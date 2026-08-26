@@ -49,15 +49,23 @@ type Token func() (string, error)
 // HTTPProbe verifies one HTTP readiness endpoint.
 type HTTPProbe func(context.Context, string) error
 
+// HTTPRequest performs one bounded fixture-control request.
+type HTTPRequest func(context.Context, string, string, []byte, map[string]string) (int, error)
+
+// Secret returns a cryptographically random hexadecimal fixture secret.
+type Secret func(int) (string, error)
+
 // Manager starts one isolated set of generic service fixtures.
 type Manager struct {
-	Process    Process
-	Probe      Probe
-	Wait       Wait
-	Token      Token
-	HTTPProbe  HTTPProbe
-	Attempts   int
-	OpenSearch *OpenSearchImages
+	Process     Process
+	Probe       Probe
+	Wait        Wait
+	Token       Token
+	HTTPProbe   HTTPProbe
+	HTTPRequest HTTPRequest
+	Secret      Secret
+	Attempts    int
+	OpenSearch  *OpenSearchImages
 }
 
 // Lease exposes fixture environment and owns exact started resources.
@@ -65,6 +73,7 @@ type Lease struct {
 	environment map[string]string
 	identities  map[string]string
 	containers  []string
+	networks    []string
 	process     Process
 	closeOnce   sync.Once
 	closeErr    error
@@ -79,6 +88,7 @@ type definition struct {
 	environment   func(string) map[string]string
 	requiresProbe bool
 	requiresHTTP  bool
+	start         func(context.Context, Manager, *Lease, string) error
 }
 
 var catalog = map[string]definition{
@@ -117,6 +127,9 @@ var catalog = map[string]definition{
 			return map[string]string{"RABBITMQ_URL": "amqp://guest:guest@127.0.0.1:" + port + "/"}
 		},
 	},
+	"rabbitstream-standalone": {
+		name: "rabbitstream-standalone", start: startRabbitStreamStandalone,
+	},
 }
 
 // Start validates the complete selection before creating task-owned containers.
@@ -144,7 +157,13 @@ func (manager Manager) Start(ctx context.Context, services []string) (*Lease, er
 		process: manager.Process,
 	}
 	for _, service := range definitions {
-		if err := manager.start(ctx, lease, service, identifier); err != nil {
+		start := manager.start
+		if service.start != nil {
+			start = func(ctx context.Context, lease *Lease, _ definition, token string) error {
+				return service.start(ctx, manager, lease, token)
+			}
+		}
+		if err := start(ctx, lease, service, identifier); err != nil {
 			cleanupContext, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 			cleanupErr := lease.Close(cleanupContext)
 			cancel()
@@ -292,6 +311,12 @@ func (lease *Lease) Close(ctx context.Context) error {
 			name := lease.containers[index]
 			if err := lease.process(ctx, "docker", []string{"rm", "--force", name}, nil, io.Discard, io.Discard); err != nil {
 				failures = append(failures, fmt.Errorf("remove service container %s: %w", name, err))
+			}
+		}
+		for index := len(lease.networks) - 1; index >= 0; index-- {
+			name := lease.networks[index]
+			if err := lease.process(ctx, "docker", []string{"network", "rm", name}, nil, io.Discard, io.Discard); err != nil {
+				failures = append(failures, fmt.Errorf("remove service network %s: %w", name, err))
 			}
 		}
 		lease.closeErr = errors.Join(failures...)

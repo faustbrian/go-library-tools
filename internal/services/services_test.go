@@ -272,21 +272,23 @@ func TestReadinessDefaultsAndRuntimeHelpers(t *testing.T) {
 }
 
 type fakeBackend struct {
-	mu          sync.Mutex
-	commands    []string
-	port        int
-	portOutput  string
-	imageOutput string
-	failCommand string
-	failRemove  bool
-	failure     error
+	mu           sync.Mutex
+	commands     []string
+	environments []map[string]string
+	port         int
+	portOutput   string
+	imageOutput  string
+	failCommand  string
+	failRemove   bool
+	failure      error
 }
 
-func (backend *fakeBackend) run(_ context.Context, name string, args []string, _ map[string]string, stdout, _ io.Writer) error {
+func (backend *fakeBackend) run(_ context.Context, name string, args []string, environment map[string]string, stdout, _ io.Writer) error {
 	backend.mu.Lock()
 	defer backend.mu.Unlock()
 	command := name + " " + strings.Join(args, " ")
 	backend.commands = append(backend.commands, command)
+	backend.environments = append(backend.environments, clone(environment))
 	operation := ""
 	if len(args) > 0 {
 		operation = args[0]
