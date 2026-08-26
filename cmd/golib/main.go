@@ -1,16 +1,29 @@
 package main
 
 import (
+	"io"
 	"os"
 
 	"github.com/faustbrian/go-library-tools/internal/cli"
 )
 
+var (
+	commandArguments              = func() []string { return os.Args[1:] }
+	getWorkingDirectory           = os.Getwd
+	standardOutput      io.Writer = os.Stdout
+	standardError       io.Writer = os.Stderr
+	exitProcess                   = os.Exit
+)
+
 func main() {
-	workingDirectory, err := os.Getwd()
+	exitProcess(run(commandArguments(), getWorkingDirectory, standardOutput, standardError))
+}
+
+func run(args []string, getwd func() (string, error), stdout, stderr io.Writer) int {
+	workingDirectory, err := getwd()
 	if err != nil {
-		_, _ = os.Stderr.WriteString(err.Error() + "\n")
-		os.Exit(1)
+		_, _ = io.WriteString(stderr, err.Error()+"\n")
+		return 1
 	}
-	os.Exit(cli.Execute(os.Args[1:], workingDirectory, os.Stdout, os.Stderr))
+	return cli.Execute(args, workingDirectory, stdout, stderr)
 }

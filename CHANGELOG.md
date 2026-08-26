@@ -48,3 +48,5 @@ All notable changes to this project are documented in this file.
   ports, task-owned credentials and networks, and pinned Toxiproxy control.
 - Parallel-safe RabbitMQ Streams cluster, rolling-upgrade, authorization, and
   mutual-TLS topology with task-owned Compose files, volumes, and certificates.
+- The executable entry point is covered through an injectable, side-effect-free
+  boundary so the tooling repository can enforce coverage uniformly.
