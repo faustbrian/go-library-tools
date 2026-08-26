@@ -15,6 +15,7 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/evidence"
 	"github.com/faustbrian/go-library-tools/internal/gates"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/internal/releasecheck"
 	"github.com/faustbrian/go-library-tools/internal/repository"
 )
 
@@ -149,6 +150,24 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Docs(context.Background(), selection)
+		})
+	case "release":
+		if len(args) != 2 || (args[1] != "check" && args[1] != "dry-run") {
+			return usage(stderr, "usage: golib release <check|dry-run>")
+		}
+		selection, validationError := releasecheck.Validate(catalog, policy)
+		if validationError != nil {
+			return failure(stderr, validationError)
+		}
+		if validationError := repository.Check(root, catalog); validationError != nil {
+			return failure(stderr, validationError)
+		}
+		if args[1] == "check" {
+			_, _ = fmt.Fprintf(stdout, "release contract passed for %d module(s)\n", len(selection))
+			return 0
+		}
+		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(context.Background(), selection)
 		})
 	case "evidence":
 		if len(args) < 2 || args[1] != "inspect" || (len(args) == 3 && args[2] != "--json") || len(args) > 3 {

@@ -63,3 +63,5 @@ All notable changes to this project are documented in this file.
   identities across the two canonical manifests.
 - Native bounded Markdown validation with deterministic local-link checks and
   a dedicated `golib docs check` command.
+- Stable release metadata validation and full releasable-module dry runs through
+  the `golib release` command family.

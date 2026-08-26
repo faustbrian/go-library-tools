@@ -133,6 +133,50 @@ func TestExecuteRoutesDocumentationCheck(t *testing.T) {
 	}
 }
 
+func TestExecuteRoutesReleaseChecks(t *testing.T) {
+	root := internalFixture(t)
+	manifest := `{"schema_version":1,"repository":"example","go_version":"1.27.0","modules":[{"directory":".","module_path":"example","go_version":"1.27.0","kind":"public","releasable":true,"version":"1.0.0","tag_prefix":"v","gates":{"coverage":true,"documentation":true,"lint":true,"mutation":true,"race":true,"security":true,"tests":true},"packages":[]}]}`
+	if err := os.WriteFile(filepath.Join(root, "modules.json"), []byte(manifest), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	if code := execute([]string{"release", "check"}, root, &stdout, &stderr, nil); code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "release contract passed") {
+		t.Fatalf("execute(release check) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return successfulExecutor{}, func() error { return nil }, nil
+	}
+	stderr.Reset()
+	if code := execute([]string{"release", "dry-run"}, root, &stdout, &stderr, factory); code != 1 || stderr.Len() == 0 {
+		t.Fatalf("execute(release dry-run) = %d, %q", code, stderr.String())
+	}
+	for _, args := range [][]string{{"release"}, {"release", "publish"}, {"release", "check", "extra"}} {
+		stderr.Reset()
+		if code := execute(args, root, &stdout, &stderr, nil); code != 2 || !strings.Contains(stderr.String(), "usage: golib release") {
+			t.Fatalf("execute(%v) = %d, %q", args, code, stderr.String())
+		}
+	}
+}
+
+func TestExecuteReportsReleaseContractFailures(t *testing.T) {
+	root := internalFixture(t)
+	var stdout, stderr bytes.Buffer
+	if code := execute([]string{"release", "check"}, root, &stdout, &stderr, nil); code != 1 || !strings.Contains(stderr.String(), "stable version") {
+		t.Fatalf("execute(release invalid) = %d, %q", code, stderr.String())
+	}
+	manifest := `{"schema_version":1,"repository":"example","go_version":"1.27.0","modules":[{"directory":".","module_path":"example","go_version":"1.27.0","kind":"public","releasable":true,"version":"1.0.0","tag_prefix":"v","gates":{"coverage":true,"documentation":true,"lint":true,"mutation":true,"race":true,"security":true,"tests":true},"packages":[]}]}`
+	if err := os.WriteFile(filepath.Join(root, "modules.json"), []byte(manifest), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, ".go-version"), []byte("1.26.0\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stderr.Reset()
+	if code := execute([]string{"release", "check"}, root, &stdout, &stderr, nil); code != 1 || !strings.Contains(stderr.String(), ".go-version") {
+		t.Fatalf("execute(release repository) = %d, %q", code, stderr.String())
+	}
+}
+
 type successfulExecutor struct{}
 
 func (successfulExecutor) Run(context.Context, gates.Command) error { return nil }

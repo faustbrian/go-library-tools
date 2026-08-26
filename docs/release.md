@@ -11,3 +11,7 @@ from an immutable tag. Consumers verify artifacts before execution.
 
 Later releases follow semantic versioning. Never replace release artifacts or
 move tags; publish a new patch release for corrections.
+
+Run `golib release check` before preparing a tag and `golib release dry-run`
+against the final source. Releasable modules must use stable versions, canonical
+tag prefixes, and all mandatory gates.

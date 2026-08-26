@@ -158,6 +158,18 @@
         },
         {
           "module_directory": ".",
+          "directory": "internal/releasecheck",
+          "name": "releasecheck",
+          "import_path": "github.com/faustbrian/go-library-tools/internal/releasecheck",
+          "kind": "internal",
+          "production": true,
+          "executable": true,
+          "coverage_required": true,
+          "build_required": true,
+          "build_tags": []
+        },
+        {
+          "module_directory": ".",
           "directory": "internal/repository",
           "name": "repository",
           "import_path": "github.com/faustbrian/go-library-tools/internal/repository",

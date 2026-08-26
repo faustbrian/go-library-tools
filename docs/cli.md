@@ -19,6 +19,9 @@ Core commands:
 - `golib evidence inspect [--json]` validates attributable evidence records.
 - `golib docs check [--module DIR]` validates bounded Markdown navigation and
   optional typed documentation tests.
+- `golib release check` validates stable versions, tag prefixes, mandatory
+  gates, and repository structure. `golib release dry-run` then executes the
+  complete contract for every releasable module.
 
 Selection and output ordering are deterministic. Required gates fail closed;
 NilAway remains advisory and visible.
