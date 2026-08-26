@@ -35,10 +35,10 @@ type CampaignPolicy struct {
 
 // RuntimeIdentity contains only non-secret execution metadata.
 type RuntimeIdentity struct {
-	GoVersion  string
-	GOOS       string
-	GOARCH     string
-	CGOEnabled string
+	GoVersion  string `json:"GOVERSION"`
+	GOOS       string `json:"GOOS"`
+	GOARCH     string `json:"GOARCH"`
+	CGOEnabled string `json:"CGO_ENABLED"`
 }
 
 // Campaign executes or reuses package-granular mutation evidence.
