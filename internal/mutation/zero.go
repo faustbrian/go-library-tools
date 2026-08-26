@@ -78,12 +78,18 @@ func (review ZeroReview) validate() error {
 // Reviewed reports whether an exact source and verifier identity has a human
 // zero-mutant review. Near matches deliberately fail closed.
 func (inventory ZeroInventory) Reviewed(module, pkg, source, version, verifier string) bool {
+	_, reviewed := inventory.Review(module, pkg, source, version, verifier)
+	return reviewed
+}
+
+// Review returns an independent copy of the exact approved zero-mutant review.
+func (inventory ZeroInventory) Review(module, pkg, source, version, verifier string) (*ZeroReview, bool) {
 	for _, review := range inventory.Packages {
 		if review.ModuleDirectory == module && review.PackageDirectory == pkg &&
 			review.SourceDigest == source && review.GremlinsVersion == version &&
 			review.GremlinsVerifierSHA256 == verifier {
-			return true
+			return &review, true
 		}
 	}
-	return false
+	return nil, false
 }

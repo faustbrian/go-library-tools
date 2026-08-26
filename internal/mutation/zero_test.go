@@ -28,8 +28,15 @@ func TestParseZeroInventoryMatchesExactReviewedIdentity(t *testing.T) {
 	if !inventory.Reviewed(".", "adapter", digest, "v0.6.0", verifier) {
 		t.Fatal("Reviewed() = false, want true")
 	}
+	review, reviewed := inventory.Review(".", "adapter", digest, "v0.6.0", verifier)
+	if !reviewed || review == nil || review.Reason == "" {
+		t.Fatalf("Review() = %#v, %v", review, reviewed)
+	}
 	if inventory.Reviewed(".", "adapter", strings.Repeat("c", 64), "v0.6.0", verifier) {
 		t.Fatal("Reviewed() accepted changed source")
+	}
+	if review, reviewed := inventory.Review(".", "adapter", strings.Repeat("c", 64), "v0.6.0", verifier); reviewed || review != nil {
+		t.Fatalf("Review() near match = %#v, %v", review, reviewed)
 	}
 }
 
