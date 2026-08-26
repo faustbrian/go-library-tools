@@ -14,3 +14,5 @@ All notable changes to this project are documented in this file.
   API, fuzz, interoperability, and benchmark behavior without shell parsing.
 - Exact production-package coverage enforcement and pinned analyzer, nil-safety,
   vulnerability, secret, and license tooling.
+- Versioned content-addressed evidence records with history-independent identity,
+  symlink rejection, atomic publication, and semantic concurrent reuse.

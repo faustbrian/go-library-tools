@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/faustbrian/go-library-tools/main/schema/evidence.schema.json",
+  "title": "golib verification evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "repository",
+    "module",
+    "gate",
+    "input_digest",
+    "verifier_digest",
+    "result",
+    "report_digest",
+    "completed_at"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "repository": { "type": "string", "minLength": 1 },
+    "module": { "type": "string", "minLength": 1 },
+    "package": { "type": "string" },
+    "gate": { "type": "string", "pattern": "^[a-z][a-z0-9-]*$" },
+    "input_digest": { "$ref": "#/$defs/digest" },
+    "verifier_digest": { "$ref": "#/$defs/digest" },
+    "result": { "enum": ["passed", "advisory", "not_applicable", "failed"] },
+    "report_digest": { "$ref": "#/$defs/digest" },
+    "environment": {
+      "type": "object",
+      "propertyNames": { "pattern": "\\S" },
+      "additionalProperties": { "type": "string" }
+    },
+    "completed_at": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "digest": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}
