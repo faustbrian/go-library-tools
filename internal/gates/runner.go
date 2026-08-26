@@ -14,8 +14,20 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 
+	"github.com/faustbrian/go-library-tools/internal/config"
+	"github.com/faustbrian/go-library-tools/internal/coverage"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
+)
+
+const (
+	golangCILintVersion = "v2.12.2"
+	staticcheckVersion  = "v0.7.0"
+	nilAwayVersion      = "v0.0.0-20260720194628-9fd1b8d7bac8"
+	govulncheckVersion  = "v1.6.0"
+	gitleaksVersion     = "v8.30.1"
+	goLicensesVersion   = "v2.0.1"
 )
 
 // Command is one external process invocation without shell interpretation.
@@ -33,10 +45,37 @@ type Executor interface {
 
 // Runner executes gates for modules in one validated repository.
 type Runner struct {
-	Root     string
-	Catalog  inventory.Inventory
-	Executor Executor
-	Output   io.Writer
+	Root          string
+	Catalog       inventory.Inventory
+	Policy        config.Config
+	Executor      Executor
+	Output        io.Writer
+	coverageFiles coverageFileSystem
+}
+
+type namedWriteCloser interface {
+	io.WriteCloser
+	Name() string
+}
+
+type coverageFileSystem interface {
+	CreateTemp() (namedWriteCloser, error)
+	Open(string) (io.ReadCloser, error)
+	Remove(string) error
+}
+
+type operatingCoverageFiles struct{}
+
+func (operatingCoverageFiles) CreateTemp() (namedWriteCloser, error) {
+	return os.CreateTemp("", "golib-coverage-*.out")
+}
+
+func (operatingCoverageFiles) Open(path string) (io.ReadCloser, error) {
+	return os.Open(path)
+}
+
+func (operatingCoverageFiles) Remove(path string) error {
+	return os.Remove(path)
 }
 
 // Check runs the standard contract for each explicitly selected module.
@@ -113,7 +152,174 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			return err
 		}
 	}
+	if module.Gates["coverage"] {
+		if err := announce(output, module.Directory, "coverage", func() error {
+			return runner.runCoverage(ctx, output, directory, module)
+		}); err != nil {
+			return err
+		}
+	}
+	if module.Gates["lint"] {
+		if err := runner.goTool(ctx, output, module.Directory, "lint", directory,
+			"github.com/golangci/golangci-lint/v2/cmd/golangci-lint@"+golangCILintVersion,
+			"run", "--allow-parallel-runners", "--timeout=10m", "./..."); err != nil {
+			return err
+		}
+		if err := runner.goTool(ctx, output, module.Directory, "staticcheck", directory,
+			"honnef.co/go/tools/cmd/staticcheck@"+staticcheckVersion, "./..."); err != nil {
+			return err
+		}
+	}
+	if module.Gates["security"] {
+		if err := runner.goTool(ctx, output, module.Directory, "vulnerability", directory,
+			"golang.org/x/vuln/cmd/govulncheck@"+govulncheckVersion, "./..."); err != nil {
+			return err
+		}
+		if err := runner.goTool(ctx, output, module.Directory, "secrets", directory,
+			"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
+			"dir", ".", "--config", filepath.Join(runner.Root, ".gitleaks.toml"), "--no-banner", "--redact"); err != nil {
+			return err
+		}
+		if err := runner.goTool(ctx, output, module.Directory, "licenses", directory,
+			"github.com/google/go-licenses/v2@"+goLicensesVersion,
+			"check", "./...", "--ignore", module.ModulePath); err != nil {
+			return err
+		}
+	}
+	for _, gate := range []string{"fuzz"} {
+		operation, exists := runner.operation(module.Directory, gate)
+		if !exists {
+			continue
+		}
+		if err := announce(output, module.Directory, gate, func() error {
+			return runner.runOperation(ctx, directory, module, operation)
+		}); err != nil {
+			return err
+		}
+	}
+	if module.Gates["lint"] {
+		_, _ = fmt.Fprintf(output, "[%s] nilaway\n", module.Directory)
+		err := runner.Executor.Run(ctx, Command{
+			Name: "go", Dir: directory, Env: map[string]string{"GOWORK": "off"},
+			Args: []string{"run", "go.uber.org/nilaway/cmd/nilaway@" + nilAwayVersion,
+				"-include-pkgs=" + module.ModulePath, "./..."},
+		})
+		if err != nil {
+			_, _ = fmt.Fprintf(output, "[%s] NilAway advisory: %v\n", module.Directory, err)
+		}
+	}
+	for _, gate := range []string{"docs", "api", "conformance", "interoperability", "benchmark"} {
+		operation, exists := runner.operation(module.Directory, gate)
+		if !exists {
+			continue
+		}
+		if err := announce(output, module.Directory, gate, func() error {
+			return runner.runOperation(ctx, directory, module, operation)
+		}); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
+	arguments := append([]string{"run", tool}, args...)
+	return runner.command(ctx, output, module, gate, directory, "go", arguments...)
+}
+
+func (runner Runner) runCoverage(ctx context.Context, output io.Writer, directory string, module inventory.Module) error {
+	files := runner.coverageFiles
+	if files == nil {
+		files = operatingCoverageFiles{}
+	}
+	profile, err := files.CreateTemp()
+	if err != nil {
+		return fmt.Errorf("create coverage profile: %w", err)
+	}
+	profilePath := profile.Name()
+	if err := profile.Close(); err != nil {
+		_ = files.Remove(profilePath)
+		return fmt.Errorf("close coverage profile: %w", err)
+	}
+	defer files.Remove(profilePath)
+	args := []string{"test"}
+	if len(module.TestTags) > 0 {
+		args = append(args, "-tags="+strings.Join(module.TestTags, ","))
+	}
+	args = append(args, "./...", "-count=1", "-timeout=20m", "-covermode=atomic", "-coverpkg=./...", "-coverprofile="+profilePath)
+	if err := runner.Executor.Run(ctx, Command{Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}); err != nil {
+		return err
+	}
+	opened, err := files.Open(profilePath)
+	if err != nil {
+		return fmt.Errorf("open coverage profile: %w", err)
+	}
+	defer opened.Close()
+	expected := make([]string, 0, len(module.Packages))
+	for _, packagePolicy := range module.Packages {
+		if packagePolicy.CoverageRequired {
+			expected = append(expected, packagePolicy.ImportPath)
+		}
+	}
+	report, err := coverage.Verify(opened, expected)
+	if err != nil {
+		return err
+	}
+	_, _ = io.WriteString(output, report)
+	_, _ = io.WriteString(output, "all production packages have exact 100% statement coverage\n")
+	return nil
+}
+
+func (runner Runner) operation(module, gate string) (config.Operation, bool) {
+	for _, operation := range runner.Policy.Operations {
+		if operation.Module == module && operation.Gate == gate {
+			return operation, true
+		}
+	}
+	return config.Operation{}, false
+}
+
+func (runner Runner) runOperation(ctx context.Context, directory string, module inventory.Module, operation config.Operation) error {
+	for index, step := range operation.Steps {
+		timeout, err := time.ParseDuration(step.Timeout)
+		if err != nil {
+			return fmt.Errorf("%s %s step %d timeout: %w", module.Directory, operation.Gate, index, err)
+		}
+		stepContext, cancel := context.WithTimeout(ctx, timeout)
+		command, err := operationCommand(directory, module, step)
+		if err == nil {
+			err = runner.Executor.Run(stepContext, command)
+		}
+		cancel()
+		if err != nil {
+			return fmt.Errorf("%s %s step %d: %w", module.Directory, operation.Gate, index, err)
+		}
+	}
+	return nil
+}
+
+func operationCommand(directory string, module inventory.Module, step config.Step) (Command, error) {
+	switch step.Type {
+	case "go-test":
+		args := []string{"test"}
+		if len(module.TestTags) > 0 {
+			args = append(args, "-tags="+strings.Join(module.TestTags, ","))
+		}
+		args = append(args, step.Packages...)
+		args = append(args, fmt.Sprintf("-count=%d", step.Count), "-timeout="+step.Timeout)
+		if step.Run != "" {
+			args = append(args, "-run="+step.Run)
+		}
+		if step.Benchmark != "" {
+			args = append(args, "-run=^$", "-bench="+step.Benchmark, "-benchmem", "-benchtime="+step.Budget)
+		}
+		if step.Fuzz != "" {
+			args = append(args, "-run=^$", "-fuzz="+step.Fuzz, "-fuzztime="+step.Budget)
+		}
+		return Command{Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}, nil
+	default:
+		return Command{}, fmt.Errorf("unsupported operation type: %s", step.Type)
+	}
 }
 
 func testArguments(tags []string, race bool) []string {

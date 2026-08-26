@@ -10,3 +10,7 @@ All notable changes to this project are documented in this file.
 - Deterministic `config validate`, `inventory`, and initial `check` commands.
 - Task-owned Go build, module, binary, and temporary caches for gate execution.
 - Formatting, module-tidiness, unsafe-code, vet, test, and race gates.
+- Strict typed operations for repository-specific conformance, documentation,
+  API, fuzz, interoperability, and benchmark behavior without shell parsing.
+- Exact production-package coverage enforcement and pinned analyzer, nil-safety,
+  vulnerability, secret, and license tooling.

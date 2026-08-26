@@ -7,7 +7,9 @@ import (
 	"io"
 	"path/filepath"
 	"regexp"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
 	"go.yaml.in/yaml/v3"
@@ -31,10 +33,11 @@ var (
 // Config is the complete repository-specific policy. Facts already owned by
 // canonical manifests are referenced here, not repeated.
 type Config struct {
-	SchemaVersion int       `yaml:"schema_version"`
-	ToolVersion   string    `yaml:"tool_version"`
-	Manifests     Manifests `yaml:"manifest,omitempty"`
-	Evidence      Evidence  `yaml:"evidence,omitempty"`
+	SchemaVersion int         `yaml:"schema_version"`
+	ToolVersion   string      `yaml:"tool_version"`
+	Manifests     Manifests   `yaml:"manifest,omitempty"`
+	Evidence      Evidence    `yaml:"evidence,omitempty"`
+	Operations    []Operation `yaml:"operations,omitempty"`
 }
 
 // Manifests names the canonical repository inventory files.
@@ -46,6 +49,25 @@ type Manifests struct {
 // Evidence identifies the repository-owned verification evidence root.
 type Evidence struct {
 	Root string `yaml:"root,omitempty"`
+}
+
+// Operation replaces one package-specific legacy Make target with typed steps.
+type Operation struct {
+	Module string `yaml:"module"`
+	Gate   string `yaml:"gate"`
+	Steps  []Step `yaml:"steps"`
+}
+
+// Step is a constrained operation with no shell or arbitrary executable hook.
+type Step struct {
+	Type      string   `yaml:"type"`
+	Packages  []string `yaml:"packages,omitempty"`
+	Run       string   `yaml:"run,omitempty"`
+	Benchmark string   `yaml:"benchmark,omitempty"`
+	Fuzz      string   `yaml:"fuzz,omitempty"`
+	Budget    string   `yaml:"budget,omitempty"`
+	Count     int      `yaml:"count,omitempty"`
+	Timeout   string   `yaml:"timeout,omitempty"`
 }
 
 // Load reads .golib.yaml from root, rejects unknown fields, applies stable
@@ -94,6 +116,28 @@ func applyDefaults(value *Config) {
 	if value.Evidence.Root == "" {
 		value.Evidence.Root = ".verification"
 	}
+	for operationIndex := range value.Operations {
+		for stepIndex := range value.Operations[operationIndex].Steps {
+			step := &value.Operations[operationIndex].Steps[stepIndex]
+			if step.Timeout == "" {
+				step.Timeout = "20m"
+			}
+			if step.Type == "go-test" {
+				if len(step.Packages) == 0 {
+					step.Packages = []string{"./..."}
+				}
+				if step.Count == 0 {
+					step.Count = 1
+				}
+				if step.Budget == "" && step.Fuzz != "" {
+					step.Budget = "10000x"
+				}
+				if step.Budget == "" && step.Benchmark != "" {
+					step.Budget = "100ms"
+				}
+			}
+		}
+	}
 }
 
 func (value Config) validate() error {
@@ -115,6 +159,117 @@ func (value Config) validate() error {
 		if err := validateRelativePath(path.value); err != nil {
 			return fmt.Errorf("%w: %s: %v", ErrInvalid, path.name, err)
 		}
+	}
+	seen := make(map[string]struct{}, len(value.Operations))
+	for index, operation := range value.Operations {
+		if err := operation.validate(); err != nil {
+			return fmt.Errorf("%w: operations[%d]: %v", ErrInvalid, index, err)
+		}
+		identity := operation.Module + "\x00" + operation.Gate
+		if _, exists := seen[identity]; exists {
+			return fmt.Errorf("%w: operations[%d]: duplicate module and gate", ErrInvalid, index)
+		}
+		seen[identity] = struct{}{}
+	}
+	return nil
+}
+
+func (operation Operation) validate() error {
+	if operation.Module == "" {
+		return errors.New("module is required")
+	}
+	if err := validateRelativePath(operation.Module); err != nil && operation.Module != "." {
+		return fmt.Errorf("module: %v", err)
+	}
+	allowedGates := map[string]bool{
+		"api": true, "benchmark": true, "conformance": true, "docs": true,
+		"fuzz": true, "interoperability": true,
+	}
+	if !allowedGates[operation.Gate] {
+		return fmt.Errorf("gate %q does not allow custom operations", operation.Gate)
+	}
+	if len(operation.Steps) == 0 {
+		return errors.New("steps must not be empty")
+	}
+	for index, step := range operation.Steps {
+		if err := step.validate(); err != nil {
+			return fmt.Errorf("steps[%d]: %v", index, err)
+		}
+	}
+	return nil
+}
+
+func (step Step) validate() error {
+	timeout, err := time.ParseDuration(step.Timeout)
+	if err != nil {
+		return fmt.Errorf("timeout: %v", err)
+	}
+	if timeout <= 0 {
+		return errors.New("timeout must be positive")
+	}
+	if step.Count < 0 {
+		return errors.New("count must not be negative")
+	}
+	switch step.Type {
+	case "go-test":
+		selectors := 0
+		for _, selector := range []string{step.Run, step.Benchmark, step.Fuzz} {
+			if selector != "" {
+				selectors++
+			}
+		}
+		if selectors > 1 {
+			return errors.New("go-test accepts only one run, benchmark, or fuzz selector")
+		}
+		if step.Budget != "" {
+			if step.Benchmark == "" && step.Fuzz == "" {
+				return errors.New("budget requires a benchmark or fuzz selector")
+			}
+			if err := validateBudget(step.Budget); err != nil {
+				return fmt.Errorf("budget: %v", err)
+			}
+		}
+		for _, packagePattern := range step.Packages {
+			if err := validatePackagePattern(packagePattern); err != nil {
+				return fmt.Errorf("go-test package %q: %v", packagePattern, err)
+			}
+		}
+	default:
+		return fmt.Errorf("unsupported step type %q", step.Type)
+	}
+	return nil
+}
+
+func validatePackagePattern(value string) error {
+	if value == "." {
+		return nil
+	}
+	if !strings.HasPrefix(value, "./") || value == "./" || strings.ContainsAny(value, "\\\x00") {
+		return errors.New("must be . or a repository-local ./ path")
+	}
+	segments := strings.Split(strings.TrimPrefix(value, "./"), "/")
+	for index, segment := range segments {
+		if segment == "" || segment == "." || segment == ".." {
+			return errors.New("must not contain empty, current, or parent path segments")
+		}
+		if segment == "..." && index != len(segments)-1 {
+			return errors.New("recursive wildcard must be the final path segment")
+		}
+	}
+	return nil
+}
+
+func validateBudget(value string) error {
+	if strings.HasSuffix(value, "x") {
+		iterations, err := strconv.ParseUint(strings.TrimSuffix(value, "x"), 10, 64)
+		if err != nil || iterations == 0 {
+			return errors.New("must be a positive duration or iteration count ending in x")
+		}
+		return nil
+	}
+	duration, err := time.ParseDuration(value)
+	if err != nil || duration <= 0 {
+		return errors.New("must be a positive duration or iteration count ending in x")
 	}
 	return nil
 }

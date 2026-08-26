@@ -73,7 +73,7 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 		if createError != nil {
 			return failure(stderr, createError)
 		}
-		runError := (gates.Runner{Root: root, Catalog: catalog, Executor: executor, Output: stdout}).Check(context.Background(), selection)
+		runError := (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(context.Background(), selection)
 		cleanupError := cleanup()
 		if runError != nil {
 			return failure(stderr, runError)

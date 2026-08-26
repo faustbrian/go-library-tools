@@ -102,6 +102,106 @@ func TestLoadReportsReadFailure(t *testing.T) {
 	}
 }
 
+func TestLoadAcceptsTypedRepositoryOperations(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, ".golib.yaml"), `schema_version: 1
+tool_version: v1.0.0
+operations:
+  - module: .
+    gate: conformance
+    steps:
+      - type: go-test
+        packages: [., ./...]
+        run: ^TestConformance$
+        count: 1
+        timeout: 10m
+`)
+	got, err := config.Load(root)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if len(got.Operations) != 1 || len(got.Operations[0].Steps) != 1 {
+		t.Fatalf("Load() operations = %#v", got.Operations)
+	}
+}
+
+func TestLoadAppliesBoundedOperationDefaults(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, ".golib.yaml"), `schema_version: 1
+tool_version: v1.0.0
+operations:
+  - module: .
+    gate: fuzz
+    steps:
+      - type: go-test
+        fuzz: FuzzSpec
+  - module: .
+    gate: benchmark
+    steps:
+      - type: go-test
+        benchmark: BenchmarkSpec
+`)
+	got, err := config.Load(root)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if got.Operations[0].Steps[0].Budget != "10000x" {
+		t.Fatalf("fuzz budget = %q", got.Operations[0].Steps[0].Budget)
+	}
+	if got.Operations[1].Steps[0].Budget != "100ms" {
+		t.Fatalf("benchmark budget = %q", got.Operations[1].Steps[0].Budget)
+	}
+}
+
+func TestLoadRejectsInvalidTypedOperations(t *testing.T) {
+	tests := map[string]string{
+		"unknown gate":       "module: .\n    gate: test\n    steps:\n      - type: go-test\n        packages: [./...]",
+		"missing steps":      "module: .\n    gate: docs",
+		"unknown type":       "module: .\n    gate: docs\n    steps:\n      - type: shell",
+		"invalid timeout":    "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        timeout: forever",
+		"zero timeout":       "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        timeout: 0s",
+		"negative timeout":   "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        timeout: -1s",
+		"invalid count":      "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        count: -1",
+		"missing module":     "gate: docs\n    steps:\n      - type: go-test",
+		"escaping module":    "module: ../other\n    gate: docs\n    steps:\n      - type: go-test",
+		"multiple selectors": "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        run: Test\n        benchmark: Benchmark",
+		"empty package":      "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['']",
+		"flag package":       "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['-run=Injected']",
+		"parent package":     "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['./../other']",
+		"embedded wildcard":  "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['./.../other']",
+		"orphan budget":      "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        budget: 1s",
+		"zero duration":      "module: .\n    gate: fuzz\n    steps:\n      - type: go-test\n        fuzz: FuzzInput\n        budget: 0s",
+		"zero iterations":    "module: .\n    gate: fuzz\n    steps:\n      - type: go-test\n        fuzz: FuzzInput\n        budget: 0x",
+		"invalid budget":     "module: .\n    gate: benchmark\n    steps:\n      - type: go-test\n        benchmark: BenchmarkInput\n        budget: many",
+	}
+	for name, operation := range tests {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\noperations:\n  - "+operation+"\n")
+			if _, err := config.Load(root); !errors.Is(err, config.ErrInvalid) {
+				t.Fatalf("Load() error = %v", err)
+			}
+		})
+	}
+}
+
+func TestLoadRejectsDuplicateOperationOwnership(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, ".golib.yaml"), `schema_version: 1
+tool_version: v1.0.0
+operations:
+  - module: .
+    gate: docs
+    steps: [{type: go-test}]
+  - module: .
+    gate: docs
+    steps: [{type: go-test}]
+`)
+	if _, err := config.Load(root); !errors.Is(err, config.ErrInvalid) {
+		t.Fatalf("Load() error = %v", err)
+	}
+}
+
 func TestLoadReportsMissingAndOversizedConfiguration(t *testing.T) {
 	root := t.TempDir()
 	if _, err := config.Load(root); !errors.Is(err, os.ErrNotExist) {

@@ -129,6 +129,55 @@ func TestLoadPropagatesReadFailure(t *testing.T) {
 	}
 }
 
+func TestLoadValidatesOperationModuleAndGateReferences(t *testing.T) {
+	tests := []struct {
+		name      string
+		operation config.Operation
+		want      string
+	}{
+		{"unknown module", config.Operation{Module: "missing", Gate: "docs"}, "unknown module"},
+		{"disabled gate", config.Operation{Module: ".", Gate: "conformance"}, "not enabled"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := fixture(t)
+			_, err := inventory.Load(root, config.Config{
+				Manifests:  config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+				Operations: []config.Operation{test.operation},
+			})
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("Load() error = %v", err)
+			}
+		})
+	}
+}
+
+func TestLoadAcceptsEnabledInteroperabilityOperation(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "modules.json"), `{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/example",
+  "go_version": "1.27.0",
+  "modules": [{
+    "directory": ".",
+    "module_path": "github.com/faustbrian/example",
+    "go_version": "1.27.0",
+    "kind": "public",
+    "releasable": true,
+    "gates": {},
+    "interoperability_tools": ["reference"],
+    "packages": []
+  }]
+}`)
+	_, err := inventory.Load(root, config.Config{
+		Manifests:  config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+		Operations: []config.Operation{{Module: ".", Gate: "interoperability"}},
+	})
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+}
+
 func fixture(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()

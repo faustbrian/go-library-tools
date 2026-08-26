@@ -94,6 +94,29 @@ func Load(root string, policy config.Config) (Inventory, error) {
 	if len(modules.Modules) == 0 {
 		return Inventory{}, errors.New("module manifest contains no modules")
 	}
+	byDirectory := make(map[string]Module, len(modules.Modules))
+	for _, module := range modules.Modules {
+		byDirectory[module.Directory] = module
+	}
+	gateKeys := map[string]string{
+		"api": "api_compatibility", "benchmark": "benchmarks",
+		"conformance": "conformance", "docs": "documentation", "fuzz": "fuzz",
+	}
+	for index, operation := range policy.Operations {
+		module, exists := byDirectory[operation.Module]
+		if !exists {
+			return Inventory{}, fmt.Errorf("operations[%d] references unknown module %q", index, operation.Module)
+		}
+		enabled := false
+		if operation.Gate == "interoperability" {
+			enabled = len(module.InteroperabilityTools) > 0
+		} else {
+			enabled = module.Gates[gateKeys[operation.Gate]]
+		}
+		if !enabled {
+			return Inventory{}, fmt.Errorf("operations[%d] gate %q is not enabled for module %q", index, operation.Gate, operation.Module)
+		}
+	}
 	return modules, nil
 }
 
