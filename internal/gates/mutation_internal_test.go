@@ -129,7 +129,8 @@ func TestMutationFailsClosedForInvalidSetup(t *testing.T) {
 			return nil
 		}}, nil, "runtime identity"},
 		{"runtime command", writeValidMutationSetup, workspaceExecutor{directory: "/task", run: func(context.Context, Command) error { return failure }}, nil, "read Go runtime identity"},
-		{"services", writeValidMutationSetup, runtimeExecutor("/task"), nil, "service fixture"},
+		{"services", writeValidMutationSetup, runtimeExecutor("/task"), nil, "service identities"},
+		{"wrong services", writeValidMutationSetup, runtimeExecutor("/task"), nil, "identity for postgresql is missing"},
 		{"campaign", writeValidMutationSetup, runtimeExecutor("/task"), func(context.Context, mutation.Campaign) error { return failure }, "campaign failed"},
 	}
 	for _, test := range tests {
@@ -137,13 +138,22 @@ func TestMutationFailsClosedForInvalidSetup(t *testing.T) {
 			root := t.TempDir()
 			test.prepare(t, root)
 			module := inventory.Module{Directory: ".", ModulePath: "example", GoVersion: "1.27.0", Gates: map[string]bool{"mutation": true}, Packages: []inventory.Package{{Directory: ".", CoverageRequired: true}}}
-			if test.name == "services" {
+			if test.name == "services" || test.name == "wrong services" {
 				module.RequiredServices = []string{"postgresql"}
 			}
 			runner := Runner{
 				Root: root, Catalog: inventory.Inventory{Repository: "example", Modules: []inventory.Module{module}},
 				Policy:   config.Config{Evidence: config.Evidence{Root: ".verification"}, Mutation: config.Mutation{Root: ".verification/mutation"}},
 				Executor: test.executor, mutationCampaign: test.run,
+			}
+			if test.name == "services" || test.name == "wrong services" {
+				runner.startServices = func(context.Context, []string) (serviceLease, error) {
+					lease := &fakeServiceLease{}
+					if test.name == "wrong services" {
+						lease.identities = map[string]string{"redis": "redis#sha256:identity"}
+					}
+					return lease, nil
+				}
 			}
 			err := runner.Mutation(context.Background(), []string{"."})
 			if err == nil || !strings.Contains(err.Error(), test.want) {

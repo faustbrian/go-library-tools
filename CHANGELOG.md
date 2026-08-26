@@ -40,3 +40,5 @@ All notable changes to this project are documented in this file.
   replacements, exact evidence reuse, and immediate package-level persistence.
 - Parallel-safe generic service leases for PostgreSQL, Valkey, Redis, NATS,
   NSQ, and RabbitMQ with exact cleanup and runtime image identities.
+- Module-scoped fixture environments across standard, coverage, and mutation
+  gates, including cleanup on failure and service-bound mutation evidence.

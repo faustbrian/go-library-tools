@@ -52,8 +52,10 @@ func (runner Runner) Mutation(ctx context.Context, selection []string) error {
 			_, _ = fmt.Fprintf(output, "[%s] mutation: not applicable\n", module.Directory)
 			continue
 		}
-		if err := announce(output, module.Directory, "mutation", func() error {
-			return runner.runMutation(ctx, output, module)
+		if err := runner.withModuleServices(ctx, module, func(scoped Runner) error {
+			return announce(output, module.Directory, "mutation", func() error {
+				return scoped.runMutation(ctx, output, module)
+			})
 		}); err != nil {
 			return err
 		}
@@ -66,8 +68,13 @@ func (runner Runner) runMutation(ctx context.Context, output io.Writer, module i
 	if !ok || !filepath.IsAbs(workspace.TemporaryDirectory()) {
 		return errors.New("mutation requires a task-owned workspace")
 	}
-	if len(module.RequiredServices) > 0 {
-		return fmt.Errorf("mutation service fixture lifecycle is not configured for %s", module.Directory)
+	if len(module.RequiredServices) != len(runner.serviceIdentities) {
+		return fmt.Errorf("mutation service identities are incomplete for %s", module.Directory)
+	}
+	for _, service := range module.RequiredServices {
+		if runner.serviceIdentities[service] == "" {
+			return fmt.Errorf("mutation service identity for %s is missing", service)
+		}
 	}
 	mutationRoot := filepath.Join(runner.Root, filepath.FromSlash(runner.Policy.Mutation.Root))
 	reviews, err := loadZeroInventory(runner.Root, filepath.Join(runner.Policy.Mutation.Root, "zero-inventory.json"))
@@ -109,7 +116,8 @@ func (runner Runner) runMutation(ctx context.Context, output io.Writer, module i
 			Repository: runner.Catalog.Repository, ModuleDirectory: module.Directory,
 			ModulePath: module.ModulePath, GoVersion: module.GoVersion, Packages: packages,
 			TestTags: testTags, BuildTags: append([]string(nil), module.BuildTags...),
-			ServiceIdentities: map[string]string{}, OwnedModules: owned, Workers: workers,
+			RequiredServices:  append([]string(nil), module.RequiredServices...),
+			ServiceIdentities: cloneServiceMap(runner.serviceIdentities), OwnedModules: owned, Workers: workers,
 		},
 		ZeroReviews: reviews, Environment: environment, RuntimeIdentity: runtimeIdentity,
 		Process: runner.mutationProcess(), Output: output,

@@ -51,15 +51,17 @@ type taskWorkspace interface {
 
 // Runner executes gates for modules in one validated repository.
 type Runner struct {
-	Root             string
-	Catalog          inventory.Inventory
-	Policy           config.Config
-	Executor         Executor
-	Output           io.Writer
-	coverageFiles    coverageFileSystem
-	apiFiles         apiFileSystem
-	mutationFiles    mutationFileSystem
-	mutationCampaign mutationCampaignRunner
+	Root              string
+	Catalog           inventory.Inventory
+	Policy            config.Config
+	Executor          Executor
+	Output            io.Writer
+	coverageFiles     coverageFileSystem
+	apiFiles          apiFileSystem
+	mutationFiles     mutationFileSystem
+	mutationCampaign  mutationCampaignRunner
+	startServices     serviceStarter
+	serviceIdentities map[string]string
 }
 
 type namedWriteCloser interface {
@@ -98,7 +100,9 @@ func (runner Runner) Check(ctx context.Context, selection []string) error {
 		output = io.Discard
 	}
 	for _, module := range modules {
-		if err := runner.checkModule(ctx, output, module); err != nil {
+		if err := runner.withModuleServices(ctx, module, func(scoped Runner) error {
+			return scoped.checkModule(ctx, output, module)
+		}); err != nil {
 			return err
 		}
 	}
@@ -120,9 +124,11 @@ func (runner Runner) Coverage(ctx context.Context, selection []string) error {
 			_, _ = fmt.Fprintf(output, "[%s] coverage: not applicable\n", module.Directory)
 			continue
 		}
-		directory := filepath.Join(runner.Root, module.Directory)
-		if err := announce(output, module.Directory, "coverage", func() error {
-			return runner.runCoverage(ctx, output, directory, module)
+		if err := runner.withModuleServices(ctx, module, func(scoped Runner) error {
+			directory := filepath.Join(scoped.Root, module.Directory)
+			return announce(output, module.Directory, "coverage", func() error {
+				return scoped.runCoverage(ctx, output, directory, module)
+			})
 		}); err != nil {
 			return err
 		}
