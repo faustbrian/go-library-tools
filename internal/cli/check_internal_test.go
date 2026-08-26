@@ -111,7 +111,7 @@ func TestExecuteRoutesStandaloneMutation(t *testing.T) {
 
 func TestExecuteRoutesDocumentationCheck(t *testing.T) {
 	root := internalFixture(t)
-	manifest := `{"schema_version":1,"repository":"example","go_version":"1.27.0","modules":[{"directory":".","module_path":"example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"documentation":true},"packages":[]}]}`
+	manifest := `{"schema_version":1,"repository":"example","go_version":"1.27.0","modules":[{"directory":".","module_path":"example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{},"packages":[]}]}`
 	if err := os.WriteFile(filepath.Join(root, "modules.json"), []byte(manifest), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -125,7 +125,7 @@ func TestExecuteRoutesDocumentationCheck(t *testing.T) {
 		return cliWorkspaceExecutor{directory: t.TempDir()}, func() error { return nil }, nil
 	}
 	var stdout, stderr bytes.Buffer
-	if code := execute([]string{"docs", "check"}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "[.] docs") {
+	if code := execute([]string{"docs", "check"}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "docs: not applicable") {
 		t.Fatalf("execute() = %d, %q, %q", code, stdout.String(), stderr.String())
 	}
 	for _, args := range [][]string{{"docs"}, {"docs", "update"}, {"docs", "check", "--bad"}} {

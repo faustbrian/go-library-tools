@@ -72,3 +72,5 @@ All notable changes to this project are documented in this file.
 - Strict Deno and zsh runtime policy consumed by package-neutral reusable CI.
 - Task-owned documentation spelling with an embedded, exact CSpell dependency
   graph and repository-owned dictionaries.
+- Checksum-pinned external-link verification with bounded hostile-archive
+  handling and no consumer-owned installation scripts.

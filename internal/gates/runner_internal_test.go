@@ -11,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/faustbrian/go-library-tools/internal/config"
+	"github.com/faustbrian/go-library-tools/internal/docscheck"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 )
 
@@ -199,6 +200,13 @@ func TestCheckDocumentationReportsNativeAndSpellingFailures(t *testing.T) {
 	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{}); !errors.Is(err, failure) {
 		t.Fatalf("checkDocumentation() spelling error = %v", err)
 	}
+	runner = Runner{
+		DocumentationSpelling: func(context.Context, string) error { return nil },
+		DocumentationLinks:    func(context.Context, string) error { return failure },
+	}
+	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{}); !errors.Is(err, failure) {
+		t.Fatalf("checkDocumentation() links error = %v", err)
+	}
 }
 
 func TestCheckDocumentationUsesPinnedSpellingByDefault(t *testing.T) {
@@ -206,10 +214,157 @@ func TestCheckDocumentationUsesPinnedSpellingByDefault(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "README.md"), []byte("# Example\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	runner := Runner{Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }}}
+	runner := Runner{
+		Executor:           workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }},
+		DocumentationLinks: func(context.Context, string) error { return nil },
+	}
 	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{}); err != nil {
 		t.Fatalf("checkDocumentation() error = %v", err)
 	}
+}
+
+func TestDocumentationLinksUsesVerifiedTaskOwnedBinary(t *testing.T) {
+	root := t.TempDir()
+	workspace := t.TempDir()
+	commands := make([]Command, 0, 2)
+	executor := workspaceExecutor{directory: workspace, run: func(_ context.Context, command Command) error {
+		commands = append(commands, command)
+		if command.Name == "curl" {
+			for index, argument := range command.Args {
+				if argument == "--output" {
+					return os.WriteFile(command.Args[index+1], []byte("archive"), 0o600)
+				}
+			}
+		}
+		return nil
+	}}
+	release := docscheck.LycheeRelease{Target: "test", URL: "https://example.test/lychee.tar.gz", SHA256: strings.Repeat("a", 64)}
+	runner := Runner{
+		Executor: executor,
+		documentationRelease: func(string, string) (docscheck.LycheeRelease, error) {
+			return release, nil
+		},
+		documentationExtract: func(path string, got docscheck.LycheeRelease) ([]byte, error) {
+			if path != filepath.Join(workspace, "documentation", "links", "lychee.tar.gz") || got != release {
+				t.Fatalf("extract input = %q, %#v", path, got)
+			}
+			return []byte("binary"), nil
+		},
+	}
+	if err := runner.runDocumentationLinks(context.Background(), root); err != nil {
+		t.Fatalf("runDocumentationLinks() error = %v", err)
+	}
+	if len(commands) != 2 || commands[0].Name != "curl" || !strings.HasSuffix(commands[1].Name, filepath.Join("documentation", "links", "lychee")) {
+		t.Fatalf("commands = %#v", commands)
+	}
+	info, err := os.Stat(commands[1].Name)
+	if err != nil || info.Mode().Perm() != 0o700 {
+		t.Fatalf("lychee binary = %v, %v", info, err)
+	}
+}
+
+func TestCheckDocumentationUsesPinnedLinksByDefault(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "README.md"), []byte("# Example\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	workspace := t.TempDir()
+	executor := linkWorkspaceExecutor(workspace, 0, nil)
+	runner := Runner{
+		Executor:              executor,
+		DocumentationSpelling: func(context.Context, string) error { return nil },
+		documentationExtract:  func(string, docscheck.LycheeRelease) ([]byte, error) { return []byte("binary"), nil },
+	}
+	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{}); err != nil {
+		t.Fatalf("checkDocumentation() error = %v", err)
+	}
+}
+
+func TestDocumentationLinksReportsSetupAndToolFailures(t *testing.T) {
+	failure := errors.New("injected failure")
+	release := docscheck.LycheeRelease{Target: "test", URL: "https://example.test/lychee.tar.gz", SHA256: strings.Repeat("a", 64)}
+	releaseFor := func(string, string) (docscheck.LycheeRelease, error) { return release, nil }
+	extract := func(string, docscheck.LycheeRelease) ([]byte, error) { return []byte("binary"), nil }
+
+	t.Run("workspace", func(t *testing.T) {
+		runner := Runner{Executor: executorFunction(func(context.Context, Command) error { return nil })}
+		if err := runner.runDocumentationLinks(context.Background(), t.TempDir()); err == nil || !strings.Contains(err.Error(), "task-owned workspace") {
+			t.Fatalf("runDocumentationLinks() error = %v", err)
+		}
+	})
+
+	t.Run("release", func(t *testing.T) {
+		runner := Runner{
+			Executor:             workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }},
+			documentationRelease: func(string, string) (docscheck.LycheeRelease, error) { return docscheck.LycheeRelease{}, failure },
+		}
+		if err := runner.runDocumentationLinks(context.Background(), t.TempDir()); !errors.Is(err, failure) {
+			t.Fatalf("runDocumentationLinks() error = %v", err)
+		}
+	})
+
+	t.Run("tool root", func(t *testing.T) {
+		workspace := filepath.Join(t.TempDir(), "workspace")
+		if err := os.WriteFile(workspace, []byte("occupied"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		runner := Runner{Executor: workspaceExecutor{directory: workspace, run: func(context.Context, Command) error { return nil }}, documentationRelease: releaseFor}
+		if err := runner.runDocumentationLinks(context.Background(), t.TempDir()); err == nil || !strings.Contains(err.Error(), "create link tool root") {
+			t.Fatalf("runDocumentationLinks() error = %v", err)
+		}
+	})
+
+	tests := []struct {
+		name    string
+		failAt  int
+		extract func(string, docscheck.LycheeRelease) ([]byte, error)
+		prepare func(string)
+		want    string
+	}{
+		{name: "download", failAt: 1, extract: extract, want: "download pinned link checker"},
+		{name: "extract", extract: func(string, docscheck.LycheeRelease) ([]byte, error) { return nil, failure }, want: "injected failure"},
+		{name: "default extract", want: "checksum mismatch"},
+		{name: "write", extract: extract, prepare: func(workspace string) {
+			if err := os.MkdirAll(filepath.Join(workspace, "documentation", "links", "lychee"), 0o700); err != nil {
+				t.Fatal(err)
+			}
+		}, want: "write link checker"},
+		{name: "checker", failAt: 2, extract: extract, want: "check documentation links"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			workspace := t.TempDir()
+			if test.prepare != nil {
+				test.prepare(workspace)
+			}
+			runner := Runner{
+				Executor:             linkWorkspaceExecutor(workspace, test.failAt, failure),
+				documentationRelease: releaseFor,
+				documentationExtract: test.extract,
+			}
+			if err := runner.runDocumentationLinks(context.Background(), t.TempDir()); err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("runDocumentationLinks() error = %v", err)
+			}
+		})
+	}
+}
+
+func linkWorkspaceExecutor(workspace string, failAt int, failure error) workspaceExecutor {
+	calls := 0
+	return workspaceExecutor{directory: workspace, run: func(_ context.Context, command Command) error {
+		calls++
+		if calls == failAt {
+			return failure
+		}
+		if command.Name == "curl" {
+			for index, argument := range command.Args {
+				if argument == "--output" {
+					return os.WriteFile(command.Args[index+1], []byte("archive"), 0o600)
+				}
+			}
+		}
+		return nil
+	}}
 }
 
 func TestRunOperationReportsTimeoutCommandAndExecutionFailures(t *testing.T) {

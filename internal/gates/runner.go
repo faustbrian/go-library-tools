@@ -18,6 +18,7 @@ import (
 
 	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/coverage"
+	"github.com/faustbrian/go-library-tools/internal/docscheck"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/services"
 )
@@ -67,6 +68,11 @@ type Runner struct {
 	// DocumentationSpelling is an isolated test boundary. Production callers
 	// leave it nil and use the pinned task-owned implementation.
 	DocumentationSpelling func(context.Context, string) error
+	// DocumentationLinks is an isolated test boundary. Production callers
+	// leave it nil and use the checksum-pinned task-owned implementation.
+	DocumentationLinks   func(context.Context, string) error
+	documentationRelease func(string, string) (docscheck.LycheeRelease, error)
+	documentationExtract func(string, docscheck.LycheeRelease) ([]byte, error)
 }
 
 type namedWriteCloser interface {

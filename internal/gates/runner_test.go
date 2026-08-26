@@ -26,7 +26,7 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 		Gates: map[string]bool{
 			"lint": true, "tests": true, "race": true, "documentation": true,
 		},
-	}}}, Executor: executor, Output: &output, DocumentationSpelling: successfulSpelling}
+	}}}, Executor: executor, Output: &output, DocumentationSpelling: successfulSpelling, DocumentationLinks: successfulLinks}
 
 	if err := runner.Check(context.Background(), []string{"."}); err != nil {
 		t.Fatalf("Check() error = %v", err)
@@ -71,6 +71,7 @@ func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
 		}},
 		Executor:              executor,
 		DocumentationSpelling: successfulSpelling,
+		DocumentationLinks:    successfulLinks,
 	}
 	if err := runner.Check(context.Background(), []string{"."}); err != nil {
 		t.Fatalf("Check() error = %v", err)
@@ -147,6 +148,7 @@ func TestDocsRunsNativeAndTypedChecks(t *testing.T) {
 		Executor:              executor,
 		Output:                &output,
 		DocumentationSpelling: successfulSpelling,
+		DocumentationLinks:    successfulLinks,
 	}
 	if err := runner.Docs(context.Background(), []string{"nested", "."}); err != nil {
 		t.Fatalf("Docs() error = %v", err)
@@ -449,6 +451,7 @@ type recordingExecutor struct {
 }
 
 func successfulSpelling(context.Context, string) error { return nil }
+func successfulLinks(context.Context, string) error    { return nil }
 
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
 	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, command.Args...), " "))
