@@ -26,25 +26,29 @@ const (
 )
 
 var (
-	ErrInvalid = errors.New("invalid mutation evidence")
-	digestRE   = regexp.MustCompile(`^[0-9a-f]{64}$`)
-	versionRE  = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
+	ErrInvalid    = errors.New("invalid mutation evidence")
+	ErrUnapproved = errors.New("unapproved mutation evidence migration")
+	digestRE      = regexp.MustCompile(`^[0-9a-f]{64}$`)
+	revisionRE    = regexp.MustCompile(`^[0-9a-f]{40}$`)
+	versionRE     = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
 )
 
 // Checkpoint is validated legacy evidence suitable for content-identity
 // migration. Revision fields are intentionally discarded.
 type Checkpoint struct {
-	Module         string
-	Package        string
-	InputDigest    string
-	VerifierDigest string
-	BinaryDigest   string
-	VerifierSource string
-	Gremlins       string
-	Environment    map[string]string
-	ReportDigest   string
-	Report         json.RawMessage
-	Mutants        int
+	Module            string
+	Package           string
+	ExecutionRevision string
+	InputDigest       string
+	InputLineage      []string
+	VerifierDigest    string
+	BinaryDigest      string
+	VerifierSource    string
+	Gremlins          string
+	Environment       map[string]string
+	ReportDigest      string
+	Report            json.RawMessage
+	Mutants           int
 }
 
 type legacyCheckpoint struct {
@@ -264,14 +268,30 @@ func validateCheckpoint(value legacyCheckpoint) (Checkpoint, error) {
 		*parsed.TestEfficacy != 100) {
 		return Checkpoint{}, fmt.Errorf("%w: aggregate counters do not prove a complete kill", ErrInvalid)
 	}
-	hash := sha256.Sum256(value.Report)
+	reportDigest := canonicalReportDigest(value.Report)
 	return Checkpoint{
-		Module: value.Module, Package: value.Package, InputDigest: value.GateInputDigest,
+		Module: value.Module, Package: value.Package, ExecutionRevision: value.ExecutionRevision,
+		InputDigest: value.GateInputDigest, InputLineage: append([]string(nil), value.IdentityLineage...),
 		VerifierDigest: value.GremlinsVerifierSHA256, BinaryDigest: value.GremlinsBinarySHA256,
 		VerifierSource: value.VerifierIdentitySource, Gremlins: value.GremlinsVersion,
-		Environment: value.Environment, ReportDigest: "sha256:" + hex.EncodeToString(hash[:]),
+		Environment: value.Environment, ReportDigest: reportDigest,
 		Report: append(json.RawMessage(nil), value.Report...), Mutants: mutants,
 	}, nil
+}
+
+func canonicalReportDigest(data []byte) string {
+	decoder := json.NewDecoder(bytes.NewReader(data))
+	decoder.UseNumber()
+	var value any
+	// validateCheckpoint has already strictly decoded this report.
+	_ = decoder.Decode(&value)
+	var canonical bytes.Buffer
+	encoder := json.NewEncoder(&canonical)
+	encoder.SetEscapeHTML(false)
+	// Decoded JSON values contain only types supported by json.Encoder.
+	_ = encoder.Encode(value)
+	hash := sha256.Sum256(canonical.Bytes())
+	return "sha256:" + hex.EncodeToString(hash[:])
 }
 
 func decodeStrict(data []byte, destination any) error {

@@ -212,6 +212,14 @@ func TestDuplicateKeyScannerRejectsMalformedStructures(t *testing.T) {
 	}
 }
 
+func TestCanonicalReportDigestIgnoresJSONFormatting(t *testing.T) {
+	left := canonicalReportDigest([]byte(`{"files":[],"go_module":"example"}`))
+	right := canonicalReportDigest([]byte("{\n  \"go_module\": \"example\",\n  \"files\": []\n}"))
+	if left != right || left != "sha256:2be4cb6094805afbabf362551ed21296406ed8695d68310b690c1a9495aea4a1" {
+		t.Fatalf("canonicalReportDigest() = %q, %q", left, right)
+	}
+}
+
 func TestValidRelative(t *testing.T) {
 	for value, want := range map[string]bool{".": true, "nested/package": true, "": false, "/absolute": false, "../outside": false, "a/../b": false, `a\b`: false, "a\x00b": false} {
 		if got := validRelative(value); got != want {
