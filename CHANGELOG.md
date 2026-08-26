@@ -20,3 +20,5 @@ All notable changes to this project are documented in this file.
   the pinned `apidiff` verifier and task-owned snapshots.
 - Standalone repository validation for module identity, Go versions, workspace
   membership, committed replacements, and complete legacy-tool removal.
+- Deterministic evidence inspection that validates attribution, content paths,
+  duplicate identities, bounded records, and symlink-free evidence trees.

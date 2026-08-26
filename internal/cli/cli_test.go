@@ -76,6 +76,17 @@ func TestExecuteChecksStandaloneRepositoryContract(t *testing.T) {
 	}
 }
 
+func TestExecuteInspectsEvidence(t *testing.T) {
+	root := fixture(t)
+	for _, args := range [][]string{{"evidence", "inspect"}, {"evidence", "inspect", "--json"}} {
+		var stdout, stderr bytes.Buffer
+		code := cli.Execute(args, root, &stdout, &stderr)
+		if code != 0 || stderr.Len() != 0 || stdout.Len() == 0 {
+			t.Fatalf("Execute(%v) = %d, %q, %q", args, code, stdout.String(), stderr.String())
+		}
+	}
+}
+
 func TestExecuteRunsCheckWithDisposableGoEnvironment(t *testing.T) {
 	root := fixture(t)
 	write(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/example\n\ngo 1.27.0\n")
@@ -110,6 +121,11 @@ func TestExecuteReportsOutputFailure(t *testing.T) {
 	if code != 1 || !strings.Contains(stderr.String(), "write inventory") {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
+	stderr.Reset()
+	code = cli.Execute([]string{"evidence", "inspect", "--json"}, root, failingWriter{}, &stderr)
+	if code != 1 || !strings.Contains(stderr.String(), "write evidence inventory") {
+		t.Fatalf("Execute() evidence code = %d, stderr = %q", code, stderr.String())
+	}
 }
 
 func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
@@ -125,6 +141,18 @@ func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
 		{"invalid config arguments", []string{"config"}, fixture, 2, "usage:"},
 		{"invalid inventory arguments", []string{"inventory", "--yaml"}, fixture, 2, "usage:"},
 		{"invalid repository arguments", []string{"repository"}, fixture, 2, "usage:"},
+		{"invalid evidence arguments", []string{"evidence", "inspect", "--yaml"}, fixture, 2, "usage:"},
+		{"unsafe evidence", []string{"evidence", "inspect"}, func(t *testing.T) string {
+			root := fixture(t)
+			target := filepath.Join(root, "target")
+			if err := os.Mkdir(target, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.Symlink(target, filepath.Join(root, ".verification")); err != nil {
+				t.Fatal(err)
+			}
+			return root
+		}, 1, "evidence root"},
 		{"invalid repository contract", []string{"repository", "check"}, func(t *testing.T) string {
 			root := fixture(t)
 			write(t, filepath.Join(root, ".go-version"), "1.26.0\n")

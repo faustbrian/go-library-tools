@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/faustbrian/go-library-tools/internal/config"
+	"github.com/faustbrian/go-library-tools/internal/evidence"
 	"github.com/faustbrian/go-library-tools/internal/gates"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/repository"
@@ -113,6 +114,28 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).API(context.Background(), selection, args[1] == "update")
 		})
+	case "evidence":
+		if len(args) < 2 || args[1] != "inspect" || (len(args) == 3 && args[2] != "--json") || len(args) > 3 {
+			return usage(stderr, "usage: golib evidence inspect [--json]")
+		}
+		modules := make([]string, 0, len(catalog.Modules))
+		for _, module := range catalog.Modules {
+			modules = append(modules, module.Directory)
+		}
+		records, inspectError := evidence.Inspect(root, policy.Evidence.Root, catalog.Repository, modules)
+		if inspectError != nil {
+			return failure(stderr, inspectError)
+		}
+		if len(args) == 3 {
+			encoder := json.NewEncoder(stdout)
+			encoder.SetIndent("", "  ")
+			if err := encoder.Encode(records); err != nil {
+				return failure(stderr, fmt.Errorf("write evidence inventory: %w", err))
+			}
+			return 0
+		}
+		_, _ = fmt.Fprintf(stdout, "%d valid evidence record(s)\n", len(records))
+		return 0
 	default:
 		return usage(stderr, fmt.Sprintf("unknown command: %s", args[0]))
 	}
