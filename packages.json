@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-library-tools",
+  "packages": [
+    {
+      "module_directory": ".",
+      "directory": "cmd/golib",
+      "name": "main",
+      "import_path": "github.com/faustbrian/go-library-tools/cmd/golib",
+      "kind": "command",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/buildinfo",
+      "name": "buildinfo",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/buildinfo",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/cli",
+      "name": "cli",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/cli",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/config",
+      "name": "config",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/config",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/coverage",
+      "name": "coverage",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/coverage",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/evidence",
+      "name": "evidence",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/evidence",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/gates",
+      "name": "gates",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/gates",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/inventory",
+      "name": "inventory",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/inventory",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/mutation",
+      "name": "mutation",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/mutation",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/repository",
+      "name": "repository",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/repository",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/repositoryfile",
+      "name": "repositoryfile",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/repositoryfile",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
+      "directory": "internal/services",
+      "name": "services",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/services",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    }
+  ]
+}

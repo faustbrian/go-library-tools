@@ -76,6 +76,10 @@ func TestExecuteRoutesStandaloneCoverage(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "modules.json"), []byte(manifest), 0o600); err != nil {
 		t.Fatal(err)
 	}
+	packages := `{"schema_version":1,"repository":"example","packages":[{"module_directory":".","directory":".","name":"example","import_path":"example","kind":"public","production":true,"executable":true,"coverage_required":true,"build_required":true,"build_tags":[]}]}`
+	if err := os.WriteFile(filepath.Join(root, "packages.json"), []byte(packages), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
 		return coverageExecutor{}, func() error { return nil }, nil
 	}

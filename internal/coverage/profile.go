@@ -18,6 +18,12 @@ type totals struct {
 	total   int
 }
 
+type block struct {
+	packagePath string
+	statements  int
+	covered     bool
+}
+
 // Verify returns a deterministic package report only when every expected
 // package has executable statements and exact statement coverage.
 func Verify(profile io.Reader, expected []string) (string, error) {
@@ -29,7 +35,7 @@ func Verify(profile io.Reader, expected []string) (string, error) {
 	if !scanner.Scan() || !strings.HasPrefix(scanner.Text(), "mode: ") {
 		return "", errors.New("coverage profile is missing mode header")
 	}
-	packages := make(map[string]totals)
+	blocks := make(map[string]block)
 	line := 1
 	for scanner.Scan() {
 		line++
@@ -50,15 +56,31 @@ func Verify(profile io.Reader, expected []string) (string, error) {
 			return "", fmt.Errorf("invalid execution count on coverage profile line %d", line)
 		}
 		packagePath := path.Dir(fields[0][:separator])
-		value := packages[packagePath]
-		value.total += statements
-		if count > 0 {
-			value.covered += statements
+		identity := fields[0]
+		value, exists := blocks[identity]
+		if exists && (value.packagePath != packagePath || value.statements != statements) {
+			return "", fmt.Errorf("inconsistent duplicate coverage block on line %d", line)
 		}
-		packages[packagePath] = value
+		blocks[identity] = block{
+			packagePath: packagePath,
+			statements:  statements,
+			covered:     value.covered || count > 0,
+		}
 	}
 	if err := scanner.Err(); err != nil {
 		return "", fmt.Errorf("read coverage profile: %w", err)
+	}
+	packages := make(map[string]totals)
+	for _, coverageBlock := range blocks {
+		value := packages[coverageBlock.packagePath]
+		if coverageBlock.statements > int(^uint(0)>>1)-value.total {
+			return "", fmt.Errorf("coverage statement total overflows for %s", coverageBlock.packagePath)
+		}
+		value.total += coverageBlock.statements
+		if coverageBlock.covered {
+			value.covered += coverageBlock.statements
+		}
+		packages[coverageBlock.packagePath] = value
 	}
 
 	unique := make(map[string]struct{}, len(expected))

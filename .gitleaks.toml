@@ -1,0 +1,8 @@
+title = "go-library-tools secret scanning"
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Generated local gate artifacts are not repository inputs."
+paths = ['''(?:^|/)\.artifacts(?:/.*)?$''']

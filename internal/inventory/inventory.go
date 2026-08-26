@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"reflect"
 
 	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
@@ -96,7 +97,13 @@ func Load(root string, policy config.Config) (Inventory, error) {
 	}
 	byDirectory := make(map[string]Module, len(modules.Modules))
 	for _, module := range modules.Modules {
+		if _, exists := byDirectory[module.Directory]; exists {
+			return Inventory{}, fmt.Errorf("duplicate module directory %q", module.Directory)
+		}
 		byDirectory[module.Directory] = module
+	}
+	if err := validatePackages(modules.Modules, packages.Packages); err != nil {
+		return Inventory{}, err
 	}
 	gateKeys := map[string]string{
 		"api": "api_compatibility", "benchmark": "benchmarks",
@@ -118,6 +125,41 @@ func Load(root string, policy config.Config) (Inventory, error) {
 		}
 	}
 	return modules, nil
+}
+
+func validatePackages(modules []Module, canonical []Package) error {
+	byImportPath := make(map[string]Package, len(canonical))
+	for _, packagePolicy := range canonical {
+		if _, exists := byImportPath[packagePolicy.ImportPath]; exists {
+			return fmt.Errorf("duplicate package import path %q", packagePolicy.ImportPath)
+		}
+		byImportPath[packagePolicy.ImportPath] = packagePolicy
+	}
+	seen := make(map[string]struct{}, len(canonical))
+	for _, module := range modules {
+		for _, packagePolicy := range module.Packages {
+			if packagePolicy.ModuleDirectory != module.Directory {
+				return fmt.Errorf("package %q module directory does not match %q", packagePolicy.ImportPath, module.Directory)
+			}
+			if _, exists := seen[packagePolicy.ImportPath]; exists {
+				return fmt.Errorf("duplicate module package import path %q", packagePolicy.ImportPath)
+			}
+			seen[packagePolicy.ImportPath] = struct{}{}
+			stored, exists := byImportPath[packagePolicy.ImportPath]
+			if !exists {
+				return fmt.Errorf("package %q is missing from packages manifest", packagePolicy.ImportPath)
+			}
+			if !reflect.DeepEqual(stored, packagePolicy) {
+				return fmt.Errorf("package %q differs between canonical manifests", packagePolicy.ImportPath)
+			}
+		}
+	}
+	for importPath := range byImportPath {
+		if _, exists := seen[importPath]; !exists {
+			return fmt.Errorf("package %q is missing from module manifest", importPath)
+		}
+	}
+	return nil
 }
 
 func decode(root, path string, destination any) error {

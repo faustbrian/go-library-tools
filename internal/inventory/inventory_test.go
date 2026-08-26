@@ -41,6 +41,43 @@ func TestLoadRejectsManifestMismatch(t *testing.T) {
 	}
 }
 
+func TestLoadRejectsPackageManifestDivergence(t *testing.T) {
+	packagePolicy := `{"module_directory":".","directory":".","name":"example","import_path":"github.com/faustbrian/example","kind":"public","production":true,"executable":true,"coverage_required":true,"build_required":true,"build_tags":[]}`
+	tests := []struct {
+		name     string
+		module   string
+		packages string
+		want     string
+	}{
+		{"missing canonical", packagePolicy, "", "missing from packages manifest"},
+		{"missing module", "", packagePolicy, "missing from module manifest"},
+		{"different", packagePolicy, strings.Replace(packagePolicy, `"name":"example"`, `"name":"different"`, 1), "differs"},
+		{"wrong module", strings.Replace(packagePolicy, `"module_directory":"."`, `"module_directory":"nested"`, 1), packagePolicy, "module directory"},
+		{"duplicate module package", packagePolicy + "," + packagePolicy, packagePolicy, "duplicate module package"},
+		{"duplicate canonical package", packagePolicy, packagePolicy + "," + packagePolicy, "duplicate package import"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := fixture(t)
+			write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{},"packages":[`+test.module+`]}]}`)
+			write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[`+test.packages+`]}`)
+			_, err := inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}})
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("Load() error = %v, want %q", err, test.want)
+			}
+		})
+	}
+}
+
+func TestLoadRejectsDuplicateModuleDirectories(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","packages":[]},{"directory":".","module_path":"github.com/faustbrian/example","packages":[]}]}`)
+	_, err := inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}})
+	if err == nil || !strings.Contains(err.Error(), "duplicate module directory") {
+		t.Fatalf("Load() error = %v", err)
+	}
+}
+
 func TestLoadRejectsUnknownManifestFields(t *testing.T) {
 	root := fixture(t)
 	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[],"extra":true}`)

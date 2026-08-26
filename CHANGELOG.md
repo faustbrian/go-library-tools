@@ -55,3 +55,9 @@ All notable changes to this project are documented in this file.
   documentation for the shared tooling contract.
 - Exact released-binary compatibility checks with an explicit source-build
   identity for non-circular tooling development.
+- Canonical self-hosted repository configuration, module and package
+  manifests, analyzer policy, secret scanning, and dependency notices.
+- Exact coverage now merges duplicate source blocks emitted by multiple Go
+  test binaries before evaluating each production package.
+- Inventory validation now rejects duplicated or divergent package and module
+  identities across the two canonical manifests.

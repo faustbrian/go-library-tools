@@ -3,9 +3,21 @@ package main
 import (
 	"bytes"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 )
+
+func TestCommandArgumentsOmitsExecutable(t *testing.T) {
+	original := os.Args
+	os.Args = []string{"golib", "inventory", "--json"}
+	t.Cleanup(func() { os.Args = original })
+
+	arguments := commandArguments()
+	if strings.Join(arguments, " ") != "inventory --json" {
+		t.Fatalf("commandArguments() = %#v", arguments)
+	}
+}
 
 func TestRunDelegatesToCLI(t *testing.T) {
 	var stdout, stderr bytes.Buffer
