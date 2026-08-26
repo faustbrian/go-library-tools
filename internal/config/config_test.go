@@ -29,6 +29,9 @@ func TestLoadAppliesStableDefaults(t *testing.T) {
 	if got.Evidence.Root != ".verification" {
 		t.Fatalf("Load() evidence root = %q", got.Evidence.Root)
 	}
+	if got.Mutation.Root != ".verification/mutation" {
+		t.Fatalf("Load() mutation root = %q", got.Mutation.Root)
+	}
 }
 
 func TestLoadRejectsUnknownFields(t *testing.T) {
@@ -89,6 +92,18 @@ func TestLoadRejectsPathsOutsideRepository(t *testing.T) {
 				t.Fatalf("Load() error = %v", err)
 			}
 		})
+	}
+}
+
+func TestLoadAcceptsExplicitMutationEvidenceRoot(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\nmutation:\n  root: evidence/mutations\n")
+	got, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Mutation.Root != "evidence/mutations" {
+		t.Fatalf("mutation root = %q", got.Mutation.Root)
 	}
 }
 

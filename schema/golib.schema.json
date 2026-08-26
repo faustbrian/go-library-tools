@@ -43,6 +43,16 @@
         }
       }
     },
+    "mutation": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/repositoryPath",
+          "default": ".verification/mutation"
+        }
+      }
+    },
     "operations": {
       "type": "array",
       "items": {

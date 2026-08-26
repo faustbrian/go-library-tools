@@ -37,6 +37,7 @@ type Config struct {
 	ToolVersion   string      `yaml:"tool_version"`
 	Manifests     Manifests   `yaml:"manifest,omitempty"`
 	Evidence      Evidence    `yaml:"evidence,omitempty"`
+	Mutation      Mutation    `yaml:"mutation,omitempty"`
 	Operations    []Operation `yaml:"operations,omitempty"`
 }
 
@@ -48,6 +49,11 @@ type Manifests struct {
 
 // Evidence identifies the repository-owned verification evidence root.
 type Evidence struct {
+	Root string `yaml:"root,omitempty"`
+}
+
+// Mutation identifies repository-owned reports, checkpoints, and reviews.
+type Mutation struct {
 	Root string `yaml:"root,omitempty"`
 }
 
@@ -116,6 +122,9 @@ func applyDefaults(value *Config) {
 	if value.Evidence.Root == "" {
 		value.Evidence.Root = ".verification"
 	}
+	if value.Mutation.Root == "" {
+		value.Mutation.Root = ".verification/mutation"
+	}
 	for operationIndex := range value.Operations {
 		for stepIndex := range value.Operations[operationIndex].Steps {
 			step := &value.Operations[operationIndex].Steps[stepIndex]
@@ -154,6 +163,7 @@ func (value Config) validate() error {
 		{"manifest.modules", value.Manifests.Modules},
 		{"manifest.packages", value.Manifests.Packages},
 		{"evidence.root", value.Evidence.Root},
+		{"mutation.root", value.Mutation.Root},
 	}
 	for _, path := range paths {
 		if err := validateRelativePath(path.value); err != nil {
