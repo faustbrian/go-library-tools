@@ -36,3 +36,5 @@ All notable changes to this project are documented in this file.
   dependency graph, exact source and fixtures, semantic policy, and verifier.
 - Standalone strict Gremlins report validation for runtime campaigns and
   imported checkpoints, including bounded input and aggregate reconciliation.
+- Native standalone mutation gate execution with isolated local-module
+  replacements, exact evidence reuse, and immediate package-level persistence.

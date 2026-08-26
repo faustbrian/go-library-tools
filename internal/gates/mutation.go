@@ -1,0 +1,231 @@
+package gates
+
+import (
+	"bytes"
+	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+
+	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/internal/mutation"
+	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+)
+
+const maximumModuleFileSize = 16 << 20
+
+type mutationCampaignRunner func(context.Context, mutation.Campaign) error
+
+type mutationFileSystem interface {
+	MkdirAll(string, os.FileMode) error
+	WriteFile(string, []byte, os.FileMode) error
+}
+
+type operatingMutationFiles struct{}
+
+func (operatingMutationFiles) MkdirAll(path string, mode os.FileMode) error {
+	return os.MkdirAll(path, mode)
+}
+
+func (operatingMutationFiles) WriteFile(path string, data []byte, mode os.FileMode) error {
+	return os.WriteFile(path, data, mode)
+}
+
+// Mutation runs exact package-level mutation verification for selected modules.
+func (runner Runner) Mutation(ctx context.Context, selection []string) error {
+	modules, err := runner.selectModules(selection)
+	if err != nil {
+		return err
+	}
+	output := runner.Output
+	if output == nil {
+		output = io.Discard
+	}
+	for _, module := range modules {
+		if !module.Gates["mutation"] {
+			_, _ = fmt.Fprintf(output, "[%s] mutation: not applicable\n", module.Directory)
+			continue
+		}
+		if err := announce(output, module.Directory, "mutation", func() error {
+			return runner.runMutation(ctx, output, module)
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (runner Runner) runMutation(ctx context.Context, output io.Writer, module inventory.Module) error {
+	workspace, ok := runner.Executor.(taskWorkspace)
+	if !ok || !filepath.IsAbs(workspace.TemporaryDirectory()) {
+		return errors.New("mutation requires a task-owned workspace")
+	}
+	if len(module.RequiredServices) > 0 {
+		return fmt.Errorf("mutation service fixture lifecycle is not configured for %s", module.Directory)
+	}
+	mutationRoot := filepath.Join(runner.Root, filepath.FromSlash(runner.Policy.Mutation.Root))
+	reviews, err := loadZeroInventory(runner.Root, filepath.Join(runner.Policy.Mutation.Root, "zero-inventory.json"))
+	if err != nil {
+		return err
+	}
+	runtimeIdentity, err := runner.runtimeIdentity(ctx, module.Directory)
+	if err != nil {
+		return err
+	}
+	owned := runner.localOwnedModules(module)
+	environment, err := runner.mutationEnvironment(ctx, workspace.TemporaryDirectory(), module, owned)
+	if err != nil {
+		return err
+	}
+	packages := make([]string, 0, len(module.Packages))
+	for _, pkg := range module.Packages {
+		if pkg.CoverageRequired {
+			packages = append(packages, pkg.Directory)
+		}
+	}
+	sort.Strings(packages)
+	testTags := make([]string, 0, len(module.TestTags))
+	for _, tag := range module.TestTags {
+		if tag != "interoperability" {
+			testTags = append(testTags, tag)
+		}
+	}
+	workers, err := runner.mutationWorkers(module)
+	if err != nil {
+		return err
+	}
+	campaign := mutation.Campaign{
+		Root:         runner.Root,
+		EvidenceRoot: filepath.Join(runner.Root, filepath.FromSlash(runner.Policy.Evidence.Root)),
+		MutationRoot: mutationRoot,
+		Workspace:    workspace.TemporaryDirectory(),
+		Policy: mutation.CampaignPolicy{
+			Repository: runner.Catalog.Repository, ModuleDirectory: module.Directory,
+			ModulePath: module.ModulePath, GoVersion: module.GoVersion, Packages: packages,
+			TestTags: testTags, BuildTags: append([]string(nil), module.BuildTags...),
+			ServiceIdentities: map[string]string{}, OwnedModules: owned, Workers: workers,
+		},
+		ZeroReviews: reviews, Environment: environment, RuntimeIdentity: runtimeIdentity,
+		Process: runner.mutationProcess(), Output: output,
+	}
+	run := runner.mutationCampaign
+	if run == nil {
+		run = func(ctx context.Context, campaign mutation.Campaign) error { return campaign.Run(ctx) }
+	}
+	return run(ctx, campaign)
+}
+
+func loadZeroInventory(root, path string) (mutation.ZeroInventory, error) {
+	data, err := repositoryfile.Read(root, path, maximumModuleFileSize)
+	if err != nil {
+		return mutation.ZeroInventory{}, fmt.Errorf("read zero-mutant inventory: %w", err)
+	}
+	reviews, err := mutation.ParseZeroInventory(bytes.NewReader(data))
+	if err != nil {
+		return mutation.ZeroInventory{}, fmt.Errorf("parse zero-mutant inventory: %w", err)
+	}
+	return reviews, nil
+}
+
+func (runner Runner) runtimeIdentity(ctx context.Context, module string) (mutation.RuntimeIdentity, error) {
+	var output boundedBuffer
+	directory := filepath.Join(runner.Root, filepath.FromSlash(module))
+	err := runner.Executor.Run(ctx, Command{
+		Name: "go", Args: []string{"env", "-json", "GOVERSION", "GOOS", "GOARCH", "CGO_ENABLED"},
+		Dir: directory, Env: map[string]string{"GOWORK": "off"}, Stdout: &output, Stderr: io.Discard,
+	})
+	if err != nil {
+		return mutation.RuntimeIdentity{}, fmt.Errorf("read Go runtime identity: %w", err)
+	}
+	identity, err := mutation.ParseRuntimeIdentity(bytes.NewReader(output.Bytes()))
+	if err != nil {
+		return mutation.RuntimeIdentity{}, fmt.Errorf("parse Go runtime identity: %w", err)
+	}
+	return identity, nil
+}
+
+func (runner Runner) localOwnedModules(module inventory.Module) []mutation.OwnedModule {
+	declared := make(map[string]struct{}, len(module.OwnedDependencies))
+	for _, dependency := range module.OwnedDependencies {
+		declared[dependency] = struct{}{}
+	}
+	owned := make([]mutation.OwnedModule, 0, len(declared))
+	for _, candidate := range runner.Catalog.Modules {
+		if _, exists := declared[candidate.ModulePath]; !exists || candidate.ModulePath == module.ModulePath || candidate.Kind == "fixture" {
+			continue
+		}
+		owned = append(owned, mutation.OwnedModule{ModulePath: candidate.ModulePath, Directory: candidate.Directory})
+	}
+	sort.Slice(owned, func(left, right int) bool { return owned[left].ModulePath < owned[right].ModulePath })
+	return owned
+}
+
+func (runner Runner) mutationEnvironment(ctx context.Context, workspace string, module inventory.Module, owned []mutation.OwnedModule) (map[string]string, error) {
+	environment := map[string]string{}
+	if len(owned) == 0 {
+		return environment, nil
+	}
+	moduleFile, err := repositoryfile.Read(runner.Root, filepath.Join(module.Directory, "go.mod"), maximumModuleFileSize)
+	if err != nil {
+		return nil, fmt.Errorf("read mutation go.mod: %w", err)
+	}
+	files := runner.mutationFiles
+	if files == nil {
+		files = operatingMutationFiles{}
+	}
+	directory := filepath.Join(workspace, "mutation-modfiles")
+	if err := files.MkdirAll(directory, 0o700); err != nil {
+		return nil, fmt.Errorf("create mutation modfile directory: %w", err)
+	}
+	modfile := filepath.Join(directory, mutationModuleSlug(module.ModulePath)+".mod")
+	if err := files.WriteFile(modfile, moduleFile, 0o600); err != nil {
+		return nil, fmt.Errorf("write mutation modfile: %w", err)
+	}
+	sum, err := repositoryfile.Read(runner.Root, filepath.Join(module.Directory, "go.sum"), maximumModuleFileSize)
+	if err == nil {
+		if err := files.WriteFile(strings.TrimSuffix(modfile, ".mod")+".sum", sum, 0o600); err != nil {
+			return nil, fmt.Errorf("write mutation sumfile: %w", err)
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		return nil, fmt.Errorf("read mutation go.sum: %w", err)
+	}
+	for _, dependency := range owned {
+		replacement := dependency.ModulePath + "=" + filepath.Join(runner.Root, filepath.FromSlash(dependency.Directory))
+		if err := runner.Executor.Run(ctx, Command{
+			Name: "go", Args: []string{"mod", "edit", "-modfile=" + modfile, "-replace=" + replacement},
+			Dir: filepath.Join(runner.Root, filepath.FromSlash(module.Directory)), Env: map[string]string{"GOWORK": "off"},
+		}); err != nil {
+			return nil, fmt.Errorf("configure mutation owned module %s: %w", dependency.ModulePath, err)
+		}
+	}
+	environment["GOFLAGS"] = "-modfile=" + modfile + " -mod=mod"
+	return environment, nil
+}
+
+func (runner Runner) mutationWorkers(module inventory.Module) (int, error) {
+	moduleFile, err := repositoryfile.Read(runner.Root, filepath.Join(module.Directory, "go.mod"), maximumModuleFileSize)
+	if err != nil {
+		return 0, fmt.Errorf("read mutation worker policy: %w", err)
+	}
+	if bytes.Contains(moduleFile, []byte("github.com/testcontainers/testcontainers-go")) {
+		return 1, nil
+	}
+	return 4, nil
+}
+
+func (runner Runner) mutationProcess() mutation.Process {
+	return func(ctx context.Context, name string, args []string, directory string, environment map[string]string, stdout, stderr io.Writer) error {
+		return runner.Executor.Run(ctx, Command{Name: name, Args: args, Dir: directory, Env: environment, Stdout: stdout, Stderr: stderr})
+	}
+}
+
+func mutationModuleSlug(modulePath string) string {
+	digest := sha256.Sum256([]byte(modulePath))
+	return hex.EncodeToString(digest[:])
+}

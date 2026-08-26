@@ -88,6 +88,23 @@ func TestExecuteRoutesStandaloneCoverage(t *testing.T) {
 	}
 }
 
+func TestExecuteRoutesStandaloneMutation(t *testing.T) {
+	root := internalFixture(t)
+	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return coverageExecutor{}, func() error { return nil }, nil
+	}
+	var stdout, stderr bytes.Buffer
+	if code := execute([]string{"mutation", "--module", "."}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 {
+		t.Fatalf("execute() mutation = %d, %q", code, stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "not applicable") {
+		t.Fatalf("mutation output = %q", stdout.String())
+	}
+	if code := execute([]string{"mutation", "--bad"}, root, &stdout, &stderr, factory); code != 2 {
+		t.Fatalf("execute() invalid mutation = %d", code)
+	}
+}
+
 type successfulExecutor struct{}
 
 func (successfulExecutor) Run(context.Context, gates.Command) error { return nil }

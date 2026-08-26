@@ -51,13 +51,15 @@ type taskWorkspace interface {
 
 // Runner executes gates for modules in one validated repository.
 type Runner struct {
-	Root          string
-	Catalog       inventory.Inventory
-	Policy        config.Config
-	Executor      Executor
-	Output        io.Writer
-	coverageFiles coverageFileSystem
-	apiFiles      apiFileSystem
+	Root             string
+	Catalog          inventory.Inventory
+	Policy           config.Config
+	Executor         Executor
+	Output           io.Writer
+	coverageFiles    coverageFileSystem
+	apiFiles         apiFileSystem
+	mutationFiles    mutationFileSystem
+	mutationCampaign mutationCampaignRunner
 }
 
 type namedWriteCloser interface {
@@ -187,6 +189,13 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 	if module.Gates["coverage"] {
 		if err := announce(output, module.Directory, "coverage", func() error {
 			return runner.runCoverage(ctx, output, directory, module)
+		}); err != nil {
+			return err
+		}
+	}
+	if module.Gates["mutation"] {
+		if err := announce(output, module.Directory, "mutation", func() error {
+			return runner.runMutation(ctx, output, module)
 		}); err != nil {
 			return err
 		}

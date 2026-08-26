@@ -46,7 +46,8 @@ func TestBuildVerifierUsesPinnedSourceAndAssets(t *testing.T) {
 	process := func(_ context.Context, name string, args []string, directory string, environment map[string]string, stdout, _ io.Writer) error {
 		if name == "go" {
 			for _, variable := range []string{"GOCACHE", "GOMODCACHE", "GOTMPDIR", "GOBIN"} {
-				if !filepath.IsAbs(environment[variable]) || !strings.HasPrefix(environment[variable], workspace) {
+				relative, err := filepath.Rel(workspace, environment[variable])
+				if err != nil || filepath.IsAbs(relative) || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
 					t.Fatalf("%s = %q", variable, environment[variable])
 				}
 			}
