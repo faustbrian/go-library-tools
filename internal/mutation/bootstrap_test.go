@@ -71,6 +71,19 @@ func TestReadBootstrapRejectsOversizedArchive(t *testing.T) {
 	}
 }
 
+func TestValidateReportRequiresCompleteMutationKills(t *testing.T) {
+	result, err := mutation.ValidateReport(strings.NewReader(`{"files":[{"file_name":"example.go","mutations":[{"type":"NEGATION","status":"KILLED","line":1,"column":1}]}]}`))
+	if err != nil {
+		t.Fatalf("ValidateReport() error = %v", err)
+	}
+	if result.Mutants != 1 || !strings.HasPrefix(result.Digest, "sha256:") {
+		t.Fatalf("ValidateReport() = %#v", result)
+	}
+	if _, err := mutation.ValidateReport(strings.NewReader(`{"files":[{"file_name":"example.go","mutations":[{"type":"NEGATION","status":"LIVED","line":1,"column":1}]}]}`)); !errors.Is(err, mutation.ErrInvalid) {
+		t.Fatalf("ValidateReport(survivor) error = %v", err)
+	}
+}
+
 func bootstrapArchive(t *testing.T, files map[string]string) []byte {
 	t.Helper()
 	var output bytes.Buffer

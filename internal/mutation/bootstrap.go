@@ -95,6 +95,25 @@ type mutation struct {
 	Column int    `json:"column"`
 }
 
+// ReportResult summarizes a strictly validated Gremlins report.
+type ReportResult struct {
+	Digest  string
+	Mutants int
+}
+
+// ValidateReport requires every viable mutant to be killed and validates any
+// aggregate counters against the individual mutation records.
+func ValidateReport(reader io.Reader) (ReportResult, error) {
+	data, err := io.ReadAll(io.LimitReader(reader, maximumCheckpointSize+1))
+	if err != nil {
+		return ReportResult{}, fmt.Errorf("%w: read mutation report: %v", ErrInvalid, err)
+	}
+	if len(data) > maximumCheckpointSize {
+		return ReportResult{}, fmt.Errorf("%w: mutation report exceeds %d bytes", ErrInvalid, maximumCheckpointSize)
+	}
+	return validateReportData(data)
+}
+
 // ReadBootstrap strictly reads one bounded legacy checkpoint archive.
 func ReadBootstrap(reader io.ReaderAt, size int64) ([]Checkpoint, error) {
 	if size <= 0 || size > MaximumArchiveSize {
@@ -217,31 +236,46 @@ func validateCheckpoint(value legacyCheckpoint) (Checkpoint, error) {
 	if len(value.Environment) == 0 {
 		return Checkpoint{}, fmt.Errorf("%w: environment is required", ErrInvalid)
 	}
+	result, err := validateReportData(value.Report)
+	if err != nil {
+		return Checkpoint{}, err
+	}
+	return Checkpoint{
+		Module: value.Module, Package: value.Package, ExecutionRevision: value.ExecutionRevision,
+		InputDigest: value.GateInputDigest, InputLineage: append([]string(nil), value.IdentityLineage...),
+		VerifierDigest: value.GremlinsVerifierSHA256, BinaryDigest: value.GremlinsBinarySHA256,
+		VerifierSource: value.VerifierIdentitySource, Gremlins: value.GremlinsVersion,
+		Environment: value.Environment, ReportDigest: result.Digest,
+		Report: append(json.RawMessage(nil), value.Report...), Mutants: result.Mutants,
+	}, nil
+}
+
+func validateReportData(data []byte) (ReportResult, error) {
 	var parsed report
-	if err := decodeStrict(value.Report, &parsed); err != nil {
-		return Checkpoint{}, fmt.Errorf("report: %w", err)
+	if err := decodeStrict(data, &parsed); err != nil {
+		return ReportResult{}, fmt.Errorf("report: %w", err)
 	}
 	mutants := 0
 	files := make(map[string]struct{}, len(parsed.Files))
 	identities := make(map[string]struct{})
 	for _, file := range parsed.Files {
 		if file.FileName == "" {
-			return Checkpoint{}, fmt.Errorf("%w: mutation file name is required", ErrInvalid)
+			return ReportResult{}, fmt.Errorf("%w: mutation file name is required", ErrInvalid)
 		}
 		if _, exists := files[file.FileName]; exists {
-			return Checkpoint{}, fmt.Errorf("%w: duplicate mutation file %s", ErrInvalid, file.FileName)
+			return ReportResult{}, fmt.Errorf("%w: duplicate mutation file %s", ErrInvalid, file.FileName)
 		}
 		files[file.FileName] = struct{}{}
 		for _, candidate := range file.Mutations {
 			if candidate.Type == "" || candidate.Line <= 0 || candidate.Column <= 0 {
-				return Checkpoint{}, fmt.Errorf("%w: mutation location is malformed", ErrInvalid)
+				return ReportResult{}, fmt.Errorf("%w: mutation location is malformed", ErrInvalid)
 			}
 			if candidate.Status != "KILLED" {
-				return Checkpoint{}, fmt.Errorf("%w: non-killed mutant in %s", ErrInvalid, file.FileName)
+				return ReportResult{}, fmt.Errorf("%w: non-killed mutant in %s", ErrInvalid, file.FileName)
 			}
 			identity := fmt.Sprintf("%s\x00%s\x00%d\x00%d", file.FileName, candidate.Type, candidate.Line, candidate.Column)
 			if _, exists := identities[identity]; exists {
-				return Checkpoint{}, fmt.Errorf("%w: duplicate mutation identity in %s", ErrInvalid, file.FileName)
+				return ReportResult{}, fmt.Errorf("%w: duplicate mutation identity in %s", ErrInvalid, file.FileName)
 			}
 			identities[identity] = struct{}{}
 			mutants++
@@ -260,23 +294,15 @@ func validateCheckpoint(value legacyCheckpoint) (Checkpoint, error) {
 		}
 	}
 	if metricCount != 0 && metricCount != len(metrics) {
-		return Checkpoint{}, fmt.Errorf("%w: incomplete aggregate counters", ErrInvalid)
+		return ReportResult{}, fmt.Errorf("%w: incomplete aggregate counters", ErrInvalid)
 	}
 	if metricCount > 0 && (*parsed.MutantsKilled != mutants || *parsed.MutantsLived != 0 ||
 		*parsed.MutantsNotCovered != 0 || *parsed.MutantsNotViable != 0 ||
 		*parsed.MutantsTotal != mutants || *parsed.MutationCoverage != 100 ||
 		*parsed.TestEfficacy != 100) {
-		return Checkpoint{}, fmt.Errorf("%w: aggregate counters do not prove a complete kill", ErrInvalid)
+		return ReportResult{}, fmt.Errorf("%w: aggregate counters do not prove a complete kill", ErrInvalid)
 	}
-	reportDigest := canonicalReportDigest(value.Report)
-	return Checkpoint{
-		Module: value.Module, Package: value.Package, ExecutionRevision: value.ExecutionRevision,
-		InputDigest: value.GateInputDigest, InputLineage: append([]string(nil), value.IdentityLineage...),
-		VerifierDigest: value.GremlinsVerifierSHA256, BinaryDigest: value.GremlinsBinarySHA256,
-		VerifierSource: value.VerifierIdentitySource, Gremlins: value.GremlinsVersion,
-		Environment: value.Environment, ReportDigest: reportDigest,
-		Report: append(json.RawMessage(nil), value.Report...), Mutants: mutants,
-	}, nil
+	return ReportResult{Digest: canonicalReportDigest(data), Mutants: mutants}, nil
 }
 
 func canonicalReportDigest(data []byte) string {

@@ -120,6 +120,15 @@ func TestReadCheckpointRejectsOpenReadAndSizeFailures(t *testing.T) {
 	assertInvalidContains(t, err, "size mismatch")
 }
 
+func TestValidateReportRejectsReadAndSizeFailures(t *testing.T) {
+	if _, err := ValidateReport(failingReader{}); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("ValidateReport(read failure) error = %v", err)
+	}
+	if _, err := ValidateReport(strings.NewReader(strings.Repeat("x", maximumCheckpointSize+1))); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("ValidateReport(oversized) error = %v", err)
+	}
+}
+
 func TestParseCheckpointRejectsMalformedContracts(t *testing.T) {
 	valid := checkpointMap(t)
 	tests := map[string]struct {

@@ -34,3 +34,5 @@ All notable changes to this project are documented in this file.
   strict path validation and a published schema default.
 - Package-granular mutation input identities derived from the observed Go
   dependency graph, exact source and fixtures, semantic policy, and verifier.
+- Standalone strict Gremlins report validation for runtime campaigns and
+  imported checkpoints, including bounded input and aggregate reconciliation.
