@@ -32,3 +32,5 @@ All notable changes to this project are documented in this file.
   exactly reproduces the verifier used by approved legacy campaigns.
 - A canonical repository-owned mutation evidence root in `.golib.yaml`, with
   strict path validation and a published schema default.
+- Package-granular mutation input identities derived from the observed Go
+  dependency graph, exact source and fixtures, semantic policy, and verifier.
