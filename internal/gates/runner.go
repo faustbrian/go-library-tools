@@ -19,6 +19,7 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/coverage"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/internal/services"
 )
 
 const (
@@ -61,6 +62,7 @@ type Runner struct {
 	mutationFiles     mutationFileSystem
 	mutationCampaign  mutationCampaignRunner
 	startServices     serviceStarter
+	serviceHTTPProbe  services.HTTPProbe
 	serviceIdentities map[string]string
 }
 

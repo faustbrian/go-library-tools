@@ -110,6 +110,67 @@ func TestDefaultServiceStarterUsesExecutorWithoutDockerInTests(t *testing.T) {
 	}
 }
 
+func TestDefaultServiceStarterLoadsModuleOwnedOpenSearchPolicy(t *testing.T) {
+	root := t.TempDir()
+	moduleRoot := filepath.Join(root, "adapter")
+	if err := os.MkdirAll(filepath.Join(moduleRoot, "scripts"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	lock := `opensearch_image_repository='opensearchproject/opensearch'
+opensearch_old_version='2.19.6'
+opensearch_old_digest='sha256:8690b204fe914c60ca76d451ac73bc0481e034d32d3779944c8caca56a2b003f'
+opensearch_new_version='3.8.0'
+opensearch_new_digest='sha256:bcc1797519726ceb6d651d4a3e60b7c30da91793914a8dfe75fd441d4f641509'
+`
+	if err := os.WriteFile(filepath.Join(moduleRoot, "scripts", "opensearch-images.env"), []byte(lock), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	executor := &serviceRecordingExecutor{workspace: filepath.Join(root, ".task"), respond: true}
+	var readinessURL string
+	runner := Runner{
+		Root: root, Executor: executor,
+		serviceHTTPProbe: func(_ context.Context, value string) error {
+			readinessURL = value
+			return nil
+		},
+	}
+	err := runner.withModuleServices(context.Background(), inventory.Module{
+		Directory: "adapter", RequiredServices: []string{"opensearch"},
+	}, func(scoped Runner) error {
+		if !strings.Contains(scoped.serviceIdentities["opensearch"], "opensearchproject/opensearch@sha256:bcc179") {
+			t.Fatalf("service identities = %#v", scoped.serviceIdentities)
+		}
+		return nil
+	})
+	if err != nil {
+		t.Fatalf("withModuleServices(OpenSearch) error = %v", err)
+	}
+	if readinessURL != "http://127.0.0.1:49152/" {
+		t.Fatalf("readiness URL = %q", readinessURL)
+	}
+	if commands := strings.Join(executor.names(), "\n"); !strings.Contains(commands, "opensearchproject/opensearch@sha256:bcc179") {
+		t.Fatalf("commands = %s", commands)
+	}
+}
+
+func TestDefaultServiceStarterRejectsMissingAndMalformedOpenSearchPolicy(t *testing.T) {
+	root := t.TempDir()
+	runner := Runner{Root: root, Executor: &serviceRecordingExecutor{respond: true}}
+	module := inventory.Module{Directory: ".", RequiredServices: []string{"opensearch"}}
+	if err := runner.withModuleServices(context.Background(), module, func(Runner) error { return nil }); err == nil || !strings.Contains(err.Error(), "read OpenSearch image policy") {
+		t.Fatalf("withModuleServices(missing policy) error = %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "scripts"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "scripts", "opensearch-images.env"), []byte("malformed\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := runner.withModuleServices(context.Background(), module, func(Runner) error { return nil }); err == nil || !strings.Contains(err.Error(), "parse OpenSearch image policy") {
+		t.Fatalf("withModuleServices(malformed policy) error = %v", err)
+	}
+}
+
 func TestCheckCoverageAndMutationUseModuleServiceScope(t *testing.T) {
 	root := t.TempDir()
 	writeValidMutationSetup(t, root)

@@ -1,18 +1,25 @@
 package gates
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
+	"path/filepath"
 	"strings"
 	"time"
 
 	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
 	"github.com/faustbrian/go-library-tools/internal/services"
 )
 
-const serviceCleanupTimeout = 30 * time.Second
+const (
+	serviceCleanupTimeout           = 30 * time.Second
+	openSearchImageLock             = "scripts/opensearch-images.env"
+	maximumOpenSearchImageLockBytes = 16 << 10
+)
 
 type serviceLease interface {
 	Environment() map[string]string
@@ -28,7 +35,9 @@ func (runner Runner) withModuleServices(ctx context.Context, module inventory.Mo
 	}
 	start := runner.startServices
 	if start == nil {
-		start = runner.defaultServiceStarter
+		start = func(ctx context.Context, names []string) (serviceLease, error) {
+			return runner.defaultServiceStarter(ctx, module, names)
+		}
 	}
 	lease, err := start(ctx, append([]string(nil), module.RequiredServices...))
 	if err != nil {
@@ -51,11 +60,40 @@ func (runner Runner) withModuleServices(ctx context.Context, module inventory.Mo
 	return errors.Join(operationErr, cleanupErr)
 }
 
-func (runner Runner) defaultServiceStarter(ctx context.Context, names []string) (serviceLease, error) {
+func (runner Runner) defaultServiceStarter(ctx context.Context, module inventory.Module, names []string) (serviceLease, error) {
 	manager := services.Manager{Process: func(ctx context.Context, name string, args []string, environment map[string]string, stdout, stderr io.Writer) error {
 		return runner.Executor.Run(ctx, Command{Name: name, Args: args, Env: environment, Stdout: stdout, Stderr: stderr})
-	}}
+	}, HTTPProbe: runner.serviceHTTPProbe}
+	if containsService(names, "opensearch") {
+		images, err := runner.loadOpenSearchImages(module)
+		if err != nil {
+			return nil, err
+		}
+		manager.OpenSearch = &images
+	}
 	return manager.Start(ctx, names)
+}
+
+func (runner Runner) loadOpenSearchImages(module inventory.Module) (services.OpenSearchImages, error) {
+	relative := filepath.Join(module.Directory, openSearchImageLock)
+	data, err := repositoryfile.Read(runner.Root, relative, maximumOpenSearchImageLockBytes)
+	if err != nil {
+		return services.OpenSearchImages{}, fmt.Errorf("read OpenSearch image policy for %s: %w", module.Directory, err)
+	}
+	images, err := services.ParseOpenSearchImages(bytes.NewReader(data))
+	if err != nil {
+		return services.OpenSearchImages{}, fmt.Errorf("parse OpenSearch image policy for %s: %w", module.Directory, err)
+	}
+	return images, nil
+}
+
+func containsService(names []string, target string) bool {
+	for _, name := range names {
+		if name == target {
+			return true
+		}
+	}
+	return false
 }
 
 type serviceEnvironmentExecutor struct {

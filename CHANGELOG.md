@@ -42,3 +42,5 @@ All notable changes to this project are documented in this file.
   NSQ, and RabbitMQ with exact cleanup and runtime image identities.
 - Module-scoped fixture environments across standard, coverage, and mutation
   gates, including cleanup on failure and service-bound mutation evidence.
+- Digest-pinned OpenSearch fixtures loaded from strict module-owned image
+  policies without evaluating repository content as shell input.

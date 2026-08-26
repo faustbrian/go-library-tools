@@ -46,13 +46,18 @@ type Wait func(context.Context, time.Duration) error
 // Token creates a collision-resistant task identifier.
 type Token func() (string, error)
 
+// HTTPProbe verifies one HTTP readiness endpoint.
+type HTTPProbe func(context.Context, string) error
+
 // Manager starts one isolated set of generic service fixtures.
 type Manager struct {
-	Process  Process
-	Probe    Probe
-	Wait     Wait
-	Token    Token
-	Attempts int
+	Process    Process
+	Probe      Probe
+	Wait       Wait
+	Token      Token
+	HTTPProbe  HTTPProbe
+	Attempts   int
+	OpenSearch *OpenSearchImages
 }
 
 // Lease exposes fixture environment and owns exact started resources.
@@ -73,6 +78,7 @@ type definition struct {
 	readyCommand  []string
 	environment   func(string) map[string]string
 	requiresProbe bool
+	requiresHTTP  bool
 }
 
 var catalog = map[string]definition{
@@ -118,7 +124,7 @@ func (manager Manager) Start(ctx context.Context, services []string) (*Lease, er
 	if manager.Process == nil {
 		return nil, errors.New("service process backend is required")
 	}
-	definitions, err := selectedDefinitions(services)
+	definitions, err := manager.selectedDefinitions(services)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +154,7 @@ func (manager Manager) Start(ctx context.Context, services []string) (*Lease, er
 	return lease, nil
 }
 
-func selectedDefinitions(names []string) ([]definition, error) {
+func (manager Manager) selectedDefinitions(names []string) ([]definition, error) {
 	if len(names) == 0 {
 		return nil, errors.New("service selection is empty")
 	}
@@ -156,6 +162,14 @@ func selectedDefinitions(names []string) ([]definition, error) {
 	result := make([]definition, 0, len(names))
 	for _, name := range names {
 		service, exists := catalog[name]
+		if name == "opensearch" && manager.OpenSearch != nil {
+			custom, customErr := manager.OpenSearch.definition()
+			if customErr != nil {
+				return nil, customErr
+			}
+			service = custom
+			exists = true
+		}
 		if !exists {
 			return nil, fmt.Errorf("unsupported service %q", name)
 		}
@@ -239,8 +253,14 @@ func (manager Manager) waitReady(ctx context.Context, service definition, name, 
 		wait = waitContext
 	}
 	var last error
+	httpReady := manager.HTTPProbe
+	if httpReady == nil {
+		httpReady = httpProbe
+	}
 	for attempt := 0; attempt < attempts; attempt++ {
-		if service.requiresProbe {
+		if service.requiresHTTP {
+			last = httpReady(ctx, "http://127.0.0.1:"+port+"/")
+		} else if service.requiresProbe {
 			last = probe(ctx, "tcp", net.JoinHostPort("127.0.0.1", port))
 		} else {
 			arguments := append([]string{"exec", name}, service.readyCommand...)
