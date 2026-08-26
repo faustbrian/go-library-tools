@@ -18,12 +18,13 @@ import (
 
 func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 	root := fixture(t)
+	write(t, filepath.Join(root, "README.md"), "# Example\n")
 	executor := &recordingExecutor{}
 	var output bytes.Buffer
 	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{
 		Directory: ".",
 		Gates: map[string]bool{
-			"lint": true, "tests": true, "race": true,
+			"lint": true, "tests": true, "race": true, "documentation": true,
 		},
 	}}}, Executor: executor, Output: &output}
 
@@ -43,7 +44,7 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 	if !reflect.DeepEqual(executor.commands, want) {
 		t.Fatalf("commands = %#v, want %#v", executor.commands, want)
 	}
-	for _, gate := range []string{"format-check", "tidy-check", "safety", "vet", "test", "race"} {
+	for _, gate := range []string{"format-check", "tidy-check", "safety", "vet", "test", "race", "docs"} {
 		if !strings.Contains(output.String(), "[.] "+gate+"\n") {
 			t.Errorf("output does not include gate %q: %s", gate, output.String())
 		}
@@ -52,16 +53,20 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 
 func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
 	root := fixture(t)
+	write(t, filepath.Join(root, "README.md"), "# Example\n")
 	executor := &recordingExecutor{}
 	runner := gates.Runner{
 		Root:    root,
-		Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: ".", TestTags: []string{"integration"}}}},
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: ".", TestTags: []string{"integration"}, Gates: map[string]bool{"documentation": true}}}},
 		Policy: config.Config{Operations: []config.Operation{
 			{Module: ".", Gate: "fuzz", Steps: []config.Step{
 				{Type: "go-test", Packages: []string{"./..."}, Fuzz: "FuzzSpec", Budget: "100x", Count: 1, Timeout: "1m"},
 			}},
 			{Module: ".", Gate: "conformance", Steps: []config.Step{
 				{Type: "go-test", Packages: []string{"./..."}, Run: "^TestSpec$", Count: 1, Timeout: "1m"},
+			}},
+			{Module: ".", Gate: "docs", Steps: []config.Step{
+				{Type: "go-test", Packages: []string{"./..."}, Run: "^TestDocs$", Count: 1, Timeout: "1m"},
 			}},
 		}},
 		Executor: executor,
@@ -123,6 +128,54 @@ func TestCoverageRunsStandaloneAndReportsSkippedModules(t *testing.T) {
 	executor.failureAt = len(executor.commands)
 	if err := runner.Coverage(context.Background(), []string{"."}); !errors.Is(err, executor.failure) {
 		t.Fatalf("Coverage() execution error = %v", err)
+	}
+}
+
+func TestDocsRunsNativeAndTypedChecks(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "README.md"), "# Root\n")
+	executor := &recordingExecutor{}
+	var output bytes.Buffer
+	runner := gates.Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Modules: []inventory.Module{
+			{Directory: ".", Gates: map[string]bool{"documentation": true}},
+			{Directory: "nested", Gates: map[string]bool{}},
+		}},
+		Policy:   config.Config{Operations: []config.Operation{{Module: ".", Gate: "docs", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Run: "^TestDocs$", Count: 1, Timeout: "1m"}}}}},
+		Executor: executor,
+		Output:   &output,
+	}
+	if err := runner.Docs(context.Background(), []string{"nested", "."}); err != nil {
+		t.Fatalf("Docs() error = %v", err)
+	}
+	if !strings.Contains(output.String(), "[.] docs\n") || !strings.Contains(output.String(), "[nested] docs: not applicable") ||
+		!strings.Contains(strings.Join(executor.commands, "\n"), "-run=^TestDocs$") {
+		t.Fatalf("Docs() output = %q, commands = %#v", output.String(), executor.commands)
+	}
+	runner.Policy.Operations = nil
+	if err := runner.Docs(context.Background(), []string{"."}); err != nil {
+		t.Fatalf("Docs(native only) error = %v", err)
+	}
+	runner.Output = nil
+	if err := runner.Docs(context.Background(), []string{"nested"}); err != nil {
+		t.Fatalf("Docs(discarded output) error = %v", err)
+	}
+	if err := runner.Docs(context.Background(), []string{"missing"}); err == nil {
+		t.Fatal("Docs(unknown module) error = nil")
+	}
+}
+
+func TestDocsAndCheckReportNativeDocumentationFailure(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "README.md"), "[missing](missing.md)\n")
+	module := inventory.Module{Directory: ".", Gates: map[string]bool{"documentation": true}}
+	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}}, Executor: &recordingExecutor{}}
+	if err := runner.Docs(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "broken local link") {
+		t.Fatalf("Docs() error = %v", err)
+	}
+	if err := runner.Check(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "broken local link") {
+		t.Fatalf("Check() error = %v", err)
 	}
 }
 

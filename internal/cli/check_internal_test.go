@@ -109,6 +109,30 @@ func TestExecuteRoutesStandaloneMutation(t *testing.T) {
 	}
 }
 
+func TestExecuteRoutesDocumentationCheck(t *testing.T) {
+	root := internalFixture(t)
+	manifest := `{"schema_version":1,"repository":"example","go_version":"1.27.0","modules":[{"directory":".","module_path":"example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"documentation":true},"packages":[]}]}`
+	if err := os.WriteFile(filepath.Join(root, "modules.json"), []byte(manifest), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "README.md"), []byte("# Example\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return successfulExecutor{}, func() error { return nil }, nil
+	}
+	var stdout, stderr bytes.Buffer
+	if code := execute([]string{"docs", "check"}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "[.] docs") {
+		t.Fatalf("execute() = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	for _, args := range [][]string{{"docs"}, {"docs", "update"}, {"docs", "check", "--bad"}} {
+		stderr.Reset()
+		if code := execute(args, root, &stdout, &stderr, factory); code != 2 || !strings.Contains(stderr.String(), "usage: golib docs") {
+			t.Fatalf("execute(%v) = %d, %q", args, code, stderr.String())
+		}
+	}
+}
+
 type successfulExecutor struct{}
 
 func (successfulExecutor) Run(context.Context, gates.Command) error { return nil }

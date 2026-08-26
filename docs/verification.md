@@ -5,6 +5,10 @@ vet, tests, races, exact package coverage, mutation evidence, linting,
 vulnerabilities, secrets, licenses, fuzzing, documentation, API compatibility,
 conformance, interoperability, and benchmarks when enabled by the manifests.
 
+The native documentation gate requires a regular root README, bounds document
+count and size, rejects trailing whitespace and symlinks, and verifies local
+Markdown targets without making network requests.
+
 Coverage is evaluated per production package and must be exactly 100%.
 Mutation reports must account for every viable mutant and kill 100%; equivalent
 or unreachable cases require narrow reviewed records.

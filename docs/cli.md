@@ -17,6 +17,8 @@ Core commands:
 - `golib api check|update [--module DIR]` checks or deliberately updates API
   baselines.
 - `golib evidence inspect [--json]` validates attributable evidence records.
+- `golib docs check [--module DIR]` validates bounded Markdown navigation and
+  optional typed documentation tests.
 
 Selection and output ordering are deterministic. Required gates fail closed;
 NilAway remains advisory and visible.

@@ -30,7 +30,7 @@ Usage:
   golib mutation [--module <directory>]
   golib api check
   golib api update
-  golib docs check
+	golib docs check [--module <directory>]
   golib services start <fixture>
   golib services stop <fixture>
   golib release check
@@ -138,6 +138,17 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Mutation(context.Background(), selection)
+		})
+	case "docs":
+		if len(args) < 2 || args[1] != "check" {
+			return usage(stderr, "usage: golib docs check [--module <directory>]")
+		}
+		selection, usageError := moduleSelection(args[2:], catalog.Modules)
+		if usageError != nil {
+			return usage(stderr, "usage: golib docs check [--module <directory>]")
+		}
+		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Docs(context.Background(), selection)
 		})
 	case "evidence":
 		if len(args) < 2 || args[1] != "inspect" || (len(args) == 3 && args[2] != "--json") || len(args) > 3 {

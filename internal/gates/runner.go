@@ -18,6 +18,7 @@ import (
 
 	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/coverage"
+	"github.com/faustbrian/go-library-tools/internal/docscheck"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/services"
 )
@@ -138,6 +139,38 @@ func (runner Runner) Coverage(ctx context.Context, selection []string) error {
 	return nil
 }
 
+// Docs validates Markdown navigation and any additional typed documentation
+// operation for selected modules.
+func (runner Runner) Docs(ctx context.Context, selection []string) error {
+	modules, err := runner.selectModules(selection)
+	if err != nil {
+		return err
+	}
+	output := runner.Output
+	if output == nil {
+		output = io.Discard
+	}
+	for _, module := range modules {
+		if !module.Gates["documentation"] {
+			_, _ = fmt.Fprintf(output, "[%s] docs: not applicable\n", module.Directory)
+			continue
+		}
+		directory := filepath.Join(runner.Root, module.Directory)
+		if err := announce(output, module.Directory, "docs", func() error {
+			if err := docscheck.Check(directory); err != nil {
+				return err
+			}
+			if operation, exists := runner.operation(module.Directory, "docs"); exists {
+				return runner.runOperation(ctx, directory, module, operation)
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (runner Runner) selectModules(selection []string) ([]inventory.Module, error) {
 	available := make(map[string]inventory.Module, len(runner.Catalog.Modules))
 	for _, module := range runner.Catalog.Modules {
@@ -246,6 +279,19 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			return err
 		}
 	}
+	if module.Gates["documentation"] {
+		if err := announce(output, module.Directory, "docs", func() error {
+			if err := docscheck.Check(directory); err != nil {
+				return err
+			}
+			if operation, exists := runner.operation(module.Directory, "docs"); exists {
+				return runner.runOperation(ctx, directory, module, operation)
+			}
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
 	if module.Gates["lint"] {
 		_, _ = fmt.Fprintf(output, "[%s] nilaway\n", module.Directory)
 		err := runner.Executor.Run(ctx, Command{
@@ -257,7 +303,7 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			_, _ = fmt.Fprintf(output, "[%s] NilAway advisory: %v\n", module.Directory, err)
 		}
 	}
-	for _, gate := range []string{"docs", "api", "conformance", "interoperability", "benchmark"} {
+	for _, gate := range []string{"api", "conformance", "interoperability", "benchmark"} {
 		operation, exists := runner.operation(module.Directory, gate)
 		if !exists {
 			continue

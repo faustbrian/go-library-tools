@@ -64,6 +64,18 @@
     },
     {
       "module_directory": ".",
+      "directory": "internal/docscheck",
+      "name": "docscheck",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/docscheck",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
       "directory": "internal/evidence",
       "name": "evidence",
       "import_path": "github.com/faustbrian/go-library-tools/internal/evidence",

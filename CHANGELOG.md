@@ -61,3 +61,5 @@ All notable changes to this project are documented in this file.
   test binaries before evaluating each production package.
 - Inventory validation now rejects duplicated or divergent package and module
   identities across the two canonical manifests.
+- Native bounded Markdown validation with deterministic local-link checks and
+  a dedicated `golib docs check` command.
