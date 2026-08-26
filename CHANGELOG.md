@@ -50,3 +50,6 @@ All notable changes to this project are documented in this file.
   mutual-TLS topology with task-owned Compose files, volumes, and certificates.
 - The executable entry point is covered through an injectable, side-effect-free
   boundary so the tooling repository can enforce coverage uniformly.
+- Standalone repository, contributor, security, support, architecture,
+  configuration, verification, fixture, workflow, migration, and release
+  documentation for the shared tooling contract.
