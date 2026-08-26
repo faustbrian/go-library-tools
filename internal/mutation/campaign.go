@@ -129,8 +129,8 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 		return err
 	}
 	reportPath := filepath.Join(campaign.Workspace, "report-"+packageSlug(packageDirectory)+".json")
-	if err := os.Remove(reportPath); err != nil && !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("remove stale mutation report: %w", err)
+	if err := removeStaleReport(reportPath); err != nil {
+		return err
 	}
 	arguments, err := Arguments(target, reportPath, strings.Join(campaign.Policy.TestTags, ","), false, campaign.Policy.Workers)
 	if err != nil {
@@ -148,9 +148,11 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 		return fmt.Errorf("mutation tool failed for %s %s: %w", campaign.Policy.ModuleDirectory, target, err)
 	}
 	report, err := os.ReadFile(reportPath)
-	if errors.Is(err, os.ErrNotExist) && review != nil {
-		report = []byte("{\"files\":[]}\n")
-		err = nil
+	if errors.Is(err, os.ErrNotExist) {
+		if review != nil {
+			report = []byte("{\"files\":[]}\n")
+			err = nil
+		}
 	}
 	if err != nil {
 		return fmt.Errorf("read mutation report for %s: %w", target, err)
@@ -217,9 +219,7 @@ func (campaign Campaign) packageInput(ctx context.Context, packageDirectory stri
 	var listing boundedBuffer
 	listing.maximum = maximumListSize
 	arguments := []string{"list", "-deps", "-test", "-json"}
-	if len(campaign.Policy.TestTags) > 0 {
-		arguments = append(arguments, "-tags="+strings.Join(campaign.Policy.TestTags, ","))
-	}
+	arguments = appendTagArgument(arguments, campaign.Policy.TestTags)
 	arguments = append(arguments, packageTarget(packageDirectory))
 	directory := filepath.Join(campaign.Root, filepath.FromSlash(campaign.Policy.ModuleDirectory))
 	if err := campaign.Process(ctx, "go", arguments, directory, campaign.commandEnvironment(), &listing, io.Discard); err != nil {
@@ -243,21 +243,35 @@ func (campaign Campaign) prepareExecution(ctx context.Context, state *campaignSt
 	}
 	state.coverageProfile = filepath.Join(campaign.Workspace, "integration.coverage")
 	arguments := []string{"test", "-count=1", "-timeout=20m", "-cover", "-coverpkg=./...", "-coverprofile=" + state.coverageProfile}
-	if len(campaign.Policy.TestTags) > 0 {
-		arguments = append(arguments, "-tags="+strings.Join(campaign.Policy.TestTags, ","))
-	}
+	arguments = appendTagArgument(arguments, campaign.Policy.TestTags)
 	arguments = append(arguments, "./...")
 	started := time.Now()
 	directory := filepath.Join(campaign.Root, filepath.FromSlash(campaign.Policy.ModuleDirectory))
 	if err := campaign.Process(ctx, "go", arguments, directory, campaign.commandEnvironment(), io.Discard, io.Discard); err != nil {
 		return fmt.Errorf("build shared mutation coverage: %w", err)
 	}
-	elapsed := time.Since(started).Round(time.Second)
-	if elapsed < time.Second {
-		elapsed = time.Second
-	}
+	elapsed := max(time.Since(started).Round(time.Second), time.Second)
 	state.coverageElapsed = elapsed.String()
 	return nil
+}
+
+func appendTagArgument(arguments, tags []string) []string {
+	if len(tags) == 0 {
+		return arguments
+	}
+	return append(arguments, "-tags="+strings.Join(tags, ","))
+}
+
+func removeStaleReport(path string) error {
+	err := os.Remove(path)
+	switch {
+	case err == nil:
+		return nil
+	case errors.Is(err, os.ErrNotExist):
+		return nil
+	default:
+		return fmt.Errorf("remove stale mutation report: %w", err)
+	}
 }
 
 func (campaign Campaign) commandEnvironment() map[string]string {
@@ -276,13 +290,13 @@ func (campaign Campaign) validate() error {
 	identityParts = append(identityParts, policy.TestTags...)
 	identityParts = append(identityParts, policy.BuildTags...)
 	identityText := strings.Join(identityParts, "")
-	if !filepath.IsAbs(campaign.Root) || !filepath.IsAbs(campaign.EvidenceRoot) ||
-		!filepath.IsAbs(campaign.MutationRoot) || !filepath.IsAbs(campaign.Workspace) || campaign.Process == nil ||
-		policy.Repository == "" || policy.ModulePath == "" || policy.GoVersion == "" || policy.Workers < 1 || policy.Workers > 64 ||
-		campaign.RuntimeIdentity.GoVersion == "" || campaign.RuntimeIdentity.GOOS == "" ||
-		campaign.RuntimeIdentity.GOARCH == "" || campaign.RuntimeIdentity.CGOEnabled == "" ||
-		strings.ContainsAny(identityText, "\x00\r\n") ||
-		!validRelative(policy.ModuleDirectory) || len(policy.Packages) == 0 {
+	valid := [16]bool{
+		filepath.IsAbs(campaign.Root), filepath.IsAbs(campaign.EvidenceRoot), filepath.IsAbs(campaign.MutationRoot), filepath.IsAbs(campaign.Workspace),
+		campaign.Process != nil, policy.Repository != "", policy.ModulePath != "", policy.GoVersion != "", policy.Workers >= 1, policy.Workers <= 64,
+		campaign.RuntimeIdentity.GoVersion != "", campaign.RuntimeIdentity.GOOS != "", campaign.RuntimeIdentity.GOARCH != "", campaign.RuntimeIdentity.CGOEnabled != "",
+		!strings.ContainsAny(identityText, "\x00\r\n"), validRelative(policy.ModuleDirectory) && len(policy.Packages) > 0,
+	}
+	if valid != [16]bool{true, true, true, true, true, true, true, true, true, true, true, true, true, true, true, true} {
 		return fmt.Errorf("%w: mutation campaign configuration is malformed", ErrInvalid)
 	}
 	for key := range campaign.Environment {
@@ -322,7 +336,7 @@ func packageSlug(directory string) string {
 }
 
 func cloneStrings(values map[string]string) map[string]string {
-	result := make(map[string]string, len(values)+1)
+	result := make(map[string]string, len(values))
 	for key, value := range values {
 		result[key] = value
 	}
@@ -337,7 +351,7 @@ func ensureCampaignDirectory(files campaignDirectoryFileSystem, path string) err
 	if err != nil {
 		return err
 	}
-	if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+	if !info.IsDir() {
 		return fmt.Errorf("%w: path is not a real directory", ErrInvalid)
 	}
 	return nil

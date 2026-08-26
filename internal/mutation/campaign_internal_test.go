@@ -13,16 +13,29 @@ import (
 func TestCampaignRejectsMalformedPolicyAndEscapingEvidence(t *testing.T) {
 	valid, _ := campaignFixture(t)
 	for name, mutate := range map[string]func(*Campaign){
-		"relative root":      func(value *Campaign) { value.Root = "." },
-		"nil process":        func(value *Campaign) { value.Process = nil },
-		"missing repository": func(value *Campaign) { value.Policy.Repository = "" },
-		"bad workers":        func(value *Campaign) { value.Policy.Workers = 0 },
-		"empty packages":     func(value *Campaign) { value.Policy.Packages = nil },
-		"escaping evidence":  func(value *Campaign) { value.EvidenceRoot = filepath.Join(t.TempDir(), "outside") },
-		"unsafe package":     func(value *Campaign) { value.Policy.Packages = []string{"../outside"} },
-		"duplicate package":  func(value *Campaign) { value.Policy.Packages = []string{".", "."} },
-		"unsafe tag":         func(value *Campaign) { value.Policy.TestTags = []string{"bad\ntag"} },
-		"unsafe environment": func(value *Campaign) { value.Environment = map[string]string{"BAD=KEY": "value"} },
+		"relative root":           func(value *Campaign) { value.Root = "." },
+		"relative evidence":       func(value *Campaign) { value.EvidenceRoot = ".verification" },
+		"relative mutation":       func(value *Campaign) { value.MutationRoot = ".verification/mutation" },
+		"relative workspace":      func(value *Campaign) { value.Workspace = ".task" },
+		"nil process":             func(value *Campaign) { value.Process = nil },
+		"missing repository":      func(value *Campaign) { value.Policy.Repository = "" },
+		"missing module path":     func(value *Campaign) { value.Policy.ModulePath = "" },
+		"missing go version":      func(value *Campaign) { value.Policy.GoVersion = "" },
+		"bad workers":             func(value *Campaign) { value.Policy.Workers = 0 },
+		"excess workers":          func(value *Campaign) { value.Policy.Workers = 65 },
+		"empty packages":          func(value *Campaign) { value.Policy.Packages = nil },
+		"escaping evidence":       func(value *Campaign) { value.EvidenceRoot = filepath.Join(t.TempDir(), "outside") },
+		"unsafe package":          func(value *Campaign) { value.Policy.Packages = []string{"../outside"} },
+		"duplicate package":       func(value *Campaign) { value.Policy.Packages = []string{".", "."} },
+		"unsafe tag":              func(value *Campaign) { value.Policy.TestTags = []string{"bad\ntag"} },
+		"unsafe build tag":        func(value *Campaign) { value.Policy.BuildTags = []string{"bad\ntag"} },
+		"unsafe environment":      func(value *Campaign) { value.Environment = map[string]string{"BAD=KEY": "value"} },
+		"empty environment":       func(value *Campaign) { value.Environment = map[string]string{"": "value"} },
+		"missing runtime Go":      func(value *Campaign) { value.RuntimeIdentity.GoVersion = "" },
+		"missing runtime OS":      func(value *Campaign) { value.RuntimeIdentity.GOOS = "" },
+		"missing runtime arch":    func(value *Campaign) { value.RuntimeIdentity.GOARCH = "" },
+		"missing runtime CGO":     func(value *Campaign) { value.RuntimeIdentity.CGOEnabled = "" },
+		"unsafe module directory": func(value *Campaign) { value.Policy.ModuleDirectory = "../outside" },
 	} {
 		t.Run(name, func(t *testing.T) {
 			campaign := valid
@@ -32,6 +45,45 @@ func TestCampaignRejectsMalformedPolicyAndEscapingEvidence(t *testing.T) {
 				t.Fatalf("Run() error = %v", err)
 			}
 		})
+	}
+}
+
+func TestCampaignAcceptsMaximumWorkers(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	campaign.Policy.Workers = 64
+	if err := campaign.Run(context.Background()); err != nil {
+		t.Fatalf("Run(maximum workers) error = %v", err)
+	}
+}
+
+func TestAppendTagArgument(t *testing.T) {
+	if got := appendTagArgument([]string{"test"}, nil); len(got) != 1 {
+		t.Fatalf("empty tags = %#v", got)
+	}
+	if got := appendTagArgument([]string{"test"}, []string{"a", "b"}); len(got) != 2 || got[1] != "-tags=a,b" {
+		t.Fatalf("tags = %#v", got)
+	}
+}
+
+func TestRemoveStaleReport(t *testing.T) {
+	root := t.TempDir()
+	missing := filepath.Join(root, "missing")
+	if err := removeStaleReport(missing); err != nil {
+		t.Fatal(err)
+	}
+	file := filepath.Join(root, "report")
+	if err := os.WriteFile(file, []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := removeStaleReport(file); err != nil {
+		t.Fatal(err)
+	}
+	directory := filepath.Join(root, "directory")
+	if err := os.MkdirAll(filepath.Join(directory, "child"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := removeStaleReport(directory); err == nil {
+		t.Fatal("removed non-empty directory")
 	}
 }
 

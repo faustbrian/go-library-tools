@@ -183,6 +183,26 @@ func TestConfigureToxiproxyRetriesAndHonorsReadinessPolicy(t *testing.T) {
 	}
 }
 
+func TestRabbitStreamRetryHelpers(t *testing.T) {
+	if shouldRetry(0, 1) || !shouldRetry(0, 2) || shouldRetry(1, 2) {
+		t.Fatal("shouldRetry boundaries are wrong")
+	}
+	failure := errors.New("failure")
+	if !errors.Is(proxyReadinessError(0, failure), failure) {
+		t.Fatal("proxyReadinessError lost request error")
+	}
+	if err := proxyReadinessError(http.StatusBadGateway, nil); err == nil || !strings.Contains(err.Error(), "502") {
+		t.Fatalf("proxyReadinessError = %v", err)
+	}
+	custom := Secret(func(int) (string, error) { return "custom", nil })
+	if value, _ := secretGenerator(custom)(1); value != "custom" {
+		t.Fatal("custom secret replaced")
+	}
+	if secretGenerator(nil) == nil {
+		t.Fatal("default secret missing")
+	}
+}
+
 func TestRabbitStreamStandaloneUsesSecureRuntimeDefaults(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
 		if request.URL.Path != "/proxies" {
@@ -291,6 +311,12 @@ func TestRabbitStreamRuntimeHelpers(t *testing.T) {
 			t.Fatalf("randomHexFrom(%d) error = nil", size)
 		}
 	}
+	for _, size := range []int{1, 64} {
+		value, err := randomHexFrom(strings.NewReader(strings.Repeat("a", size)), size)
+		if err != nil || len(value) != size*2 {
+			t.Fatalf("randomHexFrom(%d) = %q, %v", size, value, err)
+		}
+	}
 	if _, err := randomHexFrom(failingReader{}, 1); err == nil {
 		t.Fatal("randomHexFrom(read failure) error = nil")
 	}
@@ -298,6 +324,9 @@ func TestRabbitStreamRuntimeHelpers(t *testing.T) {
 		if hexSecret(invalid) {
 			t.Fatalf("hexSecret(%q) = true", invalid)
 		}
+	}
+	if !hexSecret("aa") {
+		t.Fatal("hexSecret rejected minimum valid value")
 	}
 
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {
@@ -337,6 +366,43 @@ func TestRabbitStreamRuntimeHelpers(t *testing.T) {
 	cancel()
 	if _, err := httpRequest(canceled, http.MethodGet, server.URL+"/ok", nil, nil); !errors.Is(err, context.Canceled) {
 		t.Fatalf("httpRequest(canceled) error = %v", err)
+	}
+}
+
+func TestHTTPRequestAcceptsExactBodyLimit(t *testing.T) {
+	for _, size := range []int{maximumHTTPBody, maximumHTTPBody + 1} {
+		server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, _ *http.Request) {
+			_, _ = io.WriteString(response, strings.Repeat("x", size))
+		}))
+		_, err := httpRequest(context.Background(), http.MethodGet, server.URL, nil, nil)
+		server.Close()
+		if size == maximumHTTPBody && err != nil {
+			t.Fatalf("exact limit: %v", err)
+		}
+		if size > maximumHTTPBody && err == nil {
+			t.Fatal("accepted oversized body")
+		}
+	}
+}
+
+func TestDrainHTTPBodyReportsReadFailure(t *testing.T) {
+	if err := drainHTTPBody(failingReader{}); err == nil {
+		t.Fatal("drainHTTPBody error = nil")
+	}
+}
+
+func TestHTTPRequestFactoryRejectsEveryInvalidResult(t *testing.T) {
+	failure := errors.New("factory failure")
+	for _, create := range []func(context.Context, string, string, io.Reader) (*http.Request, error){
+		func(context.Context, string, string, io.Reader) (*http.Request, error) { return nil, failure },
+		func(context.Context, string, string, io.Reader) (*http.Request, error) {
+			return &http.Request{}, failure
+		},
+		func(context.Context, string, string, io.Reader) (*http.Request, error) { return nil, nil },
+	} {
+		if _, err := httpRequestWithFactory(context.Background(), http.MethodGet, "http://example", nil, nil, create); err == nil {
+			t.Fatal("accepted invalid request factory result")
+		}
 	}
 }
 

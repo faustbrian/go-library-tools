@@ -149,7 +149,10 @@ func detailedReason(name, reason string) error {
 // Approve verifies the complete old checkpoint identity and, when necessary,
 // its exact replacement input identity.
 func (ledger MigrationLedger) Approve(checkpoint Checkpoint, currentInput, expectedVerifier string) error {
-	if !digestRE.MatchString(currentInput) || !digestRE.MatchString(expectedVerifier) {
+	if !digestRE.MatchString(currentInput) {
+		return fmt.Errorf("%w: requested identity is malformed", ErrUnapproved)
+	}
+	if !digestRE.MatchString(expectedVerifier) {
 		return fmt.Errorf("%w: requested identity is malformed", ErrUnapproved)
 	}
 	inputs := append([]string{checkpoint.InputDigest}, checkpoint.InputLineage...)

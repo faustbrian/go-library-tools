@@ -86,7 +86,10 @@ func read(root, relative string, maximum int64, files fileSystem) ([]byte, error
 	if err != nil {
 		return nil, fmt.Errorf("inspect open %s: %w", relative, err)
 	}
-	if !opened.Mode().IsRegular() || !os.SameFile(expected, opened) {
+	if !opened.Mode().IsRegular() {
+		return nil, fmt.Errorf("%w: %s changed while opening", ErrUnsafePath, relative)
+	}
+	if !os.SameFile(expected, opened) {
 		return nil, fmt.Errorf("%w: %s changed while opening", ErrUnsafePath, relative)
 	}
 

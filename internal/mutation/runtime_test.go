@@ -28,3 +28,33 @@ func TestParseRuntimeIdentityRejectsUntrustedOutput(t *testing.T) {
 		}
 	}
 }
+
+func TestParseRuntimeIdentityRequiresEveryFieldIndependently(t *testing.T) {
+	fields := []string{"GOVERSION", "GOOS", "GOARCH", "CGO_ENABLED"}
+	for _, missing := range fields {
+		t.Run(missing, func(t *testing.T) {
+			values := map[string]string{"GOVERSION": "go1.27.0", "GOOS": "linux", "GOARCH": "amd64", "CGO_ENABLED": "0"}
+			values[missing] = ""
+			input := `{"GOVERSION":"` + values["GOVERSION"] + `","GOOS":"` + values["GOOS"] + `","GOARCH":"` + values["GOARCH"] + `","CGO_ENABLED":"` + values["CGO_ENABLED"] + `"}`
+			if _, err := mutation.ParseRuntimeIdentity(strings.NewReader(input)); !errors.Is(err, mutation.ErrInvalid) {
+				t.Fatalf("ParseRuntimeIdentity() error = %v", err)
+			}
+		})
+	}
+}
+
+func TestParseRuntimeIdentityAcceptsExactSizeLimit(t *testing.T) {
+	input := []byte(`{"GOVERSION":"go1.27.0","GOOS":"linux","GOARCH":"amd64","CGO_ENABLED":"0"}`)
+	input = append(input, []byte(strings.Repeat(" ", (16<<10)-len(input)))...)
+	if _, err := mutation.ParseRuntimeIdentity(strings.NewReader(string(input))); err != nil {
+		t.Fatalf("ParseRuntimeIdentity() error = %v", err)
+	}
+}
+
+func TestParseRuntimeIdentityRequiresFinalByteAtSizeLimit(t *testing.T) {
+	prefix := `{"GOVERSION":"go1.27.0","GOOS":"linux","GOARCH":"amd64","CGO_ENABLED":"0"`
+	input := prefix + strings.Repeat(" ", (16<<10)-len(prefix)-1) + `}`
+	if _, err := mutation.ParseRuntimeIdentity(strings.NewReader(input)); err != nil {
+		t.Fatal(err)
+	}
+}

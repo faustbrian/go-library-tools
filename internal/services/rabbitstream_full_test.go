@@ -169,6 +169,23 @@ func TestFullRabbitStreamValidatesWorkspaceAndCredentials(t *testing.T) {
 	}
 }
 
+func TestRabbitStreamCredentialsRejectEachSharedField(t *testing.T) {
+	secret := func(size int) (string, error) { return strings.Repeat("a", size*2), nil }
+	validUser := "rabbitstream-" + strings.Repeat("a", 16)
+	validPassword := strings.Repeat("b", 48)
+	for name, values := range map[string][2]string{
+		"prefix": {strings.Repeat("a", 16), validPassword}, "user length": {"rabbitstream-aa", validPassword},
+		"user hex": {"rabbitstream-zzzzzzzzzzzzzzzz", validPassword}, "password length": {validUser, "bb"},
+		"password hex": {validUser, strings.Repeat("z", 48)},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := newRabbitStreamCredentials(secret, values[0], values[1]); err == nil {
+				t.Fatal("accepted malformed credentials")
+			}
+		})
+	}
+}
+
 func TestFullRabbitStreamUsesDefaultProxyClient(t *testing.T) {
 	requests := 0
 	server := httptest.NewServer(http.HandlerFunc(func(response http.ResponseWriter, request *http.Request) {

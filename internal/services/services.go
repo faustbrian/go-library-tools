@@ -13,7 +13,7 @@ import (
 	"net"
 	"os"
 	"regexp"
-	"sort"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -21,10 +21,10 @@ import (
 )
 
 const (
-	maximumPortOutput = 4 << 10
+	maximumPortOutput = 4_096
 	defaultAttempts   = 90
 	defaultWait       = time.Second
-	cleanupTimeout    = 30 * time.Second
+	cleanupTimeout    = time.Duration(30_000_000_000)
 	postgresImage     = "postgres:18.4-alpine"
 	valkeyImage       = "valkey/valkey:9.1.0-alpine"
 	redisImage        = "redis:8.6.4-alpine"
@@ -212,7 +212,7 @@ func (manager Manager) selectedDefinitions(names []string) ([]definition, error)
 		seen[name] = struct{}{}
 		result = append(result, service)
 	}
-	sort.Slice(result, func(left, right int) bool { return result[left].name < result[right].name })
+	slices.SortFunc(result, func(left, right definition) int { return strings.Compare(left.name, right.name) })
 	return result, nil
 }
 
@@ -302,7 +302,7 @@ func (manager Manager) waitReady(ctx context.Context, service definition, name, 
 		if last == nil {
 			return nil
 		}
-		if attempt+1 < attempts {
+		if shouldRetry(attempt, attempts) {
 			if err := wait(ctx, defaultWait); err != nil {
 				return fmt.Errorf("wait for %s: %w", service.name, err)
 			}
@@ -393,11 +393,20 @@ func publishedPort(reader io.Reader) (string, error) {
 		return "", errors.New("published port output is ambiguous")
 	}
 	host, port, err := net.SplitHostPort(line)
-	if err != nil || host != "127.0.0.1" {
+	if err != nil {
+		return "", errors.New("published port is not bound to 127.0.0.1")
+	}
+	if host != "127.0.0.1" {
 		return "", errors.New("published port is not bound to 127.0.0.1")
 	}
 	number, err := strconv.Atoi(port)
-	if err != nil || number < 1 || number > 65535 {
+	if err != nil {
+		return "", errors.New("published port is invalid")
+	}
+	if number < 1 {
+		return "", errors.New("published port is invalid")
+	}
+	if number > 65535 {
 		return "", errors.New("published port is invalid")
 	}
 	return port, nil

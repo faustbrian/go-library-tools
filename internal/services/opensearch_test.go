@@ -31,6 +31,18 @@ func TestParseOpenSearchImagesAcceptsStrictDigestLock(t *testing.T) {
 	}
 }
 
+func TestParseOpenSearchImagesAcceptsExactSizeLimit(t *testing.T) {
+	base := strings.TrimSuffix(validOpenSearchLock, "\n")
+	extra := maximumOpenSearchLock - len(base)
+	body := strings.Replace(base, "opensearchproject/opensearch", strings.Repeat("a", len("opensearchproject/opensearch")+extra), 1)
+	if len(body) != maximumOpenSearchLock {
+		t.Fatalf("fixture size = %d", len(body))
+	}
+	if _, err := ParseOpenSearchImages(strings.NewReader(body)); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestParseOpenSearchImagesRejectsUntrustedLocks(t *testing.T) {
 	digest := "sha256:" + strings.Repeat("a", 64)
 	base := "opensearch_image_repository='repo/name'\nopensearch_old_version='1.0.0'\nopensearch_old_digest='" + digest + "'\nopensearch_new_version='2.0.0'\nopensearch_new_digest='sha256:" + strings.Repeat("b", 64) + "'\n"
@@ -154,6 +166,18 @@ func TestHTTPProbeAcceptsSuccessAndRejectsFailure(t *testing.T) {
 	definition := definition{name: "opensearch", requiresHTTP: true}
 	if err := (Manager{Process: (&fakeBackend{}).run, Attempts: 1}).waitReady(context.Background(), definition, "container", parsed.Port()); err != nil {
 		t.Fatalf("waitReady(default HTTP) error = %v", err)
+	}
+}
+
+func TestHTTPProbeStatusBoundaries(t *testing.T) {
+	for _, status := range []int{199, 200, 299, 300} {
+		err := validateHTTPStatus(status)
+		if status >= 200 && status < 300 && err != nil {
+			t.Fatalf("status %d: %v", status, err)
+		}
+		if (status < 200 || status >= 300) && err == nil {
+			t.Fatalf("status %d accepted", status)
+		}
 	}
 }
 

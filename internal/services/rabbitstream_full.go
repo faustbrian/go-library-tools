@@ -27,7 +27,8 @@ type rabbitStreamTopology struct {
 }
 
 func startRabbitStream(ctx context.Context, manager Manager, lease *Lease, token string) error {
-	if manager.Workspace == "" || !filepath.IsAbs(manager.Workspace) {
+	workspaceValid := [2]bool{manager.Workspace != "", filepath.IsAbs(manager.Workspace)}
+	if workspaceValid != [2]bool{true, true} {
 		return errors.New("RabbitMQ Streams requires an absolute task workspace")
 	}
 	if err := startRabbitStreamStandalone(ctx, manager, lease, token+"single"); err != nil {
@@ -118,7 +119,8 @@ type rabbitStreamCredentials struct {
 
 func newRabbitStreamCredentials(secret Secret, user, password string) (rabbitStreamCredentials, error) {
 	userSecret := strings.TrimPrefix(user, "rabbitstream-")
-	if userSecret == user || len(userSecret) != 16 || !hexSecret(userSecret) || len(password) != 48 || !hexSecret(password) {
+	valid := [5]bool{userSecret != user, len(userSecret) == 16, hexSecret(userSecret), len(password) == 48, hexSecret(password)}
+	if valid != [5]bool{true, true, true, true, true} {
 		return rabbitStreamCredentials{}, errors.New("RabbitMQ Streams shared credentials are malformed")
 	}
 	sizes := []int{32, 8, 24}

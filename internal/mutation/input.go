@@ -9,6 +9,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -92,9 +93,12 @@ func InputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 		return "", err
 	}
 	if review != nil {
-		if err := review.validate(); err != nil || review.ModuleDirectory != policy.ModuleDirectory ||
-			review.PackageDirectory != policy.PackageDirectory || review.GremlinsVersion != GremlinsVersion ||
-			review.GremlinsVerifierSHA256 != LegacyVerifierDigest() {
+		if err := review.validate(); err != nil {
+			return "", fmt.Errorf("%w: zero-mutant review does not match input policy", ErrInvalid)
+		}
+		actual := [4]string{review.ModuleDirectory, review.PackageDirectory, review.GremlinsVersion, review.GremlinsVerifierSHA256}
+		expected := [4]string{policy.ModuleDirectory, policy.PackageDirectory, GremlinsVersion, LegacyVerifierDigest()}
+		if actual != expected {
 			return "", fmt.Errorf("%w: zero-mutant review does not match input policy", ErrInvalid)
 		}
 	}
@@ -129,7 +133,10 @@ func InputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 		if canonicalImport == target+".test" {
 			continue
 		}
-		observer := canonicalImport == target || pkg.ForTest == target
+		observer := canonicalImport == target
+		if pkg.ForTest == target {
+			observer = true
+		}
 		if canonicalImport == target {
 			observedTarget = true
 		}
@@ -167,7 +174,7 @@ func InputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 	for _, identity := range modules {
 		moduleList = append(moduleList, identity)
 	}
-	sort.Slice(moduleList, func(left, right int) bool { return moduleList[left].Path < moduleList[right].Path })
+	slices.SortFunc(moduleList, func(left, right moduleIdentity) int { return strings.Compare(left.Path, right.Path) })
 	semantic := struct {
 		Policy   InputPolicy      `json:"policy"`
 		Modules  []moduleIdentity `json:"modules"`
@@ -179,7 +186,8 @@ func InputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 }
 
 func (policy InputPolicy) validate() error {
-	if policy.ModulePath == "" || policy.GoVersion == "" || !validRelative(policy.ModuleDirectory) || !validRelative(policy.PackageDirectory) {
+	identity := [4]bool{policy.ModulePath != "", policy.GoVersion != "", validRelative(policy.ModuleDirectory), validRelative(policy.PackageDirectory)}
+	if identity != [4]bool{true, true, true, true} {
 		return fmt.Errorf("%w: mutation input policy identity is malformed", ErrInvalid)
 	}
 	seen := map[string]struct{}{policy.ModulePath: {}}
@@ -187,7 +195,8 @@ func (policy InputPolicy) validate() error {
 	for _, service := range policy.RequiredServices {
 		identity, identified := policy.ServiceIdentities[service]
 		_, duplicate := services[service]
-		if service == "" || identity == "" || !identified || duplicate || strings.ContainsAny(service+identity, "\x00\r\n") {
+		valid := [5]bool{service != "", identity != "", identified, !duplicate, !strings.ContainsAny(service+identity, "\x00\r\n")}
+		if valid != [5]bool{true, true, true, true, true} {
 			return fmt.Errorf("%w: required service identity is malformed", ErrInvalid)
 		}
 		services[service] = struct{}{}
@@ -196,7 +205,10 @@ func (policy InputPolicy) validate() error {
 		return fmt.Errorf("%w: service identities must exactly match required services", ErrInvalid)
 	}
 	for _, owned := range policy.OwnedModules {
-		if owned.ModulePath == "" || !validRelative(owned.Directory) {
+		if owned.ModulePath == "" {
+			return fmt.Errorf("%w: owned module identity is malformed", ErrInvalid)
+		}
+		if !validRelative(owned.Directory) {
 			return fmt.Errorf("%w: owned module identity is malformed", ErrInvalid)
 		}
 		if _, exists := seen[owned.ModulePath]; exists {
@@ -212,9 +224,7 @@ func (policy InputPolicy) canonical() InputPolicy {
 	policy.BuildTags = sortedCopy(policy.BuildTags)
 	policy.RequiredServices = sortedCopy(policy.RequiredServices)
 	policy.OwnedModules = append([]OwnedModule(nil), policy.OwnedModules...)
-	sort.Slice(policy.OwnedModules, func(left, right int) bool {
-		return policy.OwnedModules[left].ModulePath < policy.OwnedModules[right].ModulePath
-	})
+	slices.SortFunc(policy.OwnedModules, func(left, right OwnedModule) int { return strings.Compare(left.ModulePath, right.ModulePath) })
 	return policy
 }
 
@@ -244,16 +254,15 @@ func parseListing(reader io.Reader) ([]listedPackage, error) {
 	for {
 		var pkg listedPackage
 		if err := decoder.Decode(&pkg); errors.Is(err, io.EOF) {
-			break
+			if len(packages) == 0 {
+				return nil, fmt.Errorf("%w: go list output is empty", ErrInvalid)
+			}
+			return packages, nil
 		} else if err != nil {
 			return nil, fmt.Errorf("%w: decode go list output: %v", ErrInvalid, err)
 		}
 		packages = append(packages, pkg)
 	}
-	if len(packages) == 0 {
-		return nil, fmt.Errorf("%w: go list output is empty", ErrInvalid)
-	}
-	return packages, nil
 }
 
 func productionFiles(pkg listedPackage) []string {
@@ -281,7 +290,13 @@ func resolveOwnedRoot(root string, pkg listedPackage, owned []OwnedModule) (Owne
 
 func isWithin(root, candidate string) bool {
 	relative, err := filepath.Rel(root, candidate)
-	return err == nil && relative != ".." && !strings.HasPrefix(relative, ".."+string(filepath.Separator))
+	if err != nil {
+		return false
+	}
+	if relative == ".." {
+		return false
+	}
+	return !strings.HasPrefix(relative, ".."+string(filepath.Separator))
 }
 
 func addInputFile(root string, owned OwnedModule, directory, name string, content map[string][]byte, total *int) error {
@@ -307,8 +322,11 @@ func addContent(content map[string][]byte, key string, data []byte, total *int) 
 	if _, exists := content[key]; exists {
 		return nil
 	}
+	if len(content) >= maximumInputFiles {
+		return fmt.Errorf("%w: mutation input exceeds content bounds", ErrInvalid)
+	}
 	*total += len(data)
-	if *total > maximumInputTotal || len(content) >= maximumInputFiles {
+	if *total > maximumInputTotal {
 		return fmt.Errorf("%w: mutation input exceeds content bounds", ErrInvalid)
 	}
 	content[key] = data
@@ -323,7 +341,10 @@ func addDataDirectory(root string, owned OwnedModule, directory string, content 
 	if err != nil {
 		return fmt.Errorf("inspect mutation data directory: %w", err)
 	}
-	if info.Mode()&os.ModeSymlink != 0 || !info.IsDir() {
+	if info.Mode()&os.ModeSymlink != 0 {
+		return fmt.Errorf("%w: mutation data path is not a real directory: %s", ErrInvalid, directory)
+	}
+	if !info.IsDir() {
 		return fmt.Errorf("%w: mutation data path is not a real directory: %s", ErrInvalid, directory)
 	}
 	return filepath.WalkDir(directory, func(path string, entry fs.DirEntry, walkErr error) error {

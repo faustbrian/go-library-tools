@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 	"testing"
@@ -29,6 +30,18 @@ func TestReadBootstrapRejectsInvalidArchiveStructure(t *testing.T) {
 		_, err := ReadBootstrap(bytes.NewReader(archive), int64(len(archive)))
 		assertInvalidContains(t, err, "entry count")
 	})
+}
+
+func TestReadBootstrapAcceptsMaximumEntryCountGate(t *testing.T) {
+	headers := make([]zip.FileHeader, maximumCheckpointCount)
+	for index := range headers {
+		headers[index].Name = fmt.Sprintf("mutation-checkpoints/%04d.json", index)
+	}
+	archive := archiveWithHeaders(t, headers)
+	_, err := ReadBootstrap(bytes.NewReader(archive), int64(len(archive)))
+	if err == nil || strings.Contains(err.Error(), "entry count") {
+		t.Fatalf("ReadBootstrap(max entries) error = %v", err)
+	}
 }
 
 func TestValidateArchiveEntryRejectsInvalidMetadata(t *testing.T) {
@@ -82,6 +95,12 @@ func TestExpandedArchiveAccountingIsBounded(t *testing.T) {
 			t.Fatalf("addExpanded(%d, %d) error = %v", values[0], values[1], err)
 		}
 	}
+	if total, err := addExpanded(maximumExpandedSize, 0); err != nil || total != maximumExpandedSize {
+		t.Fatalf("addExpanded(exact maximum) = %d, %v", total, err)
+	}
+	if total, err := addExpanded(0, maximumExpandedSize); err != nil || total != maximumExpandedSize {
+		t.Fatalf("addExpanded(exact size) = %d, %v", total, err)
+	}
 }
 
 func TestReadBootstrapRejectsExcessiveExpandedArchive(t *testing.T) {
@@ -120,12 +139,46 @@ func TestReadCheckpointRejectsOpenReadAndSizeFailures(t *testing.T) {
 	assertInvalidContains(t, err, "size mismatch")
 }
 
+func TestReadCheckpointAcceptsExactMaximumSize(t *testing.T) {
+	prefix := strings.TrimSuffix(validCheckpointJSON(), `}`)
+	data := prefix + strings.Repeat(" ", maximumCheckpointSize-len(prefix)-1) + `}`
+	checkpoint, err := readCheckpoint(maximumCheckpointSize, func() (io.ReadCloser, error) { return io.NopCloser(strings.NewReader(data)), nil })
+	if err != nil || checkpoint.Mutants != 1 {
+		t.Fatalf("readCheckpoint(exact maximum) = %#v, %v", checkpoint, err)
+	}
+}
+
 func TestValidateReportRejectsReadAndSizeFailures(t *testing.T) {
 	if _, err := ValidateReport(failingReader{}); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("ValidateReport(read failure) error = %v", err)
 	}
 	if _, err := ValidateReport(strings.NewReader(strings.Repeat("x", maximumCheckpointSize+1))); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("ValidateReport(oversized) error = %v", err)
+	}
+}
+
+func TestValidateReportAcceptsExactMaximumSize(t *testing.T) {
+	prefix := `{"files":[]`
+	data := prefix + strings.Repeat(" ", maximumCheckpointSize-len(prefix)-1) + `}`
+	if _, err := ValidateReport(strings.NewReader(data)); err != nil {
+		t.Fatalf("ValidateReport(exact maximum) error = %v", err)
+	}
+}
+
+func TestReadBootstrapRejectsInvalidDeclaredSizes(t *testing.T) {
+	for _, size := range []int64{-1, 0, MaximumArchiveSize + 1} {
+		_, err := ReadBootstrap(bytes.NewReader(nil), size)
+		assertInvalidContains(t, err, "archive size")
+	}
+	_, err := ReadBootstrap(bytes.NewReader(make([]byte, MaximumArchiveSize)), MaximumArchiveSize)
+	assertInvalidContains(t, err, "open archive")
+}
+
+func TestArchiveEntryAcceptsExactSizeAndCompressionRatio(t *testing.T) {
+	for _, header := range []zip.FileHeader{sizedHeader(maximumCheckpointSize, maximumCheckpointSize), sizedHeader(maximumCompressionRatio, 1)} {
+		if err := validateArchiveEntry(&zip.File{FileHeader: header}); err != nil {
+			t.Fatalf("validateArchiveEntry(exact boundary) error = %v", err)
+		}
 	}
 }
 
@@ -171,6 +224,26 @@ func TestParseCheckpointRejectsMalformedContracts(t *testing.T) {
 			report["test_efficacy"] = 0
 		}, want: "aggregate counters do not prove"},
 	}
+	for field, invalid := range map[string]any{
+		"mutants_killed": 0, "mutants_lived": 1, "mutants_not_covered": 1,
+		"mutants_not_viable": 1, "mutants_total": 0, "mutations_coverage": 99, "test_efficacy": 99,
+	} {
+		field, invalid := field, invalid
+		tests["counter "+field] = struct {
+			mutate func(map[string]any)
+			want   string
+		}{mutate: func(value map[string]any) {
+			report := reportOf(value)
+			report["mutants_killed"] = 1
+			report["mutants_lived"] = 0
+			report["mutants_not_covered"] = 0
+			report["mutants_not_viable"] = 0
+			report["mutants_total"] = 1
+			report["mutations_coverage"] = 100
+			report["test_efficacy"] = 100
+			report[field] = invalid
+		}, want: "aggregate counters do not prove"}
+	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			value := cloneMap(t, valid)
@@ -210,6 +283,14 @@ func TestDecodeStrictRejectsMultipleValuesAndTrailingSyntax(t *testing.T) {
 		if !errors.Is(err, ErrInvalid) {
 			t.Fatalf("parseCheckpoint() error = %v, want ErrInvalid", err)
 		}
+	}
+}
+
+func TestDecodeStrictDistinguishesMultipleValuesFromTrailingSyntax(t *testing.T) {
+	_, multiple := parseCheckpoint([]byte(validCheckpointJSON() + `{}`))
+	_, trailing := parseCheckpoint([]byte(validCheckpointJSON() + `{`))
+	if !strings.Contains(multiple.Error(), "multiple JSON values") || !strings.Contains(trailing.Error(), "trailing data") {
+		t.Fatalf("errors = %v / %v", multiple, trailing)
 	}
 }
 

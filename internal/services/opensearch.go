@@ -10,7 +10,7 @@ import (
 	"strings"
 )
 
-const maximumOpenSearchLock = 16 << 10
+const maximumOpenSearchLock = 16_384
 
 var (
 	openSearchLineRE       = regexp.MustCompile(`^([a-z_]+)='([^']+)'$`)
@@ -131,8 +131,15 @@ func httpProbe(ctx context.Context, url string) error {
 		return err
 	}
 	defer response.Body.Close()
-	if response.StatusCode < 200 || response.StatusCode >= 300 {
-		return fmt.Errorf("OpenSearch readiness returned HTTP %d", response.StatusCode)
+	return validateHTTPStatus(response.StatusCode)
+}
+
+func validateHTTPStatus(status int) error {
+	if status < http.StatusOK {
+		return fmt.Errorf("OpenSearch readiness returned HTTP %d", status)
+	}
+	if status >= http.StatusMultipleChoices {
+		return fmt.Errorf("OpenSearch readiness returned HTTP %d", status)
 	}
 	return nil
 }

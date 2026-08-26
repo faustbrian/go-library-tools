@@ -13,7 +13,7 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"sort"
+	"slices"
 	"strings"
 )
 
@@ -127,7 +127,7 @@ func ReadBootstrap(reader io.ReaderAt, size int64) ([]Checkpoint, error) {
 		return nil, fmt.Errorf("%w: archive contains an invalid entry count", ErrInvalid)
 	}
 	files := append([]*zip.File(nil), archive.File...)
-	sort.Slice(files, func(left, right int) bool { return files[left].Name < files[right].Name })
+	slices.SortFunc(files, func(left, right *zip.File) int { return strings.Compare(left.Name, right.Name) })
 	seenNames := make(map[string]struct{}, len(files))
 	seenIdentities := make(map[string]struct{}, len(files))
 	checkpoints := make([]Checkpoint, 0, len(files))
@@ -299,11 +299,12 @@ func validateReportData(data []byte) (ReportResult, error) {
 	if metricCount != 0 && metricCount != len(metrics) {
 		return ReportResult{}, fmt.Errorf("%w: incomplete aggregate counters", ErrInvalid)
 	}
-	if metricCount > 0 && (*parsed.MutantsKilled != mutants || *parsed.MutantsLived != 0 ||
-		*parsed.MutantsNotCovered != 0 || *parsed.MutantsNotViable != 0 ||
-		*parsed.MutantsTotal != mutants || *parsed.MutationCoverage != 100 ||
-		*parsed.TestEfficacy != 100) {
-		return ReportResult{}, fmt.Errorf("%w: aggregate counters do not prove a complete kill", ErrInvalid)
+	if metricCount > 0 {
+		actual := [7]float64{float64(*parsed.MutantsKilled), float64(*parsed.MutantsLived), float64(*parsed.MutantsNotCovered), float64(*parsed.MutantsNotViable), float64(*parsed.MutantsTotal), *parsed.MutationCoverage, *parsed.TestEfficacy}
+		expected := [7]float64{float64(mutants), 0, 0, 0, float64(mutants), 100, 100}
+		if actual != expected {
+			return ReportResult{}, fmt.Errorf("%w: aggregate counters do not prove a complete kill", ErrInvalid)
+		}
 	}
 	return ReportResult{Digest: canonicalReportDigest(data), Mutants: mutants}, nil
 }

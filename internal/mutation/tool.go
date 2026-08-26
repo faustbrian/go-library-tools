@@ -34,8 +34,14 @@ type downloadMetadata struct {
 // Arguments returns the complete pinned Gremlins campaign contract.
 func Arguments(target, output, tags string, discover bool, workers int) ([]string, error) {
 	path := strings.TrimPrefix(target, "./")
-	if (target != "." && (!strings.HasPrefix(target, "./") || !validRelative(path))) ||
-		!filepath.IsAbs(output) || workers < 1 || workers > 64 || strings.ContainsAny(tags, "\x00\r\n") {
+	validTarget := target == "."
+	if strings.HasPrefix(target, "./") {
+		if validRelative(path) {
+			validTarget = true
+		}
+	}
+	valid := [5]bool{validTarget, filepath.IsAbs(output), workers >= 1, workers <= 64, !strings.ContainsAny(tags, "\x00\r\n")}
+	if valid != [5]bool{true, true, true, true, true} {
 		return nil, fmt.Errorf("%w: mutation command arguments are malformed", ErrInvalid)
 	}
 	arguments := []string{

@@ -31,6 +31,7 @@ func TestCampaignExecutesPersistsAndReusesPackageEvidence(t *testing.T) {
 		t.Fatal(err)
 	}
 	process := &campaignProcess{root: root, verifierSource: source}
+	process.requireTags = true
 	var output bytes.Buffer
 	campaign := Campaign{
 		Root: root, EvidenceRoot: filepath.Join(root, ".verification"),
@@ -82,11 +83,18 @@ type campaignProcess struct {
 	skipReport     bool
 	mutateSource   bool
 	afterMutation  func() error
+	requireTags    bool
 }
 
 func (process *campaignProcess) run(_ context.Context, name string, args []string, _ string, environment map[string]string, stdout, _ io.Writer) error {
 	switch {
 	case name == "go" && len(args) > 1 && args[0] == "list":
+		if containsArgument(args, "-tags=") {
+			return errors.New("empty list tags")
+		}
+		if process.requireTags && !containsArgument(args, "-tags=integration") {
+			return errors.New("missing list tags")
+		}
 		process.listCalls++
 		if process.fail == "list" || process.fail == "second-list" && process.listCalls > 1 {
 			return errors.New("list failed")
@@ -118,10 +126,16 @@ func (process *campaignProcess) run(_ context.Context, name string, args []strin
 		}
 		return os.WriteFile(args[4], []byte("verifier"), 0o700)
 	case name == "go" && args[0] == "test":
+		if process.requireTags && !containsArgument(args, "-tags=integration") {
+			return errors.New("missing test tags")
+		}
 		if process.fail == "coverage" {
 			return errors.New("coverage failed")
 		}
 		for _, argument := range args {
+			if argument == "-tags=" {
+				return errors.New("empty tags argument")
+			}
 			if strings.HasPrefix(argument, "-coverprofile=") {
 				return os.WriteFile(strings.TrimPrefix(argument, "-coverprofile="), []byte("mode: set\n"), 0o600)
 			}
@@ -157,4 +171,13 @@ func (process *campaignProcess) run(_ context.Context, name string, args []strin
 		}
 	}
 	return nil
+}
+
+func containsArgument(arguments []string, expected string) bool {
+	for _, argument := range arguments {
+		if argument == expected {
+			return true
+		}
+	}
+	return false
 }

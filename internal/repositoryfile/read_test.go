@@ -19,6 +19,18 @@ func TestReadReturnsBoundedRegularFile(t *testing.T) {
 	}
 }
 
+func TestReadRejectsNonPositiveLimitForEmptyFile(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "empty"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, limit := range []int64{0, -1} {
+		if _, err := repositoryfile.Read(root, "empty", limit); !errors.Is(err, repositoryfile.ErrTooLarge) {
+			t.Fatalf("Read(%d) = %v", limit, err)
+		}
+	}
+}
+
 func TestReadRejectsUnsafeAndInvalidFiles(t *testing.T) {
 	root := t.TempDir()
 	outside := filepath.Join(t.TempDir(), "outside")

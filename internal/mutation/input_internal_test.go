@@ -5,6 +5,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -12,6 +13,7 @@ import (
 
 func TestInputDigestRejectsInvalidInputs(t *testing.T) {
 	root := t.TempDir()
+	writeMutationInput(t, root, "other.go", "package other\n")
 	valid := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6"}
 	listing := func(files string) string {
 		return `{"Dir":"` + root + `","ImportPath":"example","GoFiles":` + files + `,"Module":{"Path":"example","Main":true}}`
@@ -21,13 +23,14 @@ func TestInputDigestRejectsInvalidInputs(t *testing.T) {
 		policy  InputPolicy
 		listing string
 	}{
-		"relative root":  {root: ".", policy: valid, listing: listing(`[]`)},
-		"bad policy":     {root: root, policy: InputPolicy{}, listing: listing(`[]`)},
-		"malformed list": {root: root, policy: valid, listing: "{"},
-		"missing target": {root: root, policy: valid, listing: `{"Dir":"/external","ImportPath":"external"}`},
-		"empty target":   {root: root, policy: valid, listing: listing(`[]`)},
-		"missing file":   {root: root, policy: valid, listing: listing(`["missing.go"]`)},
-		"escaping file":  {root: root, policy: valid, listing: listing(`["../outside.go"]`)},
+		"relative root":    {root: ".", policy: valid, listing: listing(`[]`)},
+		"bad policy":       {root: root, policy: InputPolicy{}, listing: listing(`[]`)},
+		"malformed list":   {root: root, policy: valid, listing: "{"},
+		"missing target":   {root: root, policy: valid, listing: `{"Dir":"/external","ImportPath":"external"}`},
+		"local non-target": {root: root, policy: valid, listing: `{"Dir":"` + root + `","ImportPath":"example/other","GoFiles":["other.go"],"Module":{"Path":"example","Main":true}}`},
+		"empty target":     {root: root, policy: valid, listing: listing(`[]`)},
+		"missing file":     {root: root, policy: valid, listing: listing(`["missing.go"]`)},
+		"escaping file":    {root: root, policy: valid, listing: listing(`["../outside.go"]`)},
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -83,12 +86,85 @@ func TestInputDigestIgnoresGeneratedTestExecutable(t *testing.T) {
 	}
 }
 
+func TestInputDigestContinuesPastIrrelevantPackages(t *testing.T) {
+	root := t.TempDir()
+	writeMutationInput(t, root, "target.go", "package example\n")
+	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.27.0"}
+	listing := strings.Join([]string{
+		`{"Dir":"/external","ImportPath":"external","GoFiles":["external.go"],"Module":{"Path":"external"}}`,
+		`{"Dir":"` + root + `","ImportPath":"example.test","GoFiles":["generated"],"Module":{"Path":"example","Main":true}}`,
+		`{"Dir":"` + root + `","ImportPath":"example/empty","GoFiles":[],"Module":{"Path":"example","Main":true}}`,
+		`{"Dir":"` + root + `","ImportPath":"example","GoFiles":["target.go"],"Module":{"Path":"example","Main":true}}`,
+	}, "\n")
+	if _, err := InputDigest(root, policy, strings.NewReader(listing), nil); err != nil {
+		t.Fatalf("InputDigest() error = %v", err)
+	}
+}
+
+func TestInputDigestIncludesExternalObserverTests(t *testing.T) {
+	root := t.TempDir()
+	writeMutationInput(t, root, "target.go", "package example\n")
+	writeMutationInput(t, root, "external_test.go", "package example_test\n")
+	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.27.0"}
+	listing := strings.Join([]string{
+		`{"Dir":"` + root + `","ImportPath":"example","GoFiles":["target.go"],"Module":{"Path":"example","Main":true}}`,
+		`{"Dir":"` + root + `","ImportPath":"example_test [example.test]","ForTest":"example","GoFiles":[],"XTestGoFiles":["external_test.go"],"Module":{"Path":"example","Main":true}}`,
+	}, "\n")
+	withTest, err := InputDigest(root, policy, strings.NewReader(listing), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeMutationInput(t, root, "external_test.go", "package example_test\n// changed\n")
+	changed, err := InputDigest(root, policy, strings.NewReader(listing), nil)
+	if err != nil || withTest == changed {
+		t.Fatalf("observer digest did not change: %v", err)
+	}
+}
+
+func TestInputDigestIncludesTargetTests(t *testing.T) {
+	root := t.TempDir()
+	writeMutationInput(t, root, "target.go", "package example\n")
+	writeMutationInput(t, root, "target_test.go", "package example\n")
+	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.27.0"}
+	listing := `{"Dir":"` + root + `","ImportPath":"example","GoFiles":["target.go"],"TestGoFiles":["target_test.go"],"Module":{"Path":"example","Main":true}}`
+	before, err := InputDigest(root, policy, strings.NewReader(listing), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeMutationInput(t, root, "target_test.go", "package example\n// changed\n")
+	after, err := InputDigest(root, policy, strings.NewReader(listing), nil)
+	if err != nil || before == after {
+		t.Fatalf("target test digest unchanged: %v", err)
+	}
+}
+
 func TestInputDigestRejectsMismatchedZeroReview(t *testing.T) {
 	root := t.TempDir()
 	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6"}
 	review := &ZeroReview{ModuleDirectory: ".", PackageDirectory: "other"}
 	if _, err := InputDigest(root, policy, strings.NewReader(`{}`), review); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("InputDigest() error = %v", err)
+	}
+}
+
+func TestInputDigestRejectsEveryMismatchedZeroReviewField(t *testing.T) {
+	root := t.TempDir()
+	valid := ZeroReview{ModuleDirectory: ".", PackageDirectory: ".", SourceDigest: strings.Repeat("a", 64), GremlinsVersion: GremlinsVersion, GremlinsVerifierSHA256: LegacyVerifierDigest(), Reason: strings.Repeat("r", 40)}
+	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6"}
+	for name, mutate := range map[string]func(*ZeroReview){
+		"invalid review": func(value *ZeroReview) { value.Reason = "short" },
+		"module":         func(value *ZeroReview) { value.ModuleDirectory = "other" },
+		"package":        func(value *ZeroReview) { value.PackageDirectory = "other" },
+		"version":        func(value *ZeroReview) { value.GremlinsVersion = "v9.9.9" },
+		"verifier":       func(value *ZeroReview) { value.GremlinsVerifierSHA256 = strings.Repeat("b", 64) },
+	} {
+		t.Run(name, func(t *testing.T) {
+			review := valid
+			mutate(&review)
+			if _, err := InputDigest(root, policy, strings.NewReader(`{}`), &review); !errors.Is(err, ErrInvalid) {
+				t.Fatalf("InputDigest() error = %v", err)
+			}
+		})
 	}
 }
 
@@ -108,6 +184,7 @@ func TestInputPolicyValidationAndCanonicalization(t *testing.T) {
 	}
 	for _, policy := range []InputPolicy{
 		{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6", OwnedModules: []OwnedModule{{}}},
+		{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6", OwnedModules: []OwnedModule{{ModulePath: "example/other", Directory: "../outside"}}},
 		{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6", OwnedModules: []OwnedModule{{ModulePath: "example", Directory: "nested"}}},
 		{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6", RequiredServices: []string{"postgresql"}},
 		{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6", ServiceIdentities: map[string]string{"postgresql": "postgres:18"}},
@@ -115,6 +192,24 @@ func TestInputPolicyValidationAndCanonicalization(t *testing.T) {
 		if err := policy.validate(); !errors.Is(err, ErrInvalid) {
 			t.Fatalf("validate() error = %v", err)
 		}
+	}
+}
+
+func TestInputPolicyRejectsEachMalformedField(t *testing.T) {
+	valid := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6"}
+	for name, mutate := range map[string]func(*InputPolicy){
+		"module path":       func(value *InputPolicy) { value.ModulePath = "" },
+		"go version":        func(value *InputPolicy) { value.GoVersion = "" },
+		"module directory":  func(value *InputPolicy) { value.ModuleDirectory = "../x" },
+		"package directory": func(value *InputPolicy) { value.PackageDirectory = "../x" },
+	} {
+		t.Run(name, func(t *testing.T) {
+			policy := valid
+			mutate(&policy)
+			if err := policy.validate(); !errors.Is(err, ErrInvalid) {
+				t.Fatalf("validate() error = %v", err)
+			}
+		})
 	}
 }
 
@@ -127,6 +222,15 @@ func TestParseListingBoundsAndFailures(t *testing.T) {
 	}
 	if _, err := parseListing(strings.NewReader("")); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("parseListing(empty) error = %v", err)
+	}
+}
+
+func TestParseListingAcceptsExactMaximumSize(t *testing.T) {
+	prefix := `{"Dir":"/tmp"`
+	data := prefix + strings.Repeat(" ", maximumListSize-len(prefix)-1) + `}`
+	packages, err := parseListing(strings.NewReader(data))
+	if err != nil || len(packages) != 1 {
+		t.Fatalf("parseListing(exact maximum) = %d, %v", len(packages), err)
 	}
 }
 
@@ -158,6 +262,18 @@ func TestOwnedRootResolution(t *testing.T) {
 	}
 }
 
+func TestIsWithinRejectsInvalidAndParentPaths(t *testing.T) {
+	root := t.TempDir()
+	for _, candidate := range []string{string([]byte{'x', 0}), filepath.Dir(root), filepath.Join(filepath.Dir(root), "sibling", "file")} {
+		if isWithin(root, candidate) {
+			t.Fatalf("isWithin(%q) = true", candidate)
+		}
+	}
+	if !isWithin(root, root) || !isWithin(root, filepath.Join(root, "child")) {
+		t.Fatal("isWithin rejected owned path")
+	}
+}
+
 func TestAddInputContentAndDataFailures(t *testing.T) {
 	content := map[string][]byte{"existing": nil}
 	total := 0
@@ -168,6 +284,14 @@ func TestAddInputContentAndDataFailures(t *testing.T) {
 	if err := addContent(content, "new", []byte("x"), &total); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("addContent(bound) error = %v", err)
 	}
+	full := make(map[string][]byte, maximumInputFiles)
+	for index := range maximumInputFiles {
+		full[strconv.Itoa(index)] = nil
+	}
+	total = 0
+	if err := addContent(full, "overflow", nil, &total); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("addContent(file count) = %v", err)
+	}
 	root := t.TempDir()
 	owned := OwnedModule{ModulePath: "example", Directory: "."}
 	if err := addDataDirectory(root, owned, string([]byte{'x', 0}), content, &total); err == nil {
@@ -177,6 +301,23 @@ func TestAddInputContentAndDataFailures(t *testing.T) {
 	writeMutationInput(t, root, "testdata", "not a directory")
 	if err := addDataDirectory(root, owned, file, content, &total); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("addDataDirectory(file) error = %v", err)
+	}
+}
+
+func TestAddContentAcceptsExactBounds(t *testing.T) {
+	content := make(map[string][]byte, maximumInputFiles)
+	total := 0
+	for index := range maximumInputFiles {
+		data := []byte(nil)
+		if index == maximumInputFiles-1 {
+			data = make([]byte, maximumInputTotal)
+		}
+		if err := addContent(content, strconv.Itoa(index), data, &total); err != nil {
+			t.Fatalf("addContent(%d) error = %v", index, err)
+		}
+	}
+	if total != maximumInputTotal || len(content) != maximumInputFiles {
+		t.Fatalf("bounds = files %d, bytes %d", len(content), total)
 	}
 }
 

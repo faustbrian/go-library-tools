@@ -53,23 +53,39 @@ func TestReuseTreatsOnlyAbsentEvidenceAsMiss(t *testing.T) {
 }
 
 func TestReuseRejectsMismatchedEvidence(t *testing.T) {
-	root := t.TempDir()
-	evidenceRoot := filepath.Join(root, ".verification")
-	mutationRoot := filepath.Join(evidenceRoot, "mutation")
-	if err := os.MkdirAll(mutationRoot, 0o700); err != nil {
-		t.Fatal(err)
+	mutations := map[string]func(*evidence.Record){
+		"repository": func(record *evidence.Record) { record.Repository = "other" },
+		"module":     func(record *evidence.Record) { record.Module = "other" },
+		"package":    func(record *evidence.Record) { record.Package = "other" },
+		"result":     func(record *evidence.Record) { record.Result = "failed" },
+		"verifier":   func(record *evidence.Record) { record.VerifierDigest = "sha256:" + strings.Repeat("f", 64) },
 	}
-	digest := "sha256:" + strings.Repeat("c", 64)
-	record := evidence.Record{
-		SchemaVersion: evidence.SchemaVersion, Repository: "other", Module: ".", Gate: "mutation",
-		InputDigest: digest, VerifierDigest: mutation.SemanticVerifierDigest(), Result: "passed",
-		ReportDigest: "sha256:" + strings.Repeat("d", 64), CompletedAt: time.Unix(1, 0).UTC(),
-	}
-	if _, _, err := evidence.Store(evidenceRoot, record); err != nil {
-		t.Fatal(err)
-	}
-	if _, _, err := mutation.Reuse(evidenceRoot, mutationRoot, "example", ".", ".", digest); !errors.Is(err, mutation.ErrInvalid) {
-		t.Fatalf("Reuse(mismatch) error = %v", err)
+	for name, mutate := range mutations {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			evidenceRoot := filepath.Join(root, ".verification")
+			mutationRoot := filepath.Join(evidenceRoot, "mutation")
+			if err := os.MkdirAll(mutationRoot, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			digest := "sha256:" + strings.Repeat("c", 64)
+			_, _, result, err := mutation.StoreReport(mutationRoot, digest, []byte(`{"files":[]}`))
+			if err != nil {
+				t.Fatal(err)
+			}
+			record := evidence.Record{
+				SchemaVersion: evidence.SchemaVersion, Repository: "example", Module: ".", Package: ".", Gate: "mutation",
+				InputDigest: digest, VerifierDigest: mutation.SemanticVerifierDigest(), Result: "passed",
+				ReportDigest: result.Digest, CompletedAt: time.Unix(1, 0).UTC(),
+			}
+			mutate(&record)
+			if _, _, err := evidence.Store(evidenceRoot, record); err != nil {
+				t.Fatal(err)
+			}
+			if _, _, err := mutation.Reuse(evidenceRoot, mutationRoot, "example", ".", ".", digest); !errors.Is(err, mutation.ErrInvalid) {
+				t.Fatalf("Reuse(mismatch) error = %v", err)
+			}
+		})
 	}
 }
 

@@ -61,14 +61,19 @@ func checkLegacy(root string, lstat func(string) (os.FileInfo, error)) error {
 }
 
 func checkModule(root, repository string, module inventory.Module) error {
-	if module.Directory == "" || filepath.IsAbs(module.Directory) || strings.Contains(module.Directory, "\\") {
+	validDirectory := [3]bool{module.Directory != "", !filepath.IsAbs(module.Directory), !strings.Contains(module.Directory, "\\")}
+	if validDirectory != [3]bool{true, true, true} {
 		return fmt.Errorf("invalid module directory: %q", module.Directory)
 	}
 	clean := filepath.Clean(module.Directory)
 	if clean != module.Directory || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
 		return fmt.Errorf("invalid module directory: %q", module.Directory)
 	}
-	if module.ModulePath != repository && !strings.HasPrefix(module.ModulePath, repository+"/") {
+	inNamespace := module.ModulePath == repository
+	if strings.HasPrefix(module.ModulePath, repository+"/") {
+		inNamespace = true
+	}
+	if !inNamespace {
 		return fmt.Errorf("module %s is outside repository namespace %s", module.ModulePath, repository)
 	}
 	relative := filepath.Join(module.Directory, "go.mod")
@@ -113,14 +118,22 @@ func checkWorkspace(root, goVersion string, expected []string) error {
 	actual := make([]string, 0, len(parsed.Use))
 	for _, use := range parsed.Use {
 		path := filepath.Clean(filepath.FromSlash(use.Path))
-		if filepath.IsAbs(path) || path == ".." || strings.HasPrefix(path, ".."+string(filepath.Separator)) {
+		if filepath.IsAbs(path) {
+			return fmt.Errorf("go.work contains non-local module path: %s", use.Path)
+		}
+		if path == ".." {
+			return fmt.Errorf("go.work contains non-local module path: %s", use.Path)
+		}
+		if strings.HasPrefix(path, ".."+string(filepath.Separator)) {
 			return fmt.Errorf("go.work contains non-local module path: %s", use.Path)
 		}
 		actual = append(actual, path)
 	}
 	slices.Sort(actual)
-	if len(actual) == 1 && actual[0] == "." {
-		return errors.New("root-only go.work is not allowed")
+	if len(actual) == 1 {
+		if actual[0] == "." {
+			return errors.New("root-only go.work is not allowed")
+		}
 	}
 	if !slices.Equal(actual, expected) {
 		return fmt.Errorf("go.work modules %v do not match catalog %v", actual, expected)

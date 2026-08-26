@@ -2,6 +2,7 @@ package mutation
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -25,6 +26,21 @@ func TestArgumentsRejectMalformedInputs(t *testing.T) {
 	} {
 		if _, err := Arguments(input.target, input.output, input.tags, false, input.workers); !errors.Is(err, ErrInvalid) {
 			t.Fatalf("Arguments(%#v) error = %v", input, err)
+		}
+	}
+}
+
+func TestArgumentsAcceptExactWorkerAndTargetBoundaries(t *testing.T) {
+	for _, input := range []struct {
+		target  string
+		workers int
+	}{
+		{".", 1},
+		{"./adapter", 64},
+	} {
+		arguments, err := Arguments(input.target, "/tmp/report", "", false, input.workers)
+		if err != nil || arguments[1] != input.target {
+			t.Fatalf("Arguments(%#v) = %#v, %v", input, arguments, err)
 		}
 	}
 }
@@ -88,6 +104,23 @@ func TestBuildVerifierReportsEveryConstructionFailure(t *testing.T) {
 	}
 }
 
+func TestBuildVerifierRequiresEachPinnedChecksum(t *testing.T) {
+	source := t.TempDir()
+	if err := os.WriteFile(filepath.Join(source, "go.mod"), []byte("module example\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for name, metadata := range map[string]string{
+		"module": `{"Dir":"` + source + `","Sum":"bad","GoModSum":"` + gremlinsGoModSum + `"}`,
+		"go.mod": `{"Dir":"` + source + `","Sum":"` + gremlinsSum + `","GoModSum":"bad"}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := BuildVerifier(context.Background(), t.TempDir(), verifierProcess(metadata, "", false)); !errors.Is(err, ErrInvalid) {
+				t.Fatalf("BuildVerifier() error = %v", err)
+			}
+		})
+	}
+}
+
 func TestBuildVerifierBoundsDownloadMetadata(t *testing.T) {
 	process := func(_ context.Context, _ string, _ []string, _ string, _ map[string]string, stdout, _ io.Writer) error {
 		_, err := io.WriteString(stdout, strings.Repeat("x", maximumDownloadMetadataSize+1))
@@ -129,6 +162,22 @@ func TestHashVerifierAndBoundedBufferFailures(t *testing.T) {
 	}
 	if _, err := buffer.Write([]byte("d")); err == nil {
 		t.Fatal("boundedBuffer accepted oversized output")
+	}
+}
+
+func TestRequireJSONEndDistinguishesMultipleValues(t *testing.T) {
+	decoder := json.NewDecoder(strings.NewReader(`{} {}`))
+	var first any
+	_ = decoder.Decode(&first)
+	err := requireJSONEnd(decoder)
+	if err == nil || !strings.Contains(err.Error(), "multiple JSON values") {
+		t.Fatalf("requireJSONEnd() = %v", err)
+	}
+	decoder = json.NewDecoder(strings.NewReader(`{} {`))
+	_ = decoder.Decode(&first)
+	err = requireJSONEnd(decoder)
+	if err == nil || strings.Contains(err.Error(), "multiple JSON values") {
+		t.Fatalf("requireJSONEnd(trailing) = %v", err)
 	}
 }
 

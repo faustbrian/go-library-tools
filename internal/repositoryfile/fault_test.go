@@ -30,6 +30,7 @@ func TestReadReportsFileSystemRacesAndFailures(t *testing.T) {
 		{"open", fakeFileSystem{info: info, openErr: failure}, "open file"},
 		{"stat", fakeFileSystem{info: info, opened: &fakeFile{statErr: failure}}, "inspect open file"},
 		{"changed", fakeFileSystem{info: info, opened: &fakeFile{info: fakeInfo{name: "other"}}}, "changed while opening"},
+		{"nonregular", fakeFileSystem{info: info, opened: &fakeFile{info: fakeInfo{name: "other", mode: os.ModeDir}}}, "changed while opening"},
 		{"read", fakeFileSystem{info: info, opened: &fakeFile{info: info, readErr: failure}}, "read file"},
 	}
 	for _, test := range tests {
@@ -76,11 +77,17 @@ func (*fakeFile) Close() error {
 
 type fakeInfo struct {
 	name string
+	mode os.FileMode
 }
 
-func (fake fakeInfo) Name() string  { return fake.name }
-func (fakeInfo) Size() int64        { return 0 }
-func (fakeInfo) Mode() os.FileMode  { return 0o600 }
+func (fake fakeInfo) Name() string { return fake.name }
+func (fakeInfo) Size() int64       { return 0 }
+func (fake fakeInfo) Mode() os.FileMode {
+	if fake.mode != 0 {
+		return fake.mode
+	}
+	return 0o600
+}
 func (fakeInfo) ModTime() time.Time { return time.Time{} }
 func (fakeInfo) IsDir() bool        { return false }
 func (fakeInfo) Sys() any           { return nil }

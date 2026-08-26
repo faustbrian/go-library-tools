@@ -77,6 +77,9 @@ func TestManagerStartsGenericFixturesAndCleansExactContainers(t *testing.T) {
 	if !reflect.DeepEqual(removed, wantRemoved) {
 		t.Fatalf("removed = %#v, want %#v", removed, wantRemoved)
 	}
+	if !strings.Contains(strings.Join(backend.commands, "\n"), "nsqio/nsq:v1.3.0 /nsqd --broadcast-address=127.0.0.1") {
+		t.Fatal("NSQ daemon arguments missing")
+	}
 }
 
 func TestManagerValidatesCompleteRequestBeforeStarting(t *testing.T) {
@@ -191,7 +194,10 @@ func TestPublishedPortRejectsHostAndPortAmbiguity(t *testing.T) {
 	}{
 		{"127.0.0.1:49152\n", "49152", true},
 		{"127.0.0.1:0", "", false},
+		{"127.0.0.1:1", "1", true},
 		{"127.0.0.1:not-a-port", "", false},
+		{"127.0.0.1:65535", "65535", true},
+		{"127.0.0.1:65536", "", false},
 		{"", "", false},
 		{"0.0.0.0:49152", "", false},
 		{"127.0.0.1:49152\n127.0.0.1:49153", "", false},
@@ -207,6 +213,14 @@ func TestPublishedPortRejectsHostAndPortAmbiguity(t *testing.T) {
 	}
 	if _, err := publishedPort(failingReader{}); err == nil || !strings.Contains(err.Error(), "read published port") {
 		t.Fatalf("publishedPort(read failure) error = %v", err)
+	}
+}
+
+func TestPublishedPortAcceptsExactOutputLimit(t *testing.T) {
+	suffix := "127.0.0.1:49152"
+	value := strings.Repeat(" ", maximumPortOutput-len(suffix)) + suffix
+	if port, err := publishedPort(strings.NewReader(value)); err != nil || port != "49152" {
+		t.Fatalf("publishedPort(exact limit) = %q, %v", port, err)
 	}
 }
 
@@ -265,6 +279,10 @@ func TestReadinessDefaultsAndRuntimeHelpers(t *testing.T) {
 	var writer boundedWriter
 	if _, err := writer.Write([]byte("port")); err != nil {
 		t.Fatalf("boundedWriter.Write() error = %v", err)
+	}
+	var exact boundedWriter
+	if count, err := exact.Write([]byte(strings.Repeat("x", maximumPortOutput))); err != nil || count != maximumPortOutput {
+		t.Fatalf("exact Write = %d, %v", count, err)
 	}
 	if _, err := writer.Write([]byte(strings.Repeat("x", maximumPortOutput))); err == nil {
 		t.Fatal("boundedWriter.Write(overflow) error = nil")

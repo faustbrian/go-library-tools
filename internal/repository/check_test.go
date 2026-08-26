@@ -95,6 +95,9 @@ func TestCheckRejectsInvalidWorkspaces(t *testing.T) {
 		"malformed":        "go [",
 		"version mismatch": "go 1.26.0\nuse (\n.\n./nested\n)\n",
 		"non-local":        "go 1.27.0\nuse ../other\n",
+		"parent":           "go 1.27.0\nuse ..\n",
+		"absolute":         "go 1.27.0\nuse /tmp/other\n",
+		"nested non-local": "go 1.27.0\nuse ../other/nested\n",
 		"root only":        "go 1.27.0\nuse .\n",
 		"mismatch":         "go 1.27.0\nuse ./other\n",
 	}
