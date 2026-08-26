@@ -46,7 +46,7 @@ func startRabbitStreamStandalone(ctx context.Context, manager Manager, lease *Le
 		}
 	}
 
-	network := "golib-rabbitstream-" + token
+	network := "codex-rabbitstream-" + token
 	if err := manager.Process(ctx, "docker", []string{"network", "create", "--label", "golib.task=" + token, network}, nil, io.Discard, io.Discard); err != nil {
 		return fmt.Errorf("create RabbitMQ Streams network: %w", err)
 	}

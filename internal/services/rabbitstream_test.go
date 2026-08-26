@@ -36,7 +36,7 @@ func TestManagerStartsParallelSafeRabbitStreamStandalone(t *testing.T) {
 		"RABBITSTREAM_TEST_PORT":              "40001",
 		"RABBITSTREAM_TEST_USER":              "rabbitstream-aaaaaaaaaaaaaaaa",
 		"RABBITSTREAM_TEST_PASSWORD":          strings.Repeat("a", 48),
-		"RABBITSTREAM_TEST_RESTART_CONTAINER": "golib-rabbitstream-task-rabbit",
+		"RABBITSTREAM_TEST_RESTART_CONTAINER": "codex-rabbitstream-task-rabbit",
 		"RABBITSTREAM_TEST_PROXY_API":         "http://127.0.0.1:40002",
 		"RABBITSTREAM_TEST_PROXY_NAME":        "rabbitstream",
 	}
@@ -54,7 +54,7 @@ func TestManagerStartsParallelSafeRabbitStreamStandalone(t *testing.T) {
 	}
 	commands := strings.Join(backend.commands, "\n")
 	for _, expected := range []string{
-		"docker network create --label golib.task=task golib-rabbitstream-task",
+		"docker network create --label golib.task=task codex-rabbitstream-task",
 		"-p 127.0.0.1::15552 -p 127.0.0.1::8474",
 		"rabbitmq-plugins enable --offline rabbitmq_management rabbitmq_stream",
 	} {
@@ -70,7 +70,7 @@ func TestManagerStartsParallelSafeRabbitStreamStandalone(t *testing.T) {
 	}
 	credentialEnvironment := map[string]string(nil)
 	for index, command := range backend.commands {
-		if strings.Contains(command, "--name golib-rabbitstream-task-rabbit") {
+		if strings.Contains(command, "--name codex-rabbitstream-task-rabbit") {
 			credentialEnvironment = backend.environments[index]
 		}
 	}
@@ -82,9 +82,9 @@ func TestManagerStartsParallelSafeRabbitStreamStandalone(t *testing.T) {
 		t.Fatal(err)
 	}
 	wantTail := []string{
-		"docker rm --force golib-rabbitstream-task-rabbit",
-		"docker rm --force golib-rabbitstream-task-proxy",
-		"docker network rm golib-rabbitstream-task",
+		"docker rm --force codex-rabbitstream-task-rabbit",
+		"docker rm --force codex-rabbitstream-task-proxy",
+		"docker network rm codex-rabbitstream-task",
 	}
 	if got := backend.commands[len(backend.commands)-len(wantTail):]; !reflect.DeepEqual(got, wantTail) {
 		t.Fatalf("cleanup commands = %#v", got)
@@ -259,7 +259,7 @@ func TestRabbitStreamStandaloneCleansEveryPartialStart(t *testing.T) {
 			if _, err := manager.Start(context.Background(), []string{"rabbitstream-standalone"}); err == nil || !strings.Contains(err.Error(), test.want) {
 				t.Fatalf("Start() error = %v", err)
 			}
-			if test.name != "network" && !strings.Contains(strings.Join(backend.commands, "\n"), "docker network rm golib-rabbitstream-task") {
+			if test.name != "network" && !strings.Contains(strings.Join(backend.commands, "\n"), "docker network rm codex-rabbitstream-task") {
 				t.Fatalf("cleanup commands = %#v", backend.commands)
 			}
 		})
@@ -328,7 +328,7 @@ func TestRabbitStreamRuntimeHelpers(t *testing.T) {
 func TestLeaseCloseReportsNetworkCleanupFailure(t *testing.T) {
 	failure := errors.New("network cleanup failed")
 	lease := &Lease{
-		networks: []string{"golib-rabbitstream-task"},
+		networks: []string{"codex-rabbitstream-task"},
 		process:  func(context.Context, string, []string, map[string]string, io.Writer, io.Writer) error { return failure },
 	}
 	if err := lease.Close(context.Background()); err == nil || !strings.Contains(err.Error(), "remove service network") {
