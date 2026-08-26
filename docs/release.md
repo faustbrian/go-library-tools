@@ -9,9 +9,24 @@ Release automation builds Linux and macOS archives for amd64 and arm64,
 generates checksums, SBOMs, provenance, and a release manifest, and publishes
 from an immutable tag. Consumers verify artifacts before execution.
 
+The release workflow runs only for exact semantic-version tags. It first runs
+the complete release rehearsal, cross-compiles a `CGO_ENABLED=0` binary for
+each supported platform, embeds the tag as the binary identity, packages the
+binary with the license, produces SPDX JSON SBOMs, and attests the artifacts.
+The publish job creates a source- and artifact-bound release manifest,
+`checksums.txt`, attestations for both, and the GitHub release only after every
+platform succeeds.
+
 Later releases follow semantic versioning. Never replace release artifacts or
 move tags; publish a new patch release for corrections.
 
 Run `golib release check` before preparing a tag and `golib release dry-run`
 against the final source. Releasable modules must use stable versions, canonical
 tag prefixes, and all mandatory gates.
+
+Consumers can verify an archive with:
+
+```bash
+grep '  golib_1.0.0_linux_amd64.tar.gz$' checksums.txt | sha256sum --check -
+gh attestation verify golib_1.0.0_linux_amd64.tar.gz --repo faustbrian/go-library-tools
+```

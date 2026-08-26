@@ -1,0 +1,48 @@
+name: Set up golib
+description: Install and verify the exact golib release declared by a repository
+
+runs:
+  using: composite
+  steps:
+    - name: Install verified golib release
+      shell: bash
+      env:
+        GOLIB_REPOSITORY: faustbrian/go-library-tools
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+
+        [[ -f .golib.yaml ]]
+        declarations="$(awk '$1 == "tool_version:" { print $2 }' .golib.yaml)"
+        [[ "$(printf '%s\n' "${declarations}" | wc -l | tr -d ' ')" -eq 1 ]]
+        version="${declarations}"
+        [[ "${version}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+
+        case "${RUNNER_OS}/${RUNNER_ARCH}" in
+          Linux/X64) platform='linux_amd64' ;;
+          Linux/ARM64) platform='linux_arm64' ;;
+          macOS/X64) platform='darwin_amd64' ;;
+          macOS/ARM64) platform='darwin_arm64' ;;
+          *) printf 'unsupported golib platform: %s/%s\n' "${RUNNER_OS}" "${RUNNER_ARCH}" >&2; exit 1 ;;
+        esac
+
+        release="${version#v}"
+        archive="golib_${release}_${platform}.tar.gz"
+        install_root="${RUNNER_TEMP}/golib-${version}"
+        mkdir -p "${install_root}" "${RUNNER_TEMP}/golib-bin"
+        gh release download "${version}" --repo "${GOLIB_REPOSITORY}" \
+          --pattern "${archive}" --pattern checksums.txt --dir "${install_root}"
+        checksum="$(grep -E "^[0-9a-f]{64}  ${archive}$" "${install_root}/checksums.txt")"
+        [[ "$(printf '%s\n' "${checksum}" | wc -l | tr -d ' ')" -eq 1 ]]
+        if command -v sha256sum >/dev/null 2>&1; then
+          (cd "${install_root}" && printf '%s\n' "${checksum}" | sha256sum --check -)
+        else
+          (cd "${install_root}" && printf '%s\n' "${checksum}" | shasum -a 256 --check)
+        fi
+        gh attestation verify "${install_root}/${archive}" \
+          --repo "${GOLIB_REPOSITORY}"
+        tar --extract --gzip --file "${install_root}/${archive}" \
+          --directory "${RUNNER_TEMP}/golib-bin" golib
+        chmod 0755 "${RUNNER_TEMP}/golib-bin/golib"
+        echo "${RUNNER_TEMP}/golib-bin" >>"${GITHUB_PATH}"
+        "${RUNNER_TEMP}/golib-bin/golib" --version | grep -Fx "${version}"

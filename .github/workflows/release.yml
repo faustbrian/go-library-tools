@@ -1,0 +1,144 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify release
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: false
+      - name: Validate release identity and contract
+        run: |
+          set -euo pipefail
+          [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          declared="$(awk '$1 == "tool_version:" { print $2 }' .golib.yaml)"
+          [[ "${declared}" == "${GITHUB_REF_NAME}" ]]
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-release-check.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            go run ./cmd/golib release dry-run
+
+  build:
+    name: Build release artifacts
+    needs: verify
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {goos: linux, goarch: amd64}
+          - {goos: linux, goarch: arm64}
+          - {goos: darwin, goarch: amd64}
+          - {goos: darwin, goarch: arm64}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: false
+      - name: Build deterministic archive
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          VERSION: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          release="${VERSION#v}"
+          directory='dist/stage'
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-release-build.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${directory}"
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            CGO_ENABLED=0 go build -trimpath -buildvcs=false \
+            -ldflags="-s -w -X github.com/faustbrian/go-library-tools/internal/buildinfo.Version=${VERSION}" \
+            -o "${directory}/golib" ./cmd/golib
+          cp LICENSE "${directory}/LICENSE"
+          tar --sort=name --owner=0 --group=0 --numeric-owner \
+            --mtime='UTC 1970-01-01' --gzip --create \
+            --file="dist/golib_${release}_${GOOS}_${GOARCH}.tar.gz" \
+            --directory="${directory}" golib LICENSE
+      - uses: anchore/sbom-action@e22c389904149dbc22b58101806040fa8d37a610 # v0.24.0
+        with:
+          path: dist/stage
+          format: spdx-json
+          output-file: dist/golib_${{ matrix.goos }}_${{ matrix.goarch }}.spdx.json
+          upload-artifact: false
+      - name: Remove release staging directory
+        run: find dist/stage -depth -delete
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: dist/*
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  publish:
+    name: Publish release
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+      - name: Publish immutable release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          assets="$({
+            for artifact in ./dist/*.tar.gz ./dist/*.spdx.json; do
+              digest="$(sha256sum "${artifact}" | cut -d' ' -f1)"
+              jq -cn --arg name "${artifact#./dist/}" --arg sha256 "${digest}" \
+                '{name: $name, sha256: $sha256}'
+            done
+          } | jq -cs 'sort_by(.name)')"
+          jq -n --arg version "${GITHUB_REF_NAME}" --arg source "${GITHUB_SHA}" \
+            --argjson assets "${assets}" \
+            '{schema_version: 1, version: $version, source_commit: $source, provenance: "github-artifact-attestation", assets: $assets}' \
+            >dist/release-manifest.json
+          (cd dist && sha256sum ./* | sed 's#  \./#  #' | LC_ALL=C sort > checksums.txt)
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
+        with:
+          subject-path: |
+            dist/checksums.txt
+            dist/release-manifest.json
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release create "${GITHUB_REF_NAME}" ./dist/* \
+            --verify-tag --generate-notes --title "${GITHUB_REF_NAME}"

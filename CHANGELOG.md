@@ -65,3 +65,7 @@ All notable changes to this project are documented in this file.
   a dedicated `golib docs check` command.
 - Stable release metadata validation and full releasable-module dry runs through
   the `golib release` command family.
+- A reusable consumer CI workflow with immutable tooling identity, module
+  matrices, attributable evidence, CodeQL, and one stable required check.
+- A checksum- and provenance-verifying setup action plus attested Linux and
+  macOS amd64/arm64 release automation with SPDX SBOMs.

@@ -1,0 +1,185 @@
+name: Go library CI
+
+on:
+  workflow_call:
+    inputs:
+      tooling_sha:
+        description: Immutable go-library-tools commit used by this workflow reference
+        required: true
+        type: string
+      release_dry_run:
+        description: Run the stable release rehearsal instead of the standard contract
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: golib-${{ github.repository }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  prepare:
+    name: Select modules
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.modules.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: false
+      - name: Check immutable tooling identity
+        env:
+          TOOLING_SHA: ${{ inputs.tooling_sha }}
+        run: |
+          set -euo pipefail
+          [[ "${TOOLING_SHA}" =~ ^[0-9a-f]{40}$ ]]
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: faustbrian/go-library-tools
+          ref: ${{ inputs.tooling_sha }}
+          path: .golib-tooling
+          persist-credentials: false
+      - uses: ./.golib-tooling/.github/actions/setup-golib
+      - id: modules
+        name: Build module matrix
+        env:
+          RELEASE_DRY_RUN: ${{ inputs.release_dry_run }}
+        run: |
+          set -euo pipefail
+          inventory="$(golib inventory --json)"
+          if [[ "${RELEASE_DRY_RUN}" == true ]]; then
+            matrix="$(jq -c '[.modules[] | select(.releasable == true) | {directory, artifact: (if .directory == "." then "root" else (.directory | gsub("/"; "-")) end)}]' <<<"${inventory}")"
+          else
+            matrix="$(jq -c '[.modules[] | {directory, artifact: (if .directory == "." then "root" else (.directory | gsub("/"; "-")) end)}]' <<<"${inventory}")"
+          fi
+          [[ "$(jq 'length' <<<"${matrix}")" -gt 0 ]]
+          echo "matrix=${matrix}" >>"${GITHUB_OUTPUT}"
+
+  repository-contract:
+    name: Repository contract
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: faustbrian/go-library-tools
+          ref: ${{ inputs.tooling_sha }}
+          path: .golib-tooling
+          persist-credentials: false
+      - uses: ./.golib-tooling/.github/actions/setup-golib
+      - run: golib repository check
+      - run: golib docs check
+      - if: inputs.release_dry_run == true
+        run: golib release check
+
+  quality:
+    name: Quality / ${{ matrix.directory }}
+    needs: prepare
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        include: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: false
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: faustbrian/go-library-tools
+          ref: ${{ inputs.tooling_sha }}
+          path: .golib-tooling
+          persist-credentials: false
+      - uses: ./.golib-tooling/.github/actions/setup-golib
+      - name: Run module contract
+        if: inputs.release_dry_run != true
+        run: golib check --module '${{ matrix.directory }}'
+      - name: Run release rehearsal
+        if: inputs.release_dry_run == true
+        run: golib check --module '${{ matrix.directory }}'
+      - name: Upload attributable evidence
+        if: always() && hashFiles('.verification/**') != ''
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: evidence-${{ matrix.artifact }}
+          path: .verification
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30
+
+  codeql:
+    name: CodeQL
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      packages: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: false
+      - uses: github/codeql-action/init@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
+        with:
+          languages: go
+          queries: security-extended,security-and-quality
+      - name: Build every module
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-codeql.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp"
+          jq -r '.modules[] | [.directory, ((.build_tags // []) | join(","))] | @tsv' modules.json |
+          while IFS=$'\t' read -r module tags; do
+            if [[ -n "${tags}" ]]; then
+              (cd "${module}" && go build -tags="${tags}" ./...)
+            else
+              (cd "${module}" && go build ./...)
+            fi
+          done
+      - uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
+
+  required:
+    name: Required
+    if: always()
+    needs: [prepare, repository-contract, quality, codeql]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require every repository result
+        env:
+          PREPARE_RESULT: ${{ needs.prepare.result }}
+          CONTRACT_RESULT: ${{ needs.repository-contract.result }}
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          CODEQL_RESULT: ${{ needs.codeql.result }}
+        run: |
+          set -euo pipefail
+          for result in "${PREPARE_RESULT}" "${CONTRACT_RESULT}" "${QUALITY_RESULT}" "${CODEQL_RESULT}"; do
+            [[ "${result}" == success ]]
+          done
