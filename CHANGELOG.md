@@ -28,3 +28,5 @@ All notable changes to this project are documented in this file.
   bounded archive expansion, duplicate rejection, and complete-kill proofs.
 - Strict semantic-migration ledger validation that preserves approved mutation
   evidence without making new records depend on mutable Git history.
+- Embedded, checksum-pinned Gremlins verifier assets whose derived identity
+  exactly reproduces the verifier used by approved legacy campaigns.
