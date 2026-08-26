@@ -32,15 +32,21 @@ const (
 
 // Command is one external process invocation without shell interpretation.
 type Command struct {
-	Name string
-	Args []string
-	Dir  string
-	Env  map[string]string
+	Name   string
+	Args   []string
+	Dir    string
+	Env    map[string]string
+	Stdout io.Writer
+	Stderr io.Writer
 }
 
 // Executor runs one external command.
 type Executor interface {
 	Run(context.Context, Command) error
+}
+
+type taskWorkspace interface {
+	TemporaryDirectory() string
 }
 
 // Runner executes gates for modules in one validated repository.
@@ -51,6 +57,7 @@ type Runner struct {
 	Executor      Executor
 	Output        io.Writer
 	coverageFiles coverageFileSystem
+	apiFiles      apiFileSystem
 }
 
 type namedWriteCloser interface {
@@ -59,15 +66,15 @@ type namedWriteCloser interface {
 }
 
 type coverageFileSystem interface {
-	CreateTemp() (namedWriteCloser, error)
+	CreateTemp(string) (namedWriteCloser, error)
 	Open(string) (io.ReadCloser, error)
 	Remove(string) error
 }
 
 type operatingCoverageFiles struct{}
 
-func (operatingCoverageFiles) CreateTemp() (namedWriteCloser, error) {
-	return os.CreateTemp("", "golib-coverage-*.out")
+func (operatingCoverageFiles) CreateTemp(directory string) (namedWriteCloser, error) {
+	return os.CreateTemp(directory, "golib-coverage-*.out")
 }
 
 func (operatingCoverageFiles) Open(path string) (io.ReadCloser, error) {
@@ -232,7 +239,11 @@ func (runner Runner) runCoverage(ctx context.Context, output io.Writer, director
 	if files == nil {
 		files = operatingCoverageFiles{}
 	}
-	profile, err := files.CreateTemp()
+	temporaryDirectory := ""
+	if workspace, ok := runner.Executor.(taskWorkspace); ok {
+		temporaryDirectory = workspace.TemporaryDirectory()
+	}
+	profile, err := files.CreateTemp(temporaryDirectory)
 	if err != nil {
 		return fmt.Errorf("create coverage profile: %w", err)
 	}

@@ -15,6 +15,7 @@ type processExecutor struct {
 	environment map[string]string
 	stdout      io.Writer
 	stderr      io.Writer
+	task        string
 }
 
 type taskFileSystem interface {
@@ -85,15 +86,23 @@ func newProcessExecutor(repositoryRoot string, stdout, stderr io.Writer, files t
 			return nil, nil, fmt.Errorf("create task directory: %w", err)
 		}
 	}
-	return &processExecutor{environment: directories, stdout: stdout, stderr: stderr}, cleanup, nil
+	return &processExecutor{environment: directories, stdout: stdout, stderr: stderr, task: task}, cleanup, nil
 }
+
+func (executor *processExecutor) TemporaryDirectory() string { return executor.task }
 
 func (executor *processExecutor) Run(ctx context.Context, command Command) error {
 	process := exec.CommandContext(ctx, command.Name, command.Args...)
 	process.Dir = command.Dir
 	process.Env = mergeEnvironment(os.Environ(), executor.environment, command.Env)
-	process.Stdout = executor.stdout
-	process.Stderr = executor.stderr
+	process.Stdout = command.Stdout
+	if process.Stdout == nil {
+		process.Stdout = executor.stdout
+	}
+	process.Stderr = command.Stderr
+	if process.Stderr == nil {
+		process.Stderr = executor.stderr
+	}
 	if err := process.Run(); err != nil {
 		return fmt.Errorf("run %s: %w", command.Name, err)
 	}

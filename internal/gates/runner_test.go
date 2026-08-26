@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -94,6 +95,108 @@ func TestCheckRequiresExactProductionCoverage(t *testing.T) {
 	executor.coverageProfile = "mode: atomic\ngithub.com/acme/example/file.go:1.1,2.1 1 0\n"
 	if err := runner.Check(context.Background(), []string{"."}); err == nil {
 		t.Fatal("Check() uncovered error = nil")
+	}
+}
+
+func TestAPICheckAndUpdateUsePinnedTool(t *testing.T) {
+	root := fixture(t)
+	if err := os.MkdirAll(filepath.Join(root, "api"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(root, "api", "baseline.txt"), "old baseline")
+	executor := &recordingExecutor{apiSnapshot: "new baseline"}
+	var output bytes.Buffer
+	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{
+		Directory: ".", ModulePath: "example", Gates: map[string]bool{"api_compatibility": true},
+	}}}, Executor: executor, Output: &output}
+	if err := runner.API(context.Background(), []string{"."}, false); err != nil {
+		t.Fatalf("API(check) error = %v", err)
+	}
+	if !strings.Contains(output.String(), "API compatibility passed") ||
+		!strings.Contains(strings.Join(executor.commands, "\n"), "apidiff@v0.0.0-20260718201538-764159d718ef") {
+		t.Fatalf("API check output/commands = %q, %#v", output.String(), executor.commands)
+	}
+	output.Reset()
+	if err := runner.API(context.Background(), []string{"."}, true); err != nil {
+		t.Fatalf("API(update) error = %v", err)
+	}
+	updated, err := os.ReadFile(filepath.Join(root, "api", "baseline.txt"))
+	if err != nil || string(updated) != "new baseline" {
+		t.Fatalf("updated baseline = %q, %v", updated, err)
+	}
+}
+
+func TestAPIRejectsMissingEmptyIncompatibleAndFailedSnapshots(t *testing.T) {
+	root := fixture(t)
+	module := inventory.Module{Directory: ".", ModulePath: "example", Gates: map[string]bool{"api_compatibility": true}}
+	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}}, Executor: &recordingExecutor{apiSnapshot: "snapshot"}}
+	if err := runner.API(context.Background(), []string{"."}, false); err == nil || !strings.Contains(err.Error(), "missing API baseline") {
+		t.Fatalf("API() missing baseline error = %v", err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, "api"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(root, "api", "baseline.txt"), "baseline")
+	runner.Executor = &recordingExecutor{}
+	if err := runner.API(context.Background(), []string{"."}, false); err == nil || !strings.Contains(err.Error(), "is empty") {
+		t.Fatalf("API() empty snapshot error = %v", err)
+	}
+	failure := errors.New("tool failed")
+	runner.Executor = &recordingExecutor{apiSnapshot: "snapshot", apiReport: "breaking change", failureAt: 1, failure: failure}
+	if err := runner.API(context.Background(), []string{"."}, false); err == nil || !strings.Contains(err.Error(), "breaking change") {
+		t.Fatalf("API() incompatible error = %v", err)
+	}
+	runner.Executor = &recordingExecutor{apiSnapshot: "snapshot", failureAt: 1, failure: failure}
+	if err := runner.API(context.Background(), []string{"."}, false); !errors.Is(err, failure) {
+		t.Fatalf("API() tool error = %v", err)
+	}
+	runner.Executor = &recordingExecutor{failureAt: 0, failure: failure}
+	if err := runner.API(context.Background(), []string{"."}, false); !errors.Is(err, failure) {
+		t.Fatalf("API() snapshot error = %v", err)
+	}
+}
+
+func TestAPIRejectsSymlinkBaselineAndDirectory(t *testing.T) {
+	root := fixture(t)
+	target := filepath.Join(root, "target")
+	write(t, target, "outside")
+	if err := os.Mkdir(filepath.Join(root, "api"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(target, filepath.Join(root, "api", "baseline.txt")); err != nil {
+		t.Fatal(err)
+	}
+	module := inventory.Module{Directory: ".", ModulePath: "example", Gates: map[string]bool{"api_compatibility": true}}
+	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}}, Executor: &recordingExecutor{apiSnapshot: "snapshot"}}
+	if err := runner.API(context.Background(), []string{"."}, false); err == nil {
+		t.Fatal("API() symlink baseline error = nil")
+	}
+	second := fixture(t)
+	targetDirectory := filepath.Join(second, "target")
+	if err := os.Mkdir(targetDirectory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(targetDirectory, filepath.Join(second, "api")); err != nil {
+		t.Fatal(err)
+	}
+	runner.Root = second
+	if err := runner.API(context.Background(), []string{"."}, true); err == nil {
+		t.Fatal("API() symlink directory error = nil")
+	}
+}
+
+func TestAPISkipsDisabledModulesAndRejectsUnknownSelection(t *testing.T) {
+	executor := &recordingExecutor{}
+	var output bytes.Buffer
+	runner := gates.Runner{Root: fixture(t), Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: "."}}}, Executor: executor, Output: &output}
+	if err := runner.API(context.Background(), []string{"."}, false); err != nil || len(executor.commands) != 0 {
+		t.Fatalf("API() skip = %#v, %v", executor.commands, err)
+	}
+	if !strings.Contains(output.String(), "not applicable") {
+		t.Fatalf("API() skip output = %q", output.String())
+	}
+	if err := runner.API(context.Background(), []string{"missing"}, false); err == nil {
+		t.Fatal("API() unknown module error = nil")
 	}
 }
 
@@ -258,17 +361,31 @@ type recordingExecutor struct {
 	failureAt       int
 	failure         error
 	coverageProfile string
+	apiSnapshot     string
+	apiReport       string
 }
 
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
 	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, command.Args...), " "))
-	if executor.failure != nil && len(executor.commands)-1 == executor.failureAt {
-		return executor.failure
-	}
 	for _, argument := range command.Args {
 		if strings.HasPrefix(argument, "-coverprofile=") {
-			return os.WriteFile(strings.TrimPrefix(argument, "-coverprofile="), []byte(executor.coverageProfile), 0o600)
+			if err := os.WriteFile(strings.TrimPrefix(argument, "-coverprofile="), []byte(executor.coverageProfile), 0o600); err != nil {
+				return err
+			}
 		}
+	}
+	for index, argument := range command.Args {
+		if argument == "-w" && index+1 < len(command.Args) {
+			if err := os.WriteFile(command.Args[index+1], []byte(executor.apiSnapshot), 0o600); err != nil {
+				return err
+			}
+		}
+		if argument == "-incompatible" && command.Stdout != nil {
+			_, _ = io.WriteString(command.Stdout, executor.apiReport)
+		}
+	}
+	if executor.failure != nil && len(executor.commands)-1 == executor.failureAt {
+		return executor.failure
 	}
 	return nil
 }

@@ -55,6 +55,19 @@ func TestCoverageReportsOwnedFileAndExecutionFailures(t *testing.T) {
 	}
 }
 
+func TestCoverageUsesTaskWorkspace(t *testing.T) {
+	files := &fakeCoverageFiles{file: &fakeNamedFile{name: "profile"}}
+	executor := workspaceExecutor{directory: "/task", run: func(context.Context, Command) error { return nil }}
+	runner := Runner{Executor: executor, coverageFiles: files}
+	module := inventory.Module{Directory: ".", Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}}
+	if err := runner.runCoverage(context.Background(), io.Discard, t.TempDir(), module); err != nil {
+		t.Fatalf("runCoverage() error = %v", err)
+	}
+	if files.directory != "/task" {
+		t.Fatalf("coverage directory = %q", files.directory)
+	}
+}
+
 func TestRunOperationReportsTimeoutCommandAndExecutionFailures(t *testing.T) {
 	failure := errors.New("injected failure")
 	tests := []struct {
@@ -87,9 +100,11 @@ type fakeCoverageFiles struct {
 	file      namedWriteCloser
 	createErr error
 	openErr   error
+	directory string
 }
 
-func (fake *fakeCoverageFiles) CreateTemp() (namedWriteCloser, error) {
+func (fake *fakeCoverageFiles) CreateTemp(directory string) (namedWriteCloser, error) {
+	fake.directory = directory
 	return fake.file, fake.createErr
 }
 

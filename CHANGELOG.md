@@ -16,3 +16,5 @@ All notable changes to this project are documented in this file.
   vulnerability, secret, and license tooling.
 - Versioned content-addressed evidence records with history-independent identity,
   symlink rejection, atomic publication, and semantic concurrent reuse.
+- Built-in exported API compatibility checks and atomic baseline updates using
+  the pinned `apidiff` verifier and task-owned snapshots.

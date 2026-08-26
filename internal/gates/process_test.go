@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -19,6 +20,9 @@ func TestProcessExecutorUsesIsolatedTaskEnvironmentAndCleansIt(t *testing.T) {
 	}
 	executor := created.(*processExecutor)
 	task := filepath.Dir(executor.environment["GOCACHE"])
+	if executor.TemporaryDirectory() != task {
+		t.Fatalf("TemporaryDirectory() = %q, want %q", executor.TemporaryDirectory(), task)
+	}
 	for _, name := range []string{"GOCACHE", "GOMODCACHE", "GOTMPDIR", "GOBIN"} {
 		if !strings.HasPrefix(executor.environment[name], task+string(filepath.Separator)) {
 			t.Fatalf("%s is not task-owned: %s", name, executor.environment[name])
@@ -55,6 +59,23 @@ func TestProcessExecutorReportsCommandFailure(t *testing.T) {
 	})
 	if err == nil || !strings.Contains(err.Error(), "run ") {
 		t.Fatalf("Run() error = %v", err)
+	}
+}
+
+func TestProcessExecutorHonorsCommandOutputOverrides(t *testing.T) {
+	created, cleanup, err := NewProcessExecutor(t.TempDir(), io.Discard, io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer cleanup()
+	var stdout, stderr bytes.Buffer
+	err = created.Run(context.Background(), Command{
+		Name: os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
+		Env:    map[string]string{"GO_WANT_HELPER": "1", "HELPER_OUTPUT": "expected"},
+		Stdout: &stdout, Stderr: &stderr,
+	})
+	if err != nil || stdout.String() != "expected" || stderr.Len() != 0 {
+		t.Fatalf("Run() = %v, %q, %q", err, stdout.String(), stderr.String())
 	}
 }
 

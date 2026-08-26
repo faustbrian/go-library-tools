@@ -69,19 +69,9 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 		if usageError != nil {
 			return usage(stderr, usageError.Error())
 		}
-		executor, cleanup, createError := createExecutor(root, stdout, stderr)
-		if createError != nil {
-			return failure(stderr, createError)
-		}
-		runError := (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(context.Background(), selection)
-		cleanupError := cleanup()
-		if runError != nil {
-			return failure(stderr, runError)
-		}
-		if cleanupError != nil {
-			return failure(stderr, cleanupError)
-		}
-		return 0
+		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(context.Background(), selection)
+		})
 	case "config":
 		if len(args) != 2 || args[1] != "validate" {
 			return usage(stderr, "usage: golib config validate")
@@ -102,9 +92,36 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return failure(stderr, fmt.Errorf("write inventory: %w", err))
 		}
 		return 0
+	case "api":
+		if len(args) < 2 || (args[1] != "check" && args[1] != "update") {
+			return usage(stderr, "usage: golib api <check|update> [--module <directory>]")
+		}
+		selection, usageError := moduleSelection(args[2:], catalog.Modules)
+		if usageError != nil {
+			return usage(stderr, "usage: golib api <check|update> [--module <directory>]")
+		}
+		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).API(context.Background(), selection, args[1] == "update")
+		})
 	default:
 		return usage(stderr, fmt.Sprintf("unknown command: %s", args[0]))
 	}
+}
+
+func withExecutor(root string, stdout, stderr io.Writer, create executorFactory, run func(gates.Executor) error) int {
+	executor, cleanup, err := create(root, stdout, stderr)
+	if err != nil {
+		return failure(stderr, err)
+	}
+	runError := run(executor)
+	cleanupError := cleanup()
+	if runError != nil {
+		return failure(stderr, runError)
+	}
+	if cleanupError != nil {
+		return failure(stderr, cleanupError)
+	}
+	return 0
 }
 
 func moduleSelection(args []string, modules []inventory.Module) ([]string, error) {
