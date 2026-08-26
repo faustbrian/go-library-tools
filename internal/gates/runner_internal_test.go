@@ -68,6 +68,150 @@ func TestCoverageUsesTaskWorkspace(t *testing.T) {
 	}
 }
 
+func TestDocumentationSpellingUsesPinnedTaskOwnedInstall(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "cspell.json"), []byte("{}\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	task, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	commands := make([]Command, 0, 2)
+	executor := workspaceExecutor{directory: task, run: func(_ context.Context, command Command) error {
+		commands = append(commands, command)
+		return nil
+	}}
+	runner := Runner{Executor: executor}
+	if err := runner.runDocumentationSpelling(context.Background(), root); err != nil {
+		t.Fatalf("runDocumentationSpelling() error = %v", err)
+	}
+	if len(commands) != 2 || commands[0].Name != "npm" || !strings.HasSuffix(commands[1].Name, filepath.Join("node_modules", ".bin", "cspell")) {
+		t.Fatalf("commands = %#v", commands)
+	}
+	if commands[0].Dir != filepath.Join(task, "documentation", "spelling") ||
+		!strings.HasPrefix(commands[0].Env["NPM_CONFIG_CACHE"], task+string(filepath.Separator)) {
+		t.Fatalf("npm command is not task-owned: %#v", commands[0])
+	}
+	for _, name := range []string{"package.json", "package-lock.json"} {
+		if info, err := os.Stat(filepath.Join(commands[0].Dir, name)); err != nil || !info.Mode().IsRegular() {
+			t.Fatalf("asset %s = %v, %v", name, info, err)
+		}
+	}
+}
+
+func TestDocumentationSpellingRequiresTaskWorkspace(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "cspell.json"), []byte("{}\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runner := Runner{Executor: executorFunction(func(context.Context, Command) error { return nil })}
+	if err := runner.runDocumentationSpelling(context.Background(), root); err == nil || !strings.Contains(err.Error(), "task-owned workspace") {
+		t.Fatalf("runDocumentationSpelling() error = %v", err)
+	}
+}
+
+func TestDocumentationSpellingReportsConfigurationAndWorkspaceFailures(t *testing.T) {
+	t.Run("configuration", func(t *testing.T) {
+		runner := Runner{Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }}}
+		if err := runner.runDocumentationSpelling(context.Background(), t.TempDir()); err == nil || !strings.Contains(err.Error(), "read cspell configuration") {
+			t.Fatalf("runDocumentationSpelling() error = %v", err)
+		}
+	})
+
+	t.Run("tool root", func(t *testing.T) {
+		root := spellingRepository(t)
+		workspace := filepath.Join(t.TempDir(), "workspace")
+		if err := os.WriteFile(workspace, []byte("occupied"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		runner := Runner{Executor: workspaceExecutor{directory: workspace, run: func(context.Context, Command) error { return nil }}}
+		if err := runner.runDocumentationSpelling(context.Background(), root); err == nil || !strings.Contains(err.Error(), "create spelling tool root") {
+			t.Fatalf("runDocumentationSpelling() error = %v", err)
+		}
+	})
+
+	t.Run("asset", func(t *testing.T) {
+		root := spellingRepository(t)
+		workspace := t.TempDir()
+		packagePath := filepath.Join(workspace, "documentation", "spelling", "package.json")
+		if err := os.MkdirAll(packagePath, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		runner := Runner{Executor: workspaceExecutor{directory: workspace, run: func(context.Context, Command) error { return nil }}}
+		if err := runner.runDocumentationSpelling(context.Background(), root); err == nil || !strings.Contains(err.Error(), "write spelling tool package.json") {
+			t.Fatalf("runDocumentationSpelling() error = %v", err)
+		}
+	})
+}
+
+func TestDocumentationSpellingReportsToolFailures(t *testing.T) {
+	failure := errors.New("injected failure")
+	tests := []struct {
+		name      string
+		failAt    int
+		want      string
+		wantCalls int
+	}{
+		{name: "install", failAt: 1, want: "install pinned spelling tool", wantCalls: 1},
+		{name: "spellcheck", failAt: 2, want: "check documentation spelling", wantCalls: 2},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			calls := 0
+			executor := workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error {
+				calls++
+				if calls == test.failAt {
+					return failure
+				}
+				return nil
+			}}
+			runner := Runner{Executor: executor}
+			if err := runner.runDocumentationSpelling(context.Background(), spellingRepository(t)); err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("runDocumentationSpelling() error = %v", err)
+			}
+			if calls != test.wantCalls {
+				t.Fatalf("tool calls = %d, want %d", calls, test.wantCalls)
+			}
+		})
+	}
+}
+
+func spellingRepository(t *testing.T) string {
+	t.Helper()
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "cspell.json"), []byte("{}\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return root
+}
+
+func TestCheckDocumentationReportsNativeAndSpellingFailures(t *testing.T) {
+	failure := errors.New("injected failure")
+	runner := Runner{DocumentationSpelling: func(context.Context, string) error { return failure }}
+	if err := runner.checkDocumentation(context.Background(), t.TempDir(), inventory.Module{}); err == nil || errors.Is(err, failure) {
+		t.Fatalf("checkDocumentation() native error = %v", err)
+	}
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "README.md"), []byte("# Example\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{}); !errors.Is(err, failure) {
+		t.Fatalf("checkDocumentation() spelling error = %v", err)
+	}
+}
+
+func TestCheckDocumentationUsesPinnedSpellingByDefault(t *testing.T) {
+	root := spellingRepository(t)
+	if err := os.WriteFile(filepath.Join(root, "README.md"), []byte("# Example\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runner := Runner{Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }}}
+	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{}); err != nil {
+		t.Fatalf("checkDocumentation() error = %v", err)
+	}
+}
+
 func TestRunOperationReportsTimeoutCommandAndExecutionFailures(t *testing.T) {
 	failure := errors.New("injected failure")
 	tests := []struct {

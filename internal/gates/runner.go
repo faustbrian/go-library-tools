@@ -18,7 +18,6 @@ import (
 
 	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/coverage"
-	"github.com/faustbrian/go-library-tools/internal/docscheck"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/services"
 )
@@ -65,6 +64,9 @@ type Runner struct {
 	startServices     serviceStarter
 	serviceHTTPProbe  services.HTTPProbe
 	serviceIdentities map[string]string
+	// DocumentationSpelling is an isolated test boundary. Production callers
+	// leave it nil and use the pinned task-owned implementation.
+	DocumentationSpelling func(context.Context, string) error
 }
 
 type namedWriteCloser interface {
@@ -157,13 +159,7 @@ func (runner Runner) Docs(ctx context.Context, selection []string) error {
 		}
 		directory := filepath.Join(runner.Root, module.Directory)
 		if err := announce(output, module.Directory, "docs", func() error {
-			if err := docscheck.Check(directory); err != nil {
-				return err
-			}
-			if operation, exists := runner.operation(module.Directory, "docs"); exists {
-				return runner.runOperation(ctx, directory, module, operation)
-			}
-			return nil
+			return runner.checkDocumentation(ctx, directory, module)
 		}); err != nil {
 			return err
 		}
@@ -281,13 +277,7 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 	}
 	if module.Gates["documentation"] {
 		if err := announce(output, module.Directory, "docs", func() error {
-			if err := docscheck.Check(directory); err != nil {
-				return err
-			}
-			if operation, exists := runner.operation(module.Directory, "docs"); exists {
-				return runner.runOperation(ctx, directory, module, operation)
-			}
-			return nil
+			return runner.checkDocumentation(ctx, directory, module)
 		}); err != nil {
 			return err
 		}

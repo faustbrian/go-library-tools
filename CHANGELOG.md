@@ -70,3 +70,5 @@ All notable changes to this project are documented in this file.
 - A checksum- and provenance-verifying setup action plus attested Linux and
   macOS amd64/arm64 release automation with SPDX SBOMs.
 - Strict Deno and zsh runtime policy consumed by package-neutral reusable CI.
+- Task-owned documentation spelling with an embedded, exact CSpell dependency
+  graph and repository-owned dictionaries.

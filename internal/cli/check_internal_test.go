@@ -118,8 +118,11 @@ func TestExecuteRoutesDocumentationCheck(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "README.md"), []byte("# Example\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
+	if err := os.WriteFile(filepath.Join(root, "cspell.json"), []byte("{}\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
-		return successfulExecutor{}, func() error { return nil }, nil
+		return cliWorkspaceExecutor{directory: t.TempDir()}, func() error { return nil }, nil
 	}
 	var stdout, stderr bytes.Buffer
 	if code := execute([]string{"docs", "check"}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "[.] docs") {
@@ -180,6 +183,13 @@ func TestExecuteReportsReleaseContractFailures(t *testing.T) {
 type successfulExecutor struct{}
 
 func (successfulExecutor) Run(context.Context, gates.Command) error { return nil }
+
+type cliWorkspaceExecutor struct {
+	directory string
+}
+
+func (cliWorkspaceExecutor) Run(context.Context, gates.Command) error { return nil }
+func (executor cliWorkspaceExecutor) TemporaryDirectory() string      { return executor.directory }
 
 type apiExecutor struct{}
 

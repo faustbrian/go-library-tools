@@ -90,7 +90,6 @@ jobs:
           persist-credentials: false
       - uses: ./.golib-tooling/.github/actions/setup-golib
       - run: golib repository check
-      - run: golib docs check
       - if: inputs.release_dry_run == true
         run: golib release check
 
@@ -112,6 +111,10 @@ jobs:
         with:
           go-version-file: .go-version
           cache: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.4.1'
+          package-manager-cache: false
       - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
         if: needs.prepare.outputs.deno != ''
         with:

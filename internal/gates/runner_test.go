@@ -26,7 +26,7 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 		Gates: map[string]bool{
 			"lint": true, "tests": true, "race": true, "documentation": true,
 		},
-	}}}, Executor: executor, Output: &output}
+	}}}, Executor: executor, Output: &output, DocumentationSpelling: successfulSpelling}
 
 	if err := runner.Check(context.Background(), []string{"."}); err != nil {
 		t.Fatalf("Check() error = %v", err)
@@ -69,7 +69,8 @@ func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
 				{Type: "go-test", Packages: []string{"./..."}, Run: "^TestDocs$", Count: 1, Timeout: "1m"},
 			}},
 		}},
-		Executor: executor,
+		Executor:              executor,
+		DocumentationSpelling: successfulSpelling,
 	}
 	if err := runner.Check(context.Background(), []string{"."}); err != nil {
 		t.Fatalf("Check() error = %v", err)
@@ -142,9 +143,10 @@ func TestDocsRunsNativeAndTypedChecks(t *testing.T) {
 			{Directory: ".", Gates: map[string]bool{"documentation": true}},
 			{Directory: "nested", Gates: map[string]bool{}},
 		}},
-		Policy:   config.Config{Operations: []config.Operation{{Module: ".", Gate: "docs", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Run: "^TestDocs$", Count: 1, Timeout: "1m"}}}}},
-		Executor: executor,
-		Output:   &output,
+		Policy:                config.Config{Operations: []config.Operation{{Module: ".", Gate: "docs", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Run: "^TestDocs$", Count: 1, Timeout: "1m"}}}}},
+		Executor:              executor,
+		Output:                &output,
+		DocumentationSpelling: successfulSpelling,
 	}
 	if err := runner.Docs(context.Background(), []string{"nested", "."}); err != nil {
 		t.Fatalf("Docs() error = %v", err)
@@ -445,6 +447,8 @@ type recordingExecutor struct {
 	apiSnapshot     string
 	apiReport       string
 }
+
+func successfulSpelling(context.Context, string) error { return nil }
 
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
 	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, command.Args...), " "))
