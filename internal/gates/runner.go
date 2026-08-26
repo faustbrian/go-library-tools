@@ -103,6 +103,31 @@ func (runner Runner) Check(ctx context.Context, selection []string) error {
 	return nil
 }
 
+// Coverage runs only exact production-package coverage for selected modules.
+func (runner Runner) Coverage(ctx context.Context, selection []string) error {
+	modules, err := runner.selectModules(selection)
+	if err != nil {
+		return err
+	}
+	output := runner.Output
+	if output == nil {
+		output = io.Discard
+	}
+	for _, module := range modules {
+		if !module.Gates["coverage"] {
+			_, _ = fmt.Fprintf(output, "[%s] coverage: not applicable\n", module.Directory)
+			continue
+		}
+		directory := filepath.Join(runner.Root, module.Directory)
+		if err := announce(output, module.Directory, "coverage", func() error {
+			return runner.runCoverage(ctx, output, directory, module)
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (runner Runner) selectModules(selection []string) ([]inventory.Module, error) {
 	available := make(map[string]inventory.Module, len(runner.Catalog.Modules))
 	for _, module := range runner.Catalog.Modules {

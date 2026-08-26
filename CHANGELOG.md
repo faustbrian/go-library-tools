@@ -22,3 +22,5 @@ All notable changes to this project are documented in this file.
   membership, committed replacements, and complete legacy-tool removal.
 - Deterministic evidence inspection that validates attribution, content paths,
   duplicate identities, bounded records, and symlink-free evidence trees.
+- Standalone exact-coverage execution with deterministic module selection and
+  explicit not-applicable reporting.

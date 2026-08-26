@@ -70,6 +70,24 @@ func TestExecuteRejectsInvalidAPIArguments(t *testing.T) {
 	}
 }
 
+func TestExecuteRoutesStandaloneCoverage(t *testing.T) {
+	root := internalFixture(t)
+	manifest := `{"schema_version":1,"repository":"example","go_version":"1.27.0","modules":[{"directory":".","module_path":"example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"coverage":true},"packages":[{"module_directory":".","directory":".","name":"example","import_path":"example","kind":"public","production":true,"executable":true,"coverage_required":true,"build_required":true,"build_tags":[]}]}]}`
+	if err := os.WriteFile(filepath.Join(root, "modules.json"), []byte(manifest), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return coverageExecutor{}, func() error { return nil }, nil
+	}
+	var stdout, stderr bytes.Buffer
+	if code := execute([]string{"coverage", "--module", "."}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 {
+		t.Fatalf("execute() = %d, %q", code, stderr.String())
+	}
+	if code := execute([]string{"coverage", "--bad"}, root, &stdout, &stderr, factory); code != 2 {
+		t.Fatalf("execute() invalid coverage = %d", code)
+	}
+}
+
 type successfulExecutor struct{}
 
 func (successfulExecutor) Run(context.Context, gates.Command) error { return nil }
@@ -80,6 +98,17 @@ func (apiExecutor) Run(_ context.Context, command gates.Command) error {
 	for index, argument := range command.Args {
 		if argument == "-w" {
 			return os.WriteFile(command.Args[index+1], []byte("snapshot"), 0o600)
+		}
+	}
+	return nil
+}
+
+type coverageExecutor struct{}
+
+func (coverageExecutor) Run(_ context.Context, command gates.Command) error {
+	for _, argument := range command.Args {
+		if strings.HasPrefix(argument, "-coverprofile=") {
+			return os.WriteFile(strings.TrimPrefix(argument, "-coverprofile="), []byte("mode: atomic\nexample/file.go:1.1,2.1 1 1\n"), 0o600)
 		}
 	}
 	return nil

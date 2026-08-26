@@ -98,6 +98,34 @@ func TestCheckRequiresExactProductionCoverage(t *testing.T) {
 	}
 }
 
+func TestCoverageRunsStandaloneAndReportsSkippedModules(t *testing.T) {
+	root := fixture(t)
+	executor := &recordingExecutor{coverageProfile: "mode: atomic\nexample/file.go:1.1,2.1 1 1\n"}
+	var output bytes.Buffer
+	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{
+		{Directory: ".", Gates: map[string]bool{"coverage": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}},
+		{Directory: "nested", Gates: map[string]bool{}},
+	}}, Executor: executor, Output: &output}
+	if err := runner.Coverage(context.Background(), []string{"nested", "."}); err != nil {
+		t.Fatalf("Coverage() error = %v", err)
+	}
+	if !strings.Contains(output.String(), "exact 100%") || !strings.Contains(output.String(), "not applicable") {
+		t.Fatalf("Coverage() output = %q", output.String())
+	}
+	if err := runner.Coverage(context.Background(), []string{"missing"}); err == nil {
+		t.Fatal("Coverage() unknown module error = nil")
+	}
+	runner.Output = nil
+	if err := runner.Coverage(context.Background(), []string{"nested"}); err != nil {
+		t.Fatalf("Coverage() discarded output error = %v", err)
+	}
+	executor.failure = errors.New("failed")
+	executor.failureAt = len(executor.commands)
+	if err := runner.Coverage(context.Background(), []string{"."}); !errors.Is(err, executor.failure) {
+		t.Fatalf("Coverage() execution error = %v", err)
+	}
+}
+
 func TestAPICheckAndUpdateUsePinnedTool(t *testing.T) {
 	root := fixture(t)
 	if err := os.MkdirAll(filepath.Join(root, "api"), 0o700); err != nil {
