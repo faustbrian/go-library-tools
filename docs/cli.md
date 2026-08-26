@@ -7,6 +7,7 @@ with status 1. Success exits with status 0.
 
 Core commands:
 
+- `golib --version` prints `dev` for source builds or the immutable release.
 - `golib config validate` validates configuration and both manifests.
 - `golib inventory [--json]` prints the canonical module inventory.
 - `golib repository check` validates standalone repository structure.
@@ -19,3 +20,7 @@ Core commands:
 
 Selection and output ordering are deterministic. Required gates fail closed;
 NilAway remains advisory and visible.
+
+Released binaries must exactly match `.golib.yaml`. The explicit `dev` identity
+is accepted only for deliberate source builds and prevents circular bootstrap
+while developing this repository.

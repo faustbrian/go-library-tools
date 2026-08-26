@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/faustbrian/go-library-tools/internal/buildinfo"
 	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/evidence"
 	"github.com/faustbrian/go-library-tools/internal/gates"
@@ -20,6 +21,7 @@ import (
 const help = `golib validates and executes the Go library repository contract.
 
 Usage:
+  golib --version
   golib check [--all|--module <directory>]
   golib config validate
   golib inventory [--json]
@@ -38,6 +40,10 @@ Usage:
 
 // Execute runs one command and returns a stable process exit code.
 func Execute(args []string, workingDirectory string, stdout, stderr io.Writer) int {
+	if len(args) == 1 && args[0] == "--version" {
+		_, _ = fmt.Fprintln(stdout, buildinfo.Version)
+		return 0
+	}
 	return execute(args, workingDirectory, stdout, stderr, gates.NewProcessExecutor)
 }
 
@@ -58,6 +64,9 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 	}
 	policy, err := config.Load(root)
 	if err != nil {
+		return failure(stderr, err)
+	}
+	if err := buildinfo.ValidateRequired(policy.ToolVersion); err != nil {
 		return failure(stderr, err)
 	}
 	catalog, err := inventory.Load(root, policy)

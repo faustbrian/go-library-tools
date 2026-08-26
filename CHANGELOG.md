@@ -53,3 +53,5 @@ All notable changes to this project are documented in this file.
 - Standalone repository, contributor, security, support, architecture,
   configuration, verification, fixture, workflow, migration, and release
   documentation for the shared tooling contract.
+- Exact released-binary compatibility checks with an explicit source-build
+  identity for non-circular tooling development.

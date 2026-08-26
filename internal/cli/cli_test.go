@@ -25,6 +25,14 @@ func TestExecuteShowsHelp(t *testing.T) {
 	}
 }
 
+func TestExecuteShowsVersionWithoutRepository(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"--version"}, t.TempDir(), &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 || stdout.String() != "dev\n" {
+		t.Fatalf("Execute() code = %d, stdout = %q, stderr = %q", code, stdout.String(), stderr.String())
+	}
+}
+
 func TestExecuteValidatesConfigurationFromNestedDirectory(t *testing.T) {
 	root := fixture(t)
 	nested := filepath.Join(root, "nested", "directory")
