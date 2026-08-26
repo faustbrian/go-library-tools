@@ -53,6 +53,21 @@
         }
       }
     },
+    "runtimes": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "deno": {
+          "type": "string",
+          "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
+          "description": "Exact Deno version required by repository tests."
+        },
+        "zsh": {
+          "const": "5.9",
+          "description": "Exact supported zsh runtime required by repository tests."
+        }
+      }
+    },
     "operations": {
       "type": "array",
       "items": {

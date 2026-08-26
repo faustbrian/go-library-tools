@@ -18,7 +18,7 @@ func TestExecuteShowsHelp(t *testing.T) {
 	if code != 0 || stderr.Len() != 0 {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
-	for _, command := range []string{"check", "config validate", "inventory", "repository check", "release dry-run"} {
+	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "repository check", "release dry-run"} {
 		if !strings.Contains(stdout.String(), command) {
 			t.Errorf("help does not contain %q", command)
 		}
@@ -46,6 +46,24 @@ func TestExecuteValidatesConfigurationFromNestedDirectory(t *testing.T) {
 	}
 	if got := stdout.String(); got != "configuration valid: github.com/faustbrian/example\n" {
 		t.Fatalf("Execute() stdout = %q", got)
+	}
+}
+
+func TestExecuteShowsMachineReadableConfiguration(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\nruntimes:\n  deno: 2.9.4\n")
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"config", "show", "--json"}, root, &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 {
+		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
+	}
+	var got map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+		t.Fatal(err)
+	}
+	runtimes, ok := got["runtimes"].(map[string]any)
+	if !ok || runtimes["deno"] != "2.9.4" {
+		t.Fatalf("configuration = %#v", got)
 	}
 }
 
@@ -125,7 +143,12 @@ func TestExecuteCheckDefaultsToAllModules(t *testing.T) {
 func TestExecuteReportsOutputFailure(t *testing.T) {
 	root := fixture(t)
 	var stderr bytes.Buffer
-	code := cli.Execute([]string{"inventory", "--json"}, root, failingWriter{}, &stderr)
+	code := cli.Execute([]string{"config", "show", "--json"}, root, failingWriter{}, &stderr)
+	if code != 1 || !strings.Contains(stderr.String(), "write configuration") {
+		t.Fatalf("Execute() config code = %d, stderr = %q", code, stderr.String())
+	}
+	stderr.Reset()
+	code = cli.Execute([]string{"inventory", "--json"}, root, failingWriter{}, &stderr)
 	if code != 1 || !strings.Contains(stderr.String(), "write inventory") {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
@@ -147,6 +170,7 @@ func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
 		{"missing command", nil, fixture, 2, "command is required"},
 		{"unknown command", []string{"wat"}, fixture, 2, "unknown command"},
 		{"invalid config arguments", []string{"config"}, fixture, 2, "usage:"},
+		{"invalid config show arguments", []string{"config", "show"}, fixture, 2, "usage:"},
 		{"invalid inventory arguments", []string{"inventory", "--yaml"}, fixture, 2, "usage:"},
 		{"invalid repository arguments", []string{"repository"}, fixture, 2, "usage:"},
 		{"invalid evidence arguments", []string{"evidence", "inspect", "--yaml"}, fixture, 2, "usage:"},

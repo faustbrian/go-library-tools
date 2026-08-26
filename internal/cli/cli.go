@@ -25,6 +25,7 @@ Usage:
   golib --version
   golib check [--all|--module <directory>]
   golib config validate
+	golib config show --json
   golib inventory [--json]
   golib repository check
   golib coverage [--module <directory>]
@@ -85,11 +86,19 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(context.Background(), selection)
 		})
 	case "config":
-		if len(args) != 2 || args[1] != "validate" {
-			return usage(stderr, "usage: golib config validate")
+		if len(args) == 2 && args[1] == "validate" {
+			_, _ = fmt.Fprintf(stdout, "configuration valid: %s\n", catalog.Repository)
+			return 0
 		}
-		_, _ = fmt.Fprintf(stdout, "configuration valid: %s\n", catalog.Repository)
-		return 0
+		if len(args) == 3 && args[1] == "show" && args[2] == "--json" {
+			encoder := json.NewEncoder(stdout)
+			encoder.SetIndent("", "  ")
+			if err := encoder.Encode(policy); err != nil {
+				return failure(stderr, fmt.Errorf("write configuration: %w", err))
+			}
+			return 0
+		}
+		return usage(stderr, "usage: golib config <validate|show --json>")
 	case "repository":
 		if len(args) != 2 || args[1] != "check" {
 			return usage(stderr, "usage: golib repository check")

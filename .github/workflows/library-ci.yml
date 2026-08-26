@@ -27,6 +27,8 @@ jobs:
     timeout-minutes: 15
     outputs:
       matrix: ${{ steps.modules.outputs.matrix }}
+      deno: ${{ steps.modules.outputs.deno }}
+      zsh: ${{ steps.modules.outputs.zsh }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -55,13 +57,18 @@ jobs:
         run: |
           set -euo pipefail
           inventory="$(golib inventory --json)"
+          configuration="$(golib config show --json)"
           if [[ "${RELEASE_DRY_RUN}" == true ]]; then
             matrix="$(jq -c '[.modules[] | select(.releasable == true) | {directory, artifact: (if .directory == "." then "root" else (.directory | gsub("/"; "-")) end)}]' <<<"${inventory}")"
           else
             matrix="$(jq -c '[.modules[] | {directory, artifact: (if .directory == "." then "root" else (.directory | gsub("/"; "-")) end)}]' <<<"${inventory}")"
           fi
           [[ "$(jq 'length' <<<"${matrix}")" -gt 0 ]]
-          echo "matrix=${matrix}" >>"${GITHUB_OUTPUT}"
+          {
+            echo "matrix=${matrix}"
+            echo "deno=$(jq -r '.runtimes.deno // empty' <<<"${configuration}")"
+            echo "zsh=$(jq -r '.runtimes.zsh // empty' <<<"${configuration}")"
+          } >>"${GITHUB_OUTPUT}"
 
   repository-contract:
     name: Repository contract
@@ -105,6 +112,29 @@ jobs:
         with:
           go-version-file: .go-version
           cache: false
+      - uses: denoland/setup-deno@22d081ff2d3a40755e97629de92e3bcbfa7cf2ed # v2.0.5
+        if: needs.prepare.outputs.deno != ''
+        with:
+          deno-version: ${{ needs.prepare.outputs.deno }}
+          cache: false
+      - name: Set up zsh runtime
+        if: needs.prepare.outputs.zsh != ''
+        env:
+          ZSH_VERSION: ${{ needs.prepare.outputs.zsh }}
+          ZSH_DEB_SHA256: bd5cc8dd3a01a6db38c0a815d75202c356a9c7f378674ba7bed9bc86dcba8af0
+        run: |
+          set -euo pipefail
+          [[ "${ZSH_VERSION}" == '5.9' ]]
+          archive="${RUNNER_TEMP}/zsh.deb"
+          root="${RUNNER_TEMP}/zsh-runtime"
+          curl --fail --silent --show-error --location --retry 5 --retry-all-errors \
+            'https://archive.ubuntu.com/ubuntu/pool/main/z/zsh/zsh_5.9-6ubuntu2_amd64.deb' \
+            --output "${archive}"
+          printf '%s  %s\n' "${ZSH_DEB_SHA256}" "${archive}" | sha256sum --check -
+          mkdir -p "${root}"
+          dpkg-deb --extract "${archive}" "${root}"
+          echo "${root}/bin" >>"${GITHUB_PATH}"
+          "${root}/bin/zsh" --version | grep -Eq '^zsh 5\.9 '
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           repository: faustbrian/go-library-tools

@@ -33,47 +33,55 @@ var (
 // Config is the complete repository-specific policy. Facts already owned by
 // canonical manifests are referenced here, not repeated.
 type Config struct {
-	SchemaVersion int         `yaml:"schema_version"`
-	ToolVersion   string      `yaml:"tool_version"`
-	Manifests     Manifests   `yaml:"manifest,omitempty"`
-	Evidence      Evidence    `yaml:"evidence,omitempty"`
-	Mutation      Mutation    `yaml:"mutation,omitempty"`
-	Operations    []Operation `yaml:"operations,omitempty"`
+	SchemaVersion int         `json:"schema_version" yaml:"schema_version"`
+	ToolVersion   string      `json:"tool_version" yaml:"tool_version"`
+	Manifests     Manifests   `json:"manifest" yaml:"manifest,omitempty"`
+	Evidence      Evidence    `json:"evidence" yaml:"evidence,omitempty"`
+	Mutation      Mutation    `json:"mutation" yaml:"mutation,omitempty"`
+	Runtimes      Runtimes    `json:"runtimes" yaml:"runtimes,omitempty"`
+	Operations    []Operation `json:"operations,omitempty" yaml:"operations,omitempty"`
 }
 
 // Manifests names the canonical repository inventory files.
 type Manifests struct {
-	Modules  string `yaml:"modules,omitempty"`
-	Packages string `yaml:"packages,omitempty"`
+	Modules  string `json:"modules" yaml:"modules,omitempty"`
+	Packages string `json:"packages" yaml:"packages,omitempty"`
 }
 
 // Evidence identifies the repository-owned verification evidence root.
 type Evidence struct {
-	Root string `yaml:"root,omitempty"`
+	Root string `json:"root" yaml:"root,omitempty"`
 }
 
 // Mutation identifies repository-owned reports, checkpoints, and reviews.
 type Mutation struct {
-	Root string `yaml:"root,omitempty"`
+	Root string `json:"root" yaml:"root,omitempty"`
+}
+
+// Runtimes declares exact non-Go executables required by repository tests.
+// Node is a tooling-owned documentation runtime and is not repository policy.
+type Runtimes struct {
+	Deno string `json:"deno,omitempty" yaml:"deno,omitempty"`
+	Zsh  string `json:"zsh,omitempty" yaml:"zsh,omitempty"`
 }
 
 // Operation replaces one package-specific legacy Make target with typed steps.
 type Operation struct {
-	Module string `yaml:"module"`
-	Gate   string `yaml:"gate"`
-	Steps  []Step `yaml:"steps"`
+	Module string `json:"module" yaml:"module"`
+	Gate   string `json:"gate" yaml:"gate"`
+	Steps  []Step `json:"steps" yaml:"steps"`
 }
 
 // Step is a constrained operation with no shell or arbitrary executable hook.
 type Step struct {
-	Type      string   `yaml:"type"`
-	Packages  []string `yaml:"packages,omitempty"`
-	Run       string   `yaml:"run,omitempty"`
-	Benchmark string   `yaml:"benchmark,omitempty"`
-	Fuzz      string   `yaml:"fuzz,omitempty"`
-	Budget    string   `yaml:"budget,omitempty"`
-	Count     int      `yaml:"count,omitempty"`
-	Timeout   string   `yaml:"timeout,omitempty"`
+	Type      string   `json:"type" yaml:"type"`
+	Packages  []string `json:"packages,omitempty" yaml:"packages,omitempty"`
+	Run       string   `json:"run,omitempty" yaml:"run,omitempty"`
+	Benchmark string   `json:"benchmark,omitempty" yaml:"benchmark,omitempty"`
+	Fuzz      string   `json:"fuzz,omitempty" yaml:"fuzz,omitempty"`
+	Budget    string   `json:"budget,omitempty" yaml:"budget,omitempty"`
+	Count     int      `json:"count,omitempty" yaml:"count,omitempty"`
+	Timeout   string   `json:"timeout" yaml:"timeout,omitempty"`
 }
 
 // Load reads .golib.yaml from root, rejects unknown fields, applies stable
@@ -169,6 +177,12 @@ func (value Config) validate() error {
 		if err := validateRelativePath(path.value); err != nil {
 			return fmt.Errorf("%w: %s: %v", ErrInvalid, path.name, err)
 		}
+	}
+	if value.Runtimes.Deno != "" && !versionRE.MatchString("v"+value.Runtimes.Deno) {
+		return fmt.Errorf("%w: runtimes.deno must be an exact MAJOR.MINOR.PATCH version", ErrInvalid)
+	}
+	if value.Runtimes.Zsh != "" && value.Runtimes.Zsh != "5.9" {
+		return fmt.Errorf("%w: runtimes.zsh supports only 5.9", ErrInvalid)
 	}
 	seen := make(map[string]struct{}, len(value.Operations))
 	for index, operation := range value.Operations {

@@ -9,6 +9,7 @@ Core commands:
 
 - `golib --version` prints `dev` for source builds or the immutable release.
 - `golib config validate` validates configuration and both manifests.
+- `golib config show --json` emits normalized policy for workflow orchestration.
 - `golib inventory [--json]` prints the canonical module inventory.
 - `golib repository check` validates standalone repository structure.
 - `golib check [--all|--module DIR]` runs the enabled contract.

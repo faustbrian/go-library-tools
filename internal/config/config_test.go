@@ -107,6 +107,39 @@ func TestLoadAcceptsExplicitMutationEvidenceRoot(t *testing.T) {
 	}
 }
 
+func TestLoadAcceptsPinnedExternalRuntimes(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, ".golib.yaml"), `schema_version: 1
+tool_version: v1.0.0
+runtimes:
+  deno: 2.9.4
+  zsh: "5.9"
+`)
+	got, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Runtimes.Deno != "2.9.4" || got.Runtimes.Zsh != "5.9" {
+		t.Fatalf("runtimes = %#v", got.Runtimes)
+	}
+}
+
+func TestLoadRejectsUnsupportedExternalRuntimes(t *testing.T) {
+	tests := map[string]string{
+		"floating deno":   "runtimes:\n  deno: latest\n",
+		"unsupported zsh": "runtimes:\n  zsh: \"5.8\"\n",
+	}
+	for name, runtime := range tests {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\n"+runtime)
+			if _, err := config.Load(root); !errors.Is(err, config.ErrInvalid) {
+				t.Fatalf("Load() error = %v", err)
+			}
+		})
+	}
+}
+
 func TestLoadReportsReadFailure(t *testing.T) {
 	root := t.TempDir()
 	if err := os.Mkdir(filepath.Join(root, ".golib.yaml"), 0o700); err != nil {
