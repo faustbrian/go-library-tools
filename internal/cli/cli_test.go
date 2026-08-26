@@ -1,0 +1,140 @@
+package cli_test
+
+import (
+	"bytes"
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/faustbrian/go-library-tools/internal/cli"
+)
+
+func TestExecuteShowsHelp(t *testing.T) {
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"--help"}, t.TempDir(), &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 {
+		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
+	}
+	for _, command := range []string{"check", "config validate", "inventory", "repository check", "release dry-run"} {
+		if !strings.Contains(stdout.String(), command) {
+			t.Errorf("help does not contain %q", command)
+		}
+	}
+}
+
+func TestExecuteValidatesConfigurationFromNestedDirectory(t *testing.T) {
+	root := fixture(t)
+	nested := filepath.Join(root, "nested", "directory")
+	if err := os.MkdirAll(nested, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"config", "validate"}, nested, &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 {
+		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
+	}
+	if got := stdout.String(); got != "configuration valid: github.com/faustbrian/example\n" {
+		t.Fatalf("Execute() stdout = %q", got)
+	}
+}
+
+func TestExecutePrintsDeterministicJSONInventory(t *testing.T) {
+	root := fixture(t)
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"inventory", "--json"}, root, &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 {
+		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
+	}
+	var got map[string]any
+	if err := json.Unmarshal(stdout.Bytes(), &got); err != nil {
+		t.Fatalf("stdout is not JSON: %v", err)
+	}
+	if got["repository"] != "github.com/faustbrian/example" {
+		t.Fatalf("inventory repository = %#v", got["repository"])
+	}
+}
+
+func TestExecutePrintsHumanInventory(t *testing.T) {
+	root := fixture(t)
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"inventory"}, root, &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 || stdout.String() != "github.com/faustbrian/example: 1 module(s)\n" {
+		t.Fatalf("Execute() code = %d, stdout = %q, stderr = %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteReportsOutputFailure(t *testing.T) {
+	root := fixture(t)
+	var stderr bytes.Buffer
+	code := cli.Execute([]string{"inventory", "--json"}, root, failingWriter{}, &stderr)
+	if code != 1 || !strings.Contains(stderr.String(), "write inventory") {
+		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
+	}
+}
+
+func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		root func(*testing.T) string
+		code int
+		want string
+	}{
+		{"missing command", nil, fixture, 2, "command is required"},
+		{"unknown command", []string{"wat"}, fixture, 2, "unknown command"},
+		{"invalid config arguments", []string{"config"}, fixture, 2, "usage:"},
+		{"invalid inventory arguments", []string{"inventory", "--yaml"}, fixture, 2, "usage:"},
+		{"missing root", []string{"inventory"}, func(t *testing.T) string { return t.TempDir() }, 1, "locate repository root"},
+		{"relative root", []string{"inventory"}, func(*testing.T) string { return "." }, 1, "must be absolute"},
+		{"invalid root path", []string{"inventory"}, func(t *testing.T) string {
+			root := t.TempDir()
+			file := filepath.Join(root, "file")
+			write(t, file, "not a directory")
+			return file
+		}, 1, "locate repository root"},
+		{"invalid config", []string{"inventory"}, func(t *testing.T) string {
+			root := fixture(t)
+			write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 2\ntool_version: v1.0.0\n")
+			return root
+		}, 1, "schema_version must be 1"},
+		{"invalid manifest", []string{"inventory"}, func(t *testing.T) string {
+			root := fixture(t)
+			write(t, filepath.Join(root, "modules.json"), "{")
+			return root
+		}, 1, "load module manifest"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			code := cli.Execute(test.args, test.root(t), &stdout, &stderr)
+			if code != test.code || !strings.Contains(stderr.String(), test.want) {
+				t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
+			}
+		})
+	}
+}
+
+type failingWriter struct{}
+
+func (failingWriter) Write([]byte) (int, error) {
+	return 0, errors.New("write failed")
+}
+
+func fixture(t *testing.T) string {
+	t.Helper()
+	root := t.TempDir()
+	write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\n")
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"tests":true},"packages":[]}]}`)
+	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[]}`)
+	return root
+}
+
+func write(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}

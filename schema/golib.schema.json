@@ -1,0 +1,63 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/faustbrian/go-library-tools/main/schema/golib.schema.json",
+  "title": "golib repository configuration",
+  "description": "Repository-specific policy consumed by the golib CLI.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "tool_version"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1,
+      "description": "Configuration schema version."
+    },
+    "tool_version": {
+      "type": "string",
+      "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$",
+      "description": "Exact released golib CLI version."
+    },
+    "manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modules": {
+          "$ref": "#/$defs/repositoryPath",
+          "default": "modules.json"
+        },
+        "packages": {
+          "$ref": "#/$defs/repositoryPath",
+          "default": "packages.json"
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/repositoryPath",
+          "default": ".verification"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "repositoryPath": {
+      "type": "string",
+      "minLength": 1,
+      "not": {
+        "anyOf": [
+          {
+            "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+          },
+          {
+            "pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"
+          }
+        ]
+      }
+    }
+  }
+}

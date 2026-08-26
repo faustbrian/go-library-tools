@@ -1,0 +1,159 @@
+package inventory_test
+
+import (
+	"errors"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+
+	"github.com/faustbrian/go-library-tools/internal/config"
+	"github.com/faustbrian/go-library-tools/internal/inventory"
+)
+
+func TestLoadValidatesCanonicalManifests(t *testing.T) {
+	root := fixture(t)
+
+	got, err := inventory.Load(root, config.Config{
+		Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+	})
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+
+	if got.Repository != "github.com/faustbrian/example" || len(got.Modules) != 1 {
+		t.Fatalf("Load() = %#v", got)
+	}
+	if got.Modules[0].Directory != "." || got.Modules[0].ModulePath != got.Repository {
+		t.Fatalf("Load() module = %#v", got.Modules[0])
+	}
+}
+
+func TestLoadRejectsManifestMismatch(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/other","packages":[]}`)
+
+	_, err := inventory.Load(root, config.Config{
+		Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "repository identities differ") {
+		t.Fatalf("Load() error = %v", err)
+	}
+}
+
+func TestLoadRejectsUnknownManifestFields(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[],"extra":true}`)
+
+	_, err := inventory.Load(root, config.Config{
+		Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+	})
+	if err == nil || !strings.Contains(err.Error(), "unknown field") {
+		t.Fatalf("Load() error = %v", err)
+	}
+}
+
+func TestLoadRejectsInvalidManifestContracts(t *testing.T) {
+	tests := map[string]func(*testing.T, string){
+		"unsupported module schema": func(t *testing.T, root string) {
+			write(t, filepath.Join(root, "modules.json"), `{"schema_version":2,"repository":"github.com/faustbrian/example","modules":[]}`)
+		},
+		"unsupported package schema": func(t *testing.T, root string) {
+			write(t, filepath.Join(root, "packages.json"), `{"schema_version":2,"repository":"github.com/faustbrian/example","packages":[]}`)
+		},
+		"empty repository": func(t *testing.T, root string) {
+			write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"","packages":[]}`)
+			write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"","modules":[]}`)
+		},
+		"no modules": func(t *testing.T, root string) {
+			write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","modules":[]}`)
+		},
+	}
+	for name, mutate := range tests {
+		t.Run(name, func(t *testing.T) {
+			root := fixture(t)
+			mutate(t, root)
+			_, err := inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}})
+			if err == nil {
+				t.Fatal("Load() error = nil")
+			}
+		})
+	}
+}
+
+func TestLoadReportsManifestInputFailures(t *testing.T) {
+	tests := map[string]func(*testing.T, string){
+		"missing modules": func(t *testing.T, root string) {
+			if err := os.Remove(filepath.Join(root, "modules.json")); err != nil {
+				t.Fatal(err)
+			}
+		},
+		"missing packages": func(t *testing.T, root string) {
+			if err := os.Remove(filepath.Join(root, "packages.json")); err != nil {
+				t.Fatal(err)
+			}
+		},
+		"malformed modules": func(t *testing.T, root string) {
+			write(t, filepath.Join(root, "modules.json"), "{")
+		},
+		"multiple package values": func(t *testing.T, root string) {
+			write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[]} {}`)
+		},
+		"malformed trailing value": func(t *testing.T, root string) {
+			write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[]} {`)
+		},
+	}
+	for name, mutate := range tests {
+		t.Run(name, func(t *testing.T) {
+			root := fixture(t)
+			mutate(t, root)
+			_, err := inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}})
+			if err == nil {
+				t.Fatal("Load() error = nil")
+			}
+		})
+	}
+}
+
+func TestLoadPropagatesReadFailure(t *testing.T) {
+	root := fixture(t)
+	if err := os.Remove(filepath.Join(root, "packages.json")); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Mkdir(filepath.Join(root, "packages.json"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	_, err := inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}})
+	if err == nil || errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("Load() error = %v", err)
+	}
+}
+
+func fixture(t *testing.T) string {
+	t.Helper()
+	root := t.TempDir()
+	write(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/example\n\ngo 1.27.0\n")
+	write(t, filepath.Join(root, "modules.json"), `{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/example",
+  "go_version": "1.27.0",
+  "modules": [{
+    "directory": ".",
+    "module_path": "github.com/faustbrian/example",
+    "go_version": "1.27.0",
+    "kind": "public",
+    "releasable": true,
+    "gates": {"tests": true},
+    "packages": []
+  }]
+}`)
+	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[]}`)
+	return root
+}
+
+func write(t *testing.T, path, content string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
