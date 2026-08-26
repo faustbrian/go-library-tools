@@ -90,6 +90,7 @@ func internalFixture(t *testing.T) string {
 	root := t.TempDir()
 	files := map[string]string{
 		".golib.yaml":   "schema_version: 1\ntool_version: v1.0.0\n",
+		".go-version":   "1.27.0\n",
 		"go.mod":        "module example\n\ngo 1.27.0\n",
 		"example.go":    "package example\n",
 		"modules.json":  `{"schema_version":1,"repository":"example","go_version":"1.27.0","modules":[{"directory":".","module_path":"example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{},"packages":[]}]}`,

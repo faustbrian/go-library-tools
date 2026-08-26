@@ -66,6 +66,16 @@ func TestExecutePrintsHumanInventory(t *testing.T) {
 	}
 }
 
+func TestExecuteChecksStandaloneRepositoryContract(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/example\n\ngo 1.27.0\n")
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"repository", "check"}, root, &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 || stdout.String() != "standalone repository contract passed\n" {
+		t.Fatalf("Execute() = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
 func TestExecuteRunsCheckWithDisposableGoEnvironment(t *testing.T) {
 	root := fixture(t)
 	write(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/example\n\ngo 1.27.0\n")
@@ -114,6 +124,12 @@ func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
 		{"unknown command", []string{"wat"}, fixture, 2, "unknown command"},
 		{"invalid config arguments", []string{"config"}, fixture, 2, "usage:"},
 		{"invalid inventory arguments", []string{"inventory", "--yaml"}, fixture, 2, "usage:"},
+		{"invalid repository arguments", []string{"repository"}, fixture, 2, "usage:"},
+		{"invalid repository contract", []string{"repository", "check"}, func(t *testing.T) string {
+			root := fixture(t)
+			write(t, filepath.Join(root, ".go-version"), "1.26.0\n")
+			return root
+		}, 1, ".go-version"},
 		{"invalid check arguments", []string{"check", "--module"}, fixture, 2, "usage:"},
 		{"unknown check module", []string{"check", "--module", "missing"}, fixture, 1, "unknown module"},
 		{"missing root", []string{"inventory"}, func(t *testing.T) string { return t.TempDir() }, 1, "locate repository root"},
@@ -156,6 +172,7 @@ func fixture(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\n")
+	write(t, filepath.Join(root, ".go-version"), "1.27.0\n")
 	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"tests":true},"packages":[]}]}`)
 	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[]}`)
 	return root

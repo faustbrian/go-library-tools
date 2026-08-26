@@ -13,6 +13,7 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/gates"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/internal/repository"
 )
 
 const help = `golib validates and executes the Go library repository contract.
@@ -77,6 +78,15 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return usage(stderr, "usage: golib config validate")
 		}
 		_, _ = fmt.Fprintf(stdout, "configuration valid: %s\n", catalog.Repository)
+		return 0
+	case "repository":
+		if len(args) != 2 || args[1] != "check" {
+			return usage(stderr, "usage: golib repository check")
+		}
+		if err := repository.Check(root, catalog); err != nil {
+			return failure(stderr, err)
+		}
+		_, _ = io.WriteString(stdout, "standalone repository contract passed\n")
 		return 0
 	case "inventory":
 		if len(args) == 1 {

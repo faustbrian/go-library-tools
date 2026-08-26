@@ -18,3 +18,5 @@ All notable changes to this project are documented in this file.
   symlink rejection, atomic publication, and semantic concurrent reuse.
 - Built-in exported API compatibility checks and atomic baseline updates using
   the pinned `apidiff` verifier and task-owned snapshots.
+- Standalone repository validation for module identity, Go versions, workspace
+  membership, committed replacements, and complete legacy-tool removal.
