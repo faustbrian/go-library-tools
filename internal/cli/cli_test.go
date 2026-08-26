@@ -66,6 +66,33 @@ func TestExecutePrintsHumanInventory(t *testing.T) {
 	}
 }
 
+func TestExecuteRunsCheckWithDisposableGoEnvironment(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/example\n\ngo 1.27.0\n")
+	write(t, filepath.Join(root, "example.go"), "package example\n\nfunc Value() int { return 1 }\n")
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{},"packages":[]}]}`)
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"check", "--module", "."}, root, &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 {
+		t.Fatalf("Execute() code = %d, stdout = %q, stderr = %q", code, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "[.] safety\n") {
+		t.Fatalf("check output = %q", stdout.String())
+	}
+}
+
+func TestExecuteCheckDefaultsToAllModules(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/example\n\ngo 1.27.0\n")
+	write(t, filepath.Join(root, "example.go"), "package example\n")
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{},"packages":[]}]}`)
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"check"}, root, &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 {
+		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
+	}
+}
+
 func TestExecuteReportsOutputFailure(t *testing.T) {
 	root := fixture(t)
 	var stderr bytes.Buffer
@@ -87,6 +114,8 @@ func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
 		{"unknown command", []string{"wat"}, fixture, 2, "unknown command"},
 		{"invalid config arguments", []string{"config"}, fixture, 2, "usage:"},
 		{"invalid inventory arguments", []string{"inventory", "--yaml"}, fixture, 2, "usage:"},
+		{"invalid check arguments", []string{"check", "--module"}, fixture, 2, "usage:"},
+		{"unknown check module", []string{"check", "--module", "missing"}, fixture, 1, "unknown module"},
 		{"missing root", []string{"inventory"}, func(t *testing.T) string { return t.TempDir() }, 1, "locate repository root"},
 		{"relative root", []string{"inventory"}, func(*testing.T) string { return "." }, 1, "must be absolute"},
 		{"invalid root path", []string{"inventory"}, func(t *testing.T) string {
