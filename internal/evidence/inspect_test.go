@@ -39,6 +39,19 @@ func TestInspectAcceptsMissingEvidenceRoot(t *testing.T) {
 	}
 }
 
+func TestInspectIgnoresDirectoriesAndNonJSONEvidenceFiles(t *testing.T) {
+	root := t.TempDir()
+	directory := filepath.Join(root, ".verification", "by-input", "coverage", strings.Repeat("a", 64)+".json")
+	if err := os.MkdirAll(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	writeInspect(t, filepath.Join(root, ".verification", "by-input", "coverage", strings.Repeat("b", 64)+".txt"), "not evidence")
+	records, err := evidence.Inspect(root, ".verification", "example", []string{"."})
+	if err != nil || len(records) != 0 {
+		t.Fatalf("Inspect() = %#v, %v", records, err)
+	}
+}
+
 func TestInspectRejectsUnsafeRootsAndTrees(t *testing.T) {
 	root := t.TempDir()
 	target := filepath.Join(root, "target")

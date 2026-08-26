@@ -21,7 +21,7 @@
         "documentation": true,
         "fuzz": true,
         "lint": true,
-        "mutation": false,
+        "mutation": true,
         "race": true,
         "security": true,
         "tests": true

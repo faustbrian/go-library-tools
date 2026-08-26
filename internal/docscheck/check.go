@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 )
 
@@ -77,14 +78,7 @@ func documents(root string) ([]string, error) {
 	if err != nil {
 		return nil, fmt.Errorf("walk documentation: %w", err)
 	}
-	foundReadme := false
-	for _, path := range paths {
-		if path == readme {
-			foundReadme = true
-			break
-		}
-	}
-	if !foundReadme {
+	if !slices.Contains(paths, readme) {
 		return nil, errors.New("README.md is required")
 	}
 	return paths, nil
@@ -159,7 +153,7 @@ func linkDestination(value string) (string, error) {
 		return "", nil
 	}
 	closing := strings.IndexByte(value, '>')
-	if closing < 0 {
+	if closing == -1 {
 		return "", errors.New("angle-bracket link destination is not closed")
 	}
 	return value[1:closing], nil

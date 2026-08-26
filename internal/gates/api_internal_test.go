@@ -1,6 +1,7 @@
 package gates
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -66,6 +67,46 @@ func TestAPIModuleRejectsUnboundedVerifierOutput(t *testing.T) {
 	err := runner.apiModule(context.Background(), io.Discard, inventory.Module{Directory: ".", ModulePath: "example"}, false)
 	if err == nil || !strings.Contains(err.Error(), "exceeded") {
 		t.Fatalf("apiModule() error = %v", err)
+	}
+}
+
+func TestBoundedBufferPreservesExactBoundaryAndTruncatesOverflow(t *testing.T) {
+	var buffer boundedBuffer
+	first := bytes.Repeat([]byte{'a'}, maximumAPIOutput-1)
+	if written, err := buffer.Write(first); err != nil || written != len(first) || buffer.overflow {
+		t.Fatalf("first write = %d, %v, overflow = %v", written, err, buffer.overflow)
+	}
+	if written, err := buffer.Write([]byte{'b'}); err != nil || written != 1 || buffer.overflow || buffer.Len() != maximumAPIOutput {
+		t.Fatalf("boundary write = %d, %v, overflow = %v, length = %d", written, err, buffer.overflow, buffer.Len())
+	}
+	if written, err := buffer.Write([]byte("cd")); err != nil || written != 2 || !buffer.overflow || buffer.Len() != maximumAPIOutput {
+		t.Fatalf("overflow write = %d, %v, overflow = %v, length = %d", written, err, buffer.overflow, buffer.Len())
+	}
+	if got := buffer.Bytes()[maximumAPIOutput-1]; got != 'b' {
+		t.Fatalf("last retained byte = %q", got)
+	}
+}
+
+func TestAPIDisabledModuleDoesNotStopLaterEnabledModule(t *testing.T) {
+	files := &fakeAPIFiles{file: &fakeNamedFile{name: "snapshot"}}
+	runs := 0
+	runner := Runner{
+		Root: "/repo",
+		Catalog: inventory.Inventory{Modules: []inventory.Module{
+			{Directory: "a-disabled"},
+			{Directory: "z-enabled", ModulePath: "example", Gates: map[string]bool{"api_compatibility": true}},
+		}},
+		Executor: executorFunction(func(context.Context, Command) error {
+			runs++
+			return nil
+		}),
+		apiFiles: files,
+	}
+	if err := runner.API(context.Background(), []string{"a-disabled", "z-enabled"}, false); err != nil {
+		t.Fatalf("API() error = %v", err)
+	}
+	if runs != 2 {
+		t.Fatalf("enabled API command runs = %d, want 2", runs)
 	}
 }
 

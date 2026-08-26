@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -170,7 +171,9 @@ func (runner Runner) localOwnedModules(module inventory.Module) []mutation.Owned
 		}
 		owned = append(owned, mutation.OwnedModule{ModulePath: candidate.ModulePath, Directory: candidate.Directory})
 	}
-	sort.Slice(owned, func(left, right int) bool { return owned[left].ModulePath < owned[right].ModulePath })
+	slices.SortFunc(owned, func(left, right mutation.OwnedModule) int {
+		return strings.Compare(left.ModulePath, right.ModulePath)
+	})
 	return owned
 }
 

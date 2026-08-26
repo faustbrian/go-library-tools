@@ -173,6 +173,7 @@ func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
 		{"invalid config show arguments", []string{"config", "show"}, fixture, 2, "usage:"},
 		{"invalid inventory arguments", []string{"inventory", "--yaml"}, fixture, 2, "usage:"},
 		{"invalid repository arguments", []string{"repository"}, fixture, 2, "usage:"},
+		{"missing evidence action", []string{"evidence"}, fixture, 2, "usage:"},
 		{"invalid evidence arguments", []string{"evidence", "inspect", "--yaml"}, fixture, 2, "usage:"},
 		{"unsafe evidence", []string{"evidence", "inspect"}, func(t *testing.T) string {
 			root := fixture(t)
@@ -200,6 +201,21 @@ func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
 			write(t, file, "not a directory")
 			return file
 		}, 1, "locate repository root"},
+		{"unreadable root marker", []string{"inventory"}, func(t *testing.T) string {
+			root := t.TempDir()
+			marker := filepath.Join(root, ".golib.yaml")
+			if err := os.Symlink(marker, marker); err != nil {
+				t.Fatal(err)
+			}
+			return root
+		}, 1, "locate repository root"},
+		{"directory root marker", []string{"inventory"}, func(t *testing.T) string {
+			root := t.TempDir()
+			if err := os.Mkdir(filepath.Join(root, ".golib.yaml"), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			return root
+		}, 1, ".golib.yaml not found"},
 		{"invalid config", []string{"inventory"}, func(t *testing.T) string {
 			root := fixture(t)
 			write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 2\ntool_version: v1.0.0\n")

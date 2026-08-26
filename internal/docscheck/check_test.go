@@ -14,7 +14,19 @@ func TestCheckAcceptsNavigableDocumentation(t *testing.T) {
 	write(t, filepath.Join(root, "SECURITY.md"), "# Security\n")
 	write(t, filepath.Join(root, "docs", "guide.md"), "# Guide\n\n[Root](../README.md) [Encoded](space%20name.md)\n")
 	write(t, filepath.Join(root, "docs", "space name.md"), "# Encoded\n")
+	write(t, filepath.Join(root, "docs", "ignored.txt"), "ignored trailing whitespace \n")
 	write(t, filepath.Join(root, "unrelated", "ignored.md"), "ignored trailing whitespace \n")
+	if err := Check(root); err != nil {
+		t.Fatalf("Check() error = %v", err)
+	}
+}
+
+func TestCheckAcceptsExactDocumentBounds(t *testing.T) {
+	root := basic(t)
+	write(t, filepath.Join(root, "README.md"), strings.Repeat("x", maximumDocumentSize))
+	for index := 1; index < maximumDocuments; index++ {
+		write(t, filepath.Join(root, "docs", fmt.Sprintf("%04d.md", index)), "# Document\n")
+	}
 	if err := Check(root); err != nil {
 		t.Fatalf("Check() error = %v", err)
 	}
@@ -90,6 +102,7 @@ func TestCheckRejectsUnsafeAndBrokenLinks(t *testing.T) {
 		{"network path", "//example.com/path", "repository-relative"},
 		{"absolute", "/tmp/file", "repository-relative"},
 		{"escape", "../outside.md", "escapes repository"},
+		{"exact parent escape", "..", "escapes repository"},
 		{"broken", "missing.md", "broken local link"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -110,6 +123,14 @@ func TestCheckRejectsUnsafeAndBrokenLinks(t *testing.T) {
 		}
 		write(t, filepath.Join(root, "README.md"), "[target](link.txt)\n")
 		if err := Check(root); err == nil || !strings.Contains(err.Error(), "targets symlink") {
+			t.Fatalf("Check() error = %v", err)
+		}
+	})
+
+	t.Run("checks every link and line number", func(t *testing.T) {
+		root := basic(t)
+		write(t, filepath.Join(root, "README.md"), "# Readme\n[valid](#readme) [broken](missing.md)\n")
+		if err := Check(root); err == nil || !strings.Contains(err.Error(), "README.md:2") || !strings.Contains(err.Error(), "broken local link") {
 			t.Fatalf("Check() error = %v", err)
 		}
 	})

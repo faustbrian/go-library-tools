@@ -58,7 +58,11 @@ func TestCoverageReportsOwnedFileAndExecutionFailures(t *testing.T) {
 
 func TestCoverageUsesTaskWorkspace(t *testing.T) {
 	files := &fakeCoverageFiles{file: &fakeNamedFile{name: "profile"}}
-	executor := workspaceExecutor{directory: "/task", run: func(context.Context, Command) error { return nil }}
+	var observed Command
+	executor := workspaceExecutor{directory: "/task", run: func(_ context.Context, command Command) error {
+		observed = command
+		return nil
+	}}
 	runner := Runner{Executor: executor, coverageFiles: files}
 	module := inventory.Module{Directory: ".", Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}}
 	if err := runner.runCoverage(context.Background(), io.Discard, t.TempDir(), module); err != nil {
@@ -66,6 +70,56 @@ func TestCoverageUsesTaskWorkspace(t *testing.T) {
 	}
 	if files.directory != "/task" {
 		t.Fatalf("coverage directory = %q", files.directory)
+	}
+	if got := strings.Join(observed.Args, " "); strings.Contains(got, "-tags=") {
+		t.Fatalf("coverage command contains empty test tags: %q", got)
+	}
+}
+
+func TestStandaloneGatesContinuePastDisabledModules(t *testing.T) {
+	root := t.TempDir()
+	enabled := filepath.Join(root, "z-enabled")
+	if err := os.MkdirAll(enabled, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(enabled, "README.md"), []byte("# Enabled\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	modules := []inventory.Module{
+		{Directory: "a-disabled"},
+		{Directory: "z-enabled", Gates: map[string]bool{"coverage": true, "documentation": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}},
+	}
+	commands := 0
+	spellingChecks := 0
+	linkChecks := 0
+	runner := Runner{
+		Root: root, Catalog: inventory.Inventory{Modules: modules},
+		Executor: executorFunction(func(context.Context, Command) error {
+			commands++
+			return nil
+		}),
+		coverageFiles: &fakeCoverageFiles{file: &fakeNamedFile{name: "profile"}},
+		DocumentationSpelling: func(context.Context, string) error {
+			spellingChecks++
+			return nil
+		},
+		DocumentationLinks: func(context.Context, string) error {
+			linkChecks++
+			return nil
+		},
+	}
+	selection := []string{"a-disabled", "z-enabled"}
+	if err := runner.Coverage(context.Background(), selection); err != nil {
+		t.Fatalf("Coverage() error = %v", err)
+	}
+	if err := runner.Docs(context.Background(), selection); err != nil {
+		t.Fatalf("Docs() error = %v", err)
+	}
+	if commands != 1 {
+		t.Fatalf("enabled gate command runs = %d, want 1", commands)
+	}
+	if spellingChecks != 1 || linkChecks != 1 {
+		t.Fatalf("enabled documentation checks = spelling %d, links %d", spellingChecks, linkChecks)
 	}
 }
 
@@ -450,6 +504,13 @@ func TestOperationCommandSupportsSelectorsAndRejectsUnknownTypes(t *testing.T) {
 	}
 	if _, err := operationCommand(root, module, config.Step{Type: "unsupported"}); err == nil {
 		t.Fatal("operationCommand() error = nil")
+	}
+	command, err := operationCommand(root, inventory.Module{}, config.Step{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := strings.Join(command.Args, " "); strings.Contains(got, "-tags=") {
+		t.Fatalf("operation command contains empty test tags: %q", got)
 	}
 }
 

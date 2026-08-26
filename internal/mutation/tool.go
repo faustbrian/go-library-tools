@@ -95,7 +95,7 @@ func BuildVerifier(ctx context.Context, workspace string, process Process) (Tool
 		if err := os.WriteFile(patchPath, assets[asset.identity], 0o600); err != nil {
 			return Tool{}, fmt.Errorf("write verifier patch: %w", err)
 		}
-		if err := process(ctx, "git", []string{"apply", "--whitespace=nowarn", patchPath}, source, nil, io.Discard, io.Discard); err != nil {
+		if err := process(ctx, "git", []string{"apply", "--unidiff-zero", "--whitespace=nowarn", patchPath}, source, nil, io.Discard, io.Discard); err != nil {
 			return Tool{}, fmt.Errorf("apply verifier patch %s: %w", filepath.Base(asset.embedded), err)
 		}
 	}

@@ -270,12 +270,8 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			return err
 		}
 	}
-	for _, gate := range []string{"fuzz"} {
-		operation, exists := runner.operation(module.Directory, gate)
-		if !exists {
-			continue
-		}
-		if err := announce(output, module.Directory, gate, func() error {
+	if operation, exists := runner.operation(module.Directory, "fuzz"); exists {
+		if err := announce(output, module.Directory, "fuzz", func() error {
 			return runner.runOperation(ctx, directory, module, operation)
 		}); err != nil {
 			return err

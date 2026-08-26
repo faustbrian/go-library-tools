@@ -70,6 +70,19 @@ func TestInputDigestResolvesNestedTargetImport(t *testing.T) {
 	}
 }
 
+func TestInputDigestIgnoresGeneratedTestExecutable(t *testing.T) {
+	root := t.TempDir()
+	writeMutationInput(t, root, "target.go", "package example\n")
+	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.27.0"}
+	listing := strings.Join([]string{
+		`{"Dir":"` + root + `","ImportPath":"example","GoFiles":["target.go"],"Module":{"Path":"example","Main":true}}`,
+		`{"Dir":"` + root + `","ImportPath":"example.test","GoFiles":["` + filepath.Join(t.TempDir(), "go-build", "generated") + `"],"Module":{"Path":"example","Main":true}}`,
+	}, "\n")
+	if _, err := InputDigest(root, policy, strings.NewReader(listing), nil); err != nil {
+		t.Fatalf("InputDigest() error = %v", err)
+	}
+}
+
 func TestInputDigestRejectsMismatchedZeroReview(t *testing.T) {
 	root := t.TempDir()
 	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6"}

@@ -56,7 +56,9 @@ func TestVerifyRejectsIncompleteMissingAndMalformedProfiles(t *testing.T) {
 		{"missing mode", "package/file.go:1.1,2.1 1 1\n", []string{"package"}, "mode"},
 		{"malformed block", "mode: atomic\nbad\n", []string{"package"}, "line 2"},
 		{"missing location", "mode: atomic\nbad 1 1\n", []string{"package"}, "line 2"},
+		{"zero location separator", "mode: atomic\n:1.1,2.1 1 1\n", []string{"package"}, "line 2"},
 		{"invalid statements", "mode: atomic\npackage/file.go:1.1,2.1 nope 1\n", []string{"package"}, "line 2"},
+		{"zero statements", "mode: atomic\npackage/file.go:1.1,2.1 0 1\n", []string{"package"}, "missing executable"},
 		{"invalid count", "mode: atomic\npackage/file.go:1.1,2.1 1 nope\n", []string{"package"}, "line 2"},
 		{"inconsistent duplicate", "mode: atomic\npackage/file.go:1.1,2.1 1 1\npackage/file.go:1.1,2.1 2 1\n", []string{"package"}, "inconsistent duplicate"},
 		{"uncovered", "mode: atomic\npackage/file.go:1.1,2.1 1 0\n", []string{"package"}, "below exact"},
@@ -88,6 +90,31 @@ func TestVerifyRejectsStatementTotalOverflow(t *testing.T) {
 	_, err := coverage.Verify(strings.NewReader(profile), []string{"package"})
 	if err == nil || !strings.Contains(err.Error(), "overflows") {
 		t.Fatalf("Verify() error = %v", err)
+	}
+}
+
+func TestVerifyAcceptsMaximumStatementTotal(t *testing.T) {
+	maximum := int(^uint(0) >> 1)
+	profile := "mode: atomic\npackage/file.go:1.1,2.1 " + strconv.Itoa(maximum) + " 1\n"
+	report, err := coverage.Verify(strings.NewReader(profile), []string{"package"})
+	if err != nil {
+		t.Fatalf("Verify() error = %v", err)
+	}
+	want := "package " + strconv.Itoa(maximum) + "/" + strconv.Itoa(maximum) + " statements\n"
+	if report != want {
+		t.Fatalf("Verify() report = %q", report)
+	}
+}
+
+func TestVerifyAcceptsCoverageLinesBeyondScannerDefault(t *testing.T) {
+	packagePath := strings.Repeat("segment", 700)
+	profile := "mode: atomic\n" + packagePath + "/file.go:1.1,2.1 1 1\n"
+	report, err := coverage.Verify(strings.NewReader(profile), []string{packagePath})
+	if err != nil {
+		t.Fatalf("Verify() error = %v", err)
+	}
+	if report != packagePath+" 1/1 statements\n" {
+		t.Fatalf("Verify() report length = %d", len(report))
 	}
 }
 

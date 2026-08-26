@@ -174,6 +174,7 @@ func TestLoadValidatesOperationModuleAndGateReferences(t *testing.T) {
 	}{
 		{"unknown module", config.Operation{Module: "missing", Gate: "docs"}, "unknown module"},
 		{"disabled gate", config.Operation{Module: ".", Gate: "conformance"}, "not enabled"},
+		{"interoperability without tools", config.Operation{Module: ".", Gate: "interoperability"}, "not enabled"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

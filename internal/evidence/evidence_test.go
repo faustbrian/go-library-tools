@@ -82,18 +82,33 @@ func TestLoadRejectsInvalidAndMismatchedEvidence(t *testing.T) {
 	}
 	if _, err := evidence.Load(root, "test", digest); !errors.Is(err, evidence.ErrInvalid) {
 		t.Fatalf("Load(directory) error = %v", err)
+	} else if !strings.Contains(err.Error(), "not a regular file") {
+		t.Fatalf("Load(directory) error = %v", err)
 	}
 }
 
 func TestStoreRejectsConflictingEvidence(t *testing.T) {
-	root := t.TempDir()
-	record := validRecord()
-	if _, _, err := evidence.Store(root, record); err != nil {
-		t.Fatal(err)
+	tests := map[string]func(*evidence.Record){
+		"repository":  func(record *evidence.Record) { record.Repository = "github.com/faustbrian/other" },
+		"module":      func(record *evidence.Record) { record.Module = "nested" },
+		"package":     func(record *evidence.Record) { record.Package = "nested" },
+		"verifier":    func(record *evidence.Record) { record.VerifierDigest = digest("b") },
+		"result":      func(record *evidence.Record) { record.Result = "failed" },
+		"report":      func(record *evidence.Record) { record.ReportDigest = digest("b") },
+		"environment": func(record *evidence.Record) { record.Environment["go"] = "1.27.1" },
 	}
-	record.Result = "failed"
-	if _, _, err := evidence.Store(root, record); !errors.Is(err, evidence.ErrConflict) {
-		t.Fatalf("Store() error = %v", err)
+	for name, mutate := range tests {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			record := validRecord()
+			if _, _, err := evidence.Store(root, record); err != nil {
+				t.Fatal(err)
+			}
+			mutate(&record)
+			if _, _, err := evidence.Store(root, record); !errors.Is(err, evidence.ErrConflict) {
+				t.Fatalf("Store() error = %v", err)
+			}
+		})
 	}
 }
 
@@ -102,19 +117,33 @@ func TestParseRejectsInvalidRecords(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	tests := map[string][]byte{
-		"invalid":   []byte("{}"),
-		"unknown":   bytes.Replace(valid, []byte(`"gate"`), []byte(`"unknown":true,"gate"`), 1),
-		"multiple":  append(append([]byte(nil), valid...), []byte("{}")...),
-		"trailing":  append(append([]byte(nil), valid...), '['),
-		"oversized": append(append([]byte(nil), valid...), bytes.Repeat([]byte(" "), evidence.MaximumSize)...),
+	tests := map[string]struct {
+		input []byte
+		want  string
+	}{
+		"invalid":   {input: []byte("{}"), want: "schema_version"},
+		"unknown":   {input: bytes.Replace(valid, []byte(`"gate"`), []byte(`"unknown":true,"gate"`), 1), want: "unknown field"},
+		"multiple":  {input: append(append([]byte(nil), valid...), []byte("{}")...), want: "multiple JSON values"},
+		"trailing":  {input: append(append([]byte(nil), valid...), '['), want: "trailing data"},
+		"oversized": {input: append(append([]byte(nil), valid...), bytes.Repeat([]byte(" "), evidence.MaximumSize)...), want: "exceeds"},
 	}
-	for name, input := range tests {
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			if _, err := evidence.Parse(bytes.NewReader(input)); !errors.Is(err, evidence.ErrInvalid) {
+			if _, err := evidence.Parse(bytes.NewReader(test.input)); !errors.Is(err, evidence.ErrInvalid) || !strings.Contains(err.Error(), test.want) {
 				t.Fatalf("Parse() error = %v", err)
 			}
 		})
+	}
+}
+
+func TestParseAcceptsExactSizeLimit(t *testing.T) {
+	valid, err := evidence.Marshal(validRecord())
+	if err != nil {
+		t.Fatal(err)
+	}
+	input := append(valid, bytes.Repeat([]byte(" "), evidence.MaximumSize-len(valid))...)
+	if _, err := evidence.Parse(bytes.NewReader(input)); err != nil {
+		t.Fatalf("Parse() error = %v", err)
 	}
 }
 
@@ -201,7 +230,7 @@ func TestStoreRejectsUnsafeEvidenceRoots(t *testing.T) {
 }
 
 func validRecord() evidence.Record {
-	digest := "sha256:" + strings.Repeat("a", 64)
+	digest := digest("a")
 	return evidence.Record{
 		SchemaVersion: evidence.SchemaVersion, Repository: "github.com/faustbrian/example",
 		Module: ".", Gate: "coverage", InputDigest: digest,
@@ -209,3 +238,5 @@ func validRecord() evidence.Record {
 		Environment: map[string]string{"go": "1.27.0"}, CompletedAt: time.Unix(1, 0).UTC(),
 	}
 }
+
+func digest(character string) string { return "sha256:" + strings.Repeat(character, 64) }

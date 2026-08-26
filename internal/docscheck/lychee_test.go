@@ -113,6 +113,7 @@ func TestExtractLycheeRejectsMalformedContents(t *testing.T) {
 		want    string
 	}{
 		{name: "unsafe path", entries: []tarEntry{{name: "../lychee", body: []byte("binary")}}, want: "unsafe archive path"},
+		{name: "absolute path", entries: []tarEntry{{name: "/lychee", body: []byte("binary")}}, want: "unsafe archive path"},
 		{name: "backslash path", entries: []tarEntry{{name: `lychee-test\\lychee`, body: []byte("binary")}}, want: "unsafe archive path"},
 		{name: "link", entries: []tarEntry{{name: "lychee-test/lychee", kind: tar.TypeSymlink}}, want: "unsupported archive entry"},
 		{name: "binary directory", entries: []tarEntry{{name: "lychee-test/lychee", kind: tar.TypeDir}}, want: "binary is not a regular file"},
@@ -120,6 +121,11 @@ func TestExtractLycheeRejectsMalformedContents(t *testing.T) {
 		{name: "duplicate binary", entries: []tarEntry{{name: "lychee-test/lychee", body: []byte("one")}, {name: "lychee-test/lychee", body: []byte("two")}}, want: "duplicate lychee binary"},
 		{name: "binary too large", entries: []tarEntry{{name: "lychee-test/lychee", size: 65 << 20}}, want: "binary is too large"},
 		{name: "archive too large", entries: []tarEntry{{name: "lychee-test/README.md", size: 257 << 20}}, want: "expanded contents are too large"},
+		{name: "cumulative archive too large", entries: []tarEntry{
+			{name: "lychee-test/first", body: []byte("x")},
+			{name: "lychee-test/second", body: []byte("y")},
+			{name: "lychee-test/README.md", size: (256 << 20) - 1},
+		}, want: "expanded contents are too large"},
 		{name: "truncated binary", entries: []tarEntry{{name: "lychee-test/lychee", size: 10, body: []byte("short")}}, want: "read lychee binary"},
 		{name: "truncated file", entries: []tarEntry{{name: "lychee-test/README.md", size: 10, body: []byte("short")}}, want: "read archive entry"},
 	}

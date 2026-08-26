@@ -8,7 +8,6 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
-	"time"
 
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
@@ -16,7 +15,7 @@ import (
 )
 
 const (
-	serviceCleanupTimeout           = 30 * time.Second
+	serviceCleanupTimeout           = 30_000_000_000
 	openSearchImageLock             = "scripts/opensearch-images.env"
 	maximumOpenSearchImageLockBytes = 16 << 10
 )
@@ -118,7 +117,7 @@ func executorWorkspace(executor Executor) string {
 }
 
 func mergeMaps(base, override map[string]string) map[string]string {
-	result := make(map[string]string, len(base)+len(override))
+	result := make(map[string]string)
 	for key, value := range base {
 		result[key] = value
 	}

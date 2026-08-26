@@ -126,6 +126,9 @@ func InputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 			continue
 		}
 		canonicalImport := strings.Split(pkg.ImportPath, " [")[0]
+		if canonicalImport == target+".test" {
+			continue
+		}
 		observer := canonicalImport == target || pkg.ForTest == target
 		if canonicalImport == target {
 			observedTarget = true

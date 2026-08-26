@@ -71,10 +71,10 @@ func TestProcessExecutorHonorsCommandOutputOverrides(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	err = created.Run(context.Background(), Command{
 		Name: os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
-		Env:    map[string]string{"GO_WANT_HELPER": "1", "HELPER_OUTPUT": "expected"},
+		Env:    map[string]string{"GO_WANT_HELPER": "1", "HELPER_OUTPUT": "expected", "HELPER_ERROR": "diagnostic"},
 		Stdout: &stdout, Stderr: &stderr,
 	})
-	if err != nil || stdout.String() != "expected" || stderr.Len() != 0 {
+	if err != nil || stdout.String() != "expected" || stderr.String() != "diagnostic" {
 		t.Fatalf("Run() = %v, %q, %q", err, stdout.String(), stderr.String())
 	}
 }
@@ -139,6 +139,7 @@ func TestProcessHelper(t *testing.T) {
 		os.Exit(23)
 	}
 	_, _ = os.Stdout.WriteString(os.Getenv("HELPER_OUTPUT"))
+	_, _ = os.Stderr.WriteString(os.Getenv("HELPER_ERROR"))
 	os.Exit(0)
 }
 

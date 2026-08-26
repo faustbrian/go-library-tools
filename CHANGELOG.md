@@ -75,3 +75,12 @@ All notable changes to this project are documented in this file.
 - Checksum-pinned external-link verification with bounded hostile-archive
   handling and no consumer-owned installation scripts.
 - Bounded self-hosted fuzz campaigns for every untrusted tooling input family.
+- Self-hosted exact mutation verification with durable content-addressed
+  package reports and a repository-owned zero-mutant inventory.
+
+### Fixed
+
+- Mutation input identity now excludes the synthetic test executable emitted
+  by `go list`, which otherwise attributed generated cache source to a package.
+- Embedded zero-context verifier patches are applied explicitly as
+  zero-context diffs instead of depending on Git's default patch context.

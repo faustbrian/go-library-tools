@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -61,6 +62,9 @@ func TestBuildVerifierUsesPinnedSourceAndAssets(t *testing.T) {
 		case name == "git":
 			if directory != filepath.Join(workspace, "gremlins-source") {
 				t.Fatalf("git directory = %q", directory)
+			}
+			if !slices.Contains(args, "--unidiff-zero") {
+				t.Fatalf("git apply arguments = %#v", args)
 			}
 		case name == "go" && args[0] == "build":
 			output := args[4]

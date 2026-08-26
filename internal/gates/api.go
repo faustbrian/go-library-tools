@@ -22,14 +22,12 @@ type boundedBuffer struct {
 
 func (buffer *boundedBuffer) Write(value []byte) (int, error) {
 	remaining := maximumAPIOutput - buffer.Len()
-	if remaining < len(value) {
-		buffer.overflow = true
-		if remaining > 0 {
-			_, _ = buffer.Buffer.Write(value[:remaining])
-		}
-		return len(value), nil
+	if len(value) <= remaining {
+		return buffer.Buffer.Write(value)
 	}
-	return buffer.Buffer.Write(value)
+	buffer.overflow = true
+	_, _ = buffer.Buffer.Write(value[:remaining])
+	return len(value), nil
 }
 
 type apiFileSystem interface {

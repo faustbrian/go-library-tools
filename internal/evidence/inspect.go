@@ -43,7 +43,7 @@ func inspect(files inspectFileSystem, root, evidenceRoot, repository string, mod
 	if err != nil {
 		return nil, fmt.Errorf("inspect evidence root: %w", err)
 	}
-	if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+	if !info.IsDir() {
 		return nil, fmt.Errorf("%w: evidence root is not a real directory", ErrInvalid)
 	}
 	knownModules := make(map[string]struct{}, len(modules))

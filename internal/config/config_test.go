@@ -45,17 +45,20 @@ func TestLoadRejectsUnknownFields(t *testing.T) {
 }
 
 func TestLoadRejectsMalformedAndMultipleDocuments(t *testing.T) {
-	tests := map[string]string{
-		"malformed":             "schema_version: [\n",
-		"multiple":              "schema_version: 1\ntool_version: v1.0.0\n---\nsecond: document\n",
-		"bad trailing document": "schema_version: 1\ntool_version: v1.0.0\n---\n[\n",
+	tests := map[string]struct {
+		content string
+		want    string
+	}{
+		"malformed":             {content: "schema_version: [\n", want: "decode .golib.yaml"},
+		"multiple":              {content: "schema_version: 1\ntool_version: v1.0.0\n---\nsecond: document\n", want: "multiple YAML documents"},
+		"bad trailing document": {content: "schema_version: 1\ntool_version: v1.0.0\n---\n[\n", want: "decode trailing YAML document"},
 	}
-	for name, content := range tests {
+	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			root := t.TempDir()
-			write(t, filepath.Join(root, ".golib.yaml"), content)
-			if _, err := config.Load(root); err == nil {
-				t.Fatal("Load() error = nil")
+			write(t, filepath.Join(root, ".golib.yaml"), test.content)
+			if _, err := config.Load(root); err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("Load() error = %v", err)
 			}
 		})
 	}
@@ -170,6 +173,27 @@ operations:
 	}
 	if len(got.Operations) != 1 || len(got.Operations[0].Steps) != 1 {
 		t.Fatalf("Load() operations = %#v", got.Operations)
+	}
+}
+
+func TestLoadAcceptsNestedModuleOperations(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, ".golib.yaml"), `schema_version: 1
+tool_version: v1.0.0
+operations:
+  - module: integration/reference
+    gate: fuzz
+    steps:
+      - type: go-test
+        packages: [./...]
+        fuzz: FuzzInput
+`)
+	got, err := config.Load(root)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if got.Operations[0].Module != "integration/reference" {
+		t.Fatalf("Load() module = %q", got.Operations[0].Module)
 	}
 }
 

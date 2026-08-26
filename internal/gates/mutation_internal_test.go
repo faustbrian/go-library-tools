@@ -113,6 +113,38 @@ func TestMutationReportsDisabledModulesWithoutExecution(t *testing.T) {
 	}
 }
 
+func TestMutationDisabledModuleDoesNotStopLaterEnabledModule(t *testing.T) {
+	root := t.TempDir()
+	writeMutationFixture(t, root, "z-enabled", "module example/enabled\n")
+	mutationRoot := filepath.Join(root, ".verification", "mutation")
+	if err := os.MkdirAll(mutationRoot, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(mutationRoot, "zero-inventory.json"), []byte("{\"schema_version\":1,\"packages\":[]}"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runs := 0
+	runner := Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Repository: "example", Modules: []inventory.Module{
+			{Directory: "a-disabled"},
+			{Directory: "z-enabled", ModulePath: "example/enabled", GoVersion: "1.27.0", Gates: map[string]bool{"mutation": true}},
+		}},
+		Policy:   config.Config{Evidence: config.Evidence{Root: ".verification"}, Mutation: config.Mutation{Root: ".verification/mutation"}},
+		Executor: runtimeExecutor(filepath.Join(root, ".task")),
+		mutationCampaign: func(context.Context, mutation.Campaign) error {
+			runs++
+			return nil
+		},
+	}
+	if err := runner.Mutation(context.Background(), []string{"a-disabled", "z-enabled"}); err != nil {
+		t.Fatalf("Mutation() error = %v", err)
+	}
+	if runs != 1 {
+		t.Fatalf("enabled mutation runs = %d, want 1", runs)
+	}
+}
+
 func TestMutationFailsClosedForInvalidSetup(t *testing.T) {
 	failure := errors.New("campaign failed")
 	tests := []struct {

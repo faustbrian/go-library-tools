@@ -53,10 +53,25 @@ func TestExecuteRoutesAPICheckAndUpdate(t *testing.T) {
 	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
 		return apiExecutor{}, func() error { return nil }, nil
 	}
-	for _, args := range [][]string{{"api", "check"}, {"api", "update", "--module", "."}} {
+	tests := []struct {
+		args       []string
+		wantOutput string
+		wantBase   string
+	}{
+		{args: []string{"api", "check"}, wantOutput: "API compatibility passed", wantBase: "baseline"},
+		{args: []string{"api", "update", "--module", "."}, wantOutput: "API baseline updated", wantBase: "snapshot"},
+	}
+	for _, test := range tests {
+		if err := os.WriteFile(filepath.Join(root, "api", "baseline.txt"), []byte("baseline"), 0o600); err != nil {
+			t.Fatal(err)
+		}
 		var stdout, stderr bytes.Buffer
-		if code := execute(args, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 {
-			t.Fatalf("execute(%v) = %d, %q", args, code, stderr.String())
+		if code := execute(test.args, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), test.wantOutput) {
+			t.Fatalf("execute(%v) = %d, %q, %q", test.args, code, stdout.String(), stderr.String())
+		}
+		baseline, err := os.ReadFile(filepath.Join(root, "api", "baseline.txt"))
+		if err != nil || string(baseline) != test.wantBase {
+			t.Fatalf("execute(%v) baseline = %q, %v", test.args, baseline, err)
 		}
 	}
 }

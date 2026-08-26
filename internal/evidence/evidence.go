@@ -99,7 +99,7 @@ func load(files loadFileSystem, root, gate, inputDigest string) (Record, error) 
 	if err != nil {
 		return Record{}, fmt.Errorf("inspect evidence: %w", err)
 	}
-	if !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 {
+	if !info.Mode().IsRegular() {
 		return Record{}, fmt.Errorf("%w: evidence is not a regular file", ErrInvalid)
 	}
 	file, err := files.Open(path)

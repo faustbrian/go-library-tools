@@ -71,7 +71,7 @@ func ExtractLychee(archive string, release LycheeRelease) ([]byte, error) {
 	if !info.Mode().IsRegular() {
 		return nil, errors.New("lychee archive is not a regular file")
 	}
-	if info.Size() > maximumLycheeArchiveSize {
+	if !withinMaximum(info.Size(), maximumLycheeArchiveSize) {
 		return nil, errors.New("lychee archive is too large")
 	}
 	compressed, err := os.ReadFile(archive)
@@ -95,12 +95,15 @@ func ExtractLychee(archive string, release LycheeRelease) ([]byte, error) {
 	for entries := 1; ; entries++ {
 		header, err := tarReader.Next()
 		if errors.Is(err, io.EOF) {
-			break
+			if binary == nil {
+				return nil, errors.New("lychee archive does not contain the expected binary")
+			}
+			return binary, nil
 		}
 		if err != nil {
 			return nil, fmt.Errorf("read lychee archive header: %w", err)
 		}
-		if entries > maximumLycheeEntries {
+		if !withinMaximum(int64(entries), maximumLycheeEntries) {
 			return nil, errors.New("lychee archive contains too many entries")
 		}
 		clean := path.Clean(header.Name)
@@ -110,7 +113,7 @@ func ExtractLychee(archive string, release LycheeRelease) ([]byte, error) {
 		if header.Typeflag != tar.TypeDir && header.Typeflag != tar.TypeReg && header.Typeflag != tar.TypeRegA {
 			return nil, fmt.Errorf("unsupported archive entry: %s", header.Name)
 		}
-		if header.Size < 0 || header.Size > maximumLycheeExpandedSize-total {
+		if header.Size < 0 || !withinMaximum(header.Size, maximumLycheeExpandedSize-total) {
 			return nil, errors.New("lychee archive expanded contents are too large")
 		}
 		total += header.Size
@@ -121,11 +124,11 @@ func ExtractLychee(archive string, release LycheeRelease) ([]byte, error) {
 			if header.Typeflag != tar.TypeReg && header.Typeflag != tar.TypeRegA {
 				return nil, errors.New("lychee binary is not a regular file")
 			}
-			if header.Size > maximumLycheeBinarySize {
+			if !withinMaximum(header.Size, maximumLycheeBinarySize) {
 				return nil, errors.New("lychee binary is too large")
 			}
 			binary, err = io.ReadAll(io.LimitReader(tarReader, header.Size+1))
-			if err != nil || int64(len(binary)) != header.Size {
+			if err != nil {
 				return nil, fmt.Errorf("read lychee binary: %w", io.ErrUnexpectedEOF)
 			}
 			continue
@@ -134,8 +137,6 @@ func ExtractLychee(archive string, release LycheeRelease) ([]byte, error) {
 			return nil, fmt.Errorf("read archive entry %s: %w", header.Name, err)
 		}
 	}
-	if binary == nil {
-		return nil, errors.New("lychee archive does not contain the expected binary")
-	}
-	return binary, nil
 }
+
+func withinMaximum(value, maximum int64) bool { return value <= maximum }
