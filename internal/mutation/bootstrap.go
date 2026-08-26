@@ -255,6 +255,9 @@ func validateReportData(data []byte) (ReportResult, error) {
 	if err := decodeStrict(data, &parsed); err != nil {
 		return ReportResult{}, fmt.Errorf("report: %w", err)
 	}
+	if parsed.Files == nil {
+		return ReportResult{}, fmt.Errorf("%w: mutation report files must be an array", ErrInvalid)
+	}
 	mutants := 0
 	files := make(map[string]struct{}, len(parsed.Files))
 	identities := make(map[string]struct{})
