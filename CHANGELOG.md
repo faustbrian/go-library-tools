@@ -24,3 +24,5 @@ All notable changes to this project are documented in this file.
   duplicate identities, bounded records, and symlink-free evidence trees.
 - Standalone exact-coverage execution with deterministic module selection and
   explicit not-applicable reporting.
+- Strict legacy mutation-checkpoint and zero-mutant review validation with
+  bounded archive expansion, duplicate rejection, and complete-kill proofs.
