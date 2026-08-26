@@ -19,7 +19,7 @@
         "conformance": false,
         "coverage": true,
         "documentation": true,
-        "fuzz": false,
+        "fuzz": true,
         "lint": true,
         "mutation": false,
         "race": true,

@@ -7,3 +7,42 @@ evidence:
   root: .verification
 mutation:
   root: .verification/mutation
+operations:
+  - module: .
+    gate: fuzz
+    steps:
+      - type: go-test
+        packages: [./internal/cli]
+        fuzz: FuzzModuleSelection
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/config]
+        fuzz: FuzzConfig
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/docscheck]
+        fuzz: FuzzLycheeArchive
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/evidence]
+        fuzz: FuzzEvidence
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/inventory]
+        fuzz: FuzzManifest
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/mutation]
+        fuzz: FuzzMutationRecords
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/services]
+        fuzz: FuzzServiceLock
+        budget: 100x
+        timeout: 2m

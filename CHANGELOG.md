@@ -74,3 +74,4 @@ All notable changes to this project are documented in this file.
   graph and repository-owned dictionaries.
 - Checksum-pinned external-link verification with bounded hostile-archive
   handling and no consumer-owned installation scripts.
+- Bounded self-hosted fuzz campaigns for every untrusted tooling input family.
