@@ -80,6 +80,46 @@ func (operatingStoreFileSystem) Link(oldPath, newPath string) error   { return o
 func (operatingStoreFileSystem) ReadFile(path string) ([]byte, error) { return os.ReadFile(path) }
 func (operatingStoreFileSystem) Remove(path string) error             { return os.Remove(path) }
 
+// Load reads one content-addressed record and verifies its path identity.
+func Load(root, gate, inputDigest string) (Record, error) {
+	return load(operatingInspectFileSystem{}, root, gate, inputDigest)
+}
+
+type loadFileSystem interface {
+	Lstat(string) (os.FileInfo, error)
+	Open(string) (io.ReadCloser, error)
+}
+
+func load(files loadFileSystem, root, gate, inputDigest string) (Record, error) {
+	if !filepath.IsAbs(root) || !gateRE.MatchString(gate) || !digestRE.MatchString(inputDigest) {
+		return Record{}, fmt.Errorf("%w: evidence location is malformed", ErrInvalid)
+	}
+	path := filepath.Join(root, "by-input", gate, strings.TrimPrefix(inputDigest, "sha256:")+".json")
+	info, err := files.Lstat(path)
+	if err != nil {
+		return Record{}, fmt.Errorf("inspect evidence: %w", err)
+	}
+	if !info.Mode().IsRegular() || info.Mode()&os.ModeSymlink != 0 {
+		return Record{}, fmt.Errorf("%w: evidence is not a regular file", ErrInvalid)
+	}
+	file, err := files.Open(path)
+	if err != nil {
+		return Record{}, fmt.Errorf("open evidence: %w", err)
+	}
+	record, parseErr := Parse(file)
+	closeErr := file.Close()
+	if parseErr != nil {
+		return Record{}, parseErr
+	}
+	if closeErr != nil {
+		return Record{}, fmt.Errorf("close evidence: %w", closeErr)
+	}
+	if record.Gate != gate || record.InputDigest != inputDigest {
+		return Record{}, fmt.Errorf("%w: evidence path identity does not match record", ErrInvalid)
+	}
+	return record, nil
+}
+
 // Digest computes an unambiguous identity from named content and semantics.
 func Digest(semanticIdentity string, content map[string][]byte) string {
 	hash := sha256.New()

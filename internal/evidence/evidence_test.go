@@ -51,6 +51,38 @@ func TestMarshalParseAndStoreRoundTrip(t *testing.T) {
 	if _, reused, err := evidence.Store(root, record); err != nil || !reused {
 		t.Fatalf("Store() semantic reuse = %v, %v", reused, err)
 	}
+	loaded, err := evidence.Load(root, record.Gate, record.InputDigest)
+	if err != nil || loaded.ReportDigest != record.ReportDigest {
+		t.Fatalf("Load() = %#v, %v", loaded, err)
+	}
+}
+
+func TestLoadRejectsInvalidAndMismatchedEvidence(t *testing.T) {
+	digest := "sha256:" + strings.Repeat("a", 64)
+	if _, err := evidence.Load("relative", "test", digest); !errors.Is(err, evidence.ErrInvalid) {
+		t.Fatalf("Load(relative) error = %v", err)
+	}
+	if _, err := evidence.Load(t.TempDir(), "bad/gate", digest); !errors.Is(err, evidence.ErrInvalid) {
+		t.Fatalf("Load(gate) error = %v", err)
+	}
+	if _, err := evidence.Load(t.TempDir(), "test", "bad"); !errors.Is(err, evidence.ErrInvalid) {
+		t.Fatalf("Load(digest) error = %v", err)
+	}
+	root := t.TempDir()
+	path := filepath.Join(root, "by-input", "test")
+	if err := os.MkdirAll(path, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := evidence.Load(root, "test", digest); err == nil {
+		t.Fatal("Load(missing) error = nil")
+	}
+	file := filepath.Join(path, strings.Repeat("a", 64)+".json")
+	if err := os.Mkdir(file, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := evidence.Load(root, "test", digest); !errors.Is(err, evidence.ErrInvalid) {
+		t.Fatalf("Load(directory) error = %v", err)
+	}
 }
 
 func TestStoreRejectsConflictingEvidence(t *testing.T) {
