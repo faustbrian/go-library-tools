@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
@@ -15,11 +16,12 @@ import (
 
 func TestManagerStartsParallelSafeRabbitStreamStandalone(t *testing.T) {
 	backend := &fakeBackend{}
+	files := &recordingServiceFiles{}
 	var requestMethod, requestURL string
 	var requestBody []byte
 	var requestHeaders map[string]string
 	manager := Manager{
-		Process: backend.run, Token: fixedToken, Wait: successfulWait,
+		Process: backend.run, Token: fixedToken, Wait: successfulWait, Workspace: t.TempDir(), Files: files,
 		Secret: func(size int) (string, error) { return strings.Repeat("a", size*2), nil },
 		HTTPRequest: func(_ context.Context, method, url string, body []byte, headers map[string]string) (int, error) {
 			requestMethod, requestURL = method, url
@@ -56,7 +58,7 @@ func TestManagerStartsParallelSafeRabbitStreamStandalone(t *testing.T) {
 	for _, expected := range []string{
 		"docker network create --label golib.task=task codex-rabbitstream-task",
 		"-p 127.0.0.1::15552 -p 127.0.0.1::8474",
-		"rabbitmq-plugins enable --offline rabbitmq_management rabbitmq_stream",
+		"target=/etc/rabbitmq/enabled_plugins,readonly",
 	} {
 		if !strings.Contains(commands, expected) {
 			t.Fatalf("commands missing %q: %s", expected, commands)
@@ -74,9 +76,17 @@ func TestManagerStartsParallelSafeRabbitStreamStandalone(t *testing.T) {
 			credentialEnvironment = backend.environments[index]
 		}
 	}
-	if credentialEnvironment["RABBITMQ_DEFAULT_PASS"] != wantEnvironment["RABBITSTREAM_TEST_PASSWORD"] ||
-		credentialEnvironment["RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS"] != "-rabbitmq_stream advertised_host localhost advertised_port 40001" {
+	if credentialEnvironment["RABBITMQ_DEFAULT_PASS"] != wantEnvironment["RABBITSTREAM_TEST_PASSWORD"] {
 		t.Fatalf("broker environment is incomplete")
+	}
+	var configuration []byte
+	for path, content := range files.writes {
+		if filepath.Base(path) == "rabbitmq.conf" {
+			configuration = content
+		}
+	}
+	if !strings.Contains(string(configuration), "stream.advertised_port = 40001") {
+		t.Fatalf("standalone configuration = %q", configuration)
 	}
 	if err := lease.Close(context.Background()); err != nil {
 		t.Fatal(err)
@@ -106,6 +116,7 @@ func TestRabbitStreamStandaloneAcceptsExistingProxyAndRejectsControlFailure(t *t
 			backend := &fakeBackend{}
 			manager := Manager{
 				Process: backend.run, Token: fixedToken, Wait: successfulWait, Attempts: 1,
+				Workspace: t.TempDir(), Files: &recordingServiceFiles{},
 				Secret: func(size int) (string, error) { return strings.Repeat("a", size*2), nil },
 				HTTPRequest: func(context.Context, string, string, []byte, map[string]string) (int, error) {
 					return test.status, test.err
@@ -182,7 +193,7 @@ func TestRabbitStreamStandaloneUsesSecureRuntimeDefaults(t *testing.T) {
 	defer server.Close()
 	port := strings.TrimPrefix(server.URL, "http://127.0.0.1:")
 	backend := &fakeBackend{portOutput: "127.0.0.1:" + port + "\n"}
-	manager := Manager{Process: backend.run, Token: fixedToken, Wait: successfulWait}
+	manager := Manager{Process: backend.run, Token: fixedToken, Wait: successfulWait, Workspace: t.TempDir()}
 	lease, err := manager.Start(context.Background(), []string{"rabbitstream-standalone"})
 	if err != nil {
 		t.Fatalf("Start() error = %v", err)
@@ -199,6 +210,9 @@ func TestRabbitStreamStandaloneUsesSecureRuntimeDefaults(t *testing.T) {
 }
 
 func TestRabbitStreamStandaloneRejectsSecretFailures(t *testing.T) {
+	if _, err := (Manager{Process: (&fakeBackend{}).run, Token: fixedToken}).Start(context.Background(), []string{"rabbitstream-standalone"}); err == nil || !strings.Contains(err.Error(), "absolute task workspace") {
+		t.Fatalf("Start(missing workspace) error = %v", err)
+	}
 	failure := errors.New("entropy unavailable")
 	for _, test := range []struct {
 		name   string
@@ -214,7 +228,7 @@ func TestRabbitStreamStandaloneRejectsSecretFailures(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			calls := 0
-			manager := Manager{Process: (&fakeBackend{}).run, Token: fixedToken, Secret: func(size int) (string, error) {
+			manager := Manager{Process: (&fakeBackend{}).run, Token: fixedToken, Workspace: t.TempDir(), Secret: func(size int) (string, error) {
 				calls++
 				if calls == test.failAt {
 					return "", failure
@@ -251,6 +265,7 @@ func TestRabbitStreamStandaloneCleansEveryPartialStart(t *testing.T) {
 			backend := &occurrenceBackend{failureOperation: test.operation, failureOccurrence: test.occurrence}
 			manager := Manager{
 				Process: backend.run, Token: fixedToken, Attempts: 1,
+				Workspace: t.TempDir(), Files: &recordingServiceFiles{},
 				Secret: func(size int) (string, error) { return strings.Repeat("a", size*2), nil },
 				HTTPRequest: func(context.Context, string, string, []byte, map[string]string) (int, error) {
 					return http.StatusCreated, nil
@@ -363,7 +378,7 @@ func (backend *occurrenceBackend) run(_ context.Context, name string, args []str
 	}
 	if operation == "port" {
 		backend.port++
-		_, _ = io.WriteString(stdout, "127.0.0.1:"+strconv.Itoa(10000*backend.port+1)+"\n")
+		_, _ = io.WriteString(stdout, "127.0.0.1:"+strconv.Itoa(40000+backend.port)+"\n")
 	}
 	return nil
 }

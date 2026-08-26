@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"regexp"
 	"sort"
 	"strconv"
@@ -55,6 +56,13 @@ type HTTPRequest func(context.Context, string, string, []byte, map[string]string
 // Secret returns a cryptographically random hexadecimal fixture secret.
 type Secret func(int) (string, error)
 
+// FileSystem owns task-local fixture files.
+type FileSystem interface {
+	MkdirAll(string, os.FileMode) error
+	WriteFile(string, []byte, os.FileMode) error
+	Chmod(string, os.FileMode) error
+}
+
 // Manager starts one isolated set of generic service fixtures.
 type Manager struct {
 	Process     Process
@@ -64,6 +72,8 @@ type Manager struct {
 	HTTPProbe   HTTPProbe
 	HTTPRequest HTTPRequest
 	Secret      Secret
+	Files       FileSystem
+	Workspace   string
 	Attempts    int
 	OpenSearch  *OpenSearchImages
 }
@@ -74,6 +84,7 @@ type Lease struct {
 	identities  map[string]string
 	containers  []string
 	networks    []string
+	volumes     []string
 	process     Process
 	closeOnce   sync.Once
 	closeErr    error
@@ -129,6 +140,9 @@ var catalog = map[string]definition{
 	},
 	"rabbitstream-standalone": {
 		name: "rabbitstream-standalone", start: startRabbitStreamStandalone,
+	},
+	"rabbitstream": {
+		name: "rabbitstream", start: startRabbitStream,
 	},
 }
 
@@ -313,6 +327,12 @@ func (lease *Lease) Close(ctx context.Context) error {
 				failures = append(failures, fmt.Errorf("remove service container %s: %w", name, err))
 			}
 		}
+		for index := len(lease.volumes) - 1; index >= 0; index-- {
+			name := lease.volumes[index]
+			if err := lease.process(ctx, "docker", []string{"volume", "rm", "--force", name}, nil, io.Discard, io.Discard); err != nil {
+				failures = append(failures, fmt.Errorf("remove service volume %s: %w", name, err))
+			}
+		}
 		for index := len(lease.networks) - 1; index >= 0; index-- {
 			name := lease.networks[index]
 			if err := lease.process(ctx, "docker", []string{"network", "rm", name}, nil, io.Discard, io.Discard); err != nil {
@@ -323,6 +343,14 @@ func (lease *Lease) Close(ctx context.Context) error {
 	})
 	return lease.closeErr
 }
+
+type operatingFiles struct{}
+
+func (operatingFiles) MkdirAll(path string, mode os.FileMode) error { return os.MkdirAll(path, mode) }
+func (operatingFiles) WriteFile(path string, data []byte, mode os.FileMode) error {
+	return os.WriteFile(path, data, mode)
+}
+func (operatingFiles) Chmod(path string, mode os.FileMode) error { return os.Chmod(path, mode) }
 
 func postgresEnvironment(port string) map[string]string {
 	dsn := "postgres://golib:golib@127.0.0.1:" + port + "/golib?sslmode=disable"

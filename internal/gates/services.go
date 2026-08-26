@@ -63,7 +63,7 @@ func (runner Runner) withModuleServices(ctx context.Context, module inventory.Mo
 func (runner Runner) defaultServiceStarter(ctx context.Context, module inventory.Module, names []string) (serviceLease, error) {
 	manager := services.Manager{Process: func(ctx context.Context, name string, args []string, environment map[string]string, stdout, stderr io.Writer) error {
 		return runner.Executor.Run(ctx, Command{Name: name, Args: args, Env: environment, Stdout: stdout, Stderr: stderr})
-	}, HTTPProbe: runner.serviceHTTPProbe}
+	}, HTTPProbe: runner.serviceHTTPProbe, Workspace: executorWorkspace(runner.Executor)}
 	if containsService(names, "opensearch") {
 		images, err := runner.loadOpenSearchImages(module)
 		if err != nil {

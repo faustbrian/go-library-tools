@@ -46,3 +46,5 @@ All notable changes to this project are documented in this file.
   policies without evaluating repository content as shell input.
 - Parallel-safe RabbitMQ Streams standalone fixtures with dynamic loopback
   ports, task-owned credentials and networks, and pinned Toxiproxy control.
+- Parallel-safe RabbitMQ Streams cluster, rolling-upgrade, authorization, and
+  mutual-TLS topology with task-owned Compose files, volumes, and certificates.

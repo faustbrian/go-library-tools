@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -21,6 +22,9 @@ const (
 )
 
 func startRabbitStreamStandalone(ctx context.Context, manager Manager, lease *Lease, token string) error {
+	if manager.Workspace == "" || !filepath.IsAbs(manager.Workspace) {
+		return errors.New("RabbitMQ Streams requires an absolute task workspace")
+	}
 	secret := manager.Secret
 	if secret == nil {
 		secret = randomHex
@@ -74,19 +78,34 @@ func startRabbitStreamStandalone(ctx context.Context, manager Manager, lease *Le
 
 	username := "rabbitstream-" + userSecret
 	rabbit := network + "-rabbit"
-	additional := "-rabbitmq_stream advertised_host localhost advertised_port " + proxyPort
+	files := manager.Files
+	if files == nil {
+		files = operatingFiles{}
+	}
+	directory := filepath.Join(manager.Workspace, "rabbitstream-standalone-"+token)
+	if err := files.MkdirAll(directory, 0o700); err != nil {
+		return fmt.Errorf("create RabbitMQ Streams standalone workspace: %w", err)
+	}
+	enabledPlugins := filepath.Join(directory, "enabled_plugins")
+	configuration := filepath.Join(directory, "rabbitmq.conf")
+	if err := files.WriteFile(enabledPlugins, []byte("[rabbitmq_management,rabbitmq_stream].\n"), 0o644); err != nil {
+		return fmt.Errorf("write RabbitMQ Streams standalone plugins: %w", err)
+	}
+	config := "stream.listeners.tcp.1 = 5552\nstream.advertised_host = localhost\nstream.advertised_port = " + proxyPort + "\n"
+	if err := files.WriteFile(configuration, []byte(config), 0o644); err != nil {
+		return fmt.Errorf("write RabbitMQ Streams standalone configuration: %w", err)
+	}
 	rabbitEnvironment := map[string]string{
-		"RABBITMQ_DEFAULT_USER":               username,
-		"RABBITMQ_DEFAULT_PASS":               password,
-		"RABBITMQ_ERLANG_COOKIE":              cookie,
-		"RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS": additional,
+		"RABBITMQ_DEFAULT_USER":  username,
+		"RABBITMQ_DEFAULT_PASS":  password,
+		"RABBITMQ_ERLANG_COOKIE": cookie,
 	}
 	if err := manager.Process(ctx, "docker", []string{
 		"run", "--detach", "--name", rabbit, "--hostname", "rabbit", "--network", network, "--network-alias", "rabbit",
-		"-e", "RABBITMQ_DEFAULT_USER", "-e", "RABBITMQ_DEFAULT_PASS",
-		"-e", "RABBITMQ_ERLANG_COOKIE", "-e", "RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS",
-		rabbitStreamImage, "/bin/sh", "-ec",
-		"rabbitmq-plugins enable --offline rabbitmq_management rabbitmq_stream >/dev/null && exec rabbitmq-server",
+		"-e", "RABBITMQ_DEFAULT_USER", "-e", "RABBITMQ_DEFAULT_PASS", "-e", "RABBITMQ_ERLANG_COOKIE",
+		"--mount", "type=bind,source=" + enabledPlugins + ",target=/etc/rabbitmq/enabled_plugins,readonly",
+		"--mount", "type=bind,source=" + configuration + ",target=/etc/rabbitmq/rabbitmq.conf,readonly",
+		rabbitStreamImage,
 	}, rabbitEnvironment, io.Discard, io.Discard); err != nil {
 		return fmt.Errorf("start RabbitMQ Streams broker: %w", err)
 	}
