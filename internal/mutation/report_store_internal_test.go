@@ -63,7 +63,7 @@ func TestReportStoreRejectsInvalidArgumentsAndReports(t *testing.T) {
 		t.Fatal("LoadReport(missing) error = nil")
 	}
 	root := t.TempDir()
-	directory := filepath.Join(root, "reports", "by-input")
+	directory := filepath.Join(root, "reports")
 	if err := os.MkdirAll(directory, 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestPrepareReportDirectoriesRejectsInvalidPaths(t *testing.T) {
 		{"not directory", &fakeReportFiles{mkdirErr: os.ErrExist, info: reportFileInfo{}}, "not a real directory"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			if err := prepareReportDirectories(test.files, "/mutation", "/mutation/reports/by-input"); err == nil || !strings.Contains(err.Error(), test.want) {
+			if err := prepareReportDirectories(test.files, "/mutation", "/mutation/reports"); err == nil || !strings.Contains(err.Error(), test.want) {
 				t.Fatalf("prepareReportDirectories() error = %v", err)
 			}
 		})

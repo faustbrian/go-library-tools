@@ -53,7 +53,7 @@ func storeReport(files reportFileSystem, root, inputDigest string, report []byte
 	if err != nil {
 		return "", false, ReportResult{}, err
 	}
-	directory := filepath.Join(root, "reports", "by-input")
+	directory := filepath.Join(root, "reports")
 	if err := prepareReportDirectories(files, root, directory); err != nil {
 		return "", false, ReportResult{}, err
 	}
@@ -90,7 +90,7 @@ func storeReport(files reportFileSystem, root, inputDigest string, report []byte
 }
 
 func prepareReportDirectories(files reportFileSystem, root, destination string) error {
-	for _, directory := range []string{root, filepath.Join(root, "reports"), destination} {
+	for _, directory := range []string{root, destination} {
 		if err := files.Mkdir(directory, 0o700); err != nil && !errors.Is(err, os.ErrExist) {
 			return fmt.Errorf("prepare mutation report directory: %w", err)
 		}
@@ -110,7 +110,7 @@ func LoadReport(root, inputDigest string) ([]byte, ReportResult, error) {
 	if !filepath.IsAbs(root) || !strings.HasPrefix(inputDigest, "sha256:") || !digestRE.MatchString(strings.TrimPrefix(inputDigest, "sha256:")) {
 		return nil, ReportResult{}, fmt.Errorf("%w: report root or input digest is malformed", ErrInvalid)
 	}
-	path := filepath.Join(root, "reports", "by-input", strings.TrimPrefix(inputDigest, "sha256:")+".json")
+	path := filepath.Join(root, "reports", strings.TrimPrefix(inputDigest, "sha256:")+".json")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, ReportResult{}, fmt.Errorf("read mutation report: %w", err)
