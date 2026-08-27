@@ -377,12 +377,17 @@ func TestDependencyPreparationAcceptsNoOwnedDependencies(t *testing.T) {
 	root := t.TempDir()
 	task := filepath.Join(root, "task")
 	fakeBin := filepath.Join(root, "bin")
+	moduleModeCapture := filepath.Join(root, "module-mode")
 	writeRehearsalFile(t, filepath.Join(root, "modules.json"), `{"modules":[{"directory":"."}]}`)
 	writeRehearsalFile(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/go-example\n\ngo 1.26.6\n")
 	writeExecutable(t, filepath.Join(fakeBin, "go"), `#!/usr/bin/env bash
 set -euo pipefail
 if [[ "${1:-}" == mod && "${2:-}" == edit ]]; then
 	printf '%s\n' '{"Module":{"Path":"github.com/faustbrian/go-example"}}'
+	exit 0
+fi
+if [[ "${1:-}" == module-mode-command ]]; then
+	printf '%s' "${GO111MODULE:-}" >"${REHEARSAL_MODULE_MODE_CAPTURE}"
 	exit 0
 fi
 printf 'unexpected fake go invocation: %s\n' "$*" >&2
@@ -398,6 +403,19 @@ exit 1
 	}
 	if info, err := os.Stat(filepath.Join(task, "bin", "go")); err != nil || info.Mode()&0o100 == 0 {
 		t.Fatalf("generated wrapper = %v, %v", info, err)
+	}
+	wrapper := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "module-mode-command")
+	wrapper.Dir = root
+	wrapper.Env = append(os.Environ(), readEnvironment(t, filepath.Join(root, "environment"))...)
+	wrapper.Env = append(wrapper.Env,
+		"GO111MODULE=off",
+		"REHEARSAL_MODULE_MODE_CAPTURE="+moduleModeCapture,
+	)
+	if output, err := wrapper.CombinedOutput(); err != nil {
+		t.Fatalf("run dependency wrapper: %v\n%s", err, output)
+	}
+	if moduleMode := readRehearsalFile(t, moduleModeCapture); moduleMode != "on" {
+		t.Fatalf("dependency wrapper GO111MODULE = %q, want on", moduleMode)
 	}
 }
 

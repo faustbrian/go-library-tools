@@ -90,6 +90,8 @@ execution_directory="${GOLIB_REHEARSAL_EXECUTION_DIRECTORY:?}"
 directory="$(pwd -P)"
 alternate_mod=''
 
+export GO111MODULE=on
+
 while true; do
     if [[ -f "${directory}/go.mod" ]]; then
         module_path="$(awk '$1 == "module" { print $2; exit }' "${directory}/go.mod")"

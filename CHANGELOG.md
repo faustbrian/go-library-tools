@@ -27,6 +27,8 @@ All notable changes to this project are documented in this file.
 - Ran versioned analyzer binaries against task-owned source snapshots carrying
   refreshed module sums, so analyzer subprocesses cannot bypass rehearsal
   dependency isolation.
+- Enforced module mode in the rehearsal Go wrapper so analyzer subprocesses
+  cannot disable module-aware package discovery for nested modules.
 - Scoped mutation verifier builds and campaign artifacts by module identity to
   prevent independently verified modules from sharing mutable workspace paths.
 - Published the tooling repository's verification tree after every CI outcome
