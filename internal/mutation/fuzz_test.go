@@ -10,7 +10,7 @@ import (
 func FuzzMutationRecords(f *testing.F) {
 	f.Add([]byte(`{"schema_version":1,"packages":[]}`))
 	f.Add([]byte("go_version='go1.27.0'\ngoos='linux'\ngoarch='amd64'\n"))
-	f.Fuzz(func(t *testing.T, input []byte) {
+	f.Fuzz(func(_ *testing.T, input []byte) {
 		if len(input) > 2<<20 {
 			return
 		}

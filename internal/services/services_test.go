@@ -168,11 +168,9 @@ func TestLeaseCloseReportsAllCleanupFailuresConcurrently(t *testing.T) {
 	errorsSeen := make(chan error, 2)
 	var group sync.WaitGroup
 	for range 2 {
-		group.Add(1)
-		go func() {
-			defer group.Done()
+		group.Go(func() {
 			errorsSeen <- lease.Close(context.Background())
-		}()
+		})
 	}
 	group.Wait()
 	close(errorsSeen)
@@ -238,7 +236,7 @@ func TestReadinessDefaultsAndRuntimeHelpers(t *testing.T) {
 		t.Fatalf("waitReady(negative attempts) error = %v", err)
 	}
 
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", "127.0.0.1:0")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -340,8 +338,8 @@ func (backend *fakeBackend) removed() []string {
 	defer backend.mu.Unlock()
 	result := make([]string, 0)
 	for _, command := range backend.commands {
-		if strings.HasPrefix(command, "docker rm --force ") {
-			result = append(result, strings.TrimPrefix(command, "docker rm --force "))
+		if name, found := strings.CutPrefix(command, "docker rm --force "); found {
+			result = append(result, name)
 		}
 	}
 	return result

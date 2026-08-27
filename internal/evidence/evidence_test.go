@@ -141,7 +141,8 @@ func TestParseAcceptsExactSizeLimit(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	input := append(valid, bytes.Repeat([]byte(" "), evidence.MaximumSize-len(valid))...)
+	input := append([]byte(nil), valid...)
+	input = append(input, bytes.Repeat([]byte(" "), evidence.MaximumSize-len(valid))...)
 	if _, err := evidence.Parse(bytes.NewReader(input)); err != nil {
 		t.Fatalf("Parse() error = %v", err)
 	}

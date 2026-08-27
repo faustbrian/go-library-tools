@@ -18,6 +18,7 @@ import (
 )
 
 const (
+	// MaximumArchiveSize bounds one imported checkpoint archive.
 	MaximumArchiveSize      = 16 << 20
 	maximumExpandedSize     = 64 << 20
 	maximumCheckpointSize   = 1 << 20
@@ -26,7 +27,9 @@ const (
 )
 
 var (
-	ErrInvalid    = errors.New("invalid mutation evidence")
+	// ErrInvalid identifies malformed mutation evidence or configuration.
+	ErrInvalid = errors.New("invalid mutation evidence")
+	// ErrUnapproved identifies evidence lacking an exact migration approval.
 	ErrUnapproved = errors.New("unapproved mutation evidence migration")
 	digestRE      = regexp.MustCompile(`^[0-9a-f]{64}$`)
 	revisionRE    = regexp.MustCompile(`^[0-9a-f]{40}$`)
@@ -106,7 +109,7 @@ type ReportResult struct {
 func ValidateReport(reader io.Reader) (ReportResult, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, maximumCheckpointSize+1))
 	if err != nil {
-		return ReportResult{}, fmt.Errorf("%w: read mutation report: %v", ErrInvalid, err)
+		return ReportResult{}, fmt.Errorf("%w: read mutation report: %s", ErrInvalid, err.Error())
 	}
 	if len(data) > maximumCheckpointSize {
 		return ReportResult{}, fmt.Errorf("%w: mutation report exceeds %d bytes", ErrInvalid, maximumCheckpointSize)
@@ -121,7 +124,7 @@ func ReadBootstrap(reader io.ReaderAt, size int64) ([]Checkpoint, error) {
 	}
 	archive, err := zip.NewReader(reader, size)
 	if err != nil {
-		return nil, fmt.Errorf("%w: open archive: %v", ErrInvalid, err)
+		return nil, fmt.Errorf("%w: open archive: %s", ErrInvalid, err.Error())
 	}
 	if len(archive.File) == 0 || len(archive.File) > maximumCheckpointCount {
 		return nil, fmt.Errorf("%w: archive contains an invalid entry count", ErrInvalid)
@@ -191,12 +194,12 @@ func validateArchiveEntry(file *zip.File) error {
 func readCheckpoint(declaredSize uint64, open func() (io.ReadCloser, error)) (Checkpoint, error) {
 	opened, err := open()
 	if err != nil {
-		return Checkpoint{}, fmt.Errorf("%w: open checkpoint: %v", ErrInvalid, err)
+		return Checkpoint{}, fmt.Errorf("%w: open checkpoint: %s", ErrInvalid, err.Error())
 	}
 	data, readErr := io.ReadAll(io.LimitReader(opened, maximumCheckpointSize+1))
 	_ = opened.Close()
 	if readErr != nil {
-		return Checkpoint{}, fmt.Errorf("%w: read checkpoint: %v", ErrInvalid, readErr)
+		return Checkpoint{}, fmt.Errorf("%w: read checkpoint: %s", ErrInvalid, readErr.Error())
 	}
 	if len(data) > maximumCheckpointSize || uint64(len(data)) != declaredSize {
 		return Checkpoint{}, fmt.Errorf("%w: checkpoint size mismatch", ErrInvalid)
@@ -331,14 +334,14 @@ func decodeStrict(data []byte, destination any) error {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(destination); err != nil {
-		return fmt.Errorf("%w: decode: %v", ErrInvalid, err)
+		return fmt.Errorf("%w: decode: %s", ErrInvalid, err.Error())
 	}
 	var extra any
 	if err := decoder.Decode(&extra); !errors.Is(err, io.EOF) {
 		if err == nil {
 			return fmt.Errorf("%w: multiple JSON values", ErrInvalid)
 		}
-		return fmt.Errorf("%w: trailing data: %v", ErrInvalid, err)
+		return fmt.Errorf("%w: trailing data: %s", ErrInvalid, err.Error())
 	}
 	return nil
 }
@@ -346,7 +349,7 @@ func decodeStrict(data []byte, destination any) error {
 func rejectDuplicateKeys(data []byte) error {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	if err := scanJSONValue(decoder); err != nil {
-		return fmt.Errorf("%w: decode: %v", ErrInvalid, err)
+		return fmt.Errorf("%w: decode: %s", ErrInvalid, err.Error())
 	}
 	return nil
 }
@@ -367,7 +370,7 @@ func scanJSONValue(decoder *json.Decoder) error {
 			if err != nil {
 				return err
 			}
-			key := keyToken.(string)
+			key := objectKey(keyToken)
 			if _, exists := seen[key]; exists {
 				return fmt.Errorf("duplicate object key %q", key)
 			}
@@ -385,6 +388,14 @@ func scanJSONValue(decoder *json.Decoder) error {
 	}
 	_, err = decoder.Token()
 	return err
+}
+
+func objectKey(token any) string {
+	key, ok := token.(string)
+	if !ok {
+		panic("JSON decoder returned a non-string object key")
+	}
+	return key
 }
 
 func validRelative(value string) bool {

@@ -114,10 +114,8 @@ func Load(root string, policy config.Config) (Inventory, error) {
 		if !exists {
 			return Inventory{}, fmt.Errorf("operations[%d] references unknown module %q", index, operation.Module)
 		}
-		enabled := false
-		if operation.Gate == "interoperability" {
-			enabled = len(module.InteroperabilityTools) > 0
-		} else {
+		enabled := operation.Gate == "interoperability" && len(module.InteroperabilityTools) > 0
+		if operation.Gate != "interoperability" {
 			enabled = module.Gates[gateKeys[operation.Gate]]
 		}
 		if !enabled {

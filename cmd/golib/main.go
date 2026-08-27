@@ -1,3 +1,4 @@
+// Command golib validates and executes the shared Go library contract.
 package main
 
 import (

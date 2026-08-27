@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"net"
 	"os"
 	"regexp"
@@ -245,9 +246,7 @@ func (manager Manager) start(ctx context.Context, lease *Lease, service definiti
 	if err := manager.waitReady(ctx, service, name, port); err != nil {
 		return err
 	}
-	for key, value := range service.environment(port) {
-		lease.environment[key] = value
-	}
+	maps.Copy(lease.environment, service.environment(port))
 	lease.identities[service.name] = imageIdentity
 	return nil
 }
@@ -290,12 +289,13 @@ func (manager Manager) waitReady(ctx context.Context, service definition, name, 
 	if httpReady == nil {
 		httpReady = httpProbe
 	}
-	for attempt := 0; attempt < attempts; attempt++ {
-		if service.requiresHTTP {
+	for attempt := range attempts {
+		switch {
+		case service.requiresHTTP:
 			last = httpReady(ctx, "http://127.0.0.1:"+port+"/")
-		} else if service.requiresProbe {
+		case service.requiresProbe:
 			last = probe(ctx, "tcp", net.JoinHostPort("127.0.0.1", port))
-		} else {
+		default:
 			arguments := append([]string{"exec", name}, service.readyCommand...)
 			last = manager.Process(ctx, "docker", arguments, nil, io.Discard, io.Discard)
 		}
@@ -321,20 +321,17 @@ func (lease *Lease) Identities() map[string]string { return clone(lease.identiti
 func (lease *Lease) Close(ctx context.Context) error {
 	lease.closeOnce.Do(func() {
 		failures := make([]error, 0)
-		for index := len(lease.containers) - 1; index >= 0; index-- {
-			name := lease.containers[index]
+		for _, name := range slices.Backward(lease.containers) {
 			if err := lease.process(ctx, "docker", []string{"rm", "--force", name}, nil, io.Discard, io.Discard); err != nil {
 				failures = append(failures, fmt.Errorf("remove service container %s: %w", name, err))
 			}
 		}
-		for index := len(lease.volumes) - 1; index >= 0; index-- {
-			name := lease.volumes[index]
+		for _, name := range slices.Backward(lease.volumes) {
 			if err := lease.process(ctx, "docker", []string{"volume", "rm", "--force", name}, nil, io.Discard, io.Discard); err != nil {
 				failures = append(failures, fmt.Errorf("remove service volume %s: %w", name, err))
 			}
 		}
-		for index := len(lease.networks) - 1; index >= 0; index-- {
-			name := lease.networks[index]
+		for _, name := range slices.Backward(lease.networks) {
 			if err := lease.process(ctx, "docker", []string{"network", "rm", name}, nil, io.Discard, io.Discard); err != nil {
 				failures = append(failures, fmt.Errorf("remove service network %s: %w", name, err))
 			}
@@ -445,9 +442,7 @@ func waitContext(ctx context.Context, duration time.Duration) error {
 
 func clone(source map[string]string) map[string]string {
 	result := make(map[string]string, len(source))
-	for key, value := range source {
-		result[key] = value
-	}
+	maps.Copy(result, source)
 	return result
 }
 

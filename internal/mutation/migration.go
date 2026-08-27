@@ -1,8 +1,10 @@
 package mutation
 
 import (
+	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 	"time"
 )
@@ -55,7 +57,7 @@ type InputMigration struct {
 func ParseMigrationLedger(reader io.Reader) (MigrationLedger, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, maximumMigrationLedgerSize+1))
 	if err != nil {
-		return MigrationLedger{}, fmt.Errorf("%w: read migration ledger: %v", ErrInvalid, err)
+		return MigrationLedger{}, fmt.Errorf("%w: read migration ledger: %s", ErrInvalid, err.Error())
 	}
 	if len(data) > maximumMigrationLedgerSize {
 		return MigrationLedger{}, fmt.Errorf("%w: migration ledger exceeds %d bytes", ErrInvalid, maximumMigrationLedgerSize)
@@ -90,7 +92,7 @@ func (ledger MigrationLedger) validate() error {
 	seenVerifier := make(map[string]struct{}, len(ledger.VerifierMigrations))
 	for index, migration := range ledger.VerifierMigrations {
 		if err := migration.validate(review.GremlinsVerifierSHA256); err != nil {
-			return fmt.Errorf("%w: verifier_migrations[%d]: %v", ErrInvalid, index, err)
+			return fmt.Errorf("%w: verifier_migrations[%d]: %s", ErrInvalid, index, err.Error())
 		}
 		identity := verifierMigrationIdentity(migration)
 		if _, exists := seenVerifier[identity]; exists {
@@ -101,7 +103,7 @@ func (ledger MigrationLedger) validate() error {
 	seenInput := make(map[string]struct{}, len(ledger.Entries))
 	for index, migration := range ledger.Entries {
 		if err := migration.validate(review.GremlinsVerifierSHA256); err != nil {
-			return fmt.Errorf("%w: entries[%d]: %v", ErrInvalid, index, err)
+			return fmt.Errorf("%w: entries[%d]: %s", ErrInvalid, index, err.Error())
 		}
 		identity := inputMigrationIdentity(migration)
 		if _, exists := seenInput[identity]; exists {
@@ -116,7 +118,7 @@ func (migration VerifierMigration) validate(expectedVerifier string) error {
 	if !revisionRE.MatchString(migration.ExecutionRevision) || !digestRE.MatchString(migration.GateInputDigest) ||
 		!digestRE.MatchString(migration.ReportSHA256) || !versionRE.MatchString(migration.GremlinsVersion) ||
 		migration.GremlinsVerifierSHA256 != expectedVerifier || !validRelative(migration.Module) || !validRelative(migration.Package) {
-		return fmt.Errorf("verifier approval identity is malformed")
+		return errors.New("verifier approval identity is malformed")
 	}
 	return nil
 }
@@ -130,10 +132,10 @@ func (migration InputMigration) validate(expectedVerifier string) error {
 		(migration.ReplacementInputDigest != "" && !digestRE.MatchString(migration.ReplacementInputDigest)) ||
 		!digestRE.MatchString(migration.ReportSHA256) || !versionRE.MatchString(migration.GremlinsVersion) ||
 		verifier != expectedVerifier || !validRelative(migration.Module) || !validRelative(migration.Package) {
-		return fmt.Errorf("input approval identity is malformed")
+		return errors.New("input approval identity is malformed")
 	}
 	if len(migration.MigrationReason) > 256 || strings.ContainsAny(migration.MigrationReason, "\x00\r\n") {
-		return fmt.Errorf("input migration reason is malformed")
+		return errors.New("input migration reason is malformed")
 	}
 	return nil
 }
@@ -191,12 +193,7 @@ func (ledger MigrationLedger) Approve(checkpoint Checkpoint, currentInput, expec
 }
 
 func contains(values []string, expected string) bool {
-	for _, value := range values {
-		if value == expected {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(values, expected)
 }
 
 func verifierMigrationIdentity(value VerifierMigration) string {

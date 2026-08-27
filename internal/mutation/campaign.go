@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"sort"
@@ -112,7 +113,7 @@ type campaignState struct {
 }
 
 func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packageDirectory string, state *campaignState) error {
-	_, review, input, err := campaign.packageInput(ctx, packageDirectory)
+	review, input, err := campaign.packageInput(ctx, packageDirectory)
 	if err != nil {
 		return err
 	}
@@ -164,7 +165,7 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 	if validated.Mutants == 0 && review == nil {
 		return fmt.Errorf("%w: zero-mutant package %s lacks an exact review", ErrInvalid, target)
 	}
-	_, _, currentInput, err := campaign.packageInput(ctx, packageDirectory)
+	_, currentInput, err := campaign.packageInput(ctx, packageDirectory)
 	if err != nil {
 		return err
 	}
@@ -203,10 +204,10 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 	return nil
 }
 
-func (campaign Campaign) packageInput(ctx context.Context, packageDirectory string) (InputPolicy, *ZeroReview, string, error) {
+func (campaign Campaign) packageInput(ctx context.Context, packageDirectory string) (*ZeroReview, string, error) {
 	source, err := SourceDigest(campaign.Root, campaign.Policy.ModuleDirectory, packageDirectory)
 	if err != nil {
-		return InputPolicy{}, nil, "", err
+		return nil, "", err
 	}
 	review, _ := campaign.ZeroReviews.Review(campaign.Policy.ModuleDirectory, packageDirectory, source, GremlinsVersion, LegacyVerifierDigest())
 	policy := InputPolicy{
@@ -223,10 +224,10 @@ func (campaign Campaign) packageInput(ctx context.Context, packageDirectory stri
 	arguments = append(arguments, packageTarget(packageDirectory))
 	directory := filepath.Join(campaign.Root, filepath.FromSlash(campaign.Policy.ModuleDirectory))
 	if err := campaign.Process(ctx, "go", arguments, directory, campaign.commandEnvironment(), &listing, io.Discard); err != nil {
-		return InputPolicy{}, nil, "", fmt.Errorf("list mutation input for %s: %w", packageDirectory, err)
+		return nil, "", fmt.Errorf("list mutation input for %s: %w", packageDirectory, err)
 	}
 	digest, err := InputDigest(campaign.Root, policy, strings.NewReader(listing.String()), review)
-	return policy, review, digest, err
+	return review, digest, err
 }
 
 func (campaign Campaign) prepareExecution(ctx context.Context, state *campaignState) error {
@@ -282,7 +283,7 @@ func (campaign Campaign) commandEnvironment() map[string]string {
 
 func (campaign Campaign) validate() error {
 	policy := campaign.Policy
-	identityParts := []string{
+	identityParts := []string{ //nolint:prealloc // Fixed identity fields keep mutation semantics observable.
 		policy.Repository, policy.ModulePath, policy.GoVersion,
 		campaign.RuntimeIdentity.GoVersion, campaign.RuntimeIdentity.GOOS,
 		campaign.RuntimeIdentity.GOARCH, campaign.RuntimeIdentity.CGOEnabled,
@@ -337,9 +338,7 @@ func packageSlug(directory string) string {
 
 func cloneStrings(values map[string]string) map[string]string {
 	result := make(map[string]string, len(values))
-	for key, value := range values {
-		result[key] = value
-	}
+	maps.Copy(result, values)
 	return result
 }
 

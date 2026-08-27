@@ -8,6 +8,7 @@ import (
 )
 
 const (
+	// GremlinsVersion is the exact mutation engine release used by the verifier.
 	GremlinsVersion  = "v0.6.0"
 	gremlinsSum      = "h1:3G2ROO0I3q4bb5bxElQIUITTuEbl1iOfVYFqunGwrJI="
 	gremlinsGoModSum = "h1:LLbvJR33CWsu1sgvQ4qMzU2rqkwYJK3Qy/Al59eHKjA="

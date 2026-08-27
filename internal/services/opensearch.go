@@ -40,7 +40,7 @@ func ParseOpenSearchImages(reader io.Reader) (OpenSearchImages, error) {
 	}
 	values := make(map[string]string, 5)
 	content := strings.TrimSuffix(string(data), "\n")
-	for _, line := range strings.Split(content, "\n") {
+	for line := range strings.SplitSeq(content, "\n") {
 		matches := openSearchLineRE.FindStringSubmatch(line)
 		if len(matches) != 3 {
 			return OpenSearchImages{}, errors.New("OpenSearch image lock contains a malformed line")

@@ -14,7 +14,7 @@ const maximumRuntimeIdentitySize = 16 << 10
 func ParseRuntimeIdentity(reader io.Reader) (RuntimeIdentity, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, maximumRuntimeIdentitySize+1))
 	if err != nil {
-		return RuntimeIdentity{}, fmt.Errorf("%w: read Go runtime identity: %v", ErrInvalid, err)
+		return RuntimeIdentity{}, fmt.Errorf("%w: read Go runtime identity: %s", ErrInvalid, err.Error())
 	}
 	if len(data) > maximumRuntimeIdentitySize {
 		return RuntimeIdentity{}, fmt.Errorf("%w: Go runtime identity exceeds %d bytes", ErrInvalid, maximumRuntimeIdentitySize)
@@ -23,7 +23,7 @@ func ParseRuntimeIdentity(reader io.Reader) (RuntimeIdentity, error) {
 	decoder.DisallowUnknownFields()
 	var identity RuntimeIdentity
 	if err := decoder.Decode(&identity); err != nil {
-		return RuntimeIdentity{}, fmt.Errorf("%w: decode Go runtime identity: %v", ErrInvalid, err)
+		return RuntimeIdentity{}, fmt.Errorf("%w: decode Go runtime identity: %s", ErrInvalid, err.Error())
 	}
 	var trailing any
 	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {

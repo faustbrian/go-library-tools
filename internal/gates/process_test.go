@@ -18,7 +18,10 @@ func TestProcessExecutorUsesIsolatedTaskEnvironmentAndCleansIt(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	executor := created.(*processExecutor)
+	executor, ok := created.(*processExecutor)
+	if !ok {
+		t.Fatalf("executor type = %T", created)
+	}
 	task := filepath.Dir(executor.environment["GOCACHE"])
 	if executor.TemporaryDirectory() != task {
 		t.Fatalf("TemporaryDirectory() = %q, want %q", executor.TemporaryDirectory(), task)
@@ -50,8 +53,15 @@ func TestProcessExecutorReportsCommandFailure(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer cleanup()
-	executor := created.(*processExecutor)
+	t.Cleanup(func() {
+		if err := cleanup(); err != nil {
+			t.Error(err)
+		}
+	})
+	executor, ok := created.(*processExecutor)
+	if !ok {
+		t.Fatalf("executor type = %T", created)
+	}
 	err = executor.Run(context.Background(), Command{
 		Name: os.Args[0],
 		Args: []string{"-test.run=TestProcessHelper", "--"},
@@ -67,7 +77,11 @@ func TestProcessExecutorHonorsCommandOutputOverrides(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	defer cleanup()
+	t.Cleanup(func() {
+		if err := cleanup(); err != nil {
+			t.Error(err)
+		}
+	})
 	var stdout, stderr bytes.Buffer
 	err = created.Run(context.Background(), Command{
 		Name: os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
@@ -131,7 +145,7 @@ func TestProcessExecutorCleanupReportsWalkAndRemoveFailures(t *testing.T) {
 	}
 }
 
-func TestProcessHelper(t *testing.T) {
+func TestProcessHelper(_ *testing.T) {
 	if os.Getenv("GO_WANT_HELPER") != "1" {
 		return
 	}

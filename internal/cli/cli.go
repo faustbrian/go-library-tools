@@ -201,7 +201,7 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 		_, _ = fmt.Fprintf(stdout, "%d valid evidence record(s)\n", len(records))
 		return 0
 	default:
-		return usage(stderr, fmt.Sprintf("unknown command: %s", args[0]))
+		return usage(stderr, "unknown command: "+args[0])
 	}
 }
 

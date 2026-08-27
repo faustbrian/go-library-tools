@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -73,7 +74,7 @@ func startRabbitStream(ctx context.Context, manager Manager, lease *Lease, token
 	if err := writeRabbitStreamFixtureFiles(files, topology); err != nil {
 		return err
 	}
-	compose := renderRabbitStreamCompose(topology)
+	compose := renderRabbitStreamCompose()
 	if err := files.WriteFile(topology.compose, []byte(compose), 0o600); err != nil {
 		return fmt.Errorf("write RabbitMQ Streams topology: %w", err)
 	}
@@ -103,9 +104,7 @@ func startRabbitStream(ctx context.Context, manager Manager, lease *Lease, token
 		return err
 	}
 	lease.identities["rabbitstream"] = standaloneIdentity + ";" + strings.Join(identities, ";")
-	for key, value := range topology.testEnvironment(credentials) {
-		lease.environment[key] = value
-	}
+	maps.Copy(lease.environment, topology.testEnvironment(credentials))
 	return nil
 }
 
@@ -224,8 +223,8 @@ func (manager Manager) configureRabbitStreamProxies(ctx context.Context, topolog
 		{"rabbit1", 15561, "rabbit1:5552"}, {"rabbit2", 15562, "rabbit2:5552"},
 		{"rabbit3", 15563, "rabbit3:5552"}, {"rabbit-tls", 15571, "rabbit-tls:5551"},
 	} {
-		payload := []byte(fmt.Sprintf(`{"name":%q,"listen":%q,"upstream":%q}`,
-			proxy.name, "0.0.0.0:"+strconv.Itoa(proxy.listen), proxy.upstream))
+		payload := fmt.Appendf(nil, `{"name":%q,"listen":%q,"upstream":%q}`,
+			proxy.name, "0.0.0.0:"+strconv.Itoa(proxy.listen), proxy.upstream)
 		if err := manager.configureToxiproxy(ctx, request, controlURL+"/proxies", payload); err != nil {
 			return fmt.Errorf("configure %s: %w", proxy.name, err)
 		}
@@ -321,7 +320,7 @@ func (topology rabbitStreamTopology) testEnvironment(credentials rabbitStreamCre
 	}
 }
 
-func renderRabbitStreamCompose(topology rabbitStreamTopology) string {
+func renderRabbitStreamCompose() string {
 	return fmt.Sprintf(rabbitStreamComposeTemplate,
 		rabbitStreamOldImage, rabbitStreamOldImage, rabbitStreamOldImage,
 		rabbitStreamImage, rabbitStreamImage,

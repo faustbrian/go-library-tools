@@ -25,7 +25,7 @@ import (
 
 const (
 	golangCILintVersion = "v2.12.2"
-	staticcheckVersion  = "v0.7.0"
+	staticcheckVersion  = "v0.8.1"
 	nilAwayVersion      = "v0.0.0-20260720194628-9fd1b8d7bac8"
 	govulncheckVersion  = "v1.6.0"
 	gitleaksVersion     = "v8.30.1"
@@ -204,7 +204,7 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 	}); err != nil {
 		return err
 	}
-	if err := runner.command(ctx, output, module.Directory, "tidy-check", directory, "go", "mod", "tidy", "-diff"); err != nil {
+	if err := runner.command(ctx, output, module.Directory, "tidy-check", directory, "mod", "tidy", "-diff"); err != nil {
 		return err
 	}
 	if err := announce(output, module.Directory, "safety", func() error {
@@ -213,19 +213,19 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 		return err
 	}
 	if module.Gates["lint"] {
-		if err := runner.command(ctx, output, module.Directory, "vet", directory, "go", "vet", "./..."); err != nil {
+		if err := runner.command(ctx, output, module.Directory, "vet", directory, "vet", "./..."); err != nil {
 			return err
 		}
 	}
 	if module.Gates["tests"] {
 		args := testArguments(module.TestTags, false)
-		if err := runner.command(ctx, output, module.Directory, "test", directory, "go", args...); err != nil {
+		if err := runner.command(ctx, output, module.Directory, "test", directory, args...); err != nil {
 			return err
 		}
 	}
 	if module.Gates["race"] {
 		args := testArguments(module.TestTags, true)
-		if err := runner.command(ctx, output, module.Directory, "race", directory, "go", args...); err != nil {
+		if err := runner.command(ctx, output, module.Directory, "race", directory, args...); err != nil {
 			return err
 		}
 	}
@@ -311,7 +311,7 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 
 func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
 	arguments := append([]string{"run", tool}, args...)
-	return runner.command(ctx, output, module, gate, directory, "go", arguments...)
+	return runner.command(ctx, output, module, gate, directory, arguments...)
 }
 
 func (runner Runner) runCoverage(ctx context.Context, output io.Writer, directory string, module inventory.Module) error {
@@ -332,7 +332,7 @@ func (runner Runner) runCoverage(ctx context.Context, output io.Writer, director
 		_ = files.Remove(profilePath)
 		return fmt.Errorf("close coverage profile: %w", err)
 	}
-	defer files.Remove(profilePath)
+	defer func() { _ = files.Remove(profilePath) }()
 	args := []string{"test"}
 	if len(module.TestTags) > 0 {
 		args = append(args, "-tags="+strings.Join(module.TestTags, ","))
@@ -424,9 +424,9 @@ func testArguments(tags []string, race bool) []string {
 	return append(args, "./...", "-count=1", "-timeout=20m")
 }
 
-func (runner Runner) command(ctx context.Context, output io.Writer, module, gate, directory, name string, args ...string) error {
+func (runner Runner) command(ctx context.Context, output io.Writer, module, gate, directory string, args ...string) error {
 	return announce(output, module, gate, func() error {
-		if err := runner.Executor.Run(ctx, Command{Name: name, Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}); err != nil {
+		if err := runner.Executor.Run(ctx, Command{Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}); err != nil {
 			return fmt.Errorf("%s %s: %w", module, gate, err)
 		}
 		return nil

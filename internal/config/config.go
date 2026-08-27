@@ -175,7 +175,7 @@ func (value Config) validate() error {
 	}
 	for _, path := range paths {
 		if err := validateRelativePath(path.value); err != nil {
-			return fmt.Errorf("%w: %s: %v", ErrInvalid, path.name, err)
+			return fmt.Errorf("%w: %s: %s", ErrInvalid, path.name, err.Error())
 		}
 	}
 	if value.Runtimes.Deno != "" && !versionRE.MatchString("v"+value.Runtimes.Deno) {
@@ -187,7 +187,7 @@ func (value Config) validate() error {
 	seen := make(map[string]struct{}, len(value.Operations))
 	for index, operation := range value.Operations {
 		if err := operation.validate(); err != nil {
-			return fmt.Errorf("%w: operations[%d]: %v", ErrInvalid, index, err)
+			return fmt.Errorf("%w: operations[%d]: %s", ErrInvalid, index, err.Error())
 		}
 		identity := operation.Module + "\x00" + operation.Gate
 		if _, exists := seen[identity]; exists {
@@ -203,7 +203,7 @@ func (operation Operation) validate() error {
 		return errors.New("module is required")
 	}
 	if err := validateRelativePath(operation.Module); err != nil && operation.Module != "." {
-		return fmt.Errorf("module: %v", err)
+		return fmt.Errorf("module: %w", err)
 	}
 	allowedGates := map[string]bool{
 		"api": true, "benchmark": true, "conformance": true, "docs": true,
@@ -217,7 +217,7 @@ func (operation Operation) validate() error {
 	}
 	for index, step := range operation.Steps {
 		if err := step.validate(); err != nil {
-			return fmt.Errorf("steps[%d]: %v", index, err)
+			return fmt.Errorf("steps[%d]: %w", index, err)
 		}
 	}
 	return nil
@@ -226,7 +226,7 @@ func (operation Operation) validate() error {
 func (step Step) validate() error {
 	timeout, err := time.ParseDuration(step.Timeout)
 	if err != nil {
-		return fmt.Errorf("timeout: %v", err)
+		return fmt.Errorf("timeout: %w", err)
 	}
 	if timeout <= 0 {
 		return errors.New("timeout must be positive")
@@ -250,12 +250,12 @@ func (step Step) validate() error {
 				return errors.New("budget requires a benchmark or fuzz selector")
 			}
 			if err := validateBudget(step.Budget); err != nil {
-				return fmt.Errorf("budget: %v", err)
+				return fmt.Errorf("budget: %w", err)
 			}
 		}
 		for _, packagePattern := range step.Packages {
 			if err := validatePackagePattern(packagePattern); err != nil {
-				return fmt.Errorf("go-test package %q: %v", packagePattern, err)
+				return fmt.Errorf("go-test package %q: %w", packagePattern, err)
 			}
 		}
 	default:
@@ -284,8 +284,8 @@ func validatePackagePattern(value string) error {
 }
 
 func validateBudget(value string) error {
-	if strings.HasSuffix(value, "x") {
-		iterations, err := strconv.ParseUint(strings.TrimSuffix(value, "x"), 10, 64)
+	if iterationsText, found := strings.CutSuffix(value, "x"); found {
+		iterations, err := strconv.ParseUint(iterationsText, 10, 64)
 		if err != nil || iterations == 0 {
 			return errors.New("must be a positive duration or iteration count ending in x")
 		}

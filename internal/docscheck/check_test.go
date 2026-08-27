@@ -138,7 +138,7 @@ func TestCheckRejectsUnsafeAndBrokenLinks(t *testing.T) {
 
 func TestCheckBoundsDocumentCount(t *testing.T) {
 	root := basic(t)
-	for index := 0; index < maximumDocuments; index++ {
+	for index := range maximumDocuments {
 		write(t, filepath.Join(root, "docs", fmt.Sprintf("%04d.md", index)), "# Document\n")
 	}
 	if err := Check(root); err == nil || !strings.Contains(err.Error(), "file count") {

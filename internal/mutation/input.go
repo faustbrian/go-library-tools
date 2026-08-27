@@ -244,7 +244,7 @@ func sortedCopy(values []string) []string {
 func parseListing(reader io.Reader) ([]listedPackage, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, maximumListSize+1))
 	if err != nil {
-		return nil, fmt.Errorf("%w: read go list output: %v", ErrInvalid, err)
+		return nil, fmt.Errorf("%w: read go list output: %s", ErrInvalid, err.Error())
 	}
 	if len(data) > maximumListSize {
 		return nil, fmt.Errorf("%w: go list output exceeds %d bytes", ErrInvalid, maximumListSize)
@@ -259,7 +259,7 @@ func parseListing(reader io.Reader) ([]listedPackage, error) {
 			}
 			return packages, nil
 		} else if err != nil {
-			return nil, fmt.Errorf("%w: decode go list output: %v", ErrInvalid, err)
+			return nil, fmt.Errorf("%w: decode go list output: %s", ErrInvalid, err.Error())
 		}
 		packages = append(packages, pkg)
 	}

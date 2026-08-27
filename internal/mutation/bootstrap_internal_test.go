@@ -205,11 +205,11 @@ func TestParseCheckpointRejectsMalformedContracts(t *testing.T) {
 		"invalid column":           {mutate: func(value map[string]any) { mutationOf(value)["column"] = 0 }, want: "location is malformed"},
 		"survivor":                 {mutate: func(value map[string]any) { mutationOf(value)["status"] = "SURVIVED" }, want: "non-killed mutant"},
 		"duplicate file": {mutate: func(value map[string]any) {
-			files := reportOf(value)["files"].([]any)
+			files, _ := reportOf(value)["files"].([]any)
 			reportOf(value)["files"] = append(files, files[0])
 		}, want: "duplicate mutation file"},
 		"duplicate mutation": {mutate: func(value map[string]any) {
-			mutations := fileOf(value)["mutations"].([]any)
+			mutations, _ := fileOf(value)["mutations"].([]any)
 			fileOf(value)["mutations"] = append(mutations, mutations[0])
 		}, want: "duplicate mutation identity"},
 		"incomplete counters": {mutate: func(value map[string]any) { reportOf(value)["mutants_total"] = 2 }, want: "incomplete aggregate counters"},
@@ -228,7 +228,6 @@ func TestParseCheckpointRejectsMalformedContracts(t *testing.T) {
 		"mutants_killed": 0, "mutants_lived": 1, "mutants_not_covered": 1,
 		"mutants_not_viable": 1, "mutants_total": 0, "mutations_coverage": 99, "test_efficacy": 99,
 	} {
-		field, invalid := field, invalid
 		tests["counter "+field] = struct {
 			mutate func(map[string]any)
 			want   string
@@ -299,6 +298,21 @@ func TestDuplicateKeyScannerRejectsMalformedStructures(t *testing.T) {
 		if err := rejectDuplicateKeys([]byte(data)); !errors.Is(err, ErrInvalid) {
 			t.Fatalf("rejectDuplicateKeys(%q) error = %v", data, err)
 		}
+	}
+}
+
+func TestObjectKeyRejectsNonStringToken(t *testing.T) {
+	deferred := func() {
+		defer func() {
+			if recover() == nil {
+				t.Fatal("objectKey accepted a non-string token")
+			}
+		}()
+		objectKey(1)
+	}
+	deferred()
+	if key := objectKey("name"); key != "name" {
+		t.Fatalf("objectKey = %q", key)
 	}
 }
 
@@ -377,12 +391,34 @@ func validCheckpointJSON() string {
 	return `{"schema_version":3,"module":".","package":".","gate_input_digest":"` + strings.Repeat("a", 64) + `","gremlins_version":"v0.6.0","environment":{"GOVERSION":"go1.26.6"},"report":{"files":[{"file_name":"example.go","mutations":[{"type":"NEGATION","status":"KILLED","line":1,"column":1}]}]}}`
 }
 
-func reportOf(value map[string]any) map[string]any { return value["report"].(map[string]any) }
+func reportOf(value map[string]any) map[string]any {
+	report, ok := value["report"].(map[string]any)
+	if !ok {
+		panic("report fixture is malformed")
+	}
+	return report
+}
 func fileOf(value map[string]any) map[string]any {
-	return reportOf(value)["files"].([]any)[0].(map[string]any)
+	files, ok := reportOf(value)["files"].([]any)
+	if !ok || len(files) == 0 {
+		panic("files fixture is malformed")
+	}
+	file, ok := files[0].(map[string]any)
+	if !ok {
+		panic("file fixture is malformed")
+	}
+	return file
 }
 func mutationOf(value map[string]any) map[string]any {
-	return fileOf(value)["mutations"].([]any)[0].(map[string]any)
+	mutations, ok := fileOf(value)["mutations"].([]any)
+	if !ok || len(mutations) == 0 {
+		panic("mutations fixture is malformed")
+	}
+	mutation, ok := mutations[0].(map[string]any)
+	if !ok {
+		panic("mutation fixture is malformed")
+	}
+	return mutation
 }
 
 func cloneMap(t *testing.T, value map[string]any) map[string]any {

@@ -63,7 +63,7 @@ func storeReport(files reportFileSystem, root, inputDigest string, report []byte
 		return "", false, ReportResult{}, fmt.Errorf("create temporary mutation report: %w", err)
 	}
 	temporaryPath := temporary.Name()
-	defer files.Remove(temporaryPath)
+	defer func() { _ = files.Remove(temporaryPath) }()
 	if _, err = temporary.Write(report); err == nil {
 		err = temporary.Sync()
 	}

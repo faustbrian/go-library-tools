@@ -110,7 +110,7 @@ func ExtractLychee(archive string, release LycheeRelease) ([]byte, error) {
 		if path.IsAbs(header.Name) || clean == ".." || strings.HasPrefix(clean, "../") || strings.Contains(header.Name, `\`) {
 			return nil, fmt.Errorf("unsafe archive path: %s", header.Name)
 		}
-		if header.Typeflag != tar.TypeDir && header.Typeflag != tar.TypeReg && header.Typeflag != tar.TypeRegA {
+		if header.Typeflag != tar.TypeDir && header.Typeflag != tar.TypeReg {
 			return nil, fmt.Errorf("unsupported archive entry: %s", header.Name)
 		}
 		if header.Size < 0 || !withinMaximum(header.Size, maximumLycheeExpandedSize-total) {
@@ -121,7 +121,7 @@ func ExtractLychee(archive string, release LycheeRelease) ([]byte, error) {
 			if binary != nil {
 				return nil, errors.New("duplicate lychee binary")
 			}
-			if header.Typeflag != tar.TypeReg && header.Typeflag != tar.TypeRegA {
+			if header.Typeflag != tar.TypeReg {
 				return nil, errors.New("lychee binary is not a regular file")
 			}
 			if !withinMaximum(header.Size, maximumLycheeBinarySize) {

@@ -337,7 +337,9 @@ func TestCheckDocumentationUsesPinnedLinksByDefault(t *testing.T) {
 func TestDocumentationLinksReportsSetupAndToolFailures(t *testing.T) {
 	failure := errors.New("injected failure")
 	release := docscheck.LycheeRelease{Target: "test", URL: "https://example.test/lychee.tar.gz", SHA256: strings.Repeat("a", 64)}
-	releaseFor := func(string, string) (docscheck.LycheeRelease, error) { return release, nil }
+	releaseFor := func(string, string) (docscheck.LycheeRelease, error) { //nolint:unparam // Matches the injected production contract.
+		return release, nil
+	}
 	extract := func(string, docscheck.LycheeRelease) ([]byte, error) { return []byte("binary"), nil }
 
 	t.Run("workspace", func(t *testing.T) {

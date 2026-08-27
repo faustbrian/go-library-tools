@@ -20,12 +20,16 @@ import (
 )
 
 const (
+	// SchemaVersion is the current evidence record schema.
 	SchemaVersion = 1
-	MaximumSize   = 1 << 20
+	// MaximumSize bounds one decoded evidence record.
+	MaximumSize = 1 << 20
 )
 
 var (
-	ErrInvalid  = errors.New("invalid evidence")
+	// ErrInvalid identifies malformed or untrusted evidence.
+	ErrInvalid = errors.New("invalid evidence")
+	// ErrConflict identifies a different record at an immutable evidence path.
 	ErrConflict = errors.New("conflicting evidence")
 	digestRE    = regexp.MustCompile(`^sha256:[0-9a-f]{64}$`)
 	gateRE      = regexp.MustCompile(`^[a-z][a-z0-9-]*$`)
@@ -147,7 +151,7 @@ func writePart(writer io.Writer, value []byte) {
 func Parse(reader io.Reader) (Record, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, MaximumSize+1))
 	if err != nil {
-		return Record{}, fmt.Errorf("%w: read: %v", ErrInvalid, err)
+		return Record{}, fmt.Errorf("%w: read: %s", ErrInvalid, err.Error())
 	}
 	if len(data) > MaximumSize {
 		return Record{}, fmt.Errorf("%w: record exceeds %d bytes", ErrInvalid, MaximumSize)
@@ -156,7 +160,7 @@ func Parse(reader io.Reader) (Record, error) {
 	decoder.DisallowUnknownFields()
 	var record Record
 	if err := decoder.Decode(&record); err != nil {
-		return Record{}, fmt.Errorf("%w: decode: %v", ErrInvalid, err)
+		return Record{}, fmt.Errorf("%w: decode: %s", ErrInvalid, err.Error())
 	}
 	if err := requireEOF(decoder); err != nil {
 		return Record{}, err
@@ -173,7 +177,7 @@ func requireEOF(decoder *json.Decoder) error {
 		if err == nil {
 			return fmt.Errorf("%w: multiple JSON values", ErrInvalid)
 		}
-		return fmt.Errorf("%w: trailing data: %v", ErrInvalid, err)
+		return fmt.Errorf("%w: trailing data: %s", ErrInvalid, err.Error())
 	}
 	return nil
 }
@@ -270,7 +274,7 @@ func store(files storeFileSystem, root string, record Record) (string, bool, err
 		return "", false, fmt.Errorf("create temporary evidence: %w", err)
 	}
 	temporaryPath := temporary.Name()
-	defer files.Remove(temporaryPath)
+	defer func() { _ = files.Remove(temporaryPath) }()
 	if _, err = temporary.Write(data); err == nil {
 		err = temporary.Sync()
 	}

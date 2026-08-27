@@ -1,6 +1,7 @@
 package mutation
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -29,7 +30,7 @@ type ZeroReview struct {
 func ParseZeroInventory(reader io.Reader) (ZeroInventory, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, maximumZeroInventorySize+1))
 	if err != nil {
-		return ZeroInventory{}, fmt.Errorf("%w: read zero-mutant inventory: %v", ErrInvalid, err)
+		return ZeroInventory{}, fmt.Errorf("%w: read zero-mutant inventory: %s", ErrInvalid, err.Error())
 	}
 	if len(data) > maximumZeroInventorySize {
 		return ZeroInventory{}, fmt.Errorf("%w: zero-mutant inventory exceeds %d bytes", ErrInvalid, maximumZeroInventorySize)
@@ -44,7 +45,7 @@ func ParseZeroInventory(reader io.Reader) (ZeroInventory, error) {
 	seen := make(map[string]struct{}, len(inventory.Packages))
 	for index, review := range inventory.Packages {
 		if err := review.validate(); err != nil {
-			return ZeroInventory{}, fmt.Errorf("%w: packages[%d]: %v", ErrInvalid, index, err)
+			return ZeroInventory{}, fmt.Errorf("%w: packages[%d]: %s", ErrInvalid, index, err.Error())
 		}
 		identity := review.ModuleDirectory + "\x00" + review.PackageDirectory
 		if _, exists := seen[identity]; exists {
@@ -57,20 +58,20 @@ func ParseZeroInventory(reader io.Reader) (ZeroInventory, error) {
 
 func (review ZeroReview) validate() error {
 	if !validRelative(review.ModuleDirectory) || !validRelative(review.PackageDirectory) {
-		return fmt.Errorf("module_directory and package_directory must be safe relative paths")
+		return errors.New("module_directory and package_directory must be safe relative paths")
 	}
 	if !digestRE.MatchString(review.SourceDigest) {
-		return fmt.Errorf("source_digest is malformed")
+		return errors.New("source_digest is malformed")
 	}
 	if !digestRE.MatchString(review.GremlinsVerifierSHA256) {
-		return fmt.Errorf("gremlins_verifier_sha256 is malformed")
+		return errors.New("gremlins_verifier_sha256 is malformed")
 	}
 	if !versionRE.MatchString(review.GremlinsVersion) {
-		return fmt.Errorf("gremlins_version is malformed")
+		return errors.New("gremlins_version is malformed")
 	}
 	reason := strings.TrimSpace(review.Reason)
 	if len(reason) < 40 || strings.ContainsAny(reason, "\x00\r\n") {
-		return fmt.Errorf("reason must be a detailed single-line explanation")
+		return errors.New("reason must be a detailed single-line explanation")
 	}
 	return nil
 }

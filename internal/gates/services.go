@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/faustbrian/go-library-tools/internal/inventory"
@@ -87,12 +89,7 @@ func (runner Runner) loadOpenSearchImages(module inventory.Module) (services.Ope
 }
 
 func containsService(names []string, target string) bool {
-	for _, name := range names {
-		if name == target {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(names, target)
 }
 
 type serviceEnvironmentExecutor struct {
@@ -118,12 +115,8 @@ func executorWorkspace(executor Executor) string {
 
 func mergeMaps(base, override map[string]string) map[string]string {
 	result := make(map[string]string)
-	for key, value := range base {
-		result[key] = value
-	}
-	for key, value := range override {
-		result[key] = value
-	}
+	maps.Copy(result, base)
+	maps.Copy(result, override)
 	return result
 }
 

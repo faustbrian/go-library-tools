@@ -82,7 +82,7 @@ func TestWithModuleServicesSkipsEmptySelection(t *testing.T) {
 	runner := Runner{startServices: func(context.Context, []string) (serviceLease, error) {
 		return nil, errors.New("must not start")
 	}}
-	if err := runner.withModuleServices(context.Background(), inventory.Module{}, func(scoped Runner) error {
+	if err := runner.withModuleServices(context.Background(), inventory.Module{}, func(_ Runner) error {
 		called = true
 		return nil
 	}); err != nil || !called {
@@ -269,8 +269,8 @@ func (executor *serviceRecordingExecutor) Run(_ context.Context, command Command
 	}
 	if executor.coverage {
 		for _, argument := range command.Args {
-			if strings.HasPrefix(argument, "-coverprofile=") {
-				return os.WriteFile(strings.TrimPrefix(argument, "-coverprofile="), []byte("mode: atomic\nexample/file.go:1.1,2.1 1 1\n"), 0o600)
+			if profile, found := strings.CutPrefix(argument, "-coverprofile="); found {
+				return os.WriteFile(profile, []byte("mode: atomic\nexample/file.go:1.1,2.1 1 1\n"), 0o600)
 			}
 		}
 	}

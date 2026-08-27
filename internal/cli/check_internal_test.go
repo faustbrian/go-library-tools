@@ -221,8 +221,8 @@ type coverageExecutor struct{}
 
 func (coverageExecutor) Run(_ context.Context, command gates.Command) error {
 	for _, argument := range command.Args {
-		if strings.HasPrefix(argument, "-coverprofile=") {
-			return os.WriteFile(strings.TrimPrefix(argument, "-coverprofile="), []byte("mode: atomic\nexample/file.go:1.1,2.1 1 1\n"), 0o600)
+		if profile, found := strings.CutPrefix(argument, "-coverprofile="); found {
+			return os.WriteFile(profile, []byte("mode: atomic\nexample/file.go:1.1,2.1 1 1\n"), 0o600)
 		}
 	}
 	return nil

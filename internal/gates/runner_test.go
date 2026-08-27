@@ -38,7 +38,7 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 		"go test ./... -count=1 -timeout=20m",
 		"go test -race ./... -count=1 -timeout=20m",
 		"go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.12.2 run --allow-parallel-runners --timeout=10m ./...",
-		"go run honnef.co/go/tools/cmd/staticcheck@v0.7.0 ./...",
+		"go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...",
 		"go run go.uber.org/nilaway/cmd/nilaway@v0.0.0-20260720194628-9fd1b8d7bac8 -include-pkgs= ./...",
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
@@ -456,8 +456,8 @@ func successfulLinks(context.Context, string) error    { return nil }
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
 	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, command.Args...), " "))
 	for _, argument := range command.Args {
-		if strings.HasPrefix(argument, "-coverprofile=") {
-			if err := os.WriteFile(strings.TrimPrefix(argument, "-coverprofile="), []byte(executor.coverageProfile), 0o600); err != nil {
+		if profile, found := strings.CutPrefix(argument, "-coverprofile="); found {
+			if err := os.WriteFile(profile, []byte(executor.coverageProfile), 0o600); err != nil {
 				return err
 			}
 		}

@@ -240,7 +240,7 @@ func TestRunPackageReportsArgumentAndCorruptReuseFailures(t *testing.T) {
 		t.Fatal("runPackage(invalid arguments) error = nil")
 	}
 	campaign, _ = campaignFixture(t)
-	_, _, input, err := campaign.packageInput(context.Background(), ".")
+	_, input, err := campaign.packageInput(context.Background(), ".")
 	if err != nil {
 		t.Fatal(err)
 	}

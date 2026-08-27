@@ -12,7 +12,7 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 )
 
-const apiDiffVersion = "v0.0.0-20260718201538-764159d718ef"
+const compatibilityToolVersion = "v0.0.0-20260718201538-764159d718ef"
 const maximumAPIOutput = 4 << 20
 
 type boundedBuffer struct {
@@ -105,8 +105,8 @@ func (runner Runner) apiModule(ctx context.Context, output io.Writer, module inv
 		_ = files.Remove(temporaryPath)
 		return fmt.Errorf("close API snapshot: %w", err)
 	}
-	defer files.Remove(temporaryPath)
-	tool := "golang.org/x/exp/cmd/apidiff@" + apiDiffVersion
+	defer func() { _ = files.Remove(temporaryPath) }()
+	tool := "golang.org/x/exp/cmd/apidiff@" + compatibilityToolVersion
 	if err := runner.Executor.Run(ctx, Command{
 		Name: "go", Dir: directory, Env: map[string]string{"GOWORK": "off"},
 		Args: []string{"run", tool, "-m", "-w", temporaryPath, module.ModulePath},

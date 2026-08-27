@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -118,9 +119,7 @@ func mergeEnvironment(current []string, sets ...map[string]string) []string {
 		}
 	}
 	for _, set := range sets {
-		for key, value := range set {
-			values[key] = value
-		}
+		maps.Copy(values, set)
 	}
 	keys := make([]string, 0, len(values))
 	for key := range values {

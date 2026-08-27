@@ -86,15 +86,15 @@ func TestInspectRejectsMalformedOrMismatchedRecords(t *testing.T) {
 			writeInspect(t, filepath.Join(root, ".verification", "by-input", "coverage", strings.Repeat("a", 64)+".json"), "{}")
 		},
 		"path mismatch": func(t *testing.T, root string) {
-			storeInspectRecord(t, root, inspectRecord(".", "coverage", "a"), "mutation", "a")
+			storeInspectRecord(t, root, inspectRecord(".", "coverage", "a"), "mutation")
 		},
 		"repository mismatch": func(t *testing.T, root string) {
 			record := inspectRecord(".", "coverage", "a")
 			record.Repository = "other"
-			storeInspectRecord(t, root, record, "coverage", "a")
+			storeInspectRecord(t, root, record, "coverage")
 		},
 		"unknown module": func(t *testing.T, root string) {
-			storeInspectRecord(t, root, inspectRecord("unknown", "coverage", "a"), "coverage", "a")
+			storeInspectRecord(t, root, inspectRecord("unknown", "coverage", "a"), "coverage")
 		},
 	}
 	for name, setup := range tests {
@@ -111,7 +111,7 @@ func TestInspectRejectsMalformedOrMismatchedRecords(t *testing.T) {
 func TestInspectRejectsDuplicateIdentity(t *testing.T) {
 	root := t.TempDir()
 	record := inspectRecord(".", "coverage", "a")
-	storeInspectRecord(t, root, record, "coverage", "a")
+	storeInspectRecord(t, root, record, "coverage")
 	data, err := evidence.Marshal(record)
 	if err != nil {
 		t.Fatal(err)
@@ -130,13 +130,13 @@ func inspectRecord(module, gate, digestCharacter string) evidence.Record {
 		CompletedAt: time.Unix(1, 0).UTC()}
 }
 
-func storeInspectRecord(t *testing.T, root string, record evidence.Record, gate, digestCharacter string) {
+func storeInspectRecord(t *testing.T, root string, record evidence.Record, gate string) {
 	t.Helper()
 	data, err := evidence.Marshal(record)
 	if err != nil {
 		t.Fatal(err)
 	}
-	writeInspect(t, filepath.Join(root, ".verification", "by-input", gate, strings.Repeat(digestCharacter, 64)+".json"), string(data))
+	writeInspect(t, filepath.Join(root, ".verification", "by-input", gate, strings.Repeat("a", 64)+".json"), string(data))
 }
 
 func writeInspect(t *testing.T, path, content string) {

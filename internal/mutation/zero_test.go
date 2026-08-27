@@ -62,12 +62,12 @@ func TestParseZeroInventoryRejectsInvalidPolicy(t *testing.T) {
 	tests := map[string]string{
 		"unknown field":       `{"schema_version":1,"packages":[],"unknown":true}`,
 		"wrong schema":        `{"schema_version":2,"packages":[]}`,
-		"unsafe path":         reviewJSON("../outside", ".", strings.Repeat("a", 64), strings.Repeat("b", 64), "v0.6.0", strings.Repeat("reason ", 8)),
-		"bad source digest":   reviewJSON(".", ".", "bad", strings.Repeat("b", 64), "v0.6.0", strings.Repeat("reason ", 8)),
-		"bad verifier digest": reviewJSON(".", ".", strings.Repeat("a", 64), "bad", "v0.6.0", strings.Repeat("reason ", 8)),
-		"bad version":         reviewJSON(".", ".", strings.Repeat("a", 64), strings.Repeat("b", 64), "latest", strings.Repeat("reason ", 8)),
-		"weak reason":         reviewJSON(".", ".", strings.Repeat("a", 64), strings.Repeat("b", 64), "v0.6.0", "none"),
-		"39 byte reason":      reviewJSON(".", ".", strings.Repeat("a", 64), strings.Repeat("b", 64), "v0.6.0", strings.Repeat("r", 39)),
+		"unsafe path":         reviewJSON("../outside", strings.Repeat("a", 64), strings.Repeat("b", 64), "v0.6.0", strings.Repeat("reason ", 8)),
+		"bad source digest":   reviewJSON(".", "bad", strings.Repeat("b", 64), "v0.6.0", strings.Repeat("reason ", 8)),
+		"bad verifier digest": reviewJSON(".", strings.Repeat("a", 64), "bad", "v0.6.0", strings.Repeat("reason ", 8)),
+		"bad version":         reviewJSON(".", strings.Repeat("a", 64), strings.Repeat("b", 64), "latest", strings.Repeat("reason ", 8)),
+		"weak reason":         reviewJSON(".", strings.Repeat("a", 64), strings.Repeat("b", 64), "v0.6.0", "none"),
+		"39 byte reason":      reviewJSON(".", strings.Repeat("a", 64), strings.Repeat("b", 64), "v0.6.0", strings.Repeat("r", 39)),
 	}
 	for name, body := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -80,7 +80,7 @@ func TestParseZeroInventoryRejectsInvalidPolicy(t *testing.T) {
 }
 
 func TestParseZeroInventoryAcceptsExactBounds(t *testing.T) {
-	body := reviewJSON(".", ".", strings.Repeat("a", 64), strings.Repeat("b", 64), "v0.6.0", strings.Repeat("r", 40))
+	body := reviewJSON(".", strings.Repeat("a", 64), strings.Repeat("b", 64), "v0.6.0", strings.Repeat("r", 40))
 	if _, err := mutation.ParseZeroInventory(strings.NewReader(body)); err != nil {
 		t.Fatalf("ParseZeroInventory(40 byte reason) error = %v", err)
 	}
@@ -98,6 +98,6 @@ func TestParseZeroInventoryRequiresFinalByteAtSizeLimit(t *testing.T) {
 	}
 }
 
-func reviewJSON(module, pkg, source, verifier, version, reason string) string {
-	return `{"schema_version":1,"packages":[{"module_directory":"` + module + `","package_directory":"` + pkg + `","source_digest":"` + source + `","gremlins_version":"` + version + `","gremlins_verifier_sha256":"` + verifier + `","reason":"` + reason + `"}]}`
+func reviewJSON(module, source, verifier, version, reason string) string {
+	return `{"schema_version":1,"packages":[{"module_directory":"` + module + `","package_directory":".","source_digest":"` + source + `","gremlins_version":"` + version + `","gremlins_verifier_sha256":"` + verifier + `","reason":"` + reason + `"}]}`
 }

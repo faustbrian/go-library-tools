@@ -16,6 +16,9 @@ func TestSpellingAssetsArePinnedAndSelfContained(t *testing.T) {
 		!bytes.Contains(packageLock, []byte(`"cspell": "10.0.0"`)) {
 		t.Fatal("package-lock.json does not bind the pinned spelling tool")
 	}
+	if len(packageJSON) == 0 {
+		t.Fatal("package.json asset is empty")
+	}
 	packageJSON[0] ^= 1
 	second, _ := docscheck.SpellingAssets()
 	if bytes.Equal(packageJSON, second) {

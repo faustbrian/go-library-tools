@@ -153,7 +153,7 @@ func (manager Manager) configureToxiproxy(ctx context.Context, request HTTPReque
 		wait = waitContext
 	}
 	var last error
-	for attempt := 0; attempt < attempts; attempt++ {
+	for attempt := range attempts {
 		status, err := request(ctx, http.MethodPost, url, payload, map[string]string{"Content-Type": "application/json"})
 		accepted := err == nil && (status == http.StatusCreated || status == http.StatusConflict)
 		if accepted {
@@ -230,6 +230,7 @@ func httpRequest(ctx context.Context, method, url string, body []byte, headers m
 
 func httpRequestWithFactory(ctx context.Context, method, url string, body []byte, headers map[string]string, create func(context.Context, string, string, io.Reader) (*http.Request, error)) (int, error) {
 	request, err := create(ctx, method, url, bytes.NewReader(body))
+	//nolint:gocritic // A switch avoids an unsafe mutation variant that can issue malformed HTTP requests.
 	switch request {
 	case nil:
 		return 0, errors.Join(errors.New("create fixture-control request"), err)
@@ -248,6 +249,7 @@ func httpRequestWithFactory(ctx context.Context, method, url string, body []byte
 		CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("redirects are not allowed") },
 	}
 	response, err := client.Do(request)
+	//nolint:gocritic // A switch keeps nil-response handling mutation-safe without changing the request lifecycle.
 	switch response {
 	case nil:
 		return 0, err

@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -136,8 +137,8 @@ func (process *campaignProcess) run(_ context.Context, name string, args []strin
 			if argument == "-tags=" {
 				return errors.New("empty tags argument")
 			}
-			if strings.HasPrefix(argument, "-coverprofile=") {
-				return os.WriteFile(strings.TrimPrefix(argument, "-coverprofile="), []byte("mode: set\n"), 0o600)
+			if profile, found := strings.CutPrefix(argument, "-coverprofile="); found {
+				return os.WriteFile(profile, []byte("mode: set\n"), 0o600)
 			}
 		}
 	case strings.HasSuffix(name, "golib-gremlins"):
@@ -174,10 +175,5 @@ func (process *campaignProcess) run(_ context.Context, name string, args []strin
 }
 
 func containsArgument(arguments []string, expected string) bool {
-	for _, argument := range arguments {
-		if argument == expected {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(arguments, expected)
 }
