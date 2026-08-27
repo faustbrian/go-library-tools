@@ -93,6 +93,27 @@ func TestProcessExecutorHonorsCommandOutputOverrides(t *testing.T) {
 	}
 }
 
+func TestProcessExecutorPassesCommandInput(t *testing.T) {
+	created, cleanup, err := NewProcessExecutor(t.TempDir(), io.Discard, io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := cleanup(); err != nil {
+			t.Error(err)
+		}
+	})
+	var stdout bytes.Buffer
+	err = created.Run(context.Background(), Command{
+		Name: os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
+		Env:   map[string]string{"GO_WANT_HELPER": "1", "HELPER_READ_STDIN": "1"},
+		Stdin: strings.NewReader("expected"), Stdout: &stdout,
+	})
+	if err != nil || stdout.String() != "expected" {
+		t.Fatalf("Run() = %v, %q", err, stdout.String())
+	}
+}
+
 func TestMergeEnvironmentIsSortedAndLastWriterWins(t *testing.T) {
 	got := mergeEnvironment([]string{"B=old", "INVALID", "A=one"}, map[string]string{"B": "new", "C": "three"})
 	want := []string{"A=one", "B=new", "C=three"}
@@ -151,6 +172,10 @@ func TestProcessHelper(_ *testing.T) {
 	}
 	if os.Getenv("HELPER_FAIL") == "1" {
 		os.Exit(23)
+	}
+	if os.Getenv("HELPER_READ_STDIN") == "1" {
+		_, _ = io.Copy(os.Stdout, os.Stdin)
+		os.Exit(0)
 	}
 	_, _ = os.Stdout.WriteString(os.Getenv("HELPER_OUTPUT"))
 	_, _ = os.Stderr.WriteString(os.Getenv("HELPER_ERROR"))

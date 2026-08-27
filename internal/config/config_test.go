@@ -174,6 +174,10 @@ operations:
         run: ^TestConformance$
         count: 1
         timeout: 10m
+      - type: make
+        makefile: verification/package.mk
+        target: generated
+        timeout: 10m
 `)
 	got, err := config.Load(root)
 	if err != nil {
@@ -258,26 +262,39 @@ operations:
 
 func TestLoadRejectsInvalidTypedOperations(t *testing.T) {
 	tests := map[string]string{
-		"unknown gate":       "module: .\n    gate: deploy\n    steps:\n      - type: go-test\n        packages: [./...]",
-		"test benchmark":     "module: .\n    gate: test\n    steps:\n      - type: go-test\n        benchmark: BenchmarkInput",
-		"test fuzz selector": "module: .\n    gate: test\n    steps:\n      - type: go-test\n        fuzz: FuzzInput",
-		"missing steps":      "module: .\n    gate: docs",
-		"unknown type":       "module: .\n    gate: docs\n    steps:\n      - type: shell",
-		"invalid timeout":    "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        timeout: forever",
-		"zero timeout":       "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        timeout: 0s",
-		"negative timeout":   "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        timeout: -1s",
-		"invalid count":      "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        count: -1",
-		"missing module":     "gate: docs\n    steps:\n      - type: go-test",
-		"escaping module":    "module: ../other\n    gate: docs\n    steps:\n      - type: go-test",
-		"multiple selectors": "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        run: Test\n        benchmark: Benchmark",
-		"empty package":      "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['']",
-		"flag package":       "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['-run=Injected']",
-		"parent package":     "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['./../other']",
-		"embedded wildcard":  "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['./.../other']",
-		"orphan budget":      "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        budget: 1s",
-		"zero duration":      "module: .\n    gate: fuzz\n    steps:\n      - type: go-test\n        fuzz: FuzzInput\n        budget: 0s",
-		"zero iterations":    "module: .\n    gate: fuzz\n    steps:\n      - type: go-test\n        fuzz: FuzzInput\n        budget: 0x",
-		"invalid budget":     "module: .\n    gate: benchmark\n    steps:\n      - type: go-test\n        benchmark: BenchmarkInput\n        budget: many",
+		"unknown gate":        "module: .\n    gate: deploy\n    steps:\n      - type: go-test\n        packages: [./...]",
+		"test benchmark":      "module: .\n    gate: test\n    steps:\n      - type: go-test\n        benchmark: BenchmarkInput",
+		"test fuzz selector":  "module: .\n    gate: test\n    steps:\n      - type: go-test\n        fuzz: FuzzInput",
+		"go test makefile":    "module: .\n    gate: conformance\n    steps:\n      - type: go-test\n        makefile: verification/package.mk",
+		"go test make target": "module: .\n    gate: conformance\n    steps:\n      - type: go-test\n        target: generated",
+		"missing steps":       "module: .\n    gate: docs",
+		"unknown type":        "module: .\n    gate: docs\n    steps:\n      - type: shell",
+		"invalid timeout":     "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        timeout: forever",
+		"zero timeout":        "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        timeout: 0s",
+		"negative timeout":    "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        timeout: -1s",
+		"invalid count":       "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        count: -1",
+		"missing module":      "gate: docs\n    steps:\n      - type: go-test",
+		"escaping module":     "module: ../other\n    gate: docs\n    steps:\n      - type: go-test",
+		"multiple selectors":  "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        run: Test\n        benchmark: Benchmark",
+		"empty package":       "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['']",
+		"flag package":        "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['-run=Injected']",
+		"parent package":      "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['./../other']",
+		"embedded wildcard":   "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        packages: ['./.../other']",
+		"orphan budget":       "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        budget: 1s",
+		"zero duration":       "module: .\n    gate: fuzz\n    steps:\n      - type: go-test\n        fuzz: FuzzInput\n        budget: 0s",
+		"zero iterations":     "module: .\n    gate: fuzz\n    steps:\n      - type: go-test\n        fuzz: FuzzInput\n        budget: 0x",
+		"invalid budget":      "module: .\n    gate: benchmark\n    steps:\n      - type: go-test\n        benchmark: BenchmarkInput\n        budget: many",
+		"make missing file":   "module: .\n    gate: conformance\n    steps:\n      - type: make\n        target: generated",
+		"make escaping file":  "module: .\n    gate: conformance\n    steps:\n      - type: make\n        makefile: ../package.mk\n        target: generated",
+		"make directory file": "module: .\n    gate: conformance\n    steps:\n      - type: make\n        makefile: .\n        target: generated",
+		"make missing target": "module: .\n    gate: conformance\n    steps:\n      - type: make\n        makefile: verification/package.mk",
+		"make flag target":    "module: .\n    gate: conformance\n    steps:\n      - type: make\n        makefile: verification/package.mk\n        target: --eval=bad",
+		"make packages":       "module: .\n    gate: conformance\n    steps:\n      - type: make\n        makefile: verification/package.mk\n        target: generated\n        packages: [./...]",
+		"make run":            "module: .\n    gate: conformance\n    steps:\n      - type: make\n        makefile: verification/package.mk\n        target: generated\n        run: Test",
+		"make benchmark":      "module: .\n    gate: conformance\n    steps:\n      - type: make\n        makefile: verification/package.mk\n        target: generated\n        benchmark: Benchmark",
+		"make fuzz":           "module: .\n    gate: conformance\n    steps:\n      - type: make\n        makefile: verification/package.mk\n        target: generated\n        fuzz: FuzzInput",
+		"make budget":         "module: .\n    gate: conformance\n    steps:\n      - type: make\n        makefile: verification/package.mk\n        target: generated\n        budget: 1s",
+		"make count":          "module: .\n    gate: conformance\n    steps:\n      - type: make\n        makefile: verification/package.mk\n        target: generated\n        count: 2",
 	}
 	for name, operation := range tests {
 		t.Run(name, func(t *testing.T) {

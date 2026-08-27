@@ -433,6 +433,7 @@ func TestRunOperationReportsTimeoutCommandAndExecutionFailures(t *testing.T) {
 	}{
 		{"timeout", config.Step{Type: "go-test", Timeout: "forever"}, executorFunction(func(context.Context, Command) error { return nil }), "timeout"},
 		{"execution", config.Step{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}, executorFunction(func(context.Context, Command) error { return failure }), "injected failure"},
+		{"makefile", config.Step{Type: "make", Makefile: "missing.mk", Target: "verify", Timeout: "1m"}, executorFunction(func(context.Context, Command) error { return nil }), "read makefile"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -487,6 +488,12 @@ func (file *fakeNamedFile) Name() string { return file.name }
 
 func TestOperationCommandSupportsSelectorsAndRejectsUnknownTypes(t *testing.T) {
 	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "verification"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "verification", "package.mk"), []byte("generated:\n\t@true\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
 	module := inventory.Module{TestTags: []string{"integration"}}
 	for name, test := range map[string]struct {
 		step config.Step
@@ -500,14 +507,24 @@ func TestOperationCommandSupportsSelectorsAndRejectsUnknownTypes(t *testing.T) {
 			step: config.Step{Type: "go-test", Packages: []string{"."}, Fuzz: "FuzzInput", Budget: "100x", Count: 1, Timeout: "1m"},
 			want: "go test -tags=integration . -count=1 -timeout=1m -run=^$ -fuzz=FuzzInput -fuzztime=100x",
 		},
+		"make": {
+			step: config.Step{Type: "make", Makefile: "verification/package.mk", Target: "generated", Timeout: "1m"},
+			want: "make --no-print-directory -f - generated",
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			command, err := operationCommand(root, module, test.step)
-			if err != nil || command.Name != "go" {
+			if err != nil {
 				t.Fatalf("operation command = %#v, %v", command, err)
 			}
 			if got := strings.Join(append([]string{command.Name}, command.Args...), " "); got != test.want {
 				t.Fatalf("operation command = %q, want %q", got, test.want)
+			}
+			if name == "make" {
+				content, readErr := io.ReadAll(command.Stdin)
+				if readErr != nil || string(content) != "generated:\n\t@true\n" {
+					t.Fatalf("makefile input = %q, %v", content, readErr)
+				}
 			}
 		})
 	}

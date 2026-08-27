@@ -96,6 +96,7 @@ func (executor *processExecutor) Run(ctx context.Context, command Command) error
 	process := exec.CommandContext(ctx, command.Name, command.Args...)
 	process.Dir = command.Dir
 	process.Env = mergeEnvironment(os.Environ(), executor.environment, command.Env)
+	process.Stdin = command.Stdin
 	process.Stdout = command.Stdout
 	if process.Stdout == nil {
 		process.Stdout = executor.stdout

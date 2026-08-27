@@ -44,11 +44,29 @@ exactly `5.9`; unsupported versions fail configuration validation rather than
 silently selecting a different shell. Node is owned by the documentation tool
 chain and therefore is not repeated as repository policy.
 
-Typed operations may invoke bounded `go test` runs for tests, docs, fuzz,
-conformance, interoperability, API, or benchmarks. A `test` operation runs
-after the module's standard test command and preserves package-specific stress,
-leak, or lifecycle checks without admitting arbitrary shell hooks. Shell
-commands and secrets are not valid configuration. Enabling fuzz, benchmark, or
-conformance in a module manifest requires a matching typed operation. Declaring
-an interoperability tool has the same requirement. Missing operations fail
-while loading the repository rather than silently skipping an enabled gate.
+Typed operations may invoke bounded `go test` runs or one named target from a
+repository-owned Makefile. A `test` operation runs after the module's standard
+test command and preserves package-specific stress, leak, or lifecycle checks.
+A `make` step is reserved for package-owned verification that cannot be
+expressed as a direct Go test, such as generated-source comparison or an
+external-runtime conformance suite:
+
+```yaml
+operations:
+  - module: .
+    gate: conformance
+    steps:
+      - type: make
+        makefile: verification/package.mk
+        target: generated
+        timeout: 10m
+```
+
+The Makefile path is repository-relative, symlinks are rejected, the file is
+read with a fixed size limit, and its exact validated bytes are provided to
+Make through standard input. Configuration cannot select an executable, add
+command-line flags, interpolate shell text, or provide secrets. Enabling fuzz,
+benchmark, or conformance in a module manifest requires a matching typed
+operation. Declaring an interoperability tool has the same requirement.
+Missing operations fail while loading the repository rather than silently
+skipping an enabled gate.

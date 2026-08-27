@@ -26,8 +26,9 @@ var (
 	// but violates the supported contract.
 	ErrInvalid = errors.New("invalid golib configuration")
 	// ErrTooLarge identifies configuration input over MaximumSize.
-	ErrTooLarge = repositoryfile.ErrTooLarge
-	versionRE   = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
+	ErrTooLarge  = repositoryfile.ErrTooLarge
+	versionRE    = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
+	makeTargetRE = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.:/-]*$`)
 )
 
 // Config is the complete repository-specific policy. Facts already owned by
@@ -89,6 +90,8 @@ type Operation struct {
 // Step is a constrained operation with no shell or arbitrary executable hook.
 type Step struct {
 	Type      string   `json:"type" yaml:"type"`
+	Makefile  string   `json:"makefile,omitempty" yaml:"makefile,omitempty"`
+	Target    string   `json:"target,omitempty" yaml:"target,omitempty"`
 	Packages  []string `json:"packages,omitempty" yaml:"packages,omitempty"`
 	Run       string   `json:"run,omitempty" yaml:"run,omitempty"`
 	Benchmark string   `json:"benchmark,omitempty" yaml:"benchmark,omitempty"`
@@ -299,6 +302,12 @@ func (step Step) validate() error {
 	}
 	switch step.Type {
 	case "go-test":
+		if step.Makefile != "" {
+			return errors.New("go-test does not accept makefile")
+		}
+		if step.Target != "" {
+			return errors.New("go-test does not accept target")
+		}
 		selectors := 0
 		for _, selector := range []string{step.Run, step.Benchmark, step.Fuzz} {
 			if selector != "" {
@@ -320,6 +329,37 @@ func (step Step) validate() error {
 			if err := validatePackagePattern(packagePattern); err != nil {
 				return fmt.Errorf("go-test package %q: %w", packagePattern, err)
 			}
+		}
+	case "make":
+		if step.Makefile == "" {
+			return errors.New("makefile is required")
+		}
+		if err := validateRelativePath(step.Makefile); err != nil {
+			return errors.New("makefile must be repository-local")
+		}
+		if filepath.Clean(step.Makefile) == "." {
+			return errors.New("makefile must identify a repository-local file")
+		}
+		if !makeTargetRE.MatchString(step.Target) {
+			return errors.New("target must be a non-flag Make target")
+		}
+		if len(step.Packages) != 0 {
+			return errors.New("make does not accept packages")
+		}
+		if step.Run != "" {
+			return errors.New("make does not accept run")
+		}
+		if step.Benchmark != "" {
+			return errors.New("make does not accept benchmark")
+		}
+		if step.Fuzz != "" {
+			return errors.New("make does not accept fuzz")
+		}
+		if step.Budget != "" {
+			return errors.New("make does not accept budget")
+		}
+		if step.Count != 0 {
+			return errors.New("make does not accept count")
 		}
 	default:
 		return fmt.Errorf("unsupported step type %q", step.Type)

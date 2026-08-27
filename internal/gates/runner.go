@@ -20,8 +20,11 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/coverage"
 	"github.com/faustbrian/go-library-tools/internal/docscheck"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
 	"github.com/faustbrian/go-library-tools/internal/services"
 )
+
+const maximumMakefileSize = 4 << 20
 
 const (
 	golangCILintVersion = "v2.12.2"
@@ -39,6 +42,7 @@ type Command struct {
 	Args   []string
 	Dir    string
 	Env    map[string]string
+	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
 }
@@ -434,6 +438,18 @@ func operationCommand(directory string, module inventory.Module, step config.Ste
 			args = append(args, "-run=^$", "-fuzz="+step.Fuzz, "-fuzztime="+step.Budget)
 		}
 		return Command{Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}, nil
+	case "make":
+		makefile, err := repositoryfile.Read(directory, step.Makefile, maximumMakefileSize)
+		if err != nil {
+			return Command{}, fmt.Errorf("read makefile: %w", err)
+		}
+		return Command{
+			Name:  "make",
+			Args:  []string{"--no-print-directory", "-f", "-", step.Target},
+			Dir:   directory,
+			Env:   map[string]string{"GOWORK": "off"},
+			Stdin: bytes.NewReader(makefile),
+		}, nil
 	default:
 		return Command{}, fmt.Errorf("unsupported operation type: %s", step.Type)
 	}

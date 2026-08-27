@@ -175,7 +175,17 @@
       "additionalProperties": false,
       "required": ["type"],
       "properties": {
-        "type": { "const": "go-test" },
+        "type": { "enum": ["go-test", "make"] },
+        "makefile": {
+          "allOf": [
+            { "$ref": "#/$defs/repositoryPath" },
+            { "not": { "const": "." } }
+          ]
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"
+        },
         "packages": {
           "type": "array",
           "items": {
@@ -200,7 +210,36 @@
         },
         "count": { "type": "integer", "minimum": 0, "default": 1 },
         "timeout": { "type": "string", "default": "20m" }
-      }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "type": { "const": "make" } },
+            "required": ["type"]
+          },
+          "then": {
+            "required": ["makefile", "target"],
+            "not": {
+              "anyOf": [
+                { "required": ["packages"] },
+                { "required": ["run"] },
+                { "required": ["benchmark"] },
+                { "required": ["fuzz"] },
+                { "required": ["budget"] },
+                { "required": ["count"] }
+              ]
+            }
+          },
+          "else": {
+            "not": {
+              "anyOf": [
+                { "required": ["makefile"] },
+                { "required": ["target"] }
+              ]
+            }
+          }
+        }
+      ]
     },
     "repositoryPath": {
       "type": "string",
