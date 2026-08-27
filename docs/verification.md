@@ -14,6 +14,9 @@ External links are checked by checksum-pinned Lychee `0.24.2` binaries for
 Linux and macOS on amd64 and arm64. Archives are bounded and treated as
 untrusted input; the verifier reads only the expected executable after checking
 the complete archive digest and entry structure.
+Nested modules do not repeat repository-wide Markdown checks. Their enabled
+documentation gate runs the configured typed operation or a bounded Go example
+test when no module-specific operation is declared.
 
 Coverage is evaluated per production package and must be exactly 100%.
 Mutation reports must account for every viable mutant and kill 100%; equivalent

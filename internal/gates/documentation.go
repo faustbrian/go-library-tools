@@ -67,6 +67,18 @@ func (runner Runner) runDocumentationSpelling(ctx context.Context, directory str
 }
 
 func (runner Runner) checkDocumentation(ctx context.Context, directory string, module inventory.Module) error {
+	if module.Directory != "." {
+		if operation, exists := runner.operation(module.Directory, "docs"); exists {
+			return runner.runOperation(ctx, directory, module, operation)
+		}
+		if err := runner.Executor.Run(ctx, Command{
+			Name: "go", Args: []string{"test", "./...", "-run=^Example", "-count=1", "-timeout=20m"},
+			Dir: directory, Env: map[string]string{"GOWORK": "off"},
+		}); err != nil {
+			return fmt.Errorf("check documentation examples: %w", err)
+		}
+		return nil
+	}
 	if err := docscheck.Check(directory); err != nil {
 		return err
 	}

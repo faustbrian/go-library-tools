@@ -29,6 +29,8 @@ All notable changes to this project are documented in this file.
   dependency isolation.
 - Enforced module mode in the rehearsal Go wrapper so analyzer subprocesses
   cannot disable module-aware package discovery for nested modules.
+- Kept repository-wide Markdown, spelling, and link validation on the root
+  module while nested documentation gates run bounded example checks.
 - Scoped mutation verifier builds and campaign artifacts by module identity to
   prevent independently verified modules from sharing mutable workspace paths.
 - Published the tooling repository's verification tree after every CI outcome

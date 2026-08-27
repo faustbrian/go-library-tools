@@ -78,16 +78,13 @@ func TestCoverageUsesTaskWorkspace(t *testing.T) {
 
 func TestStandaloneGatesContinuePastDisabledModules(t *testing.T) {
 	root := t.TempDir()
-	enabled := filepath.Join(root, "z-enabled")
-	if err := os.MkdirAll(enabled, 0o700); err != nil {
-		t.Fatal(err)
-	}
+	enabled := root
 	if err := os.WriteFile(filepath.Join(enabled, "README.md"), []byte("# Enabled\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	modules := []inventory.Module{
 		{Directory: "a-disabled"},
-		{Directory: "z-enabled", Gates: map[string]bool{"coverage": true, "documentation": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}},
+		{Directory: ".", Gates: map[string]bool{"coverage": true, "documentation": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}},
 	}
 	commands := 0
 	spellingChecks := 0
@@ -108,7 +105,7 @@ func TestStandaloneGatesContinuePastDisabledModules(t *testing.T) {
 			return nil
 		},
 	}
-	selection := []string{"a-disabled", "z-enabled"}
+	selection := []string{"a-disabled", "."}
 	if err := runner.Coverage(context.Background(), selection); err != nil {
 		t.Fatalf("Coverage() error = %v", err)
 	}
@@ -244,22 +241,76 @@ func spellingRepository(t *testing.T) string {
 func TestCheckDocumentationReportsNativeAndSpellingFailures(t *testing.T) {
 	failure := errors.New("injected failure")
 	runner := Runner{DocumentationSpelling: func(context.Context, string) error { return failure }}
-	if err := runner.checkDocumentation(context.Background(), t.TempDir(), inventory.Module{}); err == nil || errors.Is(err, failure) {
+	rootModule := inventory.Module{Directory: "."}
+	if err := runner.checkDocumentation(context.Background(), t.TempDir(), rootModule); err == nil || errors.Is(err, failure) {
 		t.Fatalf("checkDocumentation() native error = %v", err)
 	}
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "README.md"), []byte("# Example\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{}); !errors.Is(err, failure) {
+	if err := runner.checkDocumentation(context.Background(), root, rootModule); !errors.Is(err, failure) {
 		t.Fatalf("checkDocumentation() spelling error = %v", err)
 	}
 	runner = Runner{
 		DocumentationSpelling: func(context.Context, string) error { return nil },
 		DocumentationLinks:    func(context.Context, string) error { return failure },
 	}
-	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{}); !errors.Is(err, failure) {
+	if err := runner.checkDocumentation(context.Background(), root, rootModule); !errors.Is(err, failure) {
 		t.Fatalf("checkDocumentation() links error = %v", err)
+	}
+}
+
+func TestNestedDocumentationRunsExamplesWithoutRepositoryChecks(t *testing.T) {
+	root := t.TempDir()
+	moduleRoot := filepath.Join(root, "integration", "contracts")
+	if err := os.MkdirAll(moduleRoot, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	var commands []Command
+	runner := Runner{
+		Root: root,
+		Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+			commands = append(commands, command)
+			return nil
+		}},
+		DocumentationSpelling: func(context.Context, string) error {
+			t.Fatal("nested module invoked repository spelling check")
+			return nil
+		},
+		DocumentationLinks: func(context.Context, string) error {
+			t.Fatal("nested module invoked repository link check")
+			return nil
+		},
+	}
+	module := inventory.Module{Directory: "integration/contracts"}
+	if err := runner.checkDocumentation(context.Background(), moduleRoot, module); err != nil {
+		t.Fatalf("checkDocumentation() error = %v", err)
+	}
+	if len(commands) != 1 || commands[0].Name != "go" || commands[0].Dir != moduleRoot ||
+		strings.Join(commands[0].Args, " ") != "test ./... -run=^Example -count=1 -timeout=20m" {
+		t.Fatalf("nested documentation commands = %#v", commands)
+	}
+
+	commands = nil
+	runner.Policy.Operations = []config.Operation{{
+		Module: module.Directory,
+		Gate:   "docs",
+		Steps:  []config.Step{{Type: "go-test", Packages: []string{"."}, Run: "^TestDocs$", Count: 1, Timeout: "1m"}},
+	}}
+	if err := runner.checkDocumentation(context.Background(), moduleRoot, module); err != nil {
+		t.Fatalf("checkDocumentation(typed) error = %v", err)
+	}
+	if len(commands) != 1 || strings.Join(commands[0].Args, " ") != "test . -count=1 -timeout=1m -run=^TestDocs$" {
+		t.Fatalf("typed nested documentation commands = %#v", commands)
+	}
+
+	failure := errors.New("injected example failure")
+	runner.Policy.Operations = nil
+	runner.Executor = workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return failure }}
+	if err := runner.checkDocumentation(context.Background(), moduleRoot, module); !errors.Is(err, failure) ||
+		!strings.Contains(err.Error(), "check documentation examples") {
+		t.Fatalf("checkDocumentation(failure) error = %v", err)
 	}
 }
 
@@ -272,7 +323,7 @@ func TestCheckDocumentationUsesPinnedSpellingByDefault(t *testing.T) {
 		Executor:           workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }},
 		DocumentationLinks: func(context.Context, string) error { return nil },
 	}
-	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{}); err != nil {
+	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{Directory: "."}); err != nil {
 		t.Fatalf("checkDocumentation() error = %v", err)
 	}
 }
@@ -329,7 +380,7 @@ func TestCheckDocumentationUsesPinnedLinksByDefault(t *testing.T) {
 		DocumentationSpelling: func(context.Context, string) error { return nil },
 		documentationExtract:  func(string, docscheck.LycheeRelease) ([]byte, error) { return []byte("binary"), nil },
 	}
-	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{}); err != nil {
+	if err := runner.checkDocumentation(context.Background(), root, inventory.Module{Directory: "."}); err != nil {
 		t.Fatalf("checkDocumentation() error = %v", err)
 	}
 }
