@@ -31,25 +31,25 @@ operations:
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzEnvelopeBuilder
+    fuzz: '^FuzzEnvelopeBuilder$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./postgres"
-    fuzz: FuzzWriterIdentifiers
+    fuzz: '^FuzzWriterIdentifiers$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./relay"
-    fuzz: FuzzRelayOptions
+    fuzz: '^FuzzRelayOptions$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./relay"
-    fuzz: FuzzPublisherFailures
+    fuzz: '^FuzzPublisherFailures$'
     budget: 100x
     timeout: 2m
 - module: "."
@@ -67,7 +67,7 @@ operations:
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzPublisherEnvelopeMapping
+    fuzz: '^FuzzPublisherEnvelopeMapping$'
     budget: 100x
     timeout: 2m
 - module: adapters/gokafka
@@ -85,7 +85,7 @@ operations:
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzPublisherEnvelopeOwnershipAndFailureClassification
+    fuzz: '^FuzzPublisherEnvelopeOwnershipAndFailureClassification$'
     budget: 100x
     timeout: 2m
 - module: adapters/gorabbitstream
@@ -103,13 +103,13 @@ operations:
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzTelemetryLifecycle
+    fuzz: '^FuzzTelemetryLifecycle$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzWrappedPublicationIsolation
+    fuzz: '^FuzzWrappedPublicationIsolation$'
     budget: 100x
     timeout: 2m
 - module: adapters/otel
@@ -127,7 +127,7 @@ operations:
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzPublisherEnvelope
+    fuzz: '^FuzzPublisherEnvelope$'
     budget: 100x
     timeout: 2m
 - module: adapters/queue

@@ -20,6 +20,15 @@ All notable changes to this project are documented in this file.
 - Routed copied legacy tooling's explicit Go entrypoint through the rehearsal
   wrapper and exported that wrapper through the GitHub Actions path channel so
   checksum isolation applies consistently.
+- Materialized task-local proxy checksums in per-process rehearsal sums before
+  readonly nested-module commands, without changing tracked dependency sums.
+- Anchored every configured rehearsal fuzz target so one target cannot
+  accidentally select another target with the same prefix.
+- Ran versioned analyzer binaries against task-owned source snapshots carrying
+  refreshed module sums, so analyzer subprocesses cannot bypass rehearsal
+  dependency isolation.
+- Scoped mutation verifier builds and campaign artifacts by module identity to
+  prevent independently verified modules from sharing mutable workspace paths.
 - Kept shared compatibility gates on each representative repository's declared
   Go version while allowing the source CLI build to select its required toolchain.
 - Serialized package tests inside mutation campaigns so deadline behavior is

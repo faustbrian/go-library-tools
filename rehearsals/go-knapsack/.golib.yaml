@@ -22,91 +22,91 @@ operations:
   - type: go-test
     packages:
     - "./encoding"
-    fuzz: FuzzPlanDecode
+    fuzz: '^FuzzPlanDecode$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./encoding"
-    fuzz: FuzzRequestDecode
+    fuzz: '^FuzzRequestDecode$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./geometry"
-    fuzz: FuzzGeometry
+    fuzz: '^FuzzGeometry$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./geometry"
-    fuzz: FuzzOrientationEnumeration
+    fuzz: '^FuzzOrientationEnumeration$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./geometry"
-    fuzz: FuzzCuboidRelations
+    fuzz: '^FuzzCuboidRelations$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./objective"
-    fuzz: FuzzObjectiveComparison
+    fuzz: '^FuzzObjectiveComparison$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzItemContainerValidation
+    fuzz: '^FuzzItemContainerValidation$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzLatticeNormalization
+    fuzz: '^FuzzLatticeNormalization$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./solver"
-    fuzz: FuzzHeuristic
+    fuzz: '^FuzzHeuristic$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./solver"
-    fuzz: FuzzFixedContainerPacking
+    fuzz: '^FuzzFixedContainerPacking$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./solver"
-    fuzz: FuzzVariableContainerSelection
+    fuzz: '^FuzzVariableContainerSelection$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./solver"
-    fuzz: FuzzExactTinyAgreement
+    fuzz: '^FuzzExactTinyAgreement$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./solver"
-    fuzz: FuzzCancellationAndBudgets
+    fuzz: '^FuzzCancellationAndBudgets$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./verify"
-    fuzz: FuzzSuppliedPlan
+    fuzz: '^FuzzSuppliedPlan$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./verify"
-    fuzz: FuzzPhysicalConstraints
+    fuzz: '^FuzzPhysicalConstraints$'
     budget: 100x
     timeout: 2m
 - module: "."
@@ -124,19 +124,19 @@ operations:
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzCostTypeIdentifiers
+    fuzz: '^FuzzCostTypeIdentifiers$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzCostMappings
+    fuzz: '^FuzzCostMappings$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzSolverCostObjective
+    fuzz: '^FuzzSolverCostObjective$'
     budget: 100x
     timeout: 2m
 - module: objective/gomoney

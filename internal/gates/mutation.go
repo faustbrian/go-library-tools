@@ -159,7 +159,10 @@ func (runner Runner) prepareMutationCampaign(ctx context.Context, output io.Writ
 		return mutation.Campaign{}, err
 	}
 	owned := runner.localOwnedModules(module)
-	environment, err := runner.mutationEnvironment(ctx, workspace.TemporaryDirectory(), module, owned)
+	campaignWorkspace := filepath.Join(
+		workspace.TemporaryDirectory(), "mutation-campaigns", mutationModuleSlug(module.ModulePath),
+	)
+	environment, err := runner.mutationEnvironment(ctx, campaignWorkspace, module, owned)
 	if err != nil {
 		return mutation.Campaign{}, err
 	}
@@ -184,7 +187,7 @@ func (runner Runner) prepareMutationCampaign(ctx context.Context, output io.Writ
 		Root:         runner.Root,
 		EvidenceRoot: filepath.Join(runner.Root, filepath.FromSlash(runner.Policy.Evidence.Root)),
 		MutationRoot: mutationRoot,
-		Workspace:    workspace.TemporaryDirectory(),
+		Workspace:    campaignWorkspace,
 		Policy: mutation.CampaignPolicy{
 			Repository: runner.Catalog.Repository, ModuleDirectory: module.Directory,
 			ModulePath: module.ModulePath, GoVersion: module.GoVersion, Packages: packages,

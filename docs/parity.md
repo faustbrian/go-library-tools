@@ -33,7 +33,26 @@ Tracked source, source-comparable sums, and copied legacy tooling remain
 unchanged, including when child commands overlap. Legacy tooling's explicit Go
 entrypoint is directed through the same wrapper rather than bypassing it, and
 GitHub Actions receives the wrapper through its dedicated executable-path
-channel.
+channel. When copied tooling builds a task-local module proxy, the wrapper
+materializes that archive's checksum in the per-process sum before a readonly
+nested-module command starts. The historical tracked checksum remains intact,
+while the command verifies the exact task-local archive it consumes.
+
+Configured fuzz selectors are anchored regular expressions. This matches the
+copied contract's exact target discovery and prevents a selector such as
+`FuzzDecodeJSON` from also executing `FuzzDecodeJSONBatch`.
+
+Versioned analyzers are compiled without consumer module flags, then executed
+against a disposable tracked-source snapshot containing the selected module's
+refreshed module and sum files. This is required because Go places
+`$GOROOT/bin` ahead of wrapper paths for subprocesses started by `go run`, and
+`go/packages` performs module-disabled discovery calls that cannot accept a
+`-modfile` flag. The snapshot is task-owned, process-specific, and removed as
+soon as the analyzer exits; the representative checkout remains unchanged.
+
+Mutation campaigns use module-identity-scoped workspaces. Verifier source,
+coverage profiles, reports, and caches therefore cannot collide when one
+repository verifies multiple independently releasable modules.
 
 Shared rehearsals install the representative repository's declared Go version
 once. The source CLI build may use Go's automatic toolchain selection for its

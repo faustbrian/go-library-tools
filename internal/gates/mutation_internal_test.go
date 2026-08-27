@@ -250,7 +250,8 @@ func TestMutationBuildsCanonicalCampaignAndRunsEnabledModules(t *testing.T) {
 	}) {
 		t.Fatalf("owned modules = %#v", observed.Policy.OwnedModules)
 	}
-	if observed.RuntimeIdentity.GoVersion != "go1.27.0" || observed.Workspace != executor.directory || observed.Process == nil {
+	wantWorkspace := filepath.Join(executor.directory, "mutation-campaigns", mutationModuleSlug("example"))
+	if observed.RuntimeIdentity.GoVersion != "go1.27.0" || observed.Workspace != wantWorkspace || observed.Process == nil {
 		t.Fatalf("campaign runtime/workspace/process = %#v, %q, %v", observed.RuntimeIdentity, observed.Workspace, observed.Process)
 	}
 	if err := observed.Process(context.Background(), "probe", []string{"arg"}, root, map[string]string{"A": "B"}, io.Discard, io.Discard); err != nil || !processCalled {

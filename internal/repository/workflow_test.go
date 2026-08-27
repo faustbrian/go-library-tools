@@ -103,6 +103,29 @@ func TestParityWorkflowUsesActionsPathChannelForGoWrapper(t *testing.T) {
 	}
 }
 
+func TestRehearsalFuzzTargetsAreExact(t *testing.T) {
+	fixtures, err := filepath.Glob(filepath.Join(projectRoot(t), "rehearsals", "go-*", ".golib.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, fixture := range fixtures {
+		content, readErr := os.ReadFile(fixture)
+		if readErr != nil {
+			t.Fatal(readErr)
+		}
+		for _, line := range strings.Split(string(content), "\n") {
+			selector := strings.TrimSpace(line)
+			if !strings.HasPrefix(selector, "fuzz:") {
+				continue
+			}
+			value := strings.TrimSpace(strings.TrimPrefix(selector, "fuzz:"))
+			if !strings.HasPrefix(value, "'^Fuzz") || !strings.HasSuffix(value, "$'") {
+				t.Errorf("%s has non-exact fuzz selector %q", filepath.Base(filepath.Dir(fixture)), value)
+			}
+		}
+	}
+}
+
 func TestSetupActionVerifiesReleasedArtifactBeforeExtraction(t *testing.T) {
 	content := readProjectFile(t, ".github/actions/setup-golib/action.yml")
 	checksumSet := strings.Contains(content, "tool_checksums_sha256:")

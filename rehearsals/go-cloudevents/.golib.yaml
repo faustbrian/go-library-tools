@@ -22,25 +22,25 @@ operations:
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzDecodeJSON
+    fuzz: '^FuzzDecodeJSON$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzDecodeJSONBatch
+    fuzz: '^FuzzDecodeJSONBatch$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzDecodeHTTP
+    fuzz: '^FuzzDecodeHTTP$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzDecodeKafka
+    fuzz: '^FuzzDecodeKafka$'
     budget: 100x
     timeout: 2m
 - module: "."
@@ -58,43 +58,43 @@ operations:
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzDecodeKafka
+    fuzz: '^FuzzDecodeKafka$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzQueuePayloadRoundTrip
+    fuzz: '^FuzzQueuePayloadRoundTrip$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzEventSourcingRoundTrip
+    fuzz: '^FuzzEventSourcingRoundTrip$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzOutboxRoundTrip
+    fuzz: '^FuzzOutboxRoundTrip$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzWorkflowRoundTrip
+    fuzz: '^FuzzWorkflowRoundTrip$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzAuditCorrelationTenantMetadata
+    fuzz: '^FuzzAuditCorrelationTenantMetadata$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "."
-    fuzz: FuzzDirectJSONSchemaValidation
+    fuzz: '^FuzzDirectJSONSchemaValidation$'
     budget: 100x
     timeout: 2m
 - module: adapters/golib

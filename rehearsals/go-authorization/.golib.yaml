@@ -21,25 +21,25 @@ operations:
   - type: go-test
     packages:
     - "./abac"
-    fuzz: FuzzDecodeDocument
+    fuzz: '^FuzzDecodeDocument$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./acl"
-    fuzz: FuzzDecodeDocument
+    fuzz: '^FuzzDecodeDocument$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./policy"
-    fuzz: FuzzDecode
+    fuzz: '^FuzzDecode$'
     budget: 100x
     timeout: 2m
   - type: go-test
     packages:
     - "./rbac"
-    fuzz: FuzzDecodeDocument
+    fuzz: '^FuzzDecodeDocument$'
     budget: 100x
     timeout: 2m
 - module: "."

@@ -21,7 +21,10 @@ func TestDependencyWrapperUsesParallelSafeExecutionModfiles(t *testing.T) {
 	isolated := filepath.Join(root, "isolated")
 	localProxy := filepath.Join(root, "proxy")
 	capture := filepath.Join(root, "captured.sum")
-	toolCapture := filepath.Join(root, "tool.flags")
+	toolBuildCapture := filepath.Join(root, "tool-build.flags")
+	toolRuntimeCapture := filepath.Join(root, "tool-runtime.flags")
+	toolDirectoryCapture := filepath.Join(root, "tool-runtime.directory")
+	toolSumCapture := filepath.Join(root, "tool-runtime.sum")
 	writeRehearsalFile(t, filepath.Join(root, "modules.json"), `{"modules":[{"directory":"."}]}`)
 	writeRehearsalFile(t, filepath.Join(root, "go.mod"), `module github.com/faustbrian/go-example
 
@@ -85,14 +88,34 @@ if [[ "${1:-}" == rehearsal-block ]]; then
 	done
 	exit 0
 fi
-if [[ "${1:-}" == run && "${2:-}" == *@* ]]; then
-	printf '%s' "${GOFLAGS:-}" >"${REHEARSAL_TOOL_CAPTURE}"
-	exit 0
+if [[ "${1:-}" == run ]]; then
+	exec_wrapper=''
+	versioned_tool=''
+	for argument in "$@"; do
+		case "${argument}" in
+			-exec=*) exec_wrapper="${argument#-exec=}" ;;
+			*@*) versioned_tool="${argument}" ;;
+		esac
+	done
+	if [[ -n "${versioned_tool}" ]]; then
+		printf '%s' "${GOFLAGS:-}" >"${REHEARSAL_TOOL_BUILD_CAPTURE}"
+		[[ -n "${exec_wrapper}" ]] || exit 42
+		"${exec_wrapper}" "${GOLIB_REHEARSAL_TEST_TOOL}"
+		exit 0
+	fi
 fi
 printf 'unexpected fake go invocation: %s\n' "$*" >&2
 exit 1
 `)
+	writeExecutable(t, filepath.Join(fakeBin, "external-tool"), `#!/usr/bin/env bash
+set -euo pipefail
+[[ "${GO111MODULE:-}" == on ]]
+printf '%s' "${GOFLAGS:-}" >"${REHEARSAL_TOOL_RUNTIME_CAPTURE}"
+pwd -P >"${REHEARSAL_TOOL_DIRECTORY_CAPTURE}"
+cp go.sum "${REHEARSAL_TOOL_SUM_CAPTURE}"
+`)
 
+	commitRehearsalFixture(t, root)
 	environmentFile := filepath.Join(root, "environment")
 	pathFile := filepath.Join(root, "path")
 	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task, environmentFile, pathFile)
@@ -123,19 +146,24 @@ exit 1
 	wrapper.Dir = root
 	wrapper.Env = append(os.Environ(), environment...)
 	wrapper.Env = append(wrapper.Env,
+		"GO111MODULE=",
 		"GOFLAGS=-modfile="+activeMod,
 		"GOLIB_ISOLATED_MODFILES_DIRECTORY="+isolated,
 		"GOLIB_LOCAL_PROXY="+localProxy,
 		"REHEARSAL_CAPTURE="+capture,
-		"REHEARSAL_TOOL_CAPTURE="+toolCapture,
+		"REHEARSAL_TOOL_BUILD_CAPTURE="+toolBuildCapture,
+		"REHEARSAL_TOOL_RUNTIME_CAPTURE="+toolRuntimeCapture,
+		"REHEARSAL_TOOL_DIRECTORY_CAPTURE="+toolDirectoryCapture,
+		"REHEARSAL_TOOL_SUM_CAPTURE="+toolSumCapture,
+		"GOLIB_REHEARSAL_TEST_TOOL="+filepath.Join(fakeBin, "external-tool"),
 	)
 	if output, err := wrapper.CombinedOutput(); err != nil {
 		t.Fatalf("run dependency wrapper: %v\n%s", err, output)
 	}
 
 	during := readRehearsalFile(t, capture)
-	if strings.Contains(during, "github.com/faustbrian/go-local ") {
-		t.Fatalf("locally proxied checksum was preloaded:\n%s", during)
+	if !strings.Contains(during, "github.com/faustbrian/go-local v1.0.0 h1:current-local") {
+		t.Fatalf("locally proxied checksum was not refreshed:\n%s", during)
 	}
 	if !strings.Contains(during, "github.com/faustbrian/go-remote v1.0.0 h1:current-remote") {
 		t.Fatalf("remote checksum was not refreshed:\n%s", during)
@@ -216,8 +244,116 @@ exit 1
 	if output, err := tool.CombinedOutput(); err != nil {
 		t.Fatalf("run external tool: %v\n%s", err, output)
 	}
-	if flags := readRehearsalFile(t, toolCapture); flags != "" {
+	if flags := readRehearsalFile(t, toolBuildCapture); flags != "" {
 		t.Fatalf("external tool inherited consumer GOFLAGS %q", flags)
+	}
+	if runtimeFlags := readRehearsalFile(t, toolRuntimeCapture); runtimeFlags != "" {
+		t.Fatalf("external tool runtime GOFLAGS = %q, want isolated source", runtimeFlags)
+	}
+	toolDirectory := strings.TrimSpace(readRehearsalFile(t, toolDirectoryCapture))
+	if !strings.HasPrefix(toolDirectory, filepath.Join(canonicalRehearsalPath(t, task), "execution", "source-")) {
+		t.Fatalf("external tool directory = %q, want task-owned source snapshot", toolDirectory)
+	}
+	if _, err := os.Stat(toolDirectory); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("external tool source cleanup error = %v", err)
+	}
+	if sum := readRehearsalFile(t, toolSumCapture); !strings.Contains(sum, "h1:current-local") {
+		t.Fatalf("external tool checksum was not refreshed:\n%s", sum)
+	}
+}
+
+func TestDependencyWrapperRestoresConsumerFlagsForVersionedTools(t *testing.T) {
+	root := t.TempDir()
+	task := filepath.Join(root, "task")
+	fakeBin := filepath.Join(root, "bin")
+	activeMod := filepath.Join(root, "isolated", "active.mod")
+	localProxy := filepath.Join(root, "proxy")
+	buildCapture := filepath.Join(root, "build.flags")
+	runtimeCapture := filepath.Join(root, "runtime.flags")
+	directoryCapture := filepath.Join(root, "runtime.directory")
+	writeRehearsalFile(t, filepath.Join(root, "modules.json"), `{"modules":[{"directory":"."}]}`)
+	writeRehearsalFile(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/go-example\n\ngo 1.26.6\n\nrequire github.com/faustbrian/go-local v1.0.0\n")
+	writeRehearsalFile(t, filepath.Join(root, "go.sum"), "github.com/faustbrian/go-local v1.0.0 h1:historical\n")
+	writeRehearsalFile(t, activeMod, "module github.com/faustbrian/go-example\n\nrequire github.com/faustbrian/go-local v1.0.0\n")
+	writeRehearsalFile(t, strings.TrimSuffix(activeMod, ".mod")+".sum", "github.com/faustbrian/go-local v1.0.0 h1:historical\n")
+	writeRehearsalFile(t, filepath.Join(localProxy, "github.com", "faustbrian", "go-local", "@v", "v1.0.0.zip"), "local archive")
+	writeExecutable(t, filepath.Join(fakeBin, "external-tool"), `#!/usr/bin/env bash
+set -euo pipefail
+[[ "${GO111MODULE:-}" == on ]]
+printf '%s' "${GOFLAGS:-}" >"${REHEARSAL_TOOL_RUNTIME_CAPTURE}"
+pwd -P >"${REHEARSAL_TOOL_DIRECTORY_CAPTURE}"
+`)
+	writeExecutable(t, filepath.Join(fakeBin, "go"), `#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == mod && "${2:-}" == edit ]]; then
+	printf '%s\n' '{"Module":{"Path":"github.com/faustbrian/go-example"},"Require":[{"Path":"github.com/faustbrian/go-local","Version":"v1.0.0"}]}'
+	exit 0
+fi
+modfile=''
+for flag in ${GOFLAGS:-}; do
+	case "${flag}" in -modfile=*) modfile="${flag#-modfile=}" ;; esac
+done
+if [[ "${1:-}" == mod && "${2:-}" == download ]]; then
+	printf '%s\n' 'github.com/faustbrian/go-local v1.0.0 h1:current' >>"${modfile%.mod}.sum"
+	exit 0
+fi
+if [[ "${1:-}" == run ]]; then
+	exec_wrapper=''
+	versioned_tool=''
+	for argument in "$@"; do
+		case "${argument}" in
+			-exec=*) exec_wrapper="${argument#-exec=}" ;;
+			*@*) versioned_tool="${argument}" ;;
+		esac
+	done
+	if [[ -n "${versioned_tool}" ]]; then
+		printf '%s' "${GOFLAGS:-}" >"${REHEARSAL_TOOL_BUILD_CAPTURE}"
+		[[ -n "${exec_wrapper}" ]] || exit 42
+		"${exec_wrapper}" "${GOLIB_REHEARSAL_TEST_TOOL}"
+		exit 0
+	fi
+fi
+printf 'unexpected fake go invocation: %s\n' "$*" >&2
+exit 1
+`)
+
+	commitRehearsalFixture(t, root)
+	environmentFile := filepath.Join(root, "environment")
+	pathFile := filepath.Join(root, "path")
+	prepare := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task, environmentFile, pathFile)
+	prepare.Dir = root
+	prepare.Env = append(os.Environ(), "PATH="+fakeBin+":"+os.Getenv("PATH"))
+	if output, err := prepare.CombinedOutput(); err != nil {
+		t.Fatalf("prepare dependencies: %v\n%s", err, output)
+	}
+
+	wrapper := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "run", "example.com/tool@v1.0.0")
+	wrapper.Dir = root
+	wrapper.Env = append(os.Environ(), readEnvironment(t, environmentFile)...)
+	wrapper.Env = append(wrapper.Env,
+		"GO111MODULE=",
+		"GOFLAGS=-modfile="+activeMod,
+		"GOLIB_LOCAL_PROXY="+localProxy,
+		"REHEARSAL_TOOL_BUILD_CAPTURE="+buildCapture,
+		"REHEARSAL_TOOL_RUNTIME_CAPTURE="+runtimeCapture,
+		"REHEARSAL_TOOL_DIRECTORY_CAPTURE="+directoryCapture,
+		"GOLIB_REHEARSAL_TEST_TOOL="+filepath.Join(fakeBin, "external-tool"),
+	)
+	if output, err := wrapper.CombinedOutput(); err != nil {
+		t.Fatalf("run versioned tool: %v\n%s", err, output)
+	}
+	if flags := readRehearsalFile(t, buildCapture); flags != "" {
+		t.Fatalf("versioned tool build GOFLAGS = %q, want empty", flags)
+	}
+	if runtimeFlags := readRehearsalFile(t, runtimeCapture); runtimeFlags != "" {
+		t.Fatalf("versioned tool runtime GOFLAGS = %q, want isolated source", runtimeFlags)
+	}
+	toolDirectory := strings.TrimSpace(readRehearsalFile(t, directoryCapture))
+	if !strings.HasPrefix(toolDirectory, filepath.Join(canonicalRehearsalPath(t, task), "execution", "source-")) {
+		t.Fatalf("versioned tool directory = %q, want task-owned source snapshot", toolDirectory)
+	}
+	if _, err := os.Stat(toolDirectory); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("versioned tool source cleanup error = %v", err)
 	}
 }
 
@@ -252,6 +388,7 @@ fi
 printf 'unexpected fake go invocation: %s\n' "$*" >&2
 exit 1
 `)
+	commitRehearsalFixture(t, root)
 	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task,
 		filepath.Join(root, "environment"), filepath.Join(root, "path"))
 	command.Dir = root
@@ -262,6 +399,40 @@ exit 1
 	if info, err := os.Stat(filepath.Join(task, "bin", "go")); err != nil || info.Mode()&0o100 == 0 {
 		t.Fatalf("generated wrapper = %v, %v", info, err)
 	}
+}
+
+func commitRehearsalFixture(t *testing.T, root string) {
+	t.Helper()
+	for _, arguments := range [][]string{{"init", "--quiet"}, {"add", "modules.json", "go.mod"}} {
+		command := exec.CommandContext(t.Context(), "git", arguments...)
+		command.Dir = root
+		if output, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git %s: %v\n%s", strings.Join(arguments, " "), err, output)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(root, "go.sum")); err == nil {
+		command := exec.CommandContext(t.Context(), "git", "add", "go.sum")
+		command.Dir = root
+		if output, addErr := command.CombinedOutput(); addErr != nil {
+			t.Fatalf("git add go.sum: %v\n%s", addErr, output)
+		}
+	} else if !errors.Is(err, os.ErrNotExist) {
+		t.Fatal(err)
+	}
+	command := exec.CommandContext(t.Context(), "git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "--quiet", "-m", "fixture")
+	command.Dir = root
+	if output, err := command.CombinedOutput(); err != nil {
+		t.Fatalf("commit fixture: %v\n%s", err, output)
+	}
+}
+
+func canonicalRehearsalPath(t *testing.T, path string) string {
+	t.Helper()
+	canonical, err := filepath.EvalSymlinks(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return canonical
 }
 
 func dependencyPreparationScript(t *testing.T) string {
