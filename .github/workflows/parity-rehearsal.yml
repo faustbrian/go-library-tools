@@ -1,0 +1,241 @@
+name: Compatibility rehearsal
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-library-tools-compatibility-rehearsal
+  cancel-in-progress: false
+
+jobs:
+  select:
+    name: Select representatives
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.matrix.outputs.value }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - id: matrix
+        env:
+          MANIFEST: rehearsals/repositories.json
+        run: |
+          set -euo pipefail
+          jq -e '
+            .schema_version == 1 and
+            (.repositories | length == 5) and
+            all(.repositories[];
+              (.name | test("^go-[a-z0-9-]+$")) and
+              (.revision | test("^[0-9a-f]{40}$")))
+          ' "${MANIFEST}" >/dev/null
+          echo "value=$(jq -c '.repositories' "${MANIFEST}")" >>"${GITHUB_OUTPUT}"
+
+  legacy:
+    name: Legacy / ${{ matrix.name }}
+    needs: select
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.select.outputs.matrix) }}
+    env:
+      GOPRIVATE: github.com/faustbrian/*
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          path: tooling
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: faustbrian/${{ matrix.name }}
+          ref: ${{ matrix.revision }}
+          fetch-depth: 0
+          path: source
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: source/.go-version
+          cache: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.4.1'
+          package-manager-cache: false
+      - name: Prepare content-identical source
+        working-directory: source
+        run: ../tooling/rehearsals/prepare.sh "${RUNNER_TEMP}/legacy-content.sha256"
+      - name: Normalize legacy analyzer compatibility
+        working-directory: source
+        run: |
+          set -euo pipefail
+          sed -i 's/^STATICCHECK_VERSION=.*/STATICCHECK_VERSION=v0.8.1/' \
+            .golib/versions.env
+          grep -qx 'STATICCHECK_VERSION=v0.8.1' .golib/versions.env
+      - name: Run copied contract
+        working-directory: source
+        run: |
+          set +e
+          set -o pipefail
+          make ci 2>&1 | tee "${RUNNER_TEMP}/legacy.log"
+          status=${PIPESTATUS[0]}
+          printf '%s\n' "${status}" >"${RUNNER_TEMP}/legacy-check.status"
+          exit "${status}"
+      - name: Record release decision
+        if: always()
+        working-directory: source
+        run: |
+          set +e
+          status=0
+          while IFS= read -r module; do
+            ./.golib/scripts/with-disposable-go-cache.sh \
+              ./.golib/scripts/release.sh --dry-run "${module}" \
+              >>"${RUNNER_TEMP}/legacy-release.log" 2>&1 || status=$?
+          done < <(jq -r '.modules[] | select(.releasable == true) | .directory' modules.json)
+          printf '%s\n' "${status}" >"${RUNNER_TEMP}/legacy-release.status"
+          exit 0
+      - name: Audit service cleanup
+        if: always()
+        working-directory: source
+        run: ../tooling/rehearsals/audit-services.sh "${RUNNER_TEMP}/legacy-services.status"
+      - name: Summarize legacy result
+        if: always()
+        working-directory: source
+        run: |
+          ../tooling/rehearsals/summarize.sh legacy \
+            "${RUNNER_TEMP}/legacy.log" \
+            "${RUNNER_TEMP}/legacy-content.sha256" \
+            "${RUNNER_TEMP}/legacy-check.status" \
+            "${RUNNER_TEMP}/legacy-release.log" \
+            "${RUNNER_TEMP}/legacy-release.status" \
+            "${RUNNER_TEMP}/legacy-services.status" \
+            "${RUNNER_TEMP}/legacy-summary"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: parity-legacy-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/legacy.log
+            ${{ runner.temp }}/legacy-release.log
+            ${{ runner.temp }}/legacy-summary
+          if-no-files-found: error
+          retention-days: 14
+
+  shared:
+    name: Shared / ${{ matrix.name }}
+    needs: select
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.select.outputs.matrix) }}
+    env:
+      GOPRIVATE: github.com/faustbrian/*
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          path: tooling
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: faustbrian/${{ matrix.name }}
+          ref: ${{ matrix.revision }}
+          fetch-depth: 0
+          path: source
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: source/.go-version
+          cache: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.4.1'
+          package-manager-cache: false
+      - name: Build source CLI
+        working-directory: tooling
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-parity-build.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            go build -trimpath -buildvcs=false -o "${RUNNER_TEMP}/golib" ./cmd/golib
+      - name: Prepare content-identical source
+        working-directory: source
+        run: ../tooling/rehearsals/prepare.sh "${RUNNER_TEMP}/shared-content.sha256"
+      - name: Apply rehearsal policy
+        working-directory: source
+        env:
+          FIXTURE: ../tooling/rehearsals/${{ matrix.name }}
+        run: |
+          set -euo pipefail
+          cp "${FIXTURE}/.golib.yaml" .golib.yaml
+          mkdir -p .verification/mutation
+          cp "${FIXTURE}/verification/mutation/zero-inventory.json" \
+            .verification/mutation/zero-inventory.json
+          if [[ -f "${FIXTURE}/verification/package.mk" ]]; then
+            mkdir -p verification
+            cp "${FIXTURE}/verification/package.mk" verification/package.mk
+          fi
+          find .golib -depth -delete
+      - name: Run shared contract
+        working-directory: source
+        run: |
+          set +e
+          set -o pipefail
+          {
+            "${RUNNER_TEMP}/golib" repository check
+            "${RUNNER_TEMP}/golib" check --all
+          } 2>&1 | tee "${RUNNER_TEMP}/shared.log"
+          status=${PIPESTATUS[0]}
+          printf '%s\n' "${status}" >"${RUNNER_TEMP}/shared-check.status"
+          exit "${status}"
+      - name: Record release decision
+        if: always()
+        working-directory: source
+        run: |
+          set +e
+          "${RUNNER_TEMP}/golib" release dry-run \
+            >"${RUNNER_TEMP}/shared-release.log" 2>&1
+          printf '%s\n' "$?" >"${RUNNER_TEMP}/shared-release.status"
+          exit 0
+      - name: Audit service cleanup
+        if: always()
+        working-directory: source
+        run: ../tooling/rehearsals/audit-services.sh "${RUNNER_TEMP}/shared-services.status"
+      - name: Summarize shared result
+        if: always()
+        working-directory: source
+        run: |
+          ../tooling/rehearsals/summarize.sh shared \
+            "${RUNNER_TEMP}/shared.log" \
+            "${RUNNER_TEMP}/shared-content.sha256" \
+            "${RUNNER_TEMP}/shared-check.status" \
+            "${RUNNER_TEMP}/shared-release.log" \
+            "${RUNNER_TEMP}/shared-release.status" \
+            "${RUNNER_TEMP}/shared-services.status" \
+            "${RUNNER_TEMP}/shared-summary"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: parity-shared-${{ matrix.name }}
+          path: |
+            ${{ runner.temp }}/shared.log
+            ${{ runner.temp }}/shared-release.log
+            ${{ runner.temp }}/shared-summary
+          if-no-files-found: error
+          retention-days: 14
+
+  compare:
+    name: Compare contracts
+    if: always()
+    needs: [select, legacy, shared]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        with:
+          pattern: parity-*
+          path: results
+      - name: Require equivalent results
+        run: ./rehearsals/compare.sh results rehearsals/repositories.json

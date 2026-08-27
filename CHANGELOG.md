@@ -80,6 +80,11 @@ All notable changes to this project are documented in this file.
 - A strict maintained consumer inventory with schema validation, CLI reporting,
   and bounded dry-run-first pull-request automation for coordinated immutable
   tooling upgrades.
+- CI-only compatibility rehearsals for pinned representative libraries,
+  including content, module, gate, service lifecycle, cleanup, coverage,
+  mutation, advisory, and release-decision parity.
+- Release dry-runs now reject tag collisions and verify task-owned module proxy
+  archives through clean module resolution before executing release gates.
 
 ### Fixed
 

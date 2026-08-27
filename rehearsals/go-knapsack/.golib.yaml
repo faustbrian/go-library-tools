@@ -1,0 +1,150 @@
+schema_version: 1
+tool_version: v1.0.0
+manifest:
+  modules: modules.json
+  packages: packages.json
+evidence:
+  root: ".verification"
+mutation:
+  root: ".verification/mutation"
+api:
+  baselines:
+  - module: "."
+    mode: apidiff
+    path: api/baseline.txt
+  - module: objective/gomoney
+    mode: apidiff
+    path: objective/gomoney/api/baseline.txt
+operations:
+- module: "."
+  gate: fuzz
+  steps:
+  - type: go-test
+    packages:
+    - "./encoding"
+    fuzz: FuzzPlanDecode
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./encoding"
+    fuzz: FuzzRequestDecode
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./geometry"
+    fuzz: FuzzGeometry
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./geometry"
+    fuzz: FuzzOrientationEnumeration
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./geometry"
+    fuzz: FuzzCuboidRelations
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./objective"
+    fuzz: FuzzObjectiveComparison
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "."
+    fuzz: FuzzItemContainerValidation
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "."
+    fuzz: FuzzLatticeNormalization
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./solver"
+    fuzz: FuzzHeuristic
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./solver"
+    fuzz: FuzzFixedContainerPacking
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./solver"
+    fuzz: FuzzVariableContainerSelection
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./solver"
+    fuzz: FuzzExactTinyAgreement
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./solver"
+    fuzz: FuzzCancellationAndBudgets
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./verify"
+    fuzz: FuzzSuppliedPlan
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./verify"
+    fuzz: FuzzPhysicalConstraints
+    budget: 100x
+    timeout: 2m
+- module: "."
+  gate: benchmark
+  steps:
+  - type: go-test
+    packages:
+    - "./..."
+    benchmark: "."
+    budget: 100ms
+    timeout: 20m
+- module: objective/gomoney
+  gate: fuzz
+  steps:
+  - type: go-test
+    packages:
+    - "."
+    fuzz: FuzzCostTypeIdentifiers
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "."
+    fuzz: FuzzCostMappings
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "."
+    fuzz: FuzzSolverCostObjective
+    budget: 100x
+    timeout: 2m
+- module: objective/gomoney
+  gate: benchmark
+  steps:
+  - type: go-test
+    packages:
+    - "./..."
+    benchmark: "."
+    budget: 100ms
+    timeout: 20m

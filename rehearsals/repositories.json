@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "repositories": [
+    {
+      "name": "go-authorization",
+      "revision": "be7d87b23c3273a1c9ac4f41df57f2a1287f2139"
+    },
+    {
+      "name": "go-cloudevents",
+      "revision": "72c19afbfbf1d055af831b264157f0c20b0b3b90"
+    },
+    {
+      "name": "go-knapsack",
+      "revision": "0e348f26b45df09c452a1211a61e7989cd965bb2"
+    },
+    {
+      "name": "go-openapi",
+      "revision": "005026cbd1c07ddcc711315c571b15161255ed3e"
+    },
+    {
+      "name": "go-transactional-outbox",
+      "revision": "51507d3af0206ae464d2761fb64ee82390bb18d4"
+    }
+  ]
+}

@@ -30,11 +30,14 @@ jobs:
           [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           declared="$(awk '$1 == "tool_version:" { print $2 }' .golib.yaml)"
           [[ "${declared}" == "${GITHUB_REF_NAME}" ]]
+          [[ "$(git rev-parse HEAD)" == "$(git rev-list -n 1 "${GITHUB_REF_NAME}")" ]]
           task="$(mktemp -d "${RUNNER_TEMP}/golib-release-check.XXXXXX")"
           trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
-            go run ./cmd/golib release dry-run
+            go run ./cmd/golib release check
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            go run ./cmd/golib check --all
 
   build:
     name: Build release artifacts

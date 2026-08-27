@@ -232,7 +232,7 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 			return 0
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(ctx, selection)
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).ReleaseDryRun(ctx, selection)
 		})
 	case "evidence":
 		if len(args) < 2 || args[1] != "inspect" || (len(args) == 3 && args[2] != "--json") || len(args) > 3 {

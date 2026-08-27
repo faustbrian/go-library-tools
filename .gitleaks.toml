@@ -6,3 +6,10 @@ useDefault = true
 [[allowlists]]
 description = "Generated local gate artifacts are not repository inputs."
 paths = ['''(?:^|/)\.artifacts(?:/.*)?$''']
+
+[[allowlists]]
+description = "Pinned apidiff tool versions in representative package Makefiles are not credentials."
+condition = "AND"
+regexTarget = "line"
+regexes = ['''^APIDIFF_VERSION \?= v0\.0\.0-[0-9]{14}-[0-9a-f]{12}$''']
+paths = ['''^rehearsals/go-(?:authorization|openapi)/verification/package\.mk$''']

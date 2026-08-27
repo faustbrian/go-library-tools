@@ -28,8 +28,10 @@ Core commands:
 - `golib docs check [--module DIR]` validates bounded Markdown navigation and
   optional typed documentation tests.
 - `golib release check` validates stable versions, tag prefixes, mandatory
-  gates, and repository structure. `golib release dry-run` then executes the
-  complete contract for every releasable module.
+  gates, and repository structure. Before a tag exists, `golib release dry-run`
+  also rejects tag collisions, builds task-owned module-proxy archives, proves
+  clean module resolution, and executes the complete contract for every
+  releasable module.
 - `golib upgrade plan|apply --version VERSION --workflow-sha SHA
   --checksums-sha256 DIGEST [--json]` validates and updates the tool version,
   release checksum-set digest, reusable-workflow reference, and workflow input

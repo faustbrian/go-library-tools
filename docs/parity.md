@@ -4,7 +4,17 @@ Compatibility rehearsals compare copied legacy tooling with `golib` against
 content-identical package source. A successful new run is not sufficient by
 itself: the comparison records selected modules, effective gates, exit states,
 coverage denominators, mutation inventories, advisory behavior, and retained
-package-specific operations.
+package-specific operations. Service-backed representatives additionally prove
+that the same service requirements are selected and that no task-owned
+container, network, volume, or fixture lock survives either run.
+
+The remote representative rehearsal normalizes the copied legacy Staticcheck
+pin from `v0.7.0` to `v0.8.1` before execution. Staticcheck `v0.7.0` cannot read
+Go 1.27 compiler export data, so leaving that obsolete tooling dependency in
+place would stop the legacy contract before later gates and would compare tool
+incompatibility rather than repository behavior. Only copied tooling is
+changed; the content digest proves the package source and repository-owned
+fixtures remain identical.
 
 ## `go-clock`
 

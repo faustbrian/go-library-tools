@@ -1,0 +1,198 @@
+schema_version: 1
+tool_version: v1.0.0
+manifest:
+  modules: modules.json
+  packages: packages.json
+evidence:
+  root: ".verification"
+mutation:
+  root: ".verification/mutation"
+operations:
+- module: "."
+  gate: api
+  steps:
+  - type: make
+    makefile: verification/package.mk
+    target: api
+    timeout: 20m
+- module: "."
+  gate: fuzz
+  steps:
+  - type: go-test
+    packages:
+    - "./compose"
+    fuzz: FuzzFilterOperationsKeepAllIsIdentity
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./compose"
+    fuzz: FuzzMergeIdenticalDocumentsIsIdentity
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./convert"
+    fuzz: FuzzConvertPatchAndForwardVersions
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./convert"
+    fuzz: FuzzConvertOpenAPI31To30
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./convert"
+    fuzz: FuzzConvertOpenAPI30ToSwagger20
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./diff"
+    fuzz: FuzzOperationDiffDeterminism
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./expression"
+    fuzz: FuzzRuntimeExpressionParse
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./expression"
+    fuzz: FuzzRuntimeExpressionTemplateParse
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./internal/modelgen/cmd/modelgen"
+    fuzz: FuzzModelgenFieldInventoryDecoder
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./internal/quality/cmd/mutationgate"
+    fuzz: FuzzMutationReportDecoder
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./internal/specification/cmd/provenance"
+    fuzz: FuzzProvenanceManifestDecoder
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./internal/specification/cmd/specmatrix"
+    fuzz: FuzzSpecmatrixManifestDecoder
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./jsonschema"
+    fuzz: FuzzSchemaObjectCompilationAndEvaluation
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./jsonvalue"
+    fuzz: FuzzValueMarshalJSONWithLimits
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./media"
+    fuzz: FuzzServerSentEventParsingDeterminism
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./parameter"
+    fuzz: FuzzOpenAPI32QueryDecode
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./parameter"
+    fuzz: FuzzSwagger20QueryDecode
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./parse"
+    fuzz: FuzzJSONParserDeterminism
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./parse"
+    fuzz: FuzzYAMLParserProducesJSONSemantics
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./reference"
+    fuzz: FuzzPointerCanonicalRoundTrip
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./reference"
+    fuzz: FuzzFragmentClassificationIsStable
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./reference"
+    fuzz: FuzzBundleInternalDocumentsIsIdentity
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./reference"
+    fuzz: FuzzDereferenceObjectsIsDeterministic
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./reference"
+    fuzz: FuzzFileResolverIdentifierBoundary
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./reference"
+    fuzz: FuzzHTTPResolverResponseBoundary
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./serialize"
+    fuzz: FuzzJSONAndYAMLSemanticRoundTrip
+    budget: 100x
+    timeout: 2m
+  - type: go-test
+    packages:
+    - "./validate"
+    fuzz: FuzzDocumentValidationDeterminism
+    budget: 100x
+    timeout: 2m
+- module: "."
+  gate: benchmark
+  steps:
+  - type: go-test
+    packages:
+    - "./..."
+    benchmark: "."
+    budget: 100ms
+    timeout: 20m
+- module: "."
+  gate: conformance
+  steps:
+  - type: make
+    makefile: verification/package.mk
+    target: conformance
+    timeout: 20m

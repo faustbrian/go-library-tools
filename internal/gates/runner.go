@@ -22,6 +22,7 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
 	"github.com/faustbrian/go-library-tools/internal/services"
+	"golang.org/x/mod/module"
 )
 
 const maximumMakefileSize = 4 << 20
@@ -66,6 +67,8 @@ type Runner struct {
 	coverageFiles     coverageFileSystem
 	apiFiles          apiFileSystem
 	apiReadBaseline   func(string, string, int64) ([]byte, error)
+	releaseFiles      releaseFileSystem
+	releaseArchive    func(io.Writer, module.Version, string) error
 	mutationFiles     mutationFileSystem
 	mutationCampaign  mutationCampaignRunner
 	mutationImport    mutationImportRunner
