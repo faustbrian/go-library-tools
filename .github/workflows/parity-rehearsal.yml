@@ -77,6 +77,8 @@ jobs:
           sed -i 's/^STATICCHECK_VERSION=.*/STATICCHECK_VERSION=v0.8.1/' \
             .golib/versions.env
           grep -qx 'STATICCHECK_VERSION=v0.8.1' .golib/versions.env
+          sed -i 's#golib\\/#go-#g' .golib/scripts/internal/isolated-go.sh
+          grep -Fq 'faustbrian\/go-' .golib/scripts/internal/isolated-go.sh
       - name: Run copied contract
         working-directory: source
         run: |

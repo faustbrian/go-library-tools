@@ -9,7 +9,8 @@ All notable changes to this project are documented in this file.
 - Updated the central `golangci-lint` pin to `v2.13.1` so Linux Go 1.27 checks
   use its compatible Staticcheck tool graph without disabling analyzers.
 - Isolated intentionally replaced internal module checksums in task-owned
-  rehearsal module files without changing representative repository content.
+  rehearsal module files and propagated those identities through nested and
+  legacy child Go processes without changing representative repository content.
 
 ### Added
 

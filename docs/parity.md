@@ -20,6 +20,8 @@ internal dependency sums, and select the matching alternate file through a Go
 wrapper. Tracked `go.mod`, `go.sum`, package source, fixtures, and evidence stay
 unchanged. The wrapper resolves canonical module identities, so disposable
 repository snapshots and nested modules select the correct alternate file.
+The root alternate module is also exported explicitly for child processes that
+resolve the Go executable before applying command-specific environments.
 
 The remote representative rehearsal normalizes the copied legacy Staticcheck
 pin from `v0.7.0` to `v0.8.1` before execution. Staticcheck `v0.7.0` cannot read
@@ -28,6 +30,11 @@ place would stop the legacy contract before later gates and would compare tool
 incompatibility rather than repository behavior. Only copied tooling is
 changed; the content digest proves the package source and repository-owned
 fixtures remain identical.
+
+The copied legacy isolated-Go shim also retains a monorepo-era checksum filter.
+The rehearsal updates that copied filter from the retired `golib/` module path
+to standalone `go-*` modules so legacy and shared checks consume the same
+intentionally replaced dependency identities.
 
 Shared lint execution pins `golangci-lint` `v2.13.1`. That release bundles
 Staticcheck `v0.8.0`, avoiding the Go 1.27 analyzer panic in the older
