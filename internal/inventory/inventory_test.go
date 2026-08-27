@@ -2,6 +2,7 @@ package inventory_test
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -10,6 +11,48 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 )
+
+func TestLoadRequiresTypedOperationsForEnabledCustomGates(t *testing.T) {
+	tests := []struct {
+		name      string
+		gates     string
+		tools     string
+		operation string
+	}{
+		{"fuzz", `{"fuzz":true}`, `[]`, "fuzz"},
+		{"benchmark", `{"benchmarks":true}`, `[]`, "benchmark"},
+		{"conformance", `{"conformance":true}`, `[]`, "conformance"},
+		{"interoperability", `{}`, `["reference"]`, "interoperability"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := fixture(t)
+			write(t, filepath.Join(root, "modules.json"), fmt.Sprintf(`{
+  "schema_version":1,
+  "repository":"github.com/faustbrian/example",
+  "go_version":"1.27.0",
+  "modules":[{
+    "directory":".",
+    "module_path":"github.com/faustbrian/example",
+    "go_version":"1.27.0",
+    "kind":"public",
+    "releasable":true,
+    "gates":%s,
+    "interoperability_tools":%s,
+    "packages":[]
+  }]
+}`, test.gates, test.tools))
+			policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}
+			if _, err := inventory.Load(root, policy); err == nil || !strings.Contains(err.Error(), "requires a typed operation") {
+				t.Fatalf("Load(missing %s operation) error = %v", test.operation, err)
+			}
+			policy.Operations = []config.Operation{{Module: ".", Gate: test.operation}}
+			if _, err := inventory.Load(root, policy); err != nil {
+				t.Fatalf("Load(%s operation) error = %v", test.operation, err)
+			}
+		})
+	}
+}
 
 func TestLoadValidatesCanonicalManifests(t *testing.T) {
 	root := fixture(t)

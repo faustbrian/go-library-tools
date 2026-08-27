@@ -109,6 +109,7 @@ func Load(root string, policy config.Config) (Inventory, error) {
 		"api": "api_compatibility", "benchmark": "benchmarks",
 		"conformance": "conformance", "docs": "documentation", "fuzz": "fuzz",
 	}
+	declaredOperations := make(map[string]struct{}, len(policy.Operations))
 	for index, operation := range policy.Operations {
 		module, exists := byDirectory[operation.Module]
 		if !exists {
@@ -120,6 +121,25 @@ func Load(root string, policy config.Config) (Inventory, error) {
 		}
 		if !enabled {
 			return Inventory{}, fmt.Errorf("operations[%d] gate %q is not enabled for module %q", index, operation.Gate, operation.Module)
+		}
+		declaredOperations[operation.Module+"\x00"+operation.Gate] = struct{}{}
+	}
+	for _, module := range modules.Modules {
+		required := make([]string, 0, 4)
+		for _, gate := range []struct{ operation, manifest string }{
+			{"benchmark", "benchmarks"}, {"conformance", "conformance"}, {"fuzz", "fuzz"},
+		} {
+			if module.Gates[gate.manifest] {
+				required = append(required, gate.operation)
+			}
+		}
+		if len(module.InteroperabilityTools) > 0 {
+			required = append(required, "interoperability")
+		}
+		for _, gate := range required {
+			if _, exists := declaredOperations[module.Directory+"\x00"+gate]; !exists {
+				return Inventory{}, fmt.Errorf("module %q enables %s and requires a typed operation", module.Directory, gate)
+			}
 		}
 	}
 	return modules, nil

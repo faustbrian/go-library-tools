@@ -33,4 +33,7 @@ chain and therefore is not repeated as repository policy.
 
 Typed operations may invoke bounded `go test` runs for docs, fuzz,
 conformance, interoperability, API, or benchmarks. Shell commands and secrets
-are not valid configuration.
+are not valid configuration. Enabling fuzz, benchmark, or conformance in a
+module manifest requires a matching typed operation. Declaring an
+interoperability tool has the same requirement. Missing operations fail while
+loading the repository rather than silently skipping an enabled gate.
