@@ -49,6 +49,11 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 			t.Errorf("output does not include gate %q: %s", gate, output.String())
 		}
 	}
+	for _, gate := range []string{"api", "benchmark", "conformance", "interoperability"} {
+		if strings.Contains(output.String(), "[.] "+gate+"\n") {
+			t.Errorf("output includes unconfigured gate %q: %s", gate, output.String())
+		}
+	}
 }
 
 func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
@@ -57,8 +62,11 @@ func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
 	executor := &recordingExecutor{}
 	runner := gates.Runner{
 		Root:    root,
-		Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: ".", TestTags: []string{"integration"}, Gates: map[string]bool{"documentation": true}}}},
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: ".", TestTags: []string{"integration"}, Gates: map[string]bool{"api_compatibility": true, "documentation": true}}}},
 		Policy: config.Config{Operations: []config.Operation{
+			{Module: ".", Gate: "api", Steps: []config.Step{
+				{Type: "go-test", Packages: []string{"./..."}, Run: "^TestAPI$", Count: 1, Timeout: "1m"},
+			}},
 			{Module: ".", Gate: "fuzz", Steps: []config.Step{
 				{Type: "go-test", Packages: []string{"./..."}, Fuzz: "FuzzSpec", Budget: "100x", Count: 1, Timeout: "1m"},
 			}},
@@ -79,6 +87,26 @@ func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
 	wantSuffix := "go test -tags=integration ./... -count=1 -timeout=1m -run=^TestSpec$"
 	if executor.commands[len(executor.commands)-1] != wantSuffix {
 		t.Fatalf("operation commands = %#v", executor.commands)
+	}
+}
+
+func TestCheckRunsLaterTypedOperationWhenEarlierGateIsAbsent(t *testing.T) {
+	executor := &recordingExecutor{}
+	runner := gates.Runner{
+		Root:    fixture(t),
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: "."}}},
+		Policy: config.Config{Operations: []config.Operation{{
+			Module: ".", Gate: "benchmark", Steps: []config.Step{{
+				Type: "go-test", Packages: []string{"."}, Benchmark: ".", Budget: "1x", Count: 1, Timeout: "1m",
+			}},
+		}}},
+		Executor: executor,
+	}
+	if err := runner.Check(context.Background(), []string{"."}); err != nil {
+		t.Fatalf("Check() error = %v", err)
+	}
+	if !strings.Contains(strings.Join(executor.commands, "\n"), "-bench=.") {
+		t.Fatalf("Check() commands = %#v", executor.commands)
 	}
 }
 
@@ -208,6 +236,36 @@ func TestAPICheckAndUpdateUsePinnedTool(t *testing.T) {
 	updated, err := os.ReadFile(filepath.Join(root, "api", "baseline.txt"))
 	if err != nil || string(updated) != "new baseline" {
 		t.Fatalf("updated baseline = %q, %v", updated, err)
+	}
+}
+
+func TestCheckRunsEnabledNativeAPICompatibility(t *testing.T) {
+	root := fixture(t)
+	if err := os.MkdirAll(filepath.Join(root, "api"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(root, "api", "baseline.txt"), "snapshot")
+	executor := &recordingExecutor{apiSnapshot: "snapshot"}
+	var output bytes.Buffer
+	runner := gates.Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{
+			Directory: ".", ModulePath: "example", Gates: map[string]bool{"api_compatibility": true},
+		}}},
+		Executor: executor,
+		Output:   &output,
+	}
+	if err := runner.Check(context.Background(), []string{"."}); err != nil {
+		t.Fatalf("Check() error = %v", err)
+	}
+	if !strings.Contains(output.String(), "API compatibility passed") {
+		t.Fatalf("Check() output = %q", output.String())
+	}
+	if err := os.Remove(filepath.Join(root, "api", "baseline.txt")); err != nil {
+		t.Fatal(err)
+	}
+	if err := runner.Check(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "missing API baseline") {
+		t.Fatalf("Check(missing API baseline) error = %v", err)
 	}
 }
 
@@ -350,6 +408,7 @@ func TestCheckStopsAtCoverageAndTypedOperationFailures(t *testing.T) {
 	}{
 		{"coverage", inventory.Module{Directory: ".", Gates: map[string]bool{"coverage": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}}, config.Config{}},
 		{"fuzz operation", inventory.Module{Directory: "."}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "fuzz", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}},
+		{"api operation", inventory.Module{Directory: ".", Gates: map[string]bool{"api_compatibility": true}}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "api", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}},
 		{"operation", inventory.Module{Directory: "."}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "conformance", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}},
 	}
 	for _, test := range tests {

@@ -285,6 +285,19 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			return err
 		}
 	}
+	if module.Gates["api_compatibility"] {
+		if operation, exists := runner.operation(module.Directory, "api"); exists {
+			if err := announce(output, module.Directory, "api", func() error {
+				return runner.runOperation(ctx, directory, module, operation)
+			}); err != nil {
+				return err
+			}
+		} else if err := announce(output, module.Directory, "api", func() error {
+			return runner.apiModule(ctx, output, module, false)
+		}); err != nil {
+			return err
+		}
+	}
 	if module.Gates["lint"] {
 		_, _ = fmt.Fprintf(output, "[%s] nilaway\n", module.Directory)
 		err := runner.Executor.Run(ctx, Command{
@@ -296,7 +309,7 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			_, _ = fmt.Fprintf(output, "[%s] NilAway advisory: %v\n", module.Directory, err)
 		}
 	}
-	for _, gate := range []string{"api", "conformance", "interoperability", "benchmark"} {
+	for _, gate := range []string{"conformance", "interoperability", "benchmark"} {
 		operation, exists := runner.operation(module.Directory, gate)
 		if !exists {
 			continue
