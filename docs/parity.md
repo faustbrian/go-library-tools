@@ -9,9 +9,10 @@ that the same service requirements are selected and that no task-owned
 container, network, volume, or fixture lock survives either run.
 
 Preparation hashes tracked consumer content without rewriting module files or
-dependency sums and fails if the repository state changes. Shared runs build
-`golib` with the tooling repository's Go version, then switch to the consumer's
-declared Go version before executing its contract.
+dependency sums and fails if the repository state changes. Shared runs install
+the consumer's declared Go version once. Building `golib` may select the
+tooling module's required compiler through Go's automatic toolchain mechanism,
+but consumer gates continue under the declared consumer version.
 
 Some internal `v1.0.0` tags were intentionally replaced before public adoption,
 leaving historical checksums in the representative repositories. Rehearsals
@@ -25,19 +26,15 @@ resolve the Go executable before applying command-specific environments.
 Third-party child modules stop resolution at their own nearest `go.mod`, so an
 inherited rehearsal module file cannot replace their dependency graph.
 
-The remote representative rehearsal normalizes the copied legacy Staticcheck
-pin from `v0.7.0` to `v0.8.1` before execution. Staticcheck `v0.7.0` cannot read
-Go 1.27 compiler export data, so leaving that obsolete tooling dependency in
-place would stop the legacy contract before later gates and would compare tool
-incompatibility rather than repository behavior. Only copied tooling is
-changed; the content digest proves the package source and repository-owned
-fixtures remain identical.
+The rehearsal wrapper injects current standalone dependency checksums into a
+per-process module-file copy and removes that copy on success, failure, or
+cancellation. Versioned external tools run without consumer module flags.
+Tracked source, source-comparable sums, and copied legacy tooling remain
+unchanged, including when child commands overlap.
 
-Copied legacy isolated-Go shims are normalized in their task-owned tooling copy
-to exclude standalone `go-*` checksums from source comparisons. The rehearsal
-wrapper retains current remote and local-proxy checksums in task-owned child
-module files for the complete run. Tracked module files remain unchanged while
-every child process resolves the intentionally replaced module versions.
+Shared rehearsals install the representative repository's declared Go version
+once. The source CLI build may use Go's automatic toolchain selection for its
+own module, but every consumer gate continues under the representative version.
 
 Mutation campaigns serialize package tests while retaining parallel mutant
 workers. This prevents test-level scheduler contention from deciding short

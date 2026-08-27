@@ -70,25 +70,6 @@ jobs:
         run: |
           ../tooling/rehearsals/prepare-dependencies.sh \
             "${RUNNER_TEMP}/legacy-dependencies" "${GITHUB_ENV}"
-      - name: Normalize legacy analyzer compatibility
-        working-directory: source
-        run: |
-          set -euo pipefail
-          sed -i 's/^STATICCHECK_VERSION=.*/STATICCHECK_VERSION=v0.8.1/' \
-            .golib/versions.env
-          grep -qx 'STATICCHECK_VERSION=v0.8.1' .golib/versions.env
-          sed -i 's#golib\\/#go-#g' .golib/scripts/internal/isolated-go.sh
-          grep -Fq 'faustbrian\/go-' .golib/scripts/internal/isolated-go.sh
-          sed -i \
-            's/GOWORK=off go mod download/GOWORK=off GOFLAGS= go mod download/' \
-            .golib/scripts/build-golib-gremlins.sh
-          sed -i \
-            's/GOWORK=off go build/GOWORK=off GOFLAGS= go build/' \
-            .golib/scripts/build-golib-gremlins.sh
-          grep -Fq 'GOWORK=off GOFLAGS= go mod download' \
-            .golib/scripts/build-golib-gremlins.sh
-          grep -Fq 'GOWORK=off GOFLAGS= go build' \
-            .golib/scripts/build-golib-gremlins.sh
       - name: Run copied contract
         working-directory: source
         run: |
@@ -161,7 +142,7 @@ jobs:
           path: source
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
-          go-version-file: tooling/.go-version
+          go-version-file: source/.go-version
           cache: false
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
@@ -175,11 +156,8 @@ jobs:
           trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            GOTOOLCHAIN=auto \
             go build -trimpath -buildvcs=false -o "${RUNNER_TEMP}/golib" ./cmd/golib
-      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
-        with:
-          go-version-file: source/.go-version
-          cache: false
       - name: Prepare content-identical source
         working-directory: source
         run: ../tooling/rehearsals/prepare.sh "${RUNNER_TEMP}/shared-content.sha256"

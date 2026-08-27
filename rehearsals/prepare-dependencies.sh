@@ -15,7 +15,7 @@ wrapper_directory="${task_root}/bin"
 root_alternate_mod=''
 
 mkdir -p "${task_root}/cache" "${task_root}/mod" "${task_root}/tmp" \
-    "${task_root}/modules" "${wrapper_directory}"
+    "${task_root}/modules" "${task_root}/execution" "${wrapper_directory}"
 : >"${module_map}"
 
 module_directories=()
@@ -83,6 +83,7 @@ set -euo pipefail
 
 real_go="${GOLIB_REHEARSAL_REAL_GO:?}"
 module_map="${GOLIB_REHEARSAL_MODULE_MAP:?}"
+execution_directory="${GOLIB_REHEARSAL_EXECUTION_DIRECTORY:?}"
 directory="$(pwd -P)"
 alternate_mod=''
 
@@ -122,6 +123,24 @@ if [[ -z "${active_modfile}" ]]; then
     done
 fi
 
+execution_modfile=''
+execution_sum=''
+cleanup_execution_modfile() {
+    for path in "${execution_modfile}" "${execution_sum}"; do
+        [[ -n "${path}" ]] || continue
+        if [[ -e "${path}" || -L "${path}" ]]; then
+            find "${path}" -delete
+        fi
+    done
+    execution_modfile=''
+    execution_sum=''
+}
+handle_signal() {
+    local signal="$1"
+    trap - EXIT HUP INT TERM
+    cleanup_execution_modfile
+    exit "$((128 + signal))"
+}
 if [[ -n "${alternate_mod}" ]]; then
     if [[ -z "${active_modfile}" ]]; then
         export GOFLAGS="${GOFLAGS:+${GOFLAGS} }-modfile=${alternate_mod}"
@@ -147,7 +166,13 @@ if [[ -n "${alternate_mod}" ]]; then
         else
             active_sum="${active_modfile%.mod}.sum"
             alternate_sum="${alternate_mod%.mod}.sum"
-            temporary_sum="${active_sum}.golib.$$"
+            execution_modfile="${execution_directory}/$(basename "${active_modfile%.mod}")-$$.mod"
+            execution_sum="${execution_modfile%.mod}.sum"
+            trap cleanup_execution_modfile EXIT
+            trap 'handle_signal 1' HUP
+            trap 'handle_signal 2' INT
+            trap 'handle_signal 15' TERM
+            cp "${active_modfile}" "${execution_modfile}"
             {
                 if [[ -f "${active_sum}" ]]; then
                     awk '$1 !~ /^github\.com\/faustbrian\/go-/' "${active_sum}"
@@ -166,8 +191,23 @@ if [[ -n "${alternate_mod}" ]]; then
                     awk '$1 ~ /^github\.com\/faustbrian\/go-/' \
                         "${alternate_sum}"
                 )
-            } >"${temporary_sum}"
-            mv "${temporary_sum}" "${active_sum}"
+            } | LC_ALL=C sort -u >"${execution_sum}"
+            if [[ -n "${explicit_modfile}" ]]; then
+                for index in "${!command_arguments[@]}"; do
+                    case "${command_arguments[${index}]}" in
+                        -modfile=*) command_arguments[${index}]="-modfile=${execution_modfile}" ;;
+                    esac
+                done
+            else
+                updated_flags=''
+                for flag in ${GOFLAGS:-}; do
+                    case "${flag}" in
+                        -modfile=*) flag="-modfile=${execution_modfile}" ;;
+                    esac
+                    updated_flags="${updated_flags:+${updated_flags} }${flag}"
+                done
+                export GOFLAGS="${updated_flags}"
+            fi
         fi
     fi
 elif [[ -n "${active_modfile}" ]] &&
@@ -194,6 +234,14 @@ elif [[ -n "${active_modfile}" ]] &&
     fi
 fi
 
+if [[ -n "${execution_modfile}" ]]; then
+    status=0
+    "${real_go}" "${command_arguments[@]}" || status=$?
+    cleanup_execution_modfile
+    trap - EXIT HUP INT TERM
+    exit "${status}"
+fi
+
 exec "${real_go}" "${command_arguments[@]}"
 EOF
 chmod 0755 "${wrapper_directory}/go"
@@ -208,6 +256,7 @@ done
 {
     printf 'GOLIB_REHEARSAL_REAL_GO=%s\n' "${real_go}"
     printf 'GOLIB_REHEARSAL_MODULE_MAP=%s\n' "${module_map}"
+    printf 'GOLIB_REHEARSAL_EXECUTION_DIRECTORY=%s\n' "${task_root}/execution"
     printf 'GOFLAGS=%s%s-modfile=%s\n' \
         "${base_flags}" "${base_flags:+ }" "${root_alternate_mod}"
     printf 'PATH=%s:%s\n' "${wrapper_directory}" "${PATH}"

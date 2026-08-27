@@ -62,17 +62,37 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 	}
 }
 
-func TestParityWorkflowNormalizesReplacedDependencyChecksums(t *testing.T) {
+func TestParityWorkflowDoesNotModifyRepresentativeSource(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
-	for _, required := range []string{
-		"s#golib\\\\/#go-#g",
-		"grep -Fq 'faustbrian\\/go-' .golib/scripts/internal/isolated-go.sh",
-		"s/GOWORK=off go mod download/GOWORK=off GOFLAGS= go mod download/",
-		"s/GOWORK=off go build/GOWORK=off GOFLAGS= go build/",
+	for _, forbidden := range []string{
+		"Normalize legacy analyzer compatibility",
+		"sed -i 's#golib",
+		"sed -i 's/^STATICCHECK_VERSION=",
+		".golib/scripts/build-golib-gremlins.sh",
 	} {
-		if !strings.Contains(content, required) {
-			t.Errorf("parity workflow lacks %q", required)
+		if strings.Contains(content, forbidden) {
+			t.Errorf("parity workflow modifies representative source through %q", forbidden)
 		}
+	}
+}
+
+func TestSharedParityUsesRepresentativeGoVersionForConsumerGates(t *testing.T) {
+	content := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
+	sharedStart := strings.Index(content, "  shared:\n")
+	if sharedStart < 0 {
+		t.Fatal("parity workflow has no shared job")
+	}
+	shared := content[sharedStart:]
+	if count := strings.Count(shared, "uses: actions/setup-go@"); count != 1 {
+		t.Fatalf("shared parity setup-go steps = %d, want 1", count)
+	}
+	setup := strings.Index(shared, "go-version-file: source/.go-version")
+	build := strings.Index(shared, "name: Build source CLI")
+	if setup < 0 || build < 0 || setup > build {
+		t.Fatal("shared parity must select the representative Go version before building the source CLI")
+	}
+	if !strings.Contains(shared[build:], "GOTOOLCHAIN=auto") {
+		t.Fatal("source CLI build does not opt into its required automatic Go toolchain")
 	}
 }
 

@@ -2,15 +2,19 @@ package repository_test
 
 import (
 	"bufio"
+	"bytes"
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
+	"time"
 )
 
-func TestDependencyWrapperKeepsTaskOwnedChecksumsCurrent(t *testing.T) {
+func TestDependencyWrapperUsesParallelSafeExecutionModfiles(t *testing.T) {
 	root := t.TempDir()
 	task := filepath.Join(root, "task")
 	fakeBin := filepath.Join(root, "bin")
@@ -61,6 +65,24 @@ fi
 if [[ "${1:-}" == rehearsal-command ]]; then
 	cp "${sumfile}" "${REHEARSAL_CAPTURE}"
 	printf '%s\n' 'github.com/faustbrian/go-local v1.0.0 h1:local-proxy' >>"${sumfile}"
+	if [[ "${REHEARSAL_FAILURE:-0}" == 1 ]]; then
+		exit 23
+	fi
+	exit 0
+fi
+if [[ "${1:-}" == rehearsal-signal ]]; then
+	cp "${sumfile}" "${REHEARSAL_CAPTURE}"
+	printf '%s\n' 'github.com/faustbrian/go-local v1.0.0 h1:local-proxy' >>"${sumfile}"
+	kill -TERM "${PPID}"
+	exit 0
+fi
+if [[ "${1:-}" == rehearsal-block ]]; then
+	printf '%s' "${modfile}" >"${REHEARSAL_BLOCK_MODFILE}"
+	printf '%s\n' 'github.com/faustbrian/go-local v1.0.0 h1:local-proxy' >>"${sumfile}"
+	: >"${REHEARSAL_BLOCK_READY}"
+	while [[ ! -f "${REHEARSAL_BLOCK_RELEASE}" ]]; do
+		sleep 0.01
+	done
 	exit 0
 fi
 if [[ "${1:-}" == run && "${2:-}" == *@* ]]; then
@@ -110,8 +132,73 @@ exit 1
 		t.Fatalf("remote checksum was not refreshed:\n%s", during)
 	}
 	after := readRehearsalFile(t, activeSum)
-	if !strings.Contains(after, "h1:local-proxy") || !strings.Contains(after, "h1:current-remote") || strings.Contains(after, "h1:historical") {
-		t.Fatalf("task-owned checksums were not retained:\n%s", after)
+	if !strings.Contains(after, "h1:historical-local") || !strings.Contains(after, "h1:historical-remote") || strings.Contains(after, "h1:local-proxy") {
+		t.Fatalf("source-comparable checksums were not restored:\n%s", after)
+	}
+
+	wrapper.Env = append(wrapper.Env, "REHEARSAL_FAILURE=1")
+	if output, err := wrapper.CombinedOutput(); err == nil {
+		t.Fatalf("failing dependency command unexpectedly passed:\n%s", output)
+	}
+	afterFailure := readRehearsalFile(t, activeSum)
+	if afterFailure != after {
+		t.Fatalf("failed dependency command changed restored checksums:\n%s", afterFailure)
+	}
+
+	interrupted := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "rehearsal-signal")
+	interrupted.Dir = root
+	interrupted.Env = wrapper.Env
+	if output, err := interrupted.CombinedOutput(); err == nil {
+		t.Fatalf("interrupted dependency command unexpectedly passed:\n%s", output)
+	} else if exit := new(exec.ExitError); !errors.As(err, &exit) || exit.ExitCode() != 143 {
+		t.Fatalf("interrupted dependency command error = %v, want exit 143\n%s", err, output)
+	}
+	if afterSignal := readRehearsalFile(t, activeSum); afterSignal != after {
+		t.Fatalf("interrupted dependency command changed restored checksums:\n%s", afterSignal)
+	}
+
+	firstReady := filepath.Join(root, "first.ready")
+	firstRelease := filepath.Join(root, "first.release")
+	firstModfile := filepath.Join(root, "first.modfile")
+	first := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "rehearsal-block")
+	first.Dir = root
+	first.Env = slices.Clone(wrapper.Env)
+	first.Env = append(first.Env, "REHEARSAL_BLOCK_READY="+firstReady, "REHEARSAL_BLOCK_RELEASE="+firstRelease, "REHEARSAL_BLOCK_MODFILE="+firstModfile)
+	var firstOutput bytes.Buffer
+	first.Stdout = &firstOutput
+	first.Stderr = &firstOutput
+	if err := first.Start(); err != nil {
+		t.Fatal(err)
+	}
+	waitForRehearsalFile(t, firstReady)
+	if used := readRehearsalFile(t, firstModfile); !strings.HasPrefix(used, filepath.Join(task, "execution")+string(filepath.Separator)) {
+		t.Fatalf("overlapping dependency command modfile = %q, want task-owned execution path", used)
+	}
+
+	secondReady := filepath.Join(root, "second.ready")
+	secondRelease := filepath.Join(root, "second.release")
+	secondModfile := filepath.Join(root, "second.modfile")
+	second := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "rehearsal-block")
+	second.Dir = root
+	second.Env = slices.Clone(wrapper.Env)
+	second.Env = append(second.Env, "REHEARSAL_BLOCK_READY="+secondReady, "REHEARSAL_BLOCK_RELEASE="+secondRelease, "REHEARSAL_BLOCK_MODFILE="+secondModfile)
+	var secondOutput bytes.Buffer
+	second.Stdout = &secondOutput
+	second.Stderr = &secondOutput
+	if err := second.Start(); err != nil {
+		t.Fatal(err)
+	}
+	waitForRehearsalFile(t, secondReady)
+	writeRehearsalFile(t, firstRelease, "release")
+	if err := first.Wait(); err != nil {
+		t.Fatalf("first overlapping dependency command: %v\n%s", err, firstOutput.Bytes())
+	}
+	writeRehearsalFile(t, secondRelease, "release")
+	if err := second.Wait(); err != nil {
+		t.Fatalf("second overlapping dependency command: %v\n%s", err, secondOutput.Bytes())
+	}
+	if afterOverlap := readRehearsalFile(t, activeSum); afterOverlap != after {
+		t.Fatalf("overlapping dependency commands changed source-comparable checksums:\n%s", afterOverlap)
 	}
 
 	tool := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "run", "example.com/tool@v1.0.0")
@@ -122,6 +209,22 @@ exit 1
 	}
 	if flags := readRehearsalFile(t, toolCapture); flags != "" {
 		t.Fatalf("external tool inherited consumer GOFLAGS %q", flags)
+	}
+}
+
+func waitForRehearsalFile(t *testing.T, path string) {
+	t.Helper()
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		if _, err := os.Stat(path); err == nil {
+			return
+		} else if !errors.Is(err, os.ErrNotExist) {
+			t.Fatal(err)
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("timed out waiting for %s", filepath.Base(path))
+		}
+		time.Sleep(10 * time.Millisecond)
 	}
 }
 
