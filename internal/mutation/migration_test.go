@@ -25,8 +25,12 @@ func TestMigrationLedgerApprovesExactSemanticReplacement(t *testing.T) {
 	if err := ledger.Approve(checkpoint, newInput, verifier); err != nil {
 		t.Fatalf("Approve() error = %v", err)
 	}
-	if err := ledger.Approve(checkpoint, strings.Repeat("f", 64), verifier); !errors.Is(err, mutation.ErrUnapproved) {
+	err = ledger.Approve(checkpoint, strings.Repeat("f", 64), verifier)
+	if !errors.Is(err, mutation.ErrUnapproved) {
 		t.Fatalf("Approve(changed input) error = %v, want ErrUnapproved", err)
+	}
+	if err == nil || !strings.Contains(err.Error(), "requested replacement "+strings.Repeat("f", 64)) {
+		t.Fatalf("Approve(changed input) error = %v, want requested replacement digest", err)
 	}
 }
 

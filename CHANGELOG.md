@@ -83,6 +83,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Rejected mutation checkpoint migrations now report the exact replacement
+  input digest required for a reviewed approval ledger.
 - Mutation input identity now excludes the synthetic test executable emitted
   by `go list`, which otherwise attributed generated cache source to a package.
 - Embedded zero-context verifier patches are applied explicitly as

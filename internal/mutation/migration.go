@@ -188,7 +188,7 @@ func (ledger MigrationLedger) Approve(checkpoint Checkpoint, currentInput, expec
 		}
 	}
 	if inputMatches != 1 {
-		return fmt.Errorf("%w: replacement input identity is not uniquely approved", ErrUnapproved)
+		return fmt.Errorf("%w: replacement input identity is not uniquely approved for requested replacement %s", ErrUnapproved, currentInput)
 	}
 	return nil
 }
