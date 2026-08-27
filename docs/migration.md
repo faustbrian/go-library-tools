@@ -3,6 +3,8 @@
 1. Inventory modules, packages, gates, external runtimes, service fixtures,
    API baselines, and mutation checkpoints.
 2. Add strict `.golib.yaml` without duplicating manifest facts.
+   Convert checksum-only or Git-history API checks to explicit `apidiff` or
+   `go-doc` baselines and declare their repository-relative paths.
 3. Move source-specific evidence to `.verification/` and preserve exact content
    identity. Import approved legacy mutation checkpoints with
    `golib mutation import --module DIR --archive PATH --ledger PATH` before

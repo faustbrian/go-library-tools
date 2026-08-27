@@ -53,6 +53,16 @@
         }
       }
     },
+    "api": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "baselines": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/apiBaseline" }
+        }
+      }
+    },
     "runtimes": {
       "type": "object",
       "additionalProperties": false,
@@ -112,6 +122,54 @@
     }
   },
   "$defs": {
+    "apiBaseline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["module", "mode", "path"],
+      "properties": {
+        "module": { "$ref": "#/$defs/repositoryPath" },
+        "mode": { "enum": ["apidiff", "go-doc"] },
+        "path": {
+          "allOf": [
+            { "$ref": "#/$defs/repositoryPath" },
+            { "not": { "const": "." } }
+          ]
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(?:\\.|\\./[^/]+(?:/[^/]+)*)$",
+            "not": {
+              "anyOf": [
+                { "pattern": "\\\\" },
+                { "pattern": "(?:^|/)\\.{1,2}(?:/|$)" },
+                { "pattern": "(?:^|/)\\.\\.\\.(?:/|$)" }
+              ]
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": { "mode": { "const": "go-doc" } },
+            "required": ["mode"]
+          },
+          "then": {
+            "required": ["packages"],
+            "properties": { "packages": { "minItems": 1 } }
+          }
+        },
+        {
+          "if": {
+            "properties": { "mode": { "const": "apidiff" } },
+            "required": ["mode"]
+          },
+          "then": { "not": { "required": ["packages"] } }
+        }
+      ]
+    },
     "step": {
       "type": "object",
       "additionalProperties": false,

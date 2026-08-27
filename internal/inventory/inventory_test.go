@@ -70,6 +70,33 @@ func TestLoadAllowsTypedTestOperationsOnlyForEnabledTests(t *testing.T) {
 	}
 }
 
+func TestLoadValidatesTypedAPIBaselineOwnership(t *testing.T) {
+	root := fixture(t)
+	policy := config.Config{
+		Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+		API:       config.API{Baselines: []config.APIBaseline{{Module: ".", Mode: "apidiff", Path: "api/v1.txt"}}},
+	}
+	if _, err := inventory.Load(root, policy); err != nil {
+		t.Fatalf("Load(enabled API baseline) error = %v", err)
+	}
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"tests":true},"packages":[]}]}`)
+	if _, err := inventory.Load(root, policy); err == nil || !strings.Contains(err.Error(), "is not enabled") {
+		t.Fatalf("Load(disabled API baseline) error = %v", err)
+	}
+	root = fixture(t)
+
+	policy.API.Baselines[0].Module = "missing"
+	if _, err := inventory.Load(root, policy); err == nil || !strings.Contains(err.Error(), "references unknown module") {
+		t.Fatalf("Load(unknown API module) error = %v", err)
+	}
+
+	policy.API.Baselines[0].Module = "."
+	policy.Operations = []config.Operation{{Module: ".", Gate: "api"}}
+	if _, err := inventory.Load(root, policy); err == nil || !strings.Contains(err.Error(), "two API gate owners") {
+		t.Fatalf("Load(duplicate API owner) error = %v", err)
+	}
+}
+
 func TestLoadValidatesCanonicalManifests(t *testing.T) {
 	root := fixture(t)
 
@@ -289,7 +316,7 @@ func fixture(t *testing.T) string {
     "go_version": "1.27.0",
     "kind": "public",
     "releasable": true,
-    "gates": {"tests": true},
+    "gates": {"api_compatibility": true, "tests": true},
     "packages": []
   }]
 }`)

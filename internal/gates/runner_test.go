@@ -236,12 +236,70 @@ func TestAPICheckAndUpdateUsePinnedTool(t *testing.T) {
 		t.Fatalf("API check output/commands = %q, %#v", output.String(), executor.commands)
 	}
 	output.Reset()
+	if err := os.RemoveAll(filepath.Join(root, "api")); err != nil {
+		t.Fatal(err)
+	}
 	if err := runner.API(context.Background(), []string{"."}, true); err != nil {
 		t.Fatalf("API(update) error = %v", err)
 	}
 	updated, err := os.ReadFile(filepath.Join(root, "api", "baseline.txt"))
 	if err != nil || string(updated) != "new baseline" {
 		t.Fatalf("updated baseline = %q, %v", updated, err)
+	}
+}
+
+func TestAPICheckAndUpdateUseConfiguredGoDocBaseline(t *testing.T) {
+	root := fixture(t)
+	if err := os.MkdirAll(filepath.Join(root, "api"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(root, "api", "v1.txt"), "documented API\n\ndocumented API\n")
+	executor := &recordingExecutor{apiSnapshot: "documented API\n\n"}
+	policy := config.Config{API: config.API{Baselines: []config.APIBaseline{{
+		Module: ".", Mode: "go-doc", Path: "api/v1.txt", Packages: []string{".", "./manual"},
+	}}}}
+	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{
+		Directory: ".", ModulePath: "example", Gates: map[string]bool{"api_compatibility": true},
+	}}}, Policy: policy, Executor: executor}
+	if err := runner.API(context.Background(), []string{"."}, false); err != nil {
+		t.Fatalf("API(check) error = %v", err)
+	}
+	commands := strings.Join(executor.commands, "\n")
+	if !strings.Contains(commands, "go doc -all .") || !strings.Contains(commands, "go doc -all ./manual") {
+		t.Fatalf("API go-doc commands = %q", commands)
+	}
+
+	executor.apiSnapshot = "updated API\n"
+	if err := runner.API(context.Background(), []string{"."}, true); err != nil {
+		t.Fatalf("API(update) error = %v", err)
+	}
+	updated, err := os.ReadFile(filepath.Join(root, "api", "v1.txt"))
+	if err != nil || string(updated) != "updated API\nupdated API\n" {
+		t.Fatalf("updated baseline = %q, %v", updated, err)
+	}
+}
+
+func TestAPIUpdateRejectsSymlinkedBaselineAncestor(t *testing.T) {
+	root := fixture(t)
+	outside := t.TempDir()
+	if err := os.Symlink(outside, filepath.Join(root, "api")); err != nil {
+		t.Fatal(err)
+	}
+	policy := config.Config{API: config.API{Baselines: []config.APIBaseline{{
+		Module: ".", Mode: "go-doc", Path: "api/contracts/v1.txt", Packages: []string{"."},
+	}}}}
+	runner := gates.Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{
+			Directory: ".", ModulePath: "example", Gates: map[string]bool{"api_compatibility": true},
+		}}},
+		Policy: policy, Executor: &recordingExecutor{apiSnapshot: "documented API\n"},
+	}
+	if err := runner.API(context.Background(), []string{"."}, true); err == nil || !strings.Contains(err.Error(), "real directory") {
+		t.Fatalf("API(update) error = %v", err)
+	}
+	if _, err := os.Lstat(filepath.Join(outside, "contracts", "v1.txt")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("outside baseline exists: %v", err)
 	}
 }
 
@@ -284,6 +342,15 @@ func TestAPIRejectsMissingEmptyIncompatibleAndFailedSnapshots(t *testing.T) {
 	}
 	if err := os.MkdirAll(filepath.Join(root, "api"), 0o700); err != nil {
 		t.Fatal(err)
+	}
+	write(t, filepath.Join(root, "api", "baseline.txt"), strings.Repeat("x", 4<<20+1))
+	if err := runner.API(context.Background(), []string{"."}, false); err == nil || !strings.Contains(err.Error(), "exceeds") {
+		t.Fatalf("API() oversized baseline error = %v", err)
+	}
+	write(t, filepath.Join(root, "api", "baseline.txt"), strings.Repeat("x", 4<<20))
+	runner.Executor = &recordingExecutor{apiSnapshot: "snapshot"}
+	if err := runner.API(context.Background(), []string{"."}, false); err != nil {
+		t.Fatalf("API() exact-size baseline error = %v", err)
 	}
 	write(t, filepath.Join(root, "api", "baseline.txt"), "baseline")
 	runner.Executor = &recordingExecutor{}
@@ -549,6 +616,9 @@ func (executor *recordingExecutor) Run(_ context.Context, command gates.Command)
 		if argument == "-incompatible" && command.Stdout != nil {
 			_, _ = io.WriteString(command.Stdout, executor.apiReport)
 		}
+	}
+	if len(command.Args) >= 2 && command.Args[0] == "doc" && command.Stdout != nil {
+		_, _ = io.WriteString(command.Stdout, executor.apiSnapshot)
 	}
 	if executor.failure != nil && len(executor.commands)-1 == executor.failureAt {
 		return executor.failure

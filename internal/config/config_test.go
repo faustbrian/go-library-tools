@@ -184,6 +184,29 @@ operations:
 	}
 }
 
+func TestLoadAcceptsTypedAPIBaselines(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, ".golib.yaml"), `schema_version: 1
+tool_version: v1.0.0
+api:
+  baselines:
+    - module: .
+      mode: go-doc
+      path: api/v1.txt
+      packages: [., ./manual]
+    - module: integration/reference
+      mode: apidiff
+      path: integration/reference/api/v1.export
+`)
+	got, err := config.Load(root)
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if len(got.API.Baselines) != 2 || got.API.Baselines[0].Packages[1] != "./manual" {
+		t.Fatalf("Load() API baselines = %#v", got.API.Baselines)
+	}
+}
+
 func TestLoadAcceptsNestedModuleOperations(t *testing.T) {
 	root := t.TempDir()
 	write(t, filepath.Join(root, ".golib.yaml"), `schema_version: 1
@@ -260,6 +283,30 @@ func TestLoadRejectsInvalidTypedOperations(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			root := t.TempDir()
 			write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\noperations:\n  - "+operation+"\n")
+			if _, err := config.Load(root); !errors.Is(err, config.ErrInvalid) {
+				t.Fatalf("Load() error = %v", err)
+			}
+		})
+	}
+}
+
+func TestLoadRejectsInvalidAPIBaselines(t *testing.T) {
+	tests := map[string]string{
+		"duplicate":            "- module: .\n      mode: apidiff\n      path: api/a.txt\n    - module: .\n      mode: apidiff\n      path: api/b.txt",
+		"escaping module":      "- module: ../other\n      mode: apidiff\n      path: api/v1.txt",
+		"escaping path":        "- module: .\n      mode: apidiff\n      path: ../api.txt",
+		"directory path":       "- module: .\n      mode: apidiff\n      path: .",
+		"missing module":       "- mode: apidiff\n      path: api/v1.txt",
+		"missing doc packages": "- module: .\n      mode: go-doc\n      path: api/v1.txt",
+		"apidiff packages":     "- module: .\n      mode: apidiff\n      path: api/v1.txt\n      packages: [.]",
+		"invalid doc package":  "- module: .\n      mode: go-doc\n      path: api/v1.txt\n      packages: ['-all']",
+		"unknown mode":         "- module: .\n      mode: shell\n      path: api/v1.txt",
+		"wildcard package":     "- module: .\n      mode: go-doc\n      path: api/v1.txt\n      packages: [./...]",
+	}
+	for name, baselines := range tests {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\napi:\n  baselines:\n    "+baselines+"\n")
 			if _, err := config.Load(root); !errors.Is(err, config.ErrInvalid) {
 				t.Fatalf("Load() error = %v", err)
 			}

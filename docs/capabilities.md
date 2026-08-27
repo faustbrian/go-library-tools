@@ -16,7 +16,7 @@ that owns them.
 | mutation scripts and Gremlins patches | native mutation campaign | reports, reviews, approvals |
 | `restore-ci-mutation-evidence.sh` | `golib mutation import` | approved checkpoint archive and ledger |
 | gate evidence and snapshot scripts | content-addressed evidence store | `.verification` records |
-| `check-api-baseline.sh`, `update-api-baseline.sh` | `golib api check`, `golib api update` | API baseline |
+| API scripts using apidiff, go doc, checksums, or Git history | typed `apidiff` or `go-doc` policy through `golib api check` and `golib api update` | explicit API baseline |
 | package Make targets for stress, leak, and lifecycle tests | typed `test` operations | test selectors and bounded repetition |
 | package Make targets for fuzzing | typed `fuzz` operations | target and budget |
 | package Make targets for conformance | typed `conformance` operations | conformance fixtures |

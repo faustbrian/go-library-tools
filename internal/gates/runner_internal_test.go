@@ -472,11 +472,18 @@ func (*fakeCoverageFiles) Remove(string) error { return nil }
 type fakeNamedFile struct {
 	name     string
 	closeErr error
+	writeErr error
+	writeN   int
 }
 
-func (*fakeNamedFile) Write(data []byte) (int, error) { return len(data), nil }
-func (file *fakeNamedFile) Close() error              { return file.closeErr }
-func (file *fakeNamedFile) Name() string              { return file.name }
+func (file *fakeNamedFile) Write(data []byte) (int, error) {
+	if file.writeN > 0 {
+		return file.writeN, file.writeErr
+	}
+	return len(data), file.writeErr
+}
+func (file *fakeNamedFile) Close() error { return file.closeErr }
+func (file *fakeNamedFile) Name() string { return file.name }
 
 func TestOperationCommandSupportsSelectorsAndRejectsUnknownTypes(t *testing.T) {
 	root := t.TempDir()

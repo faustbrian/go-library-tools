@@ -61,6 +61,7 @@ type Runner struct {
 	Output            io.Writer
 	coverageFiles     coverageFileSystem
 	apiFiles          apiFileSystem
+	apiReadBaseline   func(string, string, int64) ([]byte, error)
 	mutationFiles     mutationFileSystem
 	mutationCampaign  mutationCampaignRunner
 	mutationImport    mutationImportRunner

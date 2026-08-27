@@ -4,6 +4,7 @@
   "useGitignore": true,
   "words": [
     "amd64",
+    "apidiff",
     "Actionlint",
     "arm64",
     "CodeQL",

@@ -110,6 +110,17 @@ func Load(root string, policy config.Config) (Inventory, error) {
 		"conformance": "conformance", "docs": "documentation", "fuzz": "fuzz",
 		"test": "tests",
 	}
+	apiOwners := make(map[string]struct{}, len(policy.API.Baselines))
+	for index, baseline := range policy.API.Baselines {
+		module, exists := byDirectory[baseline.Module]
+		if !exists {
+			return Inventory{}, fmt.Errorf("api.baselines[%d] references unknown module %q", index, baseline.Module)
+		}
+		if !module.Gates["api_compatibility"] {
+			return Inventory{}, fmt.Errorf("api.baselines[%d] is not enabled for module %q", index, baseline.Module)
+		}
+		apiOwners[baseline.Module] = struct{}{}
+	}
 	declaredOperations := make(map[string]struct{}, len(policy.Operations))
 	for index, operation := range policy.Operations {
 		module, exists := byDirectory[operation.Module]
@@ -122,6 +133,11 @@ func Load(root string, policy config.Config) (Inventory, error) {
 		}
 		if !enabled {
 			return Inventory{}, fmt.Errorf("operations[%d] gate %q is not enabled for module %q", index, operation.Gate, operation.Module)
+		}
+		if operation.Gate == "api" {
+			if _, exists := apiOwners[operation.Module]; exists {
+				return Inventory{}, fmt.Errorf("module %q has two API gate owners", operation.Module)
+			}
 		}
 		declaredOperations[operation.Module+"\x00"+operation.Gate] = struct{}{}
 	}

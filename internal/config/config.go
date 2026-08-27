@@ -38,6 +38,7 @@ type Config struct {
 	Manifests     Manifests   `json:"manifest" yaml:"manifest,omitempty"`
 	Evidence      Evidence    `json:"evidence" yaml:"evidence,omitempty"`
 	Mutation      Mutation    `json:"mutation" yaml:"mutation,omitempty"`
+	API           API         `json:"api,omitzero" yaml:"api,omitempty"`
 	Runtimes      Runtimes    `json:"runtimes" yaml:"runtimes,omitempty"`
 	Operations    []Operation `json:"operations,omitempty" yaml:"operations,omitempty"`
 }
@@ -56,6 +57,19 @@ type Evidence struct {
 // Mutation identifies repository-owned reports, checkpoints, and reviews.
 type Mutation struct {
 	Root string `json:"root" yaml:"root,omitempty"`
+}
+
+// API identifies module-specific exported API baseline formats and locations.
+type API struct {
+	Baselines []APIBaseline `json:"baselines,omitempty" yaml:"baselines,omitempty"`
+}
+
+// APIBaseline defines one module's repository-owned compatibility baseline.
+type APIBaseline struct {
+	Module   string   `json:"module" yaml:"module"`
+	Mode     string   `json:"mode" yaml:"mode"`
+	Path     string   `json:"path" yaml:"path"`
+	Packages []string `json:"packages,omitempty" yaml:"packages,omitempty"`
 }
 
 // Runtimes declares exact non-Go executables required by repository tests.
@@ -185,6 +199,16 @@ func (value Config) validate() error {
 		return fmt.Errorf("%w: runtimes.zsh supports only 5.9", ErrInvalid)
 	}
 	seen := make(map[string]struct{}, len(value.Operations))
+	apiModules := make(map[string]struct{}, len(value.API.Baselines))
+	for index, baseline := range value.API.Baselines {
+		if err := baseline.validate(); err != nil {
+			return fmt.Errorf("%w: api.baselines[%d]: %s", ErrInvalid, index, err.Error())
+		}
+		if _, exists := apiModules[baseline.Module]; exists {
+			return fmt.Errorf("%w: api.baselines[%d]: duplicate module", ErrInvalid, index)
+		}
+		apiModules[baseline.Module] = struct{}{}
+	}
 	for index, operation := range value.Operations {
 		if err := operation.validate(); err != nil {
 			return fmt.Errorf("%w: operations[%d]: %s", ErrInvalid, index, err.Error())
@@ -194,6 +218,42 @@ func (value Config) validate() error {
 			return fmt.Errorf("%w: operations[%d]: duplicate module and gate", ErrInvalid, index)
 		}
 		seen[identity] = struct{}{}
+	}
+	return nil
+}
+
+func (baseline APIBaseline) validate() error {
+	if baseline.Module == "" {
+		return errors.New("module is required")
+	}
+	if err := validateRelativePath(baseline.Module); err != nil && baseline.Module != "." {
+		return fmt.Errorf("module: %w", err)
+	}
+	if err := validateRelativePath(baseline.Path); err != nil {
+		return fmt.Errorf("path: %w", err)
+	}
+	if filepath.Clean(baseline.Path) == "." {
+		return errors.New("path must identify a repository file")
+	}
+	switch baseline.Mode {
+	case "apidiff":
+		if len(baseline.Packages) != 0 {
+			return errors.New("apidiff mode does not accept packages")
+		}
+	case "go-doc":
+		if len(baseline.Packages) == 0 {
+			return errors.New("go-doc mode requires packages")
+		}
+		for _, packagePattern := range baseline.Packages {
+			if err := validatePackagePattern(packagePattern); err != nil {
+				return fmt.Errorf("go-doc package %q: %w", packagePattern, err)
+			}
+			if strings.HasSuffix(packagePattern, "/...") {
+				return fmt.Errorf("go-doc package %q: recursive wildcards are not supported", packagePattern)
+			}
+		}
+	default:
+		return fmt.Errorf("unsupported mode %q", baseline.Mode)
 	}
 	return nil
 }

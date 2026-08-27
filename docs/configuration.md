@@ -15,6 +15,11 @@ evidence:
   root: .verification
 mutation:
   root: .verification/mutation
+api:
+  baselines:
+    - module: .
+      mode: apidiff
+      path: api/v1.export
 runtimes:
   deno: 2.9.4
   zsh: "5.9"
@@ -24,6 +29,14 @@ Defaults match the example paths. `modules.json` owns module identity, Go
 version, lifecycle, gates, tags, services, and release metadata.
 `packages.json` owns package classification. Configuration references those
 facts rather than duplicating them.
+
+`api.baselines` assigns at most one API policy to each module. `apidiff` mode
+tracks incompatible exported API changes against a repository-relative
+baseline. `go-doc` mode compares an exact normalized documentation snapshot
+for an explicit package list and is intended for repositories whose existing
+contract includes exported documentation. The API update command writes either
+format atomically. Checksum-only and Git-history scripts migrate to explicit
+baseline files; they do not remain executable hooks.
 
 `runtimes` declares exact non-Go executables used by repository tests. Deno is
 installed at the declared semantic version. The current zsh fixture supports

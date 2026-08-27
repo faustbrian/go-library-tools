@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 )
 
@@ -21,10 +22,13 @@ func TestAPIModuleReportsFilesystemFailures(t *testing.T) {
 		files  *fakeAPIFiles
 		want   string
 	}{
-		{"mkdir", true, &fakeAPIFiles{mkdirErr: failure}, "create API baseline directory"},
+		{"mkdir", true, &fakeAPIFiles{mkdirErr: failure, missingDirectory: true}, "create API baseline directory"},
 		{"inspect directory", true, &fakeAPIFiles{lstatErr: failure}, "not a real directory"},
+		{"nil directory", true, &fakeAPIFiles{nilInfo: true}, "not a real directory"},
+		{"nil baseline", false, &fakeAPIFiles{nilInfo: true}, "missing API baseline"},
 		{"create", false, &fakeAPIFiles{createErr: failure}, "create API snapshot"},
 		{"close", false, &fakeAPIFiles{file: &fakeNamedFile{name: "snapshot", closeErr: failure}}, "close API snapshot"},
+		{"nil snapshot", false, &fakeAPIFiles{nilSnapshotInfo: true}, "is empty"},
 		{"rename", true, &fakeAPIFiles{file: &fakeNamedFile{name: "snapshot"}, renameErr: failure}, "publish API baseline"},
 	}
 	for _, test := range tests {
@@ -100,6 +104,9 @@ func TestAPIDisabledModuleDoesNotStopLaterEnabledModule(t *testing.T) {
 			runs++
 			return nil
 		}),
+		Policy: config.Config{API: config.API{Baselines: []config.APIBaseline{{
+			Module: "z-enabled", Mode: "apidiff", Path: "api/baseline.txt",
+		}}}},
 		apiFiles: files,
 	}
 	if err := runner.API(context.Background(), []string{"a-disabled", "z-enabled"}, false); err != nil {
@@ -117,6 +124,94 @@ func TestBoundedBufferAcceptsContentWithinLimit(t *testing.T) {
 	}
 }
 
+func TestAPIBaselineDirectoryMustRemainBelowRoot(t *testing.T) {
+	files := &fakeAPIFiles{}
+	if err := ensureAPIBaselineDirectory(files, "/repo", ".", false); err != nil {
+		t.Fatalf("ensureAPIBaselineDirectory(root) error = %v", err)
+	}
+	if err := ensureAPIBaselineDirectory(files, "/repo", "../outside", false); err == nil || !strings.Contains(err.Error(), "below repository root") {
+		t.Fatalf("ensureAPIBaselineDirectory(outside) error = %v", err)
+	}
+	if err := ensureAPIBaselineDirectory(files, "/repo", "/absolute", false); err == nil || !strings.Contains(err.Error(), "below repository root") {
+		t.Fatalf("ensureAPIBaselineDirectory(absolute) error = %v", err)
+	}
+	missing := &fakeAPIFiles{missingDirectory: true}
+	if err := ensureAPIBaselineDirectory(missing, "/repo", "api", false); err == nil || missing.directoryCreated {
+		t.Fatalf("ensureAPIBaselineDirectory(missing) error = %v, created = %v", err, missing.directoryCreated)
+	}
+}
+
+func TestGoDocAPISnapshotReportsGenerationFailures(t *testing.T) {
+	failure := errors.New("injected failure")
+	tests := []struct {
+		name     string
+		executor Executor
+		file     *fakeNamedFile
+		want     string
+	}{
+		{"command", executorFunction(func(context.Context, Command) error { return failure }), &fakeNamedFile{name: "snapshot"}, "generate API documentation"},
+		{"overflow", executorFunction(func(_ context.Context, command Command) error {
+			_, _ = command.Stdout.Write(make([]byte, maximumAPIOutput+1))
+			return nil
+		}), &fakeNamedFile{name: "snapshot"}, "exceeded"},
+		{"empty", executorFunction(func(context.Context, Command) error { return nil }), &fakeNamedFile{name: "snapshot"}, "is empty"},
+		{"write", executorFunction(func(_ context.Context, command Command) error {
+			_, _ = io.WriteString(command.Stdout, "API")
+			return nil
+		}), &fakeNamedFile{name: "snapshot", writeErr: failure}, "write API documentation"},
+		{"short write", executorFunction(func(_ context.Context, command Command) error {
+			_, _ = io.WriteString(command.Stdout, "API")
+			return nil
+		}), &fakeNamedFile{name: "snapshot", writeN: 1}, "short write"},
+		{"close", executorFunction(func(_ context.Context, command Command) error {
+			_, _ = io.WriteString(command.Stdout, "API")
+			return nil
+		}), &fakeNamedFile{name: "snapshot", closeErr: failure}, "close API snapshot"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			runner := Runner{Executor: test.executor}
+			_, err := runner.generateAPISnapshot(context.Background(), "/repo", test.file, test.file.name,
+				inventory.Module{Directory: ".", ModulePath: "example"},
+				config.APIBaseline{Mode: "go-doc", Packages: []string{"."}})
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("generateAPISnapshot() error = %v", err)
+			}
+		})
+	}
+}
+
+func TestGoDocAPIModuleRejectsUnreadableAndDifferentBaselines(t *testing.T) {
+	failure := errors.New("injected failure")
+	for name, test := range map[string]struct {
+		read func(string, string, int64) ([]byte, error)
+		want string
+	}{
+		"read": {read: func(string, string, int64) ([]byte, error) { return nil, failure }, want: "read API baseline"},
+		"different": {read: func(string, string, int64) ([]byte, error) {
+			return []byte("different\n"), nil
+		}, want: "documentation differs"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			runner := Runner{
+				Root: "/repo",
+				Policy: config.Config{API: config.API{Baselines: []config.APIBaseline{{
+					Module: ".", Mode: "go-doc", Path: "api/v1.txt", Packages: []string{"."},
+				}}}},
+				Executor: executorFunction(func(_ context.Context, command Command) error {
+					_, _ = io.WriteString(command.Stdout, "API")
+					return nil
+				}),
+				apiFiles: &fakeAPIFiles{}, apiReadBaseline: test.read,
+			}
+			err := runner.apiModule(context.Background(), io.Discard, inventory.Module{Directory: ".", ModulePath: "example"}, false)
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("apiModule() error = %v", err)
+			}
+		})
+	}
+}
+
 type fakeAPIFiles struct {
 	file             namedWriteCloser
 	mkdirErr         error
@@ -124,15 +219,33 @@ type fakeAPIFiles struct {
 	renameErr        error
 	createdDirectory string
 	lstatErr         error
+	missingDirectory bool
+	directoryCreated bool
+	nilInfo          bool
+	nilSnapshotInfo  bool
 }
 
 func (files *fakeAPIFiles) Lstat(path string) (os.FileInfo, error) {
 	if files.lstatErr != nil {
 		return nil, files.lstatErr
 	}
+	if files.nilInfo {
+		return nil, nil
+	}
+	if files.nilSnapshotInfo && path == "snapshot" {
+		return nil, nil
+	}
+	if files.missingDirectory && strings.HasSuffix(path, "/api") && !files.directoryCreated {
+		return nil, os.ErrNotExist
+	}
 	return apiFileInfo{directory: strings.HasSuffix(path, "/api")}, nil
 }
-func (files *fakeAPIFiles) MkdirAll(string, os.FileMode) error { return files.mkdirErr }
+func (files *fakeAPIFiles) MkdirAll(string, os.FileMode) error {
+	if files.mkdirErr == nil {
+		files.directoryCreated = true
+	}
+	return files.mkdirErr
+}
 func (files *fakeAPIFiles) CreateTemp(directory, _ string) (namedWriteCloser, error) {
 	files.createdDirectory = directory
 	if files.file == nil {
