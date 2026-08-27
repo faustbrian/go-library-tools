@@ -96,6 +96,13 @@ func TestSharedParityUsesRepresentativeGoVersionForConsumerGates(t *testing.T) {
 	}
 }
 
+func TestParityWorkflowUsesActionsPathChannelForGoWrapper(t *testing.T) {
+	content := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
+	if count := strings.Count(content, `"${GITHUB_ENV}" "${GITHUB_PATH}"`); count != 2 {
+		t.Fatalf("parity wrapper path exports = %d, want legacy and shared", count)
+	}
+}
+
 func TestSetupActionVerifiesReleasedArtifactBeforeExtraction(t *testing.T) {
 	content := readProjectFile(t, ".github/actions/setup-golib/action.yml")
 	checksumSet := strings.Contains(content, "tool_checksums_sha256:")

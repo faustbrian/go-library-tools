@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 2 ]]; then
-    printf 'usage: %s <task-root> <environment-output>\n' "$0" >&2
+if [[ $# -ne 3 ]]; then
+    printf 'usage: %s <task-root> <environment-output> <path-output>\n' "$0" >&2
     exit 2
 fi
 
 task_root="$1"
 environment_output="$2"
+path_output="$3"
 source_root="$(pwd -P)"
 real_go="$(command -v go)"
 module_map="${task_root}/modules.tsv"
@@ -257,7 +258,9 @@ done
     printf 'GOLIB_REHEARSAL_REAL_GO=%s\n' "${real_go}"
     printf 'GOLIB_REHEARSAL_MODULE_MAP=%s\n' "${module_map}"
     printf 'GOLIB_REHEARSAL_EXECUTION_DIRECTORY=%s\n' "${task_root}/execution"
+    printf 'GOLIB_REAL_GO=%s\n' "${wrapper_directory}/go"
     printf 'GOFLAGS=%s%s-modfile=%s\n' \
         "${base_flags}" "${base_flags:+ }" "${root_alternate_mod}"
     printf 'PATH=%s:%s\n' "${wrapper_directory}" "${PATH}"
 } >>"${environment_output}"
+printf '%s\n' "${wrapper_directory}" >>"${path_output}"

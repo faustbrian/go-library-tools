@@ -17,6 +17,9 @@ All notable changes to this project are documented in this file.
 - Injected refreshed standalone dependency checksums into per-process execution
   module-file copies, leaving source-comparable sums unchanged under overlapping
   commands.
+- Routed copied legacy tooling's explicit Go entrypoint through the rehearsal
+  wrapper and exported that wrapper through the GitHub Actions path channel so
+  checksum isolation applies consistently.
 - Kept shared compatibility gates on each representative repository's declared
   Go version while allowing the source CLI build to select its required toolchain.
 - Serialized package tests inside mutation campaigns so deadline behavior is

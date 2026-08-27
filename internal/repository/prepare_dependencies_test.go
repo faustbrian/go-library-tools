@@ -94,11 +94,20 @@ exit 1
 `)
 
 	environmentFile := filepath.Join(root, "environment")
-	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task, environmentFile)
+	pathFile := filepath.Join(root, "path")
+	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task, environmentFile, pathFile)
 	command.Dir = root
 	command.Env = append(os.Environ(), "PATH="+fakeBin+":"+os.Getenv("PATH"))
 	if output, err := command.CombinedOutput(); err != nil {
 		t.Fatalf("prepare dependencies: %v\n%s", err, output)
+	}
+	environment := readEnvironment(t, environmentFile)
+	wrapperPath := filepath.Join(task, "bin", "go")
+	if !slices.Contains(environment, "GOLIB_REAL_GO="+wrapperPath) {
+		t.Fatalf("legacy Go entrypoint does not select task-owned wrapper: %v", environment)
+	}
+	if path := strings.TrimSpace(readRehearsalFile(t, pathFile)); path != filepath.Join(task, "bin") {
+		t.Fatalf("Go wrapper path = %q, want task-owned wrapper directory", path)
 	}
 
 	activeMod := filepath.Join(isolated, "state", "isolated.mod")
@@ -110,9 +119,9 @@ exit 1
 	}, "\n")+"\n")
 	writeRehearsalFile(t, filepath.Join(localProxy, "github.com", "faustbrian", "go-local", "@v", "v1.0.0.zip"), "local archive")
 
-	wrapper := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "rehearsal-command")
+	wrapper := exec.CommandContext(t.Context(), wrapperPath, "rehearsal-command")
 	wrapper.Dir = root
-	wrapper.Env = append(os.Environ(), readEnvironment(t, environmentFile)...)
+	wrapper.Env = append(os.Environ(), environment...)
 	wrapper.Env = append(wrapper.Env,
 		"GOFLAGS=-modfile="+activeMod,
 		"GOLIB_ISOLATED_MODFILES_DIRECTORY="+isolated,
@@ -243,7 +252,8 @@ fi
 printf 'unexpected fake go invocation: %s\n' "$*" >&2
 exit 1
 `)
-	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task, filepath.Join(root, "environment"))
+	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task,
+		filepath.Join(root, "environment"), filepath.Join(root, "path"))
 	command.Dir = root
 	command.Env = append(os.Environ(), "PATH="+fakeBin+":"+os.Getenv("PATH"))
 	if output, err := command.CombinedOutput(); err != nil {

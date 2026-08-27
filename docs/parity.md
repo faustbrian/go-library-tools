@@ -30,7 +30,10 @@ The rehearsal wrapper injects current standalone dependency checksums into a
 per-process module-file copy and removes that copy on success, failure, or
 cancellation. Versioned external tools run without consumer module flags.
 Tracked source, source-comparable sums, and copied legacy tooling remain
-unchanged, including when child commands overlap.
+unchanged, including when child commands overlap. Legacy tooling's explicit Go
+entrypoint is directed through the same wrapper rather than bypassing it, and
+GitHub Actions receives the wrapper through its dedicated executable-path
+channel.
 
 Shared rehearsals install the representative repository's declared Go version
 once. The source CLI build may use Go's automatic toolchain selection for its
