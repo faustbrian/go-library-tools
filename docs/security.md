@@ -18,6 +18,11 @@ empty or malformed output, and verifies the CycloneDX format and specification
 version. This gate proves that the current module graph can produce a valid
 SBOM; release workflows separately publish attestable SBOM artifacts.
 
+GitHub Actions workflows are checked with a pinned Actionlint release, and
+pull requests run GitHub's dependency review action from an immutable commit.
+The final required job accepts dependency review as skipped only for events
+that are not pull requests.
+
 The tool executes repository tests and approved external analyzers. A repository
 maintainer must therefore treat gate execution as code execution and must not
 run untrusted pull-request code with secrets or write-capable credentials.

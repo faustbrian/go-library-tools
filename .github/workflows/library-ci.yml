@@ -21,6 +21,15 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+
   prepare:
     name: Select modules
     runs-on: ubuntu-24.04
@@ -201,12 +210,13 @@ jobs:
   required:
     name: Required
     if: always()
-    needs: [prepare, repository-contract, quality, codeql]
+    needs: [dependency-review, prepare, repository-contract, quality, codeql]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Require every repository result
         env:
+          DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
           PREPARE_RESULT: ${{ needs.prepare.result }}
           CONTRACT_RESULT: ${{ needs.repository-contract.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
@@ -216,3 +226,4 @@ jobs:
           for result in "${PREPARE_RESULT}" "${CONTRACT_RESULT}" "${QUALITY_RESULT}" "${CODEQL_RESULT}"; do
             [[ "${result}" == success ]]
           done
+          [[ "${DEPENDENCY_REVIEW_RESULT}" == success || "${DEPENDENCY_REVIEW_RESULT}" == skipped ]]

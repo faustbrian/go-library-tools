@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: build check ci config inventory repository-check
+.PHONY: build check ci config inventory repository-check workflows
 
 define run_go
 	task="$$(mktemp -d "$${TMPDIR:-/tmp}/go-library-tools-make.XXXXXX")"; \
@@ -18,7 +18,10 @@ config:
 inventory repository-check:
 	$(call run_go,run ./cmd/golib repository check)
 
+workflows:
+	$(call run_go,run ./cmd/golib workflows check)
+
 check:
 	$(call run_go,run ./cmd/golib check --all)
 
-ci: repository-check check
+ci: repository-check workflows check

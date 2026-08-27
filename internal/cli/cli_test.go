@@ -18,7 +18,7 @@ func TestExecuteShowsHelp(t *testing.T) {
 	if code != 0 || stderr.Len() != 0 {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
-	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "repository check", "release dry-run"} {
+	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "repository check", "workflows check", "release dry-run"} {
 		if !strings.Contains(stdout.String(), command) {
 			t.Errorf("help does not contain %q", command)
 		}

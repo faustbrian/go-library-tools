@@ -12,6 +12,8 @@ Core commands:
 - `golib config show --json` emits normalized policy for workflow orchestration.
 - `golib inventory [--json]` prints the canonical module inventory.
 - `golib repository check` validates standalone repository structure.
+- `golib workflows check` validates GitHub Actions workflows with the centrally
+  pinned Actionlint release.
 - `golib check [--all|--module DIR]` runs the enabled contract.
 - `golib coverage [--module DIR]` verifies exact package coverage.
 - `golib mutation [--module DIR]` verifies or executes mutation evidence.

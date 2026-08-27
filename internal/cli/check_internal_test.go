@@ -38,6 +38,30 @@ func TestExecuteReportsExecutorCreationAndCleanupFailures(t *testing.T) {
 	}
 }
 
+func TestExecuteRoutesWorkflowChecks(t *testing.T) {
+	root := internalFixture(t)
+	var command gates.Command
+	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return cliExecutorFunction(func(_ context.Context, value gates.Command) error {
+			command = value
+			return nil
+		}), func() error { return nil }, nil
+	}
+	var stdout, stderr bytes.Buffer
+	if code := execute([]string{"workflows", "check"}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 {
+		t.Fatalf("execute(workflows check) = %d, %q", code, stderr.String())
+	}
+	if command.Name != "go" || command.Dir != root || !strings.Contains(strings.Join(command.Args, " "), "actionlint@v1.7.12") {
+		t.Fatalf("workflow command = %#v", command)
+	}
+	for _, args := range [][]string{{"workflows"}, {"workflows", "lint"}, {"workflows", "check", "extra"}} {
+		stderr.Reset()
+		if code := execute(args, root, &stdout, &stderr, factory); code != 2 || !strings.Contains(stderr.String(), "usage: golib workflows") {
+			t.Fatalf("execute(%v) = %d, %q", args, code, stderr.String())
+		}
+	}
+}
+
 func TestExecuteRoutesAPICheckAndUpdate(t *testing.T) {
 	root := internalFixture(t)
 	if err := os.Mkdir(filepath.Join(root, "api"), 0o700); err != nil {
@@ -230,6 +254,12 @@ func TestExecuteReportsReleaseContractFailures(t *testing.T) {
 type successfulExecutor struct{}
 
 func (successfulExecutor) Run(context.Context, gates.Command) error { return nil }
+
+type cliExecutorFunction func(context.Context, gates.Command) error
+
+func (function cliExecutorFunction) Run(ctx context.Context, command gates.Command) error {
+	return function(ctx, command)
+}
 
 type cliWorkspaceExecutor struct {
 	directory string

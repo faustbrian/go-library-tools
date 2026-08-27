@@ -16,6 +16,15 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+
   quality:
     name: Quality
     runs-on: ubuntu-24.04
@@ -72,11 +81,15 @@ jobs:
   required:
     name: Required
     if: always()
-    needs: [quality, codeql]
+    needs: [dependency-review, quality, codeql]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - env:
+          DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
           CODEQL_RESULT: ${{ needs.codeql.result }}
-        run: test "${QUALITY_RESULT}" = success -a "${CODEQL_RESULT}" = success
+        run: |
+          test "${QUALITY_RESULT}" = success
+          test "${CODEQL_RESULT}" = success
+          test "${DEPENDENCY_REVIEW_RESULT}" = success -o "${DEPENDENCY_REVIEW_RESULT}" = skipped

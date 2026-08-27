@@ -48,6 +48,10 @@ Consumer workflows retain least-privileged permissions, explicit concurrency,
 module matrices, attributable evidence artifacts, scheduled checks, CodeQL,
 release dry-runs, and one stable final required job.
 
+Pull-request runs review dependency changes before the final required job.
+Workflow syntax and expression validation are available locally through
+`golib workflows check` and run as part of the repository `make ci` contract.
+
 Tool version, binary checksum, setup-action SHA, and reusable-workflow SHA are
 updated together through reviewable pull requests. Existing consumers do not
 change behavior when a new tooling release is published.

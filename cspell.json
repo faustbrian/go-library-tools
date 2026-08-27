@@ -4,6 +4,7 @@
   "useGitignore": true,
   "words": [
     "amd64",
+    "Actionlint",
     "arm64",
     "CodeQL",
     "CycloneDX",

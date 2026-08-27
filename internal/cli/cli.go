@@ -28,6 +28,7 @@ Usage:
 	golib config show --json
   golib inventory [--json]
   golib repository check
+  golib workflows check
   golib coverage [--module <directory>]
   golib mutation [--module <directory>]
 	golib mutation import --module <directory> --archive <path> --ledger <path>
@@ -109,6 +110,13 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 		}
 		_, _ = io.WriteString(stdout, "standalone repository contract passed\n")
 		return 0
+	case "workflows":
+		if len(args) != 2 || args[1] != "check" {
+			return usage(stderr, "usage: golib workflows check")
+		}
+		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
+			return (gates.Runner{Root: root, Executor: executor, Output: stdout}).Workflows(context.Background())
+		})
 	case "inventory":
 		if len(args) == 1 {
 			_, _ = fmt.Fprintf(stdout, "%s: %d module(s)\n", catalog.Repository, len(catalog.Modules))
