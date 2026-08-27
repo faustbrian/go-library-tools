@@ -11,6 +11,8 @@ Core commands:
 - `golib config validate` validates configuration and both manifests.
 - `golib config show --json` emits normalized policy for workflow orchestration.
 - `golib inventory [--json]` prints the canonical module inventory.
+- `golib consumers validate [--json]` validates the maintained consumer
+  inventory and reports active, deferred, and tooling repository counts.
 - `golib repository check` validates standalone repository structure.
 - `golib workflows check` validates GitHub Actions workflows with the centrally
   pinned Actionlint release.

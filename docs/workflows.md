@@ -56,5 +56,14 @@ Tool version, binary checksum, setup-action SHA, and reusable-workflow SHA are
 updated together through reviewable pull requests. Existing consumers do not
 change behavior when a new tooling release is published.
 
+The manually dispatched `Propose consumer upgrades` workflow performs those
+updates in bounded cohorts from the validated
+[consumer inventory](consumers.md). It defaults to a read-only dry run, limits
+each cohort to ten active repositories and five concurrent jobs, and opens one
+pull request per changed consumer. Apply mode requires the separately managed
+fine-grained `GOLIB_ROLLOUT_TOKEN`; the repository-scoped workflow token cannot
+write to sibling repositories. The workflow changes only `.golib.yaml` and the
+thin CI caller and never force-pushes an existing rollout branch.
+
 This repository bootstraps its own CI from source so the first release does not
 depend on itself. Consumer repositories always use released binaries.

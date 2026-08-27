@@ -1,0 +1,200 @@
+name: Propose consumer upgrades
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Exact released golib version
+        required: true
+        type: string
+      workflow_sha:
+        description: Immutable release commit containing the reusable workflow
+        required: true
+        type: string
+      checksums_sha256:
+        description: SHA-256 digest of the release checksums.txt asset
+        required: true
+        type: string
+      cohort:
+        description: JSON array of 1-10 active repository names
+        required: true
+        type: string
+      dry_run:
+        description: Plan without branches or pull requests
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-library-consumer-upgrades
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Validate cohort
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: false
+      - name: Build source CLI
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-rollout-plan.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            go build -trimpath -buildvcs=false -o "${RUNNER_TEMP}/golib" ./cmd/golib
+      - id: plan
+        name: Validate inventory and bounded cohort
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COHORT: ${{ inputs.cohort }}
+          VERSION: ${{ inputs.version }}
+          WORKFLOW_SHA: ${{ inputs.workflow_sha }}
+          CHECKSUMS_SHA256: ${{ inputs.checksums_sha256 }}
+        run: |
+          set -euo pipefail
+          [[ "${VERSION}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          [[ "${WORKFLOW_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${CHECKSUMS_SHA256}" =~ ^[0-9a-f]{64}$ ]]
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-release-coordinates.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          git fetch --no-tags --depth=1 origin "refs/tags/${VERSION}:refs/tags/${VERSION}"
+          [[ "$(git rev-list -n 1 "${VERSION}")" == "${WORKFLOW_SHA}" ]]
+          gh release download "${VERSION}" --pattern checksums.txt --dir "${task}"
+          actual_checksums_sha256="$(sha256sum "${task}/checksums.txt" | awk '{print $1}')"
+          [[ "${actual_checksums_sha256}" == "${CHECKSUMS_SHA256}" ]]
+          inventory="$(${RUNNER_TEMP}/golib consumers validate --json)"
+          matrix="$(jq -cne \
+            --argjson inventory "${inventory}" \
+            --argjson cohort "${COHORT}" '
+              if ($cohort | type) != "array" or ($cohort | length) < 1 or ($cohort | length) > 10 then
+                error("cohort must contain 1-10 repositories")
+              elif all($cohort[]; type == "string") | not then
+                error("cohort entries must be repository names")
+              elif ($cohort | unique | length) != ($cohort | length) then
+                error("cohort contains duplicate repositories")
+              else
+                [$cohort[] as $name |
+                  ($inventory.repositories | map(select(.name == $name and .classification == "active"))) as $matches |
+                  if ($matches | length) != 1 then error("repository is not an active consumer: " + $name)
+                  else $matches[0]
+                  end]
+              end
+            ')"
+          echo "matrix=${matrix}" >>"${GITHUB_OUTPUT}"
+          jq -r '.[] | "- `" + .name + "` from `" + .default_branch + "`"' <<<"${matrix}" >>"${GITHUB_STEP_SUMMARY}"
+
+  propose:
+    name: ${{ inputs.dry_run && 'Plan' || 'Propose' }} / ${{ matrix.name }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          ref: ${{ inputs.workflow_sha }}
+          path: tooling
+          persist-credentials: false
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: tooling/.go-version
+          cache: false
+      - name: Build rollout CLI
+        working-directory: tooling
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-rollout-build.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            go build -trimpath -buildvcs=false -o "${RUNNER_TEMP}/golib" ./cmd/golib
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: faustbrian/${{ matrix.name }}
+          ref: ${{ matrix.default_branch }}
+          path: consumer
+          token: ${{ secrets.GOLIB_ROLLOUT_TOKEN || github.token }}
+      - name: Plan coordinated pin update
+        working-directory: consumer
+        env:
+          VERSION: ${{ inputs.version }}
+          WORKFLOW_SHA: ${{ inputs.workflow_sha }}
+          CHECKSUMS_SHA256: ${{ inputs.checksums_sha256 }}
+        run: |
+          set -euo pipefail
+          "${RUNNER_TEMP}/golib" upgrade plan \
+            --version "${VERSION}" \
+            --workflow-sha "${WORKFLOW_SHA}" \
+            --checksums-sha256 "${CHECKSUMS_SHA256}" \
+            --json | tee "${RUNNER_TEMP}/${{ matrix.name }}-upgrade-plan.json"
+      - id: apply
+        name: Apply coordinated pin update
+        if: inputs.dry_run == false
+        working-directory: consumer
+        env:
+          VERSION: ${{ inputs.version }}
+          WORKFLOW_SHA: ${{ inputs.workflow_sha }}
+          CHECKSUMS_SHA256: ${{ inputs.checksums_sha256 }}
+        run: |
+          set -euo pipefail
+          "${RUNNER_TEMP}/golib" upgrade apply \
+            --version "${VERSION}" \
+            --workflow-sha "${WORKFLOW_SHA}" \
+            --checksums-sha256 "${CHECKSUMS_SHA256}"
+          "${RUNNER_TEMP}/golib" config validate
+          changed="$(git diff --name-only)"
+          if [[ -z "${changed}" ]]; then
+            echo 'changed=false' >>"${GITHUB_OUTPUT}"
+          else
+            while IFS= read -r path; do
+              case "${path}" in
+                .github/workflows/ci.yml|.golib.yaml) ;;
+                *) echo "unexpected changed path: ${path}" >&2; exit 1 ;;
+              esac
+            done <<<"${changed}"
+            [[ -z "$(git ls-files --others --exclude-standard)" ]]
+            echo 'changed=true' >>"${GITHUB_OUTPUT}"
+          fi
+      - name: Open pull request
+        if: inputs.dry_run == false && steps.apply.outputs.changed == 'true'
+        working-directory: consumer
+        env:
+          GH_TOKEN: ${{ secrets.GOLIB_ROLLOUT_TOKEN }}
+          VERSION: ${{ inputs.version }}
+          REPOSITORY: faustbrian/${{ matrix.name }}
+          BASE_BRANCH: ${{ matrix.default_branch }}
+        run: |
+          set -euo pipefail
+          [[ -n "${GH_TOKEN}" ]]
+          branch="chore/golib-${VERSION#v}"
+          if git ls-remote --exit-code --heads origin "${branch}" >/dev/null 2>&1; then
+            echo "remote branch already exists: ${branch}" >&2
+            exit 1
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "${branch}"
+          git add .golib.yaml .github/workflows/ci.yml
+          git commit -m "chore: update golib to ${VERSION}"
+          git push origin HEAD
+          gh pr create \
+            --repo "${REPOSITORY}" \
+            --base "${BASE_BRANCH}" \
+            --head "${branch}" \
+            --title "chore: update golib to ${VERSION}" \
+            --body "Update the pinned golib CLI release, checksum set, and immutable reusable workflow together."

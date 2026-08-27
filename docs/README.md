@@ -7,6 +7,7 @@
 - [Verification](verification.md): gates, evidence, coverage, and mutation.
 - [Service fixtures](services.md): supported services and lifecycle safety.
 - [Reusable workflows](workflows.md): immutable CI consumption.
+- [Consumer inventory](consumers.md): maintained repositories and bounded upgrades.
 - [Migration](migration.md): replacing copied `.golib` automation.
 - [Compatibility rehearsals](parity.md): content-identical legacy comparisons.
 - [Development](development.md): building and testing the tool.

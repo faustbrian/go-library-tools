@@ -22,6 +22,11 @@ operations:
         budget: 100x
         timeout: 2m
       - type: go-test
+        packages: [./internal/consumers]
+        fuzz: FuzzConsumerManifest
+        budget: 100x
+        timeout: 2m
+      - type: go-test
         packages: [./internal/docscheck]
         fuzz: FuzzLycheeArchive
         budget: 100x

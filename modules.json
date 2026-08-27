@@ -86,6 +86,18 @@
         },
         {
           "module_directory": ".",
+          "directory": "internal/consumers",
+          "name": "consumers",
+          "import_path": "github.com/faustbrian/go-library-tools/internal/consumers",
+          "kind": "internal",
+          "production": true,
+          "executable": true,
+          "coverage_required": true,
+          "build_required": true,
+          "build_tags": []
+        },
+        {
+          "module_directory": ".",
           "directory": "internal/coverage",
           "name": "coverage",
           "import_path": "github.com/faustbrian/go-library-tools/internal/coverage",

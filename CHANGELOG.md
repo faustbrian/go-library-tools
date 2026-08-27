@@ -77,6 +77,9 @@ All notable changes to this project are documented in this file.
 - Bounded self-hosted fuzz campaigns for every untrusted tooling input family.
 - Self-hosted exact mutation verification with durable content-addressed
   package reports and a repository-owned zero-mutant inventory.
+- A strict maintained consumer inventory with schema validation, CLI reporting,
+  and bounded dry-run-first pull-request automation for coordinated immutable
+  tooling upgrades.
 
 ### Fixed
 

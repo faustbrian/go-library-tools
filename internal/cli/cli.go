@@ -12,6 +12,7 @@ import (
 
 	"github.com/faustbrian/go-library-tools/internal/buildinfo"
 	"github.com/faustbrian/go-library-tools/internal/config"
+	"github.com/faustbrian/go-library-tools/internal/consumers"
 	"github.com/faustbrian/go-library-tools/internal/evidence"
 	"github.com/faustbrian/go-library-tools/internal/gates"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
@@ -28,6 +29,7 @@ Usage:
   golib config validate
 	golib config show --json
   golib inventory [--json]
+	golib consumers validate [--json]
   golib repository check
   golib workflows check
   golib coverage [--module <directory>]
@@ -141,6 +143,28 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		encoder.SetIndent("", "  ")
 		if err := encoder.Encode(catalog); err != nil {
 			return failure(stderr, fmt.Errorf("write inventory: %w", err))
+		}
+		return 0
+	case "consumers":
+		if len(args) < 2 || args[1] != "validate" || (len(args) == 3 && args[2] != "--json") || len(args) > 3 {
+			return usage(stderr, "usage: golib consumers validate [--json]")
+		}
+		manifest, err := consumers.Load(root, "consumers.json")
+		if err != nil {
+			return failure(stderr, err)
+		}
+		summary := manifest.Summary()
+		if len(args) == 3 {
+			encoder := json.NewEncoder(stdout)
+			encoder.SetIndent("", "  ")
+			if err := encoder.Encode(summary); err != nil {
+				return failure(stderr, fmt.Errorf("write consumer inventory: %w", err))
+			}
+			return 0
+		}
+		_, err = fmt.Fprintf(stdout, "consumer inventory valid: %d total, %d active, %d deferred, %d tooling\n", summary.Total, summary.Active, summary.Deferred, summary.Tooling)
+		if err != nil {
+			return failure(stderr, fmt.Errorf("write consumer inventory: %w", err))
 		}
 		return 0
 	case "api":

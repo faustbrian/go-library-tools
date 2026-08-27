@@ -99,6 +99,42 @@ func TestReleaseWorkflowBuildsAndAttestsEverySupportedPlatform(t *testing.T) {
 	}
 }
 
+func TestConsumerUpgradeWorkflowIsBoundedAndReviewable(t *testing.T) {
+	content := readProjectFile(t, ".github/workflows/update-consumers.yml")
+	for _, required := range []string{
+		"workflow_dispatch:",
+		"version:",
+		"workflow_sha:",
+		"checksums_sha256:",
+		"cohort:",
+		"dry_run:",
+		"golib consumers validate --json",
+		"cohort must contain 1-10 repositories",
+		"git fetch --no-tags --depth=1 origin",
+		"gh release download",
+		"actual_checksums_sha256",
+		"ref: ${{ inputs.workflow_sha }}",
+		"max-parallel: 5",
+		"if: inputs.dry_run == false",
+		"GOLIB_ROLLOUT_TOKEN",
+		"git add .golib.yaml .github/workflows/ci.yml",
+		"git ls-files --others --exclude-standard",
+		"gh pr create",
+	} {
+		if !strings.Contains(content, required) {
+			t.Errorf("consumer upgrade workflow lacks %q", required)
+		}
+	}
+	for _, forbidden := range []string{"--force", "git add --all", "git add -A", "@main", "cancel-in-progress: true"} {
+		if strings.Contains(content, forbidden) {
+			t.Errorf("consumer upgrade workflow contains forbidden %q", forbidden)
+		}
+	}
+	if regexp.MustCompile(`(?m)^\s*git add \.\s*$`).MatchString(content) {
+		t.Error("consumer upgrade workflow contains wholesale staging")
+	}
+}
+
 func projectRoot(t *testing.T) string {
 	t.Helper()
 	_, source, _, ok := runtime.Caller(0)

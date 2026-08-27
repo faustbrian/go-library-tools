@@ -18,7 +18,7 @@ func TestExecuteShowsHelp(t *testing.T) {
 	if code != 0 || stderr.Len() != 0 {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
-	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "repository check", "workflows check", "release dry-run", "upgrade <plan|apply>"} {
+	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "workflows check", "release dry-run", "upgrade <plan|apply>"} {
 		if !strings.Contains(stdout.String(), command) {
 			t.Errorf("help does not contain %q", command)
 		}
@@ -94,6 +94,24 @@ func TestExecutePrintsHumanInventory(t *testing.T) {
 	code := cli.Execute([]string{"inventory"}, root, &stdout, &stderr)
 	if code != 0 || stderr.Len() != 0 || stdout.String() != "github.com/faustbrian/example: 1 module(s)\n" {
 		t.Fatalf("Execute() code = %d, stdout = %q, stderr = %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteValidatesConsumerInventory(t *testing.T) {
+	root := fixture(t)
+	writeConsumerInventory(t, root)
+	for _, test := range []struct {
+		args []string
+		want string
+	}{
+		{[]string{"consumers", "validate"}, "2 total, 1 active, 0 deferred, 1 tooling"},
+		{[]string{"consumers", "validate", "--json"}, `"active": 1`},
+	} {
+		var stdout, stderr bytes.Buffer
+		code := cli.Execute(test.args, root, &stdout, &stderr)
+		if code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), test.want) {
+			t.Fatalf("Execute(%v) = %d, %q, %q", test.args, code, stdout.String(), stderr.String())
+		}
 	}
 }
 
@@ -243,6 +261,17 @@ func TestExecuteReportsOutputFailure(t *testing.T) {
 	if code != 1 || !strings.Contains(stderr.String(), "write evidence inventory") {
 		t.Fatalf("Execute() evidence code = %d, stderr = %q", code, stderr.String())
 	}
+	writeConsumerInventory(t, root)
+	stderr.Reset()
+	code = cli.Execute([]string{"consumers", "validate", "--json"}, root, failingWriter{}, &stderr)
+	if code != 1 || !strings.Contains(stderr.String(), "write consumer inventory") {
+		t.Fatalf("Execute() consumer JSON code = %d, stderr = %q", code, stderr.String())
+	}
+	stderr.Reset()
+	code = cli.Execute([]string{"consumers", "validate"}, root, failingWriter{}, &stderr)
+	if code != 1 || !strings.Contains(stderr.String(), "write consumer inventory") {
+		t.Fatalf("Execute() consumer code = %d, stderr = %q", code, stderr.String())
+	}
 }
 
 func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
@@ -258,6 +287,11 @@ func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
 		{"invalid config arguments", []string{"config"}, fixture, 2, "usage:"},
 		{"invalid config show arguments", []string{"config", "show"}, fixture, 2, "usage:"},
 		{"invalid inventory arguments", []string{"inventory", "--yaml"}, fixture, 2, "usage:"},
+		{"missing consumer action", []string{"consumers"}, fixture, 2, "usage:"},
+		{"unknown consumer action", []string{"consumers", "show"}, fixture, 2, "usage:"},
+		{"invalid consumer arguments", []string{"consumers", "validate", "--yaml"}, fixture, 2, "usage:"},
+		{"extra consumer arguments", []string{"consumers", "validate", "--json", "extra"}, fixture, 2, "usage:"},
+		{"missing consumer inventory", []string{"consumers", "validate"}, fixture, 1, "read consumer manifest"},
 		{"invalid upgrade arguments", []string{"upgrade", "plan", "--version", "v1.0.0"}, fixture, 2, "usage:"},
 		{"invalid repository arguments", []string{"repository"}, fixture, 2, "usage:"},
 		{"missing evidence action", []string{"evidence"}, fixture, 2, "usage:"},
@@ -365,4 +399,9 @@ func assertFileContains(t *testing.T, path, fragment string) {
 func writeUpgradeWorkflow(t *testing.T, root, sha string) {
 	t.Helper()
 	write(t, filepath.Join(root, ".github", "workflows", "ci.yml"), "jobs:\n  ci:\n    uses: faustbrian/go-library-tools/.github/workflows/library-ci.yml@"+sha+" # v1.0.0\n    with:\n      tooling_sha: "+sha+"\n")
+}
+
+func writeConsumerInventory(t *testing.T, root string) {
+	t.Helper()
+	write(t, filepath.Join(root, "consumers.json"), `{"schema_version":1,"owner":"faustbrian","repositories":[{"name":"go-library","classification":"active","default_branch":"main"},{"name":"go-tooling","classification":"tooling","default_branch":"main","reason":"tooling"}]}`)
 }

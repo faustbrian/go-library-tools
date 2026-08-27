@@ -27,6 +27,13 @@ workflow replacement fails. Machine-readable output supports reviewable
 per-repository pull requests and bounded cohorts without coupling normal CI to
 a live sibling-repository inventory.
 
+The canonical [`consumers.json`](../consumers.json) manifest controls rollout
+eligibility. Validate it with `golib consumers validate`, then dispatch the
+upgrade workflow in dry-run mode before apply mode. Apply mode requires the
+fine-grained cross-repository `GOLIB_ROLLOUT_TOKEN` described in the
+[consumer rollout guide](consumers.md). Initial adoption remains a manual,
+parity-reviewed migration rather than an automated upgrade.
+
 Run `golib release check` before preparing a tag and `golib release dry-run`
 against the final source. Releasable modules must use stable versions, canonical
 tag prefixes, and all mandatory gates.
