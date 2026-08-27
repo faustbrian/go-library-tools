@@ -10,13 +10,14 @@ import (
 	"testing"
 )
 
-func TestDependencyWrapperDefersLocallyProxiedChecksums(t *testing.T) {
+func TestDependencyWrapperKeepsTaskOwnedChecksumsCurrent(t *testing.T) {
 	root := t.TempDir()
 	task := filepath.Join(root, "task")
 	fakeBin := filepath.Join(root, "bin")
 	isolated := filepath.Join(root, "isolated")
 	localProxy := filepath.Join(root, "proxy")
 	capture := filepath.Join(root, "captured.sum")
+	toolCapture := filepath.Join(root, "tool.flags")
 	writeRehearsalFile(t, filepath.Join(root, "modules.json"), `{"modules":[{"directory":"."}]}`)
 	writeRehearsalFile(t, filepath.Join(root, "go.mod"), `module github.com/faustbrian/go-example
 
@@ -62,12 +63,16 @@ if [[ "${1:-}" == rehearsal-command ]]; then
 	printf '%s\n' 'github.com/faustbrian/go-local v1.0.0 h1:local-proxy' >>"${sumfile}"
 	exit 0
 fi
+if [[ "${1:-}" == run && "${2:-}" == *@* ]]; then
+	printf '%s' "${GOFLAGS:-}" >"${REHEARSAL_TOOL_CAPTURE}"
+	exit 0
+fi
 printf 'unexpected fake go invocation: %s\n' "$*" >&2
 exit 1
 `)
 
 	environmentFile := filepath.Join(root, "environment")
-	command := exec.Command("bash", dependencyPreparationScript(t), task, environmentFile)
+	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task, environmentFile)
 	command.Dir = root
 	command.Env = append(os.Environ(), "PATH="+fakeBin+":"+os.Getenv("PATH"))
 	if output, err := command.CombinedOutput(); err != nil {
@@ -83,7 +88,7 @@ exit 1
 	}, "\n")+"\n")
 	writeRehearsalFile(t, filepath.Join(localProxy, "github.com", "faustbrian", "go-local", "@v", "v1.0.0.zip"), "local archive")
 
-	wrapper := exec.Command(filepath.Join(task, "bin", "go"), "rehearsal-command")
+	wrapper := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "rehearsal-command")
 	wrapper.Dir = root
 	wrapper.Env = append(os.Environ(), readEnvironment(t, environmentFile)...)
 	wrapper.Env = append(wrapper.Env,
@@ -91,6 +96,7 @@ exit 1
 		"GOLIB_ISOLATED_MODFILES_DIRECTORY="+isolated,
 		"GOLIB_LOCAL_PROXY="+localProxy,
 		"REHEARSAL_CAPTURE="+capture,
+		"REHEARSAL_TOOL_CAPTURE="+toolCapture,
 	)
 	if output, err := wrapper.CombinedOutput(); err != nil {
 		t.Fatalf("run dependency wrapper: %v\n%s", err, output)
@@ -104,8 +110,18 @@ exit 1
 		t.Fatalf("remote checksum was not refreshed:\n%s", during)
 	}
 	after := readRehearsalFile(t, activeSum)
-	if !strings.Contains(after, "h1:historical-local") || !strings.Contains(after, "h1:historical-remote") || strings.Contains(after, "h1:local-proxy") {
-		t.Fatalf("historical checksums were not restored:\n%s", after)
+	if !strings.Contains(after, "h1:local-proxy") || !strings.Contains(after, "h1:current-remote") || strings.Contains(after, "h1:historical") {
+		t.Fatalf("task-owned checksums were not retained:\n%s", after)
+	}
+
+	tool := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "run", "example.com/tool@v1.0.0")
+	tool.Dir = root
+	tool.Env = wrapper.Env
+	if output, err := tool.CombinedOutput(); err != nil {
+		t.Fatalf("run external tool: %v\n%s", err, output)
+	}
+	if flags := readRehearsalFile(t, toolCapture); flags != "" {
+		t.Fatalf("external tool inherited consumer GOFLAGS %q", flags)
 	}
 }
 
@@ -124,7 +140,7 @@ fi
 printf 'unexpected fake go invocation: %s\n' "$*" >&2
 exit 1
 `)
-	command := exec.Command("bash", dependencyPreparationScript(t), task, filepath.Join(root, "environment"))
+	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task, filepath.Join(root, "environment"))
 	command.Dir = root
 	command.Env = append(os.Environ(), "PATH="+fakeBin+":"+os.Getenv("PATH"))
 	if output, err := command.CombinedOutput(); err != nil {

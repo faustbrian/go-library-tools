@@ -33,11 +33,15 @@ incompatibility rather than repository behavior. Only copied tooling is
 changed; the content digest proves the package source and repository-owned
 fixtures remain identical.
 
-Copied legacy isolated-Go shims retain historical standalone checksums for
-their source comparisons. The rehearsal wrapper injects current internal sums
-only while a child Go command runs, then restores the historical lines in the
-task-owned legacy sum file. This keeps tracked source and legacy comparisons
-unchanged while Go resolves the intentionally replaced module versions.
+Copied legacy isolated-Go shims are normalized in their task-owned tooling copy
+to exclude standalone `go-*` checksums from source comparisons. The rehearsal
+wrapper retains current remote and local-proxy checksums in task-owned child
+module files for the complete run. Tracked module files remain unchanged while
+every child process resolves the intentionally replaced module versions.
+
+Mutation campaigns serialize package tests while retaining parallel mutant
+workers. This prevents test-level scheduler contention from deciding short
+deadline assertions without reducing the mutant inventory or gate strictness.
 
 Shared runs temporarily hide copied `.golib` tooling only while validating the
 standalone repository contract, then restore it before exercising the package

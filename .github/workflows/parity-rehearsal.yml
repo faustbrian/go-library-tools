@@ -77,6 +77,18 @@ jobs:
           sed -i 's/^STATICCHECK_VERSION=.*/STATICCHECK_VERSION=v0.8.1/' \
             .golib/versions.env
           grep -qx 'STATICCHECK_VERSION=v0.8.1' .golib/versions.env
+          sed -i 's#golib\\/#go-#g' .golib/scripts/internal/isolated-go.sh
+          grep -Fq 'faustbrian\/go-' .golib/scripts/internal/isolated-go.sh
+          sed -i \
+            's/GOWORK=off go mod download/GOWORK=off GOFLAGS= go mod download/' \
+            .golib/scripts/build-golib-gremlins.sh
+          sed -i \
+            's/GOWORK=off go build/GOWORK=off GOFLAGS= go build/' \
+            .golib/scripts/build-golib-gremlins.sh
+          grep -Fq 'GOWORK=off GOFLAGS= go mod download' \
+            .golib/scripts/build-golib-gremlins.sh
+          grep -Fq 'GOWORK=off GOFLAGS= go build' \
+            .golib/scripts/build-golib-gremlins.sh
       - name: Run copied contract
         working-directory: source
         run: |

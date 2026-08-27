@@ -98,6 +98,14 @@ while true; do
 done
 
 command_arguments=("$@")
+if [[ "${command_arguments[0]:-}" == run ]]; then
+    for argument in "${command_arguments[@]:1}"; do
+        if [[ "${argument}" == *@* ]]; then
+            export GOFLAGS=''
+            exec "${real_go}" "${command_arguments[@]}"
+        fi
+    done
+fi
 explicit_modfile=''
 for argument in "${command_arguments[@]}"; do
     case "${argument}" in
@@ -114,7 +122,6 @@ if [[ -z "${active_modfile}" ]]; then
     done
 fi
 
-restore_internal_sum=''
 if [[ -n "${alternate_mod}" ]]; then
     if [[ -z "${active_modfile}" ]]; then
         export GOFLAGS="${GOFLAGS:+${GOFLAGS} }-modfile=${alternate_mod}"
@@ -141,19 +148,6 @@ if [[ -n "${alternate_mod}" ]]; then
             active_sum="${active_modfile%.mod}.sum"
             alternate_sum="${alternate_mod%.mod}.sum"
             temporary_sum="${active_sum}.golib.$$"
-            if [[ -n "${GOLIB_ISOLATED_MODFILES_DIRECTORY:-}" ]]; then
-                case "${active_modfile}" in
-                    "${GOLIB_ISOLATED_MODFILES_DIRECTORY}"/*)
-                        restore_internal_sum="${active_sum}.golib-restore.$$"
-                        if [[ -f "${active_sum}" ]]; then
-                            awk '$1 ~ /^github\.com\/faustbrian\/go-/' \
-                                "${active_sum}" >"${restore_internal_sum}"
-                        else
-                            : >"${restore_internal_sum}"
-                        fi
-                        ;;
-                esac
-            fi
             {
                 if [[ -f "${active_sum}" ]]; then
                     awk '$1 !~ /^github\.com\/faustbrian\/go-/' "${active_sum}"
@@ -198,22 +192,6 @@ elif [[ -n "${active_modfile}" ]] &&
         done
         export GOFLAGS="${updated_flags}"
     fi
-fi
-
-if [[ -n "${restore_internal_sum}" ]]; then
-    status=0
-    "${real_go}" "${command_arguments[@]}" || status=$?
-    active_sum="${active_modfile%.mod}.sum"
-    temporary_sum="${active_sum}.golib.$$"
-    {
-        if [[ -f "${active_sum}" ]]; then
-            awk '$1 !~ /^github\.com\/faustbrian\/go-/' "${active_sum}"
-        fi
-        cat "${restore_internal_sum}"
-    } | LC_ALL=C sort -u >"${temporary_sum}"
-    mv "${temporary_sum}" "${active_sum}"
-    find "${restore_internal_sum}" -delete
-    exit "${status}"
 fi
 
 exec "${real_go}" "${command_arguments[@]}"

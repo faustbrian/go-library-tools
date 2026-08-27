@@ -3,7 +3,9 @@ SHELL := /usr/bin/env bash
 .PHONY: build check ci config consumers inventory repository-check workflows
 
 define run_go
+	set -euo pipefail; \
 	task="$$(mktemp -d "$${TMPDIR:-/tmp}/go-library-tools-make.XXXXXX")"; \
+	task="$$(cd "$$task" && pwd -P)"; \
 	trap 'chmod -R u+w "$$task" 2>/dev/null || true; find "$$task" -depth -delete' EXIT; \
 	mkdir -p "$$task/cache" "$$task/mod" "$$task/tmp"; \
 	GOCACHE="$$task/cache" GOMODCACHE="$$task/mod" GOTMPDIR="$$task/tmp" go $(1)

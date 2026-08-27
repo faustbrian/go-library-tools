@@ -62,6 +62,20 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 	}
 }
 
+func TestParityWorkflowNormalizesReplacedDependencyChecksums(t *testing.T) {
+	content := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
+	for _, required := range []string{
+		"s#golib\\\\/#go-#g",
+		"grep -Fq 'faustbrian\\/go-' .golib/scripts/internal/isolated-go.sh",
+		"s/GOWORK=off go mod download/GOWORK=off GOFLAGS= go mod download/",
+		"s/GOWORK=off go build/GOWORK=off GOFLAGS= go build/",
+	} {
+		if !strings.Contains(content, required) {
+			t.Errorf("parity workflow lacks %q", required)
+		}
+	}
+}
+
 func TestSetupActionVerifiesReleasedArtifactBeforeExtraction(t *testing.T) {
 	content := readProjectFile(t, ".github/actions/setup-golib/action.yml")
 	checksumSet := strings.Contains(content, "tool_checksums_sha256:")

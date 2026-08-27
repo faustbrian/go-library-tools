@@ -366,6 +366,11 @@ func removeStaleReport(path string) error {
 
 func (campaign Campaign) commandEnvironment() map[string]string {
 	environment := cloneStrings(campaign.Environment)
+	flags := strings.Fields(environment["GOFLAGS"])
+	flags = slices.DeleteFunc(flags, func(flag string) bool {
+		return strings.HasPrefix(flag, "-parallel=")
+	})
+	environment["GOFLAGS"] = strings.Join(append(flags, "-parallel=1"), " ")
 	environment["GOWORK"] = "off"
 	return environment
 }

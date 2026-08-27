@@ -14,6 +14,12 @@ All notable changes to this project are documented in this file.
   while deferring locally proxied modules to their task-owned archive identity.
 - Isolated checksum-pinned verifier construction from consumer module flags so
   external tooling always resolves against its own module graph.
+- Kept refreshed standalone dependency checksums in task-owned rehearsal module
+  files and normalized copied legacy comparisons without changing tracked sums.
+- Serialized package tests inside mutation campaigns so deadline behavior is
+  not determined by parallel test scheduling.
+- Canonicalized local task workspace paths so macOS temporary-directory
+  symlinks cannot change repository path identity during verification.
 
 ### Added
 

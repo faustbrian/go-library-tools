@@ -33,6 +33,7 @@ func TestCampaignExecutesPersistsAndReusesPackageEvidence(t *testing.T) {
 	}
 	process := &campaignProcess{root: root, verifierSource: source}
 	process.requireTags = true
+	process.requireSerial = true
 	var output bytes.Buffer
 	campaign := Campaign{
 		Root: root, EvidenceRoot: filepath.Join(root, ".verification"),
@@ -42,7 +43,9 @@ func TestCampaignExecutesPersistsAndReusesPackageEvidence(t *testing.T) {
 			Packages: []string{"adapter", "."}, TestTags: []string{"integration"},
 			ServiceIdentities: map[string]string{}, Workers: 2,
 		},
-		Environment:     map[string]string{"SECRET_SERVICE_PASSWORD": "must-not-persist"},
+		Environment: map[string]string{
+			"GOFLAGS": "-tags=integration -parallel=9", "SECRET_SERVICE_PASSWORD": "must-not-persist",
+		},
 		RuntimeIdentity: RuntimeIdentity{GoVersion: "go1.27.0", GOOS: "linux", GOARCH: "amd64", CGOEnabled: "0"},
 		Process:         process.run,
 		Output:          &output, Now: func() time.Time { return time.Unix(10, 0) },
@@ -85,9 +88,25 @@ type campaignProcess struct {
 	mutateSource   bool
 	afterMutation  func() error
 	requireTags    bool
+	requireSerial  bool
 }
 
 func (process *campaignProcess) run(_ context.Context, name string, args []string, _ string, environment map[string]string, stdout, _ io.Writer) error {
+	packageCommand := name == "go" && len(args) > 0 && (args[0] == "list" || args[0] == "test") || strings.HasSuffix(name, "golib-gremlins")
+	if process.requireSerial && packageCommand {
+		parallelFlags := 0
+		for flag := range strings.FieldsSeq(environment["GOFLAGS"]) {
+			if strings.HasPrefix(flag, "-parallel=") {
+				parallelFlags++
+				if flag != "-parallel=1" {
+					return errors.New("mutation package tests retain a conflicting parallel limit")
+				}
+			}
+		}
+		if parallelFlags != 1 {
+			return errors.New("mutation package tests are not serialized")
+		}
+	}
 	switch {
 	case name == "go" && len(args) > 1 && args[0] == "list":
 		if containsArgument(args, "-tags=") {
