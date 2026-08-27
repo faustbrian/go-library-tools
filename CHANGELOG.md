@@ -10,7 +10,10 @@ All notable changes to this project are documented in this file.
   use its compatible Staticcheck tool graph without disabling analyzers.
 - Isolated intentionally replaced internal module checksums in task-owned
   rehearsal module files and propagated those identities through nested and
-  legacy child Go processes without changing representative repository content.
+  legacy child Go processes without changing representative repository content,
+  while deferring locally proxied modules to their task-owned archive identity.
+- Isolated checksum-pinned verifier construction from consumer module flags so
+  external tooling always resolves against its own module graph.
 
 ### Added
 

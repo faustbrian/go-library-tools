@@ -124,6 +124,7 @@ func BuildVerifier(ctx context.Context, workspace string, process Process) (Tool
 func toolEnvironment(workspace string) (map[string]string, error) {
 	environment := map[string]string{
 		"GOWORK":     "off",
+		"GOFLAGS":    "",
 		"GOCACHE":    filepath.Join(workspace, "go-build"),
 		"GOMODCACHE": filepath.Join(workspace, "go-mod"),
 		"GOTMPDIR":   filepath.Join(workspace, "go-tmp"),

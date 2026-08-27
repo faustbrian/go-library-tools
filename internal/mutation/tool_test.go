@@ -55,6 +55,9 @@ func TestBuildVerifierUsesPinnedSourceAndAssets(t *testing.T) {
 			if environment["GOWORK"] != "off" {
 				t.Fatalf("GOWORK = %q", environment["GOWORK"])
 			}
+			if flags, exists := environment["GOFLAGS"]; !exists || flags != "" {
+				t.Fatalf("GOFLAGS = %q, exists = %t", flags, exists)
+			}
 		}
 		switch {
 		case name == "go" && len(args) > 1 && args[0] == "mod":

@@ -59,11 +59,13 @@ for index in "${!module_directories[@]}"; do
             "\(.Path)@\(.Version)"
         ' <<<"${module_metadata}"
     )
-    for dependency in "${dependencies[@]}"; do
-        GOWORK=off GOFLAGS="-modfile=${alternate_mod}" \
-            GOCACHE="${task_root}/cache" GOMODCACHE="${task_root}/mod" \
-            GOTMPDIR="${task_root}/tmp" "${real_go}" mod download "${dependency}"
-    done
+    if [[ "${#dependencies[@]}" -gt 0 ]]; then
+        for dependency in "${dependencies[@]}"; do
+            GOWORK=off GOFLAGS="-modfile=${alternate_mod}" \
+                GOCACHE="${task_root}/cache" GOMODCACHE="${task_root}/mod" \
+                GOTMPDIR="${task_root}/tmp" "${real_go}" mod download "${dependency}"
+        done
+    fi
     printf '%s\t%s\n' "${module_path}" "${alternate_mod}" >>"${module_map}"
     if [[ "${directory}" == "." ]]; then
         root_alternate_mod="${alternate_mod}"
@@ -156,7 +158,20 @@ if [[ -n "${alternate_mod}" ]]; then
                 if [[ -f "${active_sum}" ]]; then
                     awk '$1 !~ /^github\.com\/faustbrian\/go-/' "${active_sum}"
                 fi
-                awk '$1 ~ /^github\.com\/faustbrian\/go-/' "${alternate_sum}"
+                while IFS= read -r checksum; do
+                    module="${checksum%% *}"
+                    version_and_sum="${checksum#* }"
+                    version="${version_and_sum%% *}"
+                    version="${version%/go.mod}"
+                    if [[ -n "${GOLIB_LOCAL_PROXY:-}" &&
+                        -f "${GOLIB_LOCAL_PROXY}/${module}/@v/${version}.zip" ]]; then
+                        continue
+                    fi
+                    printf '%s\n' "${checksum}"
+                done < <(
+                    awk '$1 ~ /^github\.com\/faustbrian\/go-/' \
+                        "${alternate_sum}"
+                )
             } >"${temporary_sum}"
             mv "${temporary_sum}" "${active_sum}"
         fi
