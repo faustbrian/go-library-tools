@@ -8,6 +8,11 @@ package-specific operations. Service-backed representatives additionally prove
 that the same service requirements are selected and that no task-owned
 container, network, volume, or fixture lock survives either run.
 
+Preparation hashes tracked consumer content without rewriting module files or
+dependency sums and fails if the repository state changes. Shared runs build
+`golib` with the tooling repository's Go version, then switch to the consumer's
+declared Go version before executing its contract.
+
 The remote representative rehearsal normalizes the copied legacy Staticcheck
 pin from `v0.7.0` to `v0.8.1` before execution. Staticcheck `v0.7.0` cannot read
 Go 1.27 compiler export data, so leaving that obsolete tooling dependency in

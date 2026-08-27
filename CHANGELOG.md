@@ -88,6 +88,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Compatibility rehearsals now preserve consumer source byte-for-byte and use
+  separate Go toolchains for building the CLI and exercising each consumer.
 - Module manifests now accept the structured goal-evidence records emitted by
   current standalone repositories while retaining strict unknown-field checks.
 - Rejected mutation checkpoint migrations now report the exact replacement

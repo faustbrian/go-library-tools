@@ -7,26 +7,7 @@ if [[ $# -ne 1 ]]; then
 fi
 
 output="$1"
-task="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/golib-parity-prepare.XXXXXX")"
-cleanup() {
-    chmod -R u+w "${task}" 2>/dev/null || true
-    find "${task}" -depth -delete 2>/dev/null || true
-}
-trap cleanup EXIT HUP INT TERM
-mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
-
-while IFS= read -r module_file; do
-    module_directory="${module_file%/go.mod}"
-    if [[ "${module_directory}" == "${module_file}" ]]; then
-        module_directory='.'
-    fi
-    : >"${module_directory}/go.sum"
-    (
-        cd "${module_directory}"
-        GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" \
-            GOTMPDIR="${task}/tmp" GOWORK=off go mod tidy
-    )
-done < <(find . -type f -name go.mod -not -path './.golib/*' | LC_ALL=C sort)
+before="$(git status --porcelain=v1 --untracked-files=all)"
 
 git ls-files -z | while IFS= read -r -d '' file; do
     case "${file}" in
@@ -36,3 +17,9 @@ git ls-files -z | while IFS= read -r -d '' file; do
     printf '%s\0' "${file}"
     sha256sum "${file}" | awk '{printf "%s%c", $1, 0}'
 done | sha256sum | awk '{print $1}' >"${output}"
+
+after="$(git status --porcelain=v1 --untracked-files=all)"
+if [[ "${before}" != "${after}" ]]; then
+    printf 'parity preparation modified repository content\n' >&2
+    exit 1
+fi
