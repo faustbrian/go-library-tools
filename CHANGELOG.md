@@ -88,6 +88,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Module manifests now accept the structured goal-evidence records emitted by
+  current standalone repositories while retaining strict unknown-field checks.
 - Rejected mutation checkpoint migrations now report the exact replacement
   input digest required for a reviewed approval ledger.
 - Mutation input identity now excludes the synthetic test executable emitted

@@ -31,6 +31,11 @@ version, lifecycle, gates, tags, services, and release metadata.
 `packages.json` owns package classification. Configuration references those
 facts rather than duplicating them.
 
+Each `goal_evidence` entry in `modules.json` is a structured record with the
+goal file, requirements digest, implementation artifacts, verification gates,
+and implementation status. Unknown record fields are rejected. This metadata
+documents goal traceability but does not select or waive verification gates.
+
 Consumer repositories pin both `tool_version` and the lowercase SHA-256 digest
 of that release's `checksums.txt` asset. The setup action verifies this digest
 before trusting the archive checksum selected for the current platform. The

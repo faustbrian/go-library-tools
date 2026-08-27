@@ -52,8 +52,18 @@ type Module struct {
 	FamilyOrder                 int             `json:"family_order"`
 	GoalStatus                  string          `json:"goal_status"`
 	GoalFiles                   []string        `json:"goal_files"`
-	GoalEvidence                []string        `json:"goal_evidence"`
+	GoalEvidence                []GoalEvidence  `json:"goal_evidence"`
 	Provenance                  json.RawMessage `json:"provenance"`
+}
+
+// GoalEvidence binds a goal document to its implementation and verification
+// claims without making those claims part of gate selection.
+type GoalEvidence struct {
+	File                   string   `json:"file"`
+	RequirementsSHA256     string   `json:"requirements_sha256"`
+	ImplementationEvidence []string `json:"implementation_evidence"`
+	VerificationGates      []string `json:"verification_gates"`
+	ImplementationStatus   string   `json:"implementation_status"`
 }
 
 // Package is the canonical package classification shared by both manifests.

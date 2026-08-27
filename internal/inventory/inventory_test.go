@@ -115,6 +115,56 @@ func TestLoadValidatesCanonicalManifests(t *testing.T) {
 	}
 }
 
+func TestLoadAcceptsStructuredGoalEvidence(t *testing.T) {
+	root := fixture(t)
+	manifest := `{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/example",
+  "go_version": "1.27.0",
+  "modules": [{
+    "directory": ".",
+    "module_path": "github.com/faustbrian/example",
+    "go_version": "1.27.0",
+    "kind": "public",
+    "releasable": true,
+    "gates": {"api_compatibility": true, "tests": true},
+    "goal_evidence": [{
+      "file": ".ai/GOAL.md",
+      "requirements_sha256": "8943c11690449de8975138c956cd69f95bbb0eec6671cd6109e0b4d49387cfa2",
+      "implementation_evidence": ["README.md", "docs/security.md"],
+      "verification_gates": ["test", "coverage", "mutation"],
+      "implementation_status": "implemented-requires-fresh-verification"
+    }],
+    "packages": []
+  }]
+}`
+	write(t, filepath.Join(root, "modules.json"), manifest)
+
+	got, err := inventory.Load(root, config.Config{
+		Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+	})
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	evidence := got.Modules[0].GoalEvidence
+	if len(evidence) != 1 || evidence[0].File != ".ai/GOAL.md" ||
+		evidence[0].ImplementationStatus != "implemented-requires-fresh-verification" {
+		t.Fatalf("Load() goal evidence = %#v", evidence)
+	}
+
+	write(t, filepath.Join(root, "modules.json"), strings.Replace(
+		manifest,
+		`"implementation_status": "implemented-requires-fresh-verification"`,
+		`"implementation_status": "implemented-requires-fresh-verification", "unknown": true`,
+		1,
+	))
+	if _, err := inventory.Load(root, config.Config{
+		Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+	}); err == nil || !strings.Contains(err.Error(), "unknown field") {
+		t.Fatalf("Load(unknown goal evidence field) error = %v", err)
+	}
+}
+
 func TestLoadRejectsManifestMismatch(t *testing.T) {
 	root := fixture(t)
 	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/other","packages":[]}`)
