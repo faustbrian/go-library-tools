@@ -29,6 +29,8 @@ All notable changes to this project are documented in this file.
   dependency isolation.
 - Scoped mutation verifier builds and campaign artifacts by module identity to
   prevent independently verified modules from sharing mutable workspace paths.
+- Published the tooling repository's verification tree after every CI outcome
+  so newly generated content-addressed evidence is retained immediately.
 - Kept shared compatibility gates on each representative repository's declared
   Go version while allowing the source CLI build to select its required toolchain.
 - Serialized package tests inside mutation campaigns so deadline behavior is

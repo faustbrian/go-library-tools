@@ -51,6 +51,15 @@ jobs:
             go build -trimpath -buildvcs=false -o "${RUNNER_TEMP}/golib" ./cmd/golib
       - name: Run repository contract
         run: make ci
+      - name: Upload verification evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: tooling-verification
+          path: .verification
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 30
 
   codeql:
     name: CodeQL

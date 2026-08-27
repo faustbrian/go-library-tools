@@ -62,6 +62,30 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 	}
 }
 
+func TestToolingWorkflowUploadsVerificationEvidenceOnEveryOutcome(t *testing.T) {
+	content := readProjectFile(t, ".github/workflows/ci.yml")
+	start := strings.Index(content, "- name: Upload verification evidence")
+	if start < 0 {
+		t.Fatal("tooling workflow does not upload verification evidence")
+	}
+	remainder := content[start:]
+	end := strings.Index(remainder, "\n  codeql:")
+	if end < 0 {
+		t.Fatal("tooling evidence upload is outside the quality job")
+	}
+	step := remainder[:end]
+	for _, required := range []string{
+		"if: always()",
+		"uses: actions/upload-artifact@",
+		"path: .verification",
+		"include-hidden-files: true",
+	} {
+		if !strings.Contains(step, required) {
+			t.Errorf("tooling evidence upload lacks %q", required)
+		}
+	}
+}
+
 func TestParityWorkflowDoesNotModifyRepresentativeSource(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
 	for _, forbidden := range []string{
