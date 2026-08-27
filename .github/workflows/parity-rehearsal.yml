@@ -65,6 +65,11 @@ jobs:
       - name: Prepare content-identical source
         working-directory: source
         run: ../tooling/rehearsals/prepare.sh "${RUNNER_TEMP}/legacy-content.sha256"
+      - name: Prepare isolated dependency sums
+        working-directory: source
+        run: |
+          ../tooling/rehearsals/prepare-dependencies.sh \
+            "${RUNNER_TEMP}/legacy-dependencies" "${GITHUB_ENV}"
       - name: Normalize legacy analyzer compatibility
         working-directory: source
         run: |
@@ -166,6 +171,11 @@ jobs:
       - name: Prepare content-identical source
         working-directory: source
         run: ../tooling/rehearsals/prepare.sh "${RUNNER_TEMP}/shared-content.sha256"
+      - name: Prepare isolated dependency sums
+        working-directory: source
+        run: |
+          ../tooling/rehearsals/prepare-dependencies.sh \
+            "${RUNNER_TEMP}/shared-dependencies" "${GITHUB_ENV}"
       - name: Apply rehearsal policy
         working-directory: source
         env:

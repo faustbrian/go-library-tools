@@ -13,6 +13,14 @@ dependency sums and fails if the repository state changes. Shared runs build
 `golib` with the tooling repository's Go version, then switch to the consumer's
 declared Go version before executing its contract.
 
+Some internal `v1.0.0` tags were intentionally replaced before public adoption,
+leaving historical checksums in the representative repositories. Rehearsals
+therefore prepare task-owned alternate module and sum files, refresh only those
+internal dependency sums, and select the matching alternate file through a Go
+wrapper. Tracked `go.mod`, `go.sum`, package source, fixtures, and evidence stay
+unchanged. Multi-module repositories select the alternate file by the nearest
+module root.
+
 The remote representative rehearsal normalizes the copied legacy Staticcheck
 pin from `v0.7.0` to `v0.8.1` before execution. Staticcheck `v0.7.0` cannot read
 Go 1.27 compiler export data, so leaving that obsolete tooling dependency in
