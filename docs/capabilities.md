@@ -23,7 +23,7 @@ that owns them.
 | package Make targets for benchmarks | typed `benchmark` operations | benchmark target and budget |
 | `check-documentation.sh` and npm tool manifests | native docs gate | Markdown and `cspell.json` |
 | tool installation in `versions.env` | centrally pinned Go tools | runtime versions only when package-specific |
-| service start and stop scripts | typed service fixtures | topology and compatibility payloads |
+| service start and stop scripts | gate-owned typed service leases | topology and compatibility payloads |
 | `codeql-build.sh` | reusable workflow CodeQL matrix | build tags and modules |
 | `release.sh`, `filter-releasable-modules.sh` | `golib release check`, `golib release dry-run` | release metadata |
 | `stage-ci-evidence.sh` | reusable workflow artifact upload | `.verification` |

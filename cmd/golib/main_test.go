@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"os"
 	"strings"
@@ -20,9 +21,15 @@ func TestCommandArgumentsOmitsExecutable(t *testing.T) {
 }
 
 func TestRunDelegatesToCLI(t *testing.T) {
+	originalNotifyContext := notifyContext
+	stopped := false
+	notifyContext = func(context.Context, ...os.Signal) (context.Context, context.CancelFunc) {
+		return context.Background(), func() { stopped = true }
+	}
+	t.Cleanup(func() { notifyContext = originalNotifyContext })
 	var stdout, stderr bytes.Buffer
 	code := run([]string{"--help"}, func() (string, error) { return t.TempDir(), nil }, &stdout, &stderr)
-	if code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "golib check") {
+	if code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "golib check") || !stopped {
 		t.Fatalf("run() = %d, stdout = %q, stderr = %q", code, stdout.String(), stderr.String())
 	}
 }
@@ -42,12 +49,14 @@ func TestMainUsesProcessBoundaries(t *testing.T) {
 	originalOutput := standardOutput
 	originalError := standardError
 	originalExit := exitProcess
+	originalNotifyContext := notifyContext
 	t.Cleanup(func() {
 		commandArguments = originalArguments
 		getWorkingDirectory = originalWorkingDirectory
 		standardOutput = originalOutput
 		standardError = originalError
 		exitProcess = originalExit
+		notifyContext = originalNotifyContext
 	})
 
 	var stdout, stderr bytes.Buffer
@@ -57,6 +66,9 @@ func TestMainUsesProcessBoundaries(t *testing.T) {
 	standardOutput = &stdout
 	standardError = &stderr
 	exitProcess = func(code int) { exitCode = code }
+	notifyContext = func(context.Context, ...os.Signal) (context.Context, context.CancelFunc) {
+		return context.Background(), func() {}
+	}
 
 	main()
 	if exitCode != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "golib check") {

@@ -23,6 +23,11 @@ func TestExecuteShowsHelp(t *testing.T) {
 			t.Errorf("help does not contain %q", command)
 		}
 	}
+	for _, unsupported := range []string{"services start", "services stop"} {
+		if strings.Contains(stdout.String(), unsupported) {
+			t.Errorf("help advertises unsupported command %q", unsupported)
+		}
+	}
 }
 
 func TestExecuteShowsVersionWithoutRepository(t *testing.T) {

@@ -32,6 +32,10 @@ Core commands:
 Selection and output ordering are deterministic. Required gates fail closed;
 NilAway remains advisory and visible.
 
+The process converts interrupts and termination requests into command-context
+cancellation. Long-running tools and service leases receive that context;
+service cleanup then runs with its own bounded cleanup context.
+
 Released binaries must exactly match `.golib.yaml`. The explicit `dev` identity
 is accepted only for deliberate source builds and prevents circular bootstrap
 while developing this repository.

@@ -35,8 +35,6 @@ Usage:
   golib api check
   golib api update
 	golib docs check [--module <directory>]
-  golib services start <fixture>
-  golib services stop <fixture>
   golib release check
   golib release dry-run
   golib evidence inspect
@@ -44,16 +42,25 @@ Usage:
 
 // Execute runs one command and returns a stable process exit code.
 func Execute(args []string, workingDirectory string, stdout, stderr io.Writer) int {
+	return ExecuteContext(context.Background(), args, workingDirectory, stdout, stderr)
+}
+
+// ExecuteContext runs one command with caller-owned cancellation.
+func ExecuteContext(ctx context.Context, args []string, workingDirectory string, stdout, stderr io.Writer) int {
 	if len(args) == 1 && args[0] == "--version" {
 		_, _ = fmt.Fprintln(stdout, buildinfo.Version)
 		return 0
 	}
-	return execute(args, workingDirectory, stdout, stderr, gates.NewProcessExecutor)
+	return executeContext(ctx, args, workingDirectory, stdout, stderr, gates.NewProcessExecutor)
 }
 
 type executorFactory func(string, io.Writer, io.Writer) (gates.Executor, func() error, error)
 
 func execute(args []string, workingDirectory string, stdout, stderr io.Writer, createExecutor executorFactory) int {
+	return executeContext(context.Background(), args, workingDirectory, stdout, stderr, createExecutor)
+}
+
+func executeContext(ctx context.Context, args []string, workingDirectory string, stdout, stderr io.Writer, createExecutor executorFactory) int {
 	if len(args) == 1 && (args[0] == "--help" || args[0] == "-h") {
 		_, _ = io.WriteString(stdout, help)
 		return 0
@@ -85,7 +92,7 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return usage(stderr, usageError.Error())
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(context.Background(), selection)
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(ctx, selection)
 		})
 	case "config":
 		if len(args) == 2 && args[1] == "validate" {
@@ -115,7 +122,7 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return usage(stderr, "usage: golib workflows check")
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-			return (gates.Runner{Root: root, Executor: executor, Output: stdout}).Workflows(context.Background())
+			return (gates.Runner{Root: root, Executor: executor, Output: stdout}).Workflows(ctx)
 		})
 	case "inventory":
 		if len(args) == 1 {
@@ -140,7 +147,7 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return usage(stderr, "usage: golib api <check|update> [--module <directory>]")
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).API(context.Background(), selection, args[1] == "update")
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).API(ctx, selection, args[1] == "update")
 		})
 	case "coverage":
 		selection, usageError := moduleSelection(args[1:], catalog.Modules)
@@ -148,7 +155,7 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return usage(stderr, "usage: golib coverage [--module <directory>]")
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Coverage(context.Background(), selection)
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Coverage(ctx, selection)
 		})
 	case "mutation":
 		if len(args) > 1 && args[1] == "import" {
@@ -158,7 +165,7 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			}
 			return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
 				return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).MutationImport(
-					context.Background(), options.module, options.archive, options.ledger,
+					ctx, options.module, options.archive, options.ledger,
 				)
 			})
 		}
@@ -167,7 +174,7 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return usage(stderr, "usage: golib mutation [--module <directory>]")
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Mutation(context.Background(), selection)
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Mutation(ctx, selection)
 		})
 	case "docs":
 		if len(args) < 2 || args[1] != "check" {
@@ -178,7 +185,7 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return usage(stderr, "usage: golib docs check [--module <directory>]")
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Docs(context.Background(), selection)
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Docs(ctx, selection)
 		})
 	case "release":
 		if len(args) != 2 || (args[1] != "check" && args[1] != "dry-run") {
@@ -196,7 +203,7 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return 0
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(context.Background(), selection)
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(ctx, selection)
 		})
 	case "evidence":
 		if len(args) < 2 || args[1] != "inspect" || (len(args) == 3 && args[2] != "--json") || len(args) > 3 {

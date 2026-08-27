@@ -38,6 +38,21 @@ func TestExecuteReportsExecutorCreationAndCleanupFailures(t *testing.T) {
 	}
 }
 
+func TestExecuteContextPropagatesCancellationToCommands(t *testing.T) {
+	root := internalFixture(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return cliExecutorFunction(func(commandContext context.Context, _ gates.Command) error {
+			return commandContext.Err()
+		}), func() error { return nil }, nil
+	}
+	var stdout, stderr bytes.Buffer
+	if code := executeContext(ctx, []string{"check"}, root, &stdout, &stderr, factory); code != 1 || !strings.Contains(stderr.String(), context.Canceled.Error()) {
+		t.Fatalf("executeContext() = %d, %q", code, stderr.String())
+	}
+}
+
 func TestExecuteRoutesWorkflowChecks(t *testing.T) {
 	root := internalFixture(t)
 	var command gates.Command

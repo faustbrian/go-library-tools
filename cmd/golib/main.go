@@ -2,8 +2,11 @@
 package main
 
 import (
+	"context"
 	"io"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/faustbrian/go-library-tools/internal/cli"
 )
@@ -14,6 +17,7 @@ var (
 	standardOutput      io.Writer = os.Stdout
 	standardError       io.Writer = os.Stderr
 	exitProcess                   = os.Exit
+	notifyContext                 = signal.NotifyContext
 )
 
 func main() {
@@ -26,5 +30,7 @@ func run(args []string, getwd func() (string, error), stdout, stderr io.Writer) 
 		_, _ = io.WriteString(stderr, err.Error()+"\n")
 		return 1
 	}
-	return cli.Execute(args, workingDirectory, stdout, stderr)
+	ctx, stop := notifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	return cli.ExecuteContext(ctx, args, workingDirectory, stdout, stderr)
 }
