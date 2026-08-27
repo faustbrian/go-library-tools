@@ -33,6 +33,7 @@
     "RabbitMQ",
     "SBOM",
     "SHA",
+    "Staticcheck",
     "Toxiproxy",
     "Valkey",
     "YAML"
