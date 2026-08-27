@@ -77,8 +77,6 @@ jobs:
           sed -i 's/^STATICCHECK_VERSION=.*/STATICCHECK_VERSION=v0.8.1/' \
             .golib/versions.env
           grep -qx 'STATICCHECK_VERSION=v0.8.1' .golib/versions.env
-          sed -i 's#golib\\/#go-#g' .golib/scripts/internal/isolated-go.sh
-          grep -Fq 'faustbrian\/go-' .golib/scripts/internal/isolated-go.sh
       - name: Run copied contract
         working-directory: source
         run: |
@@ -192,15 +190,31 @@ jobs:
             mkdir -p verification
             cp "${FIXTURE}/verification/package.mk" verification/package.mk
           fi
-          find .golib -depth -delete
+          {
+            printf '%s\n' '/.golib.yaml' '/.verification/'
+            [[ ! -f "${FIXTURE}/verification/package.mk" ]] || \
+              printf '%s\n' '/verification/package.mk'
+          } >>.git/info/exclude
       - name: Run shared contract
         working-directory: source
         run: |
           set +e
           set -o pipefail
           {
-            "${RUNNER_TEMP}/golib" repository check
-            "${RUNNER_TEMP}/golib" check --all
+            status=0
+            copied_tooling="${RUNNER_TEMP}/shared-copied-tooling-${{ matrix.name }}"
+            restore_copied_tooling() {
+              if [[ -d "${copied_tooling}" && ! -e .golib ]]; then
+                mv "${copied_tooling}" .golib
+              fi
+            }
+            trap restore_copied_tooling EXIT HUP INT TERM
+            mv .golib "${copied_tooling}"
+            "${RUNNER_TEMP}/golib" repository check || status=$?
+            restore_copied_tooling
+            trap - EXIT HUP INT TERM
+            "${RUNNER_TEMP}/golib" check --all || status=$?
+            exit "${status}"
           } 2>&1 | tee "${RUNNER_TEMP}/shared.log"
           status=${PIPESTATUS[0]}
           printf '%s\n' "${status}" >"${RUNNER_TEMP}/shared-check.status"
@@ -210,9 +224,20 @@ jobs:
         working-directory: source
         run: |
           set +e
+          copied_tooling="${RUNNER_TEMP}/shared-release-copied-tooling-${{ matrix.name }}"
+          restore_copied_tooling() {
+            if [[ -d "${copied_tooling}" && ! -e .golib ]]; then
+              mv "${copied_tooling}" .golib
+            fi
+          }
+          trap restore_copied_tooling EXIT HUP INT TERM
+          mv .golib "${copied_tooling}"
           "${RUNNER_TEMP}/golib" release dry-run \
             >"${RUNNER_TEMP}/shared-release.log" 2>&1
-          printf '%s\n' "$?" >"${RUNNER_TEMP}/shared-release.status"
+          status=$?
+          restore_copied_tooling
+          trap - EXIT HUP INT TERM
+          printf '%s\n' "${status}" >"${RUNNER_TEMP}/shared-release.status"
           exit 0
       - name: Audit service cleanup
         if: always()

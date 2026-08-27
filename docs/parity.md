@@ -22,6 +22,8 @@ unchanged. The wrapper resolves canonical module identities, so disposable
 repository snapshots and nested modules select the correct alternate file.
 The root alternate module is also exported explicitly for child processes that
 resolve the Go executable before applying command-specific environments.
+Third-party child modules stop resolution at their own nearest `go.mod`, so an
+inherited rehearsal module file cannot replace their dependency graph.
 
 The remote representative rehearsal normalizes the copied legacy Staticcheck
 pin from `v0.7.0` to `v0.8.1` before execution. Staticcheck `v0.7.0` cannot read
@@ -31,10 +33,21 @@ incompatibility rather than repository behavior. Only copied tooling is
 changed; the content digest proves the package source and repository-owned
 fixtures remain identical.
 
-The copied legacy isolated-Go shim also retains a monorepo-era checksum filter.
-The rehearsal updates that copied filter from the retired `golib/` module path
-to standalone `go-*` modules so legacy and shared checks consume the same
-intentionally replaced dependency identities.
+Copied legacy isolated-Go shims retain historical standalone checksums for
+their source comparisons. The rehearsal wrapper injects current internal sums
+only while a child Go command runs, then restores the historical lines in the
+task-owned legacy sum file. This keeps tracked source and legacy comparisons
+unchanged while Go resolves the intentionally replaced module versions.
+
+Shared runs temporarily hide copied `.golib` tooling only while validating the
+standalone repository contract, then restore it before exercising the package
+gate set. Shared fixture files are excluded through task-owned Git metadata.
+This keeps production code, tests, evidence inputs, and package behavior
+content-identical during parity; each real consumer migration removes copied
+tooling and updates tooling-coupled package checks in its own reviewed batch.
+Release-decision checks hide copied tooling again so standalone validation sees
+the final repository shape; current representative tags then exercise the same
+tag-collision decision as the copied release contract without rerunning gates.
 
 Shared lint execution pins `golangci-lint` `v2.13.1`. That release bundles
 Staticcheck `v0.8.0`, avoiding the Go 1.27 analyzer panic in the older
