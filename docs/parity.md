@@ -21,6 +21,10 @@ incompatibility rather than repository behavior. Only copied tooling is
 changed; the content digest proves the package source and repository-owned
 fixtures remain identical.
 
+Shared lint execution pins `golangci-lint` `v2.13.1`. That release bundles
+Staticcheck `v0.8.0`, avoiding the Go 1.27 analyzer panic in the older
+`golangci-lint` `v2.12.2` tool graph while preserving the complete lint policy.
+
 ## `go-clock`
 
 `go-clock` is the root-only, pure-library rehearsal. The migrated copy retained

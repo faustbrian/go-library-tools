@@ -28,7 +28,7 @@ import (
 const maximumMakefileSize = 4 << 20
 
 const (
-	golangCILintVersion = "v2.12.2"
+	golangCILintVersion = "v2.13.1"
 	staticcheckVersion  = "v0.8.1"
 	nilAwayVersion      = "v0.0.0-20260720194628-9fd1b8d7bac8"
 	govulncheckVersion  = "v1.6.0"

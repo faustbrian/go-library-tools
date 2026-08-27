@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Updated the central `golangci-lint` pin to `v2.13.1` so Linux Go 1.27 checks
+  use its compatible Staticcheck tool graph without disabling analyzers.
+
 ### Added
 
 - Strict, bounded `.golib.yaml`, module-manifest, and package-manifest loading.

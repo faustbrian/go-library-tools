@@ -129,7 +129,7 @@ func InputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 		if !local {
 			continue
 		}
-		canonicalImport := strings.Split(pkg.ImportPath, " [")[0]
+		canonicalImport, _, _ := strings.Cut(pkg.ImportPath, " [")
 		if canonicalImport == target+".test" {
 			continue
 		}
