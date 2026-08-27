@@ -56,6 +56,177 @@ func TestCampaignAcceptsMaximumWorkers(t *testing.T) {
 	}
 }
 
+func TestCampaignImportsApprovedLegacyCheckpoint(t *testing.T) {
+	campaign, process := campaignFixture(t)
+	campaign.Output = nil
+	campaign.Now = nil
+	_, currentInput, err := campaign.packageInput(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoint, ledger := approvedImportFixture(t, currentInput)
+	if err := campaign.Import(context.Background(), []Checkpoint{checkpoint}, ledger); err != nil {
+		t.Fatalf("Import() error = %v", err)
+	}
+	reused, result, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", ".", currentInput)
+	if err != nil || !reused || result.Mutants != 1 {
+		t.Fatalf("Reuse() = %v, %#v, %v", reused, result, err)
+	}
+	if err := campaign.Run(context.Background()); err != nil {
+		t.Fatalf("Run() after import error = %v", err)
+	}
+	if process.mutations != 0 {
+		t.Fatalf("Run() executed %d mutation campaigns after import", process.mutations)
+	}
+}
+
+func TestCampaignImportFailsClosedAtEachBoundary(t *testing.T) {
+	tests := map[string]func(*Campaign, *campaignProcess, *Checkpoint, *MigrationLedger) []Checkpoint{
+		"invalid campaign": func(campaign *Campaign, _ *campaignProcess, checkpoint *Checkpoint, _ *MigrationLedger) []Checkpoint {
+			campaign.Root = "."
+			return []Checkpoint{*checkpoint}
+		},
+		"directory preparation": func(campaign *Campaign, _ *campaignProcess, checkpoint *Checkpoint, _ *MigrationLedger) []Checkpoint {
+			campaign.directoryFiles = failingCampaignDirectories{}
+			return []Checkpoint{*checkpoint}
+		},
+		"duplicate checkpoint": func(_ *Campaign, _ *campaignProcess, checkpoint *Checkpoint, _ *MigrationLedger) []Checkpoint {
+			return []Checkpoint{*checkpoint, *checkpoint}
+		},
+		"package input": func(_ *Campaign, process *campaignProcess, checkpoint *Checkpoint, _ *MigrationLedger) []Checkpoint {
+			process.fail = "list"
+			return []Checkpoint{*checkpoint}
+		},
+		"zero mutants without review": func(_ *Campaign, _ *campaignProcess, checkpoint *Checkpoint, ledger *MigrationLedger) []Checkpoint {
+			result, err := ValidateReport(strings.NewReader(`{"files":[]}`))
+			if err != nil {
+				t.Fatal(err)
+			}
+			checkpoint.Report = []byte(`{"files":[]}`)
+			checkpoint.ReportDigest = result.Digest
+			checkpoint.Mutants = 0
+			digest := strings.TrimPrefix(result.Digest, "sha256:")
+			ledger.VerifierMigrations[0].ReportSHA256 = digest
+			ledger.Entries[0].ReportSHA256 = digest
+			return []Checkpoint{*checkpoint}
+		},
+		"unapproved current input": func(_ *Campaign, _ *campaignProcess, checkpoint *Checkpoint, ledger *MigrationLedger) []Checkpoint {
+			ledger.Entries[0].ReplacementInputDigest = strings.Repeat("b", 64)
+			return []Checkpoint{*checkpoint}
+		},
+		"report store": func(campaign *Campaign, _ *campaignProcess, checkpoint *Checkpoint, _ *MigrationLedger) []Checkpoint {
+			if err := os.MkdirAll(campaign.MutationRoot, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(campaign.MutationRoot, "reports"), []byte("file"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			return []Checkpoint{*checkpoint}
+		},
+		"report identity": func(_ *Campaign, _ *campaignProcess, checkpoint *Checkpoint, _ *MigrationLedger) []Checkpoint {
+			checkpoint.Mutants++
+			return []Checkpoint{*checkpoint}
+		},
+		"evidence store": func(campaign *Campaign, _ *campaignProcess, checkpoint *Checkpoint, _ *MigrationLedger) []Checkpoint {
+			if err := os.MkdirAll(campaign.EvidenceRoot, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(campaign.EvidenceRoot, "by-input"), []byte("file"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			return []Checkpoint{*checkpoint}
+		},
+	}
+	for name, prepare := range tests {
+		t.Run(name, func(t *testing.T) {
+			campaign, process := campaignFixture(t)
+			_, currentInput, err := campaign.packageInput(context.Background(), ".")
+			if err != nil {
+				t.Fatal(err)
+			}
+			checkpoint, ledger := approvedImportFixture(t, currentInput)
+			checkpoints := prepare(&campaign, process, &checkpoint, &ledger)
+			if err := campaign.Import(context.Background(), checkpoints, ledger); err == nil {
+				t.Fatalf("Import(%s) error = nil", name)
+			}
+		})
+	}
+}
+
+func TestCampaignRejectsUnapprovedOrMismatchedImports(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	_, currentInput, err := campaign.packageInput(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoint, ledger := approvedImportFixture(t, currentInput)
+	tests := map[string]struct {
+		checkpoint Checkpoint
+		ledger     MigrationLedger
+	}{
+		"unknown module":  {checkpoint: checkpoint, ledger: ledger},
+		"unknown package": {checkpoint: checkpoint, ledger: ledger},
+		"unapproved":      {checkpoint: checkpoint, ledger: MigrationLedger{}},
+	}
+	module := tests["unknown module"]
+	module.checkpoint.Module = "other"
+	tests["unknown module"] = module
+	pkg := tests["unknown package"]
+	pkg.checkpoint.Package = "missing"
+	tests["unknown package"] = pkg
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			if err := campaign.Import(context.Background(), []Checkpoint{test.checkpoint}, test.ledger); err == nil {
+				t.Fatalf("Import(%s) error = nil", name)
+			}
+		})
+	}
+	if err := campaign.Import(context.Background(), nil, ledger); err == nil {
+		t.Fatal("Import(empty) error = nil")
+	}
+}
+
+func approvedImportFixture(t *testing.T, currentInput string) (Checkpoint, MigrationLedger) {
+	t.Helper()
+	report := []byte(`{"files":[{"file_name":"source.go","mutations":[{"type":"NEGATION","status":"KILLED","line":3,"column":1}]}]}`)
+	result, err := ValidateReport(strings.NewReader(string(report)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldInput := strings.Repeat("a", 64)
+	revision := strings.Repeat("e", 40)
+	verifier := LegacyVerifierDigest()
+	checkpoint := Checkpoint{
+		Module: ".", Package: ".", ExecutionRevision: revision, InputDigest: oldInput,
+		VerifierDigest: verifier, Gremlins: GremlinsVersion,
+		Environment:  map[string]string{"GOVERSION": "go1.26.6"},
+		ReportDigest: result.Digest, Report: report, Mutants: result.Mutants,
+	}
+	reportDigest := strings.TrimPrefix(result.Digest, "sha256:")
+	ledger := MigrationLedger{
+		SchemaVersion: 3,
+		Reason:        "The exact legacy checkpoint is approved for content-addressed evidence migration.",
+		VerifierMigrationReview: VerifierMigrationReview{
+			GremlinsVerifierSHA256: verifier,
+			Reason:                 "The complete legacy verifier semantics were independently reviewed for equivalence.",
+			ReviewedAt:             "2026-08-27",
+		},
+		VerifierMigrations: []VerifierMigration{{
+			ExecutionRevision: revision, GateInputDigest: oldInput,
+			GremlinsVerifierSHA256: verifier, GremlinsVersion: GremlinsVersion,
+			Module: ".", Package: ".", ReportSHA256: reportDigest,
+		}},
+		Entries: []InputMigration{{
+			ExecutionRevision: revision, GateInputDigest: oldInput,
+			ReplacementInputDigest: strings.TrimPrefix(currentInput, "sha256:"),
+			GremlinsVerifierSHA256: verifier, GremlinsVersion: GremlinsVersion,
+			Module: ".", Package: ".", ReportSHA256: reportDigest,
+			MigrationReason: "The new digest removes Git identity while preserving all behavioral inputs.",
+		}},
+	}
+	return checkpoint, ledger
+}
+
 func TestAppendTagArgument(t *testing.T) {
 	if got := appendTagArgument([]string{"test"}, nil); len(got) != 1 {
 		t.Fatalf("empty tags = %#v", got)

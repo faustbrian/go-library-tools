@@ -1,8 +1,10 @@
 package gates
 
 import (
+	"archive/zip"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -15,6 +17,173 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/mutation"
 )
+
+func TestMutationImportLoadsApprovedRepositoryArtifacts(t *testing.T) {
+	root := t.TempDir()
+	writeValidMutationSetup(t, root)
+	writeMutationImportFixtures(t, root)
+	var observed mutation.Campaign
+	var checkpoints []mutation.Checkpoint
+	var ledger mutation.MigrationLedger
+	var output bytes.Buffer
+	runner := Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Repository: "example", Modules: []inventory.Module{{
+			Directory: ".", ModulePath: "example", GoVersion: "1.27.0",
+			Gates: map[string]bool{"mutation": true}, Packages: []inventory.Package{{Directory: ".", CoverageRequired: true}},
+		}}},
+		Policy:   config.Config{Evidence: config.Evidence{Root: ".verification"}, Mutation: config.Mutation{Root: ".verification/mutation"}},
+		Executor: runtimeExecutor(filepath.Join(root, ".task")), Output: &output,
+		mutationImport: func(_ context.Context, campaign mutation.Campaign, imported []mutation.Checkpoint, approvals mutation.MigrationLedger) error {
+			observed, checkpoints, ledger = campaign, imported, approvals
+			return nil
+		},
+	}
+	if err := runner.MutationImport(context.Background(), ".", "legacy.zip", "ledger.json"); err != nil {
+		t.Fatalf("MutationImport() error = %v", err)
+	}
+	if observed.Policy.ModulePath != "example" || len(checkpoints) != 1 || ledger.SchemaVersion != 3 || !strings.Contains(output.String(), "mutation-import") {
+		t.Fatalf("MutationImport() observed %#v, %d, %#v, %q", observed.Policy, len(checkpoints), ledger, output.String())
+	}
+}
+
+func TestMutationImportFailsClosed(t *testing.T) {
+	root := t.TempDir()
+	writeValidMutationSetup(t, root)
+	writeMutationImportFixtures(t, root)
+	base := func() Runner {
+		module := inventory.Module{Directory: ".", ModulePath: "example", GoVersion: "1.27.0", Gates: map[string]bool{"mutation": true}, Packages: []inventory.Package{{Directory: ".", CoverageRequired: true}}}
+		return Runner{
+			Root: root, Catalog: inventory.Inventory{Repository: "example", Modules: []inventory.Module{module}},
+			Policy:   config.Config{Evidence: config.Evidence{Root: ".verification"}, Mutation: config.Mutation{Root: ".verification/mutation"}},
+			Executor: runtimeExecutor(filepath.Join(root, ".task")),
+		}
+	}
+	for name, run := range map[string]func(Runner) error{
+		"unknown module": func(runner Runner) error {
+			return runner.MutationImport(context.Background(), "missing", "legacy.zip", "ledger.json")
+		},
+		"disabled": func(runner Runner) error {
+			runner.Catalog.Modules[0].Gates = map[string]bool{}
+			return runner.MutationImport(context.Background(), ".", "legacy.zip", "ledger.json")
+		},
+		"missing archive": func(runner Runner) error {
+			return runner.MutationImport(context.Background(), ".", "missing.zip", "ledger.json")
+		},
+		"missing ledger": func(runner Runner) error {
+			return runner.MutationImport(context.Background(), ".", "legacy.zip", "missing.json")
+		},
+		"malformed archive": func(runner Runner) error {
+			if err := os.WriteFile(filepath.Join(root, "bad.zip"), []byte("bad"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			return runner.MutationImport(context.Background(), ".", "bad.zip", "ledger.json")
+		},
+		"malformed ledger": func(runner Runner) error {
+			if err := os.WriteFile(filepath.Join(root, "bad.json"), []byte("{}"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			return runner.MutationImport(context.Background(), ".", "legacy.zip", "bad.json")
+		},
+		"importer": func(runner Runner) error {
+			runner.mutationImport = func(context.Context, mutation.Campaign, []mutation.Checkpoint, mutation.MigrationLedger) error {
+				return errors.New("import failed")
+			}
+			return runner.MutationImport(context.Background(), ".", "legacy.zip", "ledger.json")
+		},
+		"default importer": func(runner Runner) error {
+			return runner.MutationImport(context.Background(), ".", "legacy.zip", "ledger.json")
+		},
+		"campaign setup": func(runner Runner) error {
+			runner.Executor = executorFunction(func(context.Context, Command) error { return nil })
+			return runner.MutationImport(context.Background(), ".", "legacy.zip", "ledger.json")
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if err := run(base()); err == nil {
+				t.Fatalf("MutationImport(%s) error = nil", name)
+			}
+		})
+	}
+	runner := base()
+	runner.Output = nil
+	runner.mutationImport = func(context.Context, mutation.Campaign, []mutation.Checkpoint, mutation.MigrationLedger) error {
+		return nil
+	}
+	if err := runner.MutationImport(context.Background(), ".", "legacy.zip", "ledger.json"); err != nil {
+		t.Fatalf("MutationImport(discarded output) error = %v", err)
+	}
+}
+
+func TestSelectedMutationModuleFindsExactDirectory(t *testing.T) {
+	module := inventory.Module{Directory: "."}
+	selected, err := selectedMutationModule([]inventory.Module{module}, ".")
+	if err != nil || selected.Directory != "." {
+		t.Fatalf("selectedMutationModule() = %#v, %v", selected, err)
+	}
+	if _, err := selectedMutationModule(nil, "."); err == nil {
+		t.Fatal("selectedMutationModule(unknown) error = nil")
+	}
+}
+
+func writeMutationImportFixtures(t *testing.T, root string) {
+	t.Helper()
+	report := json.RawMessage(`{"files":[{"file_name":"source.go","mutations":[{"type":"NEGATION","status":"KILLED","line":1,"column":1}]}]}`)
+	result, err := mutation.ValidateReport(bytes.NewReader(report))
+	if err != nil {
+		t.Fatal(err)
+	}
+	oldInput := strings.Repeat("a", 64)
+	revision := strings.Repeat("e", 40)
+	verifier := mutation.LegacyVerifierDigest()
+	checkpoint, err := json.Marshal(map[string]any{
+		"schema_version": 3, "module": ".", "package": ".", "execution_revision": revision,
+		"gate_input_digest": oldInput, "gremlins_version": mutation.GremlinsVersion,
+		"gremlins_verifier_sha256": verifier, "environment": map[string]string{"GOVERSION": "go1.26.6"},
+		"report": report,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var archive bytes.Buffer
+	writer := zip.NewWriter(&archive)
+	entry, err := writer.Create("mutation-checkpoints/root.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := entry.Write(checkpoint); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "legacy.zip"), archive.Bytes(), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	reportDigest := strings.TrimPrefix(result.Digest, "sha256:")
+	ledger := mutation.MigrationLedger{
+		SchemaVersion: 3,
+		Reason:        "The exact legacy checkpoint is approved for content-addressed evidence migration.",
+		VerifierMigrationReview: mutation.VerifierMigrationReview{
+			GremlinsVerifierSHA256: verifier,
+			Reason:                 "The complete legacy verifier semantics were independently reviewed for equivalence.",
+			ReviewedAt:             "2026-08-27",
+		},
+		VerifierMigrations: []mutation.VerifierMigration{{
+			ExecutionRevision: revision, GateInputDigest: oldInput,
+			GremlinsVerifierSHA256: verifier, GremlinsVersion: mutation.GremlinsVersion,
+			Module: ".", Package: ".", ReportSHA256: reportDigest,
+		}},
+		Entries: []mutation.InputMigration{},
+	}
+	data, err := json.Marshal(ledger)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "ledger.json"), data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+}
 
 func TestMutationBuildsCanonicalCampaignAndRunsEnabledModules(t *testing.T) {
 	root := t.TempDir()

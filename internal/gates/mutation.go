@@ -22,6 +22,7 @@ import (
 const maximumModuleFileSize = 16 << 20
 
 type mutationCampaignRunner func(context.Context, mutation.Campaign) error
+type mutationImportRunner func(context.Context, mutation.Campaign, []mutation.Checkpoint, mutation.MigrationLedger) error
 
 type mutationFileSystem interface {
 	MkdirAll(string, os.FileMode) error
@@ -64,32 +65,103 @@ func (runner Runner) Mutation(ctx context.Context, selection []string) error {
 	return nil
 }
 
+// MutationImport migrates one module's approved legacy checkpoint archive.
+func (runner Runner) MutationImport(ctx context.Context, moduleDirectory, archivePath, ledgerPath string) error {
+	module, err := selectedMutationModule(runner.Catalog.Modules, moduleDirectory)
+	if err != nil {
+		return err
+	}
+	if !module.Gates["mutation"] {
+		return fmt.Errorf("module %s does not enable mutation verification", module.Directory)
+	}
+	output := runner.Output
+	if output == nil {
+		output = io.Discard
+	}
+	return runner.withModuleServices(ctx, module, func(scoped Runner) error {
+		return announce(output, module.Directory, "mutation-import", func() error {
+			return scoped.runMutationImport(ctx, output, module, archivePath, ledgerPath)
+		})
+	})
+}
+
+func selectedMutationModule(modules []inventory.Module, directory string) (inventory.Module, error) {
+	for _, module := range modules {
+		if module.Directory == directory {
+			return module, nil
+		}
+	}
+	return inventory.Module{}, fmt.Errorf("unknown module %q", directory)
+}
+
 func (runner Runner) runMutation(ctx context.Context, output io.Writer, module inventory.Module) error {
+	campaign, err := runner.prepareMutationCampaign(ctx, output, module)
+	if err != nil {
+		return err
+	}
+	run := runner.mutationCampaign
+	if run == nil {
+		run = func(ctx context.Context, campaign mutation.Campaign) error { return campaign.Run(ctx) }
+	}
+	return run(ctx, campaign)
+}
+
+func (runner Runner) runMutationImport(ctx context.Context, output io.Writer, module inventory.Module, archivePath, ledgerPath string) error {
+	archive, err := repositoryfile.Read(runner.Root, archivePath, mutation.MaximumArchiveSize)
+	if err != nil {
+		return fmt.Errorf("read mutation checkpoint archive: %w", err)
+	}
+	checkpoints, err := mutation.ReadBootstrap(bytes.NewReader(archive), int64(len(archive)))
+	if err != nil {
+		return fmt.Errorf("parse mutation checkpoint archive: %w", err)
+	}
+	ledgerData, err := repositoryfile.Read(runner.Root, ledgerPath, mutation.MaximumMigrationLedgerSize)
+	if err != nil {
+		return fmt.Errorf("read mutation migration ledger: %w", err)
+	}
+	ledger, err := mutation.ParseMigrationLedger(bytes.NewReader(ledgerData))
+	if err != nil {
+		return fmt.Errorf("parse mutation migration ledger: %w", err)
+	}
+	campaign, err := runner.prepareMutationCampaign(ctx, output, module)
+	if err != nil {
+		return err
+	}
+	run := runner.mutationImport
+	if run == nil {
+		run = func(ctx context.Context, campaign mutation.Campaign, checkpoints []mutation.Checkpoint, ledger mutation.MigrationLedger) error {
+			return campaign.Import(ctx, checkpoints, ledger)
+		}
+	}
+	return run(ctx, campaign, checkpoints, ledger)
+}
+
+func (runner Runner) prepareMutationCampaign(ctx context.Context, output io.Writer, module inventory.Module) (mutation.Campaign, error) {
 	workspace, ok := runner.Executor.(taskWorkspace)
 	if !ok || !filepath.IsAbs(workspace.TemporaryDirectory()) {
-		return errors.New("mutation requires a task-owned workspace")
+		return mutation.Campaign{}, errors.New("mutation requires a task-owned workspace")
 	}
 	if len(module.RequiredServices) != len(runner.serviceIdentities) {
-		return fmt.Errorf("mutation service identities are incomplete for %s", module.Directory)
+		return mutation.Campaign{}, fmt.Errorf("mutation service identities are incomplete for %s", module.Directory)
 	}
 	for _, service := range module.RequiredServices {
 		if runner.serviceIdentities[service] == "" {
-			return fmt.Errorf("mutation service identity for %s is missing", service)
+			return mutation.Campaign{}, fmt.Errorf("mutation service identity for %s is missing", service)
 		}
 	}
 	mutationRoot := filepath.Join(runner.Root, filepath.FromSlash(runner.Policy.Mutation.Root))
 	reviews, err := loadZeroInventory(runner.Root, filepath.Join(runner.Policy.Mutation.Root, "zero-inventory.json"))
 	if err != nil {
-		return err
+		return mutation.Campaign{}, err
 	}
 	runtimeIdentity, err := runner.runtimeIdentity(ctx, module.Directory)
 	if err != nil {
-		return err
+		return mutation.Campaign{}, err
 	}
 	owned := runner.localOwnedModules(module)
 	environment, err := runner.mutationEnvironment(ctx, workspace.TemporaryDirectory(), module, owned)
 	if err != nil {
-		return err
+		return mutation.Campaign{}, err
 	}
 	packages := make([]string, 0, len(module.Packages))
 	for _, pkg := range module.Packages {
@@ -106,9 +178,9 @@ func (runner Runner) runMutation(ctx context.Context, output io.Writer, module i
 	}
 	workers, err := runner.mutationWorkers(module)
 	if err != nil {
-		return err
+		return mutation.Campaign{}, err
 	}
-	campaign := mutation.Campaign{
+	return mutation.Campaign{
 		Root:         runner.Root,
 		EvidenceRoot: filepath.Join(runner.Root, filepath.FromSlash(runner.Policy.Evidence.Root)),
 		MutationRoot: mutationRoot,
@@ -122,12 +194,7 @@ func (runner Runner) runMutation(ctx context.Context, output io.Writer, module i
 		},
 		ZeroReviews: reviews, Environment: environment, RuntimeIdentity: runtimeIdentity,
 		Process: runner.mutationProcess(), Output: output,
-	}
-	run := runner.mutationCampaign
-	if run == nil {
-		run = func(ctx context.Context, campaign mutation.Campaign) error { return campaign.Run(ctx) }
-	}
-	return run(ctx, campaign)
+	}, nil
 }
 
 func loadZeroInventory(root, path string) (mutation.ZeroInventory, error) {

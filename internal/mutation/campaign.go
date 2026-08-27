@@ -11,6 +11,7 @@ import (
 	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -77,18 +78,8 @@ func (campaign Campaign) Run(ctx context.Context) error {
 	if err := campaign.validate(); err != nil {
 		return err
 	}
-	directoryFiles := campaign.directoryFiles
-	if directoryFiles == nil {
-		directoryFiles = operatingCampaignDirectories{}
-	}
-	for _, root := range []struct{ name, directory string }{
-		{"evidence", campaign.EvidenceRoot},
-		{"mutation", campaign.MutationRoot},
-		{"workspace", campaign.Workspace},
-	} {
-		if err := ensureCampaignDirectory(directoryFiles, root.directory); err != nil {
-			return fmt.Errorf("prepare %s root: %w", root.name, err)
-		}
+	if err := campaign.prepareDirectories(); err != nil {
+		return err
 	}
 	output := campaign.Output
 	if output == nil {
@@ -100,6 +91,104 @@ func (campaign Campaign) Run(ctx context.Context) error {
 	for _, packageDirectory := range packages {
 		if err := campaign.runPackage(ctx, output, packageDirectory, &state); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+// Import migrates explicitly approved legacy checkpoints to current
+// content-addressed evidence without depending on their Git revisions.
+func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, ledger MigrationLedger) error {
+	if err := campaign.validate(); err != nil {
+		return err
+	}
+	if len(checkpoints) == 0 {
+		return fmt.Errorf("%w: mutation checkpoint selection is empty", ErrInvalid)
+	}
+	if err := ledger.validate(); err != nil {
+		return err
+	}
+	if err := campaign.prepareDirectories(); err != nil {
+		return err
+	}
+	allowed := make(map[string]struct{}, len(campaign.Policy.Packages))
+	for _, packageDirectory := range campaign.Policy.Packages {
+		allowed[packageDirectory] = struct{}{}
+	}
+	ordered := append([]Checkpoint(nil), checkpoints...)
+	slices.SortFunc(ordered, func(left, right Checkpoint) int {
+		return strings.Compare(left.Module+"\x00"+left.Package, right.Module+"\x00"+right.Package)
+	})
+	seen := make(map[string]struct{}, len(ordered))
+	output := campaign.Output
+	if output == nil {
+		output = io.Discard
+	}
+	for _, checkpoint := range ordered {
+		identity := checkpoint.Module + "\x00" + checkpoint.Package
+		if checkpoint.Module != campaign.Policy.ModuleDirectory {
+			return fmt.Errorf("%w: checkpoint module %s does not match %s", ErrInvalid, checkpoint.Module, campaign.Policy.ModuleDirectory)
+		}
+		if _, exists := allowed[checkpoint.Package]; !exists {
+			return fmt.Errorf("%w: checkpoint package %s is not mutation-enabled", ErrInvalid, checkpoint.Package)
+		}
+		if _, duplicate := seen[identity]; duplicate {
+			return fmt.Errorf("%w: duplicate checkpoint identity %s %s", ErrInvalid, checkpoint.Module, checkpoint.Package)
+		}
+		seen[identity] = struct{}{}
+		review, currentInput, err := campaign.packageInput(ctx, checkpoint.Package)
+		if err != nil {
+			return err
+		}
+		if checkpoint.Mutants == 0 && review == nil {
+			return fmt.Errorf("%w: zero-mutant package %s lacks an exact review", ErrInvalid, packageTarget(checkpoint.Package))
+		}
+		if err := ledger.Approve(checkpoint, strings.TrimPrefix(currentInput, "sha256:"), LegacyVerifierDigest()); err != nil {
+			return fmt.Errorf("approve checkpoint %s %s: %w", checkpoint.Module, checkpoint.Package, err)
+		}
+		_, _, stored, err := StoreReport(campaign.MutationRoot, currentInput, checkpoint.Report)
+		if err != nil {
+			return err
+		}
+		if stored.Digest != checkpoint.ReportDigest || stored.Mutants != checkpoint.Mutants {
+			return fmt.Errorf("%w: checkpoint report identity changed during import", ErrInvalid)
+		}
+		now := campaign.Now
+		if now == nil {
+			now = time.Now
+		}
+		record := evidence.Record{
+			SchemaVersion: evidence.SchemaVersion, Repository: campaign.Policy.Repository,
+			Module: campaign.Policy.ModuleDirectory, Package: checkpoint.Package, Gate: "mutation",
+			InputDigest: currentInput, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
+			ReportDigest: stored.Digest, CompletedAt: now().UTC(),
+			Environment: map[string]string{
+				"GOVERSION": campaign.RuntimeIdentity.GoVersion, "GOOS": campaign.RuntimeIdentity.GOOS,
+				"GOARCH": campaign.RuntimeIdentity.GOARCH, "CGO_ENABLED": campaign.RuntimeIdentity.CGOEnabled,
+				"evidence_origin": "approved_legacy_checkpoint",
+			},
+		}
+		if _, _, err := evidence.Store(campaign.EvidenceRoot, record); err != nil {
+			return err
+		}
+		_, _ = fmt.Fprintf(output, "[%s] %s imported approved mutation evidence (%d mutants)\n",
+			campaign.Policy.ModuleDirectory, packageTarget(checkpoint.Package), stored.Mutants)
+	}
+	return nil
+}
+
+func (campaign Campaign) prepareDirectories() error {
+	directoryFiles := campaign.directoryFiles
+	if directoryFiles == nil {
+		directoryFiles = operatingCampaignDirectories{}
+	}
+	for _, root := range []struct{ name, directory string }{
+		{"evidence", campaign.EvidenceRoot},
+		{"mutation", campaign.MutationRoot},
+		{"workspace", campaign.Workspace},
+	} {
+		if err := ensureCampaignDirectory(directoryFiles, root.directory); err != nil {
+			return fmt.Errorf("prepare %s root: %w", root.name, err)
 		}
 	}
 	return nil

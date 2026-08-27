@@ -15,6 +15,9 @@ Core commands:
 - `golib check [--all|--module DIR]` runs the enabled contract.
 - `golib coverage [--module DIR]` verifies exact package coverage.
 - `golib mutation [--module DIR]` verifies or executes mutation evidence.
+- `golib mutation import --module DIR --archive PATH --ledger PATH` validates
+  an approved legacy checkpoint archive and persists current content-addressed
+  evidence without retaining Git identity.
 - `golib api check|update [--module DIR]` checks or deliberately updates API
   baselines.
 - `golib evidence inspect [--json]` validates attributable evidence records.

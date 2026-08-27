@@ -9,7 +9,8 @@ import (
 	"time"
 )
 
-const maximumMigrationLedgerSize = 4 << 20
+// MaximumMigrationLedgerSize bounds one approved legacy migration ledger.
+const MaximumMigrationLedgerSize = 4 << 20
 
 // MigrationLedger binds legacy verifier and input identities to explicitly
 // reviewed semantic replacements. Git revisions are matching data for the old
@@ -55,12 +56,12 @@ type InputMigration struct {
 
 // ParseMigrationLedger strictly parses one bounded approval ledger.
 func ParseMigrationLedger(reader io.Reader) (MigrationLedger, error) {
-	data, err := io.ReadAll(io.LimitReader(reader, maximumMigrationLedgerSize+1))
+	data, err := io.ReadAll(io.LimitReader(reader, MaximumMigrationLedgerSize+1))
 	if err != nil {
 		return MigrationLedger{}, fmt.Errorf("%w: read migration ledger: %s", ErrInvalid, err.Error())
 	}
-	if len(data) > maximumMigrationLedgerSize {
-		return MigrationLedger{}, fmt.Errorf("%w: migration ledger exceeds %d bytes", ErrInvalid, maximumMigrationLedgerSize)
+	if len(data) > MaximumMigrationLedgerSize {
+		return MigrationLedger{}, fmt.Errorf("%w: migration ledger exceeds %d bytes", ErrInvalid, MaximumMigrationLedgerSize)
 	}
 	var ledger MigrationLedger
 	if err := decodeStrict(data, &ledger); err != nil {

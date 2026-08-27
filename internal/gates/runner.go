@@ -62,6 +62,7 @@ type Runner struct {
 	apiFiles          apiFileSystem
 	mutationFiles     mutationFileSystem
 	mutationCampaign  mutationCampaignRunner
+	mutationImport    mutationImportRunner
 	startServices     serviceStarter
 	serviceHTTPProbe  services.HTTPProbe
 	serviceIdentities map[string]string

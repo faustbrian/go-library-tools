@@ -30,6 +30,7 @@ Usage:
   golib repository check
   golib coverage [--module <directory>]
   golib mutation [--module <directory>]
+	golib mutation import --module <directory> --archive <path> --ledger <path>
   golib api check
   golib api update
 	golib docs check [--module <directory>]
@@ -142,6 +143,17 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Coverage(context.Background(), selection)
 		})
 	case "mutation":
+		if len(args) > 1 && args[1] == "import" {
+			options, usageError := mutationImportArguments(args[2:])
+			if usageError != nil {
+				return usage(stderr, "usage: golib mutation import --module <directory> --archive <path> --ledger <path>")
+			}
+			return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
+				return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).MutationImport(
+					context.Background(), options.module, options.archive, options.ledger,
+				)
+			})
+		}
 		selection, usageError := moduleSelection(args[1:], catalog.Modules)
 		if usageError != nil {
 			return usage(stderr, "usage: golib mutation [--module <directory>]")
@@ -203,6 +215,30 @@ func execute(args []string, workingDirectory string, stdout, stderr io.Writer, c
 	default:
 		return usage(stderr, "unknown command: "+args[0])
 	}
+}
+
+type mutationImportOptions struct {
+	module  string
+	archive string
+	ledger  string
+}
+
+func mutationImportArguments(args []string) (mutationImportOptions, error) {
+	if len(args) != 6 {
+		return mutationImportOptions{}, errors.New("mutation import requires module, archive, and ledger paths")
+	}
+	values := make(map[string]string, 3)
+	for index := 0; index < len(args); index += 2 {
+		flag, value := args[index], args[index+1]
+		if value == "" || (flag != "--module" && flag != "--archive" && flag != "--ledger") {
+			return mutationImportOptions{}, errors.New("mutation import arguments are malformed")
+		}
+		if _, duplicate := values[flag]; duplicate {
+			return mutationImportOptions{}, errors.New("mutation import arguments are duplicated")
+		}
+		values[flag] = value
+	}
+	return mutationImportOptions{module: values["--module"], archive: values["--archive"], ledger: values["--ledger"]}, nil
 }
 
 func withExecutor(root string, stdout, stderr io.Writer, create executorFactory, run func(gates.Executor) error) int {

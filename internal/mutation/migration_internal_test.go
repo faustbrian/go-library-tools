@@ -11,7 +11,7 @@ func TestParseMigrationLedgerRejectsInputFailures(t *testing.T) {
 	if _, err := ParseMigrationLedger(failingReader{}); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("ParseMigrationLedger(read failure) error = %v", err)
 	}
-	if _, err := ParseMigrationLedger(strings.NewReader(strings.Repeat("x", maximumMigrationLedgerSize+1))); !errors.Is(err, ErrInvalid) {
+	if _, err := ParseMigrationLedger(strings.NewReader(strings.Repeat("x", MaximumMigrationLedgerSize+1))); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("ParseMigrationLedger(oversized) error = %v", err)
 	}
 	if _, err := ParseMigrationLedger(strings.NewReader("{")); !errors.Is(err, ErrInvalid) {
@@ -24,7 +24,7 @@ func TestParseMigrationLedgerRejectsInputFailures(t *testing.T) {
 
 func TestParseMigrationLedgerAcceptsExactSizeLimit(t *testing.T) {
 	ledger := validMigrationLedgerJSON(t)
-	padded := ledger + strings.Repeat(" ", maximumMigrationLedgerSize-len(ledger))
+	padded := ledger + strings.Repeat(" ", MaximumMigrationLedgerSize-len(ledger))
 	if _, err := ParseMigrationLedger(strings.NewReader(padded)); err != nil {
 		t.Fatalf("ParseMigrationLedger() error = %v", err)
 	}
@@ -33,7 +33,7 @@ func TestParseMigrationLedgerAcceptsExactSizeLimit(t *testing.T) {
 func TestParseMigrationLedgerRequiresFinalByteAtSizeLimit(t *testing.T) {
 	ledger := validMigrationLedgerJSON(t)
 	prefix := ledger[:len(ledger)-1]
-	input := prefix + strings.Repeat(" ", maximumMigrationLedgerSize-len(prefix)-1) + `}`
+	input := prefix + strings.Repeat(" ", MaximumMigrationLedgerSize-len(prefix)-1) + `}`
 	if _, err := ParseMigrationLedger(strings.NewReader(input)); err != nil {
 		t.Fatal(err)
 	}

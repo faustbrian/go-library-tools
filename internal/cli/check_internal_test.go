@@ -113,6 +113,9 @@ func TestExecuteRoutesStandaloneMutation(t *testing.T) {
 		return coverageExecutor{}, func() error { return nil }, nil
 	}
 	var stdout, stderr bytes.Buffer
+	if code := execute([]string{"mutation"}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 {
+		t.Fatalf("execute() default mutation = %d, %q", code, stderr.String())
+	}
 	if code := execute([]string{"mutation", "--module", "."}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 {
 		t.Fatalf("execute() mutation = %d, %q", code, stderr.String())
 	}
@@ -121,6 +124,35 @@ func TestExecuteRoutesStandaloneMutation(t *testing.T) {
 	}
 	if code := execute([]string{"mutation", "--bad"}, root, &stdout, &stderr, factory); code != 2 {
 		t.Fatalf("execute() invalid mutation = %d", code)
+	}
+	if code := execute([]string{"mutation", "import"}, root, &stdout, &stderr, factory); code != 2 {
+		t.Fatalf("execute() invalid mutation import = %d", code)
+	}
+	manifest := `{"schema_version":1,"repository":"example","go_version":"1.27.0","modules":[{"directory":".","module_path":"example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"mutation":true},"packages":[]}]}`
+	if err := os.WriteFile(filepath.Join(root, "modules.json"), []byte(manifest), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stderr.Reset()
+	if code := execute([]string{"mutation", "import", "--module", ".", "--archive", "legacy.zip", "--ledger", "ledger.json"}, root, &stdout, &stderr, factory); code != 1 || !strings.Contains(stderr.String(), "checkpoint archive") {
+		t.Fatalf("execute() mutation import = %d, %q", code, stderr.String())
+	}
+}
+
+func TestMutationImportArguments(t *testing.T) {
+	options, err := mutationImportArguments([]string{"--ledger", "ledger.json", "--module", ".", "--archive", "legacy.zip"})
+	if err != nil || options.module != "." || options.archive != "legacy.zip" || options.ledger != "ledger.json" {
+		t.Fatalf("mutationImportArguments() = %#v, %v", options, err)
+	}
+	for _, args := range [][]string{
+		nil,
+		{"--module", ".", "--archive", "legacy.zip", "--unknown", "ledger.json"},
+		{"--module", ".", "--module", ".", "--ledger", "ledger.json"},
+		{"--module", ".", "--archive", "", "--ledger", "ledger.json"},
+		{"--module", ".", "--archive", "legacy.zip", "--archive", "other.zip"},
+	} {
+		if _, err := mutationImportArguments(args); err == nil {
+			t.Fatalf("mutationImportArguments(%v) error = nil", args)
+		}
 	}
 }
 
