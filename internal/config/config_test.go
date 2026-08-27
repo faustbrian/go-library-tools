@@ -34,6 +34,19 @@ func TestLoadAppliesStableDefaults(t *testing.T) {
 	}
 }
 
+func TestLoadAcceptsReleaseChecksumPin(t *testing.T) {
+	root := t.TempDir()
+	digest := strings.Repeat("a", 64)
+	write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\ntool_checksums_sha256: "+digest+"\n")
+	got, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ToolChecksumsSHA256 != digest {
+		t.Fatalf("checksum digest = %q", got.ToolChecksumsSHA256)
+	}
+}
+
 func TestLoadRejectsUnknownFields(t *testing.T) {
 	root := t.TempDir()
 	write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\nsecret: value\n")
@@ -66,8 +79,10 @@ func TestLoadRejectsMalformedAndMultipleDocuments(t *testing.T) {
 
 func TestLoadRejectsUnsupportedSchemaAndToolVersions(t *testing.T) {
 	tests := map[string]string{
-		"schema": "schema_version: 2\ntool_version: v1.0.0\n",
-		"tool":   "schema_version: 1\ntool_version: latest\n",
+		"schema":             "schema_version: 2\ntool_version: v1.0.0\n",
+		"tool":               "schema_version: 1\ntool_version: latest\n",
+		"checksum short":     "schema_version: 1\ntool_version: v1.0.0\ntool_checksums_sha256: abc\n",
+		"checksum uppercase": "schema_version: 1\ntool_version: v1.0.0\ntool_checksums_sha256: " + strings.Repeat("A", 64) + "\n",
 	}
 
 	for name, content := range tests {

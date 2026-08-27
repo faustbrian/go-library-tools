@@ -19,6 +19,11 @@
       "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$",
       "description": "Exact released golib CLI version."
     },
+    "tool_checksums_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$",
+      "description": "SHA-256 digest of the release checksums.txt asset."
+    },
     "manifest": {
       "type": "object",
       "additionalProperties": false,

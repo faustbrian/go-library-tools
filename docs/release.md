@@ -20,6 +20,13 @@ platform succeeds.
 Later releases follow semantic versioning. Never replace release artifacts or
 move tags; publish a new patch release for corrections.
 
+Consumer upgrades use `golib upgrade plan` before `golib upgrade apply`. The
+command rejects incomplete, duplicated, mutable, or mismatched pins and changes
+only `.golib.yaml` and the thin CI caller. It restores the configuration if the
+workflow replacement fails. Machine-readable output supports reviewable
+per-repository pull requests and bounded cohorts without coupling normal CI to
+a live sibling-repository inventory.
+
 Run `golib release check` before preparing a tag and `golib release dry-run`
 against the final source. Releasable modules must use stable versions, canonical
 tag prefixes, and all mandatory gates.

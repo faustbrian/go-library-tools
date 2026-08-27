@@ -28,6 +28,10 @@ Core commands:
 - `golib release check` validates stable versions, tag prefixes, mandatory
   gates, and repository structure. `golib release dry-run` then executes the
   complete contract for every releasable module.
+- `golib upgrade plan|apply --version VERSION --workflow-sha SHA
+  --checksums-sha256 DIGEST [--json]` validates and updates the tool version,
+  release checksum-set digest, reusable-workflow reference, and workflow input
+  as one coordinated change. `plan` never writes files.
 
 Selection and output ordering are deterministic. Required gates fail closed;
 NilAway remains advisory and visible.

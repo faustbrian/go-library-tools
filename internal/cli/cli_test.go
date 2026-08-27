@@ -18,7 +18,7 @@ func TestExecuteShowsHelp(t *testing.T) {
 	if code != 0 || stderr.Len() != 0 {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
-	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "repository check", "workflows check", "release dry-run"} {
+	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "repository check", "workflows check", "release dry-run", "upgrade <plan|apply>"} {
 		if !strings.Contains(stdout.String(), command) {
 			t.Errorf("help does not contain %q", command)
 		}
@@ -94,6 +94,87 @@ func TestExecutePrintsHumanInventory(t *testing.T) {
 	code := cli.Execute([]string{"inventory"}, root, &stdout, &stderr)
 	if code != 0 || stderr.Len() != 0 || stdout.String() != "github.com/faustbrian/example: 1 module(s)\n" {
 		t.Fatalf("Execute() code = %d, stdout = %q, stderr = %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecutePlansAndAppliesToolingUpgrade(t *testing.T) {
+	root := fixture(t)
+	oldSHA := strings.Repeat("1", 40)
+	newSHA := strings.Repeat("2", 40)
+	digest := strings.Repeat("a", 64)
+	writeUpgradeWorkflow(t, root, oldSHA)
+	arguments := []string{"--version", "v1.1.0", "--workflow-sha", newSHA, "--checksums-sha256", digest}
+
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute(append([]string{"upgrade", "plan"}, arguments...), root, &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "tooling pins planned") {
+		t.Fatalf("plan = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	stdout.Reset()
+	code = cli.Execute(append([]string{"upgrade", "plan", "--json"}, arguments...), root, &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 || !json.Valid(stdout.Bytes()) {
+		t.Fatalf("JSON plan = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	stdout.Reset()
+	code = cli.Execute(append(append([]string{"upgrade", "apply"}, arguments...), "--json"), root, &stdout, &stderr)
+	if code != 0 || stderr.Len() != 0 {
+		t.Fatalf("apply = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	var result struct {
+		Changed bool `json:"changed"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &result); err != nil || !result.Changed {
+		t.Fatalf("upgrade JSON = %#v, %v", result, err)
+	}
+	assertFileContains(t, filepath.Join(root, ".golib.yaml"), "tool_checksums_sha256: "+digest)
+}
+
+func TestExecuteRejectsMalformedUpgradeArguments(t *testing.T) {
+	valid := []string{"--version", "v1.1.0", "--workflow-sha", strings.Repeat("2", 40), "--checksums-sha256", strings.Repeat("a", 64)}
+	tests := []struct {
+		args []string
+		want string
+	}{
+		{[]string{"upgrade"}, "action is required"},
+		{[]string{"upgrade", "replace"}, "action must be plan or apply"},
+		{[]string{"upgrade", "plan", "--json", "--json"}, "JSON flag is duplicated"},
+		{[]string{"upgrade", "plan", "--version"}, "flag has no value"},
+		{append([]string{"upgrade", "plan", "--unknown", "value"}, valid...), "arguments are malformed"},
+		{append([]string{"upgrade", "plan", "--version", ""}, valid[2:]...), "arguments are malformed"},
+		{append([]string{"upgrade", "plan", "--version", "v1.0.0", "--version", "v1.1.0"}, valid[2:]...), "argument is duplicated"},
+	}
+	for _, test := range tests {
+		var stdout, stderr bytes.Buffer
+		if code := cli.Execute(test.args, fixture(t), &stdout, &stderr); code != 2 || !strings.Contains(stderr.String(), "usage:") || !strings.Contains(stderr.String(), test.want) {
+			t.Fatalf("Execute(%v) = %d, %q", test.args, code, stderr.String())
+		}
+	}
+}
+
+func TestExecuteReportsUpgradeFailures(t *testing.T) {
+	oldSHA := strings.Repeat("1", 40)
+	arguments := make([]string, 0, 9)
+	arguments = append(arguments, "upgrade", "plan", "--version", "v1.1.0", "--workflow-sha", strings.Repeat("2", 40), "--checksums-sha256", strings.Repeat("a", 64))
+
+	var stdout, stderr bytes.Buffer
+	if code := cli.Execute(arguments, t.TempDir(), &stdout, &stderr); code != 1 || !strings.Contains(stderr.String(), "locate repository root") {
+		t.Fatalf("missing root = %d, %q", code, stderr.String())
+	}
+
+	root := fixture(t)
+	stderr.Reset()
+	if code := cli.Execute(arguments, root, &stdout, &stderr); code != 1 || !strings.Contains(stderr.String(), "read CI workflow") {
+		t.Fatalf("invalid repository = %d, %q", code, stderr.String())
+	}
+
+	writeUpgradeWorkflow(t, root, oldSHA)
+	stderr.Reset()
+	if code := cli.Execute(arguments, root, failingWriter{}, &stderr); code != 1 || !strings.Contains(stderr.String(), "write upgrade result") {
+		t.Fatalf("human output = %d, %q", code, stderr.String())
+	}
+	stderr.Reset()
+	if code := cli.Execute(append(arguments, "--json"), root, failingWriter{}, &stderr); code != 1 || !strings.Contains(stderr.String(), "write upgrade result") {
+		t.Fatalf("JSON output = %d, %q", code, stderr.String())
 	}
 }
 
@@ -177,6 +258,7 @@ func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
 		{"invalid config arguments", []string{"config"}, fixture, 2, "usage:"},
 		{"invalid config show arguments", []string{"config", "show"}, fixture, 2, "usage:"},
 		{"invalid inventory arguments", []string{"inventory", "--yaml"}, fixture, 2, "usage:"},
+		{"invalid upgrade arguments", []string{"upgrade", "plan", "--version", "v1.0.0"}, fixture, 2, "usage:"},
 		{"invalid repository arguments", []string{"repository"}, fixture, 2, "usage:"},
 		{"missing evidence action", []string{"evidence"}, fixture, 2, "usage:"},
 		{"invalid evidence arguments", []string{"evidence", "inspect", "--yaml"}, fixture, 2, "usage:"},
@@ -261,7 +343,26 @@ func fixture(t *testing.T) string {
 
 func write(t *testing.T, path, content string) {
 	t.Helper()
+	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+		t.Fatal(err)
+	}
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
+}
+
+func assertFileContains(t *testing.T, path, fragment string) {
+	t.Helper()
+	content, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(content), fragment) {
+		t.Fatalf("%s does not contain %q", path, fragment)
+	}
+}
+
+func writeUpgradeWorkflow(t *testing.T, root, sha string) {
+	t.Helper()
+	write(t, filepath.Join(root, ".github", "workflows", "ci.yml"), "jobs:\n  ci:\n    uses: faustbrian/go-library-tools/.github/workflows/library-ci.yml@"+sha+" # v1.0.0\n    with:\n      tooling_sha: "+sha+"\n")
 }

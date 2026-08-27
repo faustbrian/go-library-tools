@@ -34,14 +34,15 @@ var (
 // Config is the complete repository-specific policy. Facts already owned by
 // canonical manifests are referenced here, not repeated.
 type Config struct {
-	SchemaVersion int         `json:"schema_version" yaml:"schema_version"`
-	ToolVersion   string      `json:"tool_version" yaml:"tool_version"`
-	Manifests     Manifests   `json:"manifest" yaml:"manifest,omitempty"`
-	Evidence      Evidence    `json:"evidence" yaml:"evidence,omitempty"`
-	Mutation      Mutation    `json:"mutation" yaml:"mutation,omitempty"`
-	API           API         `json:"api,omitzero" yaml:"api,omitempty"`
-	Runtimes      Runtimes    `json:"runtimes" yaml:"runtimes,omitempty"`
-	Operations    []Operation `json:"operations,omitempty" yaml:"operations,omitempty"`
+	SchemaVersion       int         `json:"schema_version" yaml:"schema_version"`
+	ToolVersion         string      `json:"tool_version" yaml:"tool_version"`
+	ToolChecksumsSHA256 string      `json:"tool_checksums_sha256,omitempty" yaml:"tool_checksums_sha256,omitempty"`
+	Manifests           Manifests   `json:"manifest" yaml:"manifest,omitempty"`
+	Evidence            Evidence    `json:"evidence" yaml:"evidence,omitempty"`
+	Mutation            Mutation    `json:"mutation" yaml:"mutation,omitempty"`
+	API                 API         `json:"api,omitzero" yaml:"api,omitempty"`
+	Runtimes            Runtimes    `json:"runtimes" yaml:"runtimes,omitempty"`
+	Operations          []Operation `json:"operations,omitempty" yaml:"operations,omitempty"`
 }
 
 // Manifests names the canonical repository inventory files.
@@ -181,6 +182,9 @@ func (value Config) validate() error {
 	if !versionRE.MatchString(value.ToolVersion) {
 		return fmt.Errorf("%w: tool_version must be an exact vMAJOR.MINOR.PATCH release", ErrInvalid)
 	}
+	if value.ToolChecksumsSHA256 != "" && !isLowerHexDigest(value.ToolChecksumsSHA256) {
+		return fmt.Errorf("%w: tool_checksums_sha256 must be exactly 64 lowercase hexadecimal characters", ErrInvalid)
+	}
 	paths := []struct {
 		name  string
 		value string
@@ -223,6 +227,18 @@ func (value Config) validate() error {
 		seen[identity] = struct{}{}
 	}
 	return nil
+}
+
+func isLowerHexDigest(value string) bool {
+	if len(value) != 64 {
+		return false
+	}
+	for _, character := range value {
+		if !strings.ContainsRune("0123456789abcdef", character) {
+			return false
+		}
+	}
+	return true
 }
 
 func (baseline APIBaseline) validate() error {

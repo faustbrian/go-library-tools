@@ -17,6 +17,10 @@ runs:
         [[ "$(printf '%s\n' "${declarations}" | wc -l | tr -d ' ')" -eq 1 ]]
         version="${declarations}"
         [[ "${version}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+        checksum_declarations="$(awk '$1 == "tool_checksums_sha256:" { print $2 }' .golib.yaml)"
+        [[ "$(printf '%s\n' "${checksum_declarations}" | wc -l | tr -d ' ')" -eq 1 ]]
+        checksums_sha256="${checksum_declarations}"
+        [[ "${checksums_sha256}" =~ ^[0-9a-f]{64}$ ]]
 
         case "${RUNNER_OS}/${RUNNER_ARCH}" in
           Linux/X64) platform='linux_amd64' ;;
@@ -32,6 +36,11 @@ runs:
         mkdir -p "${install_root}" "${RUNNER_TEMP}/golib-bin"
         gh release download "${version}" --repo "${GOLIB_REPOSITORY}" \
           --pattern "${archive}" --pattern checksums.txt --dir "${install_root}"
+        if command -v sha256sum >/dev/null 2>&1; then
+          printf '%s  %s\n' "${checksums_sha256}" "${install_root}/checksums.txt" | sha256sum --check -
+        else
+          printf '%s  %s\n' "${checksums_sha256}" "${install_root}/checksums.txt" | shasum -a 256 --check
+        fi
         checksum="$(grep -E "^[0-9a-f]{64}  ${archive}$" "${install_root}/checksums.txt")"
         [[ "$(printf '%s\n' "${checksum}" | wc -l | tr -d ' ')" -eq 1 ]]
         if command -v sha256sum >/dev/null 2>&1; then

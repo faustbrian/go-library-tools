@@ -17,6 +17,7 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/releasecheck"
 	"github.com/faustbrian/go-library-tools/internal/repository"
+	"github.com/faustbrian/go-library-tools/internal/upgrade"
 )
 
 const help = `golib validates and executes the Go library repository contract.
@@ -38,6 +39,7 @@ Usage:
   golib release check
   golib release dry-run
   golib evidence inspect
+  golib upgrade <plan|apply> --version <version> --workflow-sha <sha> --checksums-sha256 <digest> [--json]
 `
 
 // Execute runs one command and returns a stable process exit code.
@@ -67,6 +69,9 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 	}
 	if len(args) == 0 {
 		return usage(stderr, "command is required")
+	}
+	if args[0] == "upgrade" {
+		return executeUpgrade(args[1:], workingDirectory, stdout, stderr)
 	}
 
 	root, err := findRoot(workingDirectory)
@@ -230,6 +235,84 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 	default:
 		return usage(stderr, "unknown command: "+args[0])
 	}
+}
+
+type upgradeOptions struct {
+	action  string
+	request upgrade.Request
+	json    bool
+}
+
+func executeUpgrade(args []string, workingDirectory string, stdout, stderr io.Writer) int {
+	options, err := parseUpgradeArguments(args)
+	if err != nil {
+		return usage(stderr, err.Error()+"\nusage: golib upgrade <plan|apply> --version <version> --workflow-sha <sha> --checksums-sha256 <digest> [--json]")
+	}
+	root, err := findRoot(workingDirectory)
+	if err != nil {
+		return failure(stderr, err)
+	}
+	var result upgrade.Result
+	if options.action == "apply" {
+		result, err = upgrade.Apply(root, options.request)
+	} else {
+		result, err = upgrade.Plan(root, options.request)
+	}
+	if err != nil {
+		return failure(stderr, err)
+	}
+	if options.json {
+		encoder := json.NewEncoder(stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(result); err != nil {
+			return failure(stderr, fmt.Errorf("write upgrade result: %w", err))
+		}
+		return 0
+	}
+	if _, err := io.WriteString(stdout, result.Human(options.action == "apply")); err != nil {
+		return failure(stderr, fmt.Errorf("write upgrade result: %w", err))
+	}
+	return 0
+}
+
+func parseUpgradeArguments(args []string) (upgradeOptions, error) {
+	if len(args) == 0 {
+		return upgradeOptions{}, errors.New("upgrade action is required")
+	}
+	if args[0] != "plan" && args[0] != "apply" {
+		return upgradeOptions{}, errors.New("upgrade action must be plan or apply")
+	}
+	options := upgradeOptions{action: args[0]}
+	values := make(map[string]string, 3)
+	for index := 1; index < len(args); {
+		if args[index] == "--json" {
+			if options.json {
+				return upgradeOptions{}, errors.New("upgrade JSON flag is duplicated")
+			}
+			options.json = true
+			index++
+		} else {
+			if index+1 >= len(args) {
+				return upgradeOptions{}, errors.New("upgrade flag has no value")
+			}
+			flag, value := args[index], args[index+1]
+			if value == "" || (flag != "--version" && flag != "--workflow-sha" && flag != "--checksums-sha256") {
+				return upgradeOptions{}, errors.New("upgrade arguments are malformed")
+			}
+			if _, duplicate := values[flag]; duplicate {
+				return upgradeOptions{}, errors.New("upgrade argument is duplicated")
+			}
+			values[flag] = value
+			index += 2
+		}
+	}
+	if len(values) != 3 {
+		return upgradeOptions{}, errors.New("upgrade release identity is incomplete")
+	}
+	options.request = upgrade.Request{
+		Version: values["--version"], WorkflowSHA: values["--workflow-sha"], ChecksumsSHA256: values["--checksums-sha256"],
+	}
+	return options, nil
 }
 
 type mutationImportOptions struct {

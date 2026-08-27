@@ -64,10 +64,13 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 
 func TestSetupActionVerifiesReleasedArtifactBeforeExtraction(t *testing.T) {
 	content := readProjectFile(t, ".github/actions/setup-golib/action.yml")
-	checksum := strings.Index(content, "sha256sum --check")
+	checksumSet := strings.Contains(content, "tool_checksums_sha256:")
+	checksumSetVerification := strings.Index(content, "checksums.txt\" | sha256sum --check")
+	checksum := strings.LastIndex(content, "sha256sum --check")
 	attestation := strings.Index(content, "gh attestation verify")
 	extraction := strings.Index(content, "tar --extract")
-	if checksum < 0 || attestation < 0 || extraction < 0 || checksum > extraction || attestation > extraction {
+	if !checksumSet || checksumSetVerification < 0 || checksumSetVerification > checksum ||
+		checksum < 0 || attestation < 0 || extraction < 0 || checksum > extraction || attestation > extraction {
 		t.Fatal("setup action must verify checksum and provenance before extraction")
 	}
 	for _, platform := range []string{"linux_amd64", "linux_arm64", "darwin_amd64", "darwin_arm64"} {

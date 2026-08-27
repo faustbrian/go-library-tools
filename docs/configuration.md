@@ -8,6 +8,7 @@ and arbitrary executables are rejected.
 ```yaml
 schema_version: 1
 tool_version: v1.0.0
+tool_checksums_sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 manifest:
   modules: modules.json
   packages: packages.json
@@ -29,6 +30,12 @@ Defaults match the example paths. `modules.json` owns module identity, Go
 version, lifecycle, gates, tags, services, and release metadata.
 `packages.json` owns package classification. Configuration references those
 facts rather than duplicating them.
+
+Consumer repositories pin both `tool_version` and the lowercase SHA-256 digest
+of that release's `checksums.txt` asset. The setup action verifies this digest
+before trusting the archive checksum selected for the current platform. The
+tooling repository may omit the checksum only while bootstrapping and testing
+the release that will produce it; released consumers must include it.
 
 `api.baselines` assigns at most one API policy to each module. `apidiff` mode
 tracks incompatible exported API changes against a repository-relative
