@@ -108,6 +108,7 @@ func Load(root string, policy config.Config) (Inventory, error) {
 	gateKeys := map[string]string{
 		"api": "api_compatibility", "benchmark": "benchmarks",
 		"conformance": "conformance", "docs": "documentation", "fuzz": "fuzz",
+		"test": "tests",
 	}
 	declaredOperations := make(map[string]struct{}, len(policy.Operations))
 	for index, operation := range policy.Operations {

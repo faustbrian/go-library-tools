@@ -207,7 +207,7 @@ func (operation Operation) validate() error {
 	}
 	allowedGates := map[string]bool{
 		"api": true, "benchmark": true, "conformance": true, "docs": true,
-		"fuzz": true, "interoperability": true,
+		"fuzz": true, "interoperability": true, "test": true,
 	}
 	if !allowedGates[operation.Gate] {
 		return fmt.Errorf("gate %q does not allow custom operations", operation.Gate)
@@ -218,6 +218,9 @@ func (operation Operation) validate() error {
 	for index, step := range operation.Steps {
 		if err := step.validate(); err != nil {
 			return fmt.Errorf("steps[%d]: %w", index, err)
+		}
+		if operation.Gate == "test" && (step.Benchmark != "" || step.Fuzz != "") {
+			return fmt.Errorf("steps[%d]: test operations accept only run selectors", index)
 		}
 	}
 	return nil

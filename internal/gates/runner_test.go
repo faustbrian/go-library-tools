@@ -62,8 +62,11 @@ func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
 	executor := &recordingExecutor{}
 	runner := gates.Runner{
 		Root:    root,
-		Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: ".", TestTags: []string{"integration"}, Gates: map[string]bool{"api_compatibility": true, "documentation": true}}}},
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: ".", TestTags: []string{"integration"}, Gates: map[string]bool{"api_compatibility": true, "documentation": true, "tests": true}}}},
 		Policy: config.Config{Operations: []config.Operation{
+			{Module: ".", Gate: "test", Steps: []config.Step{
+				{Type: "go-test", Packages: []string{"./manual"}, Run: "Stress|Leak", Count: 20, Timeout: "2m"},
+			}},
 			{Module: ".", Gate: "api", Steps: []config.Step{
 				{Type: "go-test", Packages: []string{"./..."}, Run: "^TestAPI$", Count: 1, Timeout: "1m"},
 			}},
@@ -83,6 +86,9 @@ func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
 	}
 	if err := runner.Check(context.Background(), []string{"."}); err != nil {
 		t.Fatalf("Check() error = %v", err)
+	}
+	if got := executor.commands[2]; got != "go test -tags=integration ./manual -count=20 -timeout=2m -run=Stress|Leak" {
+		t.Fatalf("test operation command = %q", got)
 	}
 	wantSuffix := "go test -tags=integration ./... -count=1 -timeout=1m -run=^TestSpec$"
 	if executor.commands[len(executor.commands)-1] != wantSuffix {
@@ -404,18 +410,24 @@ func TestCheckStopsAtAnalyzerAndSecurityFailures(t *testing.T) {
 func TestCheckStopsAtCoverageAndTypedOperationFailures(t *testing.T) {
 	failure := errors.New("failed")
 	tests := []struct {
-		name   string
-		module inventory.Module
-		policy config.Config
+		name      string
+		module    inventory.Module
+		policy    config.Config
+		failureAt int
 	}{
-		{"coverage", inventory.Module{Directory: ".", Gates: map[string]bool{"coverage": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}}, config.Config{}},
-		{"fuzz operation", inventory.Module{Directory: "."}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "fuzz", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}},
-		{"api operation", inventory.Module{Directory: ".", Gates: map[string]bool{"api_compatibility": true}}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "api", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}},
-		{"operation", inventory.Module{Directory: "."}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "conformance", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}},
+		{"coverage", inventory.Module{Directory: ".", Gates: map[string]bool{"coverage": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}}, config.Config{}, 0},
+		{"test operation", inventory.Module{Directory: ".", Gates: map[string]bool{"tests": true}}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "test", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 2},
+		{"fuzz operation", inventory.Module{Directory: "."}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "fuzz", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 0},
+		{"api operation", inventory.Module{Directory: ".", Gates: map[string]bool{"api_compatibility": true}}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "api", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 0},
+		{"operation", inventory.Module{Directory: "."}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "conformance", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 0},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			executor := &recordingExecutor{failureAt: 1, failure: failure}
+			failureAt := test.failureAt
+			if failureAt == 0 {
+				failureAt = 1
+			}
+			executor := &recordingExecutor{failureAt: failureAt, failure: failure}
 			runner := gates.Runner{Root: fixture(t), Catalog: inventory.Inventory{Modules: []inventory.Module{test.module}}, Policy: test.policy, Executor: executor}
 			if err := runner.Check(context.Background(), []string{"."}); !errors.Is(err, failure) {
 				t.Fatalf("Check() error = %v", err)

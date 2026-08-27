@@ -31,9 +31,11 @@ exactly `5.9`; unsupported versions fail configuration validation rather than
 silently selecting a different shell. Node is owned by the documentation tool
 chain and therefore is not repeated as repository policy.
 
-Typed operations may invoke bounded `go test` runs for docs, fuzz,
-conformance, interoperability, API, or benchmarks. Shell commands and secrets
-are not valid configuration. Enabling fuzz, benchmark, or conformance in a
-module manifest requires a matching typed operation. Declaring an
-interoperability tool has the same requirement. Missing operations fail while
-loading the repository rather than silently skipping an enabled gate.
+Typed operations may invoke bounded `go test` runs for tests, docs, fuzz,
+conformance, interoperability, API, or benchmarks. A `test` operation runs
+after the module's standard test command and preserves package-specific stress,
+leak, or lifecycle checks without admitting arbitrary shell hooks. Shell
+commands and secrets are not valid configuration. Enabling fuzz, benchmark, or
+conformance in a module manifest requires a matching typed operation. Declaring
+an interoperability tool has the same requirement. Missing operations fail
+while loading the repository rather than silently skipping an enabled gate.

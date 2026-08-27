@@ -54,6 +54,22 @@ func TestLoadRequiresTypedOperationsForEnabledCustomGates(t *testing.T) {
 	}
 }
 
+func TestLoadAllowsTypedTestOperationsOnlyForEnabledTests(t *testing.T) {
+	root := fixture(t)
+	policy := config.Config{
+		Manifests:  config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+		Operations: []config.Operation{{Module: ".", Gate: "test"}},
+	}
+	if _, err := inventory.Load(root, policy); err != nil {
+		t.Fatalf("Load(enabled test operation) error = %v", err)
+	}
+
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{},"packages":[]}]}`)
+	if _, err := inventory.Load(root, policy); err == nil || !strings.Contains(err.Error(), `gate "test" is not enabled`) {
+		t.Fatalf("Load(disabled test operation) error = %v", err)
+	}
+}
+
 func TestLoadValidatesCanonicalManifests(t *testing.T) {
 	root := fixture(t)
 

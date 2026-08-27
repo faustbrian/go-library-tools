@@ -224,6 +224,11 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 		if err := runner.command(ctx, output, module.Directory, "test", directory, args...); err != nil {
 			return err
 		}
+		if operation, exists := runner.operation(module.Directory, "test"); exists {
+			if err := runner.runOperation(ctx, directory, module, operation); err != nil {
+				return err
+			}
+		}
 	}
 	if module.Gates["race"] {
 		args := testArguments(module.TestTags, true)

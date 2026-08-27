@@ -77,14 +77,37 @@
         "properties": {
           "module": { "$ref": "#/$defs/repositoryPath" },
           "gate": {
-            "enum": ["api", "benchmark", "conformance", "docs", "fuzz", "interoperability"]
+            "enum": ["api", "benchmark", "conformance", "docs", "fuzz", "interoperability", "test"]
           },
           "steps": {
             "type": "array",
             "minItems": 1,
             "items": { "$ref": "#/$defs/step" }
           }
-        }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": { "gate": { "const": "test" } },
+              "required": ["gate"]
+            },
+            "then": {
+              "properties": {
+                "steps": {
+                  "items": {
+                    "not": {
+                      "anyOf": [
+                        { "required": ["benchmark"] },
+                        { "required": ["fuzz"] },
+                        { "required": ["budget"] }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
       }
     }
   },

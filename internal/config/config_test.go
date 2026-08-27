@@ -159,6 +159,14 @@ func TestLoadAcceptsTypedRepositoryOperations(t *testing.T) {
 tool_version: v1.0.0
 operations:
   - module: .
+    gate: test
+    steps:
+      - type: go-test
+        packages: [./manual]
+        run: ^TestStress$
+        count: 20
+        timeout: 10m
+  - module: .
     gate: conformance
     steps:
       - type: go-test
@@ -171,7 +179,7 @@ operations:
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}
-	if len(got.Operations) != 1 || len(got.Operations[0].Steps) != 1 {
+	if len(got.Operations) != 2 || len(got.Operations[0].Steps) != 1 {
 		t.Fatalf("Load() operations = %#v", got.Operations)
 	}
 }
@@ -227,7 +235,9 @@ operations:
 
 func TestLoadRejectsInvalidTypedOperations(t *testing.T) {
 	tests := map[string]string{
-		"unknown gate":       "module: .\n    gate: test\n    steps:\n      - type: go-test\n        packages: [./...]",
+		"unknown gate":       "module: .\n    gate: deploy\n    steps:\n      - type: go-test\n        packages: [./...]",
+		"test benchmark":     "module: .\n    gate: test\n    steps:\n      - type: go-test\n        benchmark: BenchmarkInput",
+		"test fuzz selector": "module: .\n    gate: test\n    steps:\n      - type: go-test\n        fuzz: FuzzInput",
 		"missing steps":      "module: .\n    gate: docs",
 		"unknown type":       "module: .\n    gate: docs\n    steps:\n      - type: shell",
 		"invalid timeout":    "module: .\n    gate: docs\n    steps:\n      - type: go-test\n        timeout: forever",
