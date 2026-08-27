@@ -69,11 +69,10 @@ func TestToolingWorkflowUploadsVerificationEvidenceOnEveryOutcome(t *testing.T) 
 		t.Fatal("tooling workflow does not upload verification evidence")
 	}
 	remainder := content[start:]
-	end := strings.Index(remainder, "\n  codeql:")
-	if end < 0 {
+	step, _, found := strings.Cut(remainder, "\n  codeql:")
+	if !found {
 		t.Fatal("tooling evidence upload is outside the quality job")
 	}
-	step := remainder[:end]
 	for _, required := range []string{
 		"if: always()",
 		"uses: actions/upload-artifact@",
