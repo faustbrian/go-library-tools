@@ -113,7 +113,7 @@ func TestRehearsalFuzzTargetsAreExact(t *testing.T) {
 		if readErr != nil {
 			t.Fatal(readErr)
 		}
-		for _, line := range strings.Split(string(content), "\n") {
+		for line := range strings.SplitSeq(string(content), "\n") {
 			selector := strings.TrimSpace(line)
 			if !strings.HasPrefix(selector, "fuzz:") {
 				continue
