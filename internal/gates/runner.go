@@ -30,6 +30,7 @@ const (
 	govulncheckVersion  = "v1.6.0"
 	gitleaksVersion     = "v8.30.1"
 	goLicensesVersion   = "v2.0.1"
+	cycloneDXVersion    = "v1.10.0"
 )
 
 // Command is one external process invocation without shell interpretation.
@@ -268,6 +269,11 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 		if err := runner.goTool(ctx, output, module.Directory, "licenses", directory,
 			"github.com/google/go-licenses/v2@"+goLicensesVersion,
 			"check", "./...", "--ignore", module.ModulePath); err != nil {
+			return err
+		}
+		if err := announce(output, module.Directory, "SBOM", func() error {
+			return runner.runSBOM(ctx, directory, module)
+		}); err != nil {
 			return err
 		}
 	}

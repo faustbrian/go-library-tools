@@ -12,6 +12,7 @@ that owns them.
 | `build-local-proxy.sh` | owned-module input and task workspace handling | module graph |
 | `check-go-safety.go`, `check-go-safety.sh` | native safety gate | Go source |
 | `check-coverage.sh` | native exact coverage gate | package classifications |
+| `check-sbom.sh` | native bounded CycloneDX 1.6 generation and validation | module graph |
 | mutation scripts and Gremlins patches | native mutation campaign | reports, reviews, approvals |
 | `restore-ci-mutation-evidence.sh` | `golib mutation import` | approved checkpoint archive and ledger |
 | gate evidence and snapshot scripts | content-addressed evidence store | `.verification` records |

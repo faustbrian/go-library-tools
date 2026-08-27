@@ -357,6 +357,7 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config " + filepath.Join(root, ".gitleaks.toml") + " --no-banner --redact",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/acme/example",
+		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
 		t.Fatalf("commands = %#v", executor.commands)
@@ -386,6 +387,7 @@ func TestCheckStopsAtAnalyzerAndSecurityFailures(t *testing.T) {
 		{"vulnerability", map[string]bool{"security": true}, 1},
 		{"secrets", map[string]bool{"security": true}, 2},
 		{"licenses", map[string]bool{"security": true}, 3},
+		{"SBOM", map[string]bool{"security": true}, 4},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -509,11 +511,16 @@ type recordingExecutor struct {
 	apiReport       string
 }
 
+const validCycloneDX = `{"bomFormat":"CycloneDX","specVersion":"1.6"}`
+
 func successfulSpelling(context.Context, string) error { return nil }
 func successfulLinks(context.Context, string) error    { return nil }
 
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
 	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, command.Args...), " "))
+	if strings.Contains(strings.Join(command.Args, " "), "cyclonedx-gomod") && command.Stdout != nil {
+		_, _ = io.WriteString(command.Stdout, validCycloneDX)
+	}
 	for _, argument := range command.Args {
 		if profile, found := strings.CutPrefix(argument, "-coverprofile="); found {
 			if err := os.WriteFile(profile, []byte(executor.coverageProfile), 0o600); err != nil {
