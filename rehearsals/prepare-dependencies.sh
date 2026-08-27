@@ -42,21 +42,28 @@ for index in "${!module_directories[@]}"; do
         : >"${alternate_sum}"
     fi
 
+    module_metadata="$(
+        GOWORK=off GOCACHE="${task_root}/cache" GOMODCACHE="${task_root}/mod" \
+            GOTMPDIR="${task_root}/tmp" "${real_go}" mod edit \
+            -json -modfile="${alternate_mod}"
+    )"
+    module_path="$(jq -er '.Module.Path' <<<"${module_metadata}")"
     dependencies=()
     while IFS= read -r dependency; do
         dependencies+=("${dependency}")
     done < <(
-        GOWORK=off GOCACHE="${task_root}/cache" GOMODCACHE="${task_root}/mod" \
-            GOTMPDIR="${task_root}/tmp" "${real_go}" mod edit \
-            -json -modfile="${alternate_mod}" |
-            jq -r '.Require[]? | select(.Path | startswith("github.com/faustbrian/go-")) | "\(.Path)@\(.Version)"'
+        jq -r '
+            .Require[]? |
+            select(.Version != null and (.Path | startswith("github.com/faustbrian/go-"))) |
+            "\(.Path)@\(.Version)"
+        ' <<<"${module_metadata}"
     )
     for dependency in "${dependencies[@]}"; do
         GOWORK=off GOFLAGS="-modfile=${alternate_mod}" \
             GOCACHE="${task_root}/cache" GOMODCACHE="${task_root}/mod" \
             GOTMPDIR="${task_root}/tmp" "${real_go}" mod download "${dependency}"
     done
-    printf '%s\t%s\n' "${module_root}" "${alternate_mod}" >>"${module_map}"
+    printf '%s\t%s\n' "${module_path}" "${alternate_mod}" >>"${module_map}"
 done
 
 cat >"${wrapper_directory}/go" <<'EOF'
@@ -69,8 +76,11 @@ directory="$(pwd -P)"
 alternate_mod=''
 
 while true; do
-    alternate_mod="$(awk -F '\t' -v root="${directory}" '$1 == root { print $2; exit }' "${module_map}")"
-    [[ -z "${alternate_mod}" ]] || break
+    if [[ -f "${directory}/go.mod" ]]; then
+        module_path="$(awk '$1 == "module" { print $2; exit }' "${directory}/go.mod")"
+        alternate_mod="$(awk -F '\t' -v module="${module_path}" '$1 == module { print $2; exit }' "${module_map}")"
+        [[ -z "${alternate_mod}" ]] || break
+    fi
     [[ "${directory}" == / ]] && break
     directory="${directory%/*}"
     [[ -n "${directory}" ]] || directory=/

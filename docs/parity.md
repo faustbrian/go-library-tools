@@ -18,8 +18,8 @@ leaving historical checksums in the representative repositories. Rehearsals
 therefore prepare task-owned alternate module and sum files, refresh only those
 internal dependency sums, and select the matching alternate file through a Go
 wrapper. Tracked `go.mod`, `go.sum`, package source, fixtures, and evidence stay
-unchanged. Multi-module repositories select the alternate file by the nearest
-module root.
+unchanged. The wrapper resolves canonical module identities, so disposable
+repository snapshots and nested modules select the correct alternate file.
 
 The remote representative rehearsal normalizes the copied legacy Staticcheck
 pin from `v0.7.0` to `v0.8.1` before execution. Staticcheck `v0.7.0` cannot read
