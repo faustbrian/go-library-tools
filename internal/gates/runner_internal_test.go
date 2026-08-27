@@ -85,6 +85,7 @@ func TestStandaloneGatesContinuePastDisabledModules(t *testing.T) {
 	modules := []inventory.Module{
 		{Directory: "a-disabled"},
 		{Directory: ".", Gates: map[string]bool{"coverage": true, "documentation": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}},
+		{Directory: "z-enabled", Gates: map[string]bool{"coverage": true, "documentation": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}},
 	}
 	commands := 0
 	spellingChecks := 0
@@ -105,15 +106,15 @@ func TestStandaloneGatesContinuePastDisabledModules(t *testing.T) {
 			return nil
 		},
 	}
-	selection := []string{"a-disabled", "."}
+	selection := []string{"a-disabled", ".", "z-enabled"}
 	if err := runner.Coverage(context.Background(), selection); err != nil {
 		t.Fatalf("Coverage() error = %v", err)
 	}
 	if err := runner.Docs(context.Background(), selection); err != nil {
 		t.Fatalf("Docs() error = %v", err)
 	}
-	if commands != 1 {
-		t.Fatalf("enabled gate command runs = %d, want 1", commands)
+	if commands != 3 {
+		t.Fatalf("enabled gate command runs = %d, want 3", commands)
 	}
 	if spellingChecks != 1 || linkChecks != 1 {
 		t.Fatalf("enabled documentation checks = spelling %d, links %d", spellingChecks, linkChecks)
