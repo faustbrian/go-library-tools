@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.1 - 2026-08-28
+
 ### Changed
 
 - Scoped mutation identities to sibling modules actually observed by each
@@ -16,6 +18,11 @@ All notable changes to this project are documented in this file.
   pin instead of requiring an unpublished release to verify itself.
 - Required a successful full CI run for the exact tagged commit instead of
   repeating the repository contract and mutation campaigns during publishing.
+
+## 1.0.0 - 2026-08-28
+
+### Changed
+
 - Ran RabbitMQ Streams readiness checks with the broker's task-owned Erlang
   cookie identity and kept nested-module license audits scoped to the owning
   repository namespace.
