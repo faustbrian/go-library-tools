@@ -66,6 +66,9 @@ if [[ "${1:-}" == mod && "${2:-}" == download ]]; then
 	esac
 	exit 0
 fi
+if [[ "${1:-}" == mod && "${2:-}" == tidy ]]; then
+	exit 0
+fi
 if [[ "${1:-}" == rehearsal-command ]]; then
 	cp "${sumfile}" "${REHEARSAL_CAPTURE}"
 	printf '%s' "${GOLIB_ISOLATED_MODFILE:-}" >"${REHEARSAL_ISOLATED_ENVIRONMENT_CAPTURE}"
@@ -306,6 +309,9 @@ if [[ "${1:-}" == mod && "${2:-}" == download ]]; then
 	printf '%s\n' 'github.com/faustbrian/go-local v1.0.0 h1:current' >>"${modfile%.mod}.sum"
 	exit 0
 fi
+if [[ "${1:-}" == mod && "${2:-}" == tidy ]]; then
+	exit 0
+fi
 if [[ "${1:-}" == run ]]; then
 	exec_wrapper=''
 	versioned_tool=''
@@ -395,7 +401,7 @@ if [[ "${1:-}" == mod && "${2:-}" == edit ]]; then
 	printf '%s\n' '{"Module":{"Path":"github.com/faustbrian/go-example"}}'
 	exit 0
 fi
-if [[ "${1:-}" == mod && "${2:-}" == download && "${3:-}" == all ]]; then
+if [[ "${1:-}" == mod && "${2:-}" == tidy ]]; then
 	exit 0
 fi
 if [[ "${1:-}" == module-mode-command ]]; then
@@ -431,12 +437,13 @@ exit 1
 	}
 }
 
-func TestDependencyPreparationHydratesTransitiveOwnedChecksums(t *testing.T) {
+func TestDependencyPreparationHydratesExactTransitiveOwnedChecksums(t *testing.T) {
 	root := t.TempDir()
 	task := filepath.Join(root, "task")
 	fakeBin := filepath.Join(root, "bin")
 	writeRehearsalFile(t, filepath.Join(root, "modules.json"), `{"modules":[{"directory":"."}]}`)
 	writeRehearsalFile(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/go-example\n\ngo 1.26.6\n\nrequire github.com/faustbrian/go-direct v1.0.0\n")
+	writeRehearsalFile(t, filepath.Join(root, "go.sum"), "example.com/stale v1.0.0 h1:stale\n")
 	writeExecutable(t, filepath.Join(fakeBin, "go"), `#!/usr/bin/env bash
 set -euo pipefail
 if [[ "${1:-}" == mod && "${2:-}" == edit ]]; then
@@ -451,8 +458,11 @@ if [[ "${1:-}" == mod && "${2:-}" == download && "${3:-}" == github.com/faustbri
 	printf '%s\n' 'github.com/faustbrian/go-direct v1.0.0 h1:direct' >>"${modfile%.mod}.sum"
 	exit 0
 fi
-if [[ "${1:-}" == mod && "${2:-}" == download && "${3:-}" == all ]]; then
-	printf '%s\n' 'github.com/faustbrian/go-transitive v1.0.0 h1:transitive' >>"${modfile%.mod}.sum"
+if [[ "${1:-}" == mod && "${2:-}" == tidy ]]; then
+	cat >"${modfile%.mod}.sum" <<'SUM'
+github.com/faustbrian/go-direct v1.0.0 h1:direct
+github.com/faustbrian/go-transitive v1.0.0 h1:transitive
+SUM
 	exit 0
 fi
 printf 'unexpected fake go invocation: %s\n' "$*" >&2
@@ -469,6 +479,54 @@ exit 1
 	prepared := readRehearsalFile(t, filepath.Join(task, "modules", "0.sum"))
 	if !strings.Contains(prepared, "github.com/faustbrian/go-transitive v1.0.0 h1:transitive") {
 		t.Fatalf("prepared checksums omit transitive owned module:\n%s", prepared)
+	}
+	if strings.Contains(prepared, "example.com/stale") {
+		t.Fatalf("prepared checksums retain stale module:\n%s", prepared)
+	}
+}
+
+func TestDependencyPreparationPreservesModuleDriftForTheTidyGate(t *testing.T) {
+	root := t.TempDir()
+	task := filepath.Join(root, "task")
+	fakeBin := filepath.Join(root, "bin")
+	tidyCapture := filepath.Join(root, "tidy.capture")
+	original := "module github.com/faustbrian/go-example\n\ngo 1.26.6\n"
+	writeRehearsalFile(t, filepath.Join(root, "modules.json"), `{"modules":[{"directory":"."}]}`)
+	writeRehearsalFile(t, filepath.Join(root, "go.mod"), original)
+	writeExecutable(t, filepath.Join(fakeBin, "go"), `#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == mod && "${2:-}" == edit ]]; then
+	printf '%s\n' '{"Module":{"Path":"github.com/faustbrian/go-example"}}'
+	exit 0
+fi
+modfile=''
+for flag in ${GOFLAGS:-}; do
+	case "${flag}" in -modfile=*) modfile="${flag#-modfile=}" ;; esac
+done
+if [[ "${1:-}" == mod && "${2:-}" == tidy ]]; then
+	printf '%s' called >"${REHEARSAL_TIDY_CAPTURE}"
+	printf '\nrequire example.com/required v1.0.0\n' >>"${modfile}"
+	exit 0
+fi
+printf 'unexpected fake go invocation: %s\n' "$*" >&2
+exit 1
+`)
+	commitRehearsalFixture(t, root)
+	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task,
+		filepath.Join(root, "environment"), filepath.Join(root, "path"))
+	command.Dir = root
+	command.Env = append(os.Environ(),
+		"PATH="+fakeBin+":"+os.Getenv("PATH"),
+		"REHEARSAL_TIDY_CAPTURE="+tidyCapture,
+	)
+	if output, err := command.CombinedOutput(); err != nil {
+		t.Fatalf("prepare dependencies: %v\n%s", err, output)
+	}
+	if prepared := readRehearsalFile(t, filepath.Join(task, "modules", "0.mod")); prepared != original {
+		t.Fatalf("prepared module drift was hidden:\n%s", prepared)
+	}
+	if called := readRehearsalFile(t, tidyCapture); called != "called" {
+		t.Fatalf("dependency tidy capture = %q", called)
 	}
 }
 

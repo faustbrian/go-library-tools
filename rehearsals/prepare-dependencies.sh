@@ -69,9 +69,14 @@ for index in "${!module_directories[@]}"; do
                 GOTMPDIR="${task_root}/tmp" "${real_go}" mod download "${dependency}"
         done
     fi
-    GOWORK=off GOFLAGS="-modfile=${alternate_mod}" \
+    if ! GOWORK=off GOFLAGS="-modfile=${alternate_mod}" \
         GOCACHE="${task_root}/cache" GOMODCACHE="${task_root}/mod" \
-        GOTMPDIR="${task_root}/tmp" "${real_go}" mod download all
+        GOTMPDIR="${task_root}/tmp" "${real_go}" mod tidy; then
+        exit 1
+    fi
+    if ! cmp -s "${module_root}/go.mod" "${alternate_mod}"; then
+        cp "${module_root}/go.mod" "${alternate_mod}"
+    fi
     printf '%s\t%s\t%s\n' "${module_path}" "${alternate_mod}" "${directory}" >>"${module_map}"
     if [[ "${directory}" == "." ]]; then
         root_alternate_mod="${alternate_mod}"
