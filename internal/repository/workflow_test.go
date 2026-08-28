@@ -60,6 +60,9 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 	if strings.Contains(content, "curl |") || strings.Contains(content, "@main") {
 		t.Fatal("reusable workflow contains an unsafe bootstrap reference")
 	}
+	if strings.Contains(content, "packages: read") {
+		t.Fatal("reusable workflow requests package access that consumer callers do not grant")
+	}
 }
 
 func TestToolingWorkflowUploadsVerificationEvidenceOnEveryOutcome(t *testing.T) {

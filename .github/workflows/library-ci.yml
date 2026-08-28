@@ -176,7 +176,6 @@ jobs:
     timeout-minutes: 120
     permissions:
       contents: read
-      packages: read
       security-events: write
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6

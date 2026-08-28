@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Removed an unnecessary package-read permission from the reusable CodeQL job
+  so least-privileged consumer workflows can start successfully.
+
 ## 1.0.1 - 2026-08-28
 
 ### Changed
