@@ -148,6 +148,29 @@ mutation:
 	}
 }
 
+func TestLoadAcceptsNestedModuleMutationImport(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, ".golib.yaml"), `schema_version: 1
+tool_version: v1.0.1
+mutation:
+  imports:
+    - module: adapters/golib
+      archive: .verification/mutation/bootstrap/adapters-golib.zip
+      ledger: .verification/mutation/migration-ledger.json
+`)
+	got, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := config.MutationImport{
+		Module: "adapters/golib", Archive: ".verification/mutation/bootstrap/adapters-golib.zip",
+		Ledger: ".verification/mutation/migration-ledger.json",
+	}
+	if len(got.Mutation.Imports) != 1 || got.Mutation.Imports[0] != want {
+		t.Fatalf("mutation imports = %#v", got.Mutation.Imports)
+	}
+}
+
 func TestLoadRejectsMalformedMutationImports(t *testing.T) {
 	tests := map[string]string{
 		"module":    "    - module: ../outside\n      archive: checkpoint.zip\n      ledger: ledger.json\n",
