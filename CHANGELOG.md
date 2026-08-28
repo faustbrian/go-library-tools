@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Preserved the original checkpoint runtime metadata when importing mutation
+  evidence so content-identical proof is reusable across CI platforms.
+- Applied the checksum-verified bootstrap module proxy to both quality and
+  CodeQL builds in consumer repositories.
+
 ## 1.0.3 - 2026-08-28
 
 ### Fixed

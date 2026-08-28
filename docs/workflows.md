@@ -49,6 +49,17 @@ Linux or macOS amd64/arm64 archive, downloads it with GitHub CLI, verifies its
 SHA-256 checksum and GitHub artifact attestation, and only then extracts the
 binary. It never evaluates a downloaded installer.
 
+Repositories whose initial dependency graph cannot be reconstructed from the
+public Go proxy may define both `GOLIB_BOOTSTRAP_PROXY_URL` and
+`GOLIB_BOOTSTRAP_PROXY_SHA256` as repository variables. The URL must identify
+an immutable HTTPS archive containing a file-based Go module proxy, and the
+checksum must be its lowercase SHA-256 digest. The reusable workflow verifies
+the archive before extraction and exposes it to both quality and CodeQL builds.
+Defining only one variable, using a mutable or non-HTTPS URL, or providing an
+invalid checksum fails closed. These variables bootstrap historical module
+identity only; they do not replace normal dependency resolution or permit a
+consumer to weaken any gate.
+
 The reusable workflow keeps consumer policy in repository manifests. It builds
 a module matrix from `golib inventory --json`, runs one isolated module
 contract per matrix entry, uploads repository-owned `.verification` evidence,

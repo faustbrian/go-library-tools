@@ -174,11 +174,7 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			Module: campaign.Policy.ModuleDirectory, Package: checkpoint.Package, Gate: "mutation",
 			InputDigest: currentInput, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
 			ReportDigest: stored.Digest, CompletedAt: now().UTC(),
-			Environment: map[string]string{
-				"GOVERSION": campaign.RuntimeIdentity.GoVersion, "GOOS": campaign.RuntimeIdentity.GOOS,
-				"GOARCH": campaign.RuntimeIdentity.GOARCH, "CGO_ENABLED": campaign.RuntimeIdentity.CGOEnabled,
-				"evidence_origin": "approved_legacy_checkpoint",
-			},
+			Environment: importedEnvironment(checkpoint.Environment),
 		}
 		if _, _, err := evidence.Store(campaign.EvidenceRoot, record); err != nil {
 			return err
@@ -187,6 +183,16 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			campaign.Policy.ModuleDirectory, packageTarget(checkpoint.Package), stored.Mutants)
 	}
 	return changedInputs
+}
+
+func importedEnvironment(checkpoint map[string]string) map[string]string {
+	environment := map[string]string{"evidence_origin": "approved_legacy_checkpoint"}
+	for _, key := range []string{"GOVERSION", "GOOS", "GOARCH", "CGO_ENABLED"} {
+		if value := checkpoint[key]; value != "" {
+			environment[key] = value
+		}
+	}
+	return environment
 }
 
 func (campaign Campaign) prepareDirectories() error {

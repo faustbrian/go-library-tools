@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/faustbrian/go-library-tools/internal/evidence"
 )
 
 func TestCampaignRejectsMalformedPolicyAndEscapingEvidence(t *testing.T) {
@@ -77,6 +79,40 @@ func TestCampaignImportsApprovedLegacyCheckpoint(t *testing.T) {
 	}
 	if process.mutations != 0 {
 		t.Fatalf("Run() executed %d mutation campaigns after import", process.mutations)
+	}
+}
+
+func TestCampaignImportPreservesCheckpointEnvironment(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	_, currentInput, err := campaign.packageInput(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoint, ledger := approvedImportFixture(t, currentInput)
+	checkpoint.Environment = map[string]string{
+		"GOVERSION":   "go1.26.6",
+		"GOOS":        "darwin",
+		"GOARCH":      "arm64",
+		"CGO_ENABLED": "1",
+	}
+	campaign.RuntimeIdentity = RuntimeIdentity{
+		GoVersion:  "go1.27.0",
+		GOOS:       "linux",
+		GOARCH:     "amd64",
+		CGOEnabled: "0",
+	}
+
+	if err := campaign.Import(context.Background(), []Checkpoint{checkpoint}, ledger); err != nil {
+		t.Fatalf("Import() error = %v", err)
+	}
+	record, err := evidence.Load(campaign.EvidenceRoot, "mutation", currentInput)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for key, expected := range checkpoint.Environment {
+		if actual := record.Environment[key]; actual != expected {
+			t.Errorf("environment[%s] = %q, want %q", key, actual, expected)
+		}
 	}
 }
 
