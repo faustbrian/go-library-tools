@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-library-tools",
+  "module": ".",
+  "package": "cmd/golib",
+  "gate": "mutation",
+  "input_digest": "sha256:72caeb13ea0b7b52979a23a3c3c7453df97177621f3259c1807510eda10695ad",
+  "verifier_digest": "sha256:9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+  "result": "passed",
+  "report_digest": "sha256:86b578e6dace03cae78a6dec74f5e63f9667275a88075a80ef52536b3c0833b9",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "amd64",
+    "GOOS": "linux",
+    "GOVERSION": "go1.27.0",
+    "gremlins_binary_sha256": "sha256:c445d9c04ffe4d2070617fd4df511cb19e48135950462912be29133b1b0169cc"
+  },
+  "completed_at": "2026-08-28T12:46:07.552038915Z"
+}
