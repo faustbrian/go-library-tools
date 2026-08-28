@@ -7,6 +7,12 @@ on:
   schedule:
     - cron: '17 3 * * *'
   workflow_dispatch:
+    inputs:
+      release_rehearsal:
+        description: Run the complete pre-tag release dry-run
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -87,10 +93,46 @@ jobs:
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" go build ./...
       - uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4
 
+  release-rehearsal:
+    name: Release rehearsal
+    if: github.event_name == 'workflow_dispatch' && inputs.release_rehearsal
+    needs: quality
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24.4.1'
+          package-manager-cache: false
+      - name: Run pre-tag release dry-run
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-release-rehearsal.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            go run ./cmd/golib release dry-run
+      - name: Upload release evidence
+        if: always()
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-rehearsal-verification
+          path: .verification
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 30
+
   required:
     name: Required
     if: always()
-    needs: [dependency-review, quality, codeql]
+    needs: [dependency-review, quality, codeql, release-rehearsal]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -98,7 +140,9 @@ jobs:
           DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
           CODEQL_RESULT: ${{ needs.codeql.result }}
+          RELEASE_REHEARSAL_RESULT: ${{ needs.release-rehearsal.result }}
         run: |
           test "${QUALITY_RESULT}" = success
           test "${CODEQL_RESULT}" = success
           test "${DEPENDENCY_REVIEW_RESULT}" = success -o "${DEPENDENCY_REVIEW_RESULT}" = skipped
+          test "${RELEASE_REHEARSAL_RESULT}" = success -o "${RELEASE_REHEARSAL_RESULT}" = skipped

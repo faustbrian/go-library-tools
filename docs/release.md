@@ -41,6 +41,13 @@ rejects existing tag identities and verifies each module through a task-owned
 local proxy before running all gates. Releasable modules must use stable
 versions, canonical tag prefixes, and all mandatory gates.
 
+For a release candidate on `main`, dispatch the `CI` workflow with
+`release_rehearsal` enabled. The ordinary quality and CodeQL jobs must pass,
+then the release-rehearsal job runs the complete dry-run in GitHub Actions.
+This keeps process-lifecycle and cleanup tests in their isolated CI boundary
+instead of running them on a maintainer workstation. Do not create the tag
+until the workflow's stable `Required` job passes.
+
 Consumers can verify an archive with:
 
 ```bash

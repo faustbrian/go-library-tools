@@ -13,6 +13,9 @@ All notable changes to this project are documented in this file.
   owned-module checksums are present without retaining stale graph entries,
   while preserving module-file drift for the strict tidy gate and resolving
   nested module dependencies from their own source directories.
+- Added an opt-in CI release rehearsal that executes the complete pre-tag
+  dry-run after ordinary quality checks and feeds its outcome into the stable
+  required job.
 - Advanced the Knapsack and OpenAPI compatibility rehearsals to their finalized
   standalone tooling repairs.
 - Kept the isolated-module environment aligned with task-owned execution module
