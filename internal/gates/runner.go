@@ -491,7 +491,7 @@ func (runner Runner) checkFormatting(ctx context.Context, root string) error {
 	if err := walkModuleFiles(root, func(path string, _ fs.DirEntry) error {
 		relative := filepath.ToSlash(strings.TrimPrefix(path, root+string(filepath.Separator)))
 		if strings.ContainsAny(relative, "\r\n") {
-			return fmt.Errorf("Go source path contains a line break: %q", relative)
+			return fmt.Errorf("go source path contains a line break: %q", relative)
 		}
 		files = append(files, relative)
 		return nil
