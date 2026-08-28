@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.2 - 2026-08-28
+
 ### Fixed
 
 - Removed an unnecessary package-read permission from the reusable CodeQL job
