@@ -185,6 +185,9 @@ if [[ -n "${alternate_mod}" ]]; then
             trap 'handle_signal 2' INT
             trap 'handle_signal 15' TERM
             cp "${active_modfile}" "${execution_modfile}"
+            if [[ "${GOLIB_ISOLATED_MODFILE:-}" == "${active_modfile}" ]]; then
+                export GOLIB_ISOLATED_MODFILE="${execution_modfile}"
+            fi
             while read -r module version _; do
                 [[ "${version}" != */go.mod ]] || continue
                 if [[ -n "${GOLIB_LOCAL_PROXY:-}" &&

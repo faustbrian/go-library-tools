@@ -21,6 +21,7 @@ func TestDependencyWrapperUsesParallelSafeExecutionModfiles(t *testing.T) {
 	isolated := filepath.Join(root, "isolated")
 	localProxy := filepath.Join(root, "proxy")
 	capture := filepath.Join(root, "captured.sum")
+	isolatedEnvironmentCapture := filepath.Join(root, "isolated-environment")
 	toolBuildCapture := filepath.Join(root, "tool-build.flags")
 	toolRuntimeCapture := filepath.Join(root, "tool-runtime.flags")
 	toolDirectoryCapture := filepath.Join(root, "tool-runtime.directory")
@@ -67,6 +68,7 @@ if [[ "${1:-}" == mod && "${2:-}" == download ]]; then
 fi
 if [[ "${1:-}" == rehearsal-command ]]; then
 	cp "${sumfile}" "${REHEARSAL_CAPTURE}"
+	printf '%s' "${GOLIB_ISOLATED_MODFILE:-}" >"${REHEARSAL_ISOLATED_ENVIRONMENT_CAPTURE}"
 	printf '%s\n' 'github.com/faustbrian/go-local v1.0.0 h1:local-proxy' >>"${sumfile}"
 	if [[ "${REHEARSAL_FAILURE:-0}" == 1 ]]; then
 		exit 23
@@ -148,9 +150,11 @@ cp go.sum "${REHEARSAL_TOOL_SUM_CAPTURE}"
 	wrapper.Env = append(wrapper.Env,
 		"GO111MODULE=",
 		"GOFLAGS=-modfile="+activeMod,
+		"GOLIB_ISOLATED_MODFILE="+activeMod,
 		"GOLIB_ISOLATED_MODFILES_DIRECTORY="+isolated,
 		"GOLIB_LOCAL_PROXY="+localProxy,
 		"REHEARSAL_CAPTURE="+capture,
+		"REHEARSAL_ISOLATED_ENVIRONMENT_CAPTURE="+isolatedEnvironmentCapture,
 		"REHEARSAL_TOOL_BUILD_CAPTURE="+toolBuildCapture,
 		"REHEARSAL_TOOL_RUNTIME_CAPTURE="+toolRuntimeCapture,
 		"REHEARSAL_TOOL_DIRECTORY_CAPTURE="+toolDirectoryCapture,
@@ -159,6 +163,11 @@ cp go.sum "${REHEARSAL_TOOL_SUM_CAPTURE}"
 	)
 	if output, err := wrapper.CombinedOutput(); err != nil {
 		t.Fatalf("run dependency wrapper: %v\n%s", err, output)
+	}
+	executionPrefix := filepath.Join(canonicalRehearsalPath(t, task), "execution") +
+		string(filepath.Separator)
+	if isolatedModfile := readRehearsalFile(t, isolatedEnvironmentCapture); !strings.HasPrefix(isolatedModfile, executionPrefix) {
+		t.Fatalf("isolated module environment = %q, want task-owned execution path", isolatedModfile)
 	}
 
 	during := readRehearsalFile(t, capture)
