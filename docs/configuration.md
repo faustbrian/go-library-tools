@@ -7,7 +7,7 @@ and arbitrary executables are rejected.
 
 ```yaml
 schema_version: 1
-tool_version: v1.0.0
+tool_version: v1.0.1
 tool_checksums_sha256: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 manifest:
   modules: modules.json
@@ -16,6 +16,10 @@ evidence:
   root: .verification
 mutation:
   root: .verification/mutation
+  imports:
+    - module: .
+      archive: .verification/mutation/bootstrap/root.zip
+      ledger: .verification/mutation/migration-ledger.json
 api:
   baselines:
     - module: .
@@ -55,6 +59,17 @@ installed at the declared semantic version. The current zsh fixture supports
 exactly `5.9`; unsupported versions fail configuration validation rather than
 silently selecting a different shell. Node is owned by the documentation tool
 chain and therefore is not repeated as repository policy.
+
+`mutation.imports` assigns at most one approved legacy checkpoint archive and
+migration ledger to a module. The files remain repository-owned under
+`.verification`; before mutation verification, `golib` validates and imports
+them into the current content-addressed evidence store. A previously approved
+v1 identity may transition to the v2 identity only when both are derived from
+the same observed source and the v1 identity is already approved. Unrelated
+sibling modules are omitted from v2 package identity. Missing or ambiguous
+verifier approval fails closed. A checkpoint whose package input genuinely
+changed is skipped, while approved packages are imported and normal mutation
+verification runs only for packages without current evidence.
 
 Typed operations may invoke bounded `go test` runs or one named target from a
 repository-owned Makefile. A `test` operation runs after the module's standard

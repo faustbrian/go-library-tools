@@ -125,6 +125,48 @@ func TestLoadAcceptsExplicitMutationEvidenceRoot(t *testing.T) {
 	}
 }
 
+func TestLoadAcceptsApprovedMutationImports(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, ".golib.yaml"), `schema_version: 1
+tool_version: v1.0.1
+mutation:
+  imports:
+    - module: .
+      archive: .verification/mutation/bootstrap/root.zip
+      ledger: .verification/mutation/migration-ledger.json
+`)
+	got, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := config.MutationImport{
+		Module: ".", Archive: ".verification/mutation/bootstrap/root.zip",
+		Ledger: ".verification/mutation/migration-ledger.json",
+	}
+	if len(got.Mutation.Imports) != 1 || got.Mutation.Imports[0] != want {
+		t.Fatalf("mutation imports = %#v", got.Mutation.Imports)
+	}
+}
+
+func TestLoadRejectsMalformedMutationImports(t *testing.T) {
+	tests := map[string]string{
+		"module":    "    - module: ../outside\n      archive: checkpoint.zip\n      ledger: ledger.json\n",
+		"archive":   "    - module: .\n      archive: .\n      ledger: ledger.json\n",
+		"ledger":    "    - module: .\n      archive: checkpoint.zip\n      ledger: /tmp/ledger.json\n",
+		"duplicate": "    - module: .\n      archive: checkpoint.zip\n      ledger: ledger.json\n    - module: .\n      archive: second.zip\n      ledger: second.json\n",
+	}
+	for name, imports := range tests {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			content := "schema_version: 1\ntool_version: v1.0.1\nmutation:\n  imports:\n" + imports
+			write(t, filepath.Join(root, ".golib.yaml"), content)
+			if _, err := config.Load(root); !errors.Is(err, config.ErrInvalid) {
+				t.Fatalf("Load() error = %v", err)
+			}
+		})
+	}
+}
+
 func TestLoadAcceptsPinnedExternalRuntimes(t *testing.T) {
 	root := t.TempDir()
 	write(t, filepath.Join(root, ".golib.yaml"), `schema_version: 1

@@ -152,7 +152,22 @@ func detailedReason(name, reason string) error {
 // Approve verifies the complete old checkpoint identity and, when necessary,
 // its exact replacement input identity.
 func (ledger MigrationLedger) Approve(checkpoint Checkpoint, currentInput, expectedVerifier string) error {
+	return ledger.approve(checkpoint, currentInput, "", expectedVerifier)
+}
+
+// approveTransition accepts the current input identity when the same observed
+// content also produces an already approved v1 identity. This permits the
+// built-in removal of unobserved sibling modules from package identity without
+// treating unrelated repository structure as a source change.
+func (ledger MigrationLedger) approveTransition(checkpoint Checkpoint, currentInput, legacyInput, expectedVerifier string) error {
+	return ledger.approve(checkpoint, currentInput, legacyInput, expectedVerifier)
+}
+
+func (ledger MigrationLedger) approve(checkpoint Checkpoint, currentInput, legacyInput, expectedVerifier string) error {
 	if !digestRE.MatchString(currentInput) {
+		return fmt.Errorf("%w: requested identity is malformed", ErrUnapproved)
+	}
+	if legacyInput != "" && !digestRE.MatchString(legacyInput) {
 		return fmt.Errorf("%w: requested identity is malformed", ErrUnapproved)
 	}
 	if !digestRE.MatchString(expectedVerifier) {
@@ -171,8 +186,18 @@ func (ledger MigrationLedger) Approve(checkpoint Checkpoint, currentInput, expec
 	if verifierMatches != 1 || (checkpoint.VerifierDigest != "" && checkpoint.VerifierDigest != expectedVerifier) {
 		return fmt.Errorf("%w: legacy verifier identity is not uniquely approved", ErrUnapproved)
 	}
-	if checkpoint.InputDigest == currentInput {
+	if ledger.inputApproved(checkpoint, currentInput, expectedVerifier) {
 		return nil
+	}
+	if legacyInput != "" && legacyInput != currentInput && ledger.inputApproved(checkpoint, legacyInput, expectedVerifier) {
+		return nil
+	}
+	return fmt.Errorf("%w: %w: replacement input identity is not uniquely approved for requested replacement %s", ErrUnapproved, ErrInputChanged, currentInput)
+}
+
+func (ledger MigrationLedger) inputApproved(checkpoint Checkpoint, input, expectedVerifier string) bool {
+	if checkpoint.InputDigest == input {
+		return true
 	}
 	inputMatches := 0
 	for _, migration := range ledger.Entries {
@@ -182,15 +207,12 @@ func (ledger MigrationLedger) Approve(checkpoint Checkpoint, currentInput, expec
 		}
 		if migration.Module == checkpoint.Module && migration.Package == checkpoint.Package &&
 			migration.ExecutionRevision == checkpoint.ExecutionRevision && migration.GateInputDigest == checkpoint.InputDigest &&
-			migration.ReplacementInputDigest == currentInput && migration.GremlinsVersion == checkpoint.Gremlins &&
+			migration.ReplacementInputDigest == input && migration.GremlinsVersion == checkpoint.Gremlins &&
 			verifier == expectedVerifier && "sha256:"+migration.ReportSHA256 == checkpoint.ReportDigest {
 			inputMatches++
 		}
 	}
-	if inputMatches != 1 {
-		return fmt.Errorf("%w: replacement input identity is not uniquely approved for requested replacement %s", ErrUnapproved, currentInput)
-	}
-	return nil
+	return inputMatches == 1
 }
 
 func contains(values []string, expected string) bool {

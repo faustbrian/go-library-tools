@@ -80,6 +80,81 @@ func TestCampaignImportsApprovedLegacyCheckpoint(t *testing.T) {
 	}
 }
 
+func TestCampaignImportsCheckpointAcrossBuiltInInputIdentityTransition(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	campaign.Policy.OwnedModules = []OwnedModule{{
+		ModulePath: "example/unobserved", Directory: "unobserved",
+	}}
+	_, currentInput, legacyInput, err := campaign.packageInputs(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if currentInput == legacyInput {
+		t.Fatal("fixture does not exercise the input identity transition")
+	}
+	checkpoint, ledger := approvedImportFixture(t, legacyInput)
+	if err := campaign.Import(context.Background(), []Checkpoint{checkpoint}, ledger); err != nil {
+		t.Fatalf("Import() error = %v", err)
+	}
+	reused, _, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", ".", currentInput)
+	if err != nil || !reused {
+		t.Fatalf("Reuse() = %v, %v", reused, err)
+	}
+}
+
+func TestCampaignImportPreservesApprovedPackagesWhenAnotherInputChanged(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	if err := os.MkdirAll(filepath.Join(campaign.Root, "adapter"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(campaign.Root, "adapter", "adapter.go"), []byte("package adapter\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	campaign.Policy.Packages = []string{".", "adapter"}
+	_, rootInput, err := campaign.packageInput(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, adapterInput, err := campaign.packageInput(context.Background(), "adapter")
+	if err != nil {
+		t.Fatal(err)
+	}
+	rootCheckpoint, ledger := approvedImportFixture(t, rootInput)
+	ledger.Entries[0].ReplacementInputDigest = strings.Repeat("b", 64)
+	adapterCheckpoint, adapterLedger := approvedImportFixture(t, adapterInput)
+	adapterCheckpoint.Package = "adapter"
+	adapterLedger.VerifierMigrations[0].Package = "adapter"
+	adapterLedger.Entries[0].Package = "adapter"
+	ledger.VerifierMigrations = append(ledger.VerifierMigrations, adapterLedger.VerifierMigrations[0])
+	ledger.Entries = append(ledger.Entries, adapterLedger.Entries[0])
+
+	err = campaign.Import(context.Background(), []Checkpoint{rootCheckpoint, adapterCheckpoint}, ledger)
+	if !errors.Is(err, ErrInputChanged) {
+		t.Fatalf("Import() error = %v, want ErrInputChanged", err)
+	}
+	reused, _, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", "adapter", adapterInput)
+	if err != nil || !reused {
+		t.Fatalf("Reuse(adapter) = %v, %v", reused, err)
+	}
+	reused, _, err = Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", ".", rootInput)
+	if err != nil || reused {
+		t.Fatalf("Reuse(root) = %v, %v", reused, err)
+	}
+}
+
+func TestCampaignPackageInputsRejectsMalformedCurrentIdentity(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	campaign.Process = func(_ context.Context, name string, args []string, _ string, _ map[string]string, stdout, _ io.Writer) error {
+		if name == "go" && len(args) > 0 && args[0] == "list" {
+			_, _ = io.WriteString(stdout, "not-json")
+		}
+		return nil
+	}
+	if _, _, _, err := campaign.packageInputs(context.Background(), "."); err == nil {
+		t.Fatal("packageInputs() error = nil")
+	}
+}
+
 func TestCampaignImportFailsClosedAtEachBoundary(t *testing.T) {
 	tests := map[string]func(*Campaign, *campaignProcess, *Checkpoint, *MigrationLedger) []Checkpoint{
 		"invalid campaign": func(campaign *Campaign, _ *campaignProcess, checkpoint *Checkpoint, _ *MigrationLedger) []Checkpoint {
@@ -114,6 +189,10 @@ func TestCampaignImportFailsClosedAtEachBoundary(t *testing.T) {
 			ledger.Entries[0].ReplacementInputDigest = strings.Repeat("b", 64)
 			return []Checkpoint{*checkpoint}
 		},
+		"unapproved verifier": func(_ *Campaign, _ *campaignProcess, checkpoint *Checkpoint, ledger *MigrationLedger) []Checkpoint {
+			ledger.VerifierMigrations = nil
+			return []Checkpoint{*checkpoint}
+		},
 		"report store": func(campaign *Campaign, _ *campaignProcess, checkpoint *Checkpoint, _ *MigrationLedger) []Checkpoint {
 			if err := os.MkdirAll(campaign.MutationRoot, 0o700); err != nil {
 				t.Fatal(err)
@@ -146,8 +225,12 @@ func TestCampaignImportFailsClosedAtEachBoundary(t *testing.T) {
 			}
 			checkpoint, ledger := approvedImportFixture(t, currentInput)
 			checkpoints := prepare(&campaign, process, &checkpoint, &ledger)
-			if err := campaign.Import(context.Background(), checkpoints, ledger); err == nil {
+			err = campaign.Import(context.Background(), checkpoints, ledger)
+			if err == nil {
 				t.Fatalf("Import(%s) error = nil", name)
+			}
+			if name == "unapproved current input" && !errors.Is(err, ErrInputChanged) {
+				t.Fatalf("Import(%s) error = %v, want ErrInputChanged", name, err)
 			}
 		})
 	}

@@ -58,7 +58,16 @@ type Evidence struct {
 
 // Mutation identifies repository-owned reports, checkpoints, and reviews.
 type Mutation struct {
-	Root string `json:"root" yaml:"root,omitempty"`
+	Root    string           `json:"root" yaml:"root,omitempty"`
+	Imports []MutationImport `json:"imports,omitempty" yaml:"imports,omitempty"`
+}
+
+// MutationImport identifies one repository-owned approved legacy checkpoint
+// set that is materialized into content-addressed evidence before verification.
+type MutationImport struct {
+	Module  string `json:"module" yaml:"module"`
+	Archive string `json:"archive" yaml:"archive"`
+	Ledger  string `json:"ledger" yaml:"ledger"`
 }
 
 // API identifies module-specific exported API baseline formats and locations.
@@ -206,6 +215,21 @@ func (value Config) validate() error {
 		return fmt.Errorf("%w: runtimes.zsh supports only 5.9", ErrInvalid)
 	}
 	seen := make(map[string]struct{}, len(value.Operations))
+	mutationImports := make(map[string]struct{}, len(value.Mutation.Imports))
+	for index, migration := range value.Mutation.Imports {
+		if migration.Module == "" || (migration.Module != "." && validateRelativePath(migration.Module) != nil) {
+			return fmt.Errorf("%w: mutation.imports[%d].module is invalid", ErrInvalid, index)
+		}
+		for _, path := range []struct{ name, value string }{{"archive", migration.Archive}, {"ledger", migration.Ledger}} {
+			if err := validateRelativePath(path.value); err != nil || filepath.Clean(path.value) == "." {
+				return fmt.Errorf("%w: mutation.imports[%d].%s is invalid", ErrInvalid, index, path.name)
+			}
+		}
+		if _, exists := mutationImports[migration.Module]; exists {
+			return fmt.Errorf("%w: mutation.imports[%d]: duplicate module", ErrInvalid, index)
+		}
+		mutationImports[migration.Module] = struct{}{}
+	}
 	apiModules := make(map[string]struct{}, len(value.API.Baselines))
 	for index, baseline := range value.API.Baselines {
 		if err := baseline.validate(); err != nil {

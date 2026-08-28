@@ -55,6 +55,10 @@
         "root": {
           "$ref": "#/$defs/repositoryPath",
           "default": ".verification/mutation"
+        },
+        "imports": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/mutationImport" }
         }
       }
     },
@@ -127,6 +131,26 @@
     }
   },
   "$defs": {
+    "mutationImport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["module", "archive", "ledger"],
+      "properties": {
+        "module": { "$ref": "#/$defs/repositoryPath" },
+        "archive": {
+          "allOf": [
+            { "$ref": "#/$defs/repositoryPath" },
+            { "not": { "const": "." } }
+          ]
+        },
+        "ledger": {
+          "allOf": [
+            { "$ref": "#/$defs/repositoryPath" },
+            { "not": { "const": "." } }
+          ]
+        }
+      }
+    },
     "apiBaseline": {
       "type": "object",
       "additionalProperties": false,

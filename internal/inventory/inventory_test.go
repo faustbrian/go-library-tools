@@ -97,6 +97,31 @@ func TestLoadValidatesTypedAPIBaselineOwnership(t *testing.T) {
 	}
 }
 
+func TestLoadValidatesMutationImportOwnership(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"mutation":true},"packages":[]}]}`)
+	policy := config.Config{
+		Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+		Mutation: config.Mutation{Imports: []config.MutationImport{{
+			Module: ".", Archive: "checkpoint.zip", Ledger: "ledger.json",
+		}}},
+	}
+	if _, err := inventory.Load(root, policy); err != nil {
+		t.Fatalf("Load(enabled mutation import) error = %v", err)
+	}
+
+	policy.Mutation.Imports[0].Module = "missing"
+	if _, err := inventory.Load(root, policy); err == nil || !strings.Contains(err.Error(), "references unknown module") {
+		t.Fatalf("Load(unknown mutation module) error = %v", err)
+	}
+
+	policy.Mutation.Imports[0].Module = "."
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"tests":true},"packages":[]}]}`)
+	if _, err := inventory.Load(root, policy); err == nil || !strings.Contains(err.Error(), "is not enabled") {
+		t.Fatalf("Load(disabled mutation import) error = %v", err)
+	}
+}
+
 func TestLoadValidatesCanonicalManifests(t *testing.T) {
 	root := fixture(t)
 

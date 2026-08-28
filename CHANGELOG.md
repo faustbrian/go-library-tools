@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Scoped mutation identities to sibling modules actually observed by each
+  package and added deterministic migration of previously approved v1 input
+  identities, so unrelated module inventory changes do not trigger campaigns.
+- Added repository-declared mutation checkpoint imports that materialize
+  approved source-specific evidence before verification, including in
+  service-backed CI where local imports are intentionally avoided.
 - Ran RabbitMQ Streams readiness checks with the broker's task-owned Erlang
   cookie identity and kept nested-module license audits scoped to the owning
   repository namespace.

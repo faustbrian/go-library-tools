@@ -6,10 +6,11 @@
    Convert checksum-only or Git-history API checks to explicit `apidiff` or
    `go-doc` baselines and declare their repository-relative paths.
 3. Move source-specific evidence to `.verification/` and preserve exact content
-   identity. Import approved legacy mutation checkpoints with
-   `golib mutation import --module DIR --archive PATH --ledger PATH` before
-   removing the copied tooling. Keep package fixtures in durable descriptive
-   locations.
+   identity. Declare approved mutation checkpoint archives and ledgers through
+   `mutation.imports`; the normal mutation gate materializes them before
+   verification. The explicit one-time `golib mutation import` command remains
+   available with `--module DIR --archive PATH --ledger PATH`. Keep package
+   fixtures in durable descriptive locations.
 4. Replace the Makefile with thin `golib` commands and CI with the immutable
    reusable workflow.
 5. Remove `.golib` scripts, shared tool pins, and obsolete workflow code.

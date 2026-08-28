@@ -14,6 +14,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/mutation"
 	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
@@ -55,6 +56,16 @@ func (runner Runner) Mutation(ctx context.Context, selection []string) error {
 			continue
 		}
 		if err := runner.withModuleServices(ctx, module, func(scoped Runner) error {
+			if migration, exists := scoped.configuredMutationImport(module.Directory); exists {
+				if err := announce(output, module.Directory, "mutation-import", func() error {
+					return scoped.runMutationImport(ctx, output, module, migration.Archive, migration.Ledger)
+				}); err != nil {
+					if !errors.Is(err, mutation.ErrInputChanged) {
+						return err
+					}
+					_, _ = fmt.Fprintf(output, "[%s] mutation-import: changed packages require current verification\n", module.Directory)
+				}
+			}
 			return announce(output, module.Directory, "mutation", func() error {
 				return scoped.runMutation(ctx, output, module)
 			})
@@ -63,6 +74,15 @@ func (runner Runner) Mutation(ctx context.Context, selection []string) error {
 		}
 	}
 	return nil
+}
+
+func (runner Runner) configuredMutationImport(module string) (config.MutationImport, bool) {
+	for _, migration := range runner.Policy.Mutation.Imports {
+		if migration.Module == module {
+			return migration, true
+		}
+	}
+	return config.MutationImport{}, false
 }
 
 // MutationImport migrates one module's approved legacy checkpoint archive.

@@ -46,6 +46,47 @@ func TestInputDigestTracksOnlyObservedContentAndSemantics(t *testing.T) {
 	}
 }
 
+func TestInputDigestIgnoresUnobservedOwnedModules(t *testing.T) {
+	root := t.TempDir()
+	writeInput(t, root, "target.go", "package example\n")
+	listing := `{"Dir":"` + root + `","ImportPath":"example","GoFiles":["target.go"],"Module":{"Path":"example","Main":true,"GoVersion":"1.26.6"}}`
+	policy := mutation.InputPolicy{
+		ModuleDirectory: ".", PackageDirectory: ".",
+		ModulePath: "example", GoVersion: "1.26.6",
+	}
+
+	withoutSibling, err := mutation.InputDigest(root, policy, strings.NewReader(listing), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy.OwnedModules = []mutation.OwnedModule{{
+		ModulePath: "example/integration", Directory: "integration",
+	}}
+	withUnobservedSibling, err := mutation.InputDigest(root, policy, strings.NewReader(listing), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if withUnobservedSibling != withoutSibling {
+		t.Fatal("unobserved sibling module invalidated package mutation input")
+	}
+
+	writeInput(t, root, "integration/dependency.go", "package integration\n")
+	observedListing := listing + "\n" +
+		`{"Dir":"` + filepath.Join(root, "integration") + `","ImportPath":"example/integration","GoFiles":["dependency.go"],"Module":{"Path":"example/integration","Main":true,"GoVersion":"1.26.6"}}`
+	withObservedSibling, err := mutation.InputDigest(root, policy, strings.NewReader(observedListing), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeInput(t, root, "integration/dependency.go", "package integration\nvar Changed = true\n")
+	changedSibling, err := mutation.InputDigest(root, policy, strings.NewReader(observedListing), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if changedSibling == withObservedSibling {
+		t.Fatal("observed sibling module change did not invalidate package mutation input")
+	}
+}
+
 func TestInputDigestIncludesExactZeroReview(t *testing.T) {
 	root := t.TempDir()
 	writeInput(t, root, "target.go", "package example\n")

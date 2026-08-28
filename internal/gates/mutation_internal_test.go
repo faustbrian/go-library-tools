@@ -47,6 +47,68 @@ func TestMutationImportLoadsApprovedRepositoryArtifacts(t *testing.T) {
 	}
 }
 
+func TestMutationMaterializesConfiguredCheckpointBeforeVerification(t *testing.T) {
+	root := t.TempDir()
+	writeValidMutationSetup(t, root)
+	writeMutationImportFixtures(t, root)
+	var order []string
+	runner := Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Repository: "example", Modules: []inventory.Module{{
+			Directory: ".", ModulePath: "example", GoVersion: "1.27.0",
+			Gates: map[string]bool{"mutation": true}, Packages: []inventory.Package{{Directory: ".", CoverageRequired: true}},
+		}}},
+		Policy: config.Config{
+			Evidence: config.Evidence{Root: ".verification"},
+			Mutation: config.Mutation{
+				Root: ".verification/mutation",
+				Imports: []config.MutationImport{{
+					Module: ".", Archive: "legacy.zip", Ledger: "ledger.json",
+				}},
+			},
+		},
+		Executor: runtimeExecutor(filepath.Join(root, ".task")),
+		mutationImport: func(context.Context, mutation.Campaign, []mutation.Checkpoint, mutation.MigrationLedger) error {
+			order = append(order, "import")
+			return nil
+		},
+		mutationCampaign: func(context.Context, mutation.Campaign) error {
+			order = append(order, "verify")
+			return nil
+		},
+	}
+	if err := runner.Mutation(context.Background(), []string{"."}); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(order, []string{"import", "verify"}) {
+		t.Fatalf("mutation order = %v", order)
+	}
+	if _, exists := runner.configuredMutationImport("missing"); exists {
+		t.Fatal("unexpected configured import for missing module")
+	}
+	runner.mutationImport = func(context.Context, mutation.Campaign, []mutation.Checkpoint, mutation.MigrationLedger) error {
+		return errors.New("import failed")
+	}
+	runner.mutationCampaign = func(context.Context, mutation.Campaign) error {
+		t.Fatal("verification ran after failed checkpoint import")
+		return nil
+	}
+	if err := runner.Mutation(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "import failed") {
+		t.Fatalf("Mutation(failed import) error = %v", err)
+	}
+	runner.mutationImport = func(context.Context, mutation.Campaign, []mutation.Checkpoint, mutation.MigrationLedger) error {
+		return mutation.ErrInputChanged
+	}
+	runs := 0
+	runner.mutationCampaign = func(context.Context, mutation.Campaign) error {
+		runs++
+		return nil
+	}
+	if err := runner.Mutation(context.Background(), []string{"."}); err != nil || runs != 1 {
+		t.Fatalf("Mutation(stale import) = %v, runs = %d", err, runs)
+	}
+}
+
 func TestMutationImportFailsClosed(t *testing.T) {
 	root := t.TempDir()
 	writeValidMutationSetup(t, root)

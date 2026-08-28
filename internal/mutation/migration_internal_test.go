@@ -227,6 +227,23 @@ func TestMigrationApprovalUsesInputLineageAndDefaultVerifier(t *testing.T) {
 	}
 }
 
+func TestMigrationLedgerApprovesBuiltInInputIdentityTransition(t *testing.T) {
+	ledger := validMigrationLedger()
+	checkpoint := validMigrationCheckpoint()
+	currentInput := strings.Repeat("f", 64)
+	legacyInput := ledger.Entries[0].ReplacementInputDigest
+	verifier := ledger.VerifierMigrationReview.GremlinsVerifierSHA256
+	if err := ledger.approveTransition(checkpoint, currentInput, legacyInput, verifier); err != nil {
+		t.Fatalf("approveTransition() error = %v", err)
+	}
+	if err := ledger.approveTransition(checkpoint, currentInput, "bad", verifier); !errors.Is(err, ErrUnapproved) {
+		t.Fatalf("approveTransition(malformed) error = %v, want ErrUnapproved", err)
+	}
+	if err := ledger.approveTransition(checkpoint, currentInput, currentInput, verifier); !errors.Is(err, ErrUnapproved) {
+		t.Fatalf("approveTransition(unapproved) error = %v, want ErrUnapproved", err)
+	}
+}
+
 func validMigrationLedger() MigrationLedger {
 	verifier := strings.Repeat("c", 64)
 	return MigrationLedger{

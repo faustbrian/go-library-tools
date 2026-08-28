@@ -31,9 +31,12 @@ var (
 	ErrInvalid = errors.New("invalid mutation evidence")
 	// ErrUnapproved identifies evidence lacking an exact migration approval.
 	ErrUnapproved = errors.New("unapproved mutation evidence migration")
-	digestRE      = regexp.MustCompile(`^[0-9a-f]{64}$`)
-	revisionRE    = regexp.MustCompile(`^[0-9a-f]{40}$`)
-	versionRE     = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
+	// ErrInputChanged identifies an otherwise valid checkpoint whose observed
+	// package input no longer matches an approved identity.
+	ErrInputChanged = errors.New("mutation checkpoint input changed")
+	digestRE        = regexp.MustCompile(`^[0-9a-f]{64}$`)
+	revisionRE      = regexp.MustCompile(`^[0-9a-f]{40}$`)
+	versionRE       = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
 )
 
 // Checkpoint is validated legacy evidence suitable for content-identity

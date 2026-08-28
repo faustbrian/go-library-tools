@@ -86,6 +86,14 @@ type moduleIdentity struct {
 // InputDigest binds a mutation campaign to the exact local source, observing
 // tests, fixtures, dependency versions, package policy, and verifier semantics.
 func InputDigest(root string, policy InputPolicy, listing io.Reader, review *ZeroReview) (string, error) {
+	return inputDigest(root, policy, listing, review, true, "v2")
+}
+
+func legacyInputDigestV1(root string, policy InputPolicy, listing io.Reader, review *ZeroReview) (string, error) {
+	return inputDigest(root, policy, listing, review, false, "v1")
+}
+
+func inputDigest(root string, policy InputPolicy, listing io.Reader, review *ZeroReview, filterOwned bool, version string) (string, error) {
 	if !filepath.IsAbs(root) {
 		return "", fmt.Errorf("%w: repository root must be absolute", ErrInvalid)
 	}
@@ -115,6 +123,7 @@ func InputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 	content := make(map[string][]byte)
 	modules := make(map[string]moduleIdentity)
 	observedTarget := false
+	observedOwnedModules := make(map[string]struct{}, len(moduleRoots))
 	relevantDirectories := make(map[string]OwnedModule)
 	total := 0
 	for _, pkg := range packages {
@@ -129,6 +138,7 @@ func InputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 		if !local {
 			continue
 		}
+		observedOwnedModules[owned.ModulePath] = struct{}{}
 		canonicalImport, _, _ := strings.Cut(pkg.ImportPath, " [")
 		if canonicalImport == target+".test" {
 			continue
@@ -170,6 +180,9 @@ func InputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 	if len(content) == 0 {
 		return "", fmt.Errorf("%w: mutation input contains no local files", ErrInvalid)
 	}
+	if filterOwned {
+		policy.OwnedModules = observedOwned(policy.OwnedModules, observedOwnedModules)
+	}
 	moduleList := make([]moduleIdentity, 0, len(modules))
 	for _, identity := range modules {
 		moduleList = append(moduleList, identity)
@@ -182,7 +195,17 @@ func InputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 		Review   *ZeroReview      `json:"zero_review,omitempty"`
 	}{policy, moduleList, LegacyVerifierDigest(), review}
 	encoded, _ := json.Marshal(semantic)
-	return evidence.Digest("golib/mutation-input/v1\n"+string(encoded), content), nil
+	return evidence.Digest("golib/mutation-input/"+version+"\n"+string(encoded), content), nil
+}
+
+func observedOwned(owned []OwnedModule, observed map[string]struct{}) []OwnedModule {
+	result := make([]OwnedModule, 0, len(owned))
+	for _, module := range owned {
+		if _, exists := observed[module.ModulePath]; exists {
+			result = append(result, module)
+		}
+	}
+	return result
 }
 
 func (policy InputPolicy) validate() error {

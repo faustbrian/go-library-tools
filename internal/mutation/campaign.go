@@ -124,6 +124,7 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 	if output == nil {
 		output = io.Discard
 	}
+	var changedInputs error
 	for _, checkpoint := range ordered {
 		identity := checkpoint.Module + "\x00" + checkpoint.Package
 		if checkpoint.Module != campaign.Policy.ModuleDirectory {
@@ -136,14 +137,25 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			return fmt.Errorf("%w: duplicate checkpoint identity %s %s", ErrInvalid, checkpoint.Module, checkpoint.Package)
 		}
 		seen[identity] = struct{}{}
-		review, currentInput, err := campaign.packageInput(ctx, checkpoint.Package)
+		review, currentInput, legacyInput, err := campaign.packageInputs(ctx, checkpoint.Package)
 		if err != nil {
 			return err
 		}
 		if checkpoint.Mutants == 0 && review == nil {
 			return fmt.Errorf("%w: zero-mutant package %s lacks an exact review", ErrInvalid, packageTarget(checkpoint.Package))
 		}
-		if err := ledger.Approve(checkpoint, strings.TrimPrefix(currentInput, "sha256:"), LegacyVerifierDigest()); err != nil {
+		if err := ledger.approveTransition(
+			checkpoint,
+			strings.TrimPrefix(currentInput, "sha256:"),
+			strings.TrimPrefix(legacyInput, "sha256:"),
+			LegacyVerifierDigest(),
+		); err != nil {
+			if errors.Is(err, ErrInputChanged) {
+				changedInputs = errors.Join(changedInputs, fmt.Errorf("%s %s: %w", checkpoint.Module, checkpoint.Package, err))
+				_, _ = fmt.Fprintf(output, "[%s] %s skipped stale mutation checkpoint\n",
+					campaign.Policy.ModuleDirectory, packageTarget(checkpoint.Package))
+				continue
+			}
 			return fmt.Errorf("approve checkpoint %s %s: %w", checkpoint.Module, checkpoint.Package, err)
 		}
 		_, _, stored, err := StoreReport(campaign.MutationRoot, currentInput, checkpoint.Report)
@@ -174,7 +186,7 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 		_, _ = fmt.Fprintf(output, "[%s] %s imported approved mutation evidence (%d mutants)\n",
 			campaign.Policy.ModuleDirectory, packageTarget(checkpoint.Package), stored.Mutants)
 	}
-	return nil
+	return changedInputs
 }
 
 func (campaign Campaign) prepareDirectories() error {
@@ -294,9 +306,14 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 }
 
 func (campaign Campaign) packageInput(ctx context.Context, packageDirectory string) (*ZeroReview, string, error) {
+	review, current, _, err := campaign.packageInputs(ctx, packageDirectory)
+	return review, current, err
+}
+
+func (campaign Campaign) packageInputs(ctx context.Context, packageDirectory string) (*ZeroReview, string, string, error) {
 	source, err := SourceDigest(campaign.Root, campaign.Policy.ModuleDirectory, packageDirectory)
 	if err != nil {
-		return nil, "", err
+		return nil, "", "", err
 	}
 	review, _ := campaign.ZeroReviews.Review(campaign.Policy.ModuleDirectory, packageDirectory, source, GremlinsVersion, LegacyVerifierDigest())
 	policy := InputPolicy{
@@ -313,10 +330,14 @@ func (campaign Campaign) packageInput(ctx context.Context, packageDirectory stri
 	arguments = append(arguments, packageTarget(packageDirectory))
 	directory := filepath.Join(campaign.Root, filepath.FromSlash(campaign.Policy.ModuleDirectory))
 	if err := campaign.Process(ctx, "go", arguments, directory, campaign.commandEnvironment(), &listing, io.Discard); err != nil {
-		return nil, "", fmt.Errorf("list mutation input for %s: %w", packageDirectory, err)
+		return nil, "", "", fmt.Errorf("list mutation input for %s: %w", packageDirectory, err)
 	}
-	digest, err := InputDigest(campaign.Root, policy, strings.NewReader(listing.String()), review)
-	return review, digest, err
+	current, err := InputDigest(campaign.Root, policy, strings.NewReader(listing.String()), review)
+	if err != nil {
+		return nil, "", "", err
+	}
+	legacy, err := legacyInputDigestV1(campaign.Root, policy, strings.NewReader(listing.String()), review)
+	return review, current, legacy, err
 }
 
 func (campaign Campaign) prepareExecution(ctx context.Context, state *campaignState) error {

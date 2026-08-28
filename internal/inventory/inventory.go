@@ -121,6 +121,15 @@ func Load(root string, policy config.Config) (Inventory, error) {
 		"test": "tests",
 	}
 	apiOwners := make(map[string]struct{}, len(policy.API.Baselines))
+	for index, migration := range policy.Mutation.Imports {
+		module, exists := byDirectory[migration.Module]
+		if !exists {
+			return Inventory{}, fmt.Errorf("mutation.imports[%d] references unknown module %q", index, migration.Module)
+		}
+		if !module.Gates["mutation"] {
+			return Inventory{}, fmt.Errorf("mutation.imports[%d] is not enabled for module %q", index, migration.Module)
+		}
+	}
 	for index, baseline := range policy.API.Baselines {
 		module, exists := byDirectory[baseline.Module]
 		if !exists {

@@ -73,6 +73,27 @@ func TestInputDigestResolvesNestedTargetImport(t *testing.T) {
 	}
 }
 
+func TestLegacyInputDigestV1RetainsUnobservedOwnedModules(t *testing.T) {
+	root := t.TempDir()
+	writeMutationInput(t, root, "target.go", "package example\n")
+	listing := `{"Dir":"` + root + `","ImportPath":"example","GoFiles":["target.go"],"Module":{"Path":"example","Main":true}}`
+	policy := InputPolicy{
+		ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.27.0",
+		OwnedModules: []OwnedModule{{ModulePath: "example/unobserved", Directory: "unobserved"}},
+	}
+	current, err := InputDigest(root, policy, strings.NewReader(listing), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacy, err := legacyInputDigestV1(root, policy, strings.NewReader(listing), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if current == legacy {
+		t.Fatal("legacy and current input identities unexpectedly match")
+	}
+}
+
 func TestInputDigestIgnoresGeneratedTestExecutable(t *testing.T) {
 	root := t.TempDir()
 	writeMutationInput(t, root, "target.go", "package example\n")
