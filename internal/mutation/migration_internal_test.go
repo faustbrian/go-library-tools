@@ -242,6 +242,11 @@ func TestMigrationLedgerApprovesBuiltInInputIdentityTransition(t *testing.T) {
 	if err := ledger.approveTransition(checkpoint, currentInput, currentInput, verifier); !errors.Is(err, ErrUnapproved) {
 		t.Fatalf("approveTransition(unapproved) error = %v, want ErrUnapproved", err)
 	}
+	checkpoint.InputLineage = []string{checkpoint.InputDigest}
+	checkpoint.InputDigest = ""
+	if err := ledger.approveTransition(checkpoint, currentInput, "", verifier); !errors.Is(err, ErrUnapproved) {
+		t.Fatalf("approveTransition(missing legacy input) error = %v, want ErrUnapproved", err)
+	}
 }
 
 func validMigrationLedger() MigrationLedger {
