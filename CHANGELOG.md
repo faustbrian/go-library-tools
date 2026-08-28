@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.3 - 2026-08-28
+
 ### Fixed
 
 - Delegated formatting checks to the active repository Go toolchain so the
