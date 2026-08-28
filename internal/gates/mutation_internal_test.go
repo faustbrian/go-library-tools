@@ -619,6 +619,47 @@ func TestCheckRunsAndStopsAtMutationGate(t *testing.T) {
 	}
 }
 
+func TestCheckMaterializesConfiguredCheckpointBeforeMutationVerification(t *testing.T) {
+	root := t.TempDir()
+	writeValidMutationSetup(t, root)
+	writeMutationImportFixtures(t, root)
+	if err := os.WriteFile(filepath.Join(root, "source.go"), []byte("package example\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var order []string
+	runner := Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Repository: "example", Modules: []inventory.Module{{
+			Directory: ".", ModulePath: "example", GoVersion: "1.27.0", Gates: map[string]bool{"mutation": true},
+			Packages: []inventory.Package{{Directory: ".", CoverageRequired: true}},
+		}}},
+		Policy: config.Config{
+			Evidence: config.Evidence{Root: ".verification"},
+			Mutation: config.Mutation{
+				Root: ".verification/mutation",
+				Imports: []config.MutationImport{{
+					Module: ".", Archive: "legacy.zip", Ledger: "ledger.json",
+				}},
+			},
+		},
+		Executor: runtimeExecutor(filepath.Join(root, ".task")),
+		mutationImport: func(context.Context, mutation.Campaign, []mutation.Checkpoint, mutation.MigrationLedger) error {
+			order = append(order, "import")
+			return nil
+		},
+		mutationCampaign: func(context.Context, mutation.Campaign) error {
+			order = append(order, "verify")
+			return nil
+		},
+	}
+	if err := runner.Check(context.Background(), []string{"."}); err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(order, []string{"import", "verify"}) {
+		t.Fatalf("mutation order = %v", order)
+	}
+}
+
 type failingMutationFiles struct {
 	mkdirErr   error
 	writeErrAt int

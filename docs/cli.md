@@ -16,7 +16,11 @@ Core commands:
 - `golib repository check` validates standalone repository structure.
 - `golib workflows check` validates GitHub Actions workflows with the centrally
   pinned Actionlint release.
-- `golib check [--all|--module DIR]` runs the enabled contract.
+- `golib check [--all|--module DIR]` runs the enabled contract. Formatting is
+  checked by the active `gofmt` executable, keeping it aligned with the Go
+  toolchain selected for the repository rather than the CLI build toolchain.
+  Configured mutation imports are materialized before mutation verification,
+  using the same fail-closed behavior as `golib mutation`.
 - `golib coverage [--module DIR]` verifies exact package coverage.
 - `golib mutation [--module DIR]` verifies or executes mutation evidence.
 - `golib mutation import --module DIR --archive PATH --ledger PATH` validates
