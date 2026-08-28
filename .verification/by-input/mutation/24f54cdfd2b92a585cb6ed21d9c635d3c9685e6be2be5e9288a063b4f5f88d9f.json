@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-library-tools",
+  "module": ".",
+  "package": "internal/docscheck",
+  "gate": "mutation",
+  "input_digest": "sha256:24f54cdfd2b92a585cb6ed21d9c635d3c9685e6be2be5e9288a063b4f5f88d9f",
+  "verifier_digest": "sha256:9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+  "result": "passed",
+  "report_digest": "sha256:8963ab7d3d9054f7e04ac3cc91b3a9c7862e138c31f4fc9da2fd8c009c72b685",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "amd64",
+    "GOOS": "linux",
+    "GOVERSION": "go1.27.0",
+    "gremlins_binary_sha256": "sha256:c445d9c04ffe4d2070617fd4df511cb19e48135950462912be29133b1b0169cc"
+  },
+  "completed_at": "2026-08-28T08:52:38.997207399Z"
+}
