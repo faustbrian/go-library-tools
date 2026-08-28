@@ -11,11 +11,11 @@
     },
     {
       "name": "go-knapsack",
-      "revision": "d1d45bc503e53db71920074fb307dfff0cbe3bbd"
+      "revision": "be21c07bf83136d8c6a3d98bad8e81dde6662308"
     },
     {
       "name": "go-openapi",
-      "revision": "9818e09267125184b9f7b3ad2ab76832c10a864b"
+      "revision": "de599cb40a9932fb82d0698916ce9de40c01b56a"
     },
     {
       "name": "go-transactional-outbox",

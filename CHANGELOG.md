@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Advanced the Knapsack and OpenAPI compatibility rehearsals to their finalized
+  standalone tooling repairs.
 - Updated the central `golangci-lint` pin to `v2.13.1` so Linux Go 1.27 checks
   use its compatible Staticcheck tool graph without disabling analyzers.
 - Isolated intentionally replaced internal module checksums in task-owned
