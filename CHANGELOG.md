@@ -11,7 +11,8 @@ All notable changes to this project are documented in this file.
   repository namespace.
 - Generated each rehearsal module's exact tidy checksum set so transitive
   owned-module checksums are present without retaining stale graph entries,
-  while preserving module-file drift for the strict tidy gate.
+  while preserving module-file drift for the strict tidy gate and resolving
+  nested module dependencies from their own source directories.
 - Advanced the Knapsack and OpenAPI compatibility rehearsals to their finalized
   standalone tooling repairs.
 - Kept the isolated-module environment aligned with task-owned execution module

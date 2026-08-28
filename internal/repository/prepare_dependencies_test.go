@@ -530,6 +530,56 @@ exit 1
 	}
 }
 
+func TestDependencyPreparationTidiesEachModuleFromItsOwnDirectory(t *testing.T) {
+	root := t.TempDir()
+	task := filepath.Join(root, "task")
+	fakeBin := filepath.Join(root, "bin")
+	tidyCapture := filepath.Join(root, "tidy.capture")
+	writeRehearsalFile(t, filepath.Join(root, "modules.json"), `{"modules":[{"directory":"."},{"directory":"nested"}]}`)
+	writeRehearsalFile(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/go-example\n\ngo 1.26.6\n")
+	writeRehearsalFile(t, filepath.Join(root, "nested", "go.mod"), "module github.com/faustbrian/go-example/nested\n\ngo 1.26.6\n")
+	writeExecutable(t, filepath.Join(fakeBin, "go"), `#!/usr/bin/env bash
+set -euo pipefail
+modfile=''
+for argument in "$@"; do
+	case "${argument}" in -modfile=*) modfile="${argument#-modfile=}" ;; esac
+done
+for flag in ${GOFLAGS:-}; do
+	case "${flag}" in -modfile=*) modfile="${flag#-modfile=}" ;; esac
+done
+if [[ "${1:-}" == mod && "${2:-}" == edit ]]; then
+	if [[ "${modfile}" == *'/0.mod' ]]; then
+		printf '%s\n' '{"Module":{"Path":"github.com/faustbrian/go-example"}}'
+	else
+		printf '%s\n' '{"Module":{"Path":"github.com/faustbrian/go-example/nested"}}'
+	fi
+	exit 0
+fi
+if [[ "${1:-}" == mod && "${2:-}" == tidy ]]; then
+	printf '%s\t%s\n' "$(basename "${modfile}")" "$(pwd -P)" >>"${REHEARSAL_TIDY_CAPTURE}"
+	exit 0
+fi
+printf 'unexpected fake go invocation: %s\n' "$*" >&2
+exit 1
+`)
+	commitRehearsalFixture(t, root)
+	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task,
+		filepath.Join(root, "environment"), filepath.Join(root, "path"))
+	command.Dir = root
+	command.Env = append(os.Environ(),
+		"PATH="+fakeBin+":"+os.Getenv("PATH"),
+		"REHEARSAL_TIDY_CAPTURE="+tidyCapture,
+	)
+	if output, err := command.CombinedOutput(); err != nil {
+		t.Fatalf("prepare dependencies: %v\n%s", err, output)
+	}
+	canonicalRoot := canonicalRehearsalPath(t, root)
+	want := "0.mod\t" + canonicalRoot + "\n1.mod\t" + filepath.Join(canonicalRoot, "nested") + "\n"
+	if captured := readRehearsalFile(t, tidyCapture); captured != want {
+		t.Fatalf("dependency tidy directories:\n%s\nwant:\n%s", captured, want)
+	}
+}
+
 func commitRehearsalFixture(t *testing.T, root string) {
 	t.Helper()
 	for _, arguments := range [][]string{{"init", "--quiet"}, {"add", "modules.json", "go.mod"}} {
