@@ -395,6 +395,9 @@ if [[ "${1:-}" == mod && "${2:-}" == edit ]]; then
 	printf '%s\n' '{"Module":{"Path":"github.com/faustbrian/go-example"}}'
 	exit 0
 fi
+if [[ "${1:-}" == mod && "${2:-}" == download && "${3:-}" == all ]]; then
+	exit 0
+fi
 if [[ "${1:-}" == module-mode-command ]]; then
 	printf '%s' "${GO111MODULE:-}" >"${REHEARSAL_MODULE_MODE_CAPTURE}"
 	exit 0
@@ -425,6 +428,47 @@ exit 1
 	}
 	if moduleMode := readRehearsalFile(t, moduleModeCapture); moduleMode != "on" {
 		t.Fatalf("dependency wrapper GO111MODULE = %q, want on", moduleMode)
+	}
+}
+
+func TestDependencyPreparationHydratesTransitiveOwnedChecksums(t *testing.T) {
+	root := t.TempDir()
+	task := filepath.Join(root, "task")
+	fakeBin := filepath.Join(root, "bin")
+	writeRehearsalFile(t, filepath.Join(root, "modules.json"), `{"modules":[{"directory":"."}]}`)
+	writeRehearsalFile(t, filepath.Join(root, "go.mod"), "module github.com/faustbrian/go-example\n\ngo 1.26.6\n\nrequire github.com/faustbrian/go-direct v1.0.0\n")
+	writeExecutable(t, filepath.Join(fakeBin, "go"), `#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == mod && "${2:-}" == edit ]]; then
+	printf '%s\n' '{"Module":{"Path":"github.com/faustbrian/go-example"},"Require":[{"Path":"github.com/faustbrian/go-direct","Version":"v1.0.0"}]}'
+	exit 0
+fi
+modfile=''
+for flag in ${GOFLAGS:-}; do
+	case "${flag}" in -modfile=*) modfile="${flag#-modfile=}" ;; esac
+done
+if [[ "${1:-}" == mod && "${2:-}" == download && "${3:-}" == github.com/faustbrian/go-direct@v1.0.0 ]]; then
+	printf '%s\n' 'github.com/faustbrian/go-direct v1.0.0 h1:direct' >>"${modfile%.mod}.sum"
+	exit 0
+fi
+if [[ "${1:-}" == mod && "${2:-}" == download && "${3:-}" == all ]]; then
+	printf '%s\n' 'github.com/faustbrian/go-transitive v1.0.0 h1:transitive' >>"${modfile%.mod}.sum"
+	exit 0
+fi
+printf 'unexpected fake go invocation: %s\n' "$*" >&2
+exit 1
+`)
+	commitRehearsalFixture(t, root)
+	command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task,
+		filepath.Join(root, "environment"), filepath.Join(root, "path"))
+	command.Dir = root
+	command.Env = append(os.Environ(), "PATH="+fakeBin+":"+os.Getenv("PATH"))
+	if output, err := command.CombinedOutput(); err != nil {
+		t.Fatalf("prepare dependencies: %v\n%s", err, output)
+	}
+	prepared := readRehearsalFile(t, filepath.Join(task, "modules", "0.sum"))
+	if !strings.Contains(prepared, "github.com/faustbrian/go-transitive v1.0.0 h1:transitive") {
+		t.Fatalf("prepared checksums omit transitive owned module:\n%s", prepared)
 	}
 }
 
