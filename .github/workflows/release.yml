@@ -12,6 +12,9 @@ jobs:
     name: Verify release
     runs-on: ubuntu-24.04
     timeout-minutes: 360
+    permissions:
+      actions: read
+      contents: read
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -25,17 +28,24 @@ jobs:
           node-version: '24.4.1'
           package-manager-cache: false
       - name: Validate release identity and contract
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
           [[ "$(git rev-parse HEAD)" == "$(git rev-list -n 1 "${GITHUB_REF_NAME}")" ]]
+          ci_runs="$(
+            GH_TOKEN="${GITHUB_TOKEN}" gh api \
+              "/repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${GITHUB_SHA}&event=push&status=success&per_page=100"
+          )"
+          jq -e --arg sha "${GITHUB_SHA}" \
+            'any(.workflow_runs[]; .head_sha == $sha and .event == "push" and .status == "completed" and .conclusion == "success")' \
+            <<<"${ci_runs}" >/dev/null
           task="$(mktemp -d "${RUNNER_TEMP}/golib-release-check.XXXXXX")"
           trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
             go run ./cmd/golib release check
-          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
-            go run ./cmd/golib check --all
 
   build:
     name: Build release artifacts

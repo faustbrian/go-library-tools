@@ -178,6 +178,8 @@ func TestReleaseWorkflowBuildsAndAttestsEverySupportedPlatform(t *testing.T) {
 		"release-manifest.json",
 		"anchore/sbom-action@",
 		"actions/attest@",
+		"actions: read",
+		"actions/workflows/ci.yml/runs",
 		"gh release create",
 	} {
 		if !strings.Contains(content, required) {
@@ -186,6 +188,9 @@ func TestReleaseWorkflowBuildsAndAttestsEverySupportedPlatform(t *testing.T) {
 	}
 	if strings.Contains(content, `[[ "${declared}" == "${GITHUB_REF_NAME}" ]]`) {
 		t.Fatal("release workflow requires the unpublished release to bootstrap itself")
+	}
+	if strings.Contains(content, "go run ./cmd/golib check --all") {
+		t.Fatal("release workflow repeats the exact-commit repository contract")
 	}
 }
 

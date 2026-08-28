@@ -14,6 +14,8 @@ All notable changes to this project are documented in this file.
   service-backed CI where local imports are intentionally avoided.
 - Kept release verification bootstrapped by the previously published tooling
   pin instead of requiring an unpublished release to verify itself.
+- Required a successful full CI run for the exact tagged commit instead of
+  repeating the repository contract and mutation campaigns during publishing.
 - Ran RabbitMQ Streams readiness checks with the broker's task-owned Erlang
   cookie identity and kept nested-module license audits scoped to the owning
   repository namespace.

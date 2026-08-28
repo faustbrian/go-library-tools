@@ -10,14 +10,16 @@ generates checksums, SBOMs, provenance, and a release manifest, and publishes
 from an immutable tag. Consumers verify artifacts before execution.
 
 The release workflow runs only for exact semantic-version tags. It verifies
-that the tag resolves to the checked-out commit, then builds and verifies the
+that the tag resolves to the checked-out commit and that the exact commit
+already has a successful full `CI` push run. It then builds and verifies the
 current source while `.golib.yaml` remains pinned to the previous published
-release. This avoids requiring an unpublished binary and checksum set to
-bootstrap their own release. The workflow revalidates the release contract and
-all gates, cross-compiles a `CGO_ENABLED=0` binary for each supported platform,
-embeds the tag as the binary identity, packages the binary with the license,
-produces SPDX JSON SBOMs, and attests the artifacts. The publish job creates a
-source- and artifact-bound release manifest,
+release. This avoids both requiring an unpublished binary and checksum set to
+bootstrap their own release and repeating content-identical mutation campaigns
+during publication. The workflow revalidates release metadata, cross-compiles
+a `CGO_ENABLED=0` binary for each supported platform, embeds the tag as the
+binary identity, packages the binary with the license, produces SPDX JSON
+SBOMs, and attests the artifacts. The publish job creates a source- and
+artifact-bound release manifest,
 `checksums.txt`, attestations for both, and the GitHub release only after every
 platform succeeds.
 
