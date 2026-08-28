@@ -184,6 +184,9 @@ func TestReleaseWorkflowBuildsAndAttestsEverySupportedPlatform(t *testing.T) {
 			t.Errorf("release workflow lacks %q", required)
 		}
 	}
+	if strings.Contains(content, `[[ "${declared}" == "${GITHUB_REF_NAME}" ]]`) {
+		t.Fatal("release workflow requires the unpublished release to bootstrap itself")
+	}
 }
 
 func TestConsumerUpgradeWorkflowIsBoundedAndReviewable(t *testing.T) {

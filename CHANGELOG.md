@@ -12,6 +12,8 @@ All notable changes to this project are documented in this file.
 - Added repository-declared mutation checkpoint imports that materialize
   approved source-specific evidence before verification, including in
   service-backed CI where local imports are intentionally avoided.
+- Kept release verification bootstrapped by the previously published tooling
+  pin instead of requiring an unpublished release to verify itself.
 - Ran RabbitMQ Streams readiness checks with the broker's task-owned Erlang
   cookie identity and kept nested-module license audits scoped to the owning
   repository namespace.
