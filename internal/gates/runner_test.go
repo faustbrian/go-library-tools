@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -434,6 +435,25 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
 		t.Fatalf("commands = %#v", executor.commands)
+	}
+}
+
+func TestCheckIgnoresRepositoryOwnedPackagesDuringNestedModuleLicenseAudit(t *testing.T) {
+	root := fixture(t)
+	executor := &recordingExecutor{}
+	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{
+		Repository: "github.com/acme/example",
+		Modules: []inventory.Module{
+			{Directory: ".", ModulePath: "github.com/acme/example"},
+			{Directory: "nested", ModulePath: "github.com/acme/example/nested", Gates: map[string]bool{"security": true}},
+		},
+	}, Executor: executor}
+	if err := runner.Check(context.Background(), []string{"nested"}); err != nil {
+		t.Fatalf("Check() error = %v", err)
+	}
+	want := "go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/acme/example"
+	if !slices.Contains(executor.commands, want) {
+		t.Fatalf("commands = %#v, want %q", executor.commands, want)
 	}
 }
 

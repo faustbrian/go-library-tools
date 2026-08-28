@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Ran RabbitMQ Streams readiness checks with the broker's task-owned Erlang
+  cookie identity and kept nested-module license audits scoped to the owning
+  repository namespace.
 - Advanced the Knapsack and OpenAPI compatibility rehearsals to their finalized
   standalone tooling repairs.
 - Kept the isolated-module environment aligned with task-owned execution module

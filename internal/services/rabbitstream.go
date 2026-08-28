@@ -114,7 +114,7 @@ func startRabbitStreamStandalone(ctx context.Context, manager Manager, lease *Le
 	if err != nil {
 		return fmt.Errorf("read RabbitMQ Streams broker image identity: %w", err)
 	}
-	readiness := definition{name: "rabbitstream-standalone", readyCommand: []string{"rabbitmq-diagnostics", "-q", "check_running"}}
+	readiness := definition{name: "rabbitstream-standalone", readyCommand: []string{"gosu", "rabbitmq", "rabbitmq-diagnostics", "-q", "check_running"}}
 	if err := manager.waitReady(ctx, readiness, rabbit, ""); err != nil {
 		return err
 	}

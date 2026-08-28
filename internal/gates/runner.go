@@ -279,9 +279,14 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			"dir", ".", "--config", filepath.Join(runner.Root, ".gitleaks.toml"), "--no-banner", "--redact"); err != nil {
 			return err
 		}
+		licenseOwner := module.ModulePath
+		if repository := strings.TrimSuffix(runner.Catalog.Repository, "/"); repository != "" &&
+			(module.ModulePath == repository || strings.HasPrefix(module.ModulePath, repository+"/")) {
+			licenseOwner = repository
+		}
 		if err := runner.goTool(ctx, output, module.Directory, "licenses", directory,
 			"github.com/google/go-licenses/v2@"+goLicensesVersion,
-			"check", "./...", "--ignore", module.ModulePath); err != nil {
+			"check", "./...", "--ignore", licenseOwner); err != nil {
 			return err
 		}
 		if err := announce(output, module.Directory, "SBOM", func() error {

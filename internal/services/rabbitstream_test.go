@@ -59,6 +59,7 @@ func TestManagerStartsParallelSafeRabbitStreamStandalone(t *testing.T) {
 		"docker network create --label golib.task=task codex-rabbitstream-task",
 		"-p 127.0.0.1::15552 -p 127.0.0.1::8474",
 		"target=/etc/rabbitmq/enabled_plugins,readonly",
+		"docker exec codex-rabbitstream-task-rabbit gosu rabbitmq rabbitmq-diagnostics -q check_running",
 	} {
 		if !strings.Contains(commands, expected) {
 			t.Fatalf("commands missing %q: %s", expected, commands)
