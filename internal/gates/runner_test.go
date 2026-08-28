@@ -457,6 +457,35 @@ func TestCheckIgnoresRepositoryOwnedPackagesDuringNestedModuleLicenseAudit(t *te
 	}
 }
 
+func TestCheckDoesNotWidenLicenseIgnoreBeyondRepositoryOwnership(t *testing.T) {
+	for _, test := range []struct {
+		name       string
+		repository string
+		module     string
+	}{
+		{"empty repository", "", "github.com/acme/example/nested"},
+		{"unrelated repository", "github.com/acme/other", "github.com/acme/example/nested"},
+		{"lookalike repository", "github.com/acme/example", "github.com/acme/example-other"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			executor := &recordingExecutor{}
+			runner := gates.Runner{Root: fixture(t), Catalog: inventory.Inventory{
+				Repository: test.repository,
+				Modules: []inventory.Module{{
+					Directory: "nested", ModulePath: test.module, Gates: map[string]bool{"security": true},
+				}},
+			}, Executor: executor}
+			if err := runner.Check(context.Background(), []string{"nested"}); err != nil {
+				t.Fatalf("Check() error = %v", err)
+			}
+			want := "go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore " + test.module
+			if !slices.Contains(executor.commands, want) {
+				t.Fatalf("commands = %#v, want %q", executor.commands, want)
+			}
+		})
+	}
+}
+
 func TestCheckTreatsNilAwayAsAdvisory(t *testing.T) {
 	executor := &recordingExecutor{failureAt: 4, failure: errors.New("finding")}
 	var output bytes.Buffer
