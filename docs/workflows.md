@@ -30,6 +30,18 @@ jobs:
     with:
       tooling_sha: 0123456789abcdef0123456789abcdef01234567
       release_dry_run: ${{ inputs.release_dry_run || false }}
+
+  required:
+    name: Required
+    if: always()
+    needs: ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require shared workflow
+        env:
+          CI_RESULT: ${{ needs.ci.result }}
+        run: test "${CI_RESULT}" = success
 ```
 
 The setup action reads the exact `tool_version` from `.golib.yaml`, selects the
@@ -40,7 +52,8 @@ binary. It never evaluates a downloaded installer.
 The reusable workflow keeps consumer policy in repository manifests. It builds
 a module matrix from `golib inventory --json`, runs one isolated module
 contract per matrix entry, uploads repository-owned `.verification` evidence,
-runs CodeQL, and exposes one stable `Required` job for branch protection.
+and runs CodeQL. The caller's final `required` job converts the reusable-call
+result into the stable `Required` check used by branch protection.
 Set `release_dry_run: true` only for an explicit release rehearsal; this first
 validates the stable release contract and then checks every releasable module.
 
