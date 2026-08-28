@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Delegated formatting checks to the active repository Go toolchain so the
+  released CLI cannot impose formatting rules from the Go version used to
+  build the CLI itself.
+- Applied approved mutation checkpoint imports consistently through both
+  `golib mutation` and the full `golib check` contract.
+
 ## 1.0.2 - 2026-08-28
 
 ### Fixed

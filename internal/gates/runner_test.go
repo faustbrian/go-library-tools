@@ -34,6 +34,7 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 	}
 
 	want := []string{
+		"gofmt -l -- example.go",
 		"go mod tidy -diff",
 		"go vet ./...",
 		"go test ./... -count=1 -timeout=20m",
@@ -88,7 +89,7 @@ func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
 	if err := runner.Check(context.Background(), []string{"."}); err != nil {
 		t.Fatalf("Check() error = %v", err)
 	}
-	if got := executor.commands[2]; got != "go test -tags=integration ./manual -count=20 -timeout=2m -run=Stress|Leak" {
+	if got := executor.commands[3]; got != "go test -tags=integration ./manual -count=20 -timeout=2m -run=Stress|Leak" {
 		t.Fatalf("test operation command = %q", got)
 	}
 	wantSuffix := "go test -tags=integration ./... -count=1 -timeout=1m -run=^TestSpec$"
@@ -427,6 +428,7 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		t.Fatalf("Check() error = %v", err)
 	}
 	want := []string{
+		"gofmt -l -- example.go",
 		"go mod tidy -diff",
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config " + filepath.Join(root, ".gitleaks.toml") + " --no-banner --redact",
@@ -487,7 +489,7 @@ func TestCheckDoesNotWidenLicenseIgnoreBeyondRepositoryOwnership(t *testing.T) {
 }
 
 func TestCheckTreatsNilAwayAsAdvisory(t *testing.T) {
-	executor := &recordingExecutor{failureAt: 4, failure: errors.New("finding")}
+	executor := &recordingExecutor{failureAt: 5, failure: errors.New("finding")}
 	var output bytes.Buffer
 	runner := gates.Runner{Root: fixture(t), Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: ".", Gates: map[string]bool{"lint": true}}}}, Executor: executor, Output: &output}
 	if err := runner.Check(context.Background(), []string{"."}); err != nil {
@@ -504,12 +506,12 @@ func TestCheckStopsAtAnalyzerAndSecurityFailures(t *testing.T) {
 		gates     map[string]bool
 		failureAt int
 	}{
-		{"lint", map[string]bool{"lint": true}, 2},
-		{"staticcheck", map[string]bool{"lint": true}, 3},
-		{"vulnerability", map[string]bool{"security": true}, 1},
-		{"secrets", map[string]bool{"security": true}, 2},
-		{"licenses", map[string]bool{"security": true}, 3},
-		{"SBOM", map[string]bool{"security": true}, 4},
+		{"lint", map[string]bool{"lint": true}, 3},
+		{"staticcheck", map[string]bool{"lint": true}, 4},
+		{"vulnerability", map[string]bool{"security": true}, 2},
+		{"secrets", map[string]bool{"security": true}, 3},
+		{"licenses", map[string]bool{"security": true}, 4},
+		{"SBOM", map[string]bool{"security": true}, 5},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -531,19 +533,15 @@ func TestCheckStopsAtCoverageAndTypedOperationFailures(t *testing.T) {
 		policy    config.Config
 		failureAt int
 	}{
-		{"coverage", inventory.Module{Directory: ".", Gates: map[string]bool{"coverage": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}}, config.Config{}, 0},
-		{"test operation", inventory.Module{Directory: ".", Gates: map[string]bool{"tests": true}}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "test", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 2},
-		{"fuzz operation", inventory.Module{Directory: "."}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "fuzz", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 0},
-		{"api operation", inventory.Module{Directory: ".", Gates: map[string]bool{"api_compatibility": true}}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "api", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 0},
-		{"operation", inventory.Module{Directory: "."}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "conformance", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 0},
+		{"coverage", inventory.Module{Directory: ".", Gates: map[string]bool{"coverage": true}, Packages: []inventory.Package{{ImportPath: "example", CoverageRequired: true}}}, config.Config{}, 2},
+		{"test operation", inventory.Module{Directory: ".", Gates: map[string]bool{"tests": true}}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "test", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 3},
+		{"fuzz operation", inventory.Module{Directory: "."}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "fuzz", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 2},
+		{"api operation", inventory.Module{Directory: ".", Gates: map[string]bool{"api_compatibility": true}}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "api", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 2},
+		{"operation", inventory.Module{Directory: "."}, config.Config{Operations: []config.Operation{{Module: ".", Gate: "conformance", Steps: []config.Step{{Type: "go-test", Packages: []string{"."}, Count: 1, Timeout: "1m"}}}}}, 2},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			failureAt := test.failureAt
-			if failureAt == 0 {
-				failureAt = 1
-			}
-			executor := &recordingExecutor{failureAt: failureAt, failure: failure}
+			executor := &recordingExecutor{failureAt: test.failureAt, failure: failure}
 			runner := gates.Runner{Root: fixture(t), Catalog: inventory.Inventory{Modules: []inventory.Module{test.module}}, Policy: test.policy, Executor: executor}
 			if err := runner.Check(context.Background(), []string{"."}); !errors.Is(err, failure) {
 				t.Fatalf("Check() error = %v", err)
@@ -564,6 +562,7 @@ func TestCheckAppliesModuleTestTagsAndSkipsDisabledGates(t *testing.T) {
 		t.Fatalf("Check() error = %v", err)
 	}
 	want := []string{
+		"gofmt -l -- example.go",
 		"go mod tidy -diff",
 		"go test -tags=integration,postgres ./... -count=1 -timeout=20m",
 	}
@@ -575,7 +574,7 @@ func TestCheckAppliesModuleTestTagsAndSkipsDisabledGates(t *testing.T) {
 func TestCheckRejectsUnknownSelectionAndStopsAtFailure(t *testing.T) {
 	root := fixture(t)
 	failure := errors.New("failed")
-	executor := &recordingExecutor{failureAt: 1, failure: failure}
+	executor := &recordingExecutor{failureAt: 2, failure: failure}
 	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: ".", Gates: map[string]bool{"tests": true}}}}, Executor: executor}
 
 	if err := runner.Check(context.Background(), []string{"missing"}); err == nil || !strings.Contains(err.Error(), "unknown module") {
@@ -584,7 +583,7 @@ func TestCheckRejectsUnknownSelectionAndStopsAtFailure(t *testing.T) {
 	if err := runner.Check(context.Background(), []string{"."}); !errors.Is(err, failure) {
 		t.Fatalf("Check() failure = %v", err)
 	}
-	if len(executor.commands) != 2 {
+	if len(executor.commands) != 3 {
 		t.Fatalf("executed %d commands after failure", len(executor.commands))
 	}
 }
@@ -595,9 +594,10 @@ func TestCheckStopsAtExternalGateFailures(t *testing.T) {
 		gates     map[string]bool
 		failureAt int
 	}{
-		{"tidy", map[string]bool{}, 0},
-		{"vet", map[string]bool{"lint": true}, 1},
-		{"race", map[string]bool{"tests": true, "race": true}, 2},
+		{"format", map[string]bool{}, 0},
+		{"tidy", map[string]bool{}, 1},
+		{"vet", map[string]bool{"lint": true}, 2},
+		{"race", map[string]bool{"tests": true, "race": true}, 3},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -622,11 +622,50 @@ func TestCheckRejectsUnformattedAndUnsafeSources(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			root := fixture(t)
 			write(t, filepath.Join(root, "unsafe.go"), source)
-			runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: "."}}}, Executor: &recordingExecutor{}}
+			formatOutput := ""
+			if name == "unformatted" {
+				formatOutput = "unsafe.go\n"
+			}
+			runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: "."}}}, Executor: &recordingExecutor{formatOutput: formatOutput}}
 			if err := runner.Check(context.Background(), []string{"."}); err == nil {
 				t.Fatal("Check() error = nil")
 			}
 		})
+	}
+}
+
+func TestCheckDelegatesFormattingToActiveToolchain(t *testing.T) {
+	root := fixture(t)
+	executor := &recordingExecutor{formatOutput: "example.go\n"}
+	runner := gates.Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{
+			Directory: ".",
+		}}},
+		Executor: executor,
+	}
+
+	if err := runner.Check(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "unformatted Go file: example.go") {
+		t.Fatalf("Check() error = %v", err)
+	}
+	if len(executor.commands) != 1 || !strings.HasPrefix(executor.commands[0], "gofmt -l ") {
+		t.Fatalf("format commands = %#v", executor.commands)
+	}
+}
+
+func TestCheckRejectsExcessiveFormatterOutput(t *testing.T) {
+	root := fixture(t)
+	executor := &recordingExecutor{formatOutput: strings.Repeat("x", (4<<20)+1)}
+	runner := gates.Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{
+			Directory: ".",
+		}}},
+		Executor: executor,
+	}
+
+	if err := runner.Check(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "gofmt output exceeds limit") {
+		t.Fatalf("Check() error = %v", err)
 	}
 }
 
@@ -637,6 +676,7 @@ type recordingExecutor struct {
 	coverageProfile string
 	apiSnapshot     string
 	apiReport       string
+	formatOutput    string
 }
 
 const validCycloneDX = `{"bomFormat":"CycloneDX","specVersion":"1.6"}`
@@ -646,6 +686,9 @@ func successfulLinks(context.Context, string) error    { return nil }
 
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
 	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, command.Args...), " "))
+	if command.Name == "gofmt" && command.Stdout != nil {
+		_, _ = command.Stdout.Write([]byte(executor.formatOutput))
+	}
 	if strings.Contains(strings.Join(command.Args, " "), "cyclonedx-gomod") && command.Stdout != nil {
 		_, _ = io.WriteString(command.Stdout, validCycloneDX)
 	}

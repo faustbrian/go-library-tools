@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -20,13 +21,14 @@ func TestFormattingAndSafetyReportMalformedOrUnreadableTrees(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "bad.go"), []byte("package ["), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if err := checkFormatting(root); err == nil || !strings.Contains(err.Error(), "format ") {
+	runner := Runner{Executor: &processExecutor{stdout: io.Discard, stderr: io.Discard}}
+	if err := runner.checkFormatting(context.Background(), root); err == nil || !strings.Contains(err.Error(), "run gofmt") {
 		t.Fatalf("checkFormatting() error = %v", err)
 	}
 	if err := checkSafety(root); err == nil || !strings.Contains(err.Error(), "parse ") {
 		t.Fatalf("checkSafety() error = %v", err)
 	}
-	if err := checkFormatting(filepath.Join(root, "missing")); err == nil {
+	if err := runner.checkFormatting(context.Background(), filepath.Join(root, "missing")); err == nil {
 		t.Fatal("checkFormatting() missing root error = nil")
 	}
 }
@@ -613,7 +615,7 @@ func TestWalkModuleFilesSkipsVendorAndGitDirectories(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	if err := checkFormatting(root); err != nil {
+	if err := (Runner{}).checkFormatting(context.Background(), root); err != nil {
 		t.Fatalf("checkFormatting() error = %v", err)
 	}
 }
@@ -623,8 +625,22 @@ func TestFormattingReportsUnreadableSource(t *testing.T) {
 	if err := os.Symlink("missing", filepath.Join(root, "missing.go")); err != nil {
 		t.Fatal(err)
 	}
-	if err := checkFormatting(root); err == nil {
+	runner := Runner{Executor: &processExecutor{stdout: io.Discard, stderr: io.Discard}}
+	if err := runner.checkFormatting(context.Background(), root); err == nil {
 		t.Fatal("checkFormatting() error = nil")
+	}
+}
+
+func TestFormattingRejectsSourcePathsWithLineBreaks(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Windows rejects control characters in file names")
+	}
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "bad\nname.go"), []byte("package example\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := (Runner{}).checkFormatting(context.Background(), root); err == nil || !strings.Contains(err.Error(), "line break") {
+		t.Fatalf("checkFormatting() error = %v", err)
 	}
 }
 
@@ -637,7 +653,7 @@ func TestWalkModuleFilesReportsNestedModuleInspectionFailure(t *testing.T) {
 	if err := os.Symlink("go.mod", filepath.Join(nested, "go.mod")); err != nil {
 		t.Fatal(err)
 	}
-	if err := checkFormatting(root); err == nil {
+	if err := (Runner{}).checkFormatting(context.Background(), root); err == nil {
 		t.Fatal("checkFormatting() error = nil")
 	}
 }

@@ -4,8 +4,8 @@ package gates
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
-	"go/format"
 	"go/parser"
 	"go/token"
 	"io"
@@ -210,7 +210,7 @@ func (runner Runner) selectModules(selection []string) ([]inventory.Module, erro
 func (runner Runner) checkModule(ctx context.Context, output io.Writer, module inventory.Module) error {
 	directory := filepath.Join(runner.Root, module.Directory)
 	if err := announce(output, module.Directory, "format-check", func() error {
-		return checkFormatting(directory)
+		return runner.checkFormatting(ctx, directory)
 	}); err != nil {
 		return err
 	}
@@ -252,9 +252,7 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 		}
 	}
 	if module.Gates["mutation"] {
-		if err := announce(output, module.Directory, "mutation", func() error {
-			return runner.runMutation(ctx, output, module)
-		}); err != nil {
+		if err := runner.verifyMutation(ctx, output, module); err != nil {
 			return err
 		}
 	}
@@ -488,21 +486,37 @@ func announce(output io.Writer, module, gate string, operation func() error) err
 	return operation()
 }
 
-func checkFormatting(root string) error {
-	return walkModuleFiles(root, func(path string, _ fs.DirEntry) error {
-		source, err := os.ReadFile(path)
-		if err != nil {
-			return err
+func (runner Runner) checkFormatting(ctx context.Context, root string) error {
+	files := make([]string, 0)
+	if err := walkModuleFiles(root, func(path string, _ fs.DirEntry) error {
+		relative := filepath.ToSlash(strings.TrimPrefix(path, root+string(filepath.Separator)))
+		if strings.ContainsAny(relative, "\r\n") {
+			return fmt.Errorf("go source path contains a line break: %q", relative)
 		}
-		formatted, err := format.Source(source)
-		if err != nil {
-			return fmt.Errorf("format %s: %w", path, err)
-		}
-		if !bytes.Equal(source, formatted) {
-			return fmt.Errorf("unformatted Go file: %s", path)
-		}
+		files = append(files, relative)
 		return nil
-	})
+	}); err != nil {
+		return err
+	}
+	if len(files) == 0 {
+		return nil
+	}
+	sort.Strings(files)
+	var output boundedBuffer
+	if err := runner.Executor.Run(ctx, Command{
+		Name: "gofmt", Args: append([]string{"-l", "--"}, files...), Dir: root,
+		Stdout: &output,
+	}); err != nil {
+		return fmt.Errorf("run gofmt: %w", err)
+	}
+	if output.overflow {
+		return errors.New("gofmt output exceeds limit")
+	}
+	unformatted := strings.TrimSpace(output.String())
+	if unformatted == "" {
+		return nil
+	}
+	return fmt.Errorf("unformatted Go file: %s", strings.Split(unformatted, "\n")[0])
 }
 
 func checkSafety(root string) error {

@@ -56,24 +56,28 @@ func (runner Runner) Mutation(ctx context.Context, selection []string) error {
 			continue
 		}
 		if err := runner.withModuleServices(ctx, module, func(scoped Runner) error {
-			if migration, exists := scoped.configuredMutationImport(module.Directory); exists {
-				if err := announce(output, module.Directory, "mutation-import", func() error {
-					return scoped.runMutationImport(ctx, output, module, migration.Archive, migration.Ledger)
-				}); err != nil {
-					if !errors.Is(err, mutation.ErrInputChanged) {
-						return err
-					}
-					_, _ = fmt.Fprintf(output, "[%s] mutation-import: changed packages require current verification\n", module.Directory)
-				}
-			}
-			return announce(output, module.Directory, "mutation", func() error {
-				return scoped.runMutation(ctx, output, module)
-			})
+			return scoped.verifyMutation(ctx, output, module)
 		}); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func (runner Runner) verifyMutation(ctx context.Context, output io.Writer, module inventory.Module) error {
+	if migration, exists := runner.configuredMutationImport(module.Directory); exists {
+		if err := announce(output, module.Directory, "mutation-import", func() error {
+			return runner.runMutationImport(ctx, output, module, migration.Archive, migration.Ledger)
+		}); err != nil {
+			if !errors.Is(err, mutation.ErrInputChanged) {
+				return err
+			}
+			_, _ = fmt.Fprintf(output, "[%s] mutation-import: changed packages require current verification\n", module.Directory)
+		}
+	}
+	return announce(output, module.Directory, "mutation", func() error {
+		return runner.runMutation(ctx, output, module)
+	})
 }
 
 func (runner Runner) configuredMutationImport(module string) (config.MutationImport, bool) {

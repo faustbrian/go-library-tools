@@ -16,6 +16,7 @@
     "GOTMPDIR",
     "Gitleaks",
     "golangci",
+    "gofmt",
     "golib",
     "gomod",
     "GoReleaser",
