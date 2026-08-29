@@ -80,6 +80,9 @@ func TestManagerStartsFullParallelSafeRabbitStreamTopology(t *testing.T) {
 		if !rabbitStreamDataVolumeDisablesCopy(service["volumes"]) {
 			t.Fatalf("generated Compose service %s permits image data to be copied into its broker volume", name)
 		}
+		if !rabbitStreamHealthcheckRunsAsBroker(service["healthcheck"]) {
+			t.Fatalf("generated Compose service %s runs its healthcheck outside the broker account", name)
+		}
 	}
 	for _, required := range []string{
 		rabbitStreamOldImage, rabbitStreamImage, "RABBITSTREAM_VOLUME_TLS_CERTS",
@@ -130,6 +133,27 @@ func TestManagerStartsFullParallelSafeRabbitStreamTopology(t *testing.T) {
 			t.Fatalf("cleanup missing %q", expected)
 		}
 	}
+}
+
+func rabbitStreamHealthcheckRunsAsBroker(value any) bool {
+	healthcheck, ok := value.(map[string]any)
+	if !ok {
+		return false
+	}
+	command, ok := healthcheck["test"].([]any)
+	if !ok {
+		return false
+	}
+	want := []string{"CMD", "gosu", "rabbitmq", "rabbitmq-diagnostics", "-q", "check_running"}
+	if len(command) != len(want) {
+		return false
+	}
+	for index := range want {
+		if command[index] != want[index] {
+			return false
+		}
+	}
+	return true
 }
 
 func rabbitStreamDataVolumeDisablesCopy(value any) bool {

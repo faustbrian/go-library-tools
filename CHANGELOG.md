@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Ran RabbitMQ Streams healthchecks as the broker account so diagnostics
+  cannot create an Erlang cookie that the broker cannot read.
+
 ## 1.0.11 - 2026-08-29
 
 ### Fixed
