@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.5 - 2026-08-29
+
 ### Fixed
 
 - Allowed fixture modules that are not released to use non-repository module
