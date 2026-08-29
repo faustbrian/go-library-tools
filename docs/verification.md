@@ -10,9 +10,16 @@ directories. Repository namespace checks apply to releasable modules; fixture
 modules that are not released may use external example identities, but their
 manifest and `go.mod` identities must still agree.
 
+Secret scanning combines the repository-owned `.gitleaks.toml` policy with one
+tool-owned exclusion for the root `.golib-tooling` checkout created by the
+reusable workflow. The merged configuration is task-owned and removed after
+the scan. Every other tracked and untracked repository path remains in scope.
+
 The documentation gate requires a regular root README, bounds document count
 and size, rejects trailing whitespace and symlinks, and verifies local Markdown
-targets without making network requests. It then runs CSpell `10.0.0` from an
+targets without making network requests. Link-shaped text inside fenced,
+indented, or inline code is treated as code rather than navigation. It then
+runs CSpell `10.0.0` from an
 embedded lockfile in the task-owned workspace. Consumer repositories retain
 only their word policy in `cspell.json`, not shared npm manifests or lockfiles.
 External links are checked by checksum-pinned Lychee `0.24.2` binaries for

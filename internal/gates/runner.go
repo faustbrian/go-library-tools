@@ -29,6 +29,16 @@ import (
 const maximumMakefileSize = 4 << 20
 
 const (
+	maximumGitleaksConfigSize = 4 << 20
+	gitleaksToolingAllowlist  = `
+
+[[allowlists]]
+description = "The immutable CI tooling checkout is verified separately."
+paths = ['''^\.golib-tooling(?:/|$)''']
+`
+)
+
+const (
 	golangCILintVersion = "v2.13.1"
 	staticcheckVersion  = "v0.8.1"
 	nilAwayVersion      = "v0.0.0-20260720194628-9fd1b8d7bac8"
@@ -66,6 +76,7 @@ type Runner struct {
 	Executor          Executor
 	Output            io.Writer
 	coverageFiles     coverageFileSystem
+	secretConfigFiles secretConfigFileSystem
 	apiFiles          apiFileSystem
 	apiReadBaseline   func(string, string, int64) ([]byte, error)
 	releaseFiles      releaseFileSystem
@@ -108,6 +119,21 @@ func (operatingCoverageFiles) Open(path string) (io.ReadCloser, error) {
 }
 
 func (operatingCoverageFiles) Remove(path string) error {
+	return os.Remove(path)
+}
+
+type secretConfigFileSystem interface {
+	CreateTemp(string, string) (namedWriteCloser, error)
+	Remove(string) error
+}
+
+type operatingSecretConfigFiles struct{}
+
+func (operatingSecretConfigFiles) CreateTemp(directory, pattern string) (namedWriteCloser, error) {
+	return os.CreateTemp(directory, pattern)
+}
+
+func (operatingSecretConfigFiles) Remove(path string) error {
 	return os.Remove(path)
 }
 
@@ -273,10 +299,17 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			"golang.org/x/vuln/cmd/govulncheck@"+govulncheckVersion, "./..."); err != nil {
 			return err
 		}
+		configPath, cleanup, err := runner.createGitleaksConfig()
+		if err != nil {
+			return err
+		}
 		if err := runner.goTool(ctx, output, module.Directory, "secrets", directory,
 			"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
-			"dir", ".", "--config", filepath.Join(runner.Root, ".gitleaks.toml"), "--no-banner", "--redact"); err != nil {
-			return err
+			"dir", ".", "--config", configPath, "--no-banner", "--redact"); err != nil {
+			return errors.Join(err, cleanup())
+		}
+		if err := cleanup(); err != nil {
+			return fmt.Errorf("remove temporary gitleaks config: %w", err)
 		}
 		licenseOwner := module.ModulePath
 		if repository := strings.TrimSuffix(runner.Catalog.Repository, "/"); repository != "" &&
@@ -344,6 +377,34 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 		}
 	}
 	return nil
+}
+
+func (runner Runner) createGitleaksConfig() (string, func() error, error) {
+	workspace, ok := runner.Executor.(taskWorkspace)
+	if !ok || !filepath.IsAbs(workspace.TemporaryDirectory()) {
+		return "", nil, errors.New("gitleaks requires an absolute task-owned temporary directory")
+	}
+	configuration, err := repositoryfile.Read(runner.Root, ".gitleaks.toml", maximumGitleaksConfigSize)
+	if err != nil {
+		return "", nil, fmt.Errorf("read gitleaks config: %w", err)
+	}
+	files := runner.secretConfigFiles
+	if files == nil {
+		files = operatingSecretConfigFiles{}
+	}
+	temporary, err := files.CreateTemp(workspace.TemporaryDirectory(), "gitleaks-config-*.toml")
+	if err != nil {
+		return "", nil, fmt.Errorf("create temporary gitleaks config: %w", err)
+	}
+	path := temporary.Name()
+	cleanup := func() error { return files.Remove(path) }
+	if _, err := io.Copy(temporary, io.MultiReader(bytes.NewReader(configuration), strings.NewReader(gitleaksToolingAllowlist))); err != nil {
+		return "", nil, errors.Join(fmt.Errorf("write temporary gitleaks config: %w", err), temporary.Close(), cleanup())
+	}
+	if err := temporary.Close(); err != nil {
+		return "", nil, errors.Join(fmt.Errorf("close temporary gitleaks config: %w", err), cleanup())
+	}
+	return path, cleanup, nil
 }
 
 func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {

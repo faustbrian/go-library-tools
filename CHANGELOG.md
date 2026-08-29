@@ -8,6 +8,10 @@ All notable changes to this project are documented in this file.
 
 - Scoped each exact-coverage run to one production package and its tests so
   unrelated test binaries cannot pollute its profile or denominator.
+- Excluded only the immutable `.golib-tooling` CI checkout from repository
+  secret scans while retaining checks of all other tracked and untracked files.
+- Prevented fenced and inline code examples from being interpreted as local
+  Markdown links by the documentation checker.
 
 ## 1.0.6 - 2026-08-29
 
