@@ -26,7 +26,7 @@ import (
 const (
 	maximumPortOutput          = 4_096
 	maximumServiceDiagnostic   = 4_096
-	serviceDiagnosticTruncated = "\n[diagnostic truncated]"
+	serviceDiagnosticTruncated = "[diagnostic truncated]\n"
 	defaultAttempts            = 90
 	defaultWait                = time.Second
 	cleanupTimeout             = time.Duration(30_000_000_000)
@@ -464,7 +464,7 @@ func (writer *boundedWriter) Write(value []byte) (int, error) {
 func (writer *boundedWriter) String() string { return writer.value.String() }
 
 type boundedDiagnosticWriter struct {
-	value     strings.Builder
+	value     []byte
 	limit     int
 	secrets   []string
 	truncated bool
@@ -483,19 +483,23 @@ func newBoundedDiagnosticWriter(secrets ...string) boundedDiagnosticWriter {
 }
 
 func (writer *boundedDiagnosticWriter) Write(value []byte) (int, error) {
-	remaining := writer.limit - writer.value.Len()
-	retained := min(len(value), remaining)
-	_, _ = writer.value.Write(value[:retained])
-	writer.truncated = writer.truncated || retained != len(value)
+	if len(value) > writer.limit {
+		writer.value = append(writer.value[:0], value[len(value)-writer.limit:]...)
+		writer.truncated = true
+		return len(value), nil
+	}
+	if excess := len(writer.value) + len(value) - writer.limit; excess > 0 {
+		copy(writer.value, writer.value[excess:])
+		writer.value = writer.value[:len(writer.value)-excess]
+		writer.truncated = true
+	}
+	writer.value = append(writer.value, value...)
 	return len(value), nil
 }
 
 func (writer *boundedDiagnosticWriter) String() string {
-	result := strings.ToValidUTF8(writer.value.String(), "?")
-	for _, secret := range writer.secrets {
-		replacement := "[REDACTED]" + strings.Repeat("*", max(len(secret)-len("[REDACTED]"), 0))
-		result = strings.ReplaceAll(result, secret, replacement)
-	}
+	result := strings.ToValidUTF8(string(writer.value), "?")
+	result = redactDiagnosticSecrets(result, writer.secrets)
 	result = strings.Map(func(character rune) rune {
 		if character == '\r' {
 			return '\n'
@@ -506,18 +510,57 @@ func (writer *boundedDiagnosticWriter) String() string {
 		return character
 	}, result)
 	result = strings.TrimSpace(result)
-	limit := maximumServiceDiagnostic - len(serviceDiagnosticTruncated)
-	if len(result) > limit {
-		result = result[:limit]
-		for !utf8.ValidString(result) {
-			result = result[:len(result)-1]
-		}
+	limit := maximumServiceDiagnostic
+	if writer.truncated || len(result) > limit {
 		writer.truncated = true
+		limit -= len(serviceDiagnosticTruncated)
+	}
+	result = result[max(len(result)-limit, 0):]
+	for !utf8.ValidString(result) {
+		result = result[1:]
 	}
 	if writer.truncated {
-		result += serviceDiagnosticTruncated
+		result = serviceDiagnosticTruncated + result
 	}
 	return result
+}
+
+func redactDiagnosticSecrets(value string, secrets []string) string {
+	redacted := []byte(value)
+	mask := make([]bool, len(redacted))
+	for _, secret := range secrets {
+		if len(secret) <= len(value) {
+			for start := range len(value) - len(secret) + 1 {
+				if !strings.HasPrefix(value[start:], secret) {
+					continue
+				}
+				for relative := range len(secret) {
+					mask[start+relative] = true
+				}
+			}
+		}
+
+		maximumBoundary := min(len(secret)-1, len(value))
+		for boundary := range maximumBoundary {
+			size := boundary + 1
+			if value[:size] == secret[len(secret)-size:] {
+				for position := range size {
+					mask[position] = true
+				}
+			}
+			if value[len(value)-size:] == secret[:size] {
+				for relative := range size {
+					mask[len(value)-size+relative] = true
+				}
+			}
+		}
+	}
+	for position, masked := range mask {
+		if masked {
+			redacted[position] = '*'
+		}
+	}
+	return string(redacted)
 }
 
 func serviceProcessError(err error, diagnostic *boundedDiagnosticWriter) error {

@@ -97,14 +97,14 @@ func TestServiceDiagnosticRedactsBeforeBoundingUntrustedOutput(t *testing.T) {
 		t.Fatalf("Write() = %d, %v", written, err)
 	}
 	if written, err := diagnostic.Write([]byte(strings.Repeat("y", wantRawLimit-len(input)))); err != nil ||
-		written != wantRawLimit-len(input) || diagnostic.value.Len() != wantRawLimit || diagnostic.truncated {
+		written != wantRawLimit-len(input) || len(diagnostic.value) != wantRawLimit || diagnostic.truncated {
 		t.Fatalf("Write(after limit) = %d, %v", written, err)
 	}
 	if written, err := diagnostic.Write([]byte("ignored")); err != nil || written != len("ignored") {
 		t.Fatalf("Write(after truncation) = %d, %v", written, err)
 	}
-	if diagnostic.value.Len() != wantRawLimit || !diagnostic.truncated {
-		t.Fatalf("Write(after truncation) retained %d bytes, truncated=%t", diagnostic.value.Len(), diagnostic.truncated)
+	if len(diagnostic.value) != wantRawLimit || !diagnostic.truncated {
+		t.Fatalf("Write(after truncation) retained %d bytes, truncated=%t", len(diagnostic.value), diagnostic.truncated)
 	}
 	output := diagnostic.String()
 	if strings.Contains(output, "deadbeef") || strings.ContainsRune(output, '\x1b') || strings.ContainsRune(output, '\r') ||
@@ -116,19 +116,29 @@ func TestServiceDiagnosticRedactsBeforeBoundingUntrustedOutput(t *testing.T) {
 	}
 	repeated := newBoundedDiagnosticWriter(secret)
 	_, _ = repeated.Write([]byte(strings.Repeat(secret, 128)))
-	wantReplacement := "[REDACTED]" + strings.Repeat("*", len(secret)-len("[REDACTED]"))
-	if output = repeated.String(); strings.Contains(output, "deadbeef") || !strings.HasPrefix(output, wantReplacement+wantReplacement) {
+	if output = repeated.String(); strings.Contains(output, "deadbeef") ||
+		!strings.Contains(output, strings.Repeat("*", len(secret)*2)) ||
+		!strings.HasPrefix(output, serviceDiagnosticTruncated) {
 		t.Fatalf("String() exposed a repeated secret at the bound: %q", output)
 	}
 	short := newBoundedDiagnosticWriter("tiny")
 	_, _ = short.Write([]byte("tiny"))
-	if output = short.String(); output != "[REDACTED]" {
+	if output = short.String(); output != "****" {
 		t.Fatalf("String() short-secret replacement = %q", output)
 	}
+	partial := newBoundedDiagnosticWriter(secret)
+	_, _ = partial.Write([]byte(secret + strings.Repeat("x", partial.limit-len(secret)+1)))
+	if output = partial.String(); strings.Contains(output, "deadbeef") || !strings.HasPrefix(output, serviceDiagnosticTruncated) {
+		t.Fatalf("String() exposed a secret fragment at the retained boundary: %q", output)
+	}
+	control := newBoundedDiagnosticWriter()
+	_, _ = control.Write([]byte("a\x00b"))
+	if output = control.String(); output != "a?b" {
+		t.Fatalf("String() control-character output = %q", output)
+	}
 
-	utf8Boundary := newBoundedDiagnosticWriter()
-	boundary := maximumServiceDiagnostic - len(serviceDiagnosticTruncated) - 1
-	_, _ = utf8Boundary.Write([]byte(strings.Repeat("x", boundary) + "€tail"))
+	utf8Boundary := newBoundedDiagnosticWriter("tiny")
+	_, _ = utf8Boundary.Write([]byte(strings.Repeat("p", 20) + "tiny€" + strings.Repeat("x", 4_071)))
 	output = utf8Boundary.String()
 	if !utf8.ValidString(output) || !strings.Contains(output, serviceDiagnosticTruncated) {
 		t.Fatalf("String() split a UTF-8 code point at the bound: %q", output)
@@ -140,6 +150,57 @@ func TestServiceDiagnosticRedactsBeforeBoundingUntrustedOutput(t *testing.T) {
 	if len(output) != maximumServiceDiagnostic-len(serviceDiagnosticTruncated) ||
 		strings.Contains(output, serviceDiagnosticTruncated) {
 		t.Fatalf("String() truncated exact-boundary output: bytes=%d", len(output))
+	}
+	rawExact := newBoundedDiagnosticWriter()
+	_, _ = rawExact.Write([]byte(strings.Repeat("q", maximumServiceDiagnostic)))
+	if output = rawExact.String(); len(output) != maximumServiceDiagnostic ||
+		strings.Contains(output, serviceDiagnosticTruncated) {
+		t.Fatalf("String() marked an exact raw bound as truncated: bytes=%d", len(output))
+	}
+	boundarySecret := strings.Repeat("01234567", 2)
+	boundaryDiagnostic := newBoundedDiagnosticWriter(boundarySecret)
+	_, _ = boundaryDiagnostic.Write([]byte("1234567 decisive failure 0123456"))
+	if output = boundaryDiagnostic.String(); strings.Contains(output, "1234567") || strings.Contains(output, "0123456") {
+		t.Fatalf("String() exposed a short credential boundary fragment: %q", output)
+	}
+	for _, test := range []struct {
+		value string
+		want  string
+	}{
+		{"1234567 decisive", "******* decisive"},
+		{"decisive 0123456", "decisive *******"},
+		{"1234567 decisive 0123456", "******* decisive *******"},
+		{boundarySecret, strings.Repeat("*", len(boundarySecret))},
+		{boundarySecret + "Q", strings.Repeat("*", len(boundarySecret)) + "Q"},
+		{"Q" + boundarySecret, "Q" + strings.Repeat("*", len(boundarySecret))},
+		{"Q" + boundarySecret + "Q", "Q" + strings.Repeat("*", len(boundarySecret)) + "Q"},
+		{"123456701234567 decisive", strings.Repeat("*", 15) + " decisive"},
+		{"decisive 012345670123456", "decisive " + strings.Repeat("*", 15)},
+		{"0123456", strings.Repeat("*", 7)},
+		{"QQ", "QQ"},
+	} {
+		if output = redactDiagnosticSecrets(test.value, []string{boundarySecret}); output != test.want {
+			t.Fatalf("redactDiagnosticSecrets(%q) = %q, want %q", test.value, output, test.want)
+		}
+	}
+	overlapping := redactDiagnosticSecrets("ababa", []string{"aba", "bab"})
+	if overlapping != "*****" {
+		t.Fatalf("redactDiagnosticSecrets() overlapping replacements = %q", overlapping)
+	}
+	if overlapping = redactDiagnosticSecrets("ababa", []string{"aba"}); overlapping != "*****" {
+		t.Fatalf("redactDiagnosticSecrets() overlapping occurrences = %q", overlapping)
+	}
+}
+
+func TestServiceDiagnosticRetainsDecisiveTailAfterProgressNoise(t *testing.T) {
+	diagnostic := newBoundedDiagnosticWriter()
+	_, _ = diagnostic.Write([]byte(strings.Repeat("layer progress\n", maximumServiceDiagnostic)))
+	_, _ = diagnostic.Write([]byte("docker compose: decisive failure"))
+
+	output := diagnostic.String()
+	if !strings.Contains(output, "docker compose: decisive failure") ||
+		!strings.Contains(output, serviceDiagnosticTruncated) {
+		t.Fatalf("String() discarded the decisive diagnostic tail: %q", output)
 	}
 }
 

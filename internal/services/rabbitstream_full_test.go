@@ -269,7 +269,7 @@ func TestFullRabbitStreamReportsBoundedRedactedComposeDiagnostics(t *testing.T) 
 	backend := &fakeBackend{}
 	process := func(ctx context.Context, name string, arguments []string, environment map[string]string, stdout, stderr io.Writer) error {
 		if len(arguments) > 0 && arguments[0] == "compose" {
-			_, _ = io.WriteString(stderr, "compose rejected password "+password+"\n"+strings.Repeat("x", diagnosticLimit+1))
+			_, _ = io.WriteString(stderr, strings.Repeat("x", diagnosticLimit+1)+"\ncompose rejected password "+password)
 			return errors.New("compose failed")
 		}
 		return backend.run(ctx, name, arguments, environment, stdout, stderr)
@@ -287,7 +287,7 @@ func TestFullRabbitStreamReportsBoundedRedactedComposeDiagnostics(t *testing.T) 
 		t.Fatal("Start() error = nil")
 	}
 	diagnostic := err.Error()
-	if !strings.Contains(diagnostic, "compose rejected password [REDACTED]") ||
+	if !strings.Contains(diagnostic, "compose rejected password "+strings.Repeat("*", len(password))) ||
 		!strings.Contains(diagnostic, "[diagnostic truncated]") {
 		t.Fatalf("Start() error does not preserve bounded diagnostics: %v", err)
 	}
