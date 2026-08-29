@@ -120,22 +120,41 @@ func TestCheckRunsLaterTypedOperationWhenEarlierGateIsAbsent(t *testing.T) {
 
 func TestCheckRequiresExactProductionCoverage(t *testing.T) {
 	root := fixture(t)
-	executor := &recordingExecutor{coverageProfile: "mode: atomic\ngithub.com/acme/example/file.go:1.1,2.1 1 1\n"}
+	executor := &recordingExecutor{coverageProfiles: map[string]string{
+		"github.com/acme/example":        "mode: atomic\ngithub.com/acme/example/file.go:1.1,2.1 1 1\n",
+		"github.com/acme/example/memory": "mode: atomic\ngithub.com/acme/example/memory/file.go:1.1,2.1 1 1\n",
+	}}
 	var output bytes.Buffer
 	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{
 		Directory: ".",
 		TestTags:  []string{"integration"},
 		Gates:     map[string]bool{"coverage": true},
-		Packages:  []inventory.Package{{ImportPath: "github.com/acme/example", CoverageRequired: true}},
+		Packages: []inventory.Package{
+			{Directory: "memory", ImportPath: "github.com/acme/example/memory", CoverageRequired: true},
+			{Directory: ".", ImportPath: "github.com/acme/example", CoverageRequired: true},
+		},
 	}}}, Executor: executor, Output: &output}
 	if err := runner.Check(context.Background(), []string{"."}); err != nil {
 		t.Fatalf("Check() error = %v", err)
+	}
+	coverageCommands := make([]string, 0, 2)
+	for _, command := range executor.commands {
+		if strings.Contains(command, " -coverprofile=") {
+			coverageCommands = append(coverageCommands, command)
+		}
+	}
+	if len(coverageCommands) != 2 ||
+		!strings.Contains(coverageCommands[0], " -tags=integration . -count=1") ||
+		!strings.Contains(coverageCommands[0], "-coverpkg=github.com/acme/example ") ||
+		!strings.Contains(coverageCommands[1], " -tags=integration ./memory -count=1") ||
+		!strings.Contains(coverageCommands[1], "-coverpkg=github.com/acme/example/memory ") {
+		t.Fatalf("coverage commands = %#v", coverageCommands)
 	}
 	if !strings.Contains(output.String(), "all production packages have exact 100% statement coverage") {
 		t.Fatalf("coverage output = %q", output.String())
 	}
 
-	executor.coverageProfile = "mode: atomic\ngithub.com/acme/example/file.go:1.1,2.1 1 0\n"
+	executor.coverageProfiles["github.com/acme/example"] = "mode: atomic\ngithub.com/acme/example/file.go:1.1,2.1 1 0\n"
 	if err := runner.Check(context.Background(), []string{"."}); err == nil {
 		t.Fatal("Check() uncovered error = nil")
 	}
@@ -693,13 +712,14 @@ func TestCheckRejectsExcessiveFormatterOutput(t *testing.T) {
 }
 
 type recordingExecutor struct {
-	commands        []string
-	failureAt       int
-	failure         error
-	coverageProfile string
-	apiSnapshot     string
-	apiReport       string
-	formatOutput    string
+	commands         []string
+	failureAt        int
+	failure          error
+	coverageProfile  string
+	coverageProfiles map[string]string
+	apiSnapshot      string
+	apiReport        string
+	formatOutput     string
 }
 
 const validCycloneDX = `{"bomFormat":"CycloneDX","specVersion":"1.6"}`
@@ -715,9 +735,17 @@ func (executor *recordingExecutor) Run(_ context.Context, command gates.Command)
 	if strings.Contains(strings.Join(command.Args, " "), "cyclonedx-gomod") && command.Stdout != nil {
 		_, _ = io.WriteString(command.Stdout, validCycloneDX)
 	}
+	coverageProfile := executor.coverageProfile
+	for _, argument := range command.Args {
+		if target, found := strings.CutPrefix(argument, "-coverpkg="); found {
+			if profile, exists := executor.coverageProfiles[target]; exists {
+				coverageProfile = profile
+			}
+		}
+	}
 	for _, argument := range command.Args {
 		if profile, found := strings.CutPrefix(argument, "-coverprofile="); found {
-			if err := os.WriteFile(profile, []byte(executor.coverageProfile), 0o600); err != nil {
+			if err := os.WriteFile(profile, []byte(coverageProfile), 0o600); err != nil {
 				return err
 			}
 		}

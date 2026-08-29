@@ -12,6 +12,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -351,6 +352,40 @@ func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate,
 }
 
 func (runner Runner) runCoverage(ctx context.Context, output io.Writer, directory string, module inventory.Module) error {
+	type coverageTarget struct {
+		importPath string
+		pattern    string
+	}
+	targets := make([]coverageTarget, 0, len(module.Packages))
+	for _, packagePolicy := range module.Packages {
+		if packagePolicy.CoverageRequired {
+			pattern := packagePolicy.Directory
+			if pattern == "" || pattern == "." {
+				pattern = "."
+			} else {
+				pattern = "./" + filepath.ToSlash(pattern)
+			}
+			targets = append(targets, coverageTarget{importPath: packagePolicy.ImportPath, pattern: pattern})
+		}
+	}
+	slices.SortFunc(targets, func(left, right coverageTarget) int {
+		return strings.Compare(left.importPath, right.importPath)
+	})
+	if len(targets) == 0 {
+		return errors.New("coverage gate has no coverage-required packages")
+	}
+	for _, target := range targets {
+		report, err := runner.runPackageCoverage(ctx, directory, module, target.importPath, target.pattern)
+		if err != nil {
+			return fmt.Errorf("coverage package %s: %w", target.importPath, err)
+		}
+		_, _ = io.WriteString(output, report)
+	}
+	_, _ = io.WriteString(output, "all production packages have exact 100% statement coverage\n")
+	return nil
+}
+
+func (runner Runner) runPackageCoverage(ctx context.Context, directory string, module inventory.Module, target, pattern string) (string, error) {
 	files := runner.coverageFiles
 	if files == nil {
 		files = operatingCoverageFiles{}
@@ -361,40 +396,32 @@ func (runner Runner) runCoverage(ctx context.Context, output io.Writer, director
 	}
 	profile, err := files.CreateTemp(temporaryDirectory)
 	if err != nil {
-		return fmt.Errorf("create coverage profile: %w", err)
+		return "", fmt.Errorf("create coverage profile: %w", err)
 	}
 	profilePath := profile.Name()
 	if err := profile.Close(); err != nil {
 		_ = files.Remove(profilePath)
-		return fmt.Errorf("close coverage profile: %w", err)
+		return "", fmt.Errorf("close coverage profile: %w", err)
 	}
 	defer func() { _ = files.Remove(profilePath) }()
 	args := []string{"test"}
 	if len(module.TestTags) > 0 {
 		args = append(args, "-tags="+strings.Join(module.TestTags, ","))
 	}
-	args = append(args, "./...", "-count=1", "-timeout=20m", "-covermode=atomic", "-coverpkg=./...", "-coverprofile="+profilePath)
+	args = append(args, pattern, "-count=1", "-timeout=20m", "-covermode=atomic", "-coverpkg="+target, "-coverprofile="+profilePath)
 	if err := runner.Executor.Run(ctx, Command{Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}); err != nil {
-		return err
+		return "", err
 	}
 	opened, err := files.Open(profilePath)
 	if err != nil {
-		return fmt.Errorf("open coverage profile: %w", err)
+		return "", fmt.Errorf("open coverage profile: %w", err)
 	}
 	defer opened.Close()
-	expected := make([]string, 0, len(module.Packages))
-	for _, packagePolicy := range module.Packages {
-		if packagePolicy.CoverageRequired {
-			expected = append(expected, packagePolicy.ImportPath)
-		}
-	}
-	report, err := coverage.Verify(opened, expected)
+	report, err := coverage.Verify(opened, []string{target})
 	if err != nil {
-		return err
+		return "", err
 	}
-	_, _ = io.WriteString(output, report)
-	_, _ = io.WriteString(output, "all production packages have exact 100% statement coverage\n")
-	return nil
+	return report, nil
 }
 
 func (runner Runner) operation(module, gate string) (config.Operation, bool) {
