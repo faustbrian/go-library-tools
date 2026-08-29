@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.10 - 2026-08-29
+
 ### Fixed
 
 - Included bounded, credential-redacted logs from the failed RabbitMQ Streams
