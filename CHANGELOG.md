@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.11 - 2026-08-29
+
 ### Fixed
 
 - Prevented RabbitMQ image data from being copied into task-owned broker
