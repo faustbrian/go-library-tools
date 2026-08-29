@@ -93,6 +93,7 @@ func startRabbitStream(ctx context.Context, manager Manager, lease *Lease, token
 		"compose", "--project-directory", topology.directory, "-f", topology.compose,
 		"-p", topology.project, "up", "-d", "--wait",
 	}, composeEnvironment, io.Discard, &diagnostic); err != nil {
+		manager.appendRabbitStreamContainerLogs(ctx, topology, &diagnostic)
 		return fmt.Errorf("start RabbitMQ Streams topology: %w", serviceProcessError(err, &diagnostic))
 	}
 	if err := manager.Process(ctx, "docker", []string{
@@ -112,6 +113,34 @@ func startRabbitStream(ctx context.Context, manager Manager, lease *Lease, token
 	}
 	lease.identities["rabbitstream"] = standaloneIdentity + ";" + strings.Join(identities, ";")
 	maps.Copy(lease.environment, topology.testEnvironment(credentials))
+	return nil
+}
+
+func (manager Manager) appendRabbitStreamContainerLogs(
+	ctx context.Context,
+	topology rabbitStreamTopology,
+	diagnostic *boundedDiagnosticWriter,
+) {
+	for _, name := range rabbitStreamDiagnosticContainers(topology, string(diagnostic.value)) {
+		stdout := newBoundedDiagnosticWriter(diagnostic.secrets...)
+		stderr := newBoundedDiagnosticWriter(diagnostic.secrets...)
+		_ = manager.Process(ctx, "docker", []string{
+			"logs", "--tail", "120", topology.containers[name],
+		}, nil, &stdout, &stderr)
+		output := strings.TrimSpace(strings.Join([]string{stdout.String(), stderr.String()}, "\n"))
+		if output != "" {
+			_, _ = fmt.Fprintf(diagnostic, "\n[%s logs]\n%s", name, output)
+		}
+	}
+}
+
+func rabbitStreamDiagnosticContainers(topology rabbitStreamTopology, diagnostic string) []string {
+	names := []string{"rabbit1", "rabbit2", "rabbit3", "certgen", "rabbit-tls"}
+	for _, name := range names {
+		if strings.Contains(diagnostic, topology.containers[name]+" exited") {
+			return []string{name}
+		}
+	}
 	return nil
 }
 

@@ -296,6 +296,44 @@ func TestFullRabbitStreamReportsBoundedRedactedComposeDiagnostics(t *testing.T) 
 	}
 }
 
+func TestFullRabbitStreamReportsFailedContainerLogs(t *testing.T) {
+	const fixtureUser = "rabbitstream-aaaaaaaaaaaaaaaa"
+	backend := &fakeBackend{}
+	loggedContainers := make([]string, 0, 1)
+	process := func(ctx context.Context, name string, arguments []string, environment map[string]string, stdout, stderr io.Writer) error {
+		if len(arguments) > 0 && arguments[0] == "compose" {
+			_, _ = io.WriteString(stderr, "container codex-rabbitstream-task-cluster-rabbit3-1 exited (1)")
+			return errors.New("compose failed")
+		}
+		if len(arguments) > 0 && arguments[0] == "logs" {
+			loggedContainers = append(loggedContainers, arguments[len(arguments)-1])
+			_, _ = io.WriteString(stdout, "BOOT FAILED: peer discovery rejected the node for "+fixtureUser)
+			return nil
+		}
+		return backend.run(ctx, name, arguments, environment, stdout, stderr)
+	}
+	manager := fullRabbitStreamManager(t, process, &recordingServiceFiles{})
+
+	_, err := manager.Start(context.Background(), []string{"rabbitstream"})
+	if err == nil || !strings.Contains(err.Error(), "BOOT FAILED: peer discovery rejected the node") {
+		t.Fatalf("Start() error = %v", err)
+	}
+	if strings.Contains(err.Error(), fixtureUser) {
+		t.Fatalf("Start() error exposes fixture username: %v", err)
+	}
+	want := []string{"codex-rabbitstream-task-cluster-rabbit3-1"}
+	if !reflect.DeepEqual(loggedContainers, want) {
+		t.Fatalf("logged containers = %#v, want %#v", loggedContainers, want)
+	}
+}
+
+func TestRabbitStreamDiagnosticContainersRejectsUnattributedFailure(t *testing.T) {
+	topology := newRabbitStreamTopology(t.TempDir(), "task")
+	if got := rabbitStreamDiagnosticContainers(topology, "compose failed without a container identity"); got != nil {
+		t.Fatalf("rabbitStreamDiagnosticContainers() = %#v, want nil", got)
+	}
+}
+
 func TestFullRabbitStreamReportsEachProxyFailure(t *testing.T) {
 	for failAt := 2; failAt <= 5; failAt++ {
 		t.Run(string(rune('0'+failAt)), func(t *testing.T) {
