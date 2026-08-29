@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Ignored nested fixture symlink entries when deriving mutation input identity,
+  without following their targets or allowing symlinked data roots.
+
 ## 1.0.5 - 2026-08-29
 
 ### Fixed

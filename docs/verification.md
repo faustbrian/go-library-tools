@@ -30,9 +30,12 @@ or unreachable cases require narrow reviewed records.
 Evidence is keyed by complete behavior-affecting content and verifier identity,
 not Git history. It is persisted atomically when available. Code, tests,
 fixtures, relevant configuration, tools, or service identity invalidate only
-the affected evidence. Mutation package identity includes only sibling modules
-that the package actually observes. Approved v1 checkpoint inputs transition
-to this narrower v2 identity from the same source listing without rerunning a
-campaign. A stale package checkpoint does not discard approved sibling
-checkpoints; that package alone proceeds through current mutation verification.
-Missing or ambiguous verifier identity fails closed.
+the affected evidence. Mutation fixture walks ignore nested symlink entries
+without following their targets; fixture roots and explicitly listed source
+files must remain real repository-contained paths. Mutation package identity
+includes only sibling modules that the package actually observes. Approved v1
+checkpoint inputs transition to this narrower v2 identity from the same source
+listing without rerunning a campaign. A stale package checkpoint does not
+discard approved sibling checkpoints; that package alone proceeds through
+current mutation verification. Missing or ambiguous verifier identity fails
+closed.

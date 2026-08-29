@@ -63,6 +63,32 @@ func TestInputDigestRejectsConflictingModuleIdentityAndDataSymlink(t *testing.T)
 	}
 }
 
+func TestInputDigestIgnoresNestedDataSymlinksWithoutFollowingThem(t *testing.T) {
+	root := t.TempDir()
+	writeMutationInput(t, root, "target.go", "package example\n")
+	writeMutationInput(t, root, "testdata/fixture.json", "{}\n")
+	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6"}
+	listing := `{"Dir":"` + root + `","ImportPath":"example","GoFiles":["target.go"],"Module":{"Path":"example","Main":true}}`
+
+	want, err := InputDigest(root, policy, strings.NewReader(listing), nil)
+	if err != nil {
+		t.Fatalf("InputDigest(without symlink) error = %v", err)
+	}
+	outside := t.TempDir()
+	writeMutationInput(t, outside, "external.json", "must not affect the digest\n")
+	if err := os.Symlink(outside, filepath.Join(root, "testdata", "latest")); err != nil {
+		t.Fatal(err)
+	}
+
+	got, err := InputDigest(root, policy, strings.NewReader(listing), nil)
+	if err != nil {
+		t.Fatalf("InputDigest(with nested symlink) error = %v", err)
+	}
+	if got != want {
+		t.Fatalf("InputDigest(with nested symlink) = %s, want %s", got, want)
+	}
+}
+
 func TestInputDigestResolvesNestedTargetImport(t *testing.T) {
 	root := t.TempDir()
 	writeMutationInput(t, root, "nested/target.go", "package nested\n")
@@ -315,13 +341,31 @@ func TestAddInputContentAndDataFailures(t *testing.T) {
 	}
 	root := t.TempDir()
 	owned := OwnedModule{ModulePath: "example", Directory: "."}
-	if err := addDataDirectory(root, owned, string([]byte{'x', 0}), content, &total); err == nil {
+	entries := 0
+	if err := addDataDirectory(root, owned, string([]byte{'x', 0}), &entries, maximumInputEntries, content, &total); err == nil {
 		t.Fatal("addDataDirectory() accepted invalid path")
 	}
 	file := filepath.Join(root, "testdata")
 	writeMutationInput(t, root, "testdata", "not a directory")
-	if err := addDataDirectory(root, owned, file, content, &total); !errors.Is(err, ErrInvalid) {
+	if err := addDataDirectory(root, owned, file, &entries, maximumInputEntries, content, &total); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("addDataDirectory(file) error = %v", err)
+	}
+}
+
+func TestAddDataDirectorySharesTraversalBoundAcrossRoots(t *testing.T) {
+	root := t.TempDir()
+	if err := os.MkdirAll(filepath.Join(root, "corpus"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	writeMutationInput(t, root, "fixtures/fixture.json", "{}\n")
+	owned := OwnedModule{ModulePath: "example", Directory: "."}
+	content := make(map[string][]byte)
+	entries, total := 0, 0
+	if err := addDataDirectory(root, owned, filepath.Join(root, "corpus"), &entries, 2, content, &total); err != nil {
+		t.Fatalf("addDataDirectory(first root) error = %v", err)
+	}
+	if err := addDataDirectory(root, owned, filepath.Join(root, "fixtures"), &entries, 2, content, &total); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("addDataDirectory(aggregate bound) error = %v", err)
 	}
 }
 
@@ -347,18 +391,26 @@ func TestVisitDataEntryBranches(t *testing.T) {
 	owned := OwnedModule{ModulePath: "example", Directory: "."}
 	content := make(map[string][]byte)
 	total := 0
+	entries := 0
 	walkError := errors.New("walk failed")
-	if err := visitDataEntry(root, owned, root, fakeDirEntry{}, walkError, content, &total); !errors.Is(err, walkError) {
+	if err := visitDataEntry(root, owned, root, fakeDirEntry{}, walkError, &entries, maximumInputEntries, content, &total); !errors.Is(err, walkError) {
 		t.Fatalf("visitDataEntry(walk error) = %v", err)
 	}
-	if err := visitDataEntry(root, owned, root, fakeDirEntry{mode: os.ModeSymlink}, nil, content, &total); !errors.Is(err, ErrInvalid) {
+	if err := visitDataEntry(root, owned, root, fakeDirEntry{mode: os.ModeSymlink}, nil, &entries, maximumInputEntries, content, &total); err != nil {
 		t.Fatalf("visitDataEntry(symlink) = %v", err)
 	}
-	if err := visitDataEntry(root, owned, root, fakeDirEntry{directory: true, mode: os.ModeDir}, nil, content, &total); err != nil {
+	if err := visitDataEntry(root, owned, root, fakeDirEntry{directory: true, mode: os.ModeDir}, nil, &entries, maximumInputEntries, content, &total); err != nil {
 		t.Fatalf("visitDataEntry(directory) = %v", err)
 	}
-	if err := visitDataEntry(root, owned, root, fakeDirEntry{mode: os.ModeNamedPipe}, nil, content, &total); !errors.Is(err, ErrInvalid) {
+	if err := visitDataEntry(root, owned, root, fakeDirEntry{mode: os.ModeNamedPipe}, nil, &entries, maximumInputEntries, content, &total); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("visitDataEntry(nonregular) = %v", err)
+	}
+	entries = maximumInputEntries - 1
+	if err := visitDataEntry(root, owned, root, fakeDirEntry{mode: os.ModeSymlink}, nil, &entries, maximumInputEntries, content, &total); err != nil {
+		t.Fatalf("visitDataEntry(exact entry bound) = %v", err)
+	}
+	if err := visitDataEntry(root, owned, root, fakeDirEntry{mode: os.ModeSymlink}, nil, &entries, maximumInputEntries, content, &total); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("visitDataEntry(entry bound) = %v", err)
 	}
 }
 
