@@ -65,6 +65,34 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 	}
 }
 
+func TestReusableWorkflowConfiguresBootstrapProxyForEveryGoBuild(t *testing.T) {
+	content := readProjectFile(t, ".github/workflows/library-ci.yml")
+	for _, required := range []string{
+		"uses: ./.golib-tooling/.github/actions/setup-bootstrap-proxy",
+		"bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}",
+		"bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}",
+	} {
+		if count := strings.Count(content, required); count != 2 {
+			t.Errorf("reusable workflow %q count = %d, want quality and CodeQL", required, count)
+		}
+	}
+}
+
+func TestBootstrapProxyActionVerifiesArchiveBeforeExport(t *testing.T) {
+	content := readProjectFile(t, ".github/actions/setup-bootstrap-proxy/action.yml")
+	checksum := strings.Index(content, "sha256sum --check")
+	extraction := strings.Index(content, "tar --extract")
+	export := strings.Index(content, "GOPROXY=file://")
+	if checksum < 0 || extraction < 0 || export < 0 || checksum > extraction || extraction > export {
+		t.Fatal("bootstrap proxy action must verify before extraction and export")
+	}
+	for _, required := range []string{"bootstrap_url:", "bootstrap_sha256:", "GONOSUMDB=github.com/faustbrian/go-*"} {
+		if !strings.Contains(content, required) {
+			t.Errorf("bootstrap proxy action lacks %q", required)
+		}
+	}
+}
+
 func TestToolingWorkflowUploadsVerificationEvidenceOnEveryOutcome(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/ci.yml")
 	start := strings.Index(content, "- name: Upload verification evidence")

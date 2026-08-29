@@ -167,9 +167,8 @@ cp go.sum "${REHEARSAL_TOOL_SUM_CAPTURE}"
 	if output, err := wrapper.CombinedOutput(); err != nil {
 		t.Fatalf("run dependency wrapper: %v\n%s", err, output)
 	}
-	executionPrefix := filepath.Join(canonicalRehearsalPath(t, task), "execution") +
-		string(filepath.Separator)
-	if isolatedModfile := readRehearsalFile(t, isolatedEnvironmentCapture); !strings.HasPrefix(isolatedModfile, executionPrefix) {
+	executionDirectory := filepath.Join(task, "execution")
+	if isolatedModfile := readRehearsalFile(t, isolatedEnvironmentCapture); !isDirectlyWithinRehearsalDirectory(t, isolatedModfile, executionDirectory) {
 		t.Fatalf("isolated module environment = %q, want task-owned execution path", isolatedModfile)
 	}
 
@@ -220,7 +219,7 @@ cp go.sum "${REHEARSAL_TOOL_SUM_CAPTURE}"
 		t.Fatal(err)
 	}
 	waitForRehearsalFile(t, firstReady)
-	if used := readRehearsalFile(t, firstModfile); !strings.HasPrefix(used, filepath.Join(task, "execution")+string(filepath.Separator)) {
+	if used := readRehearsalFile(t, firstModfile); !isDirectlyWithinRehearsalDirectory(t, used, executionDirectory) {
 		t.Fatalf("overlapping dependency command modfile = %q, want task-owned execution path", used)
 	}
 
@@ -612,6 +611,12 @@ func canonicalRehearsalPath(t *testing.T, path string) string {
 		t.Fatal(err)
 	}
 	return canonical
+}
+
+func isDirectlyWithinRehearsalDirectory(t *testing.T, path string, directory string) bool {
+	t.Helper()
+
+	return canonicalRehearsalPath(t, filepath.Dir(path)) == canonicalRehearsalPath(t, directory)
 }
 
 func dependencyPreparationScript(t *testing.T) string {
