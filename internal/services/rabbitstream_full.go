@@ -415,7 +415,7 @@ const rabbitStreamComposeTemplate = `services:
       - "./rabbit1.conf:/etc/rabbitmq/rabbitmq.conf:ro"
       - {type: volume, source: rabbit1-data, target: /var/lib/rabbitmq/mnesia, volume: {nocopy: true}}
     healthcheck: &rabbit-health
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      test: ["CMD", "gosu", "rabbitmq", "rabbitmq-diagnostics", "-q", "check_running"]
       interval: 1s
       timeout: 5s
       retries: 90
