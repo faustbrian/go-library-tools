@@ -18,10 +18,11 @@ import (
 )
 
 const (
-	maximumListSize   = 64 << 20
-	maximumInputFile  = 16 << 20
-	maximumInputTotal = 256 << 20
-	maximumInputFiles = 100000
+	maximumListSize     = 64 << 20
+	maximumInputFile    = 16 << 20
+	maximumInputTotal   = 256 << 20
+	maximumInputFiles   = 100000
+	maximumInputEntries = 100000
 )
 
 // OwnedModule identifies a repository-local module whose source may observe a
@@ -170,9 +171,10 @@ func inputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 	if !observedTarget {
 		return "", fmt.Errorf("%w: go list did not resolve target package %s", ErrInvalid, target)
 	}
+	entries := 0
 	for directory, owned := range relevantDirectories {
 		for _, dataDirectory := range []string{"corpus", "fixtures", "testdata"} {
-			if err := addDataDirectory(root, owned, filepath.Join(directory, dataDirectory), content, &total); err != nil {
+			if err := addDataDirectory(root, owned, filepath.Join(directory, dataDirectory), &entries, maximumInputEntries, content, &total); err != nil {
 				return "", err
 			}
 		}
@@ -356,7 +358,7 @@ func addContent(content map[string][]byte, key string, data []byte, total *int) 
 	return nil
 }
 
-func addDataDirectory(root string, owned OwnedModule, directory string, content map[string][]byte, total *int) error {
+func addDataDirectory(root string, owned OwnedModule, directory string, entries *int, maximumEntries int, content map[string][]byte, total *int) error {
 	info, err := os.Lstat(directory)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
@@ -371,16 +373,22 @@ func addDataDirectory(root string, owned OwnedModule, directory string, content 
 		return fmt.Errorf("%w: mutation data path is not a real directory: %s", ErrInvalid, directory)
 	}
 	return filepath.WalkDir(directory, func(path string, entry fs.DirEntry, walkErr error) error {
-		return visitDataEntry(root, owned, path, entry, walkErr, content, total)
+		return visitDataEntry(root, owned, path, entry, walkErr, entries, maximumEntries, content, total)
 	})
 }
 
-func visitDataEntry(root string, owned OwnedModule, path string, entry fs.DirEntry, walkErr error, content map[string][]byte, total *int) error {
+func visitDataEntry(root string, owned OwnedModule, path string, entry fs.DirEntry, walkErr error, entries *int, maximumEntries int, content map[string][]byte, total *int) error {
 	if walkErr != nil {
 		return walkErr
 	}
+	*entries++
+	if *entries > maximumEntries {
+		return fmt.Errorf("%w: mutation input exceeds traversal bounds", ErrInvalid)
+	}
 	if entry.Type()&os.ModeSymlink != 0 {
-		return fmt.Errorf("%w: symlink in mutation data: %s", ErrInvalid, path)
+		// WalkDir does not follow symlinks, so ignoring the entry preserves the
+		// legacy fixture identity without exposing content outside the module.
+		return nil
 	}
 	if entry.IsDir() {
 		return nil

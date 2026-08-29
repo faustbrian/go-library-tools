@@ -138,6 +138,32 @@ func TestCampaignImportsCheckpointAcrossBuiltInInputIdentityTransition(t *testin
 	}
 }
 
+func TestCampaignImportsCheckpointWithIgnoredNestedFixtureSymlink(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	fixture := filepath.Join(campaign.Root, "testdata")
+	if err := os.MkdirAll(fixture, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(fixture, "fixture.json"), []byte("{}\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(t.TempDir(), filepath.Join(fixture, "latest")); err != nil {
+		t.Fatal(err)
+	}
+	_, currentInput, legacyInput, err := campaign.packageInputs(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoint, ledger := approvedImportFixture(t, legacyInput)
+	if err := campaign.Import(context.Background(), []Checkpoint{checkpoint}, ledger); err != nil {
+		t.Fatalf("Import() error = %v", err)
+	}
+	reused, _, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", ".", currentInput)
+	if err != nil || !reused {
+		t.Fatalf("Reuse() = %v, %v", reused, err)
+	}
+}
+
 func TestCampaignImportPreservesApprovedPackagesWhenAnotherInputChanged(t *testing.T) {
 	campaign, _ := campaignFixture(t)
 	if err := os.MkdirAll(filepath.Join(campaign.Root, "adapter"), 0o700); err != nil {
