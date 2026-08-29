@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Exposed task-owned RabbitMQ Streams network and volume identities so
+  package-owned rolling-upgrade tests can recreate generated services.
+
 ## 1.0.12 - 2026-08-29
 
 ### Fixed
