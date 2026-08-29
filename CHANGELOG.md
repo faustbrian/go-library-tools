@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Included bounded, credential-redacted logs from the failed RabbitMQ Streams
+  container when Docker Compose cannot start the topology.
+
 ## 1.0.9 - 2026-08-29
 
 ### Fixed
