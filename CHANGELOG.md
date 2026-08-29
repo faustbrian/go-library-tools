@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Allowed fixture modules that are not released to use non-repository module
+  paths while retaining namespace enforcement for published modules.
+- Excluded Go `testdata`, hidden, underscore-prefixed, vendored, and nested
+  module directories from production formatting and safety scans.
+
 ## 1.0.4 - 2026-08-29
 
 ### Fixed

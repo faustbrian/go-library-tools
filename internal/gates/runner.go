@@ -551,7 +551,8 @@ func walkModuleFiles(root string, visit func(string, fs.DirEntry) error) error {
 		}
 		if entry.IsDir() {
 			if path != root {
-				if entry.Name() == ".git" || entry.Name() == "vendor" {
+				name := entry.Name()
+				if name == "testdata" || name == "vendor" || strings.HasPrefix(name, ".") || strings.HasPrefix(name, "_") {
 					return filepath.SkipDir
 				}
 				if _, statErr := os.Stat(filepath.Join(path, "go.mod")); statErr == nil {

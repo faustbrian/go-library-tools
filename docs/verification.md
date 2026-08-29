@@ -4,6 +4,11 @@ The standard contract validates formatting, module tidiness, unsafe imports,
 vet, tests, races, exact package coverage, mutation evidence, linting,
 vulnerabilities, secrets, licenses, fuzzing, documentation, API compatibility,
 conformance, interoperability, and benchmarks when enabled by the manifests.
+Formatting and safety scans follow Go package discovery boundaries: they skip
+`testdata`, hidden, underscore-prefixed, vendored, and nested module
+directories. Repository namespace checks apply to releasable modules; fixture
+modules that are not released may use external example identities, but their
+manifest and `go.mod` identities must still agree.
 
 The documentation gate requires a regular root README, bounds document count
 and size, rejects trailing whitespace and symlinks, and verifies local Markdown

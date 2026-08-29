@@ -25,6 +25,23 @@ func TestCheckAcceptsStandaloneAndMultiModuleRepositories(t *testing.T) {
 	}
 }
 
+func TestCheckAcceptsUnreleasableFixtureOutsideRepositoryNamespace(t *testing.T) {
+	root, catalog := fixture(t)
+	fixtureModule := inventory.Module{
+		Directory:  "testdata/fixture",
+		ModulePath: "example.com/repository-fixture",
+		GoVersion:  "1.27.0",
+		Releasable: false,
+	}
+	write(t, filepath.Join(root, "testdata", "fixture", "go.mod"), "module example.com/repository-fixture\n\ngo 1.27.0\n")
+	write(t, filepath.Join(root, "go.work"), "go 1.27.0\n\nuse (\n\t.\n\t./testdata/fixture\n)\n")
+	catalog.Modules = append(catalog.Modules, fixtureModule)
+
+	if err := repository.Check(root, catalog); err != nil {
+		t.Fatalf("Check() fixture module error = %v", err)
+	}
+}
+
 func TestCheckRejectsRepositoryContractViolations(t *testing.T) {
 	tests := map[string]func(*testing.T, string, *inventory.Inventory){
 		"relative root": func(_ *testing.T, _ string, catalog *inventory.Inventory) { catalog.Repository = "relative-root" },
@@ -131,7 +148,7 @@ func fixture(t *testing.T) (string, inventory.Inventory) {
 	root := t.TempDir()
 	write(t, filepath.Join(root, ".go-version"), "1.27.0\n")
 	write(t, filepath.Join(root, "go.mod"), "module example\n\ngo 1.27.0\n")
-	return root, inventory.Inventory{Repository: "example", GoVersion: "1.27.0", Modules: []inventory.Module{{Directory: ".", ModulePath: "example", GoVersion: "1.27.0"}}}
+	return root, inventory.Inventory{Repository: "example", GoVersion: "1.27.0", Modules: []inventory.Module{{Directory: ".", ModulePath: "example", GoVersion: "1.27.0", Releasable: true}}}
 }
 
 func write(t *testing.T, path, content string) {

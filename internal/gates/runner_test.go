@@ -634,6 +634,29 @@ func TestCheckRejectsUnformattedAndUnsafeSources(t *testing.T) {
 	}
 }
 
+func TestCheckIgnoresNonPackageGoSources(t *testing.T) {
+	root := fixture(t)
+	for _, directory := range []string{"testdata", ".golib-tooling", ".verification", "_scratch"} {
+		if err := os.MkdirAll(filepath.Join(root, directory), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		write(t, filepath.Join(root, directory, "fixture.go"), "package fixture\n\nimport \"unsafe\"\n\nvar _=unsafe.Sizeof(0)\n")
+	}
+	executor := &recordingExecutor{}
+	runner := gates.Runner{
+		Root:     root,
+		Catalog:  inventory.Inventory{Modules: []inventory.Module{{Directory: "."}}},
+		Executor: executor,
+	}
+
+	if err := runner.Check(context.Background(), []string{"."}); err != nil {
+		t.Fatalf("Check() error = %v", err)
+	}
+	if len(executor.commands) == 0 || strings.Contains(executor.commands[0], "fixture.go") {
+		t.Fatalf("format command includes non-package Go source: %#v", executor.commands)
+	}
+}
+
 func TestCheckDelegatesFormattingToActiveToolchain(t *testing.T) {
 	root := fixture(t)
 	executor := &recordingExecutor{formatOutput: "example.go\n"}
