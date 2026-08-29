@@ -21,6 +21,30 @@ func TestCheckAcceptsNavigableDocumentation(t *testing.T) {
 	}
 }
 
+func TestCheckIgnoresLinkShapedCode(t *testing.T) {
+	root := basic(t)
+	write(t, filepath.Join(root, "docs", "code.md"), "# Code\n\n```go\nbuilder := structplan.New[User](validation.DefaultLimits())\n```\n\n~~~go\n[value](missing)\n~~~\n\n    [indented](missing)\n\n`structplan.New[User](validation.DefaultLimits())`\n")
+	if err := Check(root); err != nil {
+		t.Fatalf("Check() error = %v", err)
+	}
+}
+
+func TestCheckContinuesAfterCodeAndChecksImagesAndReferences(t *testing.T) {
+	for name, content := range map[string]string{
+		"after code": "# Readme\n\n```go\n[value](ignored)\n```\n\n[broken](missing.md)\n",
+		"image":      "# Readme\n\n![broken](missing.png)\n",
+		"reference":  "# Readme\n\n[broken][target]\n\n[target]: missing.md\n",
+	} {
+		t.Run(name, func(t *testing.T) {
+			root := basic(t)
+			write(t, filepath.Join(root, "README.md"), content)
+			if err := Check(root); err == nil || !strings.Contains(err.Error(), "broken local link") {
+				t.Fatalf("Check() error = %v", err)
+			}
+		})
+	}
+}
+
 func TestCheckAcceptsExactDocumentBounds(t *testing.T) {
 	root := basic(t)
 	write(t, filepath.Join(root, "README.md"), strings.Repeat("x", maximumDocumentSize))
@@ -55,9 +79,9 @@ func TestCheckRejectsInvalidRootsAndDocuments(t *testing.T) {
 		}, "symlink"},
 		{"trailing whitespace", func(t *testing.T) string {
 			root := basic(t)
-			write(t, filepath.Join(root, "README.md"), "# Readme \n")
+			write(t, filepath.Join(root, "README.md"), "# Readme\ninvalid \n")
 			return root
-		}, "trailing whitespace"},
+		}, "README.md:2 has trailing whitespace"},
 		{"oversized", func(t *testing.T) string {
 			root := basic(t)
 			write(t, filepath.Join(root, "README.md"), strings.Repeat("x", maximumDocumentSize+1))
@@ -97,7 +121,6 @@ func TestCheckRejectsInvalidRootsAndDocuments(t *testing.T) {
 func TestCheckRejectsUnsafeAndBrokenLinks(t *testing.T) {
 	for _, test := range []struct{ name, target, want string }{
 		{"invalid URL", "%zz", "invalid link"},
-		{"unclosed angle", "<missing.md", "not closed"},
 		{"unsupported scheme", "file:secret", "unsupported link scheme"},
 		{"network path", "//example.com/path", "repository-relative"},
 		{"absolute", "/tmp/file", "repository-relative"},

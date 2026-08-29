@@ -439,7 +439,8 @@ func TestAPISkipsDisabledModulesAndRejectsUnknownSelection(t *testing.T) {
 
 func TestCheckRunsSecurityTools(t *testing.T) {
 	root := fixture(t)
-	executor := &recordingExecutor{}
+	task := t.TempDir()
+	executor := &recordingExecutor{task: task}
 	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{
 		Directory: ".", ModulePath: "github.com/acme/example", Gates: map[string]bool{"security": true},
 	}}}, Executor: executor}
@@ -450,18 +451,29 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		"gofmt -l -- example.go",
 		"go mod tidy -diff",
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config " + filepath.Join(root, ".gitleaks.toml") + " --no-banner --redact",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --no-banner --redact",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/acme/example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
 		t.Fatalf("commands = %#v", executor.commands)
 	}
+	if !strings.Contains(executor.secretConfig, `title = "fixture"`) ||
+		!strings.Contains(executor.secretConfig, `paths = ['''^\.golib-tooling(?:/|$)''']`) {
+		t.Fatalf("gitleaks config = %q", executor.secretConfig)
+	}
+	if executor.secretConfigPath == filepath.Join(root, ".gitleaks.toml") ||
+		!strings.HasPrefix(executor.secretConfigPath, task+string(filepath.Separator)) {
+		t.Fatalf("gitleaks config path = %q", executor.secretConfigPath)
+	}
+	if _, err := os.Stat(executor.secretConfigPath); !os.IsNotExist(err) {
+		t.Fatalf("temporary gitleaks config remains: %v", err)
+	}
 }
 
 func TestCheckIgnoresRepositoryOwnedPackagesDuringNestedModuleLicenseAudit(t *testing.T) {
 	root := fixture(t)
-	executor := &recordingExecutor{}
+	executor := &recordingExecutor{task: t.TempDir()}
 	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{
 		Repository: "github.com/acme/example",
 		Modules: []inventory.Module{
@@ -489,7 +501,7 @@ func TestCheckDoesNotWidenLicenseIgnoreBeyondRepositoryOwnership(t *testing.T) {
 		{"lookalike repository", "github.com/acme/example", "github.com/acme/example-other"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
-			executor := &recordingExecutor{}
+			executor := &recordingExecutor{task: t.TempDir()}
 			runner := gates.Runner{Root: fixture(t), Catalog: inventory.Inventory{
 				Repository: test.repository,
 				Modules: []inventory.Module{{
@@ -535,7 +547,7 @@ func TestCheckStopsAtAnalyzerAndSecurityFailures(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			failure := errors.New("failed")
-			executor := &recordingExecutor{failureAt: test.failureAt, failure: failure}
+			executor := &recordingExecutor{failureAt: test.failureAt, failure: failure, task: t.TempDir()}
 			runner := gates.Runner{Root: fixture(t), Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: ".", Gates: test.gates}}}, Executor: executor}
 			if err := runner.Check(context.Background(), []string{"."}); !errors.Is(err, failure) {
 				t.Fatalf("Check() error = %v", err)
@@ -720,6 +732,9 @@ type recordingExecutor struct {
 	apiSnapshot      string
 	apiReport        string
 	formatOutput     string
+	secretConfig     string
+	secretConfigPath string
+	task             string
 }
 
 const validCycloneDX = `{"bomFormat":"CycloneDX","specVersion":"1.6"}`
@@ -728,7 +743,22 @@ func successfulSpelling(context.Context, string) error { return nil }
 func successfulLinks(context.Context, string) error    { return nil }
 
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
-	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, command.Args...), " "))
+	arguments := slices.Clone(command.Args)
+	if slices.Contains(arguments, "github.com/zricethezav/gitleaks/v8@v8.30.1") {
+		for index, argument := range arguments {
+			if argument != "--config" || index+1 >= len(arguments) {
+				continue
+			}
+			executor.secretConfigPath = arguments[index+1]
+			content, err := os.ReadFile(executor.secretConfigPath)
+			if err != nil {
+				return err
+			}
+			executor.secretConfig = string(content)
+			arguments[index+1] = "<generated-gitleaks-config>"
+		}
+	}
+	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, arguments...), " "))
 	if command.Name == "gofmt" && command.Stdout != nil {
 		_, _ = command.Stdout.Write([]byte(executor.formatOutput))
 	}
@@ -769,11 +799,14 @@ func (executor *recordingExecutor) Run(_ context.Context, command gates.Command)
 	return nil
 }
 
+func (executor *recordingExecutor) TemporaryDirectory() string { return executor.task }
+
 func fixture(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	write(t, filepath.Join(root, "go.mod"), "module example\n\ngo 1.27.0\n")
 	write(t, filepath.Join(root, "example.go"), "package example\n\nfunc Value() int { return 1 }\n")
+	write(t, filepath.Join(root, ".gitleaks.toml"), "title = \"fixture\"\n[extend]\nuseDefault = true\n")
 	if err := os.MkdirAll(filepath.Join(root, "nested"), 0o700); err != nil {
 		t.Fatal(err)
 	}

@@ -89,6 +89,112 @@ func TestCoverageRejectsModulesWithoutRequiredPackages(t *testing.T) {
 	}
 }
 
+func TestGitleaksConfigRequiresTaskWorkspaceAndRepositoryConfiguration(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, ".gitleaks.toml"), []byte("title = \"fixture\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		name     string
+		executor Executor
+		root     string
+		want     string
+	}{
+		{"no workspace", executorFunction(func(context.Context, Command) error { return nil }), root, "task-owned"},
+		{"relative workspace", workspaceExecutor{directory: "relative", run: func(context.Context, Command) error { return nil }}, root, "task-owned"},
+		{"missing configuration", workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }}, t.TempDir(), "read gitleaks config"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			_, _, err := (Runner{Root: test.root, Executor: test.executor}).createGitleaksConfig()
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("createGitleaksConfig() error = %v", err)
+			}
+		})
+	}
+}
+
+func TestGitleaksConfigReportsOwnedFileFailures(t *testing.T) {
+	failure := errors.New("injected failure")
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, ".gitleaks.toml"), []byte("title = \"fixture\"\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		name  string
+		files *fakeSecretConfigFiles
+		want  string
+	}{
+		{"create", &fakeSecretConfigFiles{createErr: failure}, "create temporary"},
+		{"write", &fakeSecretConfigFiles{file: &fakeNamedFile{name: "config", writeErr: failure}}, "write temporary"},
+		{"close", &fakeSecretConfigFiles{file: &fakeNamedFile{name: "config", closeErr: failure}}, "close temporary"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			runner := Runner{
+				Root: root,
+				Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error {
+					return nil
+				}},
+				secretConfigFiles: test.files,
+			}
+			_, _, err := runner.createGitleaksConfig()
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("createGitleaksConfig() error = %v", err)
+			}
+			if test.name != "create" && test.files.removed != "config" {
+				t.Fatalf("removed path = %q", test.files.removed)
+			}
+		})
+	}
+}
+
+func TestCheckReportsGitleaksConfigCleanupFailure(t *testing.T) {
+	failure := errors.New("injected cleanup failure")
+	root := t.TempDir()
+	for name, content := range map[string]string{
+		"go.mod":         "module example\n\ngo 1.27.0\n",
+		"example.go":     "package example\n",
+		".gitleaks.toml": "title = \"fixture\"\n",
+	} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	executor := workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }}
+	files := &fakeSecretConfigFiles{file: &fakeNamedFile{name: "config"}, removeErr: failure}
+	runner := Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{
+			Directory: ".", ModulePath: "example", Gates: map[string]bool{"security": true},
+		}}},
+		Executor: executor, secretConfigFiles: files,
+	}
+	if err := runner.Check(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "remove temporary gitleaks config") {
+		t.Fatalf("Check() error = %v", err)
+	}
+}
+
+func TestCheckReportsMissingGitleaksConfiguration(t *testing.T) {
+	root := t.TempDir()
+	for name, content := range map[string]string{
+		"go.mod":     "module example\n\ngo 1.27.0\n",
+		"example.go": "package example\n",
+	} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	runner := Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{
+			Directory: ".", ModulePath: "example", Gates: map[string]bool{"security": true},
+		}}},
+		Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }},
+	}
+	if err := runner.Check(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "read gitleaks config") {
+		t.Fatalf("Check() error = %v", err)
+	}
+}
+
 func TestStandaloneGatesContinuePastDisabledModules(t *testing.T) {
 	root := t.TempDir()
 	enabled := root
@@ -534,6 +640,26 @@ func (fake *fakeCoverageFiles) Open(string) (io.ReadCloser, error) {
 }
 
 func (*fakeCoverageFiles) Remove(string) error { return nil }
+
+type fakeSecretConfigFiles struct {
+	file             namedWriteCloser
+	createErr        error
+	removeErr        error
+	createdDirectory string
+	pattern          string
+	removed          string
+}
+
+func (files *fakeSecretConfigFiles) CreateTemp(directory, pattern string) (namedWriteCloser, error) {
+	files.createdDirectory = directory
+	files.pattern = pattern
+	return files.file, files.createErr
+}
+
+func (files *fakeSecretConfigFiles) Remove(path string) error {
+	files.removed = path
+	return files.removeErr
+}
 
 type fakeNamedFile struct {
 	name     string

@@ -2,23 +2,25 @@
 package docscheck
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io/fs"
 	"net/url"
 	"os"
 	"path/filepath"
-	"regexp"
 	"slices"
 	"strings"
+
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/ast"
+	"github.com/yuin/goldmark/text"
 )
 
 const (
 	maximumDocumentSize = 4 << 20
 	maximumDocuments    = 4096
 )
-
-var markdownLinkRE = regexp.MustCompile(`\[[^]]+\]\(([^)]*)\)`)
 
 // Check validates root documentation and local Markdown links without network
 // access or following symlinks.
@@ -97,21 +99,29 @@ func checkDocument(root, document string) error {
 		if strings.HasSuffix(text, " ") || strings.HasSuffix(text, "\t") {
 			return fmt.Errorf("documentation %s:%d has trailing whitespace", document, line)
 		}
-		for _, match := range markdownLinkRE.FindAllStringSubmatch(text, -1) {
-			if err := checkLink(root, document, match[1]); err != nil {
-				return fmt.Errorf("documentation %s:%d: %w", document, line, err)
-			}
-		}
 	}
-	return nil
+	parsed := goldmark.DefaultParser().Parse(text.NewReader(data))
+	return ast.Walk(parsed, func(node ast.Node, _ bool) (ast.WalkStatus, error) {
+		var destination []byte
+		switch value := node.(type) {
+		case *ast.Link:
+			destination = value.Destination
+		case *ast.Image:
+			destination = value.Destination
+		default:
+			return ast.WalkContinue, nil
+		}
+		if err := checkLink(root, document, string(destination)); err != nil {
+			position := min(max(node.Pos(), 0), len(data))
+			line := bytes.Count(data[:position], []byte{'\n'}) + 1
+			return ast.WalkStop, fmt.Errorf("documentation %s:%d: %w", document, line, err)
+		}
+		return ast.WalkContinue, nil
+	})
 }
 
 func checkLink(root, document, target string) error {
-	destination, err := linkDestination(target)
-	if err != nil {
-		return err
-	}
-	target = destination
+	target = strings.TrimSpace(target)
 	parsed, err := url.Parse(target)
 	if err != nil {
 		return fmt.Errorf("invalid link %q: %w", target, err)
@@ -142,19 +152,4 @@ func checkLink(root, document, target string) error {
 		return fmt.Errorf("local link targets symlink %q", target)
 	}
 	return nil
-}
-
-func linkDestination(value string) (string, error) {
-	value = strings.TrimSpace(value)
-	if !strings.HasPrefix(value, "<") {
-		if fields := strings.Fields(value); len(fields) > 0 {
-			return fields[0], nil
-		}
-		return "", nil
-	}
-	closing := strings.IndexByte(value, '>')
-	if closing == -1 {
-		return "", errors.New("angle-bracket link destination is not closed")
-	}
-	return value[1:closing], nil
 }
