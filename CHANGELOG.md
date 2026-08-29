@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.9 - 2026-08-29
+
 ### Fixed
 
 - Retained the bounded tail of Docker Compose diagnostics so image-pull
