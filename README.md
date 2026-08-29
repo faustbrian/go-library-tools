@@ -6,7 +6,7 @@ task-owned environments, preserves content-addressed verification evidence,
 and owns generic service fixtures without copying automation into every
 repository.
 
-The current stable release is `v1.0.10`. Consumer repositories must use
+The current stable release is `v1.0.11`. Consumer repositories must use
 checksum-verified release binaries and immutable workflow references.
 
 ## Quick Start
