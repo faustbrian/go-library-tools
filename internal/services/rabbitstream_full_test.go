@@ -263,6 +263,39 @@ func TestFullRabbitStreamCleansPartialDockerFailures(t *testing.T) {
 	}
 }
 
+func TestFullRabbitStreamReportsBoundedRedactedComposeDiagnostics(t *testing.T) {
+	const password = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+	const diagnosticLimit = 4_096
+	backend := &fakeBackend{}
+	process := func(ctx context.Context, name string, arguments []string, environment map[string]string, stdout, stderr io.Writer) error {
+		if len(arguments) > 0 && arguments[0] == "compose" {
+			_, _ = io.WriteString(stderr, "compose rejected password "+password+"\n"+strings.Repeat("x", diagnosticLimit+1))
+			return errors.New("compose failed")
+		}
+		return backend.run(ctx, name, arguments, environment, stdout, stderr)
+	}
+	manager := fullRabbitStreamManager(t, process, &recordingServiceFiles{})
+	manager.Secret = func(size int) (string, error) {
+		if size == 24 {
+			return password, nil
+		}
+		return strings.Repeat("a", size*2), nil
+	}
+
+	_, err := manager.Start(context.Background(), []string{"rabbitstream"})
+	if err == nil {
+		t.Fatal("Start() error = nil")
+	}
+	diagnostic := err.Error()
+	if !strings.Contains(diagnostic, "compose rejected password [REDACTED]") ||
+		!strings.Contains(diagnostic, "[diagnostic truncated]") {
+		t.Fatalf("Start() error does not preserve bounded diagnostics: %v", err)
+	}
+	if strings.Contains(diagnostic, password) {
+		t.Fatalf("Start() error exposes fixture password: %v", err)
+	}
+}
+
 func TestFullRabbitStreamReportsEachProxyFailure(t *testing.T) {
 	for failAt := 2; failAt <= 5; failAt++ {
 		t.Run(string(rune('0'+failAt)), func(t *testing.T) {

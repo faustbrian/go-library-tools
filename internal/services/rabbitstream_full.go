@@ -82,11 +82,18 @@ func startRabbitStream(ctx context.Context, manager Manager, lease *Lease, token
 	for _, name := range []string{"rabbit1", "rabbit2", "rabbit3", "certgen", "rabbit-tls"} {
 		lease.containers = append(lease.containers, topology.containers[name])
 	}
+	diagnostic := newBoundedDiagnosticWriter(
+		credentials.user,
+		credentials.password,
+		credentials.cookie,
+		credentials.restrictedUser,
+		credentials.restrictedPassword,
+	)
 	if err := manager.Process(ctx, "docker", []string{
 		"compose", "--project-directory", topology.directory, "-f", topology.compose,
 		"-p", topology.project, "up", "-d", "--wait",
-	}, composeEnvironment, io.Discard, io.Discard); err != nil {
-		return fmt.Errorf("start RabbitMQ Streams topology: %w", err)
+	}, composeEnvironment, io.Discard, &diagnostic); err != nil {
+		return fmt.Errorf("start RabbitMQ Streams topology: %w", serviceProcessError(err, &diagnostic))
 	}
 	if err := manager.Process(ctx, "docker", []string{
 		"exec", topology.containers["rabbit1"], "rabbitmqctl", "await_online_nodes", "3",

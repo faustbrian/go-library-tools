@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Included bounded, credential-redacted Docker Compose diagnostics when a
+  RabbitMQ Streams topology cannot start, while retaining exact cleanup of all
+  task-owned resources.
+
 ## 1.0.7 - 2026-08-29
 
 ### Fixed
