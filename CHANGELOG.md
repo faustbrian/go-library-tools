@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.7 - 2026-08-29
+
 ### Fixed
 
 - Scoped each exact-coverage run to one production package and its tests so
