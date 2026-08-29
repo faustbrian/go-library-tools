@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Prevented RabbitMQ image data from being copied into task-owned broker
+  volumes so generated Erlang cookies retain readable ownership.
+
 ## 1.0.10 - 2026-08-29
 
 ### Fixed

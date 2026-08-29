@@ -68,6 +68,19 @@ func TestManagerStartsFullParallelSafeRabbitStreamTopology(t *testing.T) {
 	if err := yaml.Unmarshal(compose, &decoded); err != nil {
 		t.Fatalf("generated Compose is invalid YAML: %v\n%s", err, compose)
 	}
+	services, ok := decoded["services"].(map[string]any)
+	if !ok {
+		t.Fatalf("generated Compose services = %#v", decoded["services"])
+	}
+	for _, name := range []string{"rabbit1", "rabbit2", "rabbit3", "rabbit-tls"} {
+		service, ok := services[name].(map[string]any)
+		if !ok {
+			t.Fatalf("generated Compose service %s = %#v", name, services[name])
+		}
+		if !rabbitStreamDataVolumeDisablesCopy(service["volumes"]) {
+			t.Fatalf("generated Compose service %s permits image data to be copied into its broker volume", name)
+		}
+	}
 	for _, required := range []string{
 		rabbitStreamOldImage, rabbitStreamImage, "RABBITSTREAM_VOLUME_TLS_CERTS",
 	} {
@@ -117,6 +130,22 @@ func TestManagerStartsFullParallelSafeRabbitStreamTopology(t *testing.T) {
 			t.Fatalf("cleanup missing %q", expected)
 		}
 	}
+}
+
+func rabbitStreamDataVolumeDisablesCopy(value any) bool {
+	volumes, ok := value.([]any)
+	if !ok {
+		return false
+	}
+	for _, value := range volumes {
+		volume, ok := value.(map[string]any)
+		if !ok || volume["target"] != "/var/lib/rabbitmq/mnesia" {
+			continue
+		}
+		settings, ok := volume["volume"].(map[string]any)
+		return ok && settings["nocopy"] == true
+	}
+	return false
 }
 
 func TestFullRabbitStreamValidatesWorkspaceAndCredentials(t *testing.T) {
