@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.4 - 2026-08-29
+
 ### Fixed
 
 - Preserved the original checkpoint runtime metadata when importing mutation
