@@ -73,7 +73,7 @@ func checkModule(root, repository string, module inventory.Module) error {
 	if strings.HasPrefix(module.ModulePath, repository+"/") {
 		inNamespace = true
 	}
-	if !inNamespace {
+	if module.Releasable && !inNamespace {
 		return fmt.Errorf("module %s is outside repository namespace %s", module.ModulePath, repository)
 	}
 	relative := filepath.Join(module.Directory, "go.mod")

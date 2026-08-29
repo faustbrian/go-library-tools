@@ -37,6 +37,7 @@
     "SBOM",
     "SHA",
     "Staticcheck",
+    "testdata",
     "Toxiproxy",
     "Valkey",
     "YAML"
