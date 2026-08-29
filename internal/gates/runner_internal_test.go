@@ -78,6 +78,17 @@ func TestCoverageUsesTaskWorkspace(t *testing.T) {
 	}
 }
 
+func TestCoverageRejectsModulesWithoutRequiredPackages(t *testing.T) {
+	runner := Runner{Executor: executorFunction(func(context.Context, Command) error {
+		t.Fatal("coverage command ran without a required package")
+		return nil
+	})}
+	err := runner.runCoverage(context.Background(), io.Discard, t.TempDir(), inventory.Module{})
+	if err == nil || !strings.Contains(err.Error(), "no coverage-required packages") {
+		t.Fatalf("runCoverage() error = %v", err)
+	}
+}
+
 func TestStandaloneGatesContinuePastDisabledModules(t *testing.T) {
 	root := t.TempDir()
 	enabled := root

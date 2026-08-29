@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Scoped each exact-coverage run to one production package and its tests so
+  unrelated test binaries cannot pollute its profile or denominator.
+
 ## 1.0.6 - 2026-08-29
 
 ### Fixed
