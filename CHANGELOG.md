@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Retained the bounded tail of Docker Compose diagnostics so image-pull
+  progress cannot hide the final service startup error.
+
 ## 1.0.8 - 2026-08-29
 
 ### Fixed

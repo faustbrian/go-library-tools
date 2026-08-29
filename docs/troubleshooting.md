@@ -9,7 +9,7 @@ record. Inspect with `golib evidence inspect --json`; rerun only the affected
 package and gate.
 
 Service failures report the first lifecycle boundary and still attempt exact
-cleanup. Docker Compose startup failures include a bounded diagnostic excerpt;
+cleanup. Docker Compose startup failures include a bounded diagnostic tail;
 generated fixture credentials are redacted. Do not run broad Docker cleanup.
 Confirm the pinned image is available, the runtime supports dynamic loopback
 ports, and no task-owned resource remains.
