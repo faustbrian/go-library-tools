@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.13 - 2026-08-29
+
 ### Fixed
 
 - Exposed task-owned RabbitMQ Streams network and volume identities so
