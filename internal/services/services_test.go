@@ -11,6 +11,7 @@ import (
 	"sync"
 	"testing"
 	"time"
+	"unicode/utf8"
 )
 
 func TestManagerStartsGenericFixturesAndCleansExactContainers(t *testing.T) {
@@ -79,6 +80,74 @@ func TestManagerStartsGenericFixturesAndCleansExactContainers(t *testing.T) {
 	}
 	if !strings.Contains(strings.Join(backend.commands, "\n"), "nsqio/nsq:v1.3.0 /nsqd --broadcast-address=127.0.0.1") {
 		t.Fatal("NSQ daemon arguments missing")
+	}
+}
+
+func TestServiceDiagnosticRedactsBeforeBoundingUntrustedOutput(t *testing.T) {
+	secret := strings.Repeat("deadbeef", 6)
+	diagnostic := newBoundedDiagnosticWriter("", secret)
+	wantRawLimit := maximumServiceDiagnostic + len(secret)
+	if diagnostic.limit != wantRawLimit || !reflect.DeepEqual(diagnostic.secrets, []string{secret}) {
+		t.Fatalf("newBoundedDiagnosticWriter() = limit %d, secrets %#v", diagnostic.limit, diagnostic.secrets)
+	}
+	prefixLength := maximumServiceDiagnostic - len(serviceDiagnosticTruncated) - len("\x1b[31m") - len("[REDACTED]") - 1
+	prefix := strings.Repeat("x", prefixLength)
+	input := append([]byte("\x1b[31m"+prefix+secret+"\rrewritten"), 0xff)
+	if written, err := diagnostic.Write(input); err != nil || written != len(input) {
+		t.Fatalf("Write() = %d, %v", written, err)
+	}
+	if written, err := diagnostic.Write([]byte(strings.Repeat("y", wantRawLimit-len(input)))); err != nil ||
+		written != wantRawLimit-len(input) || diagnostic.value.Len() != wantRawLimit || diagnostic.truncated {
+		t.Fatalf("Write(after limit) = %d, %v", written, err)
+	}
+	if written, err := diagnostic.Write([]byte("ignored")); err != nil || written != len("ignored") {
+		t.Fatalf("Write(after truncation) = %d, %v", written, err)
+	}
+	if diagnostic.value.Len() != wantRawLimit || !diagnostic.truncated {
+		t.Fatalf("Write(after truncation) retained %d bytes, truncated=%t", diagnostic.value.Len(), diagnostic.truncated)
+	}
+	output := diagnostic.String()
+	if strings.Contains(output, "deadbeef") || strings.ContainsRune(output, '\x1b') || strings.ContainsRune(output, '\r') ||
+		!strings.Contains(output, serviceDiagnosticTruncated) {
+		t.Fatalf("String() did not redact and bound the diagnostic: %q", output)
+	}
+	if len(output) > maximumServiceDiagnostic || !utf8.ValidString(output) {
+		t.Fatalf("String() is not bounded valid UTF-8: bytes=%d", len(output))
+	}
+	repeated := newBoundedDiagnosticWriter(secret)
+	_, _ = repeated.Write([]byte(strings.Repeat(secret, 128)))
+	wantReplacement := "[REDACTED]" + strings.Repeat("*", len(secret)-len("[REDACTED]"))
+	if output = repeated.String(); strings.Contains(output, "deadbeef") || !strings.HasPrefix(output, wantReplacement+wantReplacement) {
+		t.Fatalf("String() exposed a repeated secret at the bound: %q", output)
+	}
+	short := newBoundedDiagnosticWriter("tiny")
+	_, _ = short.Write([]byte("tiny"))
+	if output = short.String(); output != "[REDACTED]" {
+		t.Fatalf("String() short-secret replacement = %q", output)
+	}
+
+	utf8Boundary := newBoundedDiagnosticWriter()
+	boundary := maximumServiceDiagnostic - len(serviceDiagnosticTruncated) - 1
+	_, _ = utf8Boundary.Write([]byte(strings.Repeat("x", boundary) + "€tail"))
+	output = utf8Boundary.String()
+	if !utf8.ValidString(output) || !strings.Contains(output, serviceDiagnosticTruncated) {
+		t.Fatalf("String() split a UTF-8 code point at the bound: %q", output)
+	}
+
+	exact := newBoundedDiagnosticWriter()
+	_, _ = exact.Write([]byte(strings.Repeat("z", maximumServiceDiagnostic-len(serviceDiagnosticTruncated))))
+	output = exact.String()
+	if len(output) != maximumServiceDiagnostic-len(serviceDiagnosticTruncated) ||
+		strings.Contains(output, serviceDiagnosticTruncated) {
+		t.Fatalf("String() truncated exact-boundary output: bytes=%d", len(output))
+	}
+}
+
+func TestServiceProcessErrorPreservesCauseWithoutDiagnostic(t *testing.T) {
+	cause := errors.New("process failed")
+	diagnostic := newBoundedDiagnosticWriter()
+	if err := serviceProcessError(cause, &diagnostic); !errors.Is(err, cause) || err.Error() != cause.Error() {
+		t.Fatalf("serviceProcessError() = %v", err)
 	}
 }
 

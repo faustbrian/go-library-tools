@@ -19,19 +19,23 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 const (
-	maximumPortOutput = 4_096
-	defaultAttempts   = 90
-	defaultWait       = time.Second
-	cleanupTimeout    = time.Duration(30_000_000_000)
-	postgresImage     = "postgres:18.4-alpine"
-	valkeyImage       = "valkey/valkey:9.1.0-alpine"
-	redisImage        = "redis:8.6.4-alpine"
-	natsImage         = "nats:2.14.2-alpine"
-	nsqImage          = "nsqio/nsq:v1.3.0"
-	rabbitMQImage     = "rabbitmq:4.3.2-management-alpine"
+	maximumPortOutput          = 4_096
+	maximumServiceDiagnostic   = 4_096
+	serviceDiagnosticTruncated = "\n[diagnostic truncated]"
+	defaultAttempts            = 90
+	defaultWait                = time.Second
+	cleanupTimeout             = time.Duration(30_000_000_000)
+	postgresImage              = "postgres:18.4-alpine"
+	valkeyImage                = "valkey/valkey:9.1.0-alpine"
+	redisImage                 = "redis:8.6.4-alpine"
+	natsImage                  = "nats:2.14.2-alpine"
+	nsqImage                   = "nsqio/nsq:v1.3.0"
+	rabbitMQImage              = "rabbitmq:4.3.2-management-alpine"
 )
 
 var tokenRE = regexp.MustCompile(`^[a-z0-9]{4,32}$`)
@@ -458,3 +462,68 @@ func (writer *boundedWriter) Write(value []byte) (int, error) {
 }
 
 func (writer *boundedWriter) String() string { return writer.value.String() }
+
+type boundedDiagnosticWriter struct {
+	value     strings.Builder
+	limit     int
+	secrets   []string
+	truncated bool
+}
+
+func newBoundedDiagnosticWriter(secrets ...string) boundedDiagnosticWriter {
+	limit := maximumServiceDiagnostic
+	retained := make([]string, 0, len(secrets))
+	for _, secret := range secrets {
+		if secret != "" {
+			limit += len(secret)
+			retained = append(retained, secret)
+		}
+	}
+	return boundedDiagnosticWriter{limit: limit, secrets: retained}
+}
+
+func (writer *boundedDiagnosticWriter) Write(value []byte) (int, error) {
+	remaining := writer.limit - writer.value.Len()
+	retained := min(len(value), remaining)
+	_, _ = writer.value.Write(value[:retained])
+	writer.truncated = writer.truncated || retained != len(value)
+	return len(value), nil
+}
+
+func (writer *boundedDiagnosticWriter) String() string {
+	result := strings.ToValidUTF8(writer.value.String(), "?")
+	for _, secret := range writer.secrets {
+		replacement := "[REDACTED]" + strings.Repeat("*", max(len(secret)-len("[REDACTED]"), 0))
+		result = strings.ReplaceAll(result, secret, replacement)
+	}
+	result = strings.Map(func(character rune) rune {
+		if character == '\r' {
+			return '\n'
+		}
+		if unicode.IsControl(character) && character != '\n' && character != '\t' {
+			return '?'
+		}
+		return character
+	}, result)
+	result = strings.TrimSpace(result)
+	limit := maximumServiceDiagnostic - len(serviceDiagnosticTruncated)
+	if len(result) > limit {
+		result = result[:limit]
+		for !utf8.ValidString(result) {
+			result = result[:len(result)-1]
+		}
+		writer.truncated = true
+	}
+	if writer.truncated {
+		result += serviceDiagnosticTruncated
+	}
+	return result
+}
+
+func serviceProcessError(err error, diagnostic *boundedDiagnosticWriter) error {
+	output := diagnostic.String()
+	if output == "" {
+		return err
+	}
+	return fmt.Errorf("%w: %s", err, output)
+}
