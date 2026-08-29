@@ -410,7 +410,10 @@ const rabbitStreamComposeTemplate = `services:
       RABBITMQ_ERLANG_COOKIE: ${RABBITSTREAM_ERLANG_COOKIE:?required}
       RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS: -rabbitmq_stream initial_cluster_size 3
     networks: {rabbitstream: {aliases: [rabbit1]}}
-    volumes: ["./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro", "./rabbit1.conf:/etc/rabbitmq/rabbitmq.conf:ro", "rabbit1-data:/var/lib/rabbitmq/mnesia"]
+    volumes:
+      - "./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro"
+      - "./rabbit1.conf:/etc/rabbitmq/rabbitmq.conf:ro"
+      - {type: volume, source: rabbit1-data, target: /var/lib/rabbitmq/mnesia, volume: {nocopy: true}}
     healthcheck: &rabbit-health
       test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
       interval: 1s
@@ -421,14 +424,20 @@ const rabbitStreamComposeTemplate = `services:
     hostname: rabbit2
     environment: *rabbit-environment
     networks: {rabbitstream: {aliases: [rabbit2]}}
-    volumes: ["./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro", "./rabbit2.conf:/etc/rabbitmq/rabbitmq.conf:ro", "rabbit2-data:/var/lib/rabbitmq/mnesia"]
+    volumes:
+      - "./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro"
+      - "./rabbit2.conf:/etc/rabbitmq/rabbitmq.conf:ro"
+      - {type: volume, source: rabbit2-data, target: /var/lib/rabbitmq/mnesia, volume: {nocopy: true}}
     healthcheck: *rabbit-health
   rabbit3:
     image: ${RABBITSTREAM_IMAGE:-%s}
     hostname: rabbit3
     environment: *rabbit-environment
     networks: {rabbitstream: {aliases: [rabbit3]}}
-    volumes: ["./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro", "./rabbit3.conf:/etc/rabbitmq/rabbitmq.conf:ro", "rabbit3-data:/var/lib/rabbitmq/mnesia"]
+    volumes:
+      - "./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro"
+      - "./rabbit3.conf:/etc/rabbitmq/rabbitmq.conf:ro"
+      - {type: volume, source: rabbit3-data, target: /var/lib/rabbitmq/mnesia, volume: {nocopy: true}}
     healthcheck: *rabbit-health
   certgen:
     image: %s
@@ -444,7 +453,11 @@ const rabbitStreamComposeTemplate = `services:
       RABBITMQ_DEFAULT_PASS: ${RABBITSTREAM_PASSWORD:?required}
       RABBITMQ_ERLANG_COOKIE: ${RABBITSTREAM_ERLANG_COOKIE:?required}
     networks: {rabbitstream: {aliases: [rabbit-tls]}}
-    volumes: ["./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro", "./tls-rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro", "tls-certs:/certs:ro", "tls-data:/var/lib/rabbitmq/mnesia"]
+    volumes:
+      - "./enabled_plugins:/etc/rabbitmq/enabled_plugins:ro"
+      - "./tls-rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro"
+      - "tls-certs:/certs:ro"
+      - {type: volume, source: tls-data, target: /var/lib/rabbitmq/mnesia, volume: {nocopy: true}}
     healthcheck: *rabbit-health
 networks:
   rabbitstream:
