@@ -23,6 +23,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Accepted the complete BCP 14 requirement vocabulary in specification
+  decisions and enforced normative scope for `REQUIRED` decisions.
 - Preserved production-specific exact-coverage denominators while allowing the
   complete module test set to contribute coverage in one run when integration
   or external tests exercise a package.

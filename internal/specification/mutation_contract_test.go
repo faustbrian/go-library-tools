@@ -491,9 +491,13 @@ func TestDecisionIdentifierAndPolicyConditionBoundaries(t *testing.T) {
 	if err := validateDecision(root, inventory.Module{Directory: "."}, nil, item, authorities, evidence); err != nil {
 		t.Fatalf("validateDecision(normative MUST) error = %v", err)
 	}
+	item.RequirementStrength = "REQUIRED"
+	if err := validateDecision(root, inventory.Module{Directory: "."}, nil, item, authorities, evidence); err != nil {
+		t.Fatalf("validateDecision(normative REQUIRED) error = %v", err)
+	}
 	item.DecisionScope = "defensive"
 	if err := validateDecision(root, inventory.Module{Directory: "."}, nil, item, authorities, evidence); err == nil || !strings.Contains(err.Error(), "inconsistent") {
-		t.Fatalf("validateDecision(defensive MUST) error = %v", err)
+		t.Fatalf("validateDecision(defensive REQUIRED) error = %v", err)
 	}
 	authorities["source"] = authority{ID: "source", Kind: "recommendation", Version: "RFC 9110", Specifications: []string{"RFC 9110"}}
 	item.DecisionScope = "normative"

@@ -500,7 +500,7 @@ var allowedDecisionScopes = map[string]struct{}{
 }
 
 var allowedRequirementStrengths = map[string]struct{}{
-	"MUST": {}, "MUST NOT": {}, "SHALL": {}, "SHALL NOT": {},
+	"MUST": {}, "MUST NOT": {}, "REQUIRED": {}, "SHALL": {}, "SHALL NOT": {},
 	"SHOULD": {}, "SHOULD NOT": {}, "RECOMMENDED": {}, "NOT RECOMMENDED": {},
 	"MAY": {}, "OPTIONAL": {}, "not specified": {}, "informative": {},
 }
@@ -938,7 +938,7 @@ func validateDecision(root string, module inventory.Module, modules []inventory.
 	if !exists || (authorityItem.Kind != "specification" && authorityItem.Kind != "registry" && authorityItem.Kind != "extension" && authorityItem.Kind != "recommendation") {
 		return fmt.Errorf("specification decision %q references unknown source authority %q", item.ID, item.SourceAuthority)
 	}
-	mandatoryStrength := strings.Contains(item.RequirementStrength, "MUST") || strings.Contains(item.RequirementStrength, "SHALL")
+	mandatoryStrength := item.RequirementStrength == "REQUIRED" || strings.Contains(item.RequirementStrength, "MUST") || strings.Contains(item.RequirementStrength, "SHALL")
 	if mandatoryStrength && item.DecisionScope != "normative" ||
 		authorityItem.Kind == "recommendation" && item.DecisionScope == "normative" {
 		return fmt.Errorf("specification decision %q has inconsistent authority, scope, and requirement_strength", item.ID)
