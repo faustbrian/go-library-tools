@@ -227,6 +227,23 @@ func TestMigrationApprovalUsesInputLineageAndDefaultVerifier(t *testing.T) {
 	}
 }
 
+func TestMigrationApprovalAcceptsLegacyReportDigest(t *testing.T) {
+	ledger := validMigrationLedger()
+	checkpoint := validMigrationCheckpoint()
+	checkpoint.Report = json.RawMessage(`{"elapsed_time":1,"files":[{"file_name":"source.go","mutations":[{"type":"NEGATION","status":"KILLED","line":3,"column":1}]}]}`)
+	checkpoint.ReportDigest = canonicalReportDigest(checkpoint.Report)
+	legacyDigest := legacyCanonicalReportDigest(checkpoint.Report)
+	if checkpoint.ReportDigest == legacyDigest {
+		t.Fatal("test report has identical current and legacy digests")
+	}
+	legacySHA256 := strings.TrimPrefix(legacyDigest, "sha256:")
+	ledger.VerifierMigrations[0].ReportSHA256 = legacySHA256
+	ledger.Entries[0].ReportSHA256 = legacySHA256
+	if err := ledger.Approve(checkpoint, strings.Repeat("b", 64), strings.Repeat("c", 64)); err != nil {
+		t.Fatalf("Approve() error = %v", err)
+	}
+}
+
 func TestMigrationLedgerApprovesBuiltInInputIdentityTransition(t *testing.T) {
 	ledger := validMigrationLedger()
 	checkpoint := validMigrationCheckpoint()
