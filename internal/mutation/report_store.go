@@ -40,7 +40,7 @@ func (operatingReportFiles) ReadFile(path string) ([]byte, error) { return os.Re
 func (operatingReportFiles) Remove(path string) error             { return os.Remove(path) }
 
 // StoreReport validates and atomically publishes one immutable report by input.
-// The bool reports whether byte-identical report content already existed.
+// The bool reports whether semantically identical report content already existed.
 func StoreReport(root, inputDigest string, report []byte) (string, bool, ReportResult, error) {
 	return storeReport(operatingReportFiles{}, root, inputDigest, report)
 }

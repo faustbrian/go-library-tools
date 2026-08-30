@@ -15,7 +15,9 @@ import (
 	"go/token"
 	"io"
 	"io/fs"
+	"net"
 	"net/http"
+	"net/netip"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -39,10 +41,42 @@ const (
 )
 
 var (
-	decisionHeading = regexp.MustCompile(`(?m)^## ([A-Z][A-Z0-9-]*-DEC-[0-9]{3}): ([^\n]+)$`)
-	decisionID      = regexp.MustCompile(`\b[A-Z][A-Z0-9-]*-DEC-[0-9]{3}\b`)
-	markdownLink    = regexp.MustCompile(`\]\([[:space:]]*(?:<([^>\n]+)>|([^[:space:])]+))(?:[[:space:]]+(?:"[^"\n]*"|'[^'\n]*'|\([^\)\n]*\)))?[[:space:]]*\)`)
-	sha256Value     = regexp.MustCompile(`^[0-9a-f]{64}$`)
+	decisionHeading           = regexp.MustCompile(`(?m)^## ([A-Z][A-Z0-9-]*-DEC-[0-9]{3}): ([^\n]+)$`)
+	levelTwoHeading           = regexp.MustCompile(`(?m)^## [^\n]+$`)
+	decisionID                = regexp.MustCompile(`\b[A-Z][A-Z0-9-]*-DEC-[0-9]{3}\b`)
+	markdownLink              = regexp.MustCompile(`\]\([[:space:]]*(?:<([^>\n]+)>|([^[:space:])]+))(?:[[:space:]]+(?:"[^"\n]*"|'[^'\n]*'|\([^\)\n]*\)))?[[:space:]]*\)`)
+	sha256Value               = regexp.MustCompile(`^[0-9a-f]{64}$`)
+	publicAuthorityExceptions = []netip.Prefix{
+		netip.MustParsePrefix("192.0.0.9/32"),
+		netip.MustParsePrefix("192.0.0.10/32"),
+		netip.MustParsePrefix("2001:1::1/128"),
+		netip.MustParsePrefix("2001:1::2/128"),
+		netip.MustParsePrefix("2001:1::3/128"),
+		netip.MustParsePrefix("2001:3::/32"),
+		netip.MustParsePrefix("2001:4:112::/48"),
+		netip.MustParsePrefix("2001:20::/28"),
+		netip.MustParsePrefix("2001:30::/28"),
+	}
+	nonPublicAuthorityPrefixes = []netip.Prefix{
+		netip.MustParsePrefix("0.0.0.0/8"),
+		netip.MustParsePrefix("100.64.0.0/10"),
+		netip.MustParsePrefix("192.0.0.0/24"),
+		netip.MustParsePrefix("192.0.2.0/24"),
+		netip.MustParsePrefix("192.88.99.0/24"),
+		netip.MustParsePrefix("198.18.0.0/15"),
+		netip.MustParsePrefix("198.51.100.0/24"),
+		netip.MustParsePrefix("203.0.113.0/24"),
+		netip.MustParsePrefix("240.0.0.0/4"),
+		netip.MustParsePrefix("64:ff9b:1::/48"),
+		netip.MustParsePrefix("100::/64"),
+		netip.MustParsePrefix("100:0:0:1::/64"),
+		netip.MustParsePrefix("2001::/23"),
+		netip.MustParsePrefix("2001:db8::/32"),
+		netip.MustParsePrefix("2002::/16"),
+		netip.MustParsePrefix("3fff::/20"),
+		netip.MustParsePrefix("5f00::/16"),
+		netip.MustParsePrefix("fec0::/10"),
+	}
 )
 
 // Report summarizes the specification-backed modules and registered choices.
@@ -55,6 +89,14 @@ type Report struct {
 // CheckOnline validates the static register contract and verifies that mutable
 // authoritative errata and release feeds still match their reviewed digests.
 func CheckOnline(ctx context.Context, root string, catalog inventory.Inventory, client *http.Client) (Report, error) {
+	return checkOnline(ctx, root, catalog, client, net.DefaultResolver)
+}
+
+type authorityResolver interface {
+	LookupNetIP(context.Context, string, string) ([]netip.Addr, error)
+}
+
+func checkOnline(ctx context.Context, root string, catalog inventory.Inventory, client *http.Client, resolver authorityResolver) (Report, error) {
 	report, policies, err := check(root, catalog)
 	if err != nil {
 		return report, err
@@ -68,11 +110,15 @@ func CheckOnline(ctx context.Context, root string, catalog inventory.Inventory, 
 	if client == nil {
 		return Report{}, errors.New("specification authority HTTP client is required")
 	}
+	client, err = secureAuthorityClient(client, resolver)
+	if err != nil {
+		return Report{}, err
+	}
 	ctx, cancel := context.WithTimeout(ctx, maximumOnlineDuration)
 	defer cancel()
 	for _, policy := range policies {
 		for _, item := range policy.Authorities {
-			if err := fetchAuthority(ctx, client, item); err != nil {
+			if err := fetchAuthorityResolved(ctx, client, resolver, item); err != nil {
 				return Report{}, err
 			}
 		}
@@ -81,6 +127,10 @@ func CheckOnline(ctx context.Context, root string, catalog inventory.Inventory, 
 }
 
 func fetchAuthority(ctx context.Context, client *http.Client, item authority) error {
+	return fetchAuthorityResolved(ctx, client, net.DefaultResolver, item)
+}
+
+func fetchAuthorityResolved(ctx context.Context, client *http.Client, resolver authorityResolver, item authority) error {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, item.URL, nil)
 	if err != nil {
 		return fmt.Errorf("create specification authority request %q: %w", item.ID, err)
@@ -93,7 +143,10 @@ func fetchAuthority(ctx context.Context, client *http.Client, item authority) er
 		if candidate.URL.Scheme != "https" || !strings.EqualFold(candidate.URL.Host, request.URL.Host) {
 			return errors.New("redirect escaped its pinned HTTPS authority")
 		}
-		return nil
+		return validateAuthorityDestination(candidate.Context(), resolver, candidate.URL)
+	}
+	if err := validateAuthorityDestination(ctx, resolver, request.URL); err != nil {
+		return fmt.Errorf("fetch specification authority %q: %w", item.ID, err)
 	}
 	response, err := boundedClient.Do(request)
 	if err != nil {
@@ -118,6 +171,97 @@ func fetchAuthority(ctx context.Context, client *http.Client, item authority) er
 		return fmt.Errorf("specification authority %q changed and requires review", item.ID)
 	}
 	return nil
+}
+
+func validateAuthorityDestination(ctx context.Context, resolver authorityResolver, destination *url.URL) error {
+	_, err := resolveAuthorityDestination(ctx, resolver, destination)
+	return err
+}
+
+func resolveAuthorityDestination(ctx context.Context, resolver authorityResolver, destination *url.URL) ([]netip.Addr, error) {
+	if resolver == nil || destination == nil || destination.Hostname() == "" {
+		return nil, errors.New("authority resolver and destination are required")
+	}
+	addresses, err := resolver.LookupNetIP(ctx, "ip", destination.Hostname())
+	if err != nil {
+		return nil, fmt.Errorf("resolve authority destination: %w", err)
+	}
+	if len(addresses) == 0 {
+		return nil, errors.New("authority destination resolved no addresses")
+	}
+	for index, address := range addresses {
+		address = address.Unmap()
+		if !isPublicAuthorityAddress(address) {
+			return nil, fmt.Errorf("authority must resolve only to a public network destination: %s", address)
+		}
+		addresses[index] = address
+	}
+	return addresses, nil
+}
+
+func isPublicAuthorityAddress(address netip.Addr) bool {
+	if !address.IsValid() || !address.IsGlobalUnicast() || address.IsPrivate() || address.IsLoopback() || address.IsLinkLocalUnicast() || address.Zone() != "" {
+		return false
+	}
+	if slices.ContainsFunc(publicAuthorityExceptions, func(prefix netip.Prefix) bool {
+		return prefix.Contains(address)
+	}) {
+		return true
+	}
+	return !slices.ContainsFunc(nonPublicAuthorityPrefixes, func(prefix netip.Prefix) bool {
+		return prefix.Contains(address)
+	})
+}
+
+type authorityDialer func(context.Context, string, string) (net.Conn, error)
+
+func secureAuthorityClient(client *http.Client, resolver authorityResolver) (*http.Client, error) {
+	secured := *client
+	var transport *http.Transport
+	switch current := client.Transport.(type) {
+	case nil:
+		defaultTransport, ok := http.DefaultTransport.(*http.Transport)
+		if !ok {
+			return nil, errors.New("online specification checks require the standard default HTTP transport")
+		}
+		transport = defaultTransport.Clone()
+	case *http.Transport:
+		transport = current.Clone()
+	default:
+		return nil, errors.New("online specification checks require an HTTP transport with pinned destination dialing")
+	}
+	dial := authorityDialer(transport.DialContext)
+	if dial == nil {
+		dial = (&net.Dialer{}).DialContext
+	}
+	transport.Proxy = nil
+	transport.DialTLSContext = nil
+	transport.DialContext = dialResolvedAuthority(resolver, dial)
+	secured.Transport = transport
+	return &secured, nil
+}
+
+func dialResolvedAuthority(resolver authorityResolver, dial authorityDialer) authorityDialer {
+	return func(ctx context.Context, network, target string) (net.Conn, error) {
+		host, port, err := net.SplitHostPort(target)
+		if err != nil {
+			return nil, fmt.Errorf("split authority dial target: %w", err)
+		}
+		destination := &url.URL{Scheme: "https", Host: net.JoinHostPort(host, port)}
+		addresses, err := resolveAuthorityDestination(ctx, resolver, destination)
+		if err != nil {
+			return nil, err
+		}
+		var dialErr error
+		for _, address := range addresses {
+			connection, currentErr := dial(ctx, network, net.JoinHostPort(address.String(), port))
+			if currentErr == nil {
+				return connection, nil
+			}
+			dialErr = errors.Join(dialErr, currentErr)
+		}
+		return nil, fmt.Errorf("dial authority destination: %w", dialErr)
+	}
 }
 
 // Check validates the repository-level decision register, conformance matrix,
@@ -464,15 +608,15 @@ func validateDecisionContract(
 	registerEntries := make(map[string]string)
 	registerBodies := make(map[string]string)
 	registerMatches := decisionHeading.FindAllSubmatchIndex(register, -1)
-	for index, match := range registerMatches {
+	for _, match := range registerMatches {
 		identifier := string(register[match[2]:match[3]])
 		if _, exists := registerEntries[identifier]; exists {
 			return Report{}, nil, fmt.Errorf("duplicate specification decision identifier %q", identifier)
 		}
 		registerEntries[identifier] = strings.TrimSpace(string(register[match[4]:match[5]]))
 		end := len(register)
-		if index+1 < len(registerMatches) {
-			end = registerMatches[index+1][0]
+		if next := levelTwoHeading.FindIndex(register[match[1]:]); next != nil {
+			end = match[1] + next[0]
 		}
 		registerBodies[identifier] = string(register[match[0]:end])
 	}
@@ -535,7 +679,7 @@ func validateDecisionContract(
 			if _, exists := decisions[item.Replacement]; !exists {
 				return Report{}, nil, fmt.Errorf("superseded specification decision %q references unknown replacement %q", identifier, item.Replacement)
 			}
-			if !documentLinksToDecision(register, item.Replacement) {
+			if !documentLinksToDecision([]byte(registerBodies[identifier]), item.Replacement, decisions[item.Replacement].Title) {
 				return Report{}, nil, fmt.Errorf("superseded specification decision %q has no Markdown replacement link to %q", identifier, item.Replacement)
 			}
 		}
@@ -718,15 +862,27 @@ func documentLinksTo(documentPath string, data []byte, targetPath string) bool {
 	return false
 }
 
-func documentLinksToDecision(data []byte, identifier string) bool {
-	expected := strings.ToLower(identifier)
+func documentLinksToDecision(data []byte, identifier, title string) bool {
+	expected := decisionHeadingAnchor(identifier, title)
 	for _, match := range markdownLink.FindAllSubmatch(data, -1) {
 		parsed, err := url.Parse(markdownLinkDestination(match))
-		if err == nil && strings.HasPrefix(strings.ToLower(parsed.Fragment), expected) {
+		if err == nil && parsed.Scheme == "" && parsed.Host == "" && parsed.Path == "" && strings.EqualFold(parsed.Fragment, expected) {
 			return true
 		}
 	}
 	return false
+}
+
+func decisionHeadingAnchor(identifier, title string) string {
+	var anchor strings.Builder
+	for _, value := range strings.ToLower(identifier + " " + title) {
+		if unicode.IsLetter(value) || unicode.IsDigit(value) || value == '-' || value == '_' {
+			anchor.WriteRune(value)
+		} else if unicode.IsSpace(value) {
+			anchor.WriteByte('-')
+		}
+	}
+	return anchor.String()
 }
 
 func markdownLinkDestination(match [][]byte) string {
@@ -933,14 +1089,21 @@ func validateAdditionalAuthoritativeSourceDocumentation(item decision, row confo
 		if !exists {
 			return fmt.Errorf("specification decision %q references unknown authoritative source %q in an additional binding", item.ID, identifier)
 		}
-		values := append([]string{source.ID, source.Version, source.URL}, source.Specifications...)
-		for _, value := range values {
-			if value == "" || !strings.Contains(body, value) {
-				return fmt.Errorf("specification decision %q Markdown entry omits additional authoritative source %q value %q", item.ID, identifier, value)
-			}
+		record := documentedAuthority{ID: source.ID, Version: source.Version, URL: source.URL, Specifications: source.Specifications}
+		encoded, _ := json.Marshal(record)
+		expected := "`" + string(encoded) + "`"
+		if !strings.Contains(body, expected) {
+			return fmt.Errorf("specification decision %q Markdown entry omits additional authoritative source %q record %s", item.ID, identifier, expected)
 		}
 	}
 	return nil
+}
+
+type documentedAuthority struct {
+	ID             string   `json:"id"`
+	Version        string   `json:"version"`
+	URL            string   `json:"url"`
+	Specifications []string `json:"specifications"`
 }
 
 func sameStringSet(left, right []string) bool {
@@ -1258,13 +1421,12 @@ func jsonPinHasIdentity(object map[string]any, digestKey string) bool {
 	prefix = strings.TrimSuffix(prefix, "_")
 	for key, value := range object {
 		text, ok := value.(string)
-		if !ok || strings.TrimSpace(text) == "" {
-			continue
-		}
-		lower := strings.ToLower(key)
-		for _, suffix := range []string{"id", "name", "version", "url", "path", "source", "commit", "tag"} {
-			if lower == suffix || lower == prefix+"_"+suffix {
-				return true
+		if ok && strings.TrimSpace(text) != "" {
+			lower := strings.ToLower(key)
+			for _, suffix := range []string{"id", "name", "version", "url", "path", "source", "commit", "tag"} {
+				if lower == suffix || lower == prefix+"_"+suffix {
+					return true
+				}
 			}
 		}
 	}

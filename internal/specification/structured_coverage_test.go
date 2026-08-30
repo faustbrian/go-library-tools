@@ -282,7 +282,11 @@ func TestAdditionalAuthoritativeSourcesCoverDeclaredSpecifications(t *testing.T)
 		t.Fatalf("validateConformance(additional specification source) error = %v", err)
 	}
 
-	body := strings.Join([]string{additional.ID, additional.Version, additional.URL, additional.Specifications[0]}, "\n")
+	record, err := json.Marshal(documentedAuthority{ID: additional.ID, Version: additional.Version, URL: additional.URL, Specifications: additional.Specifications})
+	if err != nil {
+		t.Fatal(err)
+	}
+	body := "`" + string(record) + "`"
 	if err := validateAdditionalAuthoritativeSourceDocumentation(item, row, authorities, body); err != nil {
 		t.Fatalf("validateAdditionalAuthoritativeSourceDocumentation() error = %v", err)
 	}
@@ -490,11 +494,14 @@ func TestStructuredHelperFailureBoundaries(t *testing.T) {
 	if !documentLinksTo("README.md", []byte(`[target](<docs/target.md> "Target")`), "docs/target.md") {
 		t.Fatal("documentLinksTo() rejected a valid titled angle-bracket link")
 	}
-	if documentLinksToDecision([]byte("[x](https://example.com)"), "EXAMPLE-DEC-001") {
+	if documentLinksToDecision([]byte("[x](https://example.com)"), "EXAMPLE-DEC-001", "Replacement") {
 		t.Fatal("documentLinksToDecision() accepted a missing fragment")
 	}
-	if !documentLinksToDecision([]byte("[replacement](#EXAMPLE-DEC-002)"), "EXAMPLE-DEC-002") {
+	if !documentLinksToDecision([]byte("[replacement](#EXAMPLE-DEC-002-Replacement-policy)"), "EXAMPLE-DEC-002", "Replacement policy") {
 		t.Fatal("documentLinksToDecision() rejected a replacement link")
+	}
+	if documentLinksToDecision([]byte("[replacement](#EXAMPLE-DEC-002-invalid)"), "EXAMPLE-DEC-002", "Replacement policy") {
+		t.Fatal("documentLinksToDecision() accepted an inexact replacement link")
 	}
 	if _, err := validateJSONPins(map[string]any{"sha256": strings.Repeat("a", 64), "version": 1}); err == nil {
 		t.Fatal("validateJSONPins(identity) error = nil")

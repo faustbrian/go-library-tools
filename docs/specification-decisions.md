@@ -86,7 +86,8 @@ but may omit executable evidence and remain visible while blocking repository
 and release checks. Superseded decisions retain their historical evidence and
 exact cross-register bindings without requiring retired symbols or data files
 to remain current. Their documentation remains current, they name a known
-replacement in `replacement`, and the Markdown register links to it.
+replacement in `replacement`, and their own Markdown section links to the
+replacement decision's exact generated heading anchor.
 
 ## Conformance bindings
 
@@ -115,7 +116,14 @@ Evidence arrays must exactly match the decision data. `authoritative_sources`
 must include the decision's primary source authority. Additional specification,
 registry, extension, or recommendation authorities may cover other
 module-declared specifications; the Markdown entry must expose each additional
-authority's exact ID, version, URL, and covered specification names.
+authority's exact ID, version, URL, and covered specification names as one
+inline-code JSON record. For example:
+
+```markdown
+Additional authoritative source: `{"id":"rfc9110-extension","version":"Extension 1","url":"https://example.com/extension","specifications":["Example Extension"]}`
+```
+
+The record must remain inside that decision's level-two section.
 Differential evidence uses `local defect`, `peer defect`, `fixture defect`,
 `harness defect`, `specification ambiguity`, or `deliberate policy difference`.
 An empty differential evidence array must use `not assessed`, and `not assessed`
@@ -187,5 +195,7 @@ reviewers must require it to remain in the register and ledger.
 `golib specification check` performs the complete offline structural check.
 `golib specification check --online` additionally downloads bounded authority
 content, verifies each reviewed digest, preserves the original HTTPS authority
-across redirects, and bounds the complete online run to two minutes.
+across redirects, rejects any authority resolution containing a non-public
+network address, revalidates redirect resolution, and bounds the complete online
+run to two minutes.
 Repositories without declared specifications pass without network access.

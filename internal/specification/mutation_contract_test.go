@@ -4,11 +4,14 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
+	"net"
 	"net/http"
+	"net/netip"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -17,24 +20,68 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 )
 
+type staticAuthorityResolver struct {
+	addresses []netip.Addr
+	err       error
+}
+
+type sequenceAuthorityResolver struct {
+	addresses [][]netip.Addr
+	calls     int
+}
+
+func (resolver *sequenceAuthorityResolver) LookupNetIP(context.Context, string, string) ([]netip.Addr, error) {
+	index := resolver.calls
+	resolver.calls++
+	return resolver.addresses[index], nil
+}
+
+func (resolver staticAuthorityResolver) LookupNetIP(context.Context, string, string) ([]netip.Addr, error) {
+	return resolver.addresses, resolver.err
+}
+
+var publicTestAuthorityResolver = staticAuthorityResolver{addresses: []netip.Addr{netip.MustParseAddr("8.8.8.8")}}
+
+func fetchTestAuthority(ctx context.Context, client *http.Client, item authority) error {
+	return fetchAuthorityResolved(ctx, client, publicTestAuthorityResolver, item)
+}
+
 func TestAuthorityFetchBoundaryContract(t *testing.T) {
 	body := strings.Repeat("x", maximumAuthoritySize)
 	digest := sha256.Sum256([]byte(body))
 	item := authority{ID: "source", URL: "https://example.com/source", SHA256: hex.EncodeToString(digest[:])}
-	if err := fetchAuthority(context.Background(), client(response(http.StatusOK, body, nil, nil), nil), item); err != nil {
-		t.Fatalf("fetchAuthority(maximum body) error = %v", err)
+	if err := fetchTestAuthority(context.Background(), client(response(http.StatusOK, body, nil, nil), nil), item); err != nil {
+		t.Fatalf("fetchTestAuthority(maximum body) error = %v", err)
 	}
 
 	for _, status := range []int{http.StatusContinue, http.StatusMultipleChoices} {
-		err := fetchAuthority(context.Background(), client(response(status, body, nil, nil), nil), item)
+		err := fetchTestAuthority(context.Background(), client(response(status, body, nil, nil), nil), item)
 		if err == nil || !strings.Contains(err.Error(), fmt.Sprintf("HTTP %d", status)) {
-			t.Fatalf("fetchAuthority(status %d) error = %v", status, err)
+			t.Fatalf("fetchTestAuthority(status %d) error = %v", status, err)
 		}
 	}
 	for _, status := range []int{http.StatusOK, http.StatusMultipleChoices - 1} {
-		if err := fetchAuthority(context.Background(), client(response(status, body, nil, nil), nil), item); err != nil {
-			t.Fatalf("fetchAuthority(status %d) error = %v", status, err)
+		if err := fetchTestAuthority(context.Background(), client(response(status, body, nil, nil), nil), item); err != nil {
+			t.Fatalf("fetchTestAuthority(status %d) error = %v", status, err)
 		}
+	}
+}
+
+func TestAuthorityFetchRejectsPrivateDestinationsBeforeTransport(t *testing.T) {
+	called := false
+	transport := roundTripper(func(_ *http.Request) (*http.Response, error) {
+		called = true
+		return response(http.StatusOK, "private", nil, nil), nil
+	})
+	digest := sha256.Sum256([]byte("private"))
+	err := fetchAuthority(context.Background(), &http.Client{Transport: transport}, authority{
+		ID: "source", URL: "https://127.0.0.1/source", SHA256: hex.EncodeToString(digest[:]),
+	})
+	if err == nil || !strings.Contains(err.Error(), "public network destination") {
+		t.Fatalf("fetchTestAuthority(private destination) error = %v", err)
+	}
+	if called {
+		t.Fatal("fetchTestAuthority(private destination) called the transport")
 	}
 }
 
@@ -55,12 +102,12 @@ func TestAuthorityRedirectBoundaryContract(t *testing.T) {
 			}
 			return response(http.StatusOK, body, nil, nil), nil
 		})
-		err := fetchAuthority(context.Background(), &http.Client{Transport: transport}, authority{ID: "source", URL: "https://example.com/source", SHA256: hex.EncodeToString(digest[:])})
+		err := fetchTestAuthority(context.Background(), &http.Client{Transport: transport}, authority{ID: "source", URL: "https://example.com/source", SHA256: hex.EncodeToString(digest[:])})
 		if redirects == 9 && err != nil {
-			t.Fatalf("fetchAuthority(nine redirects) error = %v", err)
+			t.Fatalf("fetchTestAuthority(nine redirects) error = %v", err)
 		}
 		if redirects == 10 && (err == nil || !strings.Contains(err.Error(), "stopped after 10 redirects")) {
-			t.Fatalf("fetchAuthority(ten redirects) error = %v", err)
+			t.Fatalf("fetchTestAuthority(ten redirects) error = %v", err)
 		}
 	}
 	for _, location := range []string{"http://example.com/final", "https://other.example/final"} {
@@ -72,10 +119,63 @@ func TestAuthorityRedirectBoundaryContract(t *testing.T) {
 				Request:    request,
 			}, nil
 		})
-		err := fetchAuthority(context.Background(), &http.Client{Transport: transport}, authority{ID: "source", URL: "https://example.com/source", SHA256: hex.EncodeToString(digest[:])})
+		err := fetchTestAuthority(context.Background(), &http.Client{Transport: transport}, authority{ID: "source", URL: "https://example.com/source", SHA256: hex.EncodeToString(digest[:])})
 		if err == nil || !strings.Contains(err.Error(), "redirect escaped its pinned HTTPS authority") {
-			t.Fatalf("fetchAuthority(redirect %q) error = %v", location, err)
+			t.Fatalf("fetchTestAuthority(redirect %q) error = %v", location, err)
 		}
+	}
+}
+
+func TestAuthorityRedirectRevalidatesPublicResolution(t *testing.T) {
+	body := "authority"
+	requests := 0
+	transport := roundTripper(func(request *http.Request) (*http.Response, error) {
+		requests++
+		return &http.Response{
+			StatusCode: http.StatusFound,
+			Header:     http.Header{"Location": []string{"/final"}},
+			Body:       &faultBody{Reader: strings.NewReader("")},
+			Request:    request,
+		}, nil
+	})
+	resolver := &sequenceAuthorityResolver{addresses: [][]netip.Addr{
+		{netip.MustParseAddr("8.8.8.8")},
+		{netip.MustParseAddr("10.0.0.1")},
+	}}
+	digest := sha256.Sum256([]byte(body))
+	err := fetchAuthorityResolved(context.Background(), &http.Client{Transport: transport}, resolver, authority{
+		ID: "source", URL: "https://example.com/source", SHA256: hex.EncodeToString(digest[:]),
+	})
+	if err == nil || !strings.Contains(err.Error(), "public network destination") || resolver.calls != 2 || requests != 1 {
+		t.Fatalf("fetchAuthorityResolved(redirect resolution) = %v, resolver calls %d, requests %d", err, resolver.calls, requests)
+	}
+}
+
+func TestAuthorityFetchRejectsRebindingBeforeDial(t *testing.T) {
+	resolver := &sequenceAuthorityResolver{addresses: [][]netip.Addr{
+		{netip.MustParseAddr("8.8.8.8")},
+		{netip.MustParseAddr("10.0.0.1")},
+	}}
+	dialed := false
+	baseTransport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		t.Fatalf("default transport = %T", http.DefaultTransport)
+	}
+	transport := baseTransport.Clone()
+	transport.DialContext = func(context.Context, string, string) (net.Conn, error) {
+		dialed = true
+		return nil, errors.New("dialed unvalidated destination")
+	}
+	client, err := secureAuthorityClient(&http.Client{Transport: transport}, resolver)
+	if err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256([]byte("authority"))
+	err = fetchAuthorityResolved(context.Background(), client, resolver, authority{
+		ID: "source", URL: "https://example.com/source", SHA256: hex.EncodeToString(digest[:]),
+	})
+	if err == nil || !strings.Contains(err.Error(), "public network destination") || resolver.calls != 2 || dialed {
+		t.Fatalf("fetchAuthorityResolved(rebinding) = %v, resolver calls %d, dialed %t", err, resolver.calls, dialed)
 	}
 }
 
@@ -209,6 +309,35 @@ func TestDecisionContractRejectsUndocumentedAdditionalAuthoritativeSource(t *tes
 	}
 }
 
+func TestDecisionContractRejectsAdditionalAuthorityDocumentedOutsideDecision(t *testing.T) {
+	root, catalog := validFixture(t)
+	decisionManifest, err := loadDecisions(readFile(t, filepath.Join(root, "specification/decisions.json")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	conformanceManifest, err := loadConformance(readFile(t, filepath.Join(root, "specification/conformance.json")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy, err := loadMonitoring(root, "specification/monitoring.json", catalog.Modules[0].Specifications, time.Now().UTC())
+	if err != nil {
+		t.Fatal(err)
+	}
+	additional := authority{ID: "extension-source", Kind: "extension", Version: "Extension 1", URL: "https://example.com/extension", Specifications: []string{"Example Extension"}}
+	policy.Authorities = append(policy.Authorities, additional)
+	conformanceManifest.Decisions[0].AuthoritativeSources = append(conformanceManifest.Decisions[0].AuthoritativeSources, additional.ID)
+	register := append(readFile(t, filepath.Join(root, "docs/specification-decisions.md")), []byte("\n## Appendix\n\nextension-source\nExtension 1\nhttps://example.com/extension\nExample Extension\n")...)
+	matrix, err := matrixDecisions(readFile(t, filepath.Join(root, "specification/README.md")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	evidence := map[string]struct{}{"TestRequestTargetContract": {}, "FuzzRequestTargetContract": {}}
+	_, _, err = validateDecisionContract(root, catalog.Modules[0], catalog.Modules, policy, decisionManifest, conformanceManifest, register, matrix, evidence)
+	if err == nil || !strings.Contains(err.Error(), "omits additional authoritative source") {
+		t.Fatalf("validateDecisionContract(appendix authority) error = %v", err)
+	}
+}
+
 func TestOptionalEvidenceAndDocumentationFailureBoundaries(t *testing.T) {
 	root, catalog, item, authorities, evidence := structuredFixture(t)
 	item.FixtureEvidence = []string{" "}
@@ -314,11 +443,17 @@ func TestMarkdownLinkBoundaryContract(t *testing.T) {
 	if !documentLinksTo("README.md", data, "docs/specification-decisions.md") {
 		t.Fatal("documentLinksTo() did not continue to a valid link")
 	}
-	if documentLinksToDecision([]byte(`[bad](%)`), "EXAMPLE-DEC-001") {
+	if documentLinksToDecision([]byte(`[bad](%)`), "EXAMPLE-DEC-001", "Replacement") {
 		t.Fatal("documentLinksToDecision(malformed) = true")
 	}
-	if !documentLinksToDecision([]byte(`[bad](#other) [good](#example-dec-001-replacement)`), "EXAMPLE-DEC-001") {
+	if !documentLinksToDecision([]byte(`[bad](#other) [good](#example-dec-001-replacement)`), "EXAMPLE-DEC-001", "Replacement") {
 		t.Fatal("documentLinksToDecision() did not continue to a valid link")
+	}
+	if documentLinksToDecision([]byte(`[external](https://example.com/#example-dec-001-replacement)`), "EXAMPLE-DEC-001", "Replacement") {
+		t.Fatal("documentLinksToDecision() accepted an external replacement link")
+	}
+	if anchor := decisionHeadingAnchor("EXAMPLE-DEC-001", "Replacement: policy!"); anchor != "example-dec-001-replacement-policy" {
+		t.Fatalf("decisionHeadingAnchor() = %q", anchor)
 	}
 }
 

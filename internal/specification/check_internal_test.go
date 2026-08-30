@@ -10,7 +10,10 @@ import (
 	"go/parser"
 	"go/token"
 	"io"
+	"net"
 	"net/http"
+	"net/netip"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,6 +30,129 @@ func TestWalkJSONValueConsumesCompleteArray(t *testing.T) {
 	}
 	if token, err := decoder.Token(); !errors.Is(err, io.EOF) {
 		t.Fatalf("decoder.Token() = %v, %v, want EOF", token, err)
+	}
+}
+
+func TestValidateAuthorityDestinationRejectsUnsafeResolution(t *testing.T) {
+	destination, err := url.Parse("https://example.com/source")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for name, test := range map[string]struct {
+		resolver    authorityResolver
+		destination *url.URL
+		want        string
+	}{
+		"missing resolver":    {destination: destination, want: "required"},
+		"missing destination": {resolver: publicTestAuthorityResolver, want: "required"},
+		"missing host":        {resolver: publicTestAuthorityResolver, destination: &url.URL{Scheme: "https"}, want: "required"},
+		"resolution error":    {resolver: staticAuthorityResolver{err: errors.New("resolution failed")}, destination: destination, want: "resolve authority destination"},
+		"no addresses":        {resolver: staticAuthorityResolver{}, destination: destination, want: "resolved no addresses"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			err := validateAuthorityDestination(context.Background(), test.resolver, test.destination)
+			if err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("validateAuthorityDestination() error = %v", err)
+			}
+		})
+	}
+	for name, address := range map[string]netip.Addr{
+		"invalid":              {},
+		"multicast":            netip.MustParseAddr("224.0.0.1"),
+		"private":              netip.MustParseAddr("10.0.0.1"),
+		"mapped private":       netip.MustParseAddr("::ffff:10.0.0.1"),
+		"carrier grade NAT":    netip.MustParseAddr("100.100.100.200"),
+		"benchmarking":         netip.MustParseAddr("198.18.0.1"),
+		"documentation IPv4":   netip.MustParseAddr("192.0.2.1"),
+		"deprecated relay":     netip.MustParseAddr("192.88.99.1"),
+		"local NAT64":          netip.MustParseAddr("64:ff9b:1::1"),
+		"dummy IPv6":           netip.MustParseAddr("100:0:0:1::1"),
+		"Teredo":               netip.MustParseAddr("2001::1"),
+		"benchmarking IPv6":    netip.MustParseAddr("2001:2::1"),
+		"deprecated ORCHID":    netip.MustParseAddr("2001:10::1"),
+		"documentation IPv6":   netip.MustParseAddr("2001:db8::1"),
+		"6to4":                 netip.MustParseAddr("2002::1"),
+		"documentation IPv6 2": netip.MustParseAddr("3fff::1"),
+		"segment routing":      netip.MustParseAddr("5f00::1"),
+		"site local IPv6":      netip.MustParseAddr("fec0::1"),
+		"loopback":             netip.MustParseAddr("127.0.0.1"),
+		"link local":           netip.MustParseAddr("169.254.1.1"),
+		"zoned public":         netip.MustParseAddr("2001:4860:4860::8888%eth0"),
+	} {
+		t.Run(name, func(t *testing.T) {
+			resolver := staticAuthorityResolver{addresses: []netip.Addr{netip.MustParseAddr("8.8.8.8"), address}}
+			if err := validateAuthorityDestination(context.Background(), resolver, destination); err == nil || !strings.Contains(err.Error(), "public network destination") {
+				t.Fatalf("validateAuthorityDestination(%s) error = %v", address, err)
+			}
+		})
+	}
+}
+
+func TestValidateAuthorityDestinationAllowsPublicSpecialPurposeResolution(t *testing.T) {
+	for _, address := range []netip.Addr{
+		netip.MustParseAddr("192.0.0.9"),
+		netip.MustParseAddr("192.0.0.10"),
+		netip.MustParseAddr("2001:1::1"),
+		netip.MustParseAddr("2001:1::2"),
+		netip.MustParseAddr("2001:1::3"),
+		netip.MustParseAddr("2001:3::1"),
+		netip.MustParseAddr("2001:4:112::1"),
+		netip.MustParseAddr("2001:20::1"),
+		netip.MustParseAddr("2001:30::1"),
+	} {
+		if !isPublicAuthorityAddress(address) {
+			t.Fatalf("isPublicAuthorityAddress(%s) = false", address)
+		}
+	}
+}
+
+func TestSecureAuthorityClientTransportBoundary(t *testing.T) {
+	original := &http.Client{}
+	secured, err := secureAuthorityClient(original, publicTestAuthorityResolver)
+	if err != nil {
+		t.Fatal(err)
+	}
+	transport, ok := secured.Transport.(*http.Transport)
+	if !ok || original.Transport != nil || transport.Proxy != nil || transport.DialTLSContext != nil || transport.DialContext == nil {
+		t.Fatalf("secureAuthorityClient() = %#v, original transport %#v", secured.Transport, original.Transport)
+	}
+	nilDialClient, err := secureAuthorityClient(&http.Client{Transport: &http.Transport{}}, publicTestAuthorityResolver)
+	if err != nil {
+		t.Fatal(err)
+	}
+	nilDialTransport, ok := nilDialClient.Transport.(*http.Transport)
+	if !ok || nilDialTransport.DialContext == nil {
+		t.Fatalf("secureAuthorityClient(nil dialer) = %#v", nilDialClient)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if _, err := nilDialTransport.DialContext(ctx, "tcp", "example.com:443"); err == nil || !errors.Is(err, context.Canceled) {
+		t.Fatalf("secureAuthorityClient(default dialer) error = %v", err)
+	}
+	defaultTransport := http.DefaultTransport
+	http.DefaultTransport = roundTripper(func(*http.Request) (*http.Response, error) { return nil, nil })
+	t.Cleanup(func() { http.DefaultTransport = defaultTransport })
+	_, err = secureAuthorityClient(&http.Client{}, publicTestAuthorityResolver)
+	http.DefaultTransport = defaultTransport
+	if err == nil || !strings.Contains(err.Error(), "standard default HTTP transport") {
+		t.Fatalf("secureAuthorityClient(nonstandard default) error = %v", err)
+	}
+	if _, err := secureAuthorityClient(&http.Client{Transport: roundTripper(func(*http.Request) (*http.Response, error) {
+		return nil, nil
+	})}, publicTestAuthorityResolver); err == nil || !strings.Contains(err.Error(), "pinned destination dialing") {
+		t.Fatalf("secureAuthorityClient(custom transport) error = %v", err)
+	}
+}
+
+func TestAuthorityDialBoundaryFailures(t *testing.T) {
+	dial := dialResolvedAuthority(publicTestAuthorityResolver, func(context.Context, string, string) (net.Conn, error) {
+		return nil, errors.New("dial failed")
+	})
+	if _, err := dial(context.Background(), "tcp", "missing-port"); err == nil || !strings.Contains(err.Error(), "split authority dial target") {
+		t.Fatalf("dialResolvedAuthority(malformed target) error = %v", err)
+	}
+	if _, err := dial(context.Background(), "tcp", "example.com:443"); err == nil || !strings.Contains(err.Error(), "dial authority destination") {
+		t.Fatalf("dialResolvedAuthority(failed destinations) error = %v", err)
 	}
 }
 
@@ -318,8 +444,8 @@ func TestFetchAuthorityRejectsEveryFailureBoundary(t *testing.T) {
 	body := "authority"
 	digest := sha256.Sum256([]byte(body))
 	item := authority{ID: "errata", URL: "https://example.com/errata", SHA256: hexDigest(digest)}
-	if err := fetchAuthority(context.Background(), client(response(http.StatusOK, body, nil, nil), nil), item); err != nil {
-		t.Fatalf("fetchAuthority() error = %v", err)
+	if err := fetchTestAuthority(context.Background(), client(response(http.StatusOK, body, nil, nil), nil), item); err != nil {
+		t.Fatalf("fetchTestAuthority() error = %v", err)
 	}
 	tests := []struct {
 		name   string
@@ -336,8 +462,8 @@ func TestFetchAuthorityRejectsEveryFailureBoundary(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			if err := fetchAuthority(context.Background(), test.client, test.item); err == nil {
-				t.Fatal("fetchAuthority() error = nil")
+			if err := fetchTestAuthority(context.Background(), test.client, test.item); err == nil {
+				t.Fatal("fetchTestAuthority() error = nil")
 			}
 		})
 	}

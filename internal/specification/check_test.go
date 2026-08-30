@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -441,12 +442,22 @@ func TestCheckOnlineDetectsChangedAuthority(t *testing.T) {
 		server.URL+`","sha256":"`+hex.EncodeToString(digest[:])+`","specifications":["RFC 9110"]},{"id":"errata","kind":"errata","url":"`+
 		server.URL+`","sha256":"`+hex.EncodeToString(digest[:])+`","specifications":["RFC 9110"]}]}`)
 	refreshModuleDecisionArtifacts(t, root, "", server.URL)
+	serverClient := server.Client()
+	baseTransport, ok := serverClient.Transport.(*http.Transport)
+	if !ok {
+		t.Fatalf("server transport = %T", serverClient.Transport)
+	}
+	transport := baseTransport.Clone()
+	transport.DialContext = func(ctx context.Context, network, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, network, server.Listener.Addr().String())
+	}
+	serverClient.Transport = transport
 
-	if _, err := CheckOnline(context.Background(), root, catalog, server.Client()); err != nil {
+	if _, err := checkOnline(context.Background(), root, catalog, serverClient, publicTestAuthorityResolver); err != nil {
 		t.Fatalf("CheckOnline() error = %v", err)
 	}
 	body = "new errata"
-	if _, err := CheckOnline(context.Background(), root, catalog, server.Client()); err == nil {
+	if _, err := checkOnline(context.Background(), root, catalog, serverClient, publicTestAuthorityResolver); err == nil {
 		t.Fatal("CheckOnline(changed authority) error = nil")
 	}
 }
@@ -463,9 +474,9 @@ func TestFetchAuthorityRejectsRedirectOutsidePinnedHTTPSAuthority(t *testing.T) 
 	defer source.Close()
 	digest := sha256.Sum256([]byte(body))
 
-	err := fetchAuthority(context.Background(), source.Client(), authority{ID: "source", URL: source.URL, SHA256: hex.EncodeToString(digest[:])})
+	err := fetchTestAuthority(context.Background(), source.Client(), authority{ID: "source", URL: source.URL, SHA256: hex.EncodeToString(digest[:])})
 	if err == nil || !strings.Contains(err.Error(), "redirect") {
-		t.Fatalf("fetchAuthority() error = %v", err)
+		t.Fatalf("fetchTestAuthority() error = %v", err)
 	}
 }
 
@@ -481,8 +492,8 @@ func TestFetchAuthorityAllowsRedirectWithinPinnedHTTPSAuthority(t *testing.T) {
 	})
 	defer server.Close()
 	digest := sha256.Sum256([]byte(body))
-	if err := fetchAuthority(context.Background(), server.Client(), authority{ID: "source", URL: server.URL + "/source", SHA256: hex.EncodeToString(digest[:])}); err != nil {
-		t.Fatalf("fetchAuthority() error = %v", err)
+	if err := fetchTestAuthority(context.Background(), server.Client(), authority{ID: "source", URL: server.URL + "/source", SHA256: hex.EncodeToString(digest[:])}); err != nil {
+		t.Fatalf("fetchTestAuthority() error = %v", err)
 	}
 }
 
@@ -491,8 +502,8 @@ func TestFetchAuthorityBoundsSameAuthorityRedirects(t *testing.T) {
 		http.Redirect(writer, request, "/loop", http.StatusFound)
 	}))
 	defer server.Close()
-	if err := fetchAuthority(context.Background(), server.Client(), authority{ID: "source", URL: server.URL + "/loop", SHA256: strings.Repeat("0", 64)}); err == nil || !strings.Contains(err.Error(), "10 redirects") {
-		t.Fatalf("fetchAuthority() error = %v", err)
+	if err := fetchTestAuthority(context.Background(), server.Client(), authority{ID: "source", URL: server.URL + "/loop", SHA256: strings.Repeat("0", 64)}); err == nil || !strings.Contains(err.Error(), "10 redirects") {
+		t.Fatalf("fetchTestAuthority() error = %v", err)
 	}
 }
 
@@ -523,6 +534,10 @@ func TestCheckHandlesDiscoveryAndRepositoryFailures(t *testing.T) {
 	}
 	if _, err := CheckOnline(context.Background(), root, catalog, nil); err == nil {
 		t.Fatal("CheckOnline(nil client) error = nil")
+	}
+	customTransport := roundTripper(func(*http.Request) (*http.Response, error) { return nil, nil })
+	if _, err := checkOnline(context.Background(), root, catalog, &http.Client{Transport: customTransport}, publicTestAuthorityResolver); err == nil || !strings.Contains(err.Error(), "pinned destination dialing") {
+		t.Fatalf("checkOnline(custom transport) error = %v", err)
 	}
 
 	second := catalog.Modules[0]
