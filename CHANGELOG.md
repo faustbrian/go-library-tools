@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.0.14 - 2026-08-30
+
 ### Fixed
 
 - Preserved production-specific exact-coverage denominators while allowing the
