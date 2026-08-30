@@ -373,6 +373,71 @@ func TestValidateConformanceRejectsEveryStructuredBoundary(t *testing.T) {
 	}
 }
 
+func TestValidateConformanceSeparatesInteroperabilityFromDifferentialEvidence(t *testing.T) {
+	_, _, item, authorities, evidence := structuredFixture(t)
+	item.InteroperabilityEvidence = []string{"testdata/peer.tsv"}
+	row := conformanceDecision{
+		ID:                             item.ID,
+		AuthoritativeSources:           []string{item.SourceAuthority},
+		ExecutableEvidence:             append([]string(nil), item.ExecutableEvidence...),
+		Fixtures:                       append([]string(nil), item.FixtureEvidence...),
+		Fuzz:                           append([]string(nil), item.FuzzEvidence...),
+		InteroperabilityEvidence:       []string{"testdata/peer.tsv"},
+		InteroperabilityClassification: "provider agreement",
+		DifferentialClassification:     "not assessed",
+		PublicBehavior:                 []string{"The provider accepts the package output."},
+	}
+
+	if err := validateConformance(item, row, authorities, evidence); err != nil {
+		t.Fatalf("validateConformance(provider agreement) error = %v", err)
+	}
+	for name, mutate := range map[string]func(*conformanceDecision){
+		"unknown classification": func(value *conformanceDecision) { value.InteroperabilityClassification = "agreement" },
+		"not assessed":           func(value *conformanceDecision) { value.InteroperabilityClassification = "not assessed" },
+		"missing evidence":       func(value *conformanceDecision) { value.InteroperabilityEvidence = nil },
+		"evidence mismatch": func(value *conformanceDecision) {
+			value.InteroperabilityEvidence = nil
+			value.InteroperabilityClassification = "provider agreement"
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			invalid := row
+			mutate(&invalid)
+			if err := validateConformance(item, invalid, authorities, evidence); err == nil {
+				t.Fatal("validateConformance() error = nil")
+			}
+		})
+	}
+	withoutEvidence := item
+	withoutEvidence.InteroperabilityEvidence = nil
+	classificationOnly := row
+	classificationOnly.InteroperabilityEvidence = nil
+	classificationOnly.InteroperabilityClassification = "provider agreement"
+	if err := validateConformance(withoutEvidence, classificationOnly, authorities, evidence); err == nil {
+		t.Fatal("validateConformance(classification without evidence) error = nil")
+	}
+}
+
+func TestValidateConformanceAcceptsMaintainedPeerAgreement(t *testing.T) {
+	_, _, item, authorities, evidence := structuredFixture(t)
+	item.InteroperabilityEvidence = nil
+	item.DifferentialEvidence = []string{"testdata/peer.tsv"}
+	row := conformanceDecision{
+		ID:                         item.ID,
+		AuthoritativeSources:       []string{item.SourceAuthority},
+		ExecutableEvidence:         append([]string(nil), item.ExecutableEvidence...),
+		Fixtures:                   append([]string(nil), item.FixtureEvidence...),
+		Fuzz:                       append([]string(nil), item.FuzzEvidence...),
+		DifferentialEvidence:       []string{"testdata/peer.tsv"},
+		DifferentialClassification: "maintained peer agreement",
+		PublicBehavior:             []string{"The maintained peer produces the same observable result."},
+	}
+
+	if err := validateConformance(item, row, authorities, evidence); err != nil {
+		t.Fatalf("validateConformance(maintained peer agreement) error = %v", err)
+	}
+}
+
 func TestStructuredManifestContractRejectsCrossSurfaceDrift(t *testing.T) {
 	tests := map[string]func(string, *decisionManifest, *conformanceManifest, *[]byte, map[string]struct{}){
 		"conformance identifier": func(_ string, _ *decisionManifest, conformance *conformanceManifest, _ *[]byte, _ map[string]struct{}) {

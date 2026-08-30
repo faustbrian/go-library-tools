@@ -60,7 +60,8 @@ the repository and are never reused.
       "executable_evidence": ["TestRequestTargetContract"],
       "fixture_evidence": ["testdata/request-target.json"],
       "fuzz_evidence": ["FuzzRequestTargetContract"],
-      "interoperability_evidence": ["testdata/peer.tsv"],
+      "interoperability_evidence": ["testdata/provider.tsv"],
+      "differential_evidence": ["testdata/peer.tsv"],
       "public_apis": ["Parse"],
       "documentation": ["docs/specification-decisions.md"],
       "upstream_status": "No upstream issue exists.",
@@ -79,9 +80,9 @@ classifications are `ambiguity`, `contradiction`, `omission`, `erratum`,
 keyword, `not specified`, or `informative`.
 
 Resolved decisions must name at least one current Go `Test` function. Fixture,
-fuzz, and interoperability arrays may be empty when those evidence lanes are
-not applicable; every supplied value must still resolve to current module-owned
-evidence. Unresolved decisions follow the same validation for supplied evidence
+fuzz, interoperability, and differential arrays may be empty when those evidence
+lanes are not applicable; every supplied value must still resolve to current
+module-owned evidence. Unresolved decisions follow the same validation for supplied evidence
 but may omit executable evidence and remain visible while blocking repository
 and release checks. Superseded decisions retain their historical evidence and
 exact cross-register bindings without requiring retired symbols or data files
@@ -104,6 +105,8 @@ duplicating prose:
       "executable_evidence": ["TestRequestTargetContract"],
       "fixtures": ["testdata/request-target.json"],
       "fuzz": ["FuzzRequestTargetContract"],
+      "interoperability_evidence": ["testdata/provider.tsv"],
+      "interoperability_classification": "provider agreement",
       "differential_evidence": ["testdata/peer.tsv"],
       "differential_classification": "deliberate policy difference",
       "public_behavior": ["Parse preserves request-target bytes."]
@@ -124,8 +127,15 @@ Additional authoritative source: `{"id":"rfc9110-extension","version":"Extension
 ```
 
 The record must remain inside that decision's level-two section.
+Interoperability evidence records official-fixture or real-provider agreement
+without implying a maintained-peer differential. Its classification is
+`official fixture agreement` or `provider agreement`; evidence must be present
+for either classification. Maintained-peer comparisons remain in the separate
+`differential_evidence` lane and are also recorded separately in decision data
+as `differential_evidence`.
 Differential evidence uses `local defect`, `peer defect`, `fixture defect`,
 `harness defect`, `specification ambiguity`, or `deliberate policy difference`.
+Exact maintained-peer agreement uses `maintained peer agreement`.
 An empty differential evidence array must use `not assessed`, and `not assessed`
 is invalid when differential evidence is present.
 
@@ -158,6 +168,16 @@ source identity such as an ID, name, version, URL, path, source, commit, or tag.
       "url": "https://www.rfc-editor.org/errata/rfc9110",
       "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
       "specifications": ["RFC 9110 HTTP Semantics"]
+    },
+    {
+      "id": "iso-18004-source",
+      "kind": "specification",
+      "version": "ISO/IEC 18004:2024 edition 4",
+      "url": "https://www.iso.org/standard/83389.html",
+      "access": "restricted",
+      "expected_status": 403,
+      "unavailable_reason": "The licensed normative publication is not publicly retrievable; the catalogue identifies the exact edition.",
+      "specifications": ["ISO/IEC 18004:2024 QR Code"]
     }
   ]
 }
@@ -168,6 +188,17 @@ version. Authority kinds are `specification`, `registry`, `extension`,
 `recommendation`, `errata`, and `releases`. Every exact `modules.json`
 specification label requires at least one source authority and one errata or
 release authority. A module may monitor at most 64 authorities.
+
+Public authorities use the default or explicit `public` access mode and require
+an exact SHA-256 content pin. A licensed or otherwise non-public normative
+source may instead use `access: restricted`, omit `sha256`, and record a
+nonempty `unavailable_reason` plus an exact expected denial status of 401, 403,
+or 451. Restricted access is valid only for source
+authorities with an exact version and HTTPS catalogue or identity URL; it is
+not valid for errata or release authorities. Each affected specification still
+requires a separately content-pinned public errata or release authority. This
+records unavailable normative content honestly without hashing an access-denied
+response or treating public catalogue metadata as the publication body.
 
 ## Change control and online checks
 
@@ -197,5 +228,9 @@ reviewers must require it to remain in the register and ledger.
 content, verifies each reviewed digest, preserves the original HTTPS authority
 across redirects, rejects any authority resolution containing a non-public
 network address, revalidates redirect resolution, and bounds the complete online
-run to two minutes.
+run to two minutes. It probes restricted source authorities through the same
+SSRF-safe bounded client and requires their exact reviewed denial status, but
+does not treat the denial body as normative content or hash it. Their exact
+identity and unavailable-content rationale remain part of the offline contract
+while their separate public change authority is content-verified online.
 Repositories without declared specifications pass without network access.

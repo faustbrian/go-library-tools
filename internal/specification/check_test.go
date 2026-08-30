@@ -462,6 +462,51 @@ func TestCheckOnlineDetectsChangedAuthority(t *testing.T) {
 	}
 }
 
+func TestCheckOnlineProbesRestrictedNormativeContent(t *testing.T) {
+	root, catalog := validFixture(t)
+	body := "current release metadata"
+	var restrictedRequests int
+	restrictedStatus := http.StatusForbidden
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path == "/restricted" {
+			restrictedRequests++
+			http.Error(writer, "licensed publication", restrictedStatus)
+			return
+		}
+		_, _ = writer.Write([]byte(body))
+	}))
+	defer server.Close()
+	digest := sha256.Sum256([]byte(body))
+	restrictedURL := server.URL + "/restricted"
+	write(t, filepath.Join(root, "specification/monitoring.json"), `{"schema_version":1,"reviewed_at":"`+
+		time.Now().UTC().Format("2006-01-02")+
+		`","review_interval_days":90,"authorities":[{"id":"rfc9110-source","kind":"specification","version":"RFC 9110","url":"`+
+		restrictedURL+`","access":"restricted","expected_status":403,"unavailable_reason":"The licensed normative publication is not publicly retrievable.","specifications":["RFC 9110"]},{"id":"rfc9110-releases","kind":"releases","url":"`+
+		server.URL+`/releases","sha256":"`+hex.EncodeToString(digest[:])+`","specifications":["RFC 9110"]}]}`)
+	refreshModuleDecisionArtifacts(t, root, "", restrictedURL)
+	serverClient := server.Client()
+	baseTransport, ok := serverClient.Transport.(*http.Transport)
+	if !ok {
+		t.Fatalf("server transport = %T", serverClient.Transport)
+	}
+	transport := baseTransport.Clone()
+	transport.DialContext = func(ctx context.Context, network, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, network, server.Listener.Addr().String())
+	}
+	serverClient.Transport = transport
+
+	if _, err := checkOnline(context.Background(), root, catalog, serverClient, publicTestAuthorityResolver); err != nil {
+		t.Fatalf("CheckOnline(restricted source) error = %v", err)
+	}
+	if restrictedRequests != 1 {
+		t.Fatalf("restricted authority requests = %d, want 1", restrictedRequests)
+	}
+	restrictedStatus = http.StatusUnauthorized
+	if _, err := checkOnline(context.Background(), root, catalog, serverClient, publicTestAuthorityResolver); err == nil || !strings.Contains(err.Error(), "want 403") {
+		t.Fatalf("CheckOnline(changed restricted status) error = %v", err)
+	}
+}
+
 func TestFetchAuthorityRejectsRedirectOutsidePinnedHTTPSAuthority(t *testing.T) {
 	body := "redirected authority"
 	destination := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {

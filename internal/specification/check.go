@@ -160,11 +160,17 @@ func fetchAuthorityResolved(ctx context.Context, client *http.Client, resolver a
 	if closeErr != nil {
 		return fmt.Errorf("close specification authority %q: %w", item.ID, closeErr)
 	}
-	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
-		return fmt.Errorf("specification authority %q returned HTTP %d", item.ID, response.StatusCode)
-	}
 	if len(body) > maximumAuthoritySize {
 		return fmt.Errorf("specification authority %q exceeds maximum size", item.ID)
+	}
+	if item.Access == "restricted" {
+		if response.StatusCode != item.ExpectedStatus {
+			return fmt.Errorf("restricted specification authority %q returned HTTP %d, want %d", item.ID, response.StatusCode, item.ExpectedStatus)
+		}
+		return nil
+	}
+	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("specification authority %q returned HTTP %d", item.ID, response.StatusCode)
 	}
 	digest := fmt.Sprintf("%x", sha256.Sum256(body))
 	if digest != item.SHA256 {
@@ -457,6 +463,7 @@ type decision struct {
 	FixtureEvidence           []string `json:"fixture_evidence"`
 	FuzzEvidence              []string `json:"fuzz_evidence"`
 	InteroperabilityEvidence  []string `json:"interoperability_evidence"`
+	DifferentialEvidence      []string `json:"differential_evidence,omitempty"`
 	PublicAPIs                []string `json:"public_apis"`
 	Documentation             []string `json:"documentation"`
 	UpstreamStatus            string   `json:"upstream_status"`
@@ -470,14 +477,16 @@ type conformanceManifest struct {
 }
 
 type conformanceDecision struct {
-	ID                         string   `json:"id"`
-	AuthoritativeSources       []string `json:"authoritative_sources"`
-	ExecutableEvidence         []string `json:"executable_evidence"`
-	Fixtures                   []string `json:"fixtures"`
-	Fuzz                       []string `json:"fuzz"`
-	DifferentialEvidence       []string `json:"differential_evidence"`
-	DifferentialClassification string   `json:"differential_classification"`
-	PublicBehavior             []string `json:"public_behavior"`
+	ID                             string   `json:"id"`
+	AuthoritativeSources           []string `json:"authoritative_sources"`
+	ExecutableEvidence             []string `json:"executable_evidence"`
+	Fixtures                       []string `json:"fixtures"`
+	Fuzz                           []string `json:"fuzz"`
+	InteroperabilityEvidence       []string `json:"interoperability_evidence,omitempty"`
+	InteroperabilityClassification string   `json:"interoperability_classification,omitempty"`
+	DifferentialEvidence           []string `json:"differential_evidence"`
+	DifferentialClassification     string   `json:"differential_classification"`
+	PublicBehavior                 []string `json:"public_behavior"`
 }
 
 var allowedClassifications = map[string]struct{}{
@@ -498,7 +507,11 @@ var allowedRequirementStrengths = map[string]struct{}{
 
 var allowedDifferentialClassifications = map[string]struct{}{
 	"local defect": {}, "peer defect": {}, "fixture defect": {}, "harness defect": {},
-	"specification ambiguity": {}, "deliberate policy difference": {},
+	"specification ambiguity": {}, "deliberate policy difference": {}, "maintained peer agreement": {},
+}
+
+var allowedInteroperabilityClassifications = map[string]struct{}{
+	"official fixture agreement": {}, "provider agreement": {},
 }
 
 func loadDecisions(data []byte) (decisionManifest, error) {
@@ -772,7 +785,7 @@ func validateMarkdownDecision(item decision, source authority, body string) erro
 		item.SelectedBehavior, item.Rationale, item.SecurityConsequences, item.ResourceConsequences,
 		item.CompatibilityConsequences, item.WireConsequences, item.UpstreamStatus, item.ReconsiderWhen}
 	for _, list := range [][]string{item.Interpretations, item.ExecutableEvidence, item.FixtureEvidence, item.FuzzEvidence,
-		item.InteroperabilityEvidence, item.PublicAPIs, item.Documentation} {
+		item.InteroperabilityEvidence, item.DifferentialEvidence, item.PublicAPIs, item.Documentation} {
 		values = append(values, list...)
 	}
 	for _, value := range values {
@@ -949,6 +962,7 @@ func validateDecision(root string, module inventory.Module, modules []inventory.
 	for name, values := range map[string][]string{
 		"executable_evidence": item.ExecutableEvidence, "fixture_evidence": item.FixtureEvidence,
 		"fuzz_evidence": item.FuzzEvidence, "interoperability_evidence": item.InteroperabilityEvidence,
+		"differential_evidence": item.DifferentialEvidence,
 	} {
 		if err := validateOptionalTextList(item.ID, name, values); err != nil {
 			return err
@@ -975,6 +989,7 @@ func validateDecision(root string, module inventory.Module, modules []inventory.
 	}
 	for name, paths := range map[string][]string{
 		"fixture evidence": item.FixtureEvidence, "interoperability evidence": item.InteroperabilityEvidence,
+		"differential evidence": item.DifferentialEvidence,
 	} {
 		var err error
 		if item.Status == "superseded" {
@@ -1032,7 +1047,8 @@ func validateConformance(item decision, row conformanceDecision, authorities map
 	}
 	for name, values := range map[string][]string{
 		"executable_evidence": row.ExecutableEvidence, "fixtures": row.Fixtures,
-		"fuzz": row.Fuzz, "differential_evidence": row.DifferentialEvidence,
+		"fuzz": row.Fuzz, "interoperability_evidence": row.InteroperabilityEvidence,
+		"differential_evidence": row.DifferentialEvidence,
 	} {
 		if err := validateOptionalTextList(item.ID, "conformance "+name, values); err != nil {
 			return err
@@ -1050,14 +1066,35 @@ func validateConformance(item decision, row conformanceDecision, authorities map
 			return fmt.Errorf("conformance decision %q primary authoritative source %q does not cover %q", item.ID, identifier, item.Specification)
 		}
 	}
+	expectedInteroperability := item.InteroperabilityEvidence
+	expectedDifferential := item.DifferentialEvidence
+	if len(row.InteroperabilityEvidence) == 0 && len(expectedDifferential) == 0 {
+		// Preserve compatibility with schema v1 records that used the generic
+		// decision field for maintained-peer differential evidence.
+		expectedInteroperability = nil
+		expectedDifferential = item.InteroperabilityEvidence
+	}
 	for name, pair := range map[string][2][]string{
-		"executable evidence":   {item.ExecutableEvidence, row.ExecutableEvidence},
-		"fixtures":              {item.FixtureEvidence, row.Fixtures},
-		"fuzz evidence":         {item.FuzzEvidence, row.Fuzz},
-		"differential evidence": {item.InteroperabilityEvidence, row.DifferentialEvidence},
+		"executable evidence":       {item.ExecutableEvidence, row.ExecutableEvidence},
+		"fixtures":                  {item.FixtureEvidence, row.Fixtures},
+		"fuzz evidence":             {item.FuzzEvidence, row.Fuzz},
+		"interoperability evidence": {expectedInteroperability, row.InteroperabilityEvidence},
+		"differential evidence":     {expectedDifferential, row.DifferentialEvidence},
 	} {
 		if !sameStringSet(pair[0], pair[1]) {
 			return fmt.Errorf("conformance decision %q %s differ from decisions.json", item.ID, name)
+		}
+	}
+	switch {
+	case len(row.InteroperabilityEvidence) == 0:
+		if row.InteroperabilityClassification != "" && row.InteroperabilityClassification != "not assessed" {
+			return fmt.Errorf("conformance decision %q without interoperability evidence must be not assessed", item.ID)
+		}
+	case row.InteroperabilityClassification == "" || row.InteroperabilityClassification == "not assessed":
+		return fmt.Errorf("conformance decision %q with interoperability evidence must have an assessed classification", item.ID)
+	default:
+		if _, exists := allowedInteroperabilityClassifications[row.InteroperabilityClassification]; !exists {
+			return fmt.Errorf("conformance decision %q has invalid interoperability classification %q", item.ID, row.InteroperabilityClassification)
 		}
 	}
 	switch {
@@ -1156,12 +1193,15 @@ type monitoring struct {
 }
 
 type authority struct {
-	ID             string   `json:"id"`
-	Kind           string   `json:"kind"`
-	Version        string   `json:"version"`
-	URL            string   `json:"url"`
-	SHA256         string   `json:"sha256"`
-	Specifications []string `json:"specifications"`
+	ID                string   `json:"id"`
+	Kind              string   `json:"kind"`
+	Version           string   `json:"version"`
+	URL               string   `json:"url"`
+	SHA256            string   `json:"sha256,omitempty"`
+	Access            string   `json:"access,omitempty"`
+	ExpectedStatus    int      `json:"expected_status,omitempty"`
+	UnavailableReason string   `json:"unavailable_reason,omitempty"`
+	Specifications    []string `json:"specifications"`
 }
 
 func loadMonitoring(root, relative string, specifications []string, now time.Time) (monitoring, error) {
@@ -1215,8 +1255,8 @@ func loadMonitoring(root, relative string, specifications []string, now time.Tim
 		}
 		seen[item.ID] = struct{}{}
 		parsed, parseErr := url.Parse(item.URL)
-		if parseErr != nil || !validPinnedHTTPSURL(parsed) || !sha256Value.MatchString(item.SHA256) {
-			return monitoring{}, fmt.Errorf("specification authority %q is not an exact HTTPS pin", item.ID)
+		if parseErr != nil || !validPinnedHTTPSURL(parsed) {
+			return monitoring{}, fmt.Errorf("specification authority %q is not an exact HTTPS authority", item.ID)
 		}
 		isSource := false
 		isChange := false
@@ -1227,6 +1267,18 @@ func loadMonitoring(root, relative string, specifications []string, now time.Tim
 			isSource = true
 		default:
 			return monitoring{}, fmt.Errorf("specification authority %q has unsupported kind %q", item.ID, item.Kind)
+		}
+		switch item.Access {
+		case "", "public":
+			if !sha256Value.MatchString(item.SHA256) || item.ExpectedStatus != 0 || strings.TrimSpace(item.UnavailableReason) != "" {
+				return monitoring{}, fmt.Errorf("public specification authority %q is not an exact content pin", item.ID)
+			}
+		case "restricted":
+			if !isSource || item.SHA256 != "" || !restrictedAuthorityStatus(item.ExpectedStatus) || strings.TrimSpace(item.UnavailableReason) == "" {
+				return monitoring{}, fmt.Errorf("restricted specification authority %q must be a source with no content digest, a pinned denial status, and an unavailable reason", item.ID)
+			}
+		default:
+			return monitoring{}, fmt.Errorf("specification authority %q has unsupported access %q", item.ID, item.Access)
 		}
 		if isSource && strings.TrimSpace(item.Version) == "" {
 			return monitoring{}, fmt.Errorf("specification source authority %q has no exact version", item.ID)
@@ -1255,6 +1307,10 @@ func loadMonitoring(root, relative string, specifications []string, now time.Tim
 		}
 	}
 	return policy, nil
+}
+
+func restrictedAuthorityStatus(status int) bool {
+	return status == http.StatusUnauthorized || status == http.StatusForbidden || status == http.StatusUnavailableForLegalReasons
 }
 
 func validateProvenance(root string, module inventory.Module, modules []inventory.Module) error {

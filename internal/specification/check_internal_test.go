@@ -211,6 +211,40 @@ func TestLoadMonitoringRejectsInvalidPolicies(t *testing.T) {
 	}
 }
 
+func TestLoadMonitoringAcceptsRestrictedSourceWithoutContentDigest(t *testing.T) {
+	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
+	policy := `{"schema_version":1,"reviewed_at":"2026-08-30","review_interval_days":90,"authorities":[{"id":"iso-source","kind":"specification","version":"ISO/IEC 18004:2024 edition 4","url":"https://www.iso.org/standard/83389.html","access":"restricted","expected_status":403,"unavailable_reason":"The licensed normative publication is not publicly retrievable; the ISO catalogue identifies the exact edition.","specifications":["ISO/IEC 18004:2024 QR Code"]},{"id":"iso-releases","kind":"releases","url":"https://example.com/iso-18004-releases","sha256":"` + strings.Repeat("b", 64) + `","specifications":["ISO/IEC 18004:2024 QR Code"]}]}`
+	root := t.TempDir()
+	write(t, filepath.Join(root, "specification/monitoring.json"), policy)
+
+	if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now); err != nil {
+		t.Fatalf("loadMonitoring(restricted source) error = %v", err)
+	}
+}
+
+func TestLoadMonitoringRejectsUntruthfulRestrictedSource(t *testing.T) {
+	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
+	digest := strings.Repeat("a", 64)
+	valid := `{"schema_version":1,"reviewed_at":"2026-08-30","review_interval_days":90,"authorities":[{"id":"source","kind":"specification","version":"ISO/IEC 18004:2024 edition 4","url":"https://www.iso.org/standard/83389.html","access":"restricted","expected_status":403,"unavailable_reason":"The licensed normative publication is not publicly retrievable.","specifications":["ISO/IEC 18004:2024 QR Code"]},{"id":"releases","kind":"releases","url":"https://example.com/releases","sha256":"` + digest + `","specifications":["ISO/IEC 18004:2024 QR Code"]}]}`
+	tests := map[string]string{
+		"content digest":     strings.Replace(valid, `"access":"restricted"`, `"sha256":"`+digest+`","access":"restricted"`, 1),
+		"missing reason":     strings.Replace(valid, `,"unavailable_reason":"The licensed normative publication is not publicly retrievable."`, "", 1),
+		"missing status":     strings.Replace(valid, `,"expected_status":403`, "", 1),
+		"success status":     strings.Replace(valid, `"expected_status":403`, `"expected_status":200`, 1),
+		"unsupported access": strings.Replace(valid, `"access":"restricted"`, `"access":"private"`, 1),
+		"change authority":   strings.Replace(valid, `"kind":"releases"`, `"kind":"releases","access":"restricted","unavailable_reason":"Unavailable."`, 1),
+	}
+	for name, content := range tests {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			write(t, filepath.Join(root, "specification/monitoring.json"), content)
+			if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now); err == nil {
+				t.Fatal("loadMonitoring() error = nil")
+			}
+		})
+	}
+}
+
 func TestLoadMonitoringRejectsUnboundedAuthoritySet(t *testing.T) {
 	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
 	items := make([]string, 0, 66)

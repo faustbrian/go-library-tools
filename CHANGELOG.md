@@ -6,6 +6,13 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Added truthful restricted-source monitoring for licensed normative
+  publications whose exact edition can be identified but whose content cannot
+  be publicly retrieved or hashed, while retaining bounded denial-status probes
+  and content-pinned public change monitoring.
+- Separated official-fixture and provider interoperability evidence from
+  maintained-peer differential results so each claim retains its actual proof
+  boundary.
 - Added a shared specification-decision contract that discovers
   specification-backed modules; validates strict decision, conformance,
   provenance, documentation, and change-control records; blocks unresolved
