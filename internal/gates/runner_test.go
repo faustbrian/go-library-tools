@@ -121,8 +121,9 @@ func TestCheckRunsLaterTypedOperationWhenEarlierGateIsAbsent(t *testing.T) {
 func TestCheckRequiresExactProductionCoverage(t *testing.T) {
 	root := fixture(t)
 	executor := &recordingExecutor{coverageProfiles: map[string]string{
-		"github.com/acme/example":        "mode: atomic\ngithub.com/acme/example/file.go:1.1,2.1 1 1\n",
-		"github.com/acme/example/memory": "mode: atomic\ngithub.com/acme/example/memory/file.go:1.1,2.1 1 1\n",
+		"github.com/acme/example,github.com/acme/example/memory": "mode: atomic\n" +
+			"github.com/acme/example/file.go:1.1,2.1 1 1\n" +
+			"github.com/acme/example/memory/file.go:1.1,2.1 1 1\n",
 	}}
 	var output bytes.Buffer
 	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{
@@ -143,18 +144,18 @@ func TestCheckRequiresExactProductionCoverage(t *testing.T) {
 			coverageCommands = append(coverageCommands, command)
 		}
 	}
-	if len(coverageCommands) != 2 ||
-		!strings.Contains(coverageCommands[0], " -tags=integration . -count=1") ||
-		!strings.Contains(coverageCommands[0], "-coverpkg=github.com/acme/example ") ||
-		!strings.Contains(coverageCommands[1], " -tags=integration ./memory -count=1") ||
-		!strings.Contains(coverageCommands[1], "-coverpkg=github.com/acme/example/memory ") {
+	if len(coverageCommands) != 1 ||
+		!strings.Contains(coverageCommands[0], " -tags=integration ./... -count=1") ||
+		!strings.Contains(coverageCommands[0], "-coverpkg=github.com/acme/example,github.com/acme/example/memory ") {
 		t.Fatalf("coverage commands = %#v", coverageCommands)
 	}
 	if !strings.Contains(output.String(), "all production packages have exact 100% statement coverage") {
 		t.Fatalf("coverage output = %q", output.String())
 	}
 
-	executor.coverageProfiles["github.com/acme/example"] = "mode: atomic\ngithub.com/acme/example/file.go:1.1,2.1 1 0\n"
+	executor.coverageProfiles["github.com/acme/example,github.com/acme/example/memory"] = "mode: atomic\n" +
+		"github.com/acme/example/file.go:1.1,2.1 1 0\n" +
+		"github.com/acme/example/memory/file.go:1.1,2.1 1 1\n"
 	if err := runner.Check(context.Background(), []string{"."}); err == nil {
 		t.Fatal("Check() uncovered error = nil")
 	}
