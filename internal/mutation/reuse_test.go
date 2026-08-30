@@ -39,6 +39,33 @@ func TestReuseValidatesExactPackageEvidence(t *testing.T) {
 	}
 }
 
+func TestReuseAcceptsTheExactLegacyReportDigest(t *testing.T) {
+	root := t.TempDir()
+	evidenceRoot := filepath.Join(root, ".verification")
+	mutationRoot := filepath.Join(evidenceRoot, "mutation")
+	if err := os.MkdirAll(mutationRoot, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	input := "sha256:" + strings.Repeat("9", 64)
+	report := []byte(`{"elapsed_time":1,"files":[]}`)
+	if _, _, _, err := mutation.StoreReport(mutationRoot, input, report); err != nil {
+		t.Fatal(err)
+	}
+	record := evidence.Record{
+		SchemaVersion: evidence.SchemaVersion, Repository: "example", Module: ".", Package: ".",
+		Gate: "mutation", InputDigest: input, VerifierDigest: mutation.SemanticVerifierDigest(), Result: "passed",
+		ReportDigest: "sha256:e8091387ea1e4cc0805a2b33c6f6897feaa858a7b1d411233762dbc2a9f7c844",
+		CompletedAt:  time.Unix(1, 0).UTC(),
+	}
+	if _, _, err := evidence.Store(evidenceRoot, record); err != nil {
+		t.Fatal(err)
+	}
+	reused, result, err := mutation.Reuse(evidenceRoot, mutationRoot, "example", ".", ".", input)
+	if err != nil || !reused || result.Mutants != 0 {
+		t.Fatalf("Reuse(legacy digest) = %v, %#v, %v", reused, result, err)
+	}
+}
+
 func TestReuseTreatsOnlyAbsentEvidenceAsMiss(t *testing.T) {
 	root := t.TempDir()
 	evidenceRoot := filepath.Join(root, ".verification")

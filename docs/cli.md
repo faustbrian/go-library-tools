@@ -14,6 +14,10 @@ Core commands:
 - `golib consumers validate [--json]` validates the maintained consumer
   inventory and reports active, deferred, and tooling repository counts.
 - `golib repository check` validates standalone repository structure.
+- `golib specification check [--online]` discovers specification-backed
+  modules, validates each module's decision register, conformance matrix,
+  module-owned source pins and executable evidence, and optionally verifies
+  monitored errata and release feeds against their reviewed digests.
 - `golib workflows check` validates GitHub Actions workflows with the centrally
   pinned Actionlint release.
 - `golib check [--all|--module DIR]` runs the enabled contract. Formatting is

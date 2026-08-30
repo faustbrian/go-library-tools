@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added a shared specification-decision contract that discovers
+  specification-backed modules; validates strict decision, conformance,
+  provenance, documentation, and change-control records; blocks unresolved
+  release policy; and detects changed authoritative errata or release feeds in
+  reusable CI. Conformance records distinguish authoritative sources from
+  optional evidence lanes, record unassessed differential work honestly, and
+  preserve superseded evidence without requiring retired artifacts to remain.
+
 ### Fixed
 
 - Preserved production-specific exact-coverage denominators while allowing the

@@ -324,6 +324,14 @@ func TestCanonicalReportDigestIgnoresJSONFormatting(t *testing.T) {
 	}
 }
 
+func TestCanonicalReportDigestOrdersEveryMutationIdentityField(t *testing.T) {
+	left := canonicalReportDigest([]byte(`{"files":[{"file_name":"source.go","mutations":[{"type":"NEGATION","status":"SURVIVED","line":2,"column":1},{"type":"NEGATION","status":"KILLED","line":1,"column":2},{"type":"NEGATION","status":"KILLED","line":1,"column":1},{"type":"ARITHMETIC","status":"KILLED","line":1,"column":1}]}]}`))
+	right := canonicalReportDigest([]byte(`{"files":[{"file_name":"source.go","mutations":[{"type":"ARITHMETIC","status":"KILLED","line":1,"column":1},{"type":"NEGATION","status":"KILLED","line":1,"column":1},{"type":"NEGATION","status":"KILLED","line":1,"column":2},{"type":"NEGATION","status":"SURVIVED","line":2,"column":1}]}]}`))
+	if left != right {
+		t.Fatalf("canonicalReportDigest() = %q, %q", left, right)
+	}
+}
+
 func TestValidRelative(t *testing.T) {
 	for value, want := range map[string]bool{".": true, "nested/package": true, "": false, "/absolute": false, "../outside": false, "a/../b": false, `a\b`: false, "a\x00b": false} {
 		if got := validRelative(value); got != want {

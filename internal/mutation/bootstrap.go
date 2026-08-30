@@ -4,6 +4,7 @@ package mutation
 import (
 	"archive/zip"
 	"bytes"
+	"cmp"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -316,18 +317,58 @@ func validateReportData(data []byte) (ReportResult, error) {
 }
 
 func canonicalReportDigest(data []byte) string {
+	var value report
+	// validateCheckpoint has already strictly decoded this report.
+	_ = json.Unmarshal(data, &value)
+	value.ElapsedTime = nil
+	for index := range value.Files {
+		slices.SortFunc(value.Files[index].Mutations, func(left, right mutation) int {
+			if order := strings.Compare(left.Type, right.Type); order != 0 {
+				return order
+			}
+			if order := cmp.Compare(left.Line, right.Line); order != 0 {
+				return order
+			}
+			return cmp.Compare(left.Column, right.Column)
+		})
+	}
+	slices.SortFunc(value.Files, func(left, right reportFile) int {
+		return strings.Compare(left.FileName, right.FileName)
+	})
+	if len(value.MutatorStatistics) > 0 {
+		decoder := json.NewDecoder(bytes.NewReader(value.MutatorStatistics))
+		decoder.UseNumber()
+		var statistics any
+		_ = decoder.Decode(&statistics)
+		value.MutatorStatistics = canonicalJSON(statistics)
+	}
+	serialized, _ := json.Marshal(value)
+	decoder := json.NewDecoder(bytes.NewReader(serialized))
+	decoder.UseNumber()
+	var canonicalValue any
+	_ = decoder.Decode(&canonicalValue)
+	canonical := canonicalJSON(canonicalValue)
+	hash := sha256.Sum256(canonical)
+	return "sha256:" + hex.EncodeToString(hash[:])
+}
+
+func legacyCanonicalReportDigest(data []byte) string {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.UseNumber()
 	var value any
-	// validateCheckpoint has already strictly decoded this report.
 	_ = decoder.Decode(&value)
+	canonical := canonicalJSON(value)
+	hash := sha256.Sum256(canonical)
+	return "sha256:" + hex.EncodeToString(hash[:])
+}
+
+func canonicalJSON(value any) json.RawMessage {
 	var canonical bytes.Buffer
 	encoder := json.NewEncoder(&canonical)
 	encoder.SetEscapeHTML(false)
-	// Decoded JSON values contain only types supported by json.Encoder.
+	// Validated report values contain only types supported by json.Encoder.
 	_ = encoder.Encode(value)
-	hash := sha256.Sum256(canonical.Bytes())
-	return "sha256:" + hex.EncodeToString(hash[:])
+	return canonical.Bytes()
 }
 
 func decodeStrict(data []byte, destination any) error {
