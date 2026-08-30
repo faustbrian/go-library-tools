@@ -78,6 +78,44 @@ func TestCoverageUsesTaskWorkspace(t *testing.T) {
 	}
 }
 
+func TestCoverageCountsModuleTestsForEachProductionPackage(t *testing.T) {
+	root := t.TempDir()
+	child := filepath.Join(root, "child")
+	if err := os.Mkdir(child, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	files := map[string]string{
+		"go.mod":          "module example\n\ngo 1.26.0\n",
+		"example.go":      "package example\n\nfunc Value() int { return 1 }\n",
+		"example_test.go": "package example_test\n\nimport (\n\t\"testing\"\n\n\texample \"example\"\n\t\"example/child\"\n)\n\nfunc TestBehavior(t *testing.T) {\n\tif example.Value()+child.Value() != 3 {\n\t\tt.Fatal(\"unexpected value\")\n\t}\n}\n",
+		"child/child.go":  "package child\n\nfunc Value() int { return 2 }\n",
+	}
+	for name, content := range files {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	executor, cleanup, err := NewProcessExecutor(root, io.Discard, io.Discard)
+	if err != nil {
+		t.Fatalf("create process executor: %v", err)
+	}
+	t.Cleanup(func() {
+		if err := cleanup(); err != nil {
+			t.Errorf("clean process executor: %v", err)
+		}
+	})
+	module := inventory.Module{
+		Directory: ".",
+		Packages: []inventory.Package{
+			{Directory: ".", ImportPath: "example", CoverageRequired: true},
+			{Directory: "child", ImportPath: "example/child", CoverageRequired: true},
+		},
+	}
+	if err := (Runner{Executor: executor}).runCoverage(context.Background(), io.Discard, root, module); err != nil {
+		t.Fatalf("runCoverage() error = %v", err)
+	}
+}
+
 func TestCoverageRejectsModulesWithoutRequiredPackages(t *testing.T) {
 	runner := Runner{Executor: executorFunction(func(context.Context, Command) error {
 		t.Fatal("coverage command ran without a required package")

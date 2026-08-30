@@ -31,9 +31,10 @@ documentation gate runs the configured typed operation or a bounded Go example
 test when no module-specific operation is declared.
 
 Coverage is evaluated per production package and must be exactly 100%. The
-runner executes each required package's tests with coverage instrumentation
-scoped to that package, so unrelated test binaries cannot pollute its profile
-or denominator.
+runner instruments the exact production-package set once while executing the
+complete module test set. This keeps denominators production-specific while
+allowing integration and external-package tests to contribute only when they
+actually exercise a package.
 Mutation reports must account for every viable mutant and kill 100%; equivalent
 or unreachable cases require narrow reviewed records.
 

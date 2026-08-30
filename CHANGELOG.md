@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Preserved production-specific exact-coverage denominators while allowing the
+  complete module test set to contribute coverage in one run when integration
+  or external tests exercise a package.
+
 ## 1.0.13 - 2026-08-29
 
 ### Fixed
