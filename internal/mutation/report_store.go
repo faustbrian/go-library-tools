@@ -40,27 +40,31 @@ func (operatingReportFiles) ReadFile(path string) ([]byte, error) { return os.Re
 func (operatingReportFiles) Remove(path string) error             { return os.Remove(path) }
 
 // StoreReport validates and atomically publishes one immutable report by input.
-// The bool reports whether byte-identical report content already existed.
+// The bool reports whether semantically identical report content already existed.
 func StoreReport(root, inputDigest string, report []byte) (string, bool, ReportResult, error) {
-	return storeReport(operatingReportFiles{}, root, inputDigest, report)
+	path, reused, result, _, err := storeReport(operatingReportFiles{}, root, inputDigest, report)
+	return path, reused, result, err
 }
 
-func storeReport(files reportFileSystem, root, inputDigest string, report []byte) (string, bool, ReportResult, error) {
+func storeReport(files reportFileSystem, root, inputDigest string, report []byte) (string, bool, ReportResult, []byte, error) {
 	if !filepath.IsAbs(root) || !strings.HasPrefix(inputDigest, "sha256:") || !digestRE.MatchString(strings.TrimPrefix(inputDigest, "sha256:")) {
-		return "", false, ReportResult{}, fmt.Errorf("%w: report root or input digest is malformed", ErrInvalid)
+		return "", false, ReportResult{}, nil, fmt.Errorf("%w: report root or input digest is malformed", ErrInvalid)
 	}
 	result, err := ValidateReport(bytes.NewReader(report))
 	if err != nil {
-		return "", false, ReportResult{}, err
+		return "", false, ReportResult{}, nil, err
 	}
 	directory := filepath.Join(root, "reports")
 	if err := prepareReportDirectories(files, root, directory); err != nil {
-		return "", false, ReportResult{}, err
+		return "", false, ReportResult{}, nil, err
 	}
 	destination := filepath.Join(directory, strings.TrimPrefix(inputDigest, "sha256:")+".json")
 	temporary, err := files.CreateTemp(directory, ".report-*")
 	if err != nil {
-		return "", false, ReportResult{}, fmt.Errorf("create temporary mutation report: %w", err)
+		return "", false, ReportResult{}, nil, fmt.Errorf("create temporary mutation report: %w", err)
+	}
+	if temporary == nil {
+		return "", false, ReportResult{}, nil, fmt.Errorf("%w: create temporary mutation report returned no file", ErrInvalid)
 	}
 	temporaryPath := temporary.Name()
 	defer func() { _ = files.Remove(temporaryPath) }()
@@ -71,22 +75,22 @@ func storeReport(files reportFileSystem, root, inputDigest string, report []byte
 		err = closeErr
 	}
 	if err != nil {
-		return "", false, ReportResult{}, fmt.Errorf("write mutation report: %w", err)
+		return "", false, ReportResult{}, nil, fmt.Errorf("write mutation report: %w", err)
 	}
 	if err := files.Link(temporaryPath, destination); err == nil {
-		return destination, false, result, nil
+		return destination, false, result, report, nil
 	} else if !errors.Is(err, os.ErrExist) {
-		return "", false, ReportResult{}, fmt.Errorf("publish mutation report: %w", err)
+		return "", false, ReportResult{}, nil, fmt.Errorf("publish mutation report: %w", err)
 	}
 	existing, err := files.ReadFile(destination)
 	if err != nil {
-		return "", false, ReportResult{}, fmt.Errorf("read existing mutation report: %w", err)
+		return "", false, ReportResult{}, nil, fmt.Errorf("read existing mutation report: %w", err)
 	}
 	existingResult, err := ValidateReport(bytes.NewReader(existing))
 	if err != nil || existingResult.Digest != result.Digest {
-		return "", false, ReportResult{}, fmt.Errorf("%w: mutation report already exists with different content", ErrInvalid)
+		return "", false, ReportResult{}, nil, fmt.Errorf("%w: mutation report already exists with different content", ErrInvalid)
 	}
-	return destination, true, existingResult, nil
+	return destination, true, existingResult, existing, nil
 }
 
 func prepareReportDirectories(files reportFileSystem, root, destination string) error {
@@ -97,6 +101,9 @@ func prepareReportDirectories(files reportFileSystem, root, destination string) 
 		info, err := files.Lstat(directory)
 		if err != nil {
 			return fmt.Errorf("inspect mutation report directory: %w", err)
+		}
+		if info == nil {
+			return fmt.Errorf("%w: inspect mutation report directory returned no metadata", ErrInvalid)
 		}
 		if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
 			return fmt.Errorf("%w: mutation report path is not a real directory", ErrInvalid)

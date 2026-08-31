@@ -48,6 +48,7 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 		"tooling_sha:",
 		"security-events: write",
 		"golib repository check",
+		"golib specification check --online",
 		"golib check --module",
 		"github/codeql-action/init@",
 		"github/codeql-action/analyze@",

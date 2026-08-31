@@ -178,7 +178,7 @@ func (ledger MigrationLedger) approve(checkpoint Checkpoint, currentInput, legac
 	for _, migration := range ledger.VerifierMigrations {
 		if migration.Module == checkpoint.Module && migration.Package == checkpoint.Package &&
 			migration.ExecutionRevision == checkpoint.ExecutionRevision && migration.GremlinsVersion == checkpoint.Gremlins &&
-			migration.GremlinsVerifierSHA256 == expectedVerifier && "sha256:"+migration.ReportSHA256 == checkpoint.ReportDigest &&
+			migration.GremlinsVerifierSHA256 == expectedVerifier && reportDigestApproved(checkpoint, migration.ReportSHA256) &&
 			contains(inputs, migration.GateInputDigest) {
 			verifierMatches++
 		}
@@ -208,11 +208,16 @@ func (ledger MigrationLedger) inputApproved(checkpoint Checkpoint, input, expect
 		if migration.Module == checkpoint.Module && migration.Package == checkpoint.Package &&
 			migration.ExecutionRevision == checkpoint.ExecutionRevision && migration.GateInputDigest == checkpoint.InputDigest &&
 			migration.ReplacementInputDigest == input && migration.GremlinsVersion == checkpoint.Gremlins &&
-			verifier == expectedVerifier && "sha256:"+migration.ReportSHA256 == checkpoint.ReportDigest {
+			verifier == expectedVerifier && reportDigestApproved(checkpoint, migration.ReportSHA256) {
 			inputMatches++
 		}
 	}
 	return inputMatches == 1
+}
+
+func reportDigestApproved(checkpoint Checkpoint, approved string) bool {
+	expected := "sha256:" + approved
+	return expected == checkpoint.ReportDigest || expected == legacyCanonicalReportDigest(checkpoint.Report)
 }
 
 func contains(values []string, expected string) bool {

@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 
@@ -18,6 +19,7 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/releasecheck"
 	"github.com/faustbrian/go-library-tools/internal/repository"
+	"github.com/faustbrian/go-library-tools/internal/specification"
 	"github.com/faustbrian/go-library-tools/internal/upgrade"
 )
 
@@ -31,6 +33,7 @@ Usage:
   golib inventory [--json]
 	golib consumers validate [--json]
   golib repository check
+  golib specification check [--online]
   golib workflows check
   golib coverage [--module <directory>]
   golib mutation [--module <directory>]
@@ -124,6 +127,22 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 			return failure(stderr, err)
 		}
 		_, _ = io.WriteString(stdout, "standalone repository contract passed\n")
+		return 0
+	case "specification":
+		if len(args) < 2 || len(args) > 3 || args[1] != "check" || (len(args) == 3 && args[2] != "--online") {
+			return usage(stderr, "usage: golib specification check [--online]")
+		}
+		var report specification.Report
+		var checkError error
+		if len(args) == 3 {
+			report, checkError = specification.CheckOnline(ctx, root, catalog, &http.Client{})
+		} else {
+			report, checkError = specification.Check(root, catalog)
+		}
+		if checkError != nil {
+			return failure(stderr, checkError)
+		}
+		_, _ = fmt.Fprintf(stdout, "specification decisions valid: %d module(s), %d decision(s)\n", report.Modules, report.Decisions)
 		return 0
 	case "workflows":
 		if len(args) != 2 || args[1] != "check" {

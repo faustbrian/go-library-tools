@@ -16,6 +16,11 @@ CLI, schema, workflow, evidence, or fixture changes require compatibility
 tests and corresponding documentation. New external dependencies require a
 maintenance, license, vulnerability, and supply-chain review.
 
+Specification-backed modules must follow the
+[specification decision contract](docs/specification-decisions.md), including
+its decision-register, conformance, compatibility, changelog, and pull-request
+review requirements.
+
 Do not add copied automation, arbitrary execution hooks, mutable action pins,
 permanent module replacements, machine-specific paths, bypass flags, or
 threshold exceptions.

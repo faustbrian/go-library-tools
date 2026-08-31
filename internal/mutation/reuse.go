@@ -25,11 +25,11 @@ func Reuse(evidenceRoot, mutationRoot, repository, module, pkg, inputDigest stri
 		record.Result != "passed" || record.VerifierDigest != SemanticVerifierDigest() {
 		return false, ReportResult{}, fmt.Errorf("%w: mutation evidence identity does not match requested package", ErrInvalid)
 	}
-	_, report, err := LoadReport(mutationRoot, inputDigest)
+	data, report, err := LoadReport(mutationRoot, inputDigest)
 	if err != nil {
 		return false, ReportResult{}, err
 	}
-	if report.Digest != record.ReportDigest {
+	if report.Digest != record.ReportDigest && legacyCanonicalReportDigest(data) != record.ReportDigest {
 		return false, ReportResult{}, fmt.Errorf("%w: mutation evidence report digest does not match", ErrInvalid)
 	}
 	return true, report, nil

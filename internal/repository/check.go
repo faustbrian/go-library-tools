@@ -11,6 +11,7 @@ import (
 
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/internal/specification"
 	"golang.org/x/mod/modfile"
 )
 
@@ -46,6 +47,9 @@ func Check(root string, catalog inventory.Inventory) error {
 		return err
 	}
 	if err := checkLegacy(root, os.Lstat); err != nil {
+		return err
+	}
+	if _, err := specification.Check(root, catalog); err != nil {
 		return err
 	}
 	return nil

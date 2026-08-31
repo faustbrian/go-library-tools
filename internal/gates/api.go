@@ -141,7 +141,7 @@ func (runner Runner) apiModule(ctx context.Context, output io.Writer, module inv
 	tool := "golang.org/x/exp/cmd/apidiff@" + compatibilityToolVersion
 	var report, diagnostics boundedBuffer
 	err = runner.Executor.Run(ctx, Command{
-		Name: "go", Dir: directory, Env: map[string]string{"GOWORK": "off"},
+		Name: "go", Dir: directory, Env: apiToolEnvironment(module),
 		Args:   []string{"run", tool, "-m", "-incompatible", baseline, temporaryPath},
 		Stdout: &report, Stderr: &diagnostics,
 	})
@@ -214,7 +214,7 @@ func (runner Runner) generateAPISnapshot(
 		}
 		tool := "golang.org/x/exp/cmd/apidiff@" + compatibilityToolVersion
 		if err := runner.Executor.Run(ctx, Command{
-			Name: "go", Dir: directory, Env: map[string]string{"GOWORK": "off"},
+			Name: "go", Dir: directory, Env: apiToolEnvironment(module),
 			Args: []string{"run", tool, "-m", "-w", temporaryPath, module.ModulePath},
 		}); err != nil {
 			return nil, fmt.Errorf("generate API snapshot for %s: %w", module.Directory, err)
@@ -225,7 +225,7 @@ func (runner Runner) generateAPISnapshot(
 	var snapshot boundedBuffer
 	for _, packagePattern := range policy.Packages {
 		if err := runner.Executor.Run(ctx, Command{
-			Name: "go", Dir: directory, Env: map[string]string{"GOWORK": "off"},
+			Name: "go", Dir: directory, Env: apiToolEnvironment(module),
 			Args: []string{"doc", "-all", packagePattern}, Stdout: &snapshot,
 		}); err != nil {
 			_ = temporary.Close()
@@ -254,4 +254,11 @@ func (runner Runner) generateAPISnapshot(
 		return nil, fmt.Errorf("close API snapshot: %w", err)
 	}
 	return documentation, nil
+}
+
+func apiToolEnvironment(module inventory.Module) map[string]string {
+	return map[string]string{
+		"GOTOOLCHAIN": "go" + module.GoVersion,
+		"GOWORK":      "off",
+	}
 }

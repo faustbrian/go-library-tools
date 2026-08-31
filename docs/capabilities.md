@@ -20,6 +20,7 @@ that owns them.
 | package Make targets for stress, leak, and lifecycle tests | typed `test` operations | test selectors and bounded repetition |
 | package Make targets for fuzzing | typed `fuzz` operations | target and budget |
 | package Make targets for conformance | typed `conformance` operations | conformance fixtures |
+| specification decision and source-pin scripts | `golib specification check` | decision register, conformance matrix, provenance, authority monitoring |
 | package Make targets for interoperability | typed `interoperability` operations | reference fixtures and runtimes |
 | package Make targets for benchmarks | typed `benchmark` operations | benchmark target and budget |
 | `check-documentation.sh` and npm tool manifests | native docs gate | Markdown and `cspell.json` |

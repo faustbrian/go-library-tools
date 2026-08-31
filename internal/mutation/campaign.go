@@ -158,7 +158,7 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			}
 			return fmt.Errorf("approve checkpoint %s %s: %w", checkpoint.Module, checkpoint.Package, err)
 		}
-		_, _, stored, err := StoreReport(campaign.MutationRoot, currentInput, checkpoint.Report)
+		_, _, stored, storedReport, err := storeReport(operatingReportFiles{}, campaign.MutationRoot, currentInput, checkpoint.Report)
 		if err != nil {
 			return err
 		}
@@ -175,6 +175,12 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			InputDigest: currentInput, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
 			ReportDigest: stored.Digest, CompletedAt: now().UTC(),
 			Environment: importedEnvironment(checkpoint.Environment),
+		}
+		existing, loadErr := evidence.Load(campaign.EvidenceRoot, "mutation", currentInput)
+		if loadErr == nil && existing.ReportDigest == legacyCanonicalReportDigest(storedReport) {
+			record.ReportDigest = existing.ReportDigest
+		} else if loadErr != nil && !errors.Is(loadErr, os.ErrNotExist) {
+			return loadErr
 		}
 		if _, _, err := evidence.Store(campaign.EvidenceRoot, record); err != nil {
 			return err
@@ -317,7 +323,11 @@ func (campaign Campaign) packageInput(ctx context.Context, packageDirectory stri
 }
 
 func (campaign Campaign) packageInputs(ctx context.Context, packageDirectory string) (*ZeroReview, string, string, error) {
-	source, err := SourceDigest(campaign.Root, campaign.Policy.ModuleDirectory, packageDirectory)
+	root, err := filepath.EvalSymlinks(campaign.Root)
+	if err != nil {
+		return nil, "", "", fmt.Errorf("%w: resolve repository root: %s", ErrInvalid, err.Error())
+	}
+	source, err := SourceDigest(root, campaign.Policy.ModuleDirectory, packageDirectory)
 	if err != nil {
 		return nil, "", "", err
 	}
@@ -334,15 +344,11 @@ func (campaign Campaign) packageInputs(ctx context.Context, packageDirectory str
 	arguments := []string{"list", "-deps", "-test", "-json"}
 	arguments = appendTagArgument(arguments, campaign.Policy.TestTags)
 	arguments = append(arguments, packageTarget(packageDirectory))
-	directory := filepath.Join(campaign.Root, filepath.FromSlash(campaign.Policy.ModuleDirectory))
+	directory := filepath.Join(root, filepath.FromSlash(campaign.Policy.ModuleDirectory))
 	if err := campaign.Process(ctx, "go", arguments, directory, campaign.commandEnvironment(), &listing, io.Discard); err != nil {
 		return nil, "", "", fmt.Errorf("list mutation input for %s: %w", packageDirectory, err)
 	}
-	current, err := InputDigest(campaign.Root, policy, strings.NewReader(listing.String()), review)
-	if err != nil {
-		return nil, "", "", err
-	}
-	legacy, err := legacyInputDigestV1(campaign.Root, policy, strings.NewReader(listing.String()), review)
+	current, legacy, err := inputDigests(root, policy, strings.NewReader(listing.String()), review, campaign.Root)
 	return review, current, legacy, err
 }
 
@@ -470,6 +476,9 @@ func ensureCampaignDirectory(files campaignDirectoryFileSystem, path string) err
 	info, err := files.Lstat(path)
 	if err != nil {
 		return err
+	}
+	if info == nil {
+		return fmt.Errorf("%w: inspect mutation campaign directory returned no metadata", ErrInvalid)
 	}
 	if !info.IsDir() {
 		return fmt.Errorf("%w: path is not a real directory", ErrInvalid)

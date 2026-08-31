@@ -99,6 +99,7 @@ jobs:
           persist-credentials: false
       - uses: ./.golib-tooling/.github/actions/setup-golib
       - run: golib repository check
+      - run: golib specification check --online
       - if: inputs.release_dry_run == true
         run: golib release check
 

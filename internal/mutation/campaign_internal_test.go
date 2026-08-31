@@ -1,6 +1,7 @@
 package mutation
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/faustbrian/go-library-tools/internal/evidence"
 )
@@ -16,6 +18,7 @@ func TestCampaignRejectsMalformedPolicyAndEscapingEvidence(t *testing.T) {
 	valid, _ := campaignFixture(t)
 	for name, mutate := range map[string]func(*Campaign){
 		"relative root":           func(value *Campaign) { value.Root = "." },
+		"missing root":            func(value *Campaign) { value.Root = filepath.Join(t.TempDir(), "missing") },
 		"relative evidence":       func(value *Campaign) { value.EvidenceRoot = ".verification" },
 		"relative mutation":       func(value *Campaign) { value.MutationRoot = ".verification/mutation" },
 		"relative workspace":      func(value *Campaign) { value.Workspace = ".task" },
@@ -79,6 +82,76 @@ func TestCampaignImportsApprovedLegacyCheckpoint(t *testing.T) {
 	}
 	if process.mutations != 0 {
 		t.Fatalf("Run() executed %d mutation campaigns after import", process.mutations)
+	}
+}
+
+func TestCampaignImportReusesApprovedLegacyEvidenceReportIdentity(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	_, currentInput, err := campaign.packageInput(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoint, ledger := approvedImportFixture(t, currentInput)
+	storedReport := bytes.Replace(checkpoint.Report, []byte(`"elapsed_time":1`), []byte(`"elapsed_time":2`), 1)
+	if canonicalReportDigest(storedReport) != checkpoint.ReportDigest {
+		t.Fatal("fixture changed the semantic report identity")
+	}
+	if err := campaign.prepareDirectories(); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := StoreReport(campaign.MutationRoot, currentInput, storedReport); err != nil {
+		t.Fatal(err)
+	}
+	legacyReportDigest := legacyCanonicalReportDigest(storedReport)
+	if legacyReportDigest == checkpoint.ReportDigest {
+		t.Fatal("fixture does not exercise the report identity transition")
+	}
+	record := evidence.Record{
+		SchemaVersion: evidence.SchemaVersion, Repository: campaign.Policy.Repository,
+		Module: campaign.Policy.ModuleDirectory, Package: checkpoint.Package, Gate: "mutation",
+		InputDigest: currentInput, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
+		ReportDigest: legacyReportDigest, CompletedAt: time.Unix(1, 0).UTC(),
+		Environment: importedEnvironment(checkpoint.Environment),
+	}
+	if _, _, err := evidence.Store(campaign.EvidenceRoot, record); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := campaign.Import(context.Background(), []Checkpoint{checkpoint}, ledger); err != nil {
+		t.Fatalf("Import() error = %v", err)
+	}
+	loaded, err := evidence.Load(campaign.EvidenceRoot, "mutation", currentInput)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.ReportDigest != legacyReportDigest {
+		t.Fatalf("stored report digest = %s, want approved legacy identity %s", loaded.ReportDigest, legacyReportDigest)
+	}
+	reused, _, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", ".", currentInput)
+	if err != nil || !reused {
+		t.Fatalf("Reuse() = %v, %v", reused, err)
+	}
+}
+
+func TestCampaignImportRejectsUnapprovedExistingReportIdentity(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	_, currentInput, err := campaign.packageInput(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoint, ledger := approvedImportFixture(t, currentInput)
+	record := evidence.Record{
+		SchemaVersion: evidence.SchemaVersion, Repository: campaign.Policy.Repository,
+		Module: campaign.Policy.ModuleDirectory, Package: checkpoint.Package, Gate: "mutation",
+		InputDigest: currentInput, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
+		ReportDigest: "sha256:" + strings.Repeat("b", 64), CompletedAt: time.Unix(1, 0).UTC(),
+		Environment: importedEnvironment(checkpoint.Environment),
+	}
+	if _, _, err := evidence.Store(campaign.EvidenceRoot, record); err != nil {
+		t.Fatal(err)
+	}
+	if err := campaign.Import(context.Background(), []Checkpoint{checkpoint}, ledger); !errors.Is(err, evidence.ErrConflict) {
+		t.Fatalf("Import() error = %v, want evidence conflict", err)
 	}
 }
 
@@ -333,7 +406,7 @@ func TestCampaignRejectsUnapprovedOrMismatchedImports(t *testing.T) {
 
 func approvedImportFixture(t *testing.T, currentInput string) (Checkpoint, MigrationLedger) {
 	t.Helper()
-	report := []byte(`{"files":[{"file_name":"source.go","mutations":[{"type":"NEGATION","status":"KILLED","line":3,"column":1}]}]}`)
+	report := []byte(`{"elapsed_time":1,"files":[{"file_name":"source.go","mutations":[{"type":"NEGATION","status":"KILLED","line":3,"column":1}]}]}`)
 	result, err := ValidateReport(strings.NewReader(string(report)))
 	if err != nil {
 		t.Fatal(err)
@@ -548,6 +621,61 @@ func TestCampaignAcceptsReviewedZeroReportAndDefaultOutputClock(t *testing.T) {
 	}
 }
 
+func TestPackageInputsPinsRepositoryRootBeforeListing(t *testing.T) {
+	original := t.TempDir()
+	replacement := t.TempDir()
+	writeMutationInput(t, original, "source.go", "package example\n\nfunc Value() int { return 1 }\n")
+	writeMutationInput(t, replacement, "source.go", "package example\n\nfunc Value() int { return 2 }\n")
+	alias := filepath.Join(t.TempDir(), "repository")
+	if err := os.Symlink(original, alias); err != nil {
+		t.Fatal(err)
+	}
+	policy := InputPolicy{
+		ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.27.0",
+		ServiceIdentities: map[string]string{},
+	}
+	listing := func(directory string) string {
+		return `{"Dir":"` + directory + `","ImportPath":"example","GoFiles":["source.go"],"Module":{"Path":"example","Main":true,"GoVersion":"1.27.0"}}`
+	}
+	wantCurrent, err := InputDigest(original, policy, strings.NewReader(listing(original)), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantLegacy, err := legacyInputDigestV1(original, policy, strings.NewReader(listing(original)), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	campaign, _ := campaignFixture(t)
+	campaign.Root = alias
+	campaign.Process = func(_ context.Context, name string, args []string, directory string, _ map[string]string, stdout, _ io.Writer) error {
+		if name != "go" || len(args) == 0 || args[0] != "list" {
+			return errors.New("unexpected process invocation")
+		}
+		if _, err := io.WriteString(stdout, listing(directory)); err != nil {
+			return err
+		}
+		if err := os.Remove(alias); err != nil {
+			return err
+		}
+		return os.Symlink(replacement, alias)
+	}
+	_, current, legacy, err := campaign.packageInputs(context.Background(), ".")
+	if err != nil {
+		t.Fatalf("packageInputs() error = %v", err)
+	}
+	if current != wantCurrent || legacy != wantLegacy {
+		t.Fatalf("packageInputs() = %s, %s; want original snapshot %s, %s", current, legacy, wantCurrent, wantLegacy)
+	}
+}
+
+func TestPackageInputsRejectsUnresolvableRepositoryRoot(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	campaign.Root = filepath.Join(t.TempDir(), "missing")
+	if _, _, _, err := campaign.packageInputs(context.Background(), "."); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("packageInputs() error = %v, want ErrInvalid", err)
+	}
+}
+
 func TestRunPackageReportsArgumentAndCorruptReuseFailures(t *testing.T) {
 	campaign, _ := campaignFixture(t)
 	campaign.Policy.Workers = 0
@@ -586,12 +714,25 @@ func TestCampaignDirectoryPreparationReportsInspectionFailure(t *testing.T) {
 	}
 }
 
+func TestCampaignDirectoryPreparationRejectsMissingMetadata(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	campaign.directoryFiles = nilCampaignDirectories{}
+	if err := campaign.Run(context.Background()); err == nil || !strings.Contains(err.Error(), "inspect mutation campaign directory") {
+		t.Fatalf("Run(missing directory metadata) error = %v", err)
+	}
+}
+
 type failingCampaignDirectories struct{}
 
 func (failingCampaignDirectories) MkdirAll(string, os.FileMode) error { return nil }
 func (failingCampaignDirectories) Lstat(string) (os.FileInfo, error) {
 	return nil, errors.New("inspect failed")
 }
+
+type nilCampaignDirectories struct{}
+
+func (nilCampaignDirectories) MkdirAll(string, os.FileMode) error { return nil }
+func (nilCampaignDirectories) Lstat(string) (os.FileInfo, error)  { return nil, nil }
 
 func campaignFixture(t *testing.T) (Campaign, *campaignProcess) {
 	t.Helper()

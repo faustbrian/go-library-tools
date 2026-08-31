@@ -47,6 +47,16 @@ operations:
         budget: 100x
         timeout: 2m
       - type: go-test
+        packages: [./internal/specification]
+        fuzz: FuzzDecisionManifests
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/specification]
+        fuzz: FuzzSourceManifest
+        budget: 100x
+        timeout: 2m
+      - type: go-test
         packages: [./internal/services]
         fuzz: FuzzServiceLock
         budget: 100x

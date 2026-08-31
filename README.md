@@ -6,7 +6,7 @@ task-owned environments, preserves content-addressed verification evidence,
 and owns generic service fixtures without copying automation into every
 repository.
 
-The current stable release is `v1.1.0`. Consumer repositories must use
+The current stable release is `v1.2.0`. Consumer repositories must use
 checksum-verified release binaries and immutable workflow references.
 
 ## Quick Start
@@ -29,6 +29,8 @@ package facts in `packages.json`, and source-specific evidence under
 - no shell evaluation of repository configuration;
 - evidence keyed by behavior-affecting content rather than Git history;
 - strict schemas, deterministic ordering, bounded input, and fail-closed gates;
+- auditable specification decisions with executable evidence and monitored
+  authoritative errata or release feeds;
 - immutable release and GitHub Actions consumption.
 
 Start with the [documentation index](docs/README.md). See

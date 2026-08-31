@@ -172,6 +172,18 @@
     },
     {
       "module_directory": ".",
+      "directory": "internal/specification",
+      "name": "specification",
+      "import_path": "github.com/faustbrian/go-library-tools/internal/specification",
+      "kind": "internal",
+      "production": true,
+      "executable": true,
+      "coverage_required": true,
+      "build_required": true,
+      "build_tags": []
+    },
+    {
+      "module_directory": ".",
       "directory": "internal/services",
       "name": "services",
       "import_path": "github.com/faustbrian/go-library-tools/internal/services",

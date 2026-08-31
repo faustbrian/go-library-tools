@@ -59,6 +59,31 @@ func TestAPIModuleUsesTaskWorkspaceAndReportsDiagnostics(t *testing.T) {
 	}
 }
 
+func TestAPIModulePinsDeclaredGoToolchain(t *testing.T) {
+	files := &fakeAPIFiles{file: &fakeNamedFile{name: "snapshot"}}
+	var commands []Command
+	runner := Runner{
+		Root: "/repo",
+		Executor: workspaceExecutor{directory: "/task", run: func(_ context.Context, command Command) error {
+			commands = append(commands, command)
+			return nil
+		}},
+		apiFiles: files,
+	}
+	module := inventory.Module{Directory: ".", ModulePath: "example", GoVersion: "1.26.6"}
+	if err := runner.apiModule(context.Background(), io.Discard, module, false); err != nil {
+		t.Fatalf("apiModule() error = %v", err)
+	}
+	if len(commands) != 2 {
+		t.Fatalf("API command count = %d, want 2", len(commands))
+	}
+	for index, command := range commands {
+		if got := command.Env["GOTOOLCHAIN"]; got != "go1.26.6" {
+			t.Errorf("command %d GOTOOLCHAIN = %q, want go1.26.6", index, got)
+		}
+	}
+}
+
 func TestAPIModuleRejectsUnboundedVerifierOutput(t *testing.T) {
 	files := &fakeAPIFiles{file: &fakeNamedFile{name: "snapshot"}}
 	executor := workspaceExecutor{directory: "/task", run: func(_ context.Context, command Command) error {
@@ -178,6 +203,22 @@ func TestGoDocAPISnapshotReportsGenerationFailures(t *testing.T) {
 				t.Fatalf("generateAPISnapshot() error = %v", err)
 			}
 		})
+	}
+}
+
+func TestGoDocAPISnapshotPinsDeclaredGoToolchain(t *testing.T) {
+	file := &fakeNamedFile{name: "snapshot"}
+	runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
+		if got := command.Env["GOTOOLCHAIN"]; got != "go1.26.6" {
+			t.Fatalf("GOTOOLCHAIN = %q, want go1.26.6", got)
+		}
+		_, _ = io.WriteString(command.Stdout, "API")
+		return nil
+	})}
+	module := inventory.Module{Directory: ".", ModulePath: "example", GoVersion: "1.26.6"}
+	if _, err := runner.generateAPISnapshot(context.Background(), "/repo", file, file.name, module,
+		config.APIBaseline{Mode: "go-doc", Packages: []string{"."}}); err != nil {
+		t.Fatalf("generateAPISnapshot() error = %v", err)
 	}
 }
 

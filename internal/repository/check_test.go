@@ -1,11 +1,16 @@
 package repository_test
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/faustbrian/go-library-tools/internal/inventory"
 	"github.com/faustbrian/go-library-tools/internal/repository"
@@ -40,6 +45,111 @@ func TestCheckAcceptsUnreleasableFixtureOutsideRepositoryNamespace(t *testing.T)
 	if err := repository.Check(root, catalog); err != nil {
 		t.Fatalf("Check() fixture module error = %v", err)
 	}
+}
+
+func TestCheckRequiresSpecificationEvidenceForSpecificationBackedModule(t *testing.T) {
+	root, catalog := fixture(t)
+	catalog.Modules[0].Specifications = []string{"RFC 9110"}
+	catalog.Modules[0].Provenance = []byte(`["specification/manifest.tsv"]`)
+	write(t, filepath.Join(root, "specification", "manifest.tsv"), "id\tversion\tsections\trole\turl\tsha256\tstatus\n"+
+		"rfc9110\tRFC-9110\t7.1\tHTTP\thttps://www.rfc-editor.org/rfc/rfc9110.txt\t21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a\tpinned\n")
+	write(t, filepath.Join(root, "specification", "monitoring.json"), `{"schema_version":1,"reviewed_at":"`+time.Now().UTC().Format("2006-01-02")+`","review_interval_days":90,"authorities":[{"id":"source","kind":"specification","version":"RFC 9110","url":"https://www.rfc-editor.org/rfc/rfc9110.txt","sha256":"21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a","specifications":["RFC 9110"]},{"id":"errata","kind":"errata","url":"https://www.rfc-editor.org/errata/rfc9110","sha256":"21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a","specifications":["RFC 9110"]}]}`)
+
+	err := repository.Check(root, catalog)
+	if err == nil || !strings.Contains(err.Error(), "specification decision register") {
+		t.Fatalf("Check() error = %v", err)
+	}
+}
+
+func TestCheckBlocksUnresolvedSpecificationDecision(t *testing.T) {
+	root, catalog := fixture(t)
+	catalog.Modules[0].Specifications = []string{"RFC 9110"}
+	catalog.Modules[0].Provenance = []byte(`["specification/manifest.tsv"]`)
+	write(t, filepath.Join(root, "specification", "manifest.tsv"), "id\tversion\tsections\trole\turl\tsha256\tstatus\n"+
+		"rfc9110\tRFC-9110\t7.1\tHTTP\thttps://www.rfc-editor.org/rfc/rfc9110.txt\t21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a\tpinned\n")
+	write(t, filepath.Join(root, "specification", "monitoring.json"), `{"schema_version":1,"reviewed_at":"`+time.Now().UTC().Format("2006-01-02")+`","review_interval_days":90,"authorities":[{"id":"source","kind":"specification","version":"RFC 9110","url":"https://www.rfc-editor.org/rfc/rfc9110.txt","sha256":"21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a","specifications":["RFC 9110"]},{"id":"errata","kind":"errata","url":"https://www.rfc-editor.org/errata/rfc9110","sha256":"21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a","specifications":["RFC 9110"]}]}`)
+	write(t, filepath.Join(root, "specification", "README.md"), "# Matrix\n\nEXAMPLE-DEC-001\n")
+	write(t, filepath.Join(root, "docs", "specification-decisions.md"), "# Decisions\n\n## EXAMPLE-DEC-001: Unknown behavior\n\n"+
+		"- **Status, owner, and classification:** `unresolved`; maintainers; omission.\n"+
+		"- **Source and issue:** [RFC 9110 section 7.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-7.1) omits the behavior.\n"+
+		"- **Interpretations and peer behavior:** Accept or reject; peers disagree.\n"+
+		"- **Selected behavior, security and resource consequences, compatibility and wire consequences:** No behavior is selected; security, resource, compatibility, and wire consequences remain under review.\n"+
+		"- **Evidence, public surface, upstream, and reconsideration:** Evidence and public surface are under review; upstream has no decision; reconsider when clarified.\n")
+	write(t, filepath.Join(root, "specification", "decisions.json"), `{"schema_version":1,"decisions":[{"id":"EXAMPLE-DEC-001","title":"Unknown behavior","status":"unresolved","owner":"maintainers","classification":"omission","decision_scope":"defensive","specification":"RFC 9110","version":"RFC 9110","source_authority":"source","section":"7.1","requirement_strength":"not specified","issue":"The behavior is omitted.","interpretations":["Accept","Reject"],"peer_behavior":"Peers disagree.","selected_behavior":"No behavior is selected pending review.","rationale":"The ambiguity remains visible.","security_consequences":"Under review.","resource_consequences":"Under review.","compatibility_consequences":"Under review.","wire_consequences":"Under review.","executable_evidence":["TestContract"],"fixture_evidence":["testdata/contract.json"],"fuzz_evidence":["FuzzContract"],"interoperability_evidence":["testdata/peer.tsv"],"public_apis":["Contract"],"documentation":["docs/specification-decisions.md"],"upstream_status":"No upstream decision exists.","reconsider_when":"The specification clarifies the behavior."}]}`)
+	writeSpecificationChangeControl(t, root)
+	write(t, filepath.Join(root, "specification", "conformance.json"), `{"schema_version":1,"decisions":[{"id":"EXAMPLE-DEC-001","authoritative_sources":["source"],"executable_evidence":["TestContract"],"fixtures":["testdata/contract.json"],"fuzz":["FuzzContract"],"differential_evidence":["testdata/peer.tsv"],"differential_classification":"specification ambiguity","public_behavior":["Behavior remains unresolved."]}]}`)
+	write(t, filepath.Join(root, "testdata", "contract.json"), "{}\n")
+	write(t, filepath.Join(root, "testdata", "peer.tsv"), "peer\tbehavior\nexample\tunknown\n")
+	write(t, filepath.Join(root, "contract_test.go"), "package fixture\n\nimport \"testing\"\n\nfunc TestContract(t *testing.T) {}\nfunc FuzzContract(f *testing.F) {}\n")
+
+	err := repository.Check(root, catalog)
+	if err == nil || !strings.Contains(err.Error(), "unresolved") {
+		t.Fatalf("Check() error = %v", err)
+	}
+}
+
+func writeSpecificationChangeControl(t *testing.T, root string) {
+	t.Helper()
+	decisionPath := filepath.Join(root, "specification", "decisions.json")
+	data, err := os.ReadFile(decisionPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	control := `"change_control":{"readme":"README.md","conformance":"specification/README.md","compatibility":"COMPATIBILITY.md","contribution":"CONTRIBUTING.md","changelog":"CHANGELOG.md","pull_request_template":".github/pull_request_template.md"},`
+	write(t, decisionPath, strings.Replace(string(data), `"decisions":`, control+`"decisions":`, 1))
+	for path, link := range map[string]string{
+		"README.md":        "[Specification decisions](docs/specification-decisions.md)\n",
+		"COMPATIBILITY.md": "[Specification decisions](docs/specification-decisions.md)\n",
+		"CONTRIBUTING.md":  "[Specification decisions](docs/specification-decisions.md)\n",
+		"CHANGELOG.md":     "## Specification Decisions\n\nEXAMPLE-DEC-001: [Decision register](docs/specification-decisions.md)\n",
+	} {
+		existing, _ := os.ReadFile(filepath.Join(root, path))
+		write(t, filepath.Join(root, path), string(existing)+"\n"+link)
+	}
+	matrixPath := filepath.Join(root, "specification", "README.md")
+	matrix, err := os.ReadFile(matrixPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, matrixPath, string(matrix)+"\n[Specification decisions](../docs/specification-decisions.md)\n")
+	write(t, filepath.Join(root, ".github", "pull_request_template.md"), "## Specification Decisions\n\n- Decision identifier\n- Compatibility impact\n- Changelog entry\n- Superseded identifiers remain in the register\n")
+	finalizeSpecificationFixture(t, root, "https://www.rfc-editor.org/rfc/rfc9110.txt")
+}
+
+func finalizeSpecificationFixture(t *testing.T, root, authorityURL string) {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(root, "specification/decisions.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest struct {
+		Decisions []map[string]any `json:"decisions"`
+	}
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	registerPath := filepath.Join(root, "docs/specification-decisions.md")
+	register, err := os.ReadFile(registerPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, registerPath, string(register)+"\n"+string(data)+"\n"+authorityURL+"\n")
+	var changelog strings.Builder
+	changelog.WriteString("# Changelog\n\n")
+	history := map[string]any{"schema_version": 1, "entries": []any{}}
+	for _, item := range manifest.Decisions {
+		encoded, _ := json.Marshal(item)
+		sum := sha256.Sum256(encoded)
+		_, _ = fmt.Fprintf(&changelog, "- %s sha256:%x\n", item["id"], sum)
+		entries, ok := history["entries"].([]any)
+		if !ok {
+			t.Fatal("decision history entries are not an array")
+		}
+		history["entries"] = append(entries, map[string]any{"id": item["id"], "digests": []string{hex.EncodeToString(sum[:])}})
+	}
+	write(t, filepath.Join(root, "CHANGELOG.md"), changelog.String()+"\n[Decisions](docs/specification-decisions.md)\n")
+	historyData, _ := json.Marshal(history)
+	write(t, filepath.Join(root, "specification/decision-history.json"), string(historyData))
 }
 
 func TestCheckRejectsRepositoryContractViolations(t *testing.T) {

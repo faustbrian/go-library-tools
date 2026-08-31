@@ -20,6 +20,7 @@ func TestStoreReportReportsAtomicFilesystemFailures(t *testing.T) {
 	}{
 		{"mkdir", &fakeReportFiles{mkdirErr: failure}, "prepare mutation report directory"},
 		{"create", &fakeReportFiles{info: reportDirectoryInfo{}, createErr: failure}, "create temporary mutation report"},
+		{"missing temporary", &fakeReportFiles{info: reportDirectoryInfo{}}, "create temporary mutation report returned no file"},
 		{"write", &fakeReportFiles{info: reportDirectoryInfo{}, file: &fakeReportFile{writeErr: failure}}, "write mutation report"},
 		{"sync", &fakeReportFiles{info: reportDirectoryInfo{}, file: &fakeReportFile{syncErr: failure}}, "write mutation report"},
 		{"close", &fakeReportFiles{info: reportDirectoryInfo{}, file: &fakeReportFile{closeErr: failure}}, "write mutation report"},
@@ -30,7 +31,7 @@ func TestStoreReportReportsAtomicFilesystemFailures(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, _, _, err := storeReport(test.files, t.TempDir(), "sha256:"+strings.Repeat("a", 64), killedReport)
+			_, _, _, _, err := storeReport(test.files, t.TempDir(), "sha256:"+strings.Repeat("a", 64), killedReport)
 			if err == nil || !strings.Contains(err.Error(), test.want) {
 				t.Fatalf("storeReport() error = %v", err)
 			}
@@ -83,6 +84,7 @@ func TestPrepareReportDirectoriesRejectsInvalidPaths(t *testing.T) {
 		want  string
 	}{
 		{"inspect", &fakeReportFiles{mkdirErr: os.ErrExist, lstatErr: failure}, "inspect mutation report directory"},
+		{"missing metadata", &fakeReportFiles{mkdirErr: os.ErrExist}, "inspect mutation report directory"},
 		{"not directory", &fakeReportFiles{mkdirErr: os.ErrExist, info: reportFileInfo{}}, "not a real directory"},
 	} {
 		t.Run(test.name, func(t *testing.T) {

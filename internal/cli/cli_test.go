@@ -2,12 +2,16 @@ package cli_test
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/faustbrian/go-library-tools/internal/cli"
 )
@@ -18,7 +22,7 @@ func TestExecuteShowsHelp(t *testing.T) {
 	if code != 0 || stderr.Len() != 0 {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
-	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "workflows check", "services cycle", "release dry-run", "upgrade <plan|apply>"} {
+	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "specification check [--online]", "workflows check", "services cycle", "release dry-run", "upgrade <plan|apply>"} {
 		if !strings.Contains(stdout.String(), command) {
 			t.Errorf("help does not contain %q", command)
 		}
@@ -125,6 +129,33 @@ func TestExecuteValidatesConsumerInventory(t *testing.T) {
 		code := cli.Execute(test.args, root, &stdout, &stderr)
 		if code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), test.want) {
 			t.Fatalf("Execute(%v) = %d, %q, %q", test.args, code, stdout.String(), stderr.String())
+		}
+	}
+}
+
+func TestExecuteChecksSpecificationDecisions(t *testing.T) {
+	root := fixture(t)
+	for _, args := range [][]string{{"specification", "check"}, {"specification", "check", "--online"}} {
+		var stdout, stderr bytes.Buffer
+		if code := cli.Execute(args, root, &stdout, &stderr); code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "0 module(s), 0 decision(s)") {
+			t.Fatalf("Execute(%v) = %d, %q, %q", args, code, stdout.String(), stderr.String())
+		}
+	}
+
+	writeSpecificationFixture(t, root, "resolved")
+	var stdout, stderr bytes.Buffer
+	if code := cli.Execute([]string{"specification", "check"}, root, &stdout, &stderr); code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "1 module(s), 1 decision(s)") {
+		t.Fatalf("Execute(specification check) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	writeSpecificationFixture(t, root, "unresolved")
+	stdout.Reset()
+	if code := cli.Execute([]string{"specification", "check"}, root, &stdout, &stderr); code != 1 || !strings.Contains(stderr.String(), "1 unresolved") {
+		t.Fatalf("Execute(unresolved specification) = %d, %q", code, stderr.String())
+	}
+	for _, args := range [][]string{{"specification"}, {"specification", "lint"}, {"specification", "check", "--offline"}, {"specification", "check", "--online", "extra"}} {
+		stderr.Reset()
+		if code := cli.Execute(args, root, &stdout, &stderr); code != 2 || !strings.Contains(stderr.String(), "usage: golib specification check") {
+			t.Fatalf("Execute(%v) = %d, %q", args, code, stderr.String())
 		}
 	}
 }
@@ -421,4 +452,85 @@ func writeUpgradeWorkflow(t *testing.T, root, sha string) {
 func writeConsumerInventory(t *testing.T, root string) {
 	t.Helper()
 	write(t, filepath.Join(root, "consumers.json"), `{"schema_version":1,"owner":"faustbrian","repositories":[{"name":"go-library","classification":"active","default_branch":"main"},{"name":"go-tooling","classification":"tooling","default_branch":"main","reason":"tooling"}]}`)
+}
+
+func writeSpecificationFixture(t *testing.T, root, status string) {
+	t.Helper()
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"tests":true},"specifications":["RFC 9110"],"provenance":["specification/manifest.tsv"],"packages":[]}]}`)
+	write(t, filepath.Join(root, "specification/manifest.tsv"), "id\tversion\turl\tsha256\tstatus\nrfc9110\tRFC-9110\thttps://www.rfc-editor.org/rfc/rfc9110.txt\t21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a\tpinned\n")
+	write(t, filepath.Join(root, "specification/monitoring.json"), `{"schema_version":1,"reviewed_at":"`+time.Now().UTC().Format("2006-01-02")+`","review_interval_days":90,"authorities":[{"id":"source","kind":"specification","version":"RFC 9110","url":"https://example.com/specification","sha256":"21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a","specifications":["RFC 9110"]},{"id":"errata","kind":"errata","url":"https://example.com/errata","sha256":"21c1cdce6ab0e5509b04d84a28000836c7a087cf786efe6f04877ebfff47232a","specifications":["RFC 9110"]}]}`)
+	write(t, filepath.Join(root, "specification/README.md"), "# Matrix\n\nEXAMPLE-DEC-001 `TestContract`\n")
+	write(t, filepath.Join(root, "docs/specification-decisions.md"), "# Decisions\n\n## EXAMPLE-DEC-001: Contract\n\n"+
+		"status "+status+" owner classification source and issue interpretations and peer behavior selected behavior security resource compatibility wire evidence public surface upstream reconsider "+
+		"[RFC 9110 section 7.1](https://www.rfc-editor.org/rfc/rfc9110.html#section-7.1) `TestContract`\n")
+	write(t, filepath.Join(root, "specification/decisions.json"), `{"schema_version":1,"decisions":[{"id":"EXAMPLE-DEC-001","title":"Contract","status":"`+status+`","owner":"maintainers","classification":"omission","decision_scope":"defensive","specification":"RFC 9110","version":"RFC 9110","source_authority":"source","section":"7.1","requirement_strength":"not specified","issue":"The contract is omitted.","interpretations":["Accept","Reject"],"peer_behavior":"Peers disagree.","selected_behavior":"Accept.","rationale":"Compatibility.","security_consequences":"Bounded.","resource_consequences":"Bounded.","compatibility_consequences":"Stable.","wire_consequences":"Stable.","executable_evidence":["TestContract"],"fixture_evidence":["testdata/contract.json"],"fuzz_evidence":["FuzzContract"],"interoperability_evidence":["testdata/peer.tsv"],"public_apis":["Contract"],"documentation":["docs/specification-decisions.md"],"upstream_status":"No issue.","reconsider_when":"The source changes."}]}`)
+	writeSpecificationChangeControl(t, root)
+	write(t, filepath.Join(root, "specification/conformance.json"), `{"schema_version":1,"decisions":[{"id":"EXAMPLE-DEC-001","authoritative_sources":["source"],"executable_evidence":["TestContract"],"fixtures":["testdata/contract.json"],"fuzz":["FuzzContract"],"differential_evidence":["testdata/peer.tsv"],"differential_classification":"specification ambiguity","public_behavior":["Contract behavior."]}]}`)
+	write(t, filepath.Join(root, "testdata/contract.json"), "{}\n")
+	write(t, filepath.Join(root, "testdata/peer.tsv"), "peer\tbehavior\nexample\taccept\n")
+	write(t, filepath.Join(root, "contract_test.go"), "package example\n\nimport \"testing\"\n\nfunc TestContract(t *testing.T) {}\nfunc FuzzContract(f *testing.F) {}\n")
+	finalizeSpecificationFixture(t, root, "https://example.com/specification")
+}
+
+func finalizeSpecificationFixture(t *testing.T, root, authorityURL string) {
+	t.Helper()
+	data, err := os.ReadFile(filepath.Join(root, "specification/decisions.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest struct {
+		Decisions []map[string]any `json:"decisions"`
+	}
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	registerPath := filepath.Join(root, "docs/specification-decisions.md")
+	register, err := os.ReadFile(registerPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, registerPath, string(register)+"\n"+string(data)+"\n"+authorityURL+"\n")
+	var changelog strings.Builder
+	changelog.WriteString("# Changelog\n\n")
+	history := map[string]any{"schema_version": 1, "entries": []any{}}
+	for _, item := range manifest.Decisions {
+		encoded, _ := json.Marshal(item)
+		sum := sha256.Sum256(encoded)
+		_, _ = fmt.Fprintf(&changelog, "- %s sha256:%x\n", item["id"], sum)
+		entries, ok := history["entries"].([]any)
+		if !ok {
+			t.Fatal("decision history entries are not an array")
+		}
+		history["entries"] = append(entries, map[string]any{"id": item["id"], "digests": []string{hex.EncodeToString(sum[:])}})
+	}
+	write(t, filepath.Join(root, "CHANGELOG.md"), changelog.String()+"\n[Decisions](docs/specification-decisions.md)\n")
+	historyData, _ := json.Marshal(history)
+	write(t, filepath.Join(root, "specification/decision-history.json"), string(historyData))
+}
+
+func writeSpecificationChangeControl(t *testing.T, root string) {
+	t.Helper()
+	decisionPath := filepath.Join(root, "specification/decisions.json")
+	data, err := os.ReadFile(decisionPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	control := `"change_control":{"readme":"README.md","conformance":"specification/README.md","compatibility":"COMPATIBILITY.md","contribution":"CONTRIBUTING.md","changelog":"CHANGELOG.md","pull_request_template":".github/pull_request_template.md"},`
+	write(t, decisionPath, strings.Replace(string(data), `"decisions":`, control+`"decisions":`, 1))
+	for path, link := range map[string]string{
+		"README.md":        "[Specification decisions](docs/specification-decisions.md)\n",
+		"COMPATIBILITY.md": "[Specification decisions](docs/specification-decisions.md)\n",
+		"CONTRIBUTING.md":  "[Specification decisions](docs/specification-decisions.md)\n",
+		"CHANGELOG.md":     "## Specification Decisions\n\nEXAMPLE-DEC-001: [Decision register](docs/specification-decisions.md)\n",
+	} {
+		existing, _ := os.ReadFile(filepath.Join(root, path))
+		write(t, filepath.Join(root, path), string(existing)+"\n"+link)
+	}
+	matrixPath := filepath.Join(root, "specification/README.md")
+	matrix, err := os.ReadFile(matrixPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, matrixPath, string(matrix)+"\n[Specification decisions](../docs/specification-decisions.md)\n")
+	write(t, filepath.Join(root, ".github/pull_request_template.md"), "## Specification Decisions\n\n- Decision identifier\n- Compatibility impact\n- Changelog entry\n- Superseded identifiers remain in the register\n")
 }
