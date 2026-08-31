@@ -6,6 +6,11 @@ if [[ $# -ne 8 ]]; then
     exit 2
 fi
 
+script_directory="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
+# The helper is resolved beside this script.
+# shellcheck disable=SC1091
+source "${script_directory}/copied-tooling-lifecycle.sh"
+
 implementation="$1"
 source_root="$(cd "$2" && pwd -P)"
 golib="$3"
@@ -31,17 +36,20 @@ mkdir -p "${runtime}"
 : >"${samples}"
 
 cleanup() {
-    if [[ -d "${copied_tooling}" && ! -e "${source_root}/.golib" ]]; then
-        mv "${copied_tooling}" "${source_root}/.golib"
-    fi
+    restore_copied_tooling "${implementation}" "${source_root}" "${copied_tooling}"
     chmod -R u+w "${task}" 2>/dev/null || true
     find "${task}" -depth -delete 2>/dev/null || true
 }
-trap cleanup EXIT HUP INT TERM
-
-if [[ "${implementation}" == shared ]]; then
-    mv "${source_root}/.golib" "${copied_tooling}"
-fi
+handle_signal() {
+    local status="$1"
+    trap - EXIT HUP INT TERM
+    cleanup
+    exit "${status}"
+}
+trap cleanup EXIT
+trap 'handle_signal 129' HUP
+trap 'handle_signal 130' INT
+trap 'handle_signal 143' TERM
 
 record_command() {
     local metric="$1"
@@ -155,7 +163,9 @@ if [[ "${profile}" == core ]]; then
     [[ "${mutation_package_count}" -gt 0 ]]
 fi
 record_command startup-diagnostic 2 25 "${startup[@]}"
+hide_copied_tooling "${implementation}" "${source_root}" "${copied_tooling}"
 record_command repository-inventory 0 10 "${inventory[@]}"
+restore_copied_tooling "${implementation}" "${source_root}" "${copied_tooling}"
 
 if [[ "${profile}" == core ]]; then
     if [[ "${implementation}" == legacy ]]; then

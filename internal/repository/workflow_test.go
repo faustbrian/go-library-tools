@@ -212,6 +212,26 @@ func TestPerformanceRehearsalPublishesComparableRawMeasurements(t *testing.T) {
 	}
 }
 
+func TestPerformanceRehearsalExcludesInjectedPolicyFromSourceChecks(t *testing.T) {
+	workflow := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
+	performanceStart := strings.Index(workflow, "  performance:\n")
+	if performanceStart < 0 {
+		t.Fatal("parity workflow has no performance job")
+	}
+	performance, _, found := strings.Cut(workflow[performanceStart:], "\n  performance-report:\n")
+	if !found {
+		t.Fatal("parity workflow has no performance report after performance jobs")
+	}
+	for _, required := range []string{
+		`printf '%s\n' '/.golib.yaml' '/.verification/'`,
+		`>>.git/info/exclude`,
+	} {
+		if !strings.Contains(performance, required) {
+			t.Errorf("performance policy setup lacks %q", required)
+		}
+	}
+}
+
 func TestRehearsalFuzzTargetsAreExact(t *testing.T) {
 	fixtures, err := filepath.Glob(filepath.Join(projectRoot(t), "rehearsals", "go-*", ".golib.yaml"))
 	if err != nil {

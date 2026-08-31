@@ -329,6 +329,11 @@ jobs:
             mkdir -p verification
             cp "${FIXTURE}/verification/package.mk" verification/package.mk
           fi
+          {
+            printf '%s\n' '/.golib.yaml' '/.verification/'
+            [[ ! -f "${FIXTURE}/verification/package.mk" ]] || \
+              printf '%s\n' '/verification/package.mk'
+          } >>.git/info/exclude
       - name: Measure content-identical contract
         working-directory: source
         run: |
