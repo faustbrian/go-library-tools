@@ -41,6 +41,9 @@ func sourceDigest(files sourceFileSystem, root, moduleDirectory, packageDirector
 	if err != nil {
 		return "", fmt.Errorf("inspect mutation source directory: %w", err)
 	}
+	if info == nil {
+		return "", fmt.Errorf("%w: inspect mutation source directory returned no metadata", ErrInvalid)
+	}
 	if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
 		return "", fmt.Errorf("%w: mutation source path is not a real directory", ErrInvalid)
 	}

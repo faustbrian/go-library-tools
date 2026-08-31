@@ -16,6 +16,9 @@ func (files faultySourceFiles) Lstat(path string) (os.FileInfo, error) {
 	if files.operation == "lstat" {
 		return nil, errors.New("lstat failed")
 	}
+	if files.operation == "nil-lstat" {
+		return nil, nil
+	}
 	return files.base.Lstat(path)
 }
 
@@ -78,7 +81,7 @@ func TestSourceDigestReportsFileSystemFailures(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "source.go"), []byte("package source\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	for _, operation := range []string{"lstat", "read-dir", "read-file", "relative"} {
+	for _, operation := range []string{"lstat", "nil-lstat", "read-dir", "read-file", "relative"} {
 		t.Run(operation, func(t *testing.T) {
 			files := faultySourceFiles{base: operatingSourceFiles{}, operation: operation}
 			if _, err := sourceDigest(files, root, ".", "."); err == nil {

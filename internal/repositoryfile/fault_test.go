@@ -28,7 +28,9 @@ func TestReadReportsFileSystemRacesAndFailures(t *testing.T) {
 		want  string
 	}{
 		{"nil info", fakeFileSystem{}, "inspect file"},
+		{"nil open file", fakeFileSystem{info: info}, "open file returned no file"},
 		{"open", fakeFileSystem{info: info, openErr: failure}, "open file"},
+		{"nil stat info", fakeFileSystem{info: info, opened: &fakeFile{}}, "inspect open file returned no metadata"},
 		{"stat", fakeFileSystem{info: info, opened: &fakeFile{statErr: failure}}, "inspect open file"},
 		{"changed", fakeFileSystem{info: info, opened: &fakeFile{info: fakeInfo{name: "other"}}}, "changed while opening"},
 		{"nonregular", fakeFileSystem{info: info, opened: &fakeFile{info: fakeInfo{name: "other", mode: os.ModeDir}}}, "changed while opening"},
@@ -42,15 +44,29 @@ func TestReadReportsFileSystemRacesAndFailures(t *testing.T) {
 			}
 		})
 	}
+	for name, files := range map[string]fileSystem{
+		"parent failure":  fakeFileSystem{lstat: func(string) (os.FileInfo, error) { return nil, failure }},
+		"nil parent info": fakeFileSystem{lstat: func(string) (os.FileInfo, error) { return nil, nil }},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := read(root, "nested/file", 100, files); err == nil {
+				t.Fatal("read() error = nil")
+			}
+		})
+	}
 }
 
 type fakeFileSystem struct {
+	lstat   func(string) (os.FileInfo, error)
 	info    os.FileInfo
 	opened  file
 	openErr error
 }
 
-func (fake fakeFileSystem) Lstat(string) (os.FileInfo, error) {
+func (fake fakeFileSystem) Lstat(path string) (os.FileInfo, error) {
+	if fake.lstat != nil {
+		return fake.lstat(path)
+	}
 	return fake.info, nil
 }
 

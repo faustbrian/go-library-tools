@@ -23,9 +23,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
-- Canonicalized repository roots before deriving mutation input identities so
-  macOS `/tmp` aliases and other repository-root symlinks reuse the same
-  content evidence without weakening path-containment checks.
+- Canonicalized repository roots before source discovery and derived current
+  and legacy mutation identities from one captured snapshot so macOS `/tmp`
+  aliases and other repository-root symlinks cannot retarget evidence between
+  validation passes.
 - Reused an existing legacy mutation report digest only when it matches the
   uniquely approved checkpoint, preserving immutable content-addressed records
   while continuing to reject every other evidence conflict.

@@ -63,6 +63,9 @@ func storeReport(files reportFileSystem, root, inputDigest string, report []byte
 	if err != nil {
 		return "", false, ReportResult{}, nil, fmt.Errorf("create temporary mutation report: %w", err)
 	}
+	if temporary == nil {
+		return "", false, ReportResult{}, nil, fmt.Errorf("%w: create temporary mutation report returned no file", ErrInvalid)
+	}
 	temporaryPath := temporary.Name()
 	defer func() { _ = files.Remove(temporaryPath) }()
 	if _, err = temporary.Write(report); err == nil {
@@ -98,6 +101,9 @@ func prepareReportDirectories(files reportFileSystem, root, destination string) 
 		info, err := files.Lstat(directory)
 		if err != nil {
 			return fmt.Errorf("inspect mutation report directory: %w", err)
+		}
+		if info == nil {
+			return fmt.Errorf("%w: inspect mutation report directory returned no metadata", ErrInvalid)
 		}
 		if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
 			return fmt.Errorf("%w: mutation report path is not a real directory", ErrInvalid)

@@ -87,18 +87,44 @@ type moduleIdentity struct {
 // InputDigest binds a mutation campaign to the exact local source, observing
 // tests, fixtures, dependency versions, package policy, and verifier semantics.
 func InputDigest(root string, policy InputPolicy, listing io.Reader, review *ZeroReview) (string, error) {
-	return inputDigest(root, policy, listing, review, true, "v2")
+	return inputDigest(root, policy, listing, review, true)
 }
 
 func legacyInputDigestV1(root string, policy InputPolicy, listing io.Reader, review *ZeroReview) (string, error) {
-	return inputDigest(root, policy, listing, review, false, "v1")
+	return inputDigest(root, policy, listing, review, false)
 }
 
-func inputDigest(root string, policy InputPolicy, listing io.Reader, review *ZeroReview, filterOwned bool, version string) (string, error) {
+func inputDigest(root string, policy InputPolicy, listing io.Reader, review *ZeroReview, filterOwned bool) (string, error) {
+	digests, err := calculateInputDigests(root, policy, listing, review, nil)
+	if err != nil {
+		return "", err
+	}
+	if filterOwned {
+		return digests.current, nil
+	}
+	return digests.legacy, nil
+}
+
+func inputDigests(root string, policy InputPolicy, listing io.Reader, review *ZeroReview, listedAliases ...string) (string, string, error) {
+	digests, err := calculateInputDigests(root, policy, listing, review, listedAliases)
+	return digests.current, digests.legacy, err
+}
+
+type calculatedInputDigests struct {
+	current string
+	legacy  string
+}
+
+func calculateInputDigests(root string, policy InputPolicy, listing io.Reader, review *ZeroReview, listedAliases []string) (calculatedInputDigests, error) {
 	if !filepath.IsAbs(root) {
-		return "", fmt.Errorf("%w: repository root must be absolute", ErrInvalid)
+		return calculatedInputDigests{}, fmt.Errorf("%w: repository root must be absolute", ErrInvalid)
 	}
 	listedRoots := []string{root}
+	for _, alias := range listedAliases {
+		if filepath.IsAbs(alias) {
+			listedRoots = append(listedRoots, filepath.Clean(alias))
+		}
+	}
 	if target, linkErr := os.Readlink(root); linkErr == nil {
 		if !filepath.IsAbs(target) {
 			target = filepath.Join(filepath.Dir(root), target)
@@ -107,25 +133,25 @@ func inputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 	}
 	canonicalRoot, err := filepath.EvalSymlinks(root)
 	if err != nil {
-		return "", fmt.Errorf("%w: resolve repository root: %s", ErrInvalid, err.Error())
+		return calculatedInputDigests{}, fmt.Errorf("%w: resolve repository root: %s", ErrInvalid, err.Error())
 	}
 	root = canonicalRoot
 	if err := policy.validate(); err != nil {
-		return "", err
+		return calculatedInputDigests{}, err
 	}
 	if review != nil {
 		if err := review.validate(); err != nil {
-			return "", fmt.Errorf("%w: zero-mutant review does not match input policy", ErrInvalid)
+			return calculatedInputDigests{}, fmt.Errorf("%w: zero-mutant review does not match input policy", ErrInvalid)
 		}
 		actual := [4]string{review.ModuleDirectory, review.PackageDirectory, review.GremlinsVersion, review.GremlinsVerifierSHA256}
 		expected := [4]string{policy.ModuleDirectory, policy.PackageDirectory, GremlinsVersion, LegacyVerifierDigest()}
 		if actual != expected {
-			return "", fmt.Errorf("%w: zero-mutant review does not match input policy", ErrInvalid)
+			return calculatedInputDigests{}, fmt.Errorf("%w: zero-mutant review does not match input policy", ErrInvalid)
 		}
 	}
 	packages, err := parseListing(listing)
 	if err != nil {
-		return "", err
+		return calculatedInputDigests{}, err
 	}
 	policy = policy.canonical()
 	moduleRoots := append([]OwnedModule{{ModulePath: policy.ModulePath, Directory: policy.ModuleDirectory}}, policy.OwnedModules...)
@@ -151,7 +177,7 @@ func inputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 		if pkg.Module != nil && pkg.Module.Path != "" {
 			identity := moduleIdentity{Path: pkg.Module.Path, Version: pkg.Module.Version, Sum: pkg.Module.Sum, GoVersion: pkg.Module.GoVersion, Main: pkg.Module.Main}
 			if existing, exists := modules[identity.Path]; exists && existing != identity {
-				return "", fmt.Errorf("%w: conflicting module identity for %s", ErrInvalid, identity.Path)
+				return calculatedInputDigests{}, fmt.Errorf("%w: conflicting module identity for %s", ErrInvalid, identity.Path)
 			}
 			modules[identity.Path] = identity
 		}
@@ -161,7 +187,7 @@ func inputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 		}
 		relativeDirectory, _ := filepath.Rel(root, pkg.Dir)
 		if err := repositoryfile.ValidateDirectory(root, relativeDirectory); err != nil {
-			return "", fmt.Errorf("%w: listed package directory %s: %s", ErrInvalid, pkg.Dir, err.Error())
+			return calculatedInputDigests{}, fmt.Errorf("%w: listed package directory %s: %s", ErrInvalid, pkg.Dir, err.Error())
 		}
 		observedOwnedModules[owned.ModulePath] = struct{}{}
 		canonicalImport, _, _ := strings.Cut(pkg.ImportPath, " [")
@@ -188,40 +214,46 @@ func inputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 		relevantDirectories[pkg.Dir] = owned
 		for _, name := range files {
 			if err := addInputFile(root, owned, pkg.Dir, name, content, &total); err != nil {
-				return "", err
+				return calculatedInputDigests{}, err
 			}
 		}
 	}
 	if !observedTarget {
-		return "", fmt.Errorf("%w: go list did not resolve target package %s", ErrInvalid, target)
+		return calculatedInputDigests{}, fmt.Errorf("%w: go list did not resolve target package %s", ErrInvalid, target)
 	}
 	entries := 0
 	for directory, owned := range relevantDirectories {
 		for _, dataDirectory := range []string{"corpus", "fixtures", "testdata"} {
 			if err := addDataDirectory(root, owned, filepath.Join(directory, dataDirectory), &entries, maximumInputEntries, content, &total); err != nil {
-				return "", err
+				return calculatedInputDigests{}, err
 			}
 		}
 	}
 	if len(content) == 0 {
-		return "", fmt.Errorf("%w: mutation input contains no local files", ErrInvalid)
-	}
-	if filterOwned {
-		policy.OwnedModules = observedOwned(policy.OwnedModules, observedOwnedModules)
+		return calculatedInputDigests{}, fmt.Errorf("%w: mutation input contains no local files", ErrInvalid)
 	}
 	moduleList := make([]moduleIdentity, 0, len(modules))
 	for _, identity := range modules {
 		moduleList = append(moduleList, identity)
 	}
 	slices.SortFunc(moduleList, func(left, right moduleIdentity) int { return strings.Compare(left.Path, right.Path) })
+	currentPolicy := policy
+	currentPolicy.OwnedModules = observedOwned(currentPolicy.OwnedModules, observedOwnedModules)
+	return calculatedInputDigests{
+		current: digestInput(currentPolicy, moduleList, review, content, "v2"),
+		legacy:  digestInput(policy, moduleList, review, content, "v1"),
+	}, nil
+}
+
+func digestInput(policy InputPolicy, modules []moduleIdentity, review *ZeroReview, content map[string][]byte, version string) string {
 	semantic := struct {
 		Policy   InputPolicy      `json:"policy"`
 		Modules  []moduleIdentity `json:"modules"`
 		Verifier string           `json:"verifier"`
 		Review   *ZeroReview      `json:"zero_review,omitempty"`
-	}{policy, moduleList, LegacyVerifierDigest(), review}
+	}{policy, modules, LegacyVerifierDigest(), review}
 	encoded, _ := json.Marshal(semantic)
-	return evidence.Digest("golib/mutation-input/"+version+"\n"+string(encoded), content), nil
+	return evidence.Digest("golib/mutation-input/"+version+"\n"+string(encoded), content)
 }
 
 func observedOwned(owned []OwnedModule, observed map[string]struct{}) []OwnedModule {

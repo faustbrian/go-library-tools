@@ -75,10 +75,16 @@ func read(root, relative string, maximum int64, files fileSystem) ([]byte, error
 	if err != nil {
 		return nil, fmt.Errorf("open %s: %w", relative, err)
 	}
+	if file == nil {
+		return nil, fmt.Errorf("%w: open %s returned no file", ErrUnsafePath, relative)
+	}
 	defer file.Close()
 	opened, err := file.Stat()
 	if err != nil {
 		return nil, fmt.Errorf("inspect open %s: %w", relative, err)
+	}
+	if opened == nil {
+		return nil, fmt.Errorf("%w: inspect open %s returned no metadata", ErrUnsafePath, relative)
 	}
 	if !opened.Mode().IsRegular() {
 		return nil, fmt.Errorf("%w: %s changed while opening", ErrUnsafePath, relative)
@@ -107,8 +113,7 @@ func inspectPath(root, relative string, files interface {
 
 	current := root
 	parts := strings.Split(clean, string(filepath.Separator))
-	var expected os.FileInfo
-	for index, part := range parts {
+	for _, part := range parts[:len(parts)-1] {
 		current = filepath.Join(current, part)
 		info, err := files.Lstat(current)
 		if err != nil {
@@ -120,11 +125,20 @@ func inspectPath(root, relative string, files interface {
 		if info.Mode()&os.ModeSymlink != 0 {
 			return "", nil, fmt.Errorf("%w: %s", ErrUnsafePath, relative)
 		}
-		if index == len(parts)-1 {
-			expected = info
-		} else if !info.IsDir() {
+		if !info.IsDir() {
 			return "", nil, fmt.Errorf("%w: path component %s", ErrNotRegular, part)
 		}
+	}
+	current = filepath.Join(current, parts[len(parts)-1])
+	expected, err := files.Lstat(current)
+	if err != nil {
+		return "", nil, fmt.Errorf("inspect %s: %w", relative, err)
+	}
+	if expected == nil {
+		return "", nil, fmt.Errorf("inspect %s: %w", relative, ErrUnsafePath)
+	}
+	if expected.Mode()&os.ModeSymlink != 0 {
+		return "", nil, fmt.Errorf("%w: %s", ErrUnsafePath, relative)
 	}
 	return current, expected, nil
 }
