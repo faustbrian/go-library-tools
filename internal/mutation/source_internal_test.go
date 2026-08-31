@@ -26,6 +26,9 @@ func (files faultySourceFiles) ReadDir(path string) ([]os.DirEntry, error) {
 	if files.operation == "read-dir" {
 		return nil, errors.New("read directory failed")
 	}
+	if files.operation == "nil-dir-entry" {
+		return []os.DirEntry{nil}, nil
+	}
 	return files.base.ReadDir(path)
 }
 
@@ -81,7 +84,7 @@ func TestSourceDigestReportsFileSystemFailures(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "source.go"), []byte("package source\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	for _, operation := range []string{"lstat", "nil-lstat", "read-dir", "read-file", "relative"} {
+	for _, operation := range []string{"lstat", "nil-lstat", "read-dir", "nil-dir-entry", "read-file", "relative"} {
 		t.Run(operation, func(t *testing.T) {
 			files := faultySourceFiles{base: operatingSourceFiles{}, operation: operation}
 			if _, err := sourceDigest(files, root, ".", "."); err == nil {
