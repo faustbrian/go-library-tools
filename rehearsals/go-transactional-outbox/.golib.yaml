@@ -7,6 +7,22 @@ evidence:
   root: ".verification"
 mutation:
   root: ".verification/mutation"
+  imports:
+  - module: "."
+    archive: ".verification/mutation/bootstrap/root.zip"
+    ledger: ".verification/mutation/migration-ledger.json"
+  - module: "adapters/gokafka"
+    archive: ".verification/mutation/bootstrap/adapters-gokafka.zip"
+    ledger: ".verification/mutation/migration-ledger.json"
+  - module: "adapters/gorabbitstream"
+    archive: ".verification/mutation/bootstrap/adapters-gorabbitstream.zip"
+    ledger: ".verification/mutation/migration-ledger.json"
+  - module: "adapters/otel"
+    archive: ".verification/mutation/bootstrap/adapters-otel.zip"
+    ledger: ".verification/mutation/migration-ledger.json"
+  - module: "adapters/queue"
+    archive: ".verification/mutation/bootstrap/adapters-queue.zip"
+    ledger: ".verification/mutation/migration-ledger.json"
 api:
   baselines:
   - module: "."

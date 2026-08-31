@@ -1,13 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 2 ]]; then
-    printf 'usage: %s <results-directory> <output>\n' "$0" >&2
+if [[ $# -ne 7 ]]; then
+    printf 'usage: %s <results-directory> <output> <run-id> <run-attempt> <tooling-revision> <workflow-repository> <manifest>\n' "$0" >&2
     exit 2
 fi
 
 results="$1"
 output="$2"
+expected_run_id="$3"
+expected_run_attempt="$4"
+expected_tooling_revision="$5"
+expected_workflow_repository="$6"
+manifest="$7"
+[[ "${expected_run_id}" =~ ^[1-9][0-9]*$ ]]
+[[ "${expected_run_attempt}" =~ ^[1-9][0-9]*$ ]]
+[[ "${expected_tooling_revision}" =~ ^[0-9a-f]{40}$ ]]
+[[ "${expected_workflow_repository}" =~ ^[^/]+/[^/]+$ ]]
+[[ -s "${manifest}" ]]
 reports=()
 while IFS= read -r report; do
     reports+=("${report}")
@@ -19,19 +29,34 @@ for report in "${reports[@]}"; do
     [[ "$(cat "${cleanup_status}")" == 0 ]]
 done
 
-jq -s -e '
+jq -s -e \
+    --argjson expected_run_id "${expected_run_id}" \
+    --argjson expected_run_attempt "${expected_run_attempt}" \
+    --arg expected_tooling_revision "${expected_tooling_revision}" \
+    --arg expected_workflow_repository "${expected_workflow_repository}" \
+    --slurpfile manifest "${manifest}" '
   . as $reports |
+  ($manifest[0].repositories |
+    map(select(.performance_profile != null) | {
+      repository: .name,
+      revision: .revision,
+      profile: .performance_profile
+    }) |
+    sort_by(.repository, .profile)) as $expected_representatives |
   (
+    ($manifest | length == 1) and
+    $manifest[0].schema_version == 1 and
+    ($expected_representatives | length == 2) and
     ($reports | length == 4) and
     all($reports[];
         .schema_version == 1 and
         (.revision | test("^[0-9a-f]{40}$")) and
         (.content_sha256 | test("^[0-9a-f]{64}$")) and
-        (.tooling_revision | test("^[0-9a-f]{40}$")) and
+        .tooling_revision == $expected_tooling_revision and
         (.golib_sha256 | test("^[0-9a-f]{64}$")) and
-        (.workflow.repository | test("^[^/]+/[^/]+$")) and
-        .workflow.run_id > 0 and
-        .workflow.attempt > 0 and
+        .workflow.repository == $expected_workflow_repository and
+        .workflow.run_id == $expected_run_id and
+        .workflow.attempt == $expected_run_attempt and
         (.implementation == "legacy" or .implementation == "shared") and
         (.profile == "core" or .profile == "service") and
         .artifact_size_bytes > 0 and
@@ -50,6 +75,8 @@ jq -s -e '
     ([.[] | .golib_sha256] | unique | length) == 1 and
     ([.[] | [.workflow.repository,.workflow.run_id,.workflow.attempt]] | unique | length) == 1 and
     ([.[] | .profile] | unique | sort) == ["core","service"] and
+    ([.[] | {repository,revision,profile}] | unique |
+      sort_by(.repository, .profile)) == $expected_representatives and
     ([.[] | [.repository,.revision,.content_sha256,.profile] | join("\u0000")] | unique | length) == 2 and
     all(group_by(.repository + "\u0000" + .profile)[];
         length == 2 and

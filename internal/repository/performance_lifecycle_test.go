@@ -92,6 +92,50 @@ status=0
 func TestPerformanceComparisonAcceptsEmptyDisposableRuntime(t *testing.T) {
 	t.Parallel()
 
+	root, manifest := performanceComparisonFixture(t)
+	output := filepath.Join(root, "aggregate.json")
+	command := performanceComparisonCommand(t, root, output, "1", "1", "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", "faustbrian/go-library-tools", manifest)
+	if result, err := command.CombinedOutput(); err != nil {
+		t.Fatalf("compare empty disposable runtime: %v\n%s", err, result)
+	}
+}
+
+func TestPerformanceComparisonRejectsDetachedAttribution(t *testing.T) {
+	t.Parallel()
+
+	root, manifest := performanceComparisonFixture(t)
+	badManifest := filepath.Join(root, "bad-repositories.json")
+	if err := os.WriteFile(badManifest, []byte(`{"schema_version":1,"repositories":[{"name":"go-authorization","revision":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","performance_profile":"service"},{"name":"go-knapsack","revision":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","performance_profile":"core"}]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	tests := []struct {
+		name       string
+		runID      string
+		attempt    string
+		tooling    string
+		repository string
+		manifest   string
+	}{
+		{name: "run", runID: "2", attempt: "1", tooling: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", repository: "faustbrian/go-library-tools", manifest: manifest},
+		{name: "attempt", runID: "1", attempt: "2", tooling: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", repository: "faustbrian/go-library-tools", manifest: manifest},
+		{name: "tooling", runID: "1", attempt: "1", tooling: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", repository: "faustbrian/go-library-tools", manifest: manifest},
+		{name: "repository", runID: "1", attempt: "1", tooling: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", repository: "faustbrian/other", manifest: manifest},
+		{name: "manifest", runID: "1", attempt: "1", tooling: "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee", repository: "faustbrian/go-library-tools", manifest: badManifest},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			output := filepath.Join(root, "aggregate-"+test.name+".json")
+			command := performanceComparisonCommand(t, root, output, test.runID, test.attempt, test.tooling, test.repository, test.manifest)
+			if result, err := command.CombinedOutput(); err == nil {
+				t.Fatalf("detached attribution accepted:\n%s", result)
+			}
+		})
+	}
+}
+
+func performanceComparisonFixture(t *testing.T) (string, string) {
+	t.Helper()
+
 	root := t.TempDir()
 	for _, profile := range []string{"core", "service"} {
 		for _, implementation := range []string{"legacy", "shared"} {
@@ -111,11 +155,16 @@ func TestPerformanceComparisonAcceptsEmptyDisposableRuntime(t *testing.T) {
 			}
 		}
 	}
-	output := filepath.Join(root, "aggregate.json")
-	command := exec.CommandContext(t.Context(), "bash", filepath.Join(projectRoot(t), "rehearsals", "performance-compare.sh"), root, output)
-	if result, err := command.CombinedOutput(); err != nil {
-		t.Fatalf("compare empty disposable runtime: %v\n%s", err, result)
+	manifest := filepath.Join(root, "repositories.json")
+	if err := os.WriteFile(manifest, []byte(`{"schema_version":1,"repositories":[{"name":"go-authorization","revision":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","performance_profile":"service"},{"name":"go-knapsack","revision":"cccccccccccccccccccccccccccccccccccccccc","performance_profile":"core"}]}`), 0o600); err != nil {
+		t.Fatal(err)
 	}
+	return root, manifest
+}
+
+func performanceComparisonCommand(t *testing.T, root, output, runID, attempt, tooling, repository, manifest string) *exec.Cmd {
+	t.Helper()
+	return exec.CommandContext(t.Context(), "bash", filepath.Join(projectRoot(t), "rehearsals", "performance-compare.sh"), root, output, runID, attempt, tooling, repository, manifest)
 }
 
 func performanceReportFixture(profile, implementation string) map[string]any {
