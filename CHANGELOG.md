@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added content-identical legacy performance rehearsals with raw startup,
+  inventory, checkpoint-reuse, module-scaling, peak-RSS, artifact-size, cache,
+  and service-lifecycle measurements.
+- Added a bounded `golib services cycle` command for fixture readiness and
+  immediate cleanup without detached lifecycle state.
+
 ## 1.0.14 - 2026-08-30
 
 ### Fixed

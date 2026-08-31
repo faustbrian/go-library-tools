@@ -7,6 +7,8 @@ import (
 	"runtime"
 	"strings"
 	"testing"
+
+	"github.com/faustbrian/go-library-tools/internal/config"
 )
 
 var remoteAction = regexp.MustCompile(`(?m)^\s*- uses: ([^./][^@\s]+)@([^\s#]+)`)
@@ -136,7 +138,11 @@ func TestSharedParityUsesRepresentativeGoVersionForConsumerGates(t *testing.T) {
 	if sharedStart < 0 {
 		t.Fatal("parity workflow has no shared job")
 	}
-	shared := content[sharedStart:]
+	sharedRemainder := content[sharedStart:]
+	shared, _, found := strings.Cut(sharedRemainder, "\n  performance:\n")
+	if !found {
+		t.Fatal("parity workflow has no performance job after shared parity")
+	}
 	if count := strings.Count(shared, "uses: actions/setup-go@"); count != 1 {
 		t.Fatalf("shared parity setup-go steps = %d, want 1", count)
 	}
@@ -152,8 +158,137 @@ func TestSharedParityUsesRepresentativeGoVersionForConsumerGates(t *testing.T) {
 
 func TestParityWorkflowUsesActionsPathChannelForGoWrapper(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
-	if count := strings.Count(content, `"${GITHUB_ENV}" "${GITHUB_PATH}"`); count != 2 {
-		t.Fatalf("parity wrapper path exports = %d, want legacy and shared", count)
+	if count := strings.Count(content, `"${GITHUB_ENV}" "${GITHUB_PATH}"`); count != 3 {
+		t.Fatalf("parity wrapper path exports = %d, want legacy, shared, and performance", count)
+	}
+}
+
+func TestPerformanceRehearsalPublishesComparableRawMeasurements(t *testing.T) {
+	workflow := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
+	for _, required := range []string{
+		"name: Performance / ${{ matrix.name }}",
+		"rehearsals/performance.sh",
+		"performance-${{ matrix.artifact }}",
+		"rehearsals/performance-compare.sh",
+		"performance-results.json",
+		"performance-services.status",
+		"performance_source_run_id",
+		"github-token: ${{ github.token }}",
+		"Resolve measurement source",
+		`/repos/${GITHUB_REPOSITORY}/actions/runs/${REQUESTED_RUN_ID}`,
+		"run-id: ${{ steps.source.outputs.run_id }}",
+		"rehearsals/repositories.json",
+		`["core", "service"]`,
+	} {
+		if !strings.Contains(workflow, required) {
+			t.Errorf("performance workflow lacks %q", required)
+		}
+	}
+
+	harness := readProjectFile(t, "rehearsals/performance.sh")
+	for _, required := range []string{
+		"startup-diagnostic",
+		"repository-inventory",
+		"checkpoint-reuse",
+		"module-scaling-sequential",
+		"module-scaling-concurrent",
+		"peak_rss_kib",
+		"artifact_size_bytes",
+		"isolated_cache_residue",
+		"service-lifecycle",
+		"mutation_package_count",
+		"reused content-identical mutation evidence",
+		"tooling_revision",
+		"golib_sha256",
+	} {
+		if !strings.Contains(harness, required) {
+			t.Errorf("performance harness lacks %q", required)
+		}
+	}
+
+	documentation := readProjectFile(t, "docs/performance.md")
+	for _, required := range []string{
+		"content-identical",
+		"Raw Results",
+		"Runner variance",
+		"No-op and checkpoint reuse",
+		"Concurrent module scaling",
+	} {
+		if !strings.Contains(documentation, required) {
+			t.Errorf("performance documentation lacks %q", required)
+		}
+	}
+}
+
+func TestParityRehearsalReusesRepresentativeMutationEvidence(t *testing.T) {
+	t.Parallel()
+
+	workflow := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
+	sharedStart := strings.Index(workflow, "  shared:\n")
+	performanceStart := strings.Index(workflow, "  performance:\n")
+	performanceReportStart := strings.Index(workflow, "  performance-report:\n")
+	if sharedStart < 0 || performanceStart < 0 || performanceReportStart < 0 ||
+		sharedStart >= performanceStart || performanceStart >= performanceReportStart {
+		t.Fatal("parity workflow job order is invalid")
+	}
+	shared := workflow[sharedStart:performanceStart]
+	performance := workflow[performanceStart:performanceReportStart]
+	for _, required := range []string{
+		"Restore mutation checkpoints",
+		"restore-ci-mutation-evidence.sh",
+		"if: inputs.performance_source_run_id == ''",
+	} {
+		if !strings.Contains(workflow, required) {
+			t.Errorf("parity workflow lacks %q", required)
+		}
+	}
+	for name, job := range map[string]string{"shared": shared, "performance": performance} {
+		for _, required := range []string{
+			"cp .golib/mutation-bootstrap/*.zip",
+			"cp .golib/mutation-history-migrations.json",
+		} {
+			if !strings.Contains(job, required) {
+				t.Errorf("%s parity job lacks %q", name, required)
+			}
+		}
+	}
+
+	wantImports := map[string]int{
+		"go-authorization":        1,
+		"go-cloudevents":          2,
+		"go-knapsack":             2,
+		"go-openapi":              1,
+		"go-transactional-outbox": 5,
+	}
+	for repository, want := range wantImports {
+		configuration, err := config.Load(filepath.Join(projectRoot(t), "rehearsals", repository))
+		if err != nil {
+			t.Errorf("load %s rehearsal configuration: %v", repository, err)
+			continue
+		}
+		if got := len(configuration.Mutation.Imports); got != want {
+			t.Errorf("%s mutation imports = %d, want %d", repository, got, want)
+		}
+	}
+}
+
+func TestPerformanceRehearsalExcludesInjectedPolicyFromSourceChecks(t *testing.T) {
+	workflow := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
+	performanceStart := strings.Index(workflow, "  performance:\n")
+	if performanceStart < 0 {
+		t.Fatal("parity workflow has no performance job")
+	}
+	performance, _, found := strings.Cut(workflow[performanceStart:], "\n  performance-report:\n")
+	if !found {
+		t.Fatal("parity workflow has no performance report after performance jobs")
+	}
+	for _, required := range []string{
+		`printf '%s\n' '/.golib.yaml' '/.verification/'`,
+		`>>.git/info/exclude`,
+	} {
+		if !strings.Contains(performance, required) {
+			t.Errorf("performance policy setup lacks %q", required)
+		}
 	}
 }
 

@@ -10,6 +10,7 @@
 - [Consumer inventory](consumers.md): maintained repositories and bounded upgrades.
 - [Migration](migration.md): replacing copied `.golib` automation.
 - [Compatibility rehearsals](parity.md): content-identical legacy comparisons.
+- [Performance rehearsals](performance.md): reproducible legacy comparisons and raw results.
 - [Development](development.md): building and testing the tool.
 - [Release process](release.md): artifacts, checksums, SBOM, and provenance.
 - [Security model](security.md): threats, controls, and residual risks.

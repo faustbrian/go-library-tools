@@ -102,10 +102,16 @@ analysis, security, license, and SBOM gates.
 The rehearsal changed no Go source or public API and left no dependency on the
 archived monorepo or copied `.golib` implementation.
 
-## Required Coverage
+## Representative Coverage
 
-Additional rehearsals must cover a large package tree, genuine multi-module
-layout, service-backed tests, broker-backed tests, specification conformance,
-external runtimes, nested release units, and large or zero-mutant inventories
-before the first public release. Each difference must be resolved or recorded
-as an intentional compatibility decision before migration.
+The current five-repository matrix covers large package trees, genuine
+multi-module layouts, PostgreSQL and Valkey fixtures, broker-backed adapters,
+specification conformance, external interoperability runtimes, nested release
+units, and both large and zero-mutant inventories. `go-authorization` and
+`go-transactional-outbox` provide service-backed coverage; `go-knapsack`
+provides nested modules and reference interoperability; `go-cloudevents` and
+`go-openapi` provide specification-heavy conformance. Each run retains both
+implementation summaries and rejects unresolved contract differences.
+
+Performance is evaluated separately with the same immutable representatives and
+source-identity rule. See [Performance Rehearsals](performance.md).

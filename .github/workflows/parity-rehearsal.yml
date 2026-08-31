@@ -2,8 +2,14 @@ name: Compatibility rehearsal
 
 on:
   workflow_dispatch:
+    inputs:
+      performance_source_run_id:
+        description: Existing run containing four successful performance artifacts
+        required: false
+        type: string
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -17,6 +23,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       matrix: ${{ steps.matrix.outputs.value }}
+      performance: ${{ steps.matrix.outputs.performance }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - id: matrix
@@ -29,9 +36,23 @@ jobs:
             (.repositories | length == 5) and
             all(.repositories[];
               (.name | test("^go-[a-z0-9-]+$")) and
-              (.revision | test("^[0-9a-f]{40}$")))
+              (.revision | test("^[0-9a-f]{40}$")) and
+              (.performance_profile == null or
+                .performance_profile == "core" or
+                .performance_profile == "service")) and
+            ([.repositories[].performance_profile | select(. != null)] | sort) ==
+              ["core", "service"]
           ' "${MANIFEST}" >/dev/null
           echo "value=$(jq -c '.repositories' "${MANIFEST}")" >>"${GITHUB_OUTPUT}"
+          echo "performance=$(jq -c '[
+            .repositories[] |
+            select(.performance_profile != null) as $repository |
+            ["legacy", "shared"][] as $implementation |
+            $repository + {
+              implementation: $implementation,
+              artifact: ($repository.name + "-" + $implementation)
+            }
+          ]' "${MANIFEST}")" >>"${GITHUB_OUTPUT}"
 
   legacy:
     name: Legacy / ${{ matrix.name }}
@@ -70,6 +91,28 @@ jobs:
         run: |
           ../tooling/rehearsals/prepare-dependencies.sh \
             "${RUNNER_TEMP}/legacy-dependencies" "${GITHUB_ENV}" "${GITHUB_PATH}"
+      - name: Restore mutation checkpoints
+        working-directory: source
+        run: |
+          set -euo pipefail
+          while IFS=$'\t' read -r module artifact; do
+            seed=".golib/mutation-bootstrap/${artifact}.zip"
+            test -s "${seed}"
+            ./.golib/scripts/restore-ci-mutation-evidence.sh \
+              "${module}" "${seed}"
+          done < <(jq -r '
+            .modules[] |
+            select(.gates.mutation == true) |
+            [
+              .directory,
+              (if .directory == "." then
+                "root"
+              else
+                (.directory | gsub("/"; "-"))
+              end)
+            ] |
+            @tsv
+          ' modules.json)
       - name: Run copied contract
         working-directory: source
         run: |
@@ -173,7 +216,11 @@ jobs:
         run: |
           set -euo pipefail
           cp "${FIXTURE}/.golib.yaml" .golib.yaml
-          mkdir -p .verification/mutation
+          mkdir -p .verification/mutation/bootstrap
+          cp .golib/mutation-bootstrap/*.zip \
+            .verification/mutation/bootstrap/
+          cp .golib/mutation-history-migrations.json \
+            .verification/mutation/migration-ledger.json
           cp "${FIXTURE}/verification/mutation/zero-inventory.json" \
             .verification/mutation/zero-inventory.json
           if [[ -f "${FIXTURE}/verification/package.mk" ]]; then
@@ -253,6 +300,163 @@ jobs:
             ${{ runner.temp }}/shared.log
             ${{ runner.temp }}/shared-release.log
             ${{ runner.temp }}/shared-summary
+          if-no-files-found: error
+          retention-days: 14
+
+  performance:
+    name: Performance / ${{ matrix.name }} / ${{ matrix.implementation }}
+    if: inputs.performance_source_run_id == ''
+    needs: select
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.select.outputs.performance) }}
+    env:
+      GOPRIVATE: github.com/faustbrian/*
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          path: tooling
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: faustbrian/${{ matrix.name }}
+          ref: ${{ matrix.revision }}
+          fetch-depth: 0
+          path: source
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: source/.go-version
+          cache: false
+      - name: Build source CLI
+        working-directory: tooling
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-performance-build.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            GOTOOLCHAIN=auto \
+            go build -trimpath -buildvcs=false -o "${RUNNER_TEMP}/golib" ./cmd/golib
+      - name: Prepare content-identical source
+        working-directory: source
+        run: ../tooling/rehearsals/prepare.sh "${RUNNER_TEMP}/performance-content.sha256"
+      - name: Prepare isolated dependency sums
+        working-directory: source
+        run: |
+          ../tooling/rehearsals/prepare-dependencies.sh \
+            "${RUNNER_TEMP}/performance-dependencies" "${GITHUB_ENV}" "${GITHUB_PATH}"
+      - name: Apply shared rehearsal policy
+        if: matrix.implementation == 'shared'
+        working-directory: source
+        env:
+          FIXTURE: ../tooling/rehearsals/${{ matrix.name }}
+        run: |
+          set -euo pipefail
+          cp "${FIXTURE}/.golib.yaml" .golib.yaml
+          mkdir -p .verification/mutation/bootstrap
+          cp .golib/mutation-bootstrap/*.zip \
+            .verification/mutation/bootstrap/
+          cp .golib/mutation-history-migrations.json \
+            .verification/mutation/migration-ledger.json
+          cp "${FIXTURE}/verification/mutation/zero-inventory.json" \
+            .verification/mutation/zero-inventory.json
+          if [[ -f "${FIXTURE}/verification/package.mk" ]]; then
+            mkdir -p verification
+            cp "${FIXTURE}/verification/package.mk" verification/package.mk
+          fi
+          {
+            printf '%s\n' '/.golib.yaml' '/.verification/'
+            [[ ! -f "${FIXTURE}/verification/package.mk" ]] || \
+              printf '%s\n' '/verification/package.mk'
+          } >>.git/info/exclude
+      - name: Measure content-identical contract
+        working-directory: source
+        run: |
+          ../tooling/rehearsals/performance.sh \
+            '${{ matrix.implementation }}' \
+            . "${RUNNER_TEMP}/golib" '${{ matrix.name }}' '${{ matrix.revision }}' \
+            "$(cat "${RUNNER_TEMP}/performance-content.sha256")" \
+            '${{ matrix.performance_profile }}' \
+            "$(git -C ../tooling rev-parse HEAD)" \
+            >"${RUNNER_TEMP}/performance.json"
+      - name: Audit service cleanup
+        if: always()
+        working-directory: source
+        run: ../tooling/rehearsals/audit-services.sh "${RUNNER_TEMP}/performance-services.status"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: performance-${{ matrix.artifact }}
+          path: |
+            ${{ runner.temp }}/performance.json
+            ${{ runner.temp }}/performance-services.status
+          if-no-files-found: error
+          retention-days: 14
+
+  performance-report:
+    name: Compare performance measurements
+    if: always() && (needs.performance.result == 'success' || inputs.performance_source_run_id != '')
+    needs: performance
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Resolve measurement source
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_RUN_ID: ${{ inputs.performance_source_run_id }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${REQUESTED_RUN_ID}" ]]; then
+            run_id="${GITHUB_RUN_ID}"
+            run_attempt="${GITHUB_RUN_ATTEMPT}"
+            tooling_revision="${GITHUB_SHA}"
+          else
+            [[ "${REQUESTED_RUN_ID}" =~ ^[1-9][0-9]*$ ]]
+            metadata="$(gh api \
+              "/repos/${GITHUB_REPOSITORY}/actions/runs/${REQUESTED_RUN_ID}")"
+            jq -e \
+              --argjson run_id "${REQUESTED_RUN_ID}" \
+              --arg repository "${GITHUB_REPOSITORY}" '
+                .id == $run_id and
+                .repository.full_name == $repository and
+                .path == ".github/workflows/parity-rehearsal.yml" and
+                .event == "workflow_dispatch" and
+                .status == "completed" and
+                (.head_sha | test("^[0-9a-f]{40}$")) and
+                .run_attempt > 0
+              ' <<<"${metadata}" >/dev/null
+            run_id="$(jq -r .id <<<"${metadata}")"
+            run_attempt="$(jq -r .run_attempt <<<"${metadata}")"
+            tooling_revision="$(jq -r .head_sha <<<"${metadata}")"
+          fi
+          {
+            printf 'run_id=%s\n' "${run_id}"
+            printf 'run_attempt=%s\n' "${run_attempt}"
+            printf 'tooling_revision=%s\n' "${tooling_revision}"
+          } >>"${GITHUB_OUTPUT}"
+      - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
+        with:
+          pattern: performance-*
+          path: performance-results
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.source.outputs.run_id }}
+      - name: Validate comparable raw results
+        run: |
+          ./rehearsals/performance-compare.sh \
+            performance-results performance-results.json \
+            '${{ steps.source.outputs.run_id }}' \
+            '${{ steps.source.outputs.run_attempt }}' \
+            '${{ steps.source.outputs.tooling_revision }}' \
+            '${{ github.repository }}' \
+            rehearsals/repositories.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: performance-results
+          path: performance-results.json
           if-no-files-found: error
           retention-days: 14
 

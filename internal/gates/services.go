@@ -30,6 +30,32 @@ type serviceLease interface {
 
 type serviceStarter func(context.Context, []string) (serviceLease, error)
 
+// ServiceCycle starts each selected module's declared fixtures, waits for
+// readiness, and closes the lease without exposing detached lifecycle state.
+func (runner Runner) ServiceCycle(ctx context.Context, selection []string) error {
+	modules, err := runner.selectModules(selection)
+	if err != nil {
+		return err
+	}
+	output := runner.Output
+	if output == nil {
+		output = io.Discard
+	}
+	for _, module := range modules {
+		if len(module.RequiredServices) == 0 {
+			_, _ = fmt.Fprintf(output, "[%s] services: not applicable\n", module.Directory)
+			continue
+		}
+		if err := runner.withModuleServices(ctx, module, func(Runner) error {
+			_, _ = fmt.Fprintf(output, "[%s] services: ready\n", module.Directory)
+			return nil
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (runner Runner) withModuleServices(ctx context.Context, module inventory.Module, operation func(Runner) error) error {
 	if len(module.RequiredServices) == 0 {
 		return operation(runner)
