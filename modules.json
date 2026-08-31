@@ -11,7 +11,7 @@
       "purpose": "Strict shared repository tooling for independently released Go libraries.",
       "lifecycle": "stable",
       "releasable": true,
-      "version": "1.0.13",
+      "version": "1.1.0",
       "tag_prefix": "v",
       "gates": {
         "api_compatibility": false,
@@ -245,10 +245,8 @@
       "family_label": "Tooling",
       "family_description": "Repository verification, evidence, fixtures, workflows, and releases.",
       "family_order": 1,
-      "goal_status": "in-progress",
-      "goal_files": [
-        ".ai/GOAL.md"
-      ],
+      "goal_status": "complete",
+      "goal_files": [],
       "goal_evidence": [],
       "provenance": []
     }

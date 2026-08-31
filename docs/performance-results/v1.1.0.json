@@ -1,0 +1,1666 @@
+[
+  {
+    "schema_version": 1,
+    "repository": "go-authorization",
+    "revision": "6c8a6a7160f8b741b859315ecd1dcd667dffd682",
+    "content_sha256": "39a9defa7d594dfc81222fc1047b32641ff73c65606c37cf93aba9d8fa5ec34a",
+    "tooling_revision": "9e4fbe90e0f08ee7f3ba5f40c64115f909600624",
+    "implementation": "legacy",
+    "profile": "service",
+    "environment": {
+      "runner_image": "ubuntu24",
+      "runner_arch": "X64",
+      "go_version": "go1.26.6",
+      "cpu_count": 4
+    },
+    "workflow": {
+      "repository": "faustbrian/go-library-tools",
+      "run_id": 33353902578,
+      "attempt": 1
+    },
+    "golib_sha256": "b05bad7a73c7610237ea51ece05aa717476c419e0cd98597246eb362b45d3ca0",
+    "artifact_size_bytes": 249643,
+    "mutation_package_count": null,
+    "isolated_cache_residue": {
+      "entries": 0,
+      "bytes": 0
+    },
+    "samples": [
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 1,
+        "wall_ns": 5303970,
+        "peak_rss_kib": 3460,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 2,
+        "wall_ns": 4644063,
+        "peak_rss_kib": 3440,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 3,
+        "wall_ns": 4607786,
+        "peak_rss_kib": 3404,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 4,
+        "wall_ns": 4714264,
+        "peak_rss_kib": 3404,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 5,
+        "wall_ns": 4618927,
+        "peak_rss_kib": 3468,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 6,
+        "wall_ns": 4651898,
+        "peak_rss_kib": 3392,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 7,
+        "wall_ns": 4710146,
+        "peak_rss_kib": 3488,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 8,
+        "wall_ns": 4617844,
+        "peak_rss_kib": 3468,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 9,
+        "wall_ns": 4694808,
+        "peak_rss_kib": 3484,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 10,
+        "wall_ns": 4809834,
+        "peak_rss_kib": 3468,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 11,
+        "wall_ns": 4731616,
+        "peak_rss_kib": 3392,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 12,
+        "wall_ns": 4732889,
+        "peak_rss_kib": 3484,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 13,
+        "wall_ns": 4664561,
+        "peak_rss_kib": 3488,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 14,
+        "wall_ns": 4742977,
+        "peak_rss_kib": 3440,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 15,
+        "wall_ns": 4753346,
+        "peak_rss_kib": 3520,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 16,
+        "wall_ns": 4619428,
+        "peak_rss_kib": 3392,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 17,
+        "wall_ns": 4737146,
+        "peak_rss_kib": 3488,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 18,
+        "wall_ns": 4768344,
+        "peak_rss_kib": 3392,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 19,
+        "wall_ns": 4867498,
+        "peak_rss_kib": 3468,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 20,
+        "wall_ns": 4953328,
+        "peak_rss_kib": 3540,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 21,
+        "wall_ns": 4887415,
+        "peak_rss_kib": 3452,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 22,
+        "wall_ns": 4869002,
+        "peak_rss_kib": 3440,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 23,
+        "wall_ns": 5075776,
+        "peak_rss_kib": 3460,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 24,
+        "wall_ns": 4788893,
+        "peak_rss_kib": 3476,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 25,
+        "wall_ns": 4738279,
+        "peak_rss_kib": 3452,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 1,
+        "wall_ns": 32062665,
+        "peak_rss_kib": 4744,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 2,
+        "wall_ns": 32066061,
+        "peak_rss_kib": 4864,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 3,
+        "wall_ns": 31797081,
+        "peak_rss_kib": 4796,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 4,
+        "wall_ns": 31756207,
+        "peak_rss_kib": 4928,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 5,
+        "wall_ns": 32009606,
+        "peak_rss_kib": 4736,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 6,
+        "wall_ns": 31616275,
+        "peak_rss_kib": 5024,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 7,
+        "wall_ns": 31921142,
+        "peak_rss_kib": 4860,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 8,
+        "wall_ns": 32881216,
+        "peak_rss_kib": 4896,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 9,
+        "wall_ns": 31782314,
+        "peak_rss_kib": 4792,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 10,
+        "wall_ns": 33203857,
+        "peak_rss_kib": 4920,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "service-warmup",
+        "sample": 1,
+        "wall_ns": 10559043764,
+        "peak_rss_kib": 29512,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "service-lifecycle",
+        "sample": 1,
+        "wall_ns": 2008035289,
+        "peak_rss_kib": 29520,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "service-lifecycle",
+        "sample": 2,
+        "wall_ns": 1988655454,
+        "peak_rss_kib": 29592,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "service-lifecycle",
+        "sample": 3,
+        "wall_ns": 1983030873,
+        "peak_rss_kib": 29660,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "service-lifecycle",
+        "sample": 4,
+        "wall_ns": 1995294666,
+        "peak_rss_kib": 29384,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "service-lifecycle",
+        "sample": 5,
+        "wall_ns": 2008576927,
+        "peak_rss_kib": 31184,
+        "exit_code": 0,
+        "reuse_count": null
+      }
+    ]
+  },
+  {
+    "schema_version": 1,
+    "repository": "go-authorization",
+    "revision": "6c8a6a7160f8b741b859315ecd1dcd667dffd682",
+    "content_sha256": "39a9defa7d594dfc81222fc1047b32641ff73c65606c37cf93aba9d8fa5ec34a",
+    "tooling_revision": "9e4fbe90e0f08ee7f3ba5f40c64115f909600624",
+    "implementation": "shared",
+    "profile": "service",
+    "environment": {
+      "runner_image": "ubuntu24",
+      "runner_arch": "X64",
+      "go_version": "go1.26.6",
+      "cpu_count": 4
+    },
+    "workflow": {
+      "repository": "faustbrian/go-library-tools",
+      "run_id": 33353902578,
+      "attempt": 1
+    },
+    "golib_sha256": "b05bad7a73c7610237ea51ece05aa717476c419e0cd98597246eb362b45d3ca0",
+    "artifact_size_bytes": 13923343,
+    "mutation_package_count": null,
+    "isolated_cache_residue": {
+      "entries": 0,
+      "bytes": 0
+    },
+    "samples": [
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 1,
+        "wall_ns": 7042973,
+        "peak_rss_kib": 12376,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 2,
+        "wall_ns": 6275832,
+        "peak_rss_kib": 12496,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 3,
+        "wall_ns": 6023432,
+        "peak_rss_kib": 12460,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 4,
+        "wall_ns": 6488311,
+        "peak_rss_kib": 12588,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 5,
+        "wall_ns": 6745331,
+        "peak_rss_kib": 12460,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 6,
+        "wall_ns": 6690841,
+        "peak_rss_kib": 12504,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 7,
+        "wall_ns": 6349782,
+        "peak_rss_kib": 12368,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 8,
+        "wall_ns": 6128278,
+        "peak_rss_kib": 14600,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 9,
+        "wall_ns": 6243344,
+        "peak_rss_kib": 14580,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 10,
+        "wall_ns": 6319094,
+        "peak_rss_kib": 12304,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 11,
+        "wall_ns": 6058598,
+        "peak_rss_kib": 12456,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 12,
+        "wall_ns": 6123258,
+        "peak_rss_kib": 12456,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 13,
+        "wall_ns": 6396818,
+        "peak_rss_kib": 12124,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 14,
+        "wall_ns": 6698071,
+        "peak_rss_kib": 14604,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 15,
+        "wall_ns": 6432938,
+        "peak_rss_kib": 12644,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 16,
+        "wall_ns": 6360082,
+        "peak_rss_kib": 12460,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 17,
+        "wall_ns": 6528636,
+        "peak_rss_kib": 12548,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 18,
+        "wall_ns": 6714095,
+        "peak_rss_kib": 14564,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 19,
+        "wall_ns": 6813088,
+        "peak_rss_kib": 12624,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 20,
+        "wall_ns": 6541470,
+        "peak_rss_kib": 12508,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 21,
+        "wall_ns": 6587878,
+        "peak_rss_kib": 12452,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 22,
+        "wall_ns": 6288851,
+        "peak_rss_kib": 12464,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 23,
+        "wall_ns": 6195563,
+        "peak_rss_kib": 12372,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 24,
+        "wall_ns": 6333009,
+        "peak_rss_kib": 12580,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 25,
+        "wall_ns": 6463184,
+        "peak_rss_kib": 12464,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 1,
+        "wall_ns": 7279550,
+        "peak_rss_kib": 12588,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 2,
+        "wall_ns": 7348290,
+        "peak_rss_kib": 14836,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 3,
+        "wall_ns": 7338271,
+        "peak_rss_kib": 12504,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 4,
+        "wall_ns": 7348790,
+        "peak_rss_kib": 14752,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 5,
+        "wall_ns": 7069257,
+        "peak_rss_kib": 12708,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 6,
+        "wall_ns": 7079145,
+        "peak_rss_kib": 12676,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 7,
+        "wall_ns": 7433909,
+        "peak_rss_kib": 14740,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 8,
+        "wall_ns": 7754278,
+        "peak_rss_kib": 12628,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 9,
+        "wall_ns": 8239825,
+        "peak_rss_kib": 14640,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 10,
+        "wall_ns": 7253750,
+        "peak_rss_kib": 12656,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "service-warmup",
+        "sample": 1,
+        "wall_ns": 7906541298,
+        "peak_rss_kib": 29652,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "service-lifecycle",
+        "sample": 1,
+        "wall_ns": 1807429368,
+        "peak_rss_kib": 29380,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "service-lifecycle",
+        "sample": 2,
+        "wall_ns": 1853543024,
+        "peak_rss_kib": 29524,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "service-lifecycle",
+        "sample": 3,
+        "wall_ns": 1850149609,
+        "peak_rss_kib": 29700,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "service-lifecycle",
+        "sample": 4,
+        "wall_ns": 1821977881,
+        "peak_rss_kib": 29676,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "service-lifecycle",
+        "sample": 5,
+        "wall_ns": 1814735999,
+        "peak_rss_kib": 29376,
+        "exit_code": 0,
+        "reuse_count": null
+      }
+    ]
+  },
+  {
+    "schema_version": 1,
+    "repository": "go-knapsack",
+    "revision": "be21c07bf83136d8c6a3d98bad8e81dde6662308",
+    "content_sha256": "f5fe03ea4a1d5780a8279a1d9083e97a1f152e60f3ad97a500d77883f049f13f",
+    "tooling_revision": "9e4fbe90e0f08ee7f3ba5f40c64115f909600624",
+    "implementation": "legacy",
+    "profile": "core",
+    "environment": {
+      "runner_image": "ubuntu24",
+      "runner_arch": "X64",
+      "go_version": "go1.26.6",
+      "cpu_count": 4
+    },
+    "workflow": {
+      "repository": "faustbrian/go-library-tools",
+      "run_id": 33353902578,
+      "attempt": 1
+    },
+    "golib_sha256": "b05bad7a73c7610237ea51ece05aa717476c419e0cd98597246eb362b45d3ca0",
+    "artifact_size_bytes": 245852,
+    "mutation_package_count": 8,
+    "isolated_cache_residue": {
+      "entries": 0,
+      "bytes": 0
+    },
+    "samples": [
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 1,
+        "wall_ns": 4678797,
+        "peak_rss_kib": 3612,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 2,
+        "wall_ns": 3239500,
+        "peak_rss_kib": 3544,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 3,
+        "wall_ns": 3355609,
+        "peak_rss_kib": 3608,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 4,
+        "wall_ns": 3057071,
+        "peak_rss_kib": 3536,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 5,
+        "wall_ns": 3049402,
+        "peak_rss_kib": 3612,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 6,
+        "wall_ns": 3030386,
+        "peak_rss_kib": 3584,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 7,
+        "wall_ns": 3056731,
+        "peak_rss_kib": 3596,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 8,
+        "wall_ns": 3039840,
+        "peak_rss_kib": 3608,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 9,
+        "wall_ns": 3044949,
+        "peak_rss_kib": 3508,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 10,
+        "wall_ns": 3158489,
+        "peak_rss_kib": 3608,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 11,
+        "wall_ns": 3020590,
+        "peak_rss_kib": 3508,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 12,
+        "wall_ns": 3051682,
+        "peak_rss_kib": 3476,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 13,
+        "wall_ns": 3038869,
+        "peak_rss_kib": 3576,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 14,
+        "wall_ns": 3026673,
+        "peak_rss_kib": 3572,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 15,
+        "wall_ns": 3092740,
+        "peak_rss_kib": 3528,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 16,
+        "wall_ns": 2992841,
+        "peak_rss_kib": 3576,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 17,
+        "wall_ns": 2920353,
+        "peak_rss_kib": 3588,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 18,
+        "wall_ns": 2966217,
+        "peak_rss_kib": 3468,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 19,
+        "wall_ns": 3105943,
+        "peak_rss_kib": 3544,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 20,
+        "wall_ns": 3054232,
+        "peak_rss_kib": 3576,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 21,
+        "wall_ns": 3037163,
+        "peak_rss_kib": 3608,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 22,
+        "wall_ns": 3079365,
+        "peak_rss_kib": 3612,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 23,
+        "wall_ns": 3131665,
+        "peak_rss_kib": 3608,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 24,
+        "wall_ns": 3170721,
+        "peak_rss_kib": 3476,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "startup-diagnostic",
+        "sample": 25,
+        "wall_ns": 3072738,
+        "peak_rss_kib": 3568,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 1,
+        "wall_ns": 23593337,
+        "peak_rss_kib": 4928,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 2,
+        "wall_ns": 23782386,
+        "peak_rss_kib": 4872,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 3,
+        "wall_ns": 25209594,
+        "peak_rss_kib": 4924,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 4,
+        "wall_ns": 24217112,
+        "peak_rss_kib": 4928,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 5,
+        "wall_ns": 23372375,
+        "peak_rss_kib": 5084,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 6,
+        "wall_ns": 23522984,
+        "peak_rss_kib": 4996,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 7,
+        "wall_ns": 23261984,
+        "peak_rss_kib": 4796,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 8,
+        "wall_ns": 23040654,
+        "peak_rss_kib": 4928,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 9,
+        "wall_ns": 24290860,
+        "peak_rss_kib": 4868,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "repository-inventory",
+        "sample": 10,
+        "wall_ns": 22313280,
+        "peak_rss_kib": 4928,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "checkpoint-warmup",
+        "sample": 1,
+        "wall_ns": 1076281029175,
+        "peak_rss_kib": 306736,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "legacy",
+        "metric": "checkpoint-reuse",
+        "sample": 1,
+        "wall_ns": 4582844543,
+        "peak_rss_kib": 35152,
+        "exit_code": 0,
+        "reuse_count": 8
+      },
+      {
+        "implementation": "legacy",
+        "metric": "checkpoint-reuse",
+        "sample": 2,
+        "wall_ns": 4142861914,
+        "peak_rss_kib": 32980,
+        "exit_code": 0,
+        "reuse_count": 8
+      },
+      {
+        "implementation": "legacy",
+        "metric": "checkpoint-reuse",
+        "sample": 3,
+        "wall_ns": 5150287434,
+        "peak_rss_kib": 33052,
+        "exit_code": 0,
+        "reuse_count": 8
+      },
+      {
+        "implementation": "legacy",
+        "metric": "module-scaling-sequential",
+        "sample": 1,
+        "wall_ns": 23023082466,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      },
+      {
+        "implementation": "legacy",
+        "metric": "module-scaling-sequential",
+        "sample": 2,
+        "wall_ns": 22535358443,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      },
+      {
+        "implementation": "legacy",
+        "metric": "module-scaling-sequential",
+        "sample": 3,
+        "wall_ns": 22672508255,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      },
+      {
+        "implementation": "legacy",
+        "metric": "module-scaling-concurrent",
+        "sample": 1,
+        "wall_ns": 17407288234,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      },
+      {
+        "implementation": "legacy",
+        "metric": "module-scaling-concurrent",
+        "sample": 2,
+        "wall_ns": 18855862748,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      },
+      {
+        "implementation": "legacy",
+        "metric": "module-scaling-concurrent",
+        "sample": 3,
+        "wall_ns": 18094095796,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      }
+    ]
+  },
+  {
+    "schema_version": 1,
+    "repository": "go-knapsack",
+    "revision": "be21c07bf83136d8c6a3d98bad8e81dde6662308",
+    "content_sha256": "f5fe03ea4a1d5780a8279a1d9083e97a1f152e60f3ad97a500d77883f049f13f",
+    "tooling_revision": "9e4fbe90e0f08ee7f3ba5f40c64115f909600624",
+    "implementation": "shared",
+    "profile": "core",
+    "environment": {
+      "runner_image": "ubuntu24",
+      "runner_arch": "X64",
+      "go_version": "go1.26.6",
+      "cpu_count": 4
+    },
+    "workflow": {
+      "repository": "faustbrian/go-library-tools",
+      "run_id": 33353902578,
+      "attempt": 1
+    },
+    "golib_sha256": "b05bad7a73c7610237ea51ece05aa717476c419e0cd98597246eb362b45d3ca0",
+    "artifact_size_bytes": 13923343,
+    "mutation_package_count": 8,
+    "isolated_cache_residue": {
+      "entries": 0,
+      "bytes": 0
+    },
+    "samples": [
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 1,
+        "wall_ns": 6990971,
+        "peak_rss_kib": 12452,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 2,
+        "wall_ns": 6087428,
+        "peak_rss_kib": 12452,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 3,
+        "wall_ns": 5917244,
+        "peak_rss_kib": 12488,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 4,
+        "wall_ns": 6066816,
+        "peak_rss_kib": 12376,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 5,
+        "wall_ns": 6008784,
+        "peak_rss_kib": 12452,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 6,
+        "wall_ns": 6015302,
+        "peak_rss_kib": 12320,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 7,
+        "wall_ns": 6202091,
+        "peak_rss_kib": 14560,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 8,
+        "wall_ns": 6085060,
+        "peak_rss_kib": 14520,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 9,
+        "wall_ns": 5679736,
+        "peak_rss_kib": 12404,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 10,
+        "wall_ns": 5908009,
+        "peak_rss_kib": 12444,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 11,
+        "wall_ns": 5992716,
+        "peak_rss_kib": 14592,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 12,
+        "wall_ns": 6409042,
+        "peak_rss_kib": 14540,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 13,
+        "wall_ns": 5735891,
+        "peak_rss_kib": 12520,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 14,
+        "wall_ns": 6298881,
+        "peak_rss_kib": 14588,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 15,
+        "wall_ns": 6501464,
+        "peak_rss_kib": 12492,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 16,
+        "wall_ns": 6146155,
+        "peak_rss_kib": 12508,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 17,
+        "wall_ns": 7077434,
+        "peak_rss_kib": 12536,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 18,
+        "wall_ns": 6969573,
+        "peak_rss_kib": 12460,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 19,
+        "wall_ns": 6366460,
+        "peak_rss_kib": 12520,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 20,
+        "wall_ns": 6160493,
+        "peak_rss_kib": 12464,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 21,
+        "wall_ns": 6474957,
+        "peak_rss_kib": 12520,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 22,
+        "wall_ns": 6222240,
+        "peak_rss_kib": 12472,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 23,
+        "wall_ns": 5700554,
+        "peak_rss_kib": 12392,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 24,
+        "wall_ns": 6058894,
+        "peak_rss_kib": 14612,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "startup-diagnostic",
+        "sample": 25,
+        "wall_ns": 5873641,
+        "peak_rss_kib": 12380,
+        "exit_code": 2,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 1,
+        "wall_ns": 6957107,
+        "peak_rss_kib": 12572,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 2,
+        "wall_ns": 6794351,
+        "peak_rss_kib": 14868,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 3,
+        "wall_ns": 7137157,
+        "peak_rss_kib": 14732,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 4,
+        "wall_ns": 7124473,
+        "peak_rss_kib": 14708,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 5,
+        "wall_ns": 7053429,
+        "peak_rss_kib": 12704,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 6,
+        "wall_ns": 7396304,
+        "peak_rss_kib": 14708,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 7,
+        "wall_ns": 6912032,
+        "peak_rss_kib": 14692,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 8,
+        "wall_ns": 7187552,
+        "peak_rss_kib": 14656,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 9,
+        "wall_ns": 6815116,
+        "peak_rss_kib": 12476,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "repository-inventory",
+        "sample": 10,
+        "wall_ns": 7268027,
+        "peak_rss_kib": 12632,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "checkpoint-warmup",
+        "sample": 1,
+        "wall_ns": 1676563770844,
+        "peak_rss_kib": 582372,
+        "exit_code": 0,
+        "reuse_count": null
+      },
+      {
+        "implementation": "shared",
+        "metric": "checkpoint-reuse",
+        "sample": 1,
+        "wall_ns": 2028427580,
+        "peak_rss_kib": 31120,
+        "exit_code": 0,
+        "reuse_count": 8
+      },
+      {
+        "implementation": "shared",
+        "metric": "checkpoint-reuse",
+        "sample": 2,
+        "wall_ns": 1981657339,
+        "peak_rss_kib": 31024,
+        "exit_code": 0,
+        "reuse_count": 8
+      },
+      {
+        "implementation": "shared",
+        "metric": "checkpoint-reuse",
+        "sample": 3,
+        "wall_ns": 2081097315,
+        "peak_rss_kib": 31000,
+        "exit_code": 0,
+        "reuse_count": 8
+      },
+      {
+        "implementation": "shared",
+        "metric": "module-scaling-sequential",
+        "sample": 1,
+        "wall_ns": 22879560599,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      },
+      {
+        "implementation": "shared",
+        "metric": "module-scaling-sequential",
+        "sample": 2,
+        "wall_ns": 23325260635,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      },
+      {
+        "implementation": "shared",
+        "metric": "module-scaling-sequential",
+        "sample": 3,
+        "wall_ns": 22553310927,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      },
+      {
+        "implementation": "shared",
+        "metric": "module-scaling-concurrent",
+        "sample": 1,
+        "wall_ns": 18960800416,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      },
+      {
+        "implementation": "shared",
+        "metric": "module-scaling-concurrent",
+        "sample": 2,
+        "wall_ns": 19801066948,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      },
+      {
+        "implementation": "shared",
+        "metric": "module-scaling-concurrent",
+        "sample": 3,
+        "wall_ns": 19014066710,
+        "peak_rss_kib": null,
+        "exit_code": 0,
+        "module_count": 3
+      }
+    ]
+  }
+]

@@ -62,6 +62,15 @@ Mutation campaigns serialize package tests while retaining parallel mutant
 workers. This prevents test-level scheduler contention from deciding short
 deadline assertions without reducing the mutant inventory or gate strictness.
 
+Mutation comparison requires the same module and package keys. Shared tooling
+MUST discover and kill at least the legacy number of viable mutants for every
+key; a lower count fails compatibility. A higher fully killed count is accepted
+as strengthened verification because current discovery can expose mutation
+points absent from retained legacy evidence. Completed compatibility artifacts
+may be reused by explicit workflow run ID after the workflow verifies that all
+ten source jobs completed successfully. This permits comparator-only fixes
+without repeating content-identical mutation campaigns.
+
 Shared runs temporarily hide copied `.golib` tooling only while validating the
 standalone repository contract, then restore it before exercising the package
 gate set. Shared fixture files are excluded through task-owned Git metadata.
@@ -102,10 +111,16 @@ analysis, security, license, and SBOM gates.
 The rehearsal changed no Go source or public API and left no dependency on the
 archived monorepo or copied `.golib` implementation.
 
-## Required Coverage
+## Representative Coverage
 
-Additional rehearsals must cover a large package tree, genuine multi-module
-layout, service-backed tests, broker-backed tests, specification conformance,
-external runtimes, nested release units, and large or zero-mutant inventories
-before the first public release. Each difference must be resolved or recorded
-as an intentional compatibility decision before migration.
+The current five-repository matrix covers large package trees, genuine
+multi-module layouts, PostgreSQL and Valkey fixtures, broker-backed adapters,
+specification conformance, external interoperability runtimes, nested release
+units, and both large and zero-mutant inventories. `go-authorization` and
+`go-transactional-outbox` provide service-backed coverage; `go-knapsack`
+provides nested modules and reference interoperability; `go-cloudevents` and
+`go-openapi` provide specification-heavy conformance. Each run retains both
+implementation summaries and rejects unresolved contract differences.
+
+Performance is evaluated separately with the same immutable representatives and
+source-identity rule. See [Performance Rehearsals](performance.md).

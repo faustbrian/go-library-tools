@@ -16,6 +16,11 @@ fixtures in-process, passes their environment only to that gate, and closes the
 lease on success, failure, or process cancellation. This prevents stale state
 files and orphaned manual leases from becoming another lifecycle protocol.
 
+`golib services cycle [--module DIR]` exposes only the safe bounded lifecycle:
+start, readiness, and immediate cleanup. It supports diagnostics and
+reproducible lifecycle measurements without returning credentials, state files,
+or a lease that another process must remember to close.
+
 RabbitMQ Streams supports standalone, three-node cluster, rolling-upgrade,
 authorization, Toxiproxy, and mutual-TLS scenarios. OpenSearch images come from
 a strict module-owned digest lock. Package-specific schemas and payloads remain

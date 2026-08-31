@@ -40,7 +40,8 @@ Usage:
 	golib mutation import --module <directory> --archive <path> --ledger <path>
   golib api check
   golib api update
-	golib docs check [--module <directory>]
+  golib docs check [--module <directory>]
+	golib services cycle [--module <directory>]
   golib release check
   golib release dry-run
   golib evidence inspect
@@ -234,6 +235,17 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Docs(ctx, selection)
+		})
+	case "services":
+		if len(args) < 2 || args[1] != "cycle" {
+			return usage(stderr, "usage: golib services cycle [--module <directory>]")
+		}
+		selection, usageError := moduleSelection(args[2:], catalog.Modules)
+		if usageError != nil {
+			return usage(stderr, "usage: golib services cycle [--module <directory>]")
+		}
+		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
+			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).ServiceCycle(ctx, selection)
 		})
 	case "release":
 		if len(args) != 2 || (args[1] != "check" && args[1] != "dry-run") {

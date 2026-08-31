@@ -22,7 +22,7 @@ func TestExecuteShowsHelp(t *testing.T) {
 	if code != 0 || stderr.Len() != 0 {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
-	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "specification check [--online]", "workflows check", "release dry-run", "upgrade <plan|apply>"} {
+	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "specification check [--online]", "workflows check", "services cycle", "release dry-run", "upgrade <plan|apply>"} {
 		if !strings.Contains(stdout.String(), command) {
 			t.Errorf("help does not contain %q", command)
 		}
@@ -30,6 +30,20 @@ func TestExecuteShowsHelp(t *testing.T) {
 	for _, unsupported := range []string{"services start", "services stop"} {
 		if strings.Contains(stdout.String(), unsupported) {
 			t.Errorf("help advertises unsupported command %q", unsupported)
+		}
+	}
+}
+
+func TestExecuteCyclesModuleServicesWithoutDetachedState(t *testing.T) {
+	root := fixture(t)
+	for _, args := range [][]string{
+		{"services", "cycle"},
+		{"services", "cycle", "--module", "."},
+	} {
+		var stdout, stderr bytes.Buffer
+		code := cli.Execute(args, root, &stdout, &stderr)
+		if code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), "services: not applicable") {
+			t.Fatalf("Execute(%v) = %d, %q, %q", args, code, stdout.String(), stderr.String())
 		}
 	}
 }
@@ -325,6 +339,9 @@ func TestExecuteReportsUsageAndRepositoryErrors(t *testing.T) {
 		{"missing consumer inventory", []string{"consumers", "validate"}, fixture, 1, "read consumer manifest"},
 		{"invalid upgrade arguments", []string{"upgrade", "plan", "--version", "v1.0.0"}, fixture, 2, "usage:"},
 		{"invalid repository arguments", []string{"repository"}, fixture, 2, "usage:"},
+		{"missing services action", []string{"services"}, fixture, 2, "usage:"},
+		{"invalid services arguments", []string{"services", "start"}, fixture, 2, "usage:"},
+		{"invalid services module", []string{"services", "cycle", "--module"}, fixture, 2, "usage:"},
 		{"missing evidence action", []string{"evidence"}, fixture, 2, "usage:"},
 		{"invalid evidence arguments", []string{"evidence", "inspect", "--yaml"}, fixture, 2, "usage:"},
 		{"unsafe evidence", []string{"evidence", "inspect"}, func(t *testing.T) string {

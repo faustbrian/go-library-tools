@@ -13,6 +13,15 @@ while IFS= read -r repository; do
     shared="${artifacts}/parity-shared-${repository}/shared-summary"
     [[ -s "${legacy}" && -s "${shared}" ]]
     jq -e --slurp '
+      def mutation_map:
+        reduce .[] as $record ({};
+          ($record | split("\t")) as $fields |
+          if ($fields | length) == 3 and ($fields[2] | test("^[0-9]+$")) then
+            .[($fields[0] + "\u0000" + $fields[1])] = ($fields[2] | tonumber)
+          else
+            error("invalid mutation summary record")
+          end
+        );
       length == 2 and
       .[0].schema_version == 1 and
       .[1].schema_version == 1 and
@@ -28,7 +37,15 @@ while IFS= read -r repository; do
       .[0].required_services == .[1].required_services and
       .[0].release_units == .[1].release_units and
       .[0].coverage == .[1].coverage and
-      .[0].mutation == .[1].mutation and
+      .[0].mutation as $legacy_records |
+      .[1].mutation as $shared_records |
+      ($legacy_records | mutation_map) as $legacy_mutation |
+      ($shared_records | mutation_map) as $shared_mutation |
+      ($legacy_records | length) == ($legacy_mutation | length) and
+      ($shared_records | length) == ($shared_mutation | length) and
+      ($legacy_mutation | keys) == ($shared_mutation | keys) and
+      all($legacy_mutation | to_entries[];
+        $shared_mutation[.key] >= .value) and
       .[0].nilaway_advisories == .[1].nilaway_advisories and
       .[0].release_decision == .[1].release_decision
     ' "${legacy}" "${shared}" >/dev/null

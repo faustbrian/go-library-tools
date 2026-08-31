@@ -7,6 +7,10 @@ evidence:
   root: ".verification"
 mutation:
   root: ".verification/mutation"
+  imports:
+  - module: "."
+    archive: ".verification/mutation/bootstrap/root.zip"
+    ledger: ".verification/mutation/migration-ledger.json"
 operations:
 - module: "."
   gate: api

@@ -32,6 +32,28 @@ All notable changes to this project are documented in this file.
   while continuing to reject every other evidence conflict.
 - Accepted the complete BCP 14 requirement vocabulary in specification
   decisions and enforced normative scope for `REQUIRED` decisions.
+
+## 1.1.0 - 2026-08-31
+
+### Added
+
+- Added content-identical legacy performance rehearsals with raw startup,
+  inventory, checkpoint-reuse, module-scaling, peak-RSS, artifact-size, cache,
+  and service-lifecycle measurements.
+- Added a bounded `golib services cycle` command for fixture readiness and
+  immediate cleanup without detached lifecycle state.
+
+### Fixed
+
+- Accepted non-decreasing, fully killed mutation inventories as strengthened
+  compatibility while continuing to reject missing packages or weaker counts.
+- Allowed explicit reuse of successful compatibility artifacts so comparison
+  fixes do not rerun completed mutation campaigns.
+
+## 1.0.14 - 2026-08-30
+
+### Fixed
+
 - Preserved production-specific exact-coverage denominators while allowing the
   complete module test set to contribute coverage in one run when integration
   or external tests exercise a package.

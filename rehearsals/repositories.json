@@ -3,7 +3,8 @@
   "repositories": [
     {
       "name": "go-authorization",
-      "revision": "6c8a6a7160f8b741b859315ecd1dcd667dffd682"
+      "revision": "6c8a6a7160f8b741b859315ecd1dcd667dffd682",
+      "performance_profile": "service"
     },
     {
       "name": "go-cloudevents",
@@ -11,7 +12,8 @@
     },
     {
       "name": "go-knapsack",
-      "revision": "be21c07bf83136d8c6a3d98bad8e81dde6662308"
+      "revision": "be21c07bf83136d8c6a3d98bad8e81dde6662308",
+      "performance_profile": "core"
     },
     {
       "name": "go-openapi",
