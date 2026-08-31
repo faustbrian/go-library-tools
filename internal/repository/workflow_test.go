@@ -220,6 +220,27 @@ func TestPerformanceRehearsalPublishesComparableRawMeasurements(t *testing.T) {
 	}
 }
 
+func TestParityWorkflowCanReuseCompletedContractArtifacts(t *testing.T) {
+	workflow := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
+	for _, required := range []string{
+		"compatibility_source_run_id",
+		"Resolve compatibility source",
+		`/repos/${GITHUB_REPOSITORY}/actions/runs/${REQUESTED_RUN_ID}`,
+		`/repos/${GITHUB_REPOSITORY}/actions/runs/${REQUESTED_RUN_ID}/jobs?per_page=100`,
+		`git fetch --no-tags --depth=1 origin "${source_sha}"`,
+		`git diff --name-only "${source_sha}" "${GITHUB_SHA}" --`,
+		`grep -Ev '(^rehearsals/compare\.sh$|_test\.go$)'`,
+		"run-id: ${{ steps.contract-source.outputs.run_id }}",
+	} {
+		if !strings.Contains(workflow, required) {
+			t.Errorf("compatibility workflow lacks %q", required)
+		}
+	}
+	if count := strings.Count(workflow, "if: inputs.compatibility_source_run_id == ''"); count != 2 {
+		t.Fatalf("compatibility artifact-reuse guards = %d, want legacy and shared", count)
+	}
+}
+
 func TestParityRehearsalReusesRepresentativeMutationEvidence(t *testing.T) {
 	t.Parallel()
 
