@@ -2,8 +2,14 @@ name: Compatibility rehearsal
 
 on:
   workflow_dispatch:
+    inputs:
+      performance_source_run_id:
+        description: Existing run containing four successful performance artifacts
+        required: false
+        type: string
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -13,6 +19,7 @@ concurrency:
 jobs:
   select:
     name: Select representatives
+    if: inputs.performance_source_run_id == ''
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
@@ -360,7 +367,7 @@ jobs:
 
   performance-report:
     name: Compare performance measurements
-    if: always()
+    if: always() && (needs.performance.result == 'success' || inputs.performance_source_run_id != '')
     needs: performance
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -370,6 +377,8 @@ jobs:
         with:
           pattern: performance-*
           path: performance-results
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.performance_source_run_id || github.run_id }}
       - name: Validate comparable raw results
         run: |
           ./rehearsals/performance-compare.sh \
@@ -383,7 +392,7 @@ jobs:
 
   compare:
     name: Compare contracts
-    if: always()
+    if: always() && inputs.performance_source_run_id == ''
     needs: [select, legacy, shared]
     runs-on: ubuntu-24.04
     timeout-minutes: 10

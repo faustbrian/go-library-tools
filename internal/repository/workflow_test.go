@@ -170,6 +170,9 @@ func TestPerformanceRehearsalPublishesComparableRawMeasurements(t *testing.T) {
 		"rehearsals/performance-compare.sh",
 		"performance-results.json",
 		"performance-services.status",
+		"performance_source_run_id",
+		"github-token: ${{ github.token }}",
+		"run-id: ${{ inputs.performance_source_run_id || github.run_id }}",
 		`["core", "service"]`,
 	} {
 		if !strings.Contains(workflow, required) {

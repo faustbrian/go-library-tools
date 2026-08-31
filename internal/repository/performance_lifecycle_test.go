@@ -1,6 +1,7 @@
 package repository_test
 
 import (
+	"encoding/json"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -86,4 +87,80 @@ status=0
 	if output, err := command.CombinedOutput(); err != nil {
 		t.Fatalf("copied tooling lifecycle: %v\n%s", err, output)
 	}
+}
+
+func TestPerformanceComparisonAcceptsEmptyDisposableRuntime(t *testing.T) {
+	t.Parallel()
+
+	root := t.TempDir()
+	for _, profile := range []string{"core", "service"} {
+		for _, implementation := range []string{"legacy", "shared"} {
+			directory := filepath.Join(root, profile+"-"+implementation)
+			if err := os.MkdirAll(directory, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(directory, "performance-services.status"), []byte("0\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			data, err := json.Marshal(performanceReportFixture(profile, implementation))
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(directory, "performance.json"), data, 0o600); err != nil {
+				t.Fatal(err)
+			}
+		}
+	}
+	output := filepath.Join(root, "aggregate.json")
+	command := exec.CommandContext(t.Context(), "bash", filepath.Join(projectRoot(t), "rehearsals", "performance-compare.sh"), root, output)
+	if result, err := command.CombinedOutput(); err != nil {
+		t.Fatalf("compare empty disposable runtime: %v\n%s", err, result)
+	}
+}
+
+func performanceReportFixture(profile, implementation string) map[string]any {
+	repository := "go-authorization"
+	revision := "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	content := "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+	samples := performanceSamples(25, "startup-diagnostic", 2, nil)
+	samples = append(samples, performanceSamples(10, "repository-inventory", 0, nil)...)
+	mutationPackages := any(nil)
+	if profile == "core" {
+		repository = "go-knapsack"
+		revision = "cccccccccccccccccccccccccccccccccccccccc"
+		content = "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+		mutationPackages = 8
+		samples = append(samples, performanceSamples(1, "checkpoint-warmup", 0, nil)...)
+		samples = append(samples, performanceSamples(3, "checkpoint-reuse", 0, 8)...)
+		samples = append(samples, performanceSamples(3, "module-scaling-sequential", 0, nil)...)
+		samples = append(samples, performanceSamples(3, "module-scaling-concurrent", 0, nil)...)
+	} else {
+		samples = append(samples, performanceSamples(1, "service-warmup", 0, nil)...)
+		samples = append(samples, performanceSamples(5, "service-lifecycle", 0, nil)...)
+	}
+	return map[string]any{
+		"schema_version": 1, "repository": repository, "revision": revision,
+		"content_sha256": content, "tooling_revision": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+		"implementation": implementation, "profile": profile,
+		"workflow":            map[string]any{"repository": "faustbrian/go-library-tools", "run_id": 1, "attempt": 1},
+		"golib_sha256":        "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+		"artifact_size_bytes": 1, "mutation_package_count": mutationPackages,
+		"isolated_cache_residue": map[string]any{"entries": 0, "bytes": 0}, "samples": samples,
+	}
+}
+
+func performanceSamples(count int, metric string, exitCode int, reuse any) []map[string]any {
+	samples := make([]map[string]any, count)
+	for index := range count {
+		sample := map[string]any{
+			"implementation": "fixture", "metric": metric, "sample": index + 1,
+			"wall_ns": 1, "peak_rss_kib": 1, "exit_code": exitCode, "reuse_count": reuse,
+		}
+		if metric == "module-scaling-sequential" || metric == "module-scaling-concurrent" {
+			sample["peak_rss_kib"] = nil
+			sample["module_count"] = 3
+		}
+		samples[index] = sample
+	}
+	return samples
 }

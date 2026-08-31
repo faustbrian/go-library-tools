@@ -36,7 +36,7 @@ jq -s -e '
         (.profile == "core" or .profile == "service") and
         .artifact_size_bytes > 0 and
         .isolated_cache_residue.entries == 0 and
-        .isolated_cache_residue.bytes > 0 and
+        .isolated_cache_residue.bytes == 0 and
         all(.samples[];
             .wall_ns > 0 and
             ((.metric | startswith("module-scaling-")) or
