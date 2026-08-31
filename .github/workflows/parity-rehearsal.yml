@@ -3,6 +3,10 @@ name: Compatibility rehearsal
 on:
   workflow_dispatch:
     inputs:
+      compatibility_source_run_id:
+        description: Existing run containing ten successful compatibility artifacts
+        required: false
+        type: string
       performance_source_run_id:
         description: Existing run containing four successful performance artifacts
         required: false
@@ -56,6 +60,7 @@ jobs:
 
   legacy:
     name: Legacy / ${{ matrix.name }}
+    if: inputs.compatibility_source_run_id == ''
     needs: select
     runs-on: ubuntu-24.04
     timeout-minutes: 360
@@ -164,6 +169,7 @@ jobs:
 
   shared:
     name: Shared / ${{ matrix.name }}
+    if: inputs.compatibility_source_run_id == ''
     needs: select
     runs-on: ubuntu-24.04
     timeout-minutes: 360
@@ -462,15 +468,65 @@ jobs:
 
   compare:
     name: Compare contracts
-    if: always()
+    if: >-
+      always() && needs.select.result == 'success' &&
+      ((needs.legacy.result == 'success' && needs.shared.result == 'success') ||
+      inputs.compatibility_source_run_id != '')
     needs: [select, legacy, shared]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Resolve compatibility source
+        id: contract-source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REQUESTED_RUN_ID: ${{ inputs.compatibility_source_run_id }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${REQUESTED_RUN_ID}" ]]; then
+            run_id="${GITHUB_RUN_ID}"
+          else
+            [[ "${REQUESTED_RUN_ID}" =~ ^[1-9][0-9]*$ ]]
+            metadata="$(gh api \
+              "/repos/${GITHUB_REPOSITORY}/actions/runs/${REQUESTED_RUN_ID}")"
+            jq -e \
+              --argjson run_id "${REQUESTED_RUN_ID}" \
+              --arg repository "${GITHUB_REPOSITORY}" '
+                .id == $run_id and
+                .repository.full_name == $repository and
+                .path == ".github/workflows/parity-rehearsal.yml" and
+                .event == "workflow_dispatch" and
+                .status == "completed" and
+                (.head_sha | test("^[0-9a-f]{40}$"))
+              ' <<<"${metadata}" >/dev/null
+            source_sha="$(jq -r .head_sha <<<"${metadata}")"
+            git fetch --no-tags --depth=1 origin "${source_sha}"
+            changed_inputs="$(
+              git diff --name-only "${source_sha}" "${GITHUB_SHA}" -- \
+                .go-version go.mod go.sum cmd internal rehearsals |
+                grep -Ev '(^rehearsals/compare\.sh$|_test\.go$)' || true
+            )"
+            if [[ -n "${changed_inputs}" ]]; then
+              printf 'compatibility source inputs changed:\n%s\n' \
+                "${changed_inputs}" >&2
+              exit 1
+            fi
+            jobs_metadata="$(gh api \
+              "/repos/${GITHUB_REPOSITORY}/actions/runs/${REQUESTED_RUN_ID}/jobs?per_page=100")"
+            jq -e '
+              ([.jobs[] | select(.name | test("^(Legacy|Shared) / go-"))] | length) == 10 and
+              all(.jobs[] | select(.name | test("^(Legacy|Shared) / go-"));
+                .status == "completed" and .conclusion == "success")
+            ' <<<"${jobs_metadata}" >/dev/null
+            run_id="$(jq -r .id <<<"${metadata}")"
+          fi
+          printf 'run_id=%s\n' "${run_id}" >>"${GITHUB_OUTPUT}"
       - uses: actions/download-artifact@95815c38cf2ff2164869cbab79da8d1f422bc89e # v4
         with:
           pattern: parity-*
           path: results
+          github-token: ${{ github.token }}
+          run-id: ${{ steps.contract-source.outputs.run_id }}
       - name: Require equivalent results
         run: ./rehearsals/compare.sh results rehearsals/repositories.json

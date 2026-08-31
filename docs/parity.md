@@ -62,6 +62,15 @@ Mutation campaigns serialize package tests while retaining parallel mutant
 workers. This prevents test-level scheduler contention from deciding short
 deadline assertions without reducing the mutant inventory or gate strictness.
 
+Mutation comparison requires the same module and package keys. Shared tooling
+MUST discover and kill at least the legacy number of viable mutants for every
+key; a lower count fails compatibility. A higher fully killed count is accepted
+as strengthened verification because current discovery can expose mutation
+points absent from retained legacy evidence. Completed compatibility artifacts
+may be reused by explicit workflow run ID after the workflow verifies that all
+ten source jobs completed successfully. This permits comparator-only fixes
+without repeating content-identical mutation campaigns.
+
 Shared runs temporarily hide copied `.golib` tooling only while validating the
 standalone repository contract, then restore it before exercising the package
 gate set. Shared fixture files are excluded through task-owned Git metadata.

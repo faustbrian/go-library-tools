@@ -14,6 +14,13 @@ All notable changes to this project are documented in this file.
 - Added a bounded `golib services cycle` command for fixture readiness and
   immediate cleanup without detached lifecycle state.
 
+### Fixed
+
+- Accepted non-decreasing, fully killed mutation inventories as strengthened
+  compatibility while continuing to reject missing packages or weaker counts.
+- Allowed explicit reuse of successful compatibility artifacts so comparison
+  fixes do not rerun completed mutation campaigns.
+
 ## 1.0.14 - 2026-08-30
 
 ### Fixed
