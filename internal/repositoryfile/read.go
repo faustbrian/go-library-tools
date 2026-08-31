@@ -25,6 +25,19 @@ func Read(root, relative string, maximum int64) ([]byte, error) {
 	return read(root, relative, maximum, operatingSystem{})
 }
 
+// ValidateDirectory verifies that relative identifies a real directory below
+// root and that no existing path component is a symlink.
+func ValidateDirectory(root, relative string) error {
+	_, info, err := inspectPath(root, relative, operatingSystem{})
+	if err != nil {
+		return err
+	}
+	if !info.IsDir() {
+		return fmt.Errorf("%w: %s", ErrNotRegular, relative)
+	}
+	return nil
+}
+
 type fileSystem interface {
 	Lstat(string) (os.FileInfo, error)
 	Open(string) (file, error)
@@ -50,30 +63,11 @@ func read(root, relative string, maximum int64, files fileSystem) ([]byte, error
 	if maximum <= 0 {
 		return nil, ErrTooLarge
 	}
-	clean := filepath.Clean(relative)
-	if relative == "" || filepath.IsAbs(relative) || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
-		return nil, ErrUnsafePath
+	current, expected, err := inspectPath(root, relative, files)
+	if err != nil {
+		return nil, err
 	}
-
-	current := root
-	parts := strings.Split(clean, string(filepath.Separator))
-	var expected os.FileInfo
-	for index, part := range parts {
-		current = filepath.Join(current, part)
-		info, err := files.Lstat(current)
-		if err != nil {
-			return nil, fmt.Errorf("inspect %s: %w", relative, err)
-		}
-		if info.Mode()&os.ModeSymlink != 0 {
-			return nil, fmt.Errorf("%w: %s", ErrUnsafePath, relative)
-		}
-		if index == len(parts)-1 {
-			expected = info
-		} else if !info.IsDir() {
-			return nil, fmt.Errorf("%w: path component %s", ErrNotRegular, part)
-		}
-	}
-	if expected == nil || !expected.Mode().IsRegular() {
+	if !expected.Mode().IsRegular() {
 		return nil, fmt.Errorf("%w: %s", ErrNotRegular, relative)
 	}
 
@@ -101,4 +95,36 @@ func read(root, relative string, maximum int64, files fileSystem) ([]byte, error
 		return nil, fmt.Errorf("%w: %s", ErrTooLarge, relative)
 	}
 	return data, nil
+}
+
+func inspectPath(root, relative string, files interface {
+	Lstat(string) (os.FileInfo, error)
+}) (string, os.FileInfo, error) {
+	clean := filepath.Clean(relative)
+	if relative == "" || filepath.IsAbs(relative) || clean == ".." || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+		return "", nil, ErrUnsafePath
+	}
+
+	current := root
+	parts := strings.Split(clean, string(filepath.Separator))
+	var expected os.FileInfo
+	for index, part := range parts {
+		current = filepath.Join(current, part)
+		info, err := files.Lstat(current)
+		if err != nil {
+			return "", nil, fmt.Errorf("inspect %s: %w", relative, err)
+		}
+		if info == nil {
+			return "", nil, fmt.Errorf("inspect %s: %w", relative, ErrUnsafePath)
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			return "", nil, fmt.Errorf("%w: %s", ErrUnsafePath, relative)
+		}
+		if index == len(parts)-1 {
+			expected = info
+		} else if !info.IsDir() {
+			return "", nil, fmt.Errorf("%w: path component %s", ErrNotRegular, part)
+		}
+	}
+	return current, expected, nil
 }

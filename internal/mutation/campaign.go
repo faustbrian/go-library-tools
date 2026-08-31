@@ -158,7 +158,7 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			}
 			return fmt.Errorf("approve checkpoint %s %s: %w", checkpoint.Module, checkpoint.Package, err)
 		}
-		_, _, stored, err := StoreReport(campaign.MutationRoot, currentInput, checkpoint.Report)
+		_, _, stored, storedReport, err := storeReport(operatingReportFiles{}, campaign.MutationRoot, currentInput, checkpoint.Report)
 		if err != nil {
 			return err
 		}
@@ -175,6 +175,12 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			InputDigest: currentInput, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
 			ReportDigest: stored.Digest, CompletedAt: now().UTC(),
 			Environment: importedEnvironment(checkpoint.Environment),
+		}
+		existing, loadErr := evidence.Load(campaign.EvidenceRoot, "mutation", currentInput)
+		if loadErr == nil && existing.ReportDigest == legacyCanonicalReportDigest(storedReport) {
+			record.ReportDigest = existing.ReportDigest
+		} else if loadErr != nil && !errors.Is(loadErr, os.ErrNotExist) {
+			return loadErr
 		}
 		if _, _, err := evidence.Store(campaign.EvidenceRoot, record); err != nil {
 			return err

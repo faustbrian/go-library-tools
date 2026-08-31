@@ -30,7 +30,7 @@ func TestStoreReportReportsAtomicFilesystemFailures(t *testing.T) {
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			_, _, _, err := storeReport(test.files, t.TempDir(), "sha256:"+strings.Repeat("a", 64), killedReport)
+			_, _, _, _, err := storeReport(test.files, t.TempDir(), "sha256:"+strings.Repeat("a", 64), killedReport)
 			if err == nil || !strings.Contains(err.Error(), test.want) {
 				t.Fatalf("storeReport() error = %v", err)
 			}

@@ -23,6 +23,12 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Canonicalized repository roots before deriving mutation input identities so
+  macOS `/tmp` aliases and other repository-root symlinks reuse the same
+  content evidence without weakening path-containment checks.
+- Reused an existing legacy mutation report digest only when it matches the
+  uniquely approved checkpoint, preserving immutable content-addressed records
+  while continuing to reject every other evidence conflict.
 - Accepted the complete BCP 14 requirement vocabulary in specification
   decisions and enforced normative scope for `REQUIRED` decisions.
 - Preserved production-specific exact-coverage denominators while allowing the

@@ -1,6 +1,7 @@
 package mutation
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/faustbrian/go-library-tools/internal/evidence"
 )
@@ -79,6 +81,76 @@ func TestCampaignImportsApprovedLegacyCheckpoint(t *testing.T) {
 	}
 	if process.mutations != 0 {
 		t.Fatalf("Run() executed %d mutation campaigns after import", process.mutations)
+	}
+}
+
+func TestCampaignImportReusesApprovedLegacyEvidenceReportIdentity(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	_, currentInput, err := campaign.packageInput(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoint, ledger := approvedImportFixture(t, currentInput)
+	storedReport := bytes.Replace(checkpoint.Report, []byte(`"elapsed_time":1`), []byte(`"elapsed_time":2`), 1)
+	if canonicalReportDigest(storedReport) != checkpoint.ReportDigest {
+		t.Fatal("fixture changed the semantic report identity")
+	}
+	if err := campaign.prepareDirectories(); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, _, err := StoreReport(campaign.MutationRoot, currentInput, storedReport); err != nil {
+		t.Fatal(err)
+	}
+	legacyReportDigest := legacyCanonicalReportDigest(storedReport)
+	if legacyReportDigest == checkpoint.ReportDigest {
+		t.Fatal("fixture does not exercise the report identity transition")
+	}
+	record := evidence.Record{
+		SchemaVersion: evidence.SchemaVersion, Repository: campaign.Policy.Repository,
+		Module: campaign.Policy.ModuleDirectory, Package: checkpoint.Package, Gate: "mutation",
+		InputDigest: currentInput, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
+		ReportDigest: legacyReportDigest, CompletedAt: time.Unix(1, 0).UTC(),
+		Environment: importedEnvironment(checkpoint.Environment),
+	}
+	if _, _, err := evidence.Store(campaign.EvidenceRoot, record); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := campaign.Import(context.Background(), []Checkpoint{checkpoint}, ledger); err != nil {
+		t.Fatalf("Import() error = %v", err)
+	}
+	loaded, err := evidence.Load(campaign.EvidenceRoot, "mutation", currentInput)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.ReportDigest != legacyReportDigest {
+		t.Fatalf("stored report digest = %s, want approved legacy identity %s", loaded.ReportDigest, legacyReportDigest)
+	}
+	reused, _, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", ".", currentInput)
+	if err != nil || !reused {
+		t.Fatalf("Reuse() = %v, %v", reused, err)
+	}
+}
+
+func TestCampaignImportRejectsUnapprovedExistingReportIdentity(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	_, currentInput, err := campaign.packageInput(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoint, ledger := approvedImportFixture(t, currentInput)
+	record := evidence.Record{
+		SchemaVersion: evidence.SchemaVersion, Repository: campaign.Policy.Repository,
+		Module: campaign.Policy.ModuleDirectory, Package: checkpoint.Package, Gate: "mutation",
+		InputDigest: currentInput, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
+		ReportDigest: "sha256:" + strings.Repeat("b", 64), CompletedAt: time.Unix(1, 0).UTC(),
+		Environment: importedEnvironment(checkpoint.Environment),
+	}
+	if _, _, err := evidence.Store(campaign.EvidenceRoot, record); err != nil {
+		t.Fatal(err)
+	}
+	if err := campaign.Import(context.Background(), []Checkpoint{checkpoint}, ledger); !errors.Is(err, evidence.ErrConflict) {
+		t.Fatalf("Import() error = %v, want evidence conflict", err)
 	}
 }
 
@@ -333,7 +405,7 @@ func TestCampaignRejectsUnapprovedOrMismatchedImports(t *testing.T) {
 
 func approvedImportFixture(t *testing.T, currentInput string) (Checkpoint, MigrationLedger) {
 	t.Helper()
-	report := []byte(`{"files":[{"file_name":"source.go","mutations":[{"type":"NEGATION","status":"KILLED","line":3,"column":1}]}]}`)
+	report := []byte(`{"elapsed_time":1,"files":[{"file_name":"source.go","mutations":[{"type":"NEGATION","status":"KILLED","line":3,"column":1}]}]}`)
 	result, err := ValidateReport(strings.NewReader(string(report)))
 	if err != nil {
 		t.Fatal(err)

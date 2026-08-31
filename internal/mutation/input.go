@@ -98,6 +98,18 @@ func inputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 	if !filepath.IsAbs(root) {
 		return "", fmt.Errorf("%w: repository root must be absolute", ErrInvalid)
 	}
+	listedRoots := []string{root}
+	if target, linkErr := os.Readlink(root); linkErr == nil {
+		if !filepath.IsAbs(target) {
+			target = filepath.Join(filepath.Dir(root), target)
+		}
+		listedRoots = append(listedRoots, filepath.Clean(target))
+	}
+	canonicalRoot, err := filepath.EvalSymlinks(root)
+	if err != nil {
+		return "", fmt.Errorf("%w: resolve repository root: %s", ErrInvalid, err.Error())
+	}
+	root = canonicalRoot
 	if err := policy.validate(); err != nil {
 		return "", err
 	}
@@ -128,6 +140,14 @@ func inputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 	relevantDirectories := make(map[string]OwnedModule)
 	total := 0
 	for _, pkg := range packages {
+		for _, listedRoot := range listedRoots {
+			if isWithin(listedRoot, pkg.Dir) {
+				relativeDirectory, relativeErr := filepath.Rel(listedRoot, pkg.Dir)
+				if relativeErr == nil {
+					pkg.Dir = filepath.Join(root, relativeDirectory)
+				}
+			}
+		}
 		if pkg.Module != nil && pkg.Module.Path != "" {
 			identity := moduleIdentity{Path: pkg.Module.Path, Version: pkg.Module.Version, Sum: pkg.Module.Sum, GoVersion: pkg.Module.GoVersion, Main: pkg.Module.Main}
 			if existing, exists := modules[identity.Path]; exists && existing != identity {
@@ -138,6 +158,10 @@ func inputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 		owned, local := resolveOwnedRoot(root, pkg, moduleRoots)
 		if !local {
 			continue
+		}
+		relativeDirectory, _ := filepath.Rel(root, pkg.Dir)
+		if err := repositoryfile.ValidateDirectory(root, relativeDirectory); err != nil {
+			return "", fmt.Errorf("%w: listed package directory %s: %s", ErrInvalid, pkg.Dir, err.Error())
 		}
 		observedOwnedModules[owned.ModulePath] = struct{}{}
 		canonicalImport, _, _ := strings.Cut(pkg.ImportPath, " [")
@@ -314,14 +338,14 @@ func resolveOwnedRoot(root string, pkg listedPackage, owned []OwnedModule) (Owne
 }
 
 func isWithin(root, candidate string) bool {
-	relative, err := filepath.Rel(root, candidate)
+	relativePath, err := filepath.Rel(root, candidate)
 	if err != nil {
 		return false
 	}
-	if relative == ".." {
+	if relativePath == ".." || strings.HasPrefix(relativePath, ".."+string(filepath.Separator)) {
 		return false
 	}
-	return !strings.HasPrefix(relative, ".."+string(filepath.Separator))
+	return true
 }
 
 func addInputFile(root string, owned OwnedModule, directory, name string, content map[string][]byte, total *int) error {

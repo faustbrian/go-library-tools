@@ -82,6 +82,28 @@ func TestReadRejectsSymlinkedParent(t *testing.T) {
 	}
 }
 
+func TestValidateDirectoryRejectsUnsafeAndNonDirectoryPaths(t *testing.T) {
+	root := t.TempDir()
+	directory := filepath.Join(root, "directory")
+	if err := os.Mkdir(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(root, "file"), "content")
+	if err := os.Symlink(directory, filepath.Join(root, "link")); err != nil {
+		t.Fatal(err)
+	}
+	if err := repositoryfile.ValidateDirectory(root, "directory"); err != nil {
+		t.Fatalf("ValidateDirectory() error = %v", err)
+	}
+	for name, path := range map[string]string{"file": "file", "symlink": "link"} {
+		t.Run(name, func(t *testing.T) {
+			if err := repositoryfile.ValidateDirectory(root, path); err == nil {
+				t.Fatal("ValidateDirectory() error = nil")
+			}
+		})
+	}
+}
+
 func write(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {

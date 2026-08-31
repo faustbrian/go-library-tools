@@ -13,6 +13,7 @@ import (
 
 func TestInputDigestRejectsInvalidInputs(t *testing.T) {
 	root := t.TempDir()
+	missingRoot := filepath.Join(t.TempDir(), "missing")
 	writeMutationInput(t, root, "other.go", "package other\n")
 	valid := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.26.6"}
 	listing := func(files string) string {
@@ -24,6 +25,7 @@ func TestInputDigestRejectsInvalidInputs(t *testing.T) {
 		listing string
 	}{
 		"relative root":    {root: ".", policy: valid, listing: listing(`[]`)},
+		"missing root":     {root: missingRoot, policy: valid, listing: listing(`[]`)},
 		"bad policy":       {root: root, policy: InputPolicy{}, listing: listing(`[]`)},
 		"malformed list":   {root: root, policy: valid, listing: "{"},
 		"missing target":   {root: root, policy: valid, listing: `{"Dir":"/external","ImportPath":"external"}`},
@@ -96,6 +98,91 @@ func TestInputDigestResolvesNestedTargetImport(t *testing.T) {
 	listing := `{"Dir":"` + filepath.Join(root, "nested") + `","ImportPath":"example/nested","GoFiles":["target.go"],"Module":{"Path":"example","Main":true}}`
 	if _, err := InputDigest(root, policy, strings.NewReader(listing), nil); err != nil {
 		t.Fatalf("InputDigest() error = %v", err)
+	}
+}
+
+func TestInputDigestResolvesRepositoryRootSymlink(t *testing.T) {
+	root := t.TempDir()
+	writeMutationInput(t, root, "target.go", "package example\n")
+	absoluteAlias := filepath.Join(t.TempDir(), "repository")
+	if err := os.Symlink(root, absoluteAlias); err != nil {
+		t.Fatal(err)
+	}
+	relativeParent := t.TempDir()
+	relativeTarget, err := filepath.Rel(relativeParent, root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	relativeAlias := filepath.Join(relativeParent, "repository")
+	if err := os.Symlink(relativeTarget, relativeAlias); err != nil {
+		t.Fatal(err)
+	}
+	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.27.0"}
+	canonicalListing := `{"Dir":"` + root + `","ImportPath":"example","GoFiles":["target.go"],"Module":{"Path":"example","Main":true}}`
+	want, err := InputDigest(root, policy, strings.NewReader(canonicalListing), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for aliasName, alias := range map[string]string{"absolute target": absoluteAlias, "relative target": relativeAlias} {
+		t.Run(aliasName, func(t *testing.T) {
+			for listingName, directory := range map[string]string{"canonical listing": root, "alias listing": alias} {
+				t.Run(listingName, func(t *testing.T) {
+					listing := `{"Dir":"` + directory + `","ImportPath":"example","GoFiles":["target.go"],"Module":{"Path":"example","Main":true}}`
+					got, digestErr := InputDigest(alias, policy, strings.NewReader(listing), nil)
+					if digestErr != nil {
+						t.Fatalf("InputDigest(symlink root) error = %v", digestErr)
+					}
+					if got != want {
+						t.Fatalf("InputDigest(symlink root) = %s, want %s", got, want)
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestInputDigestRejectsListedFileSymlinks(t *testing.T) {
+	root := t.TempDir()
+	writeMutationInput(t, root, "target.go", "package example\n")
+	if err := os.Symlink(filepath.Join(root, "target.go"), filepath.Join(root, "alias.go")); err != nil {
+		t.Fatal(err)
+	}
+	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.27.0"}
+	for name, files := range map[string]string{
+		"symlink only":       `["alias.go"]`,
+		"symlink and target": `["target.go","alias.go"]`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			listing := `{"Dir":"` + root + `","ImportPath":"example","GoFiles":` + files + `,"Module":{"Path":"example","Main":true}}`
+			if _, err := InputDigest(root, policy, strings.NewReader(listing), nil); err == nil {
+				t.Fatal("InputDigest() accepted a listed symlink")
+			}
+		})
+	}
+}
+
+func TestInputDigestRejectsListedPackageDirectorySymlinks(t *testing.T) {
+	root := t.TempDir()
+	target := filepath.Join(root, "target")
+	writeMutationInput(t, target, "target.go", "package example\n")
+	other := filepath.Join(root, "other")
+	writeMutationInput(t, other, "other.go", "package other\n")
+	alias := filepath.Join(root, "alias")
+	if err := os.Symlink(target, alias); err != nil {
+		t.Fatal(err)
+	}
+	policy := InputPolicy{ModuleDirectory: ".", PackageDirectory: ".", ModulePath: "example", GoVersion: "1.27.0"}
+	for name, listing := range map[string]string{
+		"relative file":           `{"Dir":"` + alias + `","ImportPath":"example","GoFiles":["target.go"],"Module":{"Path":"example","Main":true}}`,
+		"absolute canonical file": `{"Dir":"` + alias + `","ImportPath":"example","GoFiles":["` + filepath.Join(target, "target.go") + `"],"Module":{"Path":"example","Main":true}}`,
+		"empty target": `{"Dir":"` + alias + `","ImportPath":"example","GoFiles":[],"Module":{"Path":"example","Main":true}}` + "\n" +
+			`{"Dir":"` + other + `","ImportPath":"example/other","GoFiles":["other.go"],"Module":{"Path":"example","Main":true}}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, err := InputDigest(root, policy, strings.NewReader(listing), nil); err == nil {
+				t.Fatal("InputDigest() accepted a listed package directory symlink")
+			}
+		})
 	}
 }
 
@@ -311,6 +398,9 @@ func TestOwnedRootResolution(t *testing.T) {
 
 func TestIsWithinRejectsInvalidAndParentPaths(t *testing.T) {
 	root := t.TempDir()
+	if isWithin(string([]byte{'x', 0}), root) {
+		t.Fatal("isWithin accepted an invalid root")
+	}
 	for _, candidate := range []string{string([]byte{'x', 0}), filepath.Dir(root), filepath.Join(filepath.Dir(root), "sibling", "file")} {
 		if isWithin(root, candidate) {
 			t.Fatalf("isWithin(%q) = true", candidate)

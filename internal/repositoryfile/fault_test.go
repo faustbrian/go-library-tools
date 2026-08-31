@@ -27,6 +27,7 @@ func TestReadReportsFileSystemRacesAndFailures(t *testing.T) {
 		files fileSystem
 		want  string
 	}{
+		{"nil info", fakeFileSystem{}, "inspect file"},
 		{"open", fakeFileSystem{info: info, openErr: failure}, "open file"},
 		{"stat", fakeFileSystem{info: info, opened: &fakeFile{statErr: failure}}, "inspect open file"},
 		{"changed", fakeFileSystem{info: info, opened: &fakeFile{info: fakeInfo{name: "other"}}}, "changed while opening"},
