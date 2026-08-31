@@ -90,6 +90,41 @@ func TestWithModuleServicesSkipsEmptySelection(t *testing.T) {
 	}
 }
 
+func TestServiceCycleStartsAndClosesSelectedFixtures(t *testing.T) {
+	lease := &fakeServiceLease{}
+	var output bytes.Buffer
+	runner := Runner{
+		Catalog: inventory.Inventory{Modules: []inventory.Module{
+			{Directory: "a-plain"},
+			{Directory: "z-service", RequiredServices: []string{"postgresql", "valkey"}},
+		}},
+		Output: &output,
+		startServices: func(_ context.Context, names []string) (serviceLease, error) {
+			if !reflect.DeepEqual(names, []string{"postgresql", "valkey"}) {
+				t.Fatalf("service selection = %#v", names)
+			}
+			return lease, nil
+		},
+	}
+	if err := runner.ServiceCycle(context.Background(), []string{"z-service", "a-plain"}); err != nil {
+		t.Fatalf("ServiceCycle() error = %v", err)
+	}
+	if lease.closes != 1 || !strings.Contains(output.String(), "[z-service] services: ready") ||
+		!strings.Contains(output.String(), "[a-plain] services: not applicable") {
+		t.Fatalf("ServiceCycle() closes/output = %d, %q", lease.closes, output.String())
+	}
+	if err := runner.ServiceCycle(context.Background(), []string{"missing"}); err == nil {
+		t.Fatal("ServiceCycle() unknown module error = nil")
+	}
+	runner.Output = nil
+	runner.startServices = func(context.Context, []string) (serviceLease, error) {
+		return nil, errors.New("fixture failed")
+	}
+	if err := runner.ServiceCycle(context.Background(), []string{"z-service"}); err == nil || !strings.Contains(err.Error(), "fixture failed") {
+		t.Fatalf("ServiceCycle() fixture error = %v", err)
+	}
+}
+
 func TestDefaultServiceStarterUsesExecutorWithoutDockerInTests(t *testing.T) {
 	executor := &serviceRecordingExecutor{workspace: "/task", respond: true}
 	runner := Runner{Executor: executor}

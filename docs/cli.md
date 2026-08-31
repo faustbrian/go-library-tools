@@ -31,6 +31,9 @@ Core commands:
 - `golib evidence inspect [--json]` validates attributable evidence records.
 - `golib docs check [--module DIR]` validates bounded Markdown navigation and
   optional typed documentation tests.
+- `golib services cycle [--module DIR]` starts each selected module's declared
+  fixtures, waits for readiness, and closes the exact task-owned lease. It does
+  not expose detached service state.
 - `golib release check` validates stable versions, tag prefixes, mandatory
   gates, and repository structure. Before a tag exists, `golib release dry-run`
   also rejects tag collisions, builds task-owned module-proxy archives, proves

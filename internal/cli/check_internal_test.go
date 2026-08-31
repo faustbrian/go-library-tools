@@ -66,7 +66,15 @@ func TestExecuteRoutesWorkflowChecks(t *testing.T) {
 	if code := execute([]string{"workflows", "check"}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 {
 		t.Fatalf("execute(workflows check) = %d, %q", code, stderr.String())
 	}
-	if command.Name != "go" || command.Dir != root || !strings.Contains(strings.Join(command.Args, " "), "actionlint@v1.7.12") {
+	rootInfo, err := os.Stat(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	commandInfo, err := os.Stat(command.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if command.Name != "go" || !os.SameFile(rootInfo, commandInfo) || !strings.Contains(strings.Join(command.Args, " "), "actionlint@v1.7.12") {
 		t.Fatalf("workflow command = %#v", command)
 	}
 	for _, args := range [][]string{{"workflows"}, {"workflows", "lint"}, {"workflows", "check", "extra"}} {

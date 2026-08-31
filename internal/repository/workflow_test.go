@@ -136,7 +136,11 @@ func TestSharedParityUsesRepresentativeGoVersionForConsumerGates(t *testing.T) {
 	if sharedStart < 0 {
 		t.Fatal("parity workflow has no shared job")
 	}
-	shared := content[sharedStart:]
+	sharedRemainder := content[sharedStart:]
+	shared, _, found := strings.Cut(sharedRemainder, "\n  performance:\n")
+	if !found {
+		t.Fatal("parity workflow has no performance job after shared parity")
+	}
 	if count := strings.Count(shared, "uses: actions/setup-go@"); count != 1 {
 		t.Fatalf("shared parity setup-go steps = %d, want 1", count)
 	}
@@ -152,8 +156,59 @@ func TestSharedParityUsesRepresentativeGoVersionForConsumerGates(t *testing.T) {
 
 func TestParityWorkflowUsesActionsPathChannelForGoWrapper(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
-	if count := strings.Count(content, `"${GITHUB_ENV}" "${GITHUB_PATH}"`); count != 2 {
-		t.Fatalf("parity wrapper path exports = %d, want legacy and shared", count)
+	if count := strings.Count(content, `"${GITHUB_ENV}" "${GITHUB_PATH}"`); count != 3 {
+		t.Fatalf("parity wrapper path exports = %d, want legacy, shared, and performance", count)
+	}
+}
+
+func TestPerformanceRehearsalPublishesComparableRawMeasurements(t *testing.T) {
+	workflow := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
+	for _, required := range []string{
+		"name: Performance / ${{ matrix.name }}",
+		"rehearsals/performance.sh",
+		"performance-${{ matrix.artifact }}",
+		"rehearsals/performance-compare.sh",
+		"performance-results.json",
+		"performance-services.status",
+		`["core", "service"]`,
+	} {
+		if !strings.Contains(workflow, required) {
+			t.Errorf("performance workflow lacks %q", required)
+		}
+	}
+
+	harness := readProjectFile(t, "rehearsals/performance.sh")
+	for _, required := range []string{
+		"startup-diagnostic",
+		"repository-inventory",
+		"checkpoint-reuse",
+		"module-scaling-sequential",
+		"module-scaling-concurrent",
+		"peak_rss_kib",
+		"artifact_size_bytes",
+		"isolated_cache_residue",
+		"service-lifecycle",
+		"mutation_package_count",
+		"reused content-identical mutation evidence",
+		"tooling_revision",
+		"golib_sha256",
+	} {
+		if !strings.Contains(harness, required) {
+			t.Errorf("performance harness lacks %q", required)
+		}
+	}
+
+	documentation := readProjectFile(t, "docs/performance.md")
+	for _, required := range []string{
+		"content-identical",
+		"Raw Results",
+		"Runner variance",
+		"No-op and checkpoint reuse",
+		"Concurrent module scaling",
+	} {
+		if !strings.Contains(documentation, required) {
+			t.Errorf("performance documentation lacks %q", required)
+		}
 	}
 }
 
