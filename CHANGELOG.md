@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.1.0 - 2026-08-31
+
 ### Added
 
 - Added content-identical legacy performance rehearsals with raw startup,
