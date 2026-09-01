@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.4.0 - 2026-09-01
+
 ### Added
 
 - Added digest-bound ecosystem catalog aggregation from explicit repository
