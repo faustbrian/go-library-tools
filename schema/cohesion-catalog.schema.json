@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/cohesion-catalog.schema.json",
+  "title": "Golib cohesion catalog schema v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "view", "scope", "repository", "design_language", "tooling", "modules"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "view": {"enum": ["consumer", "engineering"]},
+    "scope": {"enum": ["repository", "ecosystem"]},
+    "repository": {"type": ["string", "null"]},
+    "design_language": {"$ref": "#/$defs/design_language"},
+    "tooling": {"$ref": "#/$defs/tooling"},
+    "modules": {"type": "array"}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"view": {"const": "consumer"}}, "required": ["view"]},
+      "then": {"properties": {"modules": {"items": {"$ref": "#/$defs/consumer_module"}}}}
+    },
+    {
+      "if": {"properties": {"view": {"const": "engineering"}}, "required": ["view"]},
+      "then": {"properties": {"modules": {"items": {"$ref": "#/$defs/engineering_module"}}}}
+    },
+    {
+      "if": {"properties": {"scope": {"const": "repository"}}, "required": ["scope"]},
+      "then": {"properties": {"repository": {"type": "string", "minLength": 1}}}
+    },
+    {
+      "if": {"properties": {"scope": {"const": "ecosystem"}}, "required": ["scope"]},
+      "then": {"properties": {"repository": {"type": "null"}}}
+    },
+    {
+      "if": {
+        "properties": {"tooling": {"properties": {"publication_status": {"const": "unpublished"}}, "required": ["publication_status"]}},
+        "required": ["tooling"]
+      },
+      "then": {
+        "properties": {
+          "design_language": {"properties": {"source_identity": {"const": "unpublished"}}},
+          "tooling": {"properties": {"version": {"const": "dev"}}}
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {"tooling": {"properties": {"publication_status": {"const": "published"}}, "required": ["publication_status"]}},
+        "required": ["tooling"]
+      },
+      "then": {
+        "properties": {
+          "design_language": {"properties": {"source_identity": {"pattern": "^v(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$"}}},
+          "tooling": {"properties": {"version": {"pattern": "^v(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$"}}}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "design_language": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "sha256", "source_identity"],
+      "properties": {
+        "version": {"const": "1.0"},
+        "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "source_identity": {"type": "string", "minLength": 1}
+      }
+    },
+    "tooling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "publication_status"],
+      "properties": {
+        "version": {"type": "string", "minLength": 1},
+        "publication_status": {"enum": ["published", "unpublished"]}
+      }
+    },
+    "consumer_module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "directory", "module_path", "go_version", "kind", "releasable", "version", "specifications", "owned_dependencies", "cohesion"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "directory": {"type": "string", "minLength": 1},
+        "module_path": {"type": "string", "minLength": 1},
+        "go_version": {"$ref": "modules.schema.json#/$defs/go_version"},
+        "kind": {"enum": ["adapter", "public library"]},
+        "releasable": {"const": true},
+        "version": {"type": "string"},
+        "specifications": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "owned_dependencies": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "cohesion": {"$ref": "modules.schema.json#/$defs/cohesion"}
+      }
+    },
+    "engineering_module": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["repository", "directory", "module_path", "go_version", "kind", "purpose", "lifecycle", "releasable", "version", "tag_prefix", "gates", "test_tags", "build_tags", "required_services", "external_runtime_dependencies", "interoperability_tools", "conformance_corpora", "specifications", "owned_dependencies", "reverse_owned_dependencies", "packages", "family", "family_label", "family_description", "family_order", "goal_status", "goal_files", "goal_evidence", "provenance", "cohesion"],
+      "properties": {
+        "repository": {"type": "string", "minLength": 1},
+        "directory": {"type": "string", "minLength": 1},
+        "module_path": {"type": "string", "minLength": 1},
+        "go_version": {"$ref": "modules.schema.json#/$defs/go_version"},
+        "kind": {"type": "string", "minLength": 1},
+        "purpose": {"type": "string"},
+        "lifecycle": {"type": "string"},
+        "releasable": {"type": "boolean"},
+        "version": {"type": "string"},
+        "tag_prefix": {"type": "string"},
+        "gates": {"$ref": "modules.schema.json#/$defs/gates"},
+        "test_tags": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "build_tags": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "required_services": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "external_runtime_dependencies": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "interoperability_tools": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "conformance_corpora": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "specifications": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "owned_dependencies": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "reverse_owned_dependencies": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "packages": {"type": "array", "items": {"$ref": "modules.schema.json#/$defs/package"}},
+        "family": {"type": "string"},
+        "family_label": {"type": "string"},
+        "family_description": {"type": "string"},
+        "family_order": {"type": "integer"},
+        "goal_status": {"type": "string"},
+        "goal_files": {"$ref": "modules.schema.json#/$defs/string_set"},
+        "goal_evidence": {"type": "array", "items": {"$ref": "modules.schema.json#/$defs/goal_evidence"}},
+        "provenance": {"type": "array"},
+        "cohesion": {"oneOf": [{"$ref": "modules.schema.json#/$defs/cohesion"}, {"type": "null"}]}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"releasable": {"const": true}}, "required": ["releasable"]},
+          "then": {"properties": {"cohesion": {"$ref": "modules.schema.json#/$defs/cohesion"}}}
+        }
+      ]
+    }
+  }
+}

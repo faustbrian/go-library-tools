@@ -10,8 +10,97 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/faustbrian/go-library-tools/internal/buildinfo"
+	"github.com/faustbrian/go-library-tools/internal/cohesion"
+	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/gates"
 )
+
+func TestExecuteCohesionCoversOutputAndFailureContracts(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacyRoot := internalFixture(t)
+	legacyPolicy, err := config.Load(legacyRoot)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, args := range [][]string{{}, {"catalog"}, {"catalog", "unknown"}, {"catalog", "consumer", "--yaml"}, {"unknown"}} {
+		var stdout, stderr bytes.Buffer
+		if code := executeCohesion(args, root, policy, &stdout, &stderr); code != 2 {
+			t.Fatalf("executeCohesion(%v) = %d, %q", args, code, stderr.String())
+		}
+	}
+	var catalogUsage bytes.Buffer
+	if code := executeCohesion([]string{"catalog"}, root, policy, &bytes.Buffer{}, &catalogUsage); code != 2 || !strings.HasPrefix(catalogUsage.String(), "usage: golib cohesion catalog ") {
+		t.Fatalf("executeCohesion(catalog) = %d, %q", code, catalogUsage.String())
+	}
+	for _, args := range [][]string{{"check"}, {"check", "--json"}, {"catalog", "engineering"}} {
+		var stdout, stderr bytes.Buffer
+		if code := executeCohesion(args, root, policy, &stdout, &stderr); code != 0 || stderr.Len() != 0 || stdout.Len() == 0 {
+			t.Fatalf("executeCohesion(%v) = %d, %q, %q", args, code, stdout.String(), stderr.String())
+		}
+	}
+	var invalidStdout, invalidStderr bytes.Buffer
+	if code := executeCohesion([]string{"check"}, legacyRoot, legacyPolicy, &invalidStdout, &invalidStderr); code != 1 || invalidStdout.Len() == 0 || invalidStderr.Len() != 0 {
+		t.Fatalf("executeCohesion(legacy check) = %d, %q, %q", code, invalidStdout.String(), invalidStderr.String())
+	}
+	var catalogStdout, catalogStderr bytes.Buffer
+	if code := executeCohesion([]string{"catalog", "engineering"}, legacyRoot, legacyPolicy, &catalogStdout, &catalogStderr); code != 1 || catalogStderr.Len() == 0 {
+		t.Fatalf("executeCohesion(legacy catalog) = %d, %q", code, catalogStderr.String())
+	}
+
+	for _, args := range [][]string{{"check", "--json"}, {"catalog", "engineering", "--json"}, {"catalog", "engineering"}} {
+		var stderr bytes.Buffer
+		if code := executeCohesion(args, root, policy, errorWriter{}, &stderr); code != 1 || !strings.Contains(stderr.String(), "write cohesion") {
+			t.Fatalf("executeCohesion(writer %v) = %d, %q", args, code, stderr.String())
+		}
+	}
+
+	originalDigest := buildinfo.DesignLanguageSHA256
+	buildinfo.DesignLanguageSHA256 = "invalid"
+	t.Cleanup(func() { buildinfo.DesignLanguageSHA256 = originalDigest })
+	var stdout, stderr bytes.Buffer
+	if code := executeCohesion([]string{"catalog", "engineering"}, root, policy, &stdout, &stderr); code != 1 || !strings.Contains(stderr.String(), "design-language identity") {
+		t.Fatalf("executeCohesion(invalid identity) = %d, %q", code, stderr.String())
+	}
+	buildinfo.DesignLanguageSHA256 = originalDigest
+
+	originalVersion := buildinfo.Version
+	originalSource := buildinfo.DesignLanguageSourceIdentity
+	buildinfo.Version = "v1.2.3"
+	buildinfo.DesignLanguageSourceIdentity = "v1.2.3"
+	t.Cleanup(func() {
+		buildinfo.Version = originalVersion
+		buildinfo.DesignLanguageSourceIdentity = originalSource
+	})
+	stdout.Reset()
+	stderr.Reset()
+	if code := executeCohesion([]string{"catalog", "engineering", "--json"}, root, policy, &stdout, &stderr); code != 0 || !strings.Contains(stdout.String(), `"publication_status": "published"`) {
+		t.Fatalf("executeCohesion(published) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	buildinfo.Version = originalVersion
+	buildinfo.DesignLanguageSourceIdentity = originalSource
+
+	originalRenderer := renderCohesionCatalog
+	renderCohesionCatalog = func(cohesion.Envelope) ([]byte, error) { return nil, errors.New("render failure") }
+	t.Cleanup(func() { renderCohesionCatalog = originalRenderer })
+	stdout.Reset()
+	stderr.Reset()
+	if code := executeCohesion([]string{"catalog", "engineering"}, root, policy, &stdout, &stderr); code != 1 || !strings.Contains(stderr.String(), "render failure") {
+		t.Fatalf("executeCohesion(render failure) = %d, %q", code, stderr.String())
+	}
+}
+
+type errorWriter struct{}
+
+func (errorWriter) Write([]byte) (int, error) { return 0, errors.New("write failure") }
 
 func TestExecuteReportsExecutorCreationAndCleanupFailures(t *testing.T) {
 	root := internalFixture(t)

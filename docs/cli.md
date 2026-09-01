@@ -13,6 +13,12 @@ Core commands:
 - `golib inventory [--json]` prints the canonical module inventory.
 - `golib consumers validate [--json]` validates the maintained consumer
   inventory and reports active, deferred, and tooling repository counts.
+- `golib cohesion check [--json]` validates schema-v2 family, ownership,
+  lifecycle, environment, dependency, and documentation metadata. Schema-v1
+  repositories receive an explicit adoption-required result.
+- `golib cohesion catalog consumer|engineering [--json]` renders the validated
+  repository projection. The consumer view contains only installable libraries
+  and adapters; the engineering view retains every manifest module.
 - `golib repository check` validates standalone repository structure.
 - `golib specification check [--online]` discovers specification-backed
   modules, validates each module's decision register, conformance matrix,

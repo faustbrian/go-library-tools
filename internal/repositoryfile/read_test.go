@@ -104,6 +104,26 @@ func TestValidateDirectoryRejectsUnsafeAndNonDirectoryPaths(t *testing.T) {
 	}
 }
 
+func TestValidateRegularFileRejectsUnsafeAndNonRegularPaths(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "nested", "file"), "content")
+	outside := t.TempDir()
+	write(t, filepath.Join(outside, "file"), "outside")
+	if err := os.Symlink(outside, filepath.Join(root, "link")); err != nil {
+		t.Fatal(err)
+	}
+	if err := repositoryfile.ValidateRegularFile(root, "nested/file"); err != nil {
+		t.Fatalf("ValidateRegularFile() error = %v", err)
+	}
+	for name, path := range map[string]string{"directory": "nested", "symlinked parent": "link/file"} {
+		t.Run(name, func(t *testing.T) {
+			if err := repositoryfile.ValidateRegularFile(root, path); err == nil {
+				t.Fatal("ValidateRegularFile() error = nil")
+			}
+		})
+	}
+}
+
 func write(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {

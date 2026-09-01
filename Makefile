@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: build check ci config consumers inventory repository-check workflows
+.PHONY: build check ci cohesion config consumers inventory repository-check workflows
 
 define run_go
 	set -euo pipefail; \
@@ -23,10 +23,13 @@ inventory repository-check:
 consumers:
 	$(call run_go,run ./cmd/golib consumers validate)
 
+cohesion:
+	$(call run_go,run ./cmd/golib cohesion check)
+
 workflows:
 	$(call run_go,run ./cmd/golib workflows check)
 
 check:
 	$(call run_go,run ./cmd/golib check --all)
 
-ci: repository-check consumers workflows check
+ci: repository-check consumers cohesion workflows check
