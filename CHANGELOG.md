@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.3.0 - 2026-09-01
+
 ### Added
 
 - Added the versioned Golib ecosystem entry point and consumer-facing design
