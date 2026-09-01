@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added digest-bound ecosystem catalog aggregation from explicit repository
+  engineering projections, with deterministic consumer and engineering JSON
+  and Markdown outputs, root-confined projection reads, identity-bound atomic
+  publication, bounded total work and artifacts, plus a byte-for-byte freshness
+  check.
+
+### Fixed
+
+- Enforced cohesion metadata validation in the reusable repository-contract CI
+  job so schema-v2 drift fails the authoritative CI result.
+
 ## 1.3.0 - 2026-09-01
 
 ### Added

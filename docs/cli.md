@@ -19,6 +19,17 @@ Core commands:
 - `golib cohesion catalog consumer|engineering [--json]` renders the validated
   repository projection. The consumer view contains only installable libraries
   and adapters; the engineering view retains every manifest module.
+- `golib cohesion aggregate generate --inputs FILE --output DIRECTORY` validates
+  a closed, digest-bound repository projection manifest and publishes the four
+  deterministic ecosystem catalog files as one failure-atomic set. Projection
+  reads are confined to the manifest directory. Writes remain bound to the
+  opened output-directory identity, and a source build cannot publish to
+  `docs/ecosystem`, including through a symlink or path replacement.
+- `golib cohesion aggregate check --inputs FILE --output DIRECTORY` renders the
+  same four artifacts in memory and fails when any checked-in byte differs. It
+  never rewrites the output directory.
+  Aggregation is bounded to 256 repositories, 256 MiB of projection input,
+  4,096 modules, and 512 MiB per rendered artifact.
 - `golib repository check` validates standalone repository structure.
 - `golib specification check [--online]` discovers specification-backed
   modules, validates each module's decision register, conformance matrix,

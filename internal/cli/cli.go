@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"slices"
 
 	"github.com/faustbrian/go-library-tools/internal/buildinfo"
 	"github.com/faustbrian/go-library-tools/internal/cohesion"
@@ -31,6 +32,7 @@ Usage:
   golib check [--all|--module <directory>]
   golib cohesion check [--json]
   golib cohesion catalog <consumer|engineering> [--json]
+  golib cohesion aggregate <generate|check> --inputs <file> --output <directory>
   golib config validate
 	golib config show --json
   golib inventory [--json]
@@ -301,6 +303,38 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 }
 
 func executeCohesion(args []string, root string, policy config.Config, stdout, stderr io.Writer) int {
+	if len(args) >= 1 && args[0] == "aggregate" {
+		action, inputs, output, err := cohesionAggregateArguments(args[1:])
+		if err != nil {
+			return usage(stderr, "usage: golib cohesion aggregate <generate|check> --inputs <file> --output <directory>")
+		}
+		inputs = resolveCohesionPath(root, inputs)
+		output = resolveCohesionPath(root, output)
+		generateAggregate := cohesion.GenerateAggregate
+		if action == "generate" && buildinfo.Version == "dev" {
+			publicOutput, pathError := sameCohesionPath(output, filepath.Join(root, "docs", "ecosystem"))
+			if pathError != nil {
+				return failure(stderr, fmt.Errorf("resolve cohesion publication path: %w", pathError))
+			}
+			if publicOutput {
+				return failure(stderr, errors.New("source build cannot publish cohesion catalogs; use a released checksummed binary"))
+			}
+			generateAggregate = func(inputsPath, outputDirectory string, identity cohesion.Identity) error {
+				return cohesion.GenerateAggregateProtected(inputsPath, outputDirectory, filepath.Join(root, "docs", "ecosystem"), identity)
+			}
+		}
+		identity := currentCohesionIdentity()
+		if action == "generate" {
+			err = generateAggregate(inputs, output, identity)
+		} else {
+			err = cohesion.CheckAggregate(inputs, output, identity)
+		}
+		if err != nil {
+			return failure(stderr, err)
+		}
+		_, _ = fmt.Fprintf(stdout, "cohesion aggregate %s passed\n", action)
+		return 0
+	}
 	if len(args) >= 1 && args[0] == "catalog" {
 		if len(args) < 2 || len(args) > 3 || (args[1] != "consumer" && args[1] != "engineering") || (len(args) == 3 && args[2] != "--json") {
 			return usage(stderr, "usage: golib cohesion catalog <consumer|engineering> [--json]")
@@ -309,18 +343,7 @@ func executeCohesion(args []string, root string, policy config.Config, stdout, s
 		if !report.Valid {
 			return failure(stderr, errors.New("cohesion metadata is invalid"))
 		}
-		sourceIdentity := buildinfo.DesignLanguageSourceIdentity
-		publicationStatus := "unpublished"
-		if buildinfo.Version != "dev" {
-			publicationStatus = "published"
-		}
-		envelope, err := cohesion.Project(catalog, args[1], cohesion.Identity{
-			DesignLanguageVersion: buildinfo.DesignLanguageVersion,
-			DesignLanguageSHA256:  buildinfo.DesignLanguageSHA256,
-			SourceIdentity:        sourceIdentity,
-			ToolingVersion:        buildinfo.Version,
-			PublicationStatus:     publicationStatus,
-		})
+		envelope, err := cohesion.Project(catalog, args[1], currentCohesionIdentity())
 		if err != nil {
 			return failure(stderr, err)
 		}
@@ -342,7 +365,7 @@ func executeCohesion(args []string, root string, policy config.Config, stdout, s
 		return 0
 	}
 	if len(args) < 1 || args[0] != "check" || len(args) > 2 || (len(args) == 2 && args[1] != "--json") {
-		return usage(stderr, "usage: golib cohesion <check [--json]|catalog <consumer|engineering> [--json]>")
+		return usage(stderr, "usage: golib cohesion <check [--json]|catalog <consumer|engineering> [--json]|aggregate <generate|check> --inputs <file> --output <directory>>")
 	}
 	report := cohesion.Check(root, policy)
 	if len(args) == 2 {
@@ -364,6 +387,91 @@ func executeCohesion(args []string, root string, policy config.Config, stdout, s
 		_, _ = fmt.Fprintf(stdout, "%s: %s: %s\n", diagnostic.Code, diagnostic.Path, diagnostic.Message)
 	}
 	return 1
+}
+
+func cohesionAggregateArguments(args []string) (string, string, string, error) {
+	if len(args) != 5 || (args[0] != "generate" && args[0] != "check") {
+		return "", "", "", errors.New("invalid cohesion aggregate arguments")
+	}
+	values := map[string]string{}
+	for index := 1; index < len(args); index += 2 {
+		if (args[index] != "--inputs" && args[index] != "--output") || args[index+1] == "" {
+			return "", "", "", errors.New("invalid cohesion aggregate arguments")
+		}
+		if _, exists := values[args[index]]; exists {
+			return "", "", "", errors.New("duplicate cohesion aggregate argument")
+		}
+		values[args[index]] = args[index+1]
+	}
+	return args[0], values["--inputs"], values["--output"], nil
+}
+
+func resolveCohesionPath(root, value string) string {
+	if filepath.IsAbs(value) {
+		return filepath.Clean(value)
+	}
+	return filepath.Join(root, value)
+}
+
+func sameCohesionPath(left, right string) (bool, error) {
+	return sameCohesionPathWithCanonicalizer(left, right, canonicalCohesionPath)
+}
+
+func sameCohesionPathWithCanonicalizer(left, right string, canonicalize func(string) (string, error)) (bool, error) {
+	leftCanonical, err := canonicalize(left)
+	if err != nil {
+		return false, err
+	}
+	rightCanonical, err := canonicalize(right)
+	if err != nil {
+		return false, err
+	}
+	return leftCanonical == rightCanonical, nil
+}
+
+func canonicalCohesionPath(value string) (string, error) {
+	return canonicalCohesionPathWithFunctions(value, filepath.Abs, filepath.EvalSymlinks)
+}
+
+func canonicalCohesionPathWithFunctions(value string, absolutePath func(string) (string, error), evaluateSymlinks func(string) (string, error)) (string, error) {
+	absolute, err := absolutePath(value)
+	if err != nil {
+		return "", err
+	}
+	current := filepath.Clean(absolute)
+	missing := make([]string, 0)
+	for {
+		resolved, err := evaluateSymlinks(current)
+		if err == nil {
+			for _, component := range slices.Backward(missing) {
+				resolved = filepath.Join(resolved, component)
+			}
+			return filepath.Clean(resolved), nil
+		}
+		if !errors.Is(err, os.ErrNotExist) {
+			return "", err
+		}
+		parent := filepath.Dir(current)
+		if parent == current {
+			return "", err
+		}
+		missing = append(missing, filepath.Base(current))
+		current = parent
+	}
+}
+
+func currentCohesionIdentity() cohesion.Identity {
+	publicationStatus := "unpublished"
+	if buildinfo.Version != "dev" {
+		publicationStatus = "published"
+	}
+	return cohesion.Identity{
+		DesignLanguageVersion: buildinfo.DesignLanguageVersion,
+		DesignLanguageSHA256:  buildinfo.DesignLanguageSHA256,
+		SourceIdentity:        buildinfo.DesignLanguageSourceIdentity,
+		ToolingVersion:        buildinfo.Version,
+		PublicationStatus:     publicationStatus,
+	}
 }
 
 type upgradeOptions struct {

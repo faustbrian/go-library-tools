@@ -3,6 +3,9 @@ package cli
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -95,6 +98,258 @@ func TestExecuteCohesionCoversOutputAndFailureContracts(t *testing.T) {
 	stderr.Reset()
 	if code := executeCohesion([]string{"catalog", "engineering"}, root, policy, &stdout, &stderr); code != 1 || !strings.Contains(stderr.String(), "render failure") {
 		t.Fatalf("executeCohesion(render failure) = %d, %q", code, stderr.String())
+	}
+}
+
+func TestExecuteCohesionRejectsSourceBuildPublishingAggregateCatalogs(t *testing.T) {
+	root := internalFixture(t)
+	policy, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := executeCohesion([]string{
+		"aggregate", "generate",
+		"--inputs", filepath.Join(root, "inputs.json"),
+		"--output", filepath.Join(root, "docs", "ecosystem"),
+	}, root, policy, &stdout, &stderr)
+	if code != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "source build cannot publish cohesion catalogs") {
+		t.Fatalf("executeCohesion(aggregate generate) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	if _, err := os.Stat(filepath.Join(root, "docs", "ecosystem")); !os.IsNotExist(err) {
+		t.Fatalf("public output exists after rejection: %v", err)
+	}
+
+	publicOutput := filepath.Join(root, "docs", "ecosystem")
+	if err := os.MkdirAll(publicOutput, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	alias := filepath.Join(root, "catalog-alias")
+	if err := os.Symlink(publicOutput, alias); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	code = executeCohesion([]string{
+		"aggregate", "generate",
+		"--inputs", filepath.Join(root, "inputs.json"),
+		"--output", alias,
+	}, root, policy, &stdout, &stderr)
+	if code != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "source build cannot publish cohesion catalogs") {
+		t.Fatalf("executeCohesion(aggregate generate through symlink) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteCohesionAllowsSourceBuildToCheckPublishedAggregateCatalogs(t *testing.T) {
+	root := t.TempDir()
+	originalVersion := buildinfo.Version
+	buildinfo.Version = "dev"
+	t.Cleanup(func() { buildinfo.Version = originalVersion })
+	var stdout, stderr bytes.Buffer
+	code := executeCohesion([]string{
+		"aggregate", "check",
+		"--inputs", filepath.Join(root, "missing-inputs.json"),
+		"--output", filepath.Join(root, "docs", "ecosystem"),
+	}, root, config.Config{}, &stdout, &stderr)
+	if code != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "read cohesion aggregation inputs") || strings.Contains(stderr.String(), "source build cannot publish") {
+		t.Fatalf("executeCohesion(aggregate check) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteCohesionRoutesSourceBuildGenerationThroughProtectedOutputBoundary(t *testing.T) {
+	root := t.TempDir()
+	originalVersion := buildinfo.Version
+	buildinfo.Version = "dev"
+	t.Cleanup(func() { buildinfo.Version = originalVersion })
+	var stdout, stderr bytes.Buffer
+	code := executeCohesion([]string{
+		"aggregate", "generate",
+		"--inputs", filepath.Join(root, "missing-inputs.json"),
+		"--output", filepath.Join(root, "preview"),
+	}, root, config.Config{}, &stdout, &stderr)
+	if code != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "read cohesion aggregation inputs") {
+		t.Fatalf("executeCohesion(source aggregate generate) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteCohesionGeneratesAndChecksAggregateCatalogs(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	originalVersion := buildinfo.Version
+	originalSource := buildinfo.DesignLanguageSourceIdentity
+	buildinfo.Version = "v1.3.0"
+	buildinfo.DesignLanguageSourceIdentity = "v1.3.0"
+	t.Cleanup(func() {
+		buildinfo.Version = originalVersion
+		buildinfo.DesignLanguageSourceIdentity = originalSource
+	})
+
+	var projection, projectionStderr bytes.Buffer
+	if code := executeCohesion([]string{"catalog", "engineering", "--json"}, root, policy, &projection, &projectionStderr); code != 0 {
+		t.Fatalf("executeCohesion(catalog) = %d, %q", code, projectionStderr.String())
+	}
+	var envelope struct {
+		Repository string `json:"repository"`
+	}
+	if err := json.Unmarshal(projection.Bytes(), &envelope); err != nil {
+		t.Fatal(err)
+	}
+	task := t.TempDir()
+	projectionPath := filepath.Join(task, "repository.json")
+	if err := os.WriteFile(projectionPath, projection.Bytes(), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(projection.Bytes())
+	inputsPath := filepath.Join(task, "inputs.json")
+	inputs := `{"schema_version":1,"design_language":{"version":"` + buildinfo.DesignLanguageVersion + `","sha256":"` + buildinfo.DesignLanguageSHA256 + `"},"repositories":[{"repository":"` + envelope.Repository + `","projection":"repository.json","sha256":"` + hex.EncodeToString(digest[:]) + `"}]}`
+	if err := os.WriteFile(inputsPath, []byte(inputs), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	output := filepath.Join(task, "preview")
+
+	for _, action := range []string{"generate", "check"} {
+		var stdout, stderr bytes.Buffer
+		code := executeCohesion([]string{"aggregate", action, "--inputs", inputsPath, "--output", output}, root, policy, &stdout, &stderr)
+		if code != 0 || stderr.Len() != 0 || stdout.String() != "cohesion aggregate "+action+" passed\n" {
+			t.Fatalf("executeCohesion(aggregate %s) = %d, %q, %q", action, code, stdout.String(), stderr.String())
+		}
+	}
+}
+
+func TestCohesionAggregateArgumentsAndPathBoundaries(t *testing.T) {
+	for name, args := range map[string][]string{
+		"length":       {"generate"},
+		"action":       {"publish", "--inputs", "a", "--output", "b"},
+		"flag":         {"generate", "--unknown", "a", "--output", "b"},
+		"empty":        {"generate", "--inputs", "", "--output", "b"},
+		"empty output": {"generate", "--inputs", "a", "--output", ""},
+		"duplicate":    {"generate", "--inputs", "a", "--inputs", "b"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if _, _, _, err := cohesionAggregateArguments(args); err == nil {
+				t.Fatal("cohesionAggregateArguments() error = nil")
+			}
+		})
+	}
+	action, inputs, output, err := cohesionAggregateArguments([]string{"check", "--output", "out", "--inputs", "in"})
+	if err != nil || action != "check" || inputs != "in" || output != "out" {
+		t.Fatalf("cohesionAggregateArguments() = %q, %q, %q, %v", action, inputs, output, err)
+	}
+	if got := resolveCohesionPath("/repo", "relative"); got != "/repo/relative" {
+		t.Fatalf("resolveCohesionPath(relative) = %q", got)
+	}
+	if got := resolveCohesionPath("/repo", "/absolute/../catalog"); got != "/catalog" {
+		t.Fatalf("resolveCohesionPath(absolute) = %q", got)
+	}
+}
+
+func TestCanonicalCohesionPathReportsEveryResolutionBoundary(t *testing.T) {
+	failure := errors.New("injected failure")
+	if _, err := canonicalCohesionPathWithFunctions("value", func(string) (string, error) {
+		return "", failure
+	}, filepath.EvalSymlinks); !errors.Is(err, failure) {
+		t.Fatalf("canonicalCohesionPathWithFunctions(abs) error = %v", err)
+	}
+	if _, err := canonicalCohesionPathWithFunctions("value", func(string) (string, error) {
+		return "/value", nil
+	}, func(string) (string, error) {
+		return "", failure
+	}); !errors.Is(err, failure) {
+		t.Fatalf("canonicalCohesionPathWithFunctions(eval) error = %v", err)
+	}
+	missing := &os.PathError{Op: "eval", Path: "/", Err: os.ErrNotExist}
+	if _, err := canonicalCohesionPathWithFunctions("value", func(string) (string, error) {
+		return "/", nil
+	}, func(string) (string, error) {
+		return "", missing
+	}); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("canonicalCohesionPathWithFunctions(root) error = %v", err)
+	}
+	resolved, err := canonicalCohesionPathWithFunctions("value", func(string) (string, error) {
+		return "/root/a/b", nil
+	}, func(value string) (string, error) {
+		if value == "/root" {
+			return "/resolved", nil
+		}
+		return "", missing
+	})
+	if err != nil || resolved != "/resolved/a/b" {
+		t.Fatalf("canonicalCohesionPathWithFunctions(missing suffix) = %q, %v", resolved, err)
+	}
+
+	calls := 0
+	canonicalize := func(string) (string, error) {
+		calls++
+		if calls == 1 {
+			return "", failure
+		}
+		return "/value", nil
+	}
+	if _, err := sameCohesionPathWithCanonicalizer("left", "right", canonicalize); !errors.Is(err, failure) {
+		t.Fatalf("sameCohesionPathWithCanonicalizer(left) error = %v", err)
+	}
+	calls = 0
+	canonicalize = func(string) (string, error) {
+		calls++
+		if calls == 2 {
+			return "", failure
+		}
+		return "/value", nil
+	}
+	if _, err := sameCohesionPathWithCanonicalizer("left", "right", canonicalize); !errors.Is(err, failure) {
+		t.Fatalf("sameCohesionPathWithCanonicalizer(right) error = %v", err)
+	}
+}
+
+func TestExecuteCohesionRejectsUnresolvablePublicationPath(t *testing.T) {
+	root := internalFixture(t)
+	policy, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	originalVersion := buildinfo.Version
+	buildinfo.Version = "dev"
+	t.Cleanup(func() { buildinfo.Version = originalVersion })
+	var stdout, stderr bytes.Buffer
+	code := executeCohesion([]string{
+		"aggregate", "generate", "--inputs", "inputs.json", "--output", "\x00",
+	}, root, policy, &stdout, &stderr)
+	if code != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "resolve cohesion publication path") {
+		t.Fatalf("executeCohesion(unresolvable path) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteCohesionReportsAggregateUsageAndGenerationFailures(t *testing.T) {
+	root := internalFixture(t)
+	policy, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	if code := executeCohesion([]string{"aggregate"}, root, policy, &stdout, &stderr); code != 2 || !strings.Contains(stderr.String(), "usage: golib cohesion aggregate") {
+		t.Fatalf("executeCohesion(aggregate usage) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	originalVersion := buildinfo.Version
+	originalSource := buildinfo.DesignLanguageSourceIdentity
+	buildinfo.Version = "v1.3.0"
+	buildinfo.DesignLanguageSourceIdentity = "v1.3.0"
+	t.Cleanup(func() {
+		buildinfo.Version = originalVersion
+		buildinfo.DesignLanguageSourceIdentity = originalSource
+	})
+	stdout.Reset()
+	stderr.Reset()
+	code := executeCohesion([]string{
+		"aggregate", "generate", "--inputs", "missing-inputs.json", "--output", "preview",
+	}, root, policy, &stdout, &stderr)
+	if code != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "read cohesion aggregation inputs") {
+		t.Fatalf("executeCohesion(aggregate failure) = %d, %q, %q", code, stdout.String(), stderr.String())
 	}
 }
 
