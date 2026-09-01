@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added the versioned Golib ecosystem entry point and consumer-facing design
+  language for explicit construction, ownership, lifecycle, failure,
+  observability, adapter naming, compatibility, and application composition.
+
 ## 1.2.0 - 2026-08-31
 
 ### Added

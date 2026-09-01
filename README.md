@@ -37,6 +37,9 @@ Start with the [documentation index](docs/README.md). See
 [CONTRIBUTING.md](CONTRIBUTING.md) for development, [SECURITY.md](SECURITY.md)
 for private reports, and [SUPPORT.md](SUPPORT.md) for support channels.
 
+Consumers composing independently released Golib modules should also read the
+versioned [Golib ecosystem design language](docs/ecosystem/design-language.md).
+
 ## Compatibility
 
 The required Go version is recorded in [`.go-version`](.go-version). Released
