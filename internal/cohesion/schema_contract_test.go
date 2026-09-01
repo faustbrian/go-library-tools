@@ -12,13 +12,6 @@ import (
 )
 
 func TestValidateModulesSchemaAcceptsNormativeDocumentAndRejectsInvalidInput(t *testing.T) {
-	current, err := os.ReadFile("../../schema/modules.schema.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if string(current) != modulesSchemaJSON {
-		t.Fatal("embedded modules schema is stale; run go generate ./internal/cohesion")
-	}
 	valid := []byte(`{
   "schema_version": 2,
   "repository": "github.com/faustbrian/example",
@@ -38,6 +31,25 @@ func TestValidateModulesSchemaAcceptsNormativeDocumentAndRejectsInvalidInput(t *
 	for _, invalid := range [][]byte{[]byte(`{`), []byte(`{"schema_version":2}`)} {
 		if err := validateModulesSchema(invalid); err == nil {
 			t.Fatalf("validateModulesSchema(%s) error = nil", invalid)
+		}
+	}
+}
+
+func TestEmbeddedCohesionSchemasAreCurrent(t *testing.T) {
+	for _, test := range []struct {
+		path     string
+		embedded string
+	}{
+		{path: "../../schema/modules.schema.json", embedded: modulesSchemaJSON},
+		{path: "../../schema/cohesion-catalog.schema.json", embedded: catalogSchemaJSON},
+		{path: "../../schema/cohesion-inputs.schema.json", embedded: inputsSchemaJSON},
+	} {
+		current, err := os.ReadFile(test.path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if string(current) != test.embedded {
+			t.Fatalf("embedded schema for %s is stale; run go generate ./internal/cohesion", test.path)
 		}
 	}
 }
@@ -156,6 +168,40 @@ func TestCatalogSchemaRejectsForbiddenEnvelopeCombinations(t *testing.T) {
 	engineering["modules"] = []any{planned}
 	if err := compiled.Validate(engineering); err == nil {
 		t.Fatal("catalog schema accepted a planned module without its README entry point")
+	}
+}
+
+func TestAggregationInputsSchemaAcceptsOnlySafeManifestRelativeProjectionPaths(t *testing.T) {
+	compiled := compileSchemaFile(t, "../../schema/cohesion-inputs.schema.json", "cohesion-inputs.json")
+	manifest := map[string]any{
+		"schema_version": 1,
+		"design_language": map[string]any{
+			"version": "1.0",
+			"sha256":  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+		},
+		"repositories": []any{map[string]any{
+			"repository": "github.com/faustbrian/go-example",
+			"projection": ".ai/cohesion/repository.json",
+			"sha256":     "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+		}},
+	}
+	if err := compiled.Validate(manifest); err != nil {
+		t.Fatalf("valid aggregation manifest: %v", err)
+	}
+	for _, path := range []string{"/outside.json", "../outside.json", "projections/../outside.json", `.\\outside.json`, ".", "projections//repository.json"} {
+		candidate := cloneJSONMap(t, manifest)
+		repositories, ok := candidate["repositories"].([]any)
+		if !ok || len(repositories) == 0 {
+			t.Fatal("cloned aggregation manifest has no repositories")
+		}
+		candidateRepository, ok := repositories[0].(map[string]any)
+		if !ok {
+			t.Fatal("cloned aggregation manifest repository is not an object")
+		}
+		candidateRepository["projection"] = path
+		if err := compiled.Validate(candidate); err == nil {
+			t.Fatalf("aggregation inputs schema accepted unsafe projection %q", path)
+		}
 	}
 }
 

@@ -27,6 +27,11 @@ operations:
         budget: 100x
         timeout: 2m
       - type: go-test
+        packages: [./internal/cohesion]
+        fuzz: FuzzAggregationSchemasNeverPanic
+        budget: 100x
+        timeout: 2m
+      - type: go-test
         packages: [./internal/docscheck]
         fuzz: FuzzLycheeArchive
         budget: 100x

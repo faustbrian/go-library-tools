@@ -15,6 +15,7 @@ func TestPublishedCohesionSchemasAreClosedAndVersioned(t *testing.T) {
 		{"modules.schema.json", "cohesion"},
 		{"cohesion-check.schema.json", "diagnostic"},
 		{"cohesion-catalog.schema.json", "consumer_module"},
+		{"cohesion-inputs.schema.json", "repository_input"},
 	}
 	for _, test := range tests {
 		t.Run(test.file, func(t *testing.T) {
