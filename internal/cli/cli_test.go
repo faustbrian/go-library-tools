@@ -22,7 +22,7 @@ func TestExecuteShowsHelp(t *testing.T) {
 	if code != 0 || stderr.Len() != 0 {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
-	for _, command := range []string{"check", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "specification check [--online]", "workflows check", "services cycle", "release dry-run", "upgrade <plan|apply>"} {
+	for _, command := range []string{"check", "cohesion check [--json]", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "specification check [--online]", "workflows check", "services cycle", "release dry-run", "upgrade <plan|apply>"} {
 		if !strings.Contains(stdout.String(), command) {
 			t.Errorf("help does not contain %q", command)
 		}
@@ -30,6 +30,51 @@ func TestExecuteShowsHelp(t *testing.T) {
 	for _, unsupported := range []string{"services start", "services stop"} {
 		if strings.Contains(stdout.String(), unsupported) {
 			t.Errorf("help advertises unsupported command %q", unsupported)
+		}
+	}
+}
+
+func TestExecuteReportsCohesionAdoptionAsDeterministicJSON(t *testing.T) {
+	root := fixture(t)
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"cohesion", "check", "--json"}, root, &stdout, &stderr)
+	if code != 1 || stderr.Len() != 0 {
+		t.Fatalf("Execute(cohesion check --json) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	var report struct {
+		Valid       bool `json:"valid"`
+		Diagnostics []struct {
+			Code string `json:"code"`
+		} `json:"diagnostics"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil || report.Valid || len(report.Diagnostics) != 1 || report.Diagnostics[0].Code != "adoption-required" {
+		t.Fatalf("cohesion report = %#v, error = %v", report, err)
+	}
+}
+
+func TestExecuteProjectsRepositoryCohesionCatalogs(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		view  string
+		count int
+	}{
+		{"consumer", 0},
+		{"engineering", 1},
+	} {
+		var stdout, stderr bytes.Buffer
+		code := cli.Execute([]string{"cohesion", "catalog", test.view, "--json"}, root, &stdout, &stderr)
+		if code != 0 || stderr.Len() != 0 {
+			t.Fatalf("Execute(cohesion catalog %s) = %d, %q, %q", test.view, code, stdout.String(), stderr.String())
+		}
+		var envelope struct {
+			View    string            `json:"view"`
+			Modules []json.RawMessage `json:"modules"`
+		}
+		if err := json.Unmarshal(stdout.Bytes(), &envelope); err != nil || envelope.View != test.view || len(envelope.Modules) != test.count {
+			t.Fatalf("catalog %s = %#v, error = %v", test.view, envelope, err)
 		}
 	}
 }

@@ -85,7 +85,7 @@ jobs:
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
             CGO_ENABLED=0 go build -trimpath -buildvcs=false \
-            -ldflags="-s -w -X github.com/faustbrian/go-library-tools/internal/buildinfo.Version=${VERSION}" \
+            -ldflags="-s -w -X github.com/faustbrian/go-library-tools/internal/buildinfo.Version=${VERSION} -X github.com/faustbrian/go-library-tools/internal/buildinfo.DesignLanguageSourceIdentity=${VERSION}" \
             -o "${directory}/golib" ./cmd/golib
           cp LICENSE "${directory}/LICENSE"
           tar --sort=name --owner=0 --group=0 --numeric-owner \

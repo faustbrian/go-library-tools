@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "repository": "github.com/faustbrian/go-library-tools",
   "go_version": "1.27.0",
   "modules": [
@@ -89,6 +89,18 @@
           "directory": "internal/consumers",
           "name": "consumers",
           "import_path": "github.com/faustbrian/go-library-tools/internal/consumers",
+          "kind": "internal",
+          "production": true,
+          "executable": true,
+          "coverage_required": true,
+          "build_required": true,
+          "build_tags": []
+        },
+        {
+          "module_directory": ".",
+          "directory": "internal/cohesion",
+          "name": "cohesion",
+          "import_path": "github.com/faustbrian/go-library-tools/internal/cohesion",
           "kind": "internal",
           "production": true,
           "executable": true,
@@ -245,6 +257,72 @@
       "family_label": "Tooling",
       "family_description": "Repository verification, evidence, fixtures, workflows, and releases.",
       "family_order": 1,
+      "cohesion": {
+        "family": "tooling",
+        "secondary_capabilities": [
+          "testing-and-conformance"
+        ],
+        "responsibility": "Validate and execute the shared contract for independently released Golib repositories.",
+        "non_goals": [
+          "Own application runtime behavior or provide an umbrella Golib runtime."
+        ],
+        "public_package_identifier": "none",
+        "primary_entry_packages": [
+          "github.com/faustbrian/go-library-tools/cmd/golib"
+        ],
+        "package_selection": {
+          "github.com/faustbrian/go-library-tools/cmd/golib": "Install the golib command to run repository-owned validation and release workflows."
+        },
+        "lifecycle_status": "active",
+        "maturity": "stable",
+        "construction_styles": [
+          "plain-function"
+        ],
+        "lifecycle_styles": [
+          "stateless"
+        ],
+        "ownership": {
+          "configuration": "caller",
+          "mutable_inputs": [
+            "copy"
+          ],
+          "runtime_resources": "none",
+          "background_work": "none"
+        },
+        "optional_owned_dependencies": [],
+        "adapters": [],
+        "companions": [],
+        "supported_go": {
+          "minimum": "1.27.0",
+          "tested": [
+            "1.27.0"
+          ]
+        },
+        "supported_platforms": [
+          "portable-go"
+        ],
+        "supported_backends": [],
+        "supported_protocols": [],
+        "documentation": {
+          "readme": "README.md",
+          "api": "https://pkg.go.dev/github.com/faustbrian/go-library-tools",
+          "adoption": "docs/ecosystem/README.md",
+          "security": "SECURITY.md",
+          "compatibility": null,
+          "performance": "docs/performance.md",
+          "examples": "docs/cli.md",
+          "faq": null,
+          "changelog": "CHANGELOG.md",
+          "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-library-tools",
+          "ecosystem_index": "docs/ecosystem/README.md"
+        },
+        "known_good_compatibility_sets": [],
+        "delivery": {
+          "implementation": "in-progress",
+          "hardening": "in-progress",
+          "release": "in-progress"
+        }
+      },
       "goal_status": "complete",
       "goal_files": [],
       "goal_evidence": [],

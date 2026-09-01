@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 
 	"github.com/faustbrian/go-library-tools/internal/buildinfo"
+	"github.com/faustbrian/go-library-tools/internal/cohesion"
 	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/consumers"
 	"github.com/faustbrian/go-library-tools/internal/evidence"
@@ -28,6 +29,8 @@ const help = `golib validates and executes the Go library repository contract.
 Usage:
   golib --version
   golib check [--all|--module <directory>]
+  golib cohesion check [--json]
+  golib cohesion catalog <consumer|engineering> [--json]
   golib config validate
 	golib config show --json
   golib inventory [--json]
@@ -64,6 +67,8 @@ func ExecuteContext(ctx context.Context, args []string, workingDirectory string,
 
 type executorFactory func(string, io.Writer, io.Writer) (gates.Executor, func() error, error)
 
+var renderCohesionCatalog = cohesion.RenderMarkdown
+
 func execute(args []string, workingDirectory string, stdout, stderr io.Writer, createExecutor executorFactory) int {
 	return executeContext(context.Background(), args, workingDirectory, stdout, stderr, createExecutor)
 }
@@ -90,6 +95,9 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 	}
 	if err := buildinfo.ValidateRequired(policy.ToolVersion); err != nil {
 		return failure(stderr, err)
+	}
+	if args[0] == "cohesion" {
+		return executeCohesion(args[1:], root, policy, stdout, stderr)
 	}
 	catalog, err := inventory.Load(root, policy)
 	if err != nil {
@@ -290,6 +298,72 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 	default:
 		return usage(stderr, "unknown command: "+args[0])
 	}
+}
+
+func executeCohesion(args []string, root string, policy config.Config, stdout, stderr io.Writer) int {
+	if len(args) >= 1 && args[0] == "catalog" {
+		if len(args) < 2 || len(args) > 3 || (args[1] != "consumer" && args[1] != "engineering") || (len(args) == 3 && args[2] != "--json") {
+			return usage(stderr, "usage: golib cohesion catalog <consumer|engineering> [--json]")
+		}
+		catalog, report := cohesion.LoadAndCheck(root, policy)
+		if !report.Valid {
+			return failure(stderr, errors.New("cohesion metadata is invalid"))
+		}
+		sourceIdentity := buildinfo.DesignLanguageSourceIdentity
+		publicationStatus := "unpublished"
+		if buildinfo.Version != "dev" {
+			publicationStatus = "published"
+		}
+		envelope, err := cohesion.Project(catalog, args[1], cohesion.Identity{
+			DesignLanguageVersion: buildinfo.DesignLanguageVersion,
+			DesignLanguageSHA256:  buildinfo.DesignLanguageSHA256,
+			SourceIdentity:        sourceIdentity,
+			ToolingVersion:        buildinfo.Version,
+			PublicationStatus:     publicationStatus,
+		})
+		if err != nil {
+			return failure(stderr, err)
+		}
+		if len(args) == 3 {
+			encoder := json.NewEncoder(stdout)
+			encoder.SetIndent("", "  ")
+			if err := encoder.Encode(envelope); err != nil {
+				return failure(stderr, fmt.Errorf("write cohesion catalog: %w", err))
+			}
+			return 0
+		}
+		markdown, err := renderCohesionCatalog(envelope)
+		if err != nil {
+			return failure(stderr, err)
+		}
+		if _, err := stdout.Write(markdown); err != nil {
+			return failure(stderr, fmt.Errorf("write cohesion catalog: %w", err))
+		}
+		return 0
+	}
+	if len(args) < 1 || args[0] != "check" || len(args) > 2 || (len(args) == 2 && args[1] != "--json") {
+		return usage(stderr, "usage: golib cohesion <check [--json]|catalog <consumer|engineering> [--json]>")
+	}
+	report := cohesion.Check(root, policy)
+	if len(args) == 2 {
+		encoder := json.NewEncoder(stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(report); err != nil {
+			return failure(stderr, fmt.Errorf("write cohesion report: %w", err))
+		}
+		if report.Valid {
+			return 0
+		}
+		return 1
+	}
+	if report.Valid {
+		_, _ = fmt.Fprintf(stdout, "cohesion metadata valid: %d module(s)\n", *report.Summary.TotalModules)
+		return 0
+	}
+	for _, diagnostic := range report.Diagnostics {
+		_, _ = fmt.Fprintf(stdout, "%s: %s: %s\n", diagnostic.Code, diagnostic.Path, diagnostic.Message)
+	}
+	return 1
 }
 
 type upgradeOptions struct {

@@ -140,6 +140,158 @@ func TestLoadValidatesCanonicalManifests(t *testing.T) {
 	}
 }
 
+func TestLoadSnapshotReturnsTheExactValidatedModuleManifest(t *testing.T) {
+	root := fixture(t)
+	policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}
+	want, err := os.ReadFile(filepath.Join(root, "modules.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	catalog, snapshot, err := inventory.LoadSnapshot(root, policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if catalog.Repository != "github.com/faustbrian/example" || string(snapshot) != string(want) {
+		t.Fatalf("LoadSnapshot() = %#v, %q", catalog, snapshot)
+	}
+}
+
+func TestLoadSnapshotPreservesDecodedModuleIdentityOnPackageFailure(t *testing.T) {
+	root := fixture(t)
+	policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}
+	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/other","packages":[]}`)
+
+	catalog, snapshot, err := inventory.LoadSnapshot(root, policy)
+	if err == nil || catalog.Repository != "github.com/faustbrian/example" || catalog.SchemaVersion != 1 || len(catalog.Modules) != 1 || len(snapshot) == 0 {
+		t.Fatalf("LoadSnapshot() = %#v, %q, %v", catalog, snapshot, err)
+	}
+	loaded, loadErr := inventory.Load(root, policy)
+	if loadErr == nil || loaded.Repository != "" {
+		t.Fatalf("Load() = %#v, %v", loaded, loadErr)
+	}
+}
+
+func TestLoadSnapshotPreservesDecodedHeaderWhenValidationFails(t *testing.T) {
+	root := fixture(t)
+	policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":0,"repository":"github.com/faustbrian/example","go_version":"1.27.0"}`)
+
+	catalog, snapshot, err := inventory.LoadSnapshot(root, policy)
+	if err == nil || catalog.Repository != "github.com/faustbrian/example" || catalog.SchemaVersion != 0 || catalog.Modules != nil || len(snapshot) == 0 {
+		t.Fatalf("LoadSnapshot() = %#v, %q, %v", catalog, snapshot, err)
+	}
+}
+
+func TestLoadSnapshotRejectsUnreadableOrInvalidModuleManifest(t *testing.T) {
+	policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}
+	for _, test := range []struct {
+		name string
+		root func(*testing.T) string
+	}{
+		{"unreadable", func(t *testing.T) string { return t.TempDir() }},
+		{"invalid", func(t *testing.T) string {
+			root := fixture(t)
+			write(t, filepath.Join(root, "modules.json"), "{")
+			return root
+		}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			catalog, snapshot, err := inventory.LoadSnapshot(test.root(t), policy)
+			if err == nil || catalog.Repository != "" || snapshot != nil || !strings.Contains(err.Error(), "load module manifest") {
+				t.Fatalf("LoadSnapshot() = %#v, %q, %v", catalog, snapshot, err)
+			}
+		})
+	}
+}
+
+func TestLoadAcceptsAndPreservesSchemaV2CohesionMetadata(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "modules.json"), `{
+  "schema_version": 2,
+  "repository": "github.com/faustbrian/example",
+  "go_version": "1.27.0",
+  "modules": [{
+    "directory": ".",
+    "module_path": "github.com/faustbrian/example",
+    "go_version": "1.27.0",
+    "kind": "public tool",
+    "purpose": "Example tooling.",
+    "lifecycle": "stable",
+    "releasable": true,
+    "version": "1.0.0",
+    "tag_prefix": "v",
+    "gates": {},
+    "packages": [],
+    "family": "tooling",
+    "family_label": "Tooling",
+    "family_description": "Repository tooling.",
+    "family_order": 1,
+    "cohesion": {
+      "family": "tooling",
+      "secondary_capabilities": ["testing-and-conformance"],
+      "responsibility": "Validate standalone repositories.",
+      "non_goals": ["Own application runtime behavior."],
+      "public_package_identifier": "none",
+      "primary_entry_packages": ["github.com/faustbrian/example/cmd/example"],
+      "package_selection": {"github.com/faustbrian/example/cmd/example": "Run repository checks."},
+      "lifecycle_status": "active",
+      "maturity": "stable",
+      "construction_styles": ["plain-function"],
+      "lifecycle_styles": ["stateless"],
+      "ownership": {
+        "configuration": "caller",
+        "mutable_inputs": ["copy"],
+        "runtime_resources": "none",
+        "background_work": "none"
+      },
+      "optional_owned_dependencies": [],
+      "adapters": [],
+      "companions": [],
+      "supported_go": {"minimum": "1.27.0", "tested": ["1.27.0"]},
+      "supported_platforms": ["portable-go"],
+      "supported_backends": [],
+      "supported_protocols": [],
+      "documentation": {
+        "readme": "README.md",
+        "api": "https://pkg.go.dev/github.com/faustbrian/example",
+        "adoption": null,
+        "security": null,
+        "compatibility": null,
+        "performance": null,
+        "examples": null,
+        "faq": null,
+        "changelog": "CHANGELOG.md",
+        "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/example",
+        "ecosystem_index": "https://example.com/ecosystem"
+      },
+      "known_good_compatibility_sets": [],
+      "delivery": {"implementation": "verified", "hardening": "in-progress", "release": "in-progress"}
+    }
+  }]
+}`)
+
+	got, err := inventory.Load(root, config.Config{
+		Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"},
+	})
+	if err != nil {
+		t.Fatalf("Load(schema v2) error = %v", err)
+	}
+	if got.SchemaVersion != 2 || got.Modules[0].Cohesion == nil || got.Modules[0].Cohesion.Family != "tooling" {
+		t.Fatalf("Load(schema v2) = %#v", got)
+	}
+}
+
+func TestLoadRejectsCohesionMetadataInSchemaV1(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/faustbrian/example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{},"packages":[],"cohesion":{}}]}`)
+	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[]}`)
+	_, err := inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}})
+	if err == nil || !strings.Contains(err.Error(), "schema_version 1 must not contain cohesion") {
+		t.Fatalf("Load(schema v1 cohesion) error = %v", err)
+	}
+}
+
 func TestLoadAcceptsStructuredGoalEvidence(t *testing.T) {
 	root := fixture(t)
 	manifest := `{
@@ -254,7 +406,7 @@ func TestLoadRejectsUnknownManifestFields(t *testing.T) {
 func TestLoadRejectsInvalidManifestContracts(t *testing.T) {
 	tests := map[string]func(*testing.T, string){
 		"unsupported module schema": func(t *testing.T, root string) {
-			write(t, filepath.Join(root, "modules.json"), `{"schema_version":2,"repository":"github.com/faustbrian/example","modules":[]}`)
+			write(t, filepath.Join(root, "modules.json"), `{"schema_version":3,"repository":"github.com/faustbrian/example","modules":[]}`)
 		},
 		"unsupported package schema": func(t *testing.T, root string) {
 			write(t, filepath.Join(root, "packages.json"), `{"schema_version":2,"repository":"github.com/faustbrian/example","packages":[]}`)

@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added the versioned Golib ecosystem entry point and consumer-facing design
+  language for explicit construction, ownership, lifecycle, failure,
+  observability, adapter naming, compatibility, and application composition.
+- Added schema-v2 cohesion metadata, strict machine-readable validation,
+  deterministic consumer and engineering repository catalogs, and a local/CI
+  `make cohesion` gate.
+
 ## 1.2.0 - 2026-08-31
 
 ### Added

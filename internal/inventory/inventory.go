@@ -54,6 +54,69 @@ type Module struct {
 	GoalFiles                   []string        `json:"goal_files"`
 	GoalEvidence                []GoalEvidence  `json:"goal_evidence"`
 	Provenance                  json.RawMessage `json:"provenance"`
+	Cohesion                    *Cohesion       `json:"cohesion,omitempty"`
+}
+
+// Cohesion is the schema-v2 consumer and engineering catalog contract.
+type Cohesion struct {
+	Family                     string            `json:"family"`
+	SecondaryCapabilities      []string          `json:"secondary_capabilities"`
+	Responsibility             string            `json:"responsibility"`
+	NonGoals                   []string          `json:"non_goals"`
+	PublicPackageIdentifier    string            `json:"public_package_identifier"`
+	PrimaryEntryPackages       []string          `json:"primary_entry_packages"`
+	PackageSelection           map[string]string `json:"package_selection"`
+	LifecycleStatus            string            `json:"lifecycle_status"`
+	Maturity                   string            `json:"maturity"`
+	ConstructionStyles         []string          `json:"construction_styles"`
+	LifecycleStyles            []string          `json:"lifecycle_styles"`
+	Ownership                  Ownership         `json:"ownership"`
+	OptionalOwnedDependencies  []string          `json:"optional_owned_dependencies"`
+	Adapters                   []string          `json:"adapters"`
+	Companions                 []string          `json:"companions"`
+	SupportedGo                SupportedGo       `json:"supported_go"`
+	SupportedPlatforms         []string          `json:"supported_platforms"`
+	SupportedBackends          []string          `json:"supported_backends"`
+	SupportedProtocols         []string          `json:"supported_protocols"`
+	Documentation              Documentation     `json:"documentation"`
+	KnownGoodCompatibilitySets []string          `json:"known_good_compatibility_sets"`
+	Delivery                   Delivery          `json:"delivery"`
+}
+
+// Ownership records consumer-visible configuration, alias, resource, and work ownership.
+type Ownership struct {
+	Configuration    string   `json:"configuration"`
+	MutableInputs    []string `json:"mutable_inputs"`
+	RuntimeResources string   `json:"runtime_resources"`
+	BackgroundWork   string   `json:"background_work"`
+}
+
+// SupportedGo records the minimum version and exact versions exercised by CI.
+type SupportedGo struct {
+	Minimum string   `json:"minimum"`
+	Tested  []string `json:"tested"`
+}
+
+// Documentation records entry points; nil means the entry point is inapplicable.
+type Documentation struct {
+	README         *string `json:"readme"`
+	API            *string `json:"api"`
+	Adoption       *string `json:"adoption"`
+	Security       *string `json:"security"`
+	Compatibility  *string `json:"compatibility"`
+	Performance    *string `json:"performance"`
+	Examples       *string `json:"examples"`
+	FAQ            *string `json:"faq"`
+	Changelog      *string `json:"changelog"`
+	PkgGoDev       *string `json:"pkg_go_dev"`
+	EcosystemIndex *string `json:"ecosystem_index"`
+}
+
+// Delivery keeps implementation, hardening, and release states independent.
+type Delivery struct {
+	Implementation string `json:"implementation"`
+	Hardening      string `json:"hardening"`
+	Release        string `json:"release"`
 }
 
 // GoalEvidence binds a goal document to its implementation and verification
@@ -88,32 +151,71 @@ type packageInventory struct {
 
 // Load reads both manifests and rejects inconsistent repository identities.
 func Load(root string, policy config.Config) (Inventory, error) {
+	catalog, err := load(root, policy, nil)
+	if err != nil {
+		return Inventory{}, err
+	}
+	return catalog, nil
+}
+
+// LoadSnapshot returns the validated inventory and the exact module-manifest
+// bytes from which it was decoded so callers can perform additional checks
+// without racing a second filesystem read.
+func LoadSnapshot(root string, policy config.Config) (Inventory, []byte, error) {
+	moduleManifest, err := repositoryfile.Read(root, policy.Manifests.Modules, maximumManifestSize)
+	if err != nil {
+		return Inventory{}, nil, fmt.Errorf("load module manifest: %w", err)
+	}
+	catalog, err := load(root, policy, moduleManifest)
+	if err != nil {
+		if catalog.SchemaVersion == 0 && catalog.Repository == "" && catalog.Modules == nil {
+			return Inventory{}, nil, err
+		}
+		return catalog, moduleManifest, err
+	}
+	return catalog, moduleManifest, nil
+}
+
+func load(root string, policy config.Config, moduleManifest []byte) (Inventory, error) {
 	var modules Inventory
-	if err := decode(root, policy.Manifests.Modules, &modules); err != nil {
+	var err error
+	if moduleManifest == nil {
+		err = decode(root, policy.Manifests.Modules, &modules)
+	} else {
+		err = decodeData(moduleManifest, &modules)
+	}
+	if err != nil {
 		return Inventory{}, fmt.Errorf("load module manifest: %w", err)
 	}
 	var packages packageInventory
 	if err := decode(root, policy.Manifests.Packages, &packages); err != nil {
-		return Inventory{}, fmt.Errorf("load package manifest: %w", err)
+		return modules, fmt.Errorf("load package manifest: %w", err)
 	}
-	if modules.SchemaVersion != 1 || packages.SchemaVersion != 1 {
-		return Inventory{}, errors.New("manifest schema_version must be 1")
+	if (modules.SchemaVersion != 1 && modules.SchemaVersion != 2) || packages.SchemaVersion != 1 {
+		return modules, errors.New("module manifest schema_version must be 1 or 2 and package manifest schema_version must be 1")
+	}
+	if modules.SchemaVersion == 1 {
+		for _, module := range modules.Modules {
+			if module.Cohesion != nil {
+				return modules, errors.New("module manifest schema_version 1 must not contain cohesion metadata")
+			}
+		}
 	}
 	if modules.Repository == "" || modules.Repository != packages.Repository {
-		return Inventory{}, errors.New("module and package manifest repository identities differ")
+		return modules, errors.New("module and package manifest repository identities differ")
 	}
 	if len(modules.Modules) == 0 {
-		return Inventory{}, errors.New("module manifest contains no modules")
+		return modules, errors.New("module manifest contains no modules")
 	}
 	byDirectory := make(map[string]Module, len(modules.Modules))
 	for _, module := range modules.Modules {
 		if _, exists := byDirectory[module.Directory]; exists {
-			return Inventory{}, fmt.Errorf("duplicate module directory %q", module.Directory)
+			return modules, fmt.Errorf("duplicate module directory %q", module.Directory)
 		}
 		byDirectory[module.Directory] = module
 	}
 	if err := validatePackages(modules.Modules, packages.Packages); err != nil {
-		return Inventory{}, err
+		return modules, err
 	}
 	gateKeys := map[string]string{
 		"api": "api_compatibility", "benchmark": "benchmarks",
@@ -124,19 +226,19 @@ func Load(root string, policy config.Config) (Inventory, error) {
 	for index, migration := range policy.Mutation.Imports {
 		module, exists := byDirectory[migration.Module]
 		if !exists {
-			return Inventory{}, fmt.Errorf("mutation.imports[%d] references unknown module %q", index, migration.Module)
+			return modules, fmt.Errorf("mutation.imports[%d] references unknown module %q", index, migration.Module)
 		}
 		if !module.Gates["mutation"] {
-			return Inventory{}, fmt.Errorf("mutation.imports[%d] is not enabled for module %q", index, migration.Module)
+			return modules, fmt.Errorf("mutation.imports[%d] is not enabled for module %q", index, migration.Module)
 		}
 	}
 	for index, baseline := range policy.API.Baselines {
 		module, exists := byDirectory[baseline.Module]
 		if !exists {
-			return Inventory{}, fmt.Errorf("api.baselines[%d] references unknown module %q", index, baseline.Module)
+			return modules, fmt.Errorf("api.baselines[%d] references unknown module %q", index, baseline.Module)
 		}
 		if !module.Gates["api_compatibility"] {
-			return Inventory{}, fmt.Errorf("api.baselines[%d] is not enabled for module %q", index, baseline.Module)
+			return modules, fmt.Errorf("api.baselines[%d] is not enabled for module %q", index, baseline.Module)
 		}
 		apiOwners[baseline.Module] = struct{}{}
 	}
@@ -144,18 +246,18 @@ func Load(root string, policy config.Config) (Inventory, error) {
 	for index, operation := range policy.Operations {
 		module, exists := byDirectory[operation.Module]
 		if !exists {
-			return Inventory{}, fmt.Errorf("operations[%d] references unknown module %q", index, operation.Module)
+			return modules, fmt.Errorf("operations[%d] references unknown module %q", index, operation.Module)
 		}
 		enabled := operation.Gate == "interoperability" && len(module.InteroperabilityTools) > 0
 		if operation.Gate != "interoperability" {
 			enabled = module.Gates[gateKeys[operation.Gate]]
 		}
 		if !enabled {
-			return Inventory{}, fmt.Errorf("operations[%d] gate %q is not enabled for module %q", index, operation.Gate, operation.Module)
+			return modules, fmt.Errorf("operations[%d] gate %q is not enabled for module %q", index, operation.Gate, operation.Module)
 		}
 		if operation.Gate == "api" {
 			if _, exists := apiOwners[operation.Module]; exists {
-				return Inventory{}, fmt.Errorf("module %q has two API gate owners", operation.Module)
+				return modules, fmt.Errorf("module %q has two API gate owners", operation.Module)
 			}
 		}
 		declaredOperations[operation.Module+"\x00"+operation.Gate] = struct{}{}
@@ -174,7 +276,7 @@ func Load(root string, policy config.Config) (Inventory, error) {
 		}
 		for _, gate := range required {
 			if _, exists := declaredOperations[module.Directory+"\x00"+gate]; !exists {
-				return Inventory{}, fmt.Errorf("module %q enables %s and requires a typed operation", module.Directory, gate)
+				return modules, fmt.Errorf("module %q enables %s and requires a typed operation", module.Directory, gate)
 			}
 		}
 	}
@@ -221,6 +323,10 @@ func decode(root, path string, destination any) error {
 	if err != nil {
 		return err
 	}
+	return decodeData(data, destination)
+}
+
+func decodeData(data []byte, destination any) error {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(destination); err != nil {

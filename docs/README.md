@@ -1,5 +1,7 @@
 # Documentation
 
+- [Golib ecosystem](ecosystem/README.md): versioned consumer design language
+  and package-selection entry point.
 - [Architecture](architecture.md): component and trust boundaries.
 - [CLI reference](cli.md): commands, output, and exit behavior.
 - [Configuration](configuration.md): `.golib.yaml` and canonical manifests.

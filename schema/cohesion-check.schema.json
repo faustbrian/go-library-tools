@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/cohesion-check.schema.json",
+  "title": "Golib cohesion check report schema v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "repository", "manifest_schema_version", "valid", "summary", "diagnostics"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "repository": {"type": ["string", "null"]},
+    "manifest_schema_version": {"type": ["integer", "null"]},
+    "valid": {"type": "boolean"},
+    "summary": {"$ref": "#/$defs/summary"},
+    "diagnostics": {"type": "array", "items": {"$ref": "#/$defs/diagnostic"}}
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {"summary": {"properties": {"total_modules": {"type": "null"}}}},
+        "required": ["summary"]
+      },
+      "then": {
+        "properties": {"summary": {"properties": {
+          "total_modules": {"type": "null"},
+          "releasable_modules": {"type": "null"},
+          "classified_modules": {"type": "null"}
+        }}}
+      },
+      "else": {
+        "properties": {"summary": {"properties": {
+          "total_modules": {"type": "integer"},
+          "releasable_modules": {"type": "integer"},
+          "classified_modules": {"type": "integer"}
+        }}}
+      }
+    },
+    {
+      "if": {"properties": {"valid": {"const": true}}, "required": ["valid"]},
+      "then": {
+        "properties": {
+          "summary": {"properties": {"error_count": {"const": 0}}},
+          "diagnostics": {"maxItems": 0}
+        }
+      },
+      "else": {
+        "properties": {
+          "summary": {"properties": {"error_count": {"minimum": 1}}},
+          "diagnostics": {"minItems": 1}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "nullable_count": {"type": ["integer", "null"], "minimum": 0},
+    "summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total_modules", "releasable_modules", "classified_modules", "error_count"],
+      "properties": {
+        "total_modules": {"$ref": "#/$defs/nullable_count"},
+        "releasable_modules": {"$ref": "#/$defs/nullable_count"},
+        "classified_modules": {"$ref": "#/$defs/nullable_count"},
+        "error_count": {"type": "integer", "minimum": 0}
+      }
+    },
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "path", "message"],
+      "properties": {
+        "code": {"enum": ["adoption-required", "duplicate-entry", "invalid-manifest", "invalid-reference", "invalid-value", "missing-document", "missing-metadata", "nondeterministic-order", "unsafe-path", "view-mismatch"]},
+        "path": {"type": "string"},
+        "message": {"type": "string", "minLength": 1, "maxLength": 512}
+      }
+    }
+  }
+}

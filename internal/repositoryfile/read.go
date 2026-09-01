@@ -38,6 +38,19 @@ func ValidateDirectory(root, relative string) error {
 	return nil
 }
 
+// ValidateRegularFile verifies that relative identifies a real regular file
+// below root and that no existing path component is a symlink.
+func ValidateRegularFile(root, relative string) error {
+	_, info, err := inspectPath(root, relative, operatingSystem{})
+	if err != nil {
+		return err
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("%w: %s", ErrNotRegular, relative)
+	}
+	return nil
+}
+
 type fileSystem interface {
 	Lstat(string) (os.FileInfo, error)
 	Open(string) (file, error)
