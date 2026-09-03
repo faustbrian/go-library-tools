@@ -18,6 +18,11 @@ All notable changes to this project are documented in this file.
 
 - Enforced cohesion metadata validation in the reusable repository-contract CI
   job so schema-v2 drift fails the authoritative CI result.
+- Identified specification-monitor requests with a stable project user agent so
+  authoritative sites can distinguish them from anonymous Go HTTP traffic.
+- Resolved published modules from the public Go proxy before using the immutable
+  bootstrap archive as a fallback, preventing bootstrap content from shadowing
+  an existing public version with different bytes.
 
 ## 1.3.0 - 2026-09-01
 

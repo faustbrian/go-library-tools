@@ -85,7 +85,7 @@ func TestBootstrapProxyActionVerifiesArchiveBeforeExport(t *testing.T) {
 	content := readProjectFile(t, ".github/actions/setup-bootstrap-proxy/action.yml")
 	checksum := strings.Index(content, "sha256sum --check")
 	extraction := strings.Index(content, "tar --extract")
-	export := strings.Index(content, "GOPROXY=file://")
+	export := strings.Index(content, "GOPROXY=https://proxy.golang.org,file://")
 	if checksum < 0 || extraction < 0 || export < 0 || checksum > extraction || extraction > export {
 		t.Fatal("bootstrap proxy action must verify before extraction and export")
 	}

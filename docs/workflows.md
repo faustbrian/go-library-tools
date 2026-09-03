@@ -58,7 +58,10 @@ the archive before extraction and exposes it to both quality and CodeQL builds.
 Defining only one variable, using a mutable or non-HTTPS URL, or providing an
 invalid checksum fails closed. These variables bootstrap historical module
 identity only; they do not replace normal dependency resolution or permit a
-consumer to weaken any gate.
+consumer to weaken any gate. Published module versions resolve from the public
+Go proxy first. The file proxy is consulted only when the public proxy reports
+that a version is unavailable, so bootstrap archives cannot shadow a published
+module with different bytes.
 
 The reusable workflow keeps consumer policy in repository manifests. It builds
 a module matrix from `golib inventory --json`, runs one isolated module

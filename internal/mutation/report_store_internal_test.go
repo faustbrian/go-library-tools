@@ -54,11 +54,20 @@ func TestReportStoreRejectsInvalidArgumentsAndReports(t *testing.T) {
 			t.Fatalf("StoreReport(%q, %q) error = nil", input.root, input.digest)
 		}
 	}
-	if _, _, err := LoadReport("relative", "sha256:"+strings.Repeat("a", 64)); err == nil {
-		t.Fatal("LoadReport(relative) error = nil")
-	}
-	if _, _, err := LoadReport(t.TempDir(), "sha256:bad"); err == nil {
-		t.Fatal("LoadReport(bad digest) error = nil")
+	for _, input := range []struct {
+		name   string
+		root   string
+		digest string
+	}{
+		{"relative root", "relative", "sha256:" + strings.Repeat("a", 64)},
+		{"missing digest prefix", t.TempDir(), strings.Repeat("a", 64)},
+		{"malformed digest", t.TempDir(), "sha256:bad"},
+	} {
+		t.Run("load "+input.name, func(t *testing.T) {
+			if _, _, err := LoadReport(input.root, input.digest); !errors.Is(err, ErrInvalid) {
+				t.Fatalf("LoadReport(%q, %q) error = %v, want ErrInvalid", input.root, input.digest, err)
+			}
+		})
 	}
 	if _, _, err := LoadReport(t.TempDir(), "sha256:"+strings.Repeat("a", 64)); err == nil {
 		t.Fatal("LoadReport(missing) error = nil")
