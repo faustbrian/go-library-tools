@@ -67,6 +67,25 @@ func TestAuthorityFetchBoundaryContract(t *testing.T) {
 	}
 }
 
+func TestAuthorityFetchIdentifiesTheSpecificationMonitor(t *testing.T) {
+	body := "authority"
+	digest := sha256.Sum256([]byte(body))
+	var userAgent string
+	transport := roundTripper(func(request *http.Request) (*http.Response, error) {
+		userAgent = request.Header.Get("User-Agent")
+		return response(http.StatusOK, body, nil, nil), nil
+	})
+	err := fetchTestAuthority(context.Background(), &http.Client{Transport: transport}, authority{
+		ID: "source", URL: "https://example.com/source", SHA256: hex.EncodeToString(digest[:]),
+	})
+	if err != nil {
+		t.Fatalf("fetchTestAuthority() error = %v", err)
+	}
+	if userAgent != "go-library-tools (+https://github.com/faustbrian/go-library-tools)" {
+		t.Fatalf("specification authority User-Agent = %q", userAgent)
+	}
+}
+
 func TestAuthorityFetchRejectsPrivateDestinationsBeforeTransport(t *testing.T) {
 	called := false
 	transport := roundTripper(func(_ *http.Request) (*http.Response, error) {

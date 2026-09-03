@@ -32,5 +32,5 @@ runs:
         printf '%s  %s\n' "${BOOTSTRAP_SHA256}" "${archive}" | sha256sum --check
         mkdir -p "${proxy}"
         tar --extract --gzip --file "${archive}" --directory "${proxy}"
-        echo "GOPROXY=file://${proxy},https://proxy.golang.org,direct" >>"${GITHUB_ENV}"
+        echo "GOPROXY=https://proxy.golang.org,file://${proxy},direct" >>"${GITHUB_ENV}"
         echo 'GONOSUMDB=github.com/faustbrian/go-*' >>"${GITHUB_ENV}"

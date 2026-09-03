@@ -38,6 +38,7 @@ const (
 	maximumAuthoritySize  = 16 << 20
 	maximumAuthorities    = 64
 	maximumOnlineDuration = 2 * time.Minute
+	authorityUserAgent    = "go-library-tools (+https://github.com/faustbrian/go-library-tools)"
 )
 
 var (
@@ -135,6 +136,7 @@ func fetchAuthorityResolved(ctx context.Context, client *http.Client, resolver a
 	if err != nil {
 		return fmt.Errorf("create specification authority request %q: %w", item.ID, err)
 	}
+	request.Header.Set("User-Agent", authorityUserAgent)
 	boundedClient := *client
 	boundedClient.CheckRedirect = func(candidate *http.Request, via []*http.Request) error {
 		if len(via) >= 10 {
