@@ -16,6 +16,7 @@ func main() {
 		{input: "../../schema/modules.schema.json", output: "modules_schema_generated.go", constant: "modulesSchemaJSON"},
 		{input: "../../schema/cohesion-catalog.schema.json", output: "catalog_schema_generated.go", constant: "catalogSchemaJSON"},
 		{input: "../../schema/cohesion-inputs.schema.json", output: "inputs_schema_generated.go", constant: "inputsSchemaJSON"},
+		{input: "../../schema/cohesion-sources.schema.json", output: "sources_schema_generated.go", constant: "sourcesSchemaJSON"},
 	} {
 		data, err := os.ReadFile(schema.input)
 		if err != nil {

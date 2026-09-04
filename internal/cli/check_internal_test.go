@@ -40,6 +40,31 @@ func TestExecuteCohesionCoversOutputAndFailureContracts(t *testing.T) {
 			t.Fatalf("executeCohesion(%v) = %d, %q", args, code, stderr.String())
 		}
 	}
+	for _, test := range []struct {
+		args []string
+		code int
+	}{
+		{args: []string{"sources"}, code: 2},
+		{args: []string{"sources", "check", "--source", "release/cohesion-sources.json"}, code: 2},
+		{args: []string{"sources", "check", "--inputs", "missing-sources.json"}, code: 1},
+		{args: []string{"sources", "verify", "--inputs", "release/cohesion-sources.json", "--repository", "github.com/faustbrian/go-adaptive-throttle"}, code: 1},
+		{args: []string{"sources", "unknown", "--inputs", "release/cohesion-sources.json"}, code: 2},
+	} {
+		var stdout, stderr bytes.Buffer
+		if code := executeCohesion(test.args, root, policy, &stdout, &stderr); code != test.code || stdout.Len() != 0 || stderr.Len() == 0 {
+			t.Fatalf("executeCohesion(%v) = %d, %q, %q", test.args, code, stdout.String(), stderr.String())
+		}
+	}
+	sourceUsage := "usage: golib cohesion sources <check --inputs <file>|verify --inputs <file> --repository <identity>>\n"
+	for _, args := range [][]string{
+		{"sources"},
+		{"sources", "unknown", "--inputs", "release/cohesion-sources.json", "--repository", "github.com/faustbrian/go-library-tools"},
+	} {
+		var stdout, stderr bytes.Buffer
+		if code := executeCohesion(args, root, policy, &stdout, &stderr); code != 2 || stdout.Len() != 0 || stderr.String() != sourceUsage {
+			t.Fatalf("executeCohesion(%v) = %d, %q, %q", args, code, stdout.String(), stderr.String())
+		}
+	}
 	var catalogUsage bytes.Buffer
 	if code := executeCohesion([]string{"catalog"}, root, policy, &bytes.Buffer{}, &catalogUsage); code != 2 || !strings.HasPrefix(catalogUsage.String(), "usage: golib cohesion catalog ") {
 		t.Fatalf("executeCohesion(catalog) = %d, %q", code, catalogUsage.String())
@@ -98,6 +123,256 @@ func TestExecuteCohesionCoversOutputAndFailureContracts(t *testing.T) {
 	stderr.Reset()
 	if code := executeCohesion([]string{"catalog", "engineering"}, root, policy, &stdout, &stderr); code != 1 || !strings.Contains(stderr.String(), "render failure") {
 		t.Fatalf("executeCohesion(render failure) = %d, %q", code, stderr.String())
+	}
+}
+
+func TestExecuteAllowsReleasedCatalogProjectionAcrossRepositoryToolVersions(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	originalVersion := buildinfo.Version
+	originalSource := buildinfo.DesignLanguageSourceIdentity
+	buildinfo.Version = "v9.9.9"
+	buildinfo.DesignLanguageSourceIdentity = "v9.9.9"
+	t.Cleanup(func() {
+		buildinfo.Version = originalVersion
+		buildinfo.DesignLanguageSourceIdentity = originalSource
+	})
+
+	var stdout, stderr bytes.Buffer
+	code := execute(
+		[]string{"cohesion", "catalog", "engineering", "--json"},
+		root,
+		&stdout,
+		&stderr,
+		func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+			return successfulExecutor{}, func() error { return nil }, nil
+		},
+	)
+	if code != 0 || stderr.Len() != 0 || !strings.Contains(stdout.String(), `"tooling"`) ||
+		!strings.Contains(stdout.String(), `"version": "v9.9.9"`) {
+		t.Fatalf("execute(cohesion catalog) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = execute(
+		[]string{"cohesion", "check"},
+		root,
+		&stdout,
+		&stderr,
+		func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+			return successfulExecutor{}, func() error { return nil }, nil
+		},
+	)
+	if code != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "does not match required") {
+		t.Fatalf("execute(cohesion check) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteAllowsReleasedAggregateAcrossRepositoryToolVersions(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	originalVersion := buildinfo.Version
+	originalSource := buildinfo.DesignLanguageSourceIdentity
+	buildinfo.Version = "v9.9.9"
+	buildinfo.DesignLanguageSourceIdentity = "v9.9.9"
+	t.Cleanup(func() {
+		buildinfo.Version = originalVersion
+		buildinfo.DesignLanguageSourceIdentity = originalSource
+	})
+	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return successfulExecutor{}, func() error { return nil }, nil
+	}
+
+	var projection, projectionStderr bytes.Buffer
+	if code := execute([]string{"cohesion", "catalog", "engineering", "--json"}, root, &projection, &projectionStderr, factory); code != 0 {
+		t.Fatalf("execute(cohesion catalog) = %d, %q", code, projectionStderr.String())
+	}
+	var envelope struct {
+		Repository string `json:"repository"`
+	}
+	if err := json.Unmarshal(projection.Bytes(), &envelope); err != nil {
+		t.Fatal(err)
+	}
+	task := t.TempDir()
+	projectionPath := filepath.Join(task, "repository.json")
+	if err := os.WriteFile(projectionPath, projection.Bytes(), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(projection.Bytes())
+	inputsPath := filepath.Join(task, "inputs.json")
+	inputs := `{"schema_version":1,"design_language":{"version":"` + buildinfo.DesignLanguageVersion + `","sha256":"` + buildinfo.DesignLanguageSHA256 + `"},"repositories":[{"repository":"` + envelope.Repository + `","projection":"repository.json","sha256":"` + hex.EncodeToString(digest[:]) + `"}]}`
+	if err := os.WriteFile(inputsPath, []byte(inputs), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	output := filepath.Join(task, "catalogs")
+
+	for _, action := range []string{"generate", "check"} {
+		var stdout, stderr bytes.Buffer
+		code := execute([]string{"cohesion", "aggregate", action, "--inputs", inputsPath, "--output", output}, root, &stdout, &stderr, factory)
+		if code != 0 || stderr.Len() != 0 || stdout.String() != "cohesion aggregate "+action+" passed\n" {
+			t.Fatalf("execute(cohesion aggregate %s) = %d, %q, %q", action, code, stdout.String(), stderr.String())
+		}
+	}
+	for _, name := range []string{"catalog-consumer.json", "catalog-consumer.md", "catalog-engineering.json", "catalog-engineering.md"} {
+		data, err := os.ReadFile(filepath.Join(output, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !bytes.Contains(data, []byte("v9.9.9")) {
+			t.Fatalf("%s does not contain released generator identity", name)
+		}
+	}
+}
+
+func TestExecuteAllowsReleasedSourceLockCheckAcrossRepositoryToolVersions(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	originalVersion := buildinfo.Version
+	buildinfo.Version = "v9.9.9"
+	t.Cleanup(func() { buildinfo.Version = originalVersion })
+
+	var stdout, stderr bytes.Buffer
+	code := execute(
+		[]string{"cohesion", "sources", "check", "--inputs", "release/cohesion-sources.json"},
+		root,
+		&stdout,
+		&stderr,
+		func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+			return successfulExecutor{}, func() error { return nil }, nil
+		},
+	)
+	if code != 0 || stderr.Len() != 0 || stdout.String() != "cohesion sources check passed: 92 repositories\n" {
+		t.Fatalf("execute(cohesion sources check) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = execute(
+		[]string{"cohesion", "sources", "verify", "--inputs", "release/cohesion-sources.json", "--repository", "github.com/faustbrian/go-library-tools"},
+		root,
+		&stdout,
+		&stderr,
+		func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+			return successfulExecutor{}, func() error { return nil }, nil
+		},
+	)
+	if code != 0 || stderr.Len() != 0 || stdout.String() != "cohesion source policy verified: github.com/faustbrian/go-library-tools\n" {
+		t.Fatalf("execute(cohesion sources verify) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteRejectsSourceVerificationForAnotherRepository(t *testing.T) {
+	root := internalFixture(t)
+	policy, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sourceLock, err := filepath.Abs(filepath.Join("..", "..", "release", "cohesion-sources.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := executeCohesion([]string{
+		"sources", "verify",
+		"--inputs", sourceLock,
+		"--repository", "github.com/faustbrian/go-library-tools",
+	}, root, policy, &stdout, &stderr)
+	if code != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "repository identity") {
+		t.Fatalf("executeCohesion(sources verify another repository) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteSourceVerificationPropagatesInventoryFailure(t *testing.T) {
+	root := internalFixture(t)
+	policy, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "packages.json"), []byte(`{`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	sourceLock, err := filepath.Abs(filepath.Join("..", "..", "release", "cohesion-sources.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := executeCohesion([]string{
+		"sources", "verify",
+		"--inputs", sourceLock,
+		"--repository", "github.com/faustbrian/go-library-tools",
+	}, root, policy, &stdout, &stderr)
+	if code != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "load package manifest") {
+		t.Fatalf("executeCohesion(sources verify invalid inventory) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteSourceVerificationRejectsCurrentPolicyMismatch(t *testing.T) {
+	root := internalFixture(t)
+	for _, manifest := range []string{"modules.json", "packages.json"} {
+		path := filepath.Join(root, manifest)
+		data, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		data = bytes.ReplaceAll(data, []byte(`"repository":"example"`), []byte(`"repository":"github.com/faustbrian/go-example"`))
+		if err := os.WriteFile(path, data, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	policy, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	sourceLock := filepath.Join(root, "cohesion-sources.json")
+	lock := `{"schema_version":1,"repository_count":2,"repositories":[` +
+		`{"repository":"github.com/faustbrian/go-example","source":{"kind":"commit","commit":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"tooling":{"version":"v9.9.9","checksums_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}},` +
+		`{"repository":"github.com/faustbrian/go-library-tools","source":{"kind":"release-source"}}]}`
+	if err := os.WriteFile(sourceLock, []byte(lock), 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	var stdout, stderr bytes.Buffer
+	code := executeCohesion([]string{
+		"sources", "verify",
+		"--inputs", sourceLock,
+		"--repository", "github.com/faustbrian/go-example",
+	}, root, policy, &stdout, &stderr)
+	if code != 1 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "source policy does not match lock") {
+		t.Fatalf("executeCohesion(sources verify policy mismatch) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestUsesCohesionGeneratorIdentityOnlyForPublicationCommands(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		args []string
+		want bool
+	}{
+		{name: "catalog", args: []string{"cohesion", "catalog"}, want: true},
+		{name: "aggregate", args: []string{"cohesion", "aggregate"}, want: true},
+		{name: "sources", args: []string{"cohesion", "sources"}, want: true},
+		{name: "nil", args: nil, want: false},
+		{name: "short", args: []string{"cohesion"}, want: false},
+		{name: "ordinary", args: []string{"inventory", "catalog"}, want: false},
+		{name: "check", args: []string{"cohesion", "check"}, want: false},
+		{name: "catalog prefix", args: []string{"cohesion", "catalog-preview"}, want: false},
+		{name: "aggregate prefix", args: []string{"cohesion", "aggregate-preview"}, want: false},
+		{name: "sources prefix", args: []string{"cohesion", "sources-preview"}, want: false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if got := usesCohesionGeneratorIdentity(test.args); got != test.want {
+				t.Fatalf("usesCohesionGeneratorIdentity(%v) = %v, want %v", test.args, got, test.want)
+			}
+		})
 	}
 }
 

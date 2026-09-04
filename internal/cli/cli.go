@@ -33,6 +33,7 @@ Usage:
   golib cohesion check [--json]
   golib cohesion catalog <consumer|engineering> [--json]
   golib cohesion aggregate <generate|check> --inputs <file> --output <directory>
+  golib cohesion sources <check --inputs <file>|verify --inputs <file> --repository <identity>>
   golib config validate
 	golib config show --json
   golib inventory [--json]
@@ -95,8 +96,10 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 	if err != nil {
 		return failure(stderr, err)
 	}
-	if err := buildinfo.ValidateRequired(policy.ToolVersion); err != nil {
-		return failure(stderr, err)
+	if !usesCohesionGeneratorIdentity(args) {
+		if err := buildinfo.ValidateRequired(policy.ToolVersion); err != nil {
+			return failure(stderr, err)
+		}
 	}
 	if args[0] == "cohesion" {
 		return executeCohesion(args[1:], root, policy, stdout, stderr)
@@ -302,7 +305,44 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 	}
 }
 
+func usesCohesionGeneratorIdentity(args []string) bool {
+	return len(args) >= 2 && args[0] == "cohesion" && (args[1] == "catalog" || args[1] == "aggregate" || args[1] == "sources")
+}
+
 func executeCohesion(args []string, root string, policy config.Config, stdout, stderr io.Writer) int {
+	if len(args) > 0 && args[0] == "sources" {
+		usageMessage := "usage: golib cohesion sources <check --inputs <file>|verify --inputs <file> --repository <identity>>"
+		if len(args) != 4 && len(args) != 6 {
+			return usage(stderr, usageMessage)
+		}
+		if args[2] != "--inputs" || args[3] == "" {
+			return usage(stderr, usageMessage)
+		}
+		lock, err := cohesion.LoadSourceLock(resolveCohesionPath(root, args[3]))
+		if err != nil {
+			return failure(stderr, err)
+		}
+		switch {
+		case len(args) == 4 && args[1] == "check":
+			_, _ = fmt.Fprintf(stdout, "cohesion sources check passed: %d repositories\n", len(lock.Repositories))
+			return 0
+		case len(args) == 6 && args[1] == "verify" && args[4] == "--repository" && args[5] != "":
+			catalog, err := inventory.Load(root, policy)
+			if err != nil {
+				return failure(stderr, err)
+			}
+			if catalog.Repository != args[5] {
+				return failure(stderr, fmt.Errorf("current repository identity %s does not match requested source identity %s", catalog.Repository, args[5]))
+			}
+			if err := lock.VerifyPolicy(args[5], policy.ToolVersion, policy.ToolChecksumsSHA256); err != nil {
+				return failure(stderr, err)
+			}
+			_, _ = fmt.Fprintf(stdout, "cohesion source policy verified: %s\n", args[5])
+			return 0
+		default:
+			return usage(stderr, usageMessage)
+		}
+	}
 	if len(args) >= 1 && args[0] == "aggregate" {
 		action, inputs, output, err := cohesionAggregateArguments(args[1:])
 		if err != nil {
@@ -365,7 +405,7 @@ func executeCohesion(args []string, root string, policy config.Config, stdout, s
 		return 0
 	}
 	if len(args) < 1 || args[0] != "check" || len(args) > 2 || (len(args) == 2 && args[1] != "--json") {
-		return usage(stderr, "usage: golib cohesion <check [--json]|catalog <consumer|engineering> [--json]|aggregate <generate|check> --inputs <file> --output <directory>>")
+		return usage(stderr, "usage: golib cohesion <check [--json]|catalog <consumer|engineering> [--json]|aggregate <generate|check> --inputs <file> --output <directory>|sources <check --inputs <file>|verify --inputs <file> --repository <identity>>>")
 	}
 	report := cohesion.Check(root, policy)
 	if len(args) == 2 {
