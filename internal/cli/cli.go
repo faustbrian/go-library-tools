@@ -323,10 +323,10 @@ func executeCohesion(args []string, root string, policy config.Config, stdout, s
 			return failure(stderr, err)
 		}
 		switch {
-		case args[1] == "check" && len(args) == 4:
+		case len(args) == 4 && args[1] == "check":
 			_, _ = fmt.Fprintf(stdout, "cohesion sources check passed: %d repositories\n", len(lock.Repositories))
 			return 0
-		case args[1] == "verify" && len(args) == 6 && args[4] == "--repository" && args[5] != "":
+		case len(args) == 6 && args[1] == "verify" && args[4] == "--repository" && args[5] != "":
 			catalog, err := inventory.Load(root, policy)
 			if err != nil {
 				return failure(stderr, err)
