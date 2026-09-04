@@ -310,7 +310,7 @@ func usesCohesionGeneratorIdentity(args []string) bool {
 }
 
 func executeCohesion(args []string, root string, policy config.Config, stdout, stderr io.Writer) int {
-	if len(args) >= 1 && args[0] == "sources" {
+	if len(args) > 0 && args[0] == "sources" {
 		usageMessage := "usage: golib cohesion sources <check --inputs <file>|verify --inputs <file> --repository <identity>>"
 		if len(args) != 4 && len(args) != 6 {
 			return usage(stderr, usageMessage)
