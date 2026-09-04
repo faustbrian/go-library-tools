@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added conditional source-authority monitoring that verifies public metadata
+  content when available while accepting only one explicitly reviewed denial
+  status when a publisher edge intermittently blocks automated retrieval.
+
+### Fixed
+
+- Enforced workflow validation in the reusable repository-contract CI job so
+  hosted checks cover the same workflow contract as local repository gates.
+
 ## 1.4.0 - 2026-09-01
 
 ### Added

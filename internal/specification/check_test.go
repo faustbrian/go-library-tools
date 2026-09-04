@@ -507,6 +507,58 @@ func TestCheckOnlineProbesRestrictedNormativeContent(t *testing.T) {
 	}
 }
 
+func TestCheckOnlineVerifiesConditionallyAvailableSource(t *testing.T) {
+	root, catalog := validFixture(t)
+	sourceBody := "public catalogue metadata"
+	releaseBody := "current release metadata"
+	sourceStatus := http.StatusOK
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if request.URL.Path == "/source" {
+			writer.WriteHeader(sourceStatus)
+			_, _ = writer.Write([]byte(sourceBody))
+			return
+		}
+		_, _ = writer.Write([]byte(releaseBody))
+	}))
+	defer server.Close()
+	sourceDigest := sha256.Sum256([]byte(sourceBody))
+	releaseDigest := sha256.Sum256([]byte(releaseBody))
+	sourceURL := server.URL + "/source"
+	write(t, filepath.Join(root, "specification/monitoring.json"), `{"schema_version":1,"reviewed_at":"`+
+		time.Now().UTC().Format("2006-01-02")+
+		`","review_interval_days":90,"authorities":[{"id":"rfc9110-source","kind":"specification","version":"RFC 9110","url":"`+
+		sourceURL+`","sha256":"`+hex.EncodeToString(sourceDigest[:])+`","access":"conditional","expected_status":403,"unavailable_reason":"The public metadata endpoint may deny automated retrieval.","specifications":["RFC 9110"]},{"id":"rfc9110-releases","kind":"releases","url":"`+
+		server.URL+`/releases","sha256":"`+hex.EncodeToString(releaseDigest[:])+`","specifications":["RFC 9110"]}]}`)
+	refreshModuleDecisionArtifacts(t, root, "", sourceURL)
+	serverClient := server.Client()
+	baseTransport, ok := serverClient.Transport.(*http.Transport)
+	if !ok {
+		t.Fatalf("server transport = %T", serverClient.Transport)
+	}
+	transport := baseTransport.Clone()
+	transport.DialContext = func(ctx context.Context, network, _ string) (net.Conn, error) {
+		return (&net.Dialer{}).DialContext(ctx, network, server.Listener.Addr().String())
+	}
+	serverClient.Transport = transport
+
+	if _, err := checkOnline(context.Background(), root, catalog, serverClient, publicTestAuthorityResolver); err != nil {
+		t.Fatalf("CheckOnline(public conditional source) error = %v", err)
+	}
+	sourceStatus = http.StatusForbidden
+	if _, err := checkOnline(context.Background(), root, catalog, serverClient, publicTestAuthorityResolver); err != nil {
+		t.Fatalf("CheckOnline(denied conditional source) error = %v", err)
+	}
+	sourceStatus = http.StatusOK
+	sourceBody = "changed public catalogue metadata"
+	if _, err := checkOnline(context.Background(), root, catalog, serverClient, publicTestAuthorityResolver); err == nil || !strings.Contains(err.Error(), "changed and requires review") {
+		t.Fatalf("CheckOnline(changed conditional source) error = %v", err)
+	}
+	sourceStatus = http.StatusUnauthorized
+	if _, err := checkOnline(context.Background(), root, catalog, serverClient, publicTestAuthorityResolver); err == nil || !strings.Contains(err.Error(), "want public content or 403") {
+		t.Fatalf("CheckOnline(unexpected conditional denial) error = %v", err)
+	}
+}
+
 func TestFetchAuthorityRejectsRedirectOutsidePinnedHTTPSAuthority(t *testing.T) {
 	body := "redirected authority"
 	destination := httptest.NewServer(http.HandlerFunc(func(writer http.ResponseWriter, _ *http.Request) {
