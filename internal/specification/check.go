@@ -171,7 +171,13 @@ func fetchAuthorityResolved(ctx context.Context, client *http.Client, resolver a
 		}
 		return nil
 	}
+	if item.Access == "conditional" && response.StatusCode == item.ExpectedStatus {
+		return nil
+	}
 	if response.StatusCode < http.StatusOK || response.StatusCode >= http.StatusMultipleChoices {
+		if item.Access == "conditional" {
+			return fmt.Errorf("conditional specification authority %q returned HTTP %d, want public content or %d", item.ID, response.StatusCode, item.ExpectedStatus)
+		}
 		return fmt.Errorf("specification authority %q returned HTTP %d", item.ID, response.StatusCode)
 	}
 	digest := fmt.Sprintf("%x", sha256.Sum256(body))
@@ -1278,6 +1284,10 @@ func loadMonitoring(root, relative string, specifications []string, now time.Tim
 		case "restricted":
 			if !isSource || item.SHA256 != "" || !restrictedAuthorityStatus(item.ExpectedStatus) || strings.TrimSpace(item.UnavailableReason) == "" {
 				return monitoring{}, fmt.Errorf("restricted specification authority %q must be a source with no content digest, a pinned denial status, and an unavailable reason", item.ID)
+			}
+		case "conditional":
+			if !isSource || !sha256Value.MatchString(item.SHA256) || !restrictedAuthorityStatus(item.ExpectedStatus) || strings.TrimSpace(item.UnavailableReason) == "" {
+				return monitoring{}, fmt.Errorf("conditional specification authority %q must be a source with an exact content digest, a pinned denial status, and an unavailable reason", item.ID)
 			}
 		default:
 			return monitoring{}, fmt.Errorf("specification authority %q has unsupported access %q", item.ID, item.Access)

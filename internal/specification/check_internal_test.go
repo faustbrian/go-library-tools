@@ -245,6 +245,34 @@ func TestLoadMonitoringRejectsUntruthfulRestrictedSource(t *testing.T) {
 	}
 }
 
+func TestLoadMonitoringAcceptsConditionallyAvailableSource(t *testing.T) {
+	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
+	digest := strings.Repeat("a", 64)
+	valid := `{"schema_version":1,"reviewed_at":"2026-08-30","review_interval_days":90,"authorities":[{"id":"source","kind":"specification","version":"ISO/IEC 18004:2024 edition 4","url":"https://www.iso.org/standard/83389.html","sha256":"` + digest + `","access":"conditional","expected_status":403,"unavailable_reason":"The public metadata endpoint may deny automated retrieval.","specifications":["ISO/IEC 18004:2024 QR Code"]},{"id":"releases","kind":"releases","url":"https://example.com/releases","sha256":"` + digest + `","specifications":["ISO/IEC 18004:2024 QR Code"]}]}`
+	root := t.TempDir()
+	write(t, filepath.Join(root, "specification/monitoring.json"), valid)
+	if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now); err != nil {
+		t.Fatalf("loadMonitoring(conditional source) error = %v", err)
+	}
+
+	tests := map[string]string{
+		"missing digest":   strings.Replace(valid, `"sha256":"`+digest+`",`, "", 1),
+		"missing reason":   strings.Replace(valid, `,"unavailable_reason":"The public metadata endpoint may deny automated retrieval."`, "", 1),
+		"missing status":   strings.Replace(valid, `,"expected_status":403`, "", 1),
+		"success status":   strings.Replace(valid, `"expected_status":403`, `"expected_status":200`, 1),
+		"change authority": strings.Replace(valid, `"kind":"releases"`, `"kind":"releases","access":"conditional","expected_status":403,"unavailable_reason":"Sometimes denied."`, 1),
+	}
+	for name, content := range tests {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			write(t, filepath.Join(root, "specification/monitoring.json"), content)
+			if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now); err == nil {
+				t.Fatal("loadMonitoring() error = nil")
+			}
+		})
+	}
+}
+
 func TestLoadMonitoringRejectsUnboundedAuthoritySet(t *testing.T) {
 	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
 	items := make([]string, 0, 66)

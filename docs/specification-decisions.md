@@ -178,6 +178,17 @@ source identity such as an ID, name, version, URL, path, source, commit, or tag.
       "expected_status": 403,
       "unavailable_reason": "The licensed normative publication is not publicly retrievable; the catalogue identifies the exact edition.",
       "specifications": ["ISO/IEC 18004:2024 QR Code"]
+    },
+    {
+      "id": "publisher-catalogue-source",
+      "kind": "specification",
+      "version": "Publisher catalogue edition",
+      "url": "https://standards.example/catalogue.pdf",
+      "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+      "access": "conditional",
+      "expected_status": 403,
+      "unavailable_reason": "The public metadata endpoint may deny automated retrieval at its edge.",
+      "specifications": ["Publisher catalogue edition"]
     }
   ]
 }
@@ -199,6 +210,16 @@ not valid for errata or release authorities. Each affected specification still
 requires a separately content-pinned public errata or release authority. This
 records unavailable normative content honestly without hashing an access-denied
 response or treating public catalogue metadata as the publication body.
+
+A public source-metadata endpoint that intermittently denies automated access
+may use `access: conditional`. Conditional authorities require an exact content
+digest, an exact denial status of 401, 403, or 451, and a nonempty reason that
+explains the unstable access boundary. They are valid only for versioned source
+authorities. The online check verifies the exact digest whenever the publisher
+serves a successful response and accepts only the configured denial otherwise;
+all other statuses fail. Conditional access does not classify public metadata
+as licensed normative content and is not valid for errata or release
+authorities.
 
 ## Change control and online checks
 
@@ -233,4 +254,7 @@ SSRF-safe bounded client and requires their exact reviewed denial status, but
 does not treat the denial body as normative content or hash it. Their exact
 identity and unavailable-content rationale remain part of the offline contract
 while their separate public change authority is content-verified online.
+Conditionally available source authorities use the same bounded client: a
+successful response must match the reviewed digest, while only the configured
+denial status is accepted when the publisher edge refuses automated access.
 Repositories without declared specifications pass without network access.
