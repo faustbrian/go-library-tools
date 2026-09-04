@@ -110,9 +110,358 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
+  prepare-catalog:
+    name: Prepare catalog source matrix
+    needs: [verify, build]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      attestations: read
+    outputs:
+      matrix: ${{ steps.metadata.outputs.matrix }}
+      archive_sha256: ${{ steps.metadata.outputs.archive_sha256 }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-linux-amd64
+          path: candidate
+      - name: Verify candidate and prepare immutable matrix
+        id: metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-catalog-prepare.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/bin"
+          release="${GITHUB_REF_NAME#v}"
+          archive="candidate/golib_${release}_linux_amd64.tar.gz"
+          test -f "${archive}"
+          gh attestation verify "${archive}" --repo "${GITHUB_REPOSITORY}"
+          tar -tzf "${archive}" | LC_ALL=C sort >"${task}/members"
+          diff -u <(printf '%s\n' LICENSE golib) "${task}/members"
+          tar --extract --gzip --file="${archive}" --directory="${task}/bin" golib
+          export PATH="${task}/bin:${PATH}"
+          test "$(golib --version)" = "${GITHUB_REF_NAME}"
+          golib cohesion sources check --inputs release/cohesion-sources.json
+          matrix="$(jq -c --arg release_commit "${GITHUB_SHA}" '
+            {include: [.repositories | to_entries[] | {
+              index: .key,
+              identity: .value.repository,
+              repository: (.value.repository | sub("^github.com/"; "")),
+              commit: (if .value.source.kind == "release-source" then $release_commit else .value.source.commit end)
+            }]}
+          ' release/cohesion-sources.json)"
+          test "$(jq -r '.include | length' <<<"${matrix}")" = "$(jq -r '.repository_count' release/cohesion-sources.json)"
+          printf 'matrix=%s\n' "${matrix}" >>"${GITHUB_OUTPUT}"
+          printf 'archive_sha256=%s\n' "$(sha256sum "${archive}" | cut -d' ' -f1)" >>"${GITHUB_OUTPUT}"
+
+  project-catalog:
+    name: Project ${{ matrix.identity }}
+    needs: prepare-catalog
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix: ${{ fromJSON(needs.prepare-catalog.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          submodules: false
+          lfs: false
+          path: release-source
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.commit }}
+          fetch-depth: 1
+          persist-credentials: false
+          submodules: false
+          lfs: false
+          path: source
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-linux-amd64
+          path: candidate
+      - name: Generate deterministic repository projection
+        env:
+          ARCHIVE_SHA256: ${{ needs.prepare-catalog.outputs.archive_sha256 }}
+          PROJECTION_INDEX: ${{ matrix.index }}
+          REPOSITORY_IDENTITY: ${{ matrix.identity }}
+          SOURCE_COMMIT: ${{ matrix.commit }}
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-catalog-project.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/bin" projection
+          release="${GITHUB_REF_NAME#v}"
+          archive="candidate/golib_${release}_linux_amd64.tar.gz"
+          test "$(sha256sum "${archive}" | cut -d' ' -f1)" = "${ARCHIVE_SHA256}"
+          tar --extract --gzip --file="${archive}" --directory="${task}/bin" golib
+          export PATH="${task}/bin:${PATH}"
+          test "$(golib --version)" = "${GITHUB_REF_NAME}"
+          test "$(git -C source rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          source_lock="${GITHUB_WORKSPACE}/release-source/release/cohesion-sources.json"
+          (
+            cd source
+            golib cohesion sources verify --inputs "${source_lock}" --repository "${REPOSITORY_IDENTITY}"
+            golib cohesion catalog engineering --json >"${task}/first.json"
+            golib cohesion catalog engineering --json >"${task}/second.json"
+          )
+          cmp --silent "${task}/first.json" "${task}/second.json"
+          jq -e --arg repository "${REPOSITORY_IDENTITY}" \
+            '.repository == $repository and .view == "engineering" and .scope == "repository"' \
+            "${task}/first.json" >/dev/null
+          printf -v projection_name '%03d.json' "${PROJECTION_INDEX}"
+          cp "${task}/first.json" "projection/${projection_name}"
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cohesion-projection-${{ matrix.index }}
+          path: projection/*.json
+          if-no-files-found: error
+          retention-days: 7
+
+  assemble-catalog:
+    name: Assemble catalog assets
+    needs: [prepare-catalog, project-catalog]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-linux-amd64
+          path: candidate
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          pattern: cohesion-projection-*
+          path: projection-download
+          merge-multiple: true
+      - name: Build and byte-verify catalog assets
+        env:
+          ARCHIVE_SHA256: ${{ needs.prepare-catalog.outputs.archive_sha256 }}
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-catalog-assemble.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/bin" "${task}/bundle/projections" "${task}/first" "${task}/second" dist
+          release="${GITHUB_REF_NAME#v}"
+          archive="candidate/golib_${release}_linux_amd64.tar.gz"
+          test "$(sha256sum "${archive}" | cut -d' ' -f1)" = "${ARCHIVE_SHA256}"
+          tar --extract --gzip --file="${archive}" --directory="${task}/bin" golib
+          export PATH="${task}/bin:${PATH}"
+          test "$(golib --version)" = "${GITHUB_REF_NAME}"
+          expected="$(jq -r '.repository_count' release/cohesion-sources.json)"
+          test "$(find projection-download -mindepth 1 -maxdepth 1 -type f -name '*.json' | wc -l | tr -d ' ')" = "${expected}"
+          test "$(find projection-download -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')" = "${expected}"
+          : >"${task}/rows.jsonl"
+          for ((index=0; index<expected; index++)); do
+            printf -v projection_name '%03d.json' "${index}"
+            projection="projection-download/${projection_name}"
+            test -f "${projection}" && test ! -L "${projection}"
+            repository="$(jq -r ".repositories[${index}].repository" release/cohesion-sources.json)"
+            jq -e --arg repository "${repository}" '.repository == $repository' "${projection}" >/dev/null
+            cp "${projection}" "${task}/bundle/projections/${projection_name}"
+            jq -cn --arg repository "${repository}" \
+              --arg projection "projections/${projection_name}" \
+              --arg sha256 "$(sha256sum "${projection}" | cut -d' ' -f1)" \
+              '{repository: $repository, projection: $projection, sha256: $sha256}' \
+              >>"${task}/rows.jsonl"
+          done
+          design_version="$(jq -r '.design_language.version' "${task}/bundle/projections/000.json")"
+          design_sha256="$(jq -r '.design_language.sha256' "${task}/bundle/projections/000.json")"
+          jq -s --arg version "${design_version}" --arg sha256 "${design_sha256}" \
+            '{schema_version: 1, design_language: {version: $version, sha256: $sha256}, repositories: .}' \
+            "${task}/rows.jsonl" >"${task}/bundle/cohesion-inputs.json"
+          golib cohesion aggregate generate --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/first"
+          golib cohesion aggregate check --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/first"
+          golib cohesion aggregate generate --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/second"
+          for catalog in catalog-consumer.json catalog-consumer.md catalog-engineering.json catalog-engineering.md; do
+            cmp --silent "${task}/first/${catalog}" "${task}/second/${catalog}"
+            cp "${task}/first/${catalog}" "dist/${catalog}"
+          done
+          cp release/cohesion-sources.json dist/cohesion-sources.json
+          cp "${task}/bundle/cohesion-inputs.json" dist/cohesion-inputs.json
+          (
+            cd "${task}/bundle"
+            tar --sort=name --owner=0 --group=0 --numeric-owner --mtime='UTC 1970-01-01' \
+              --create --file=- cohesion-inputs.json projections | gzip -n >"${GITHUB_WORKSPACE}/dist/cohesion-projections.tar.gz"
+          )
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: cohesion-catalogs
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  verify-projection:
+    name: Verify projection ${{ matrix.identity }}
+    needs: [prepare-catalog, assemble-catalog]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix: ${{ fromJSON(needs.prepare-catalog.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          submodules: false
+          lfs: false
+          path: release-source
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          repository: ${{ matrix.repository }}
+          ref: ${{ matrix.commit }}
+          fetch-depth: 1
+          persist-credentials: false
+          submodules: false
+          lfs: false
+          path: source
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-linux-amd64
+          path: candidate
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: cohesion-catalogs
+          path: assets
+      - name: Independently regenerate repository projection
+        env:
+          ARCHIVE_SHA256: ${{ needs.prepare-catalog.outputs.archive_sha256 }}
+          PROJECTION_INDEX: ${{ matrix.index }}
+          REPOSITORY_IDENTITY: ${{ matrix.identity }}
+          SOURCE_COMMIT: ${{ matrix.commit }}
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-projection-verify.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/bin" "${task}/bundle"
+          release="${GITHUB_REF_NAME#v}"
+          archive="candidate/golib_${release}_linux_amd64.tar.gz"
+          test "$(sha256sum "${archive}" | cut -d' ' -f1)" = "${ARCHIVE_SHA256}"
+          tar --extract --gzip --file="${archive}" --directory="${task}/bin" golib
+          export PATH="${task}/bin:${PATH}"
+          test "$(golib --version)" = "${GITHUB_REF_NAME}"
+          test "$(git -C source rev-parse HEAD)" = "${SOURCE_COMMIT}"
+          tar -tzf assets/cohesion-projections.tar.gz >"${task}/members"
+          if grep -Eq '(^/|(^|/)\.\.(/|$))' "${task}/members"; then
+            exit 1
+          fi
+          tar --extract --gzip --file=assets/cohesion-projections.tar.gz --directory="${task}/bundle"
+          printf -v projection_name '%03d.json' "${PROJECTION_INDEX}"
+          published="${task}/bundle/projections/${projection_name}"
+          test -f "${published}" && test ! -L "${published}"
+          source_lock="${GITHUB_WORKSPACE}/release-source/release/cohesion-sources.json"
+          (
+            cd source
+            golib cohesion sources verify --inputs "${source_lock}" --repository "${REPOSITORY_IDENTITY}"
+            golib cohesion catalog engineering --json >"${task}/regenerated.json"
+          )
+          jq -e --arg repository "${REPOSITORY_IDENTITY}" \
+            '.repository == $repository and .view == "engineering" and .scope == "repository"' \
+            "${task}/regenerated.json" >/dev/null
+          cmp --silent "${published}" "${task}/regenerated.json"
+
+  verify-catalog:
+    name: Verify catalog assets
+    needs: [prepare-catalog, assemble-catalog, verify-projection]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+          submodules: false
+          lfs: false
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-linux-amd64
+          path: candidate
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: cohesion-catalogs
+          path: assets
+      - name: Independently regenerate catalog assets
+        env:
+          ARCHIVE_SHA256: ${{ needs.prepare-catalog.outputs.archive_sha256 }}
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-catalog-verify.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/bin" "${task}/bundle" "${task}/regenerated"
+          release="${GITHUB_REF_NAME#v}"
+          archive="candidate/golib_${release}_linux_amd64.tar.gz"
+          test "$(sha256sum "${archive}" | cut -d' ' -f1)" = "${ARCHIVE_SHA256}"
+          tar --extract --gzip --file="${archive}" --directory="${task}/bin" golib
+          export PATH="${task}/bin:${PATH}"
+          test "$(golib --version)" = "${GITHUB_REF_NAME}"
+          golib cohesion sources check --inputs assets/cohesion-sources.json
+          cmp --silent release/cohesion-sources.json assets/cohesion-sources.json
+          tar -tzf assets/cohesion-projections.tar.gz >"${task}/members"
+          if grep -Eq '(^/|(^|/)\.\.(/|$))' "${task}/members"; then
+            exit 1
+          fi
+          expected="$(jq -r '.repository_count' assets/cohesion-sources.json)"
+          {
+            printf '%s\n' cohesion-inputs.json projections/
+            for ((index=0; index<expected; index++)); do
+              printf 'projections/%03d.json\n' "${index}"
+            done
+          } | LC_ALL=C sort >"${task}/expected-members"
+          LC_ALL=C sort "${task}/members" >"${task}/actual-members"
+          diff -u "${task}/expected-members" "${task}/actual-members"
+          tar --extract --gzip --file=assets/cohesion-projections.tar.gz --directory="${task}/bundle"
+          cmp --silent assets/cohesion-inputs.json "${task}/bundle/cohesion-inputs.json"
+          test "$(jq -r '.repositories | length' "${task}/bundle/cohesion-inputs.json")" = "${expected}"
+          for ((index=0; index<expected; index++)); do
+            source_repository="$(jq -r ".repositories[${index}].repository" assets/cohesion-sources.json)"
+            input_repository="$(jq -r ".repositories[${index}].repository" "${task}/bundle/cohesion-inputs.json")"
+            input_projection="$(jq -r ".repositories[${index}].projection" "${task}/bundle/cohesion-inputs.json")"
+            printf -v expected_projection 'projections/%03d.json' "${index}"
+            test "${input_repository}" = "${source_repository}"
+            test "${input_projection}" = "${expected_projection}"
+            projection="${task}/bundle/${input_projection}"
+            test -f "${projection}" && test ! -L "${projection}"
+            test "$(sha256sum "${projection}" | cut -d' ' -f1)" = \
+              "$(jq -r ".repositories[${index}].sha256" "${task}/bundle/cohesion-inputs.json")"
+          done
+          golib cohesion aggregate generate --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/regenerated"
+          golib cohesion aggregate check --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/regenerated"
+          for catalog in catalog-consumer.json catalog-consumer.md catalog-engineering.json catalog-engineering.md; do
+            cmp --silent "assets/${catalog}" "${task}/regenerated/${catalog}"
+          done
+          (
+            cd "${task}/bundle"
+            tar --sort=name --owner=0 --group=0 --numeric-owner --mtime='UTC 1970-01-01' \
+              --create --file=- cohesion-inputs.json projections | gzip -n >"${task}/repacked.tar.gz"
+          )
+          cmp --silent assets/cohesion-projections.tar.gz "${task}/repacked.tar.gz"
+
   publish:
     name: Publish release
-    needs: build
+    needs: [build, verify-catalog]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
@@ -128,15 +477,41 @@ jobs:
           pattern: release-*
           path: dist
           merge-multiple: true
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: cohesion-catalogs
+          path: dist
       - name: Publish immutable release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          release="${GITHUB_REF_NAME#v}"
+          expected=(
+            "golib_${release}_linux_amd64.tar.gz"
+            "golib_${release}_linux_arm64.tar.gz"
+            "golib_${release}_darwin_amd64.tar.gz"
+            "golib_${release}_darwin_arm64.tar.gz"
+            golib_linux_amd64.spdx.json
+            golib_linux_arm64.spdx.json
+            golib_darwin_amd64.spdx.json
+            golib_darwin_arm64.spdx.json
+            cohesion-sources.json
+            cohesion-inputs.json
+            cohesion-projections.tar.gz
+            catalog-consumer.json
+            catalog-consumer.md
+            catalog-engineering.json
+            catalog-engineering.md
+          )
+          test "$(find dist -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d ' ')" = "${#expected[@]}"
+          test "$(find dist -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')" = "${#expected[@]}"
           assets="$({
-            for artifact in ./dist/*.tar.gz ./dist/*.spdx.json; do
+            for name in "${expected[@]}"; do
+              artifact="dist/${name}"
+              test -f "${artifact}" && test ! -L "${artifact}"
               digest="$(sha256sum "${artifact}" | cut -d' ' -f1)"
-              jq -cn --arg name "${artifact#./dist/}" --arg sha256 "${digest}" \
+              jq -cn --arg name "${name}" --arg sha256 "${digest}" \
                 '{name: $name, sha256: $sha256}'
             done
           } | jq -cs 'sort_by(.name)')"
@@ -144,12 +519,14 @@ jobs:
             --argjson assets "${assets}" \
             '{schema_version: 1, version: $version, source_commit: $source, provenance: "github-artifact-attestation", assets: $assets}' \
             >dist/release-manifest.json
-          (cd dist && sha256sum ./* | sed 's#  \./#  #' | LC_ALL=C sort > checksums.txt)
+          : >dist/checksums.txt
+          for name in "${expected[@]}" release-manifest.json; do
+            (cd dist && sha256sum "${name}") >>dist/checksums.txt
+          done
+          LC_ALL=C sort -o dist/checksums.txt dist/checksums.txt
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
-          subject-path: |
-            dist/checksums.txt
-            dist/release-manifest.json
+          subject-path: dist/*
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

@@ -9,6 +9,7 @@ import (
 const modulesSchemaIdentity = "https://github.com/faustbrian/go-library-tools/schema/modules.schema.json"
 const catalogSchemaIdentity = "https://github.com/faustbrian/go-library-tools/schema/cohesion-catalog.schema.json"
 const inputsSchemaIdentity = "https://github.com/faustbrian/go-library-tools/schema/cohesion-inputs.schema.json"
+const sourcesSchemaIdentity = "https://github.com/faustbrian/go-library-tools/schema/cohesion-sources.schema.json"
 
 var compiledModulesSchema = func() *jsonschema.Schema {
 	schemaDocument := must(jsonschema.UnmarshalJSON(bytes.NewReader([]byte(modulesSchemaJSON))))
@@ -33,6 +34,13 @@ var compiledInputsSchema = func() *jsonschema.Schema {
 	return must(compiler.Compile(inputsSchemaIdentity))
 }()
 
+var compiledSourcesSchema = func() *jsonschema.Schema {
+	document := must(jsonschema.UnmarshalJSON(bytes.NewReader([]byte(sourcesSchemaJSON))))
+	compiler := jsonschema.NewCompiler()
+	must(struct{}{}, compiler.AddResource(sourcesSchemaIdentity, document))
+	return must(compiler.Compile(sourcesSchemaIdentity))
+}()
+
 func validateModulesSchema(data []byte) error {
 	document, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
 	if err != nil {
@@ -55,6 +63,14 @@ func validateInputsSchema(data []byte) error {
 		return err
 	}
 	return compiledInputsSchema.Validate(document)
+}
+
+func validateSourcesSchema(data []byte) error {
+	document, err := jsonschema.UnmarshalJSON(bytes.NewReader(data))
+	if err != nil {
+		return err
+	}
+	return compiledSourcesSchema.Validate(document)
 }
 
 func must[T any](value T, err error) T {

@@ -30,6 +30,12 @@ Core commands:
   never rewrites the output directory.
   Aggregation is bounded to 256 repositories, 256 MiB of projection input,
   4,096 modules, and 512 MiB per rendered artifact.
+- `golib cohesion sources check --inputs FILE` validates the closed,
+  count-bound release source lock. `golib cohesion sources verify --inputs FILE
+  --repository IDENTITY` additionally confirms that the current repository's
+  strict `.golib.yaml` tool version and checksum-set digest match its locked
+  consumer identity. The single typed release-source entry has no prior-release
+  pin because its exact commit is resolved from the release tag.
 - `golib repository check` validates standalone repository structure.
 - `golib specification check [--online]` discovers specification-backed
   modules, validates each module's decision register, conformance matrix,
@@ -72,6 +78,9 @@ The process converts interrupts and termination requests into command-context
 cancellation. Long-running tools and service leases receive that context;
 service cleanup then runs with its own bounded cleanup context.
 
-Released binaries must exactly match `.golib.yaml`. The explicit `dev` identity
-is accepted only for deliberate source builds and prevents circular bootstrap
-while developing this repository.
+Released binaries must exactly match `.golib.yaml` for ordinary repository
+commands. Catalog projection, aggregation, and source-lock verification use the
+executing release identity so one newer released generator can read consumers
+that remain correctly pinned to earlier compatible releases. The explicit
+`dev` identity is accepted only for deliberate source builds and prevents
+circular bootstrap while developing this repository.

@@ -383,6 +383,91 @@ func TestReleaseWorkflowBuildsAndAttestsEverySupportedPlatform(t *testing.T) {
 	}
 }
 
+func TestReleaseWorkflowPublishesVerifiedCohesionCatalogs(t *testing.T) {
+	content := readProjectFile(t, ".github/workflows/release.yml")
+	for _, required := range []string{
+		"  prepare-catalog:\n",
+		"  project-catalog:\n",
+		"  assemble-catalog:\n",
+		"  verify-projection:\n",
+		"  verify-catalog:\n",
+		"max-parallel: 8",
+		"persist-credentials: false",
+		"submodules: false",
+		"lfs: false",
+		"gh attestation verify",
+		"golib cohesion sources check",
+		"golib cohesion sources verify",
+		"golib cohesion catalog engineering --json",
+		"golib cohesion aggregate generate",
+		"golib cohesion aggregate check",
+		"cmp --silent",
+		"cohesion-sources.json",
+		"cohesion-inputs.json",
+		"cohesion-projections.tar.gz",
+		"catalog-consumer.json",
+		"catalog-consumer.md",
+		"catalog-engineering.json",
+		"catalog-engineering.md",
+		"gzip -n",
+		"needs: [build, verify-catalog]",
+	} {
+		if !strings.Contains(content, required) {
+			t.Errorf("release workflow lacks catalog publication contract %q", required)
+		}
+	}
+	verifyProjectionStart := strings.Index(content, "  verify-projection:\n")
+	verifyCatalogStart := strings.Index(content, "  verify-catalog:\n")
+	if verifyProjectionStart < 0 || verifyCatalogStart < 0 || verifyProjectionStart >= verifyCatalogStart {
+		t.Fatal("release workflow must independently verify projections before catalog verification")
+	}
+	verifyProjection := content[verifyProjectionStart:verifyCatalogStart]
+	for _, required := range []string{
+		"needs: [prepare-catalog, assemble-catalog]",
+		"matrix: ${{ fromJSON(needs.prepare-catalog.outputs.matrix) }}",
+		"ref: ${{ matrix.commit }}",
+		"golib cohesion sources verify",
+		"golib cohesion catalog engineering --json",
+		"cmp --silent",
+		"cohesion-projections.tar.gz",
+	} {
+		if !strings.Contains(verifyProjection, required) {
+			t.Errorf("projection verifier lacks %q", required)
+		}
+	}
+	verifyCatalog, _, found := strings.Cut(content[verifyCatalogStart:], "\n  publish:\n")
+	if !found || !strings.Contains(verifyCatalog, "needs: [prepare-catalog, assemble-catalog, verify-projection]") {
+		t.Fatal("catalog verification must wait for independent projection verification")
+	}
+	for _, required := range []string{
+		"expected-members",
+		"source_repository=",
+		"input_repository=",
+		"input_projection=",
+		"sha256sum \"${projection}\"",
+	} {
+		if !strings.Contains(verifyCatalog, required) {
+			t.Errorf("catalog verifier lacks source-lock binding %q", required)
+		}
+	}
+	publishStart := strings.Index(content, "  publish:\n")
+	if publishStart < 0 {
+		t.Fatal("release workflow has no publish job")
+	}
+	publish := content[publishStart:]
+	for _, forbidden := range []string{"golib cohesion", "go run", "make ", "--clobber"} {
+		if strings.Contains(publish, forbidden) {
+			t.Errorf("write-capable publish job contains forbidden execution %q", forbidden)
+		}
+	}
+	manifest := strings.Index(publish, ">dist/release-manifest.json")
+	checksums := strings.Index(publish, ">dist/checksums.txt")
+	release := strings.Index(publish, "gh release create")
+	if manifest < 0 || checksums < 0 || release < 0 || manifest > checksums || checksums > release {
+		t.Fatal("publish job must create the manifest, then checksums, then the release")
+	}
+}
+
 func TestConsumerUpgradeWorkflowIsBoundedAndReviewable(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/update-consumers.yml")
 	for _, required := range []string{

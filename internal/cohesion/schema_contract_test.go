@@ -6,6 +6,7 @@ import (
 	"errors"
 	"maps"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/santhosh-tekuri/jsonschema/v6"
@@ -43,6 +44,7 @@ func TestEmbeddedCohesionSchemasAreCurrent(t *testing.T) {
 		{path: "../../schema/modules.schema.json", embedded: modulesSchemaJSON},
 		{path: "../../schema/cohesion-catalog.schema.json", embedded: catalogSchemaJSON},
 		{path: "../../schema/cohesion-inputs.schema.json", embedded: inputsSchemaJSON},
+		{path: "../../schema/cohesion-sources.schema.json", embedded: sourcesSchemaJSON},
 	} {
 		current, err := os.ReadFile(test.path)
 		if err != nil {
@@ -52,6 +54,95 @@ func TestEmbeddedCohesionSchemasAreCurrent(t *testing.T) {
 			t.Fatalf("embedded schema for %s is stale; run go generate ./internal/cohesion", test.path)
 		}
 	}
+}
+
+func TestSourcesSchemaAcceptsReviewedLockAndRejectsMalformedEntries(t *testing.T) {
+	if err := validateSourcesSchema([]byte("{")); err == nil {
+		t.Fatal("validateSourcesSchema(malformed JSON) error = nil")
+	}
+	data, err := os.ReadFile("../../release/cohesion-sources.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var valid map[string]any
+	if err := json.Unmarshal(data, &valid); err != nil {
+		t.Fatal(err)
+	}
+	if err := validateSourcesSchema(data); err != nil {
+		t.Fatalf("reviewed source lock: %v", err)
+	}
+
+	for name, mutate := range map[string]func(map[string]any){
+		"unknown field":         func(value map[string]any) { value["unexpected"] = true },
+		"zero repository count": func(value map[string]any) { value["repository_count"] = 0 },
+		"empty repositories":    func(value map[string]any) { value["repositories"] = []any{} },
+		"leading-zero version": func(value map[string]any) {
+			first := jsonObjectValue(jsonArrayValue(value["repositories"])[0])
+			jsonObjectValue(first["tooling"])["version"] = "v01.4.0"
+		},
+		"malformed commit": func(value map[string]any) {
+			first := jsonObjectValue(jsonArrayValue(value["repositories"])[0])
+			jsonObjectValue(first["source"])["commit"] = "main"
+		},
+		"uppercase commit": func(value map[string]any) {
+			first := jsonObjectValue(jsonArrayValue(value["repositories"])[0])
+			jsonObjectValue(first["source"])["commit"] = strings.Repeat("A", 40)
+		},
+		"uppercase checksum": func(value map[string]any) {
+			first := jsonObjectValue(jsonArrayValue(value["repositories"])[0])
+			jsonObjectValue(first["tooling"])["checksums_sha256"] = strings.Repeat("B", 64)
+		},
+		"missing consumer tooling": func(value map[string]any) {
+			first := jsonObjectValue(jsonArrayValue(value["repositories"])[0])
+			delete(first, "tooling")
+		},
+		"tooling on release source": func(value map[string]any) {
+			for _, raw := range jsonArrayValue(value["repositories"]) {
+				repository := jsonObjectValue(raw)
+				if jsonObjectValue(repository["source"])["kind"] == "release-source" {
+					repository["tooling"] = map[string]any{"version": "v1.5.0", "checksums_sha256": strings.Repeat("b", 64)}
+					return
+				}
+			}
+		},
+		"wrong release-source repository": func(value map[string]any) {
+			for _, raw := range jsonArrayValue(value["repositories"]) {
+				repository := jsonObjectValue(raw)
+				if jsonObjectValue(repository["source"])["kind"] == "release-source" {
+					repository["repository"] = "github.com/faustbrian/go-other"
+					return
+				}
+			}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			candidate := cloneJSONMap(t, valid)
+			mutate(candidate)
+			candidateData, err := json.Marshal(candidate)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := validateSourcesSchema(candidateData); err == nil {
+				t.Fatal("validateSourcesSchema() error = nil")
+			}
+		})
+	}
+}
+
+func jsonArrayValue(value any) []any {
+	result, ok := value.([]any)
+	if !ok {
+		return nil
+	}
+	return result
+}
+
+func jsonObjectValue(value any) map[string]any {
+	result, ok := value.(map[string]any)
+	if !ok {
+		return map[string]any{}
+	}
+	return result
 }
 
 func TestMustPanicsOnSchemaInitializationFailure(t *testing.T) {

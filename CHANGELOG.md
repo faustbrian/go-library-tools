@@ -4,6 +4,23 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.5.1 - 2026-09-04
+
+### Added
+
+- Added a closed, count-bound 92-repository source lock and typed CLI checks for
+  immutable source revisions and each consumer's adopted tooling identity.
+- Added read-only release projection, deterministic catalog assembly, and
+  independent per-source projection and catalog byte-verification jobs that
+  publish the source lock, digest-bound inputs, projection bundle, and consumer
+  and engineering catalogs as attested release assets.
+
+### Fixed
+
+- Allowed released catalog publication commands to use the executing generator
+  identity across repositories pinned to earlier compatible tooling releases,
+  while retaining exact-version enforcement for ordinary repository commands.
+
 ## 1.5.0 - 2026-09-04
 
 ### Added
