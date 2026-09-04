@@ -459,19 +459,14 @@ jobs:
           )
           cmp --silent assets/cohesion-projections.tar.gz "${task}/repacked.tar.gz"
 
-  publish:
-    name: Publish release
+  prepare-publication:
+    name: Prepare publication assets
     needs: [build, verify-catalog]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
-      contents: write
-      id-token: write
-      attestations: write
+      contents: read
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-        with:
-          fetch-depth: 0
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
         with:
           pattern: release-*
@@ -481,9 +476,7 @@ jobs:
         with:
           name: cohesion-catalogs
           path: dist
-      - name: Publish immutable release
-        env:
-          GH_TOKEN: ${{ github.token }}
+      - name: Assemble immutable publication set
         run: |
           set -euo pipefail
           release="${GITHUB_REF_NAME#v}"
@@ -524,9 +517,146 @@ jobs:
             (cd dist && sha256sum "${name}") >>dist/checksums.txt
           done
           LC_ALL=C sort -o dist/checksums.txt dist/checksums.txt
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        with:
+          name: release-publication
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  verify-publication:
+    name: Verify publication assets
+    needs: prepare-publication
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-publication
+          path: dist
+      - name: Independently verify publication set
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-publication-verify.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          release="${GITHUB_REF_NAME#v}"
+          payloads=(
+            "golib_${release}_linux_amd64.tar.gz"
+            "golib_${release}_linux_arm64.tar.gz"
+            "golib_${release}_darwin_amd64.tar.gz"
+            "golib_${release}_darwin_arm64.tar.gz"
+            golib_linux_amd64.spdx.json
+            golib_linux_arm64.spdx.json
+            golib_darwin_amd64.spdx.json
+            golib_darwin_arm64.spdx.json
+            cohesion-sources.json
+            cohesion-inputs.json
+            cohesion-projections.tar.gz
+            catalog-consumer.json
+            catalog-consumer.md
+            catalog-engineering.json
+            catalog-engineering.md
+          )
+          expected=("${payloads[@]}" release-manifest.json checksums.txt)
+          test "$(find dist -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d ' ')" = "${#expected[@]}"
+          test "$(find dist -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')" = "${#expected[@]}"
+          for name in "${expected[@]}"; do
+            test -f "dist/${name}" && test ! -L "dist/${name}"
+          done
+          printf '%s\n' "${payloads[@]}" | LC_ALL=C sort >"${task}/expected-payloads"
+          jq -r '.assets[].name' dist/release-manifest.json | LC_ALL=C sort >"${task}/manifest-payloads"
+          diff -u "${task}/expected-payloads" "${task}/manifest-payloads"
+          jq -e --arg version "${GITHUB_REF_NAME}" --arg source "${GITHUB_SHA}" '
+            type == "object" and
+            keys == ["assets", "provenance", "schema_version", "source_commit", "version"] and
+            .schema_version == 1 and
+            .version == $version and
+            .source_commit == $source and
+            .provenance == "github-artifact-attestation" and
+            (.assets | type == "array" and length == 15 and
+              all(.[]; type == "object" and keys == ["name", "sha256"] and
+                (.name | type == "string" and length > 0) and
+                (.sha256 | type == "string" and test("^[0-9a-f]{64}$"))))
+          ' dist/release-manifest.json >/dev/null
+          for name in "${payloads[@]}"; do
+            digest="$(sha256sum "dist/${name}" | cut -d' ' -f1)"
+            jq -e --arg name "${name}" --arg sha256 "${digest}" \
+              '[.assets[] | select(.name == $name and .sha256 == $sha256)] | length == 1' \
+              dist/release-manifest.json >/dev/null
+          done
+          if grep -Ev '^[0-9a-f]{64}  [A-Za-z0-9._-]+$' dist/checksums.txt; then
+            exit 1
+          fi
+          printf '%s\n' "${payloads[@]}" release-manifest.json | LC_ALL=C sort >"${task}/expected-checksums"
+          sed -E 's/^[0-9a-f]{64}  //' dist/checksums.txt | LC_ALL=C sort >"${task}/actual-checksums"
+          diff -u "${task}/expected-checksums" "${task}/actual-checksums"
+          (cd dist && sha256sum --check checksums.txt)
+
+  attest-publication:
+    name: Attest publication assets
+    needs: verify-publication
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-publication
+          path: dist
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: dist/*
+
+  publish:
+    name: Publish release
+    needs: attest-publication
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      attestations: read
+    steps:
+      - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        with:
+          name: release-publication
+          path: dist
+      - name: Verify attestations for static publication set
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          release="${GITHUB_REF_NAME#v}"
+          expected=(
+            "golib_${release}_linux_amd64.tar.gz"
+            "golib_${release}_linux_arm64.tar.gz"
+            "golib_${release}_darwin_amd64.tar.gz"
+            "golib_${release}_darwin_arm64.tar.gz"
+            golib_linux_amd64.spdx.json
+            golib_linux_arm64.spdx.json
+            golib_darwin_amd64.spdx.json
+            golib_darwin_arm64.spdx.json
+            cohesion-sources.json
+            cohesion-inputs.json
+            cohesion-projections.tar.gz
+            catalog-consumer.json
+            catalog-consumer.md
+            catalog-engineering.json
+            catalog-engineering.md
+            release-manifest.json
+            checksums.txt
+          )
+          test "$(find dist -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d ' ')" = "${#expected[@]}"
+          test "$(find dist -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')" = "${#expected[@]}"
+          for name in "${expected[@]}"; do
+            artifact="dist/${name}"
+            test -f "${artifact}" && test ! -L "${artifact}"
+            gh attestation verify "${artifact}" --repo "${GITHUB_REPOSITORY}"
+          done
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

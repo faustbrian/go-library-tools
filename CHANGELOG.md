@@ -20,6 +20,9 @@ All notable changes to this project are documented in this file.
 - Allowed released catalog publication commands to use the executing generator
   identity across repositories pinned to earlier compatible tooling releases,
   while retaining exact-version enforcement for ordinary repository commands.
+- Moved release-manifest and checksum assembly ahead of independent publication
+  verification so the write-capable publisher receives only attested static
+  assets and verifies every attestation before release creation.
 
 ## 1.5.0 - 2026-09-04
 

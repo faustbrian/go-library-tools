@@ -24,25 +24,28 @@ SBOMs, and attests the artifacts.
 Catalog publication begins only after the release candidate exists. A closed
 [`release/cohesion-sources.json`](../release/cohesion-sources.json) lock binds
 each consumer to an exact commit and adopted tool/checksum identity; the one
-tooling entry resolves to the tagged source commit. Read-only, credential-free
-jobs check out those revisions without submodules or LFS, execute no consumer
-builds or workflows, and run only the tagged candidate's typed source verifier
-and engineering projection command. Projection jobs run twice and compare
-bytes. A separate read-only job constructs the digest-bound input manifest,
-generates both catalog views twice, and creates a deterministic projection
-bundle. A second bounded read-only matrix independently regenerates every
-projection from the same locked commit and byte-compares it with the bundle.
+tooling entry resolves to the tagged source commit. Read-only jobs check out
+those revisions without persisted credentials, submodules, or LFS, execute no
+consumer builds or workflows, and run only the tagged candidate's typed source
+verifier and engineering projection command. Projection jobs run twice and
+compare bytes. A separate read-only job constructs the digest-bound input
+manifest, generates both catalog views twice, and creates a deterministic
+projection bundle. A second bounded read-only matrix independently regenerates
+every projection from the same locked commit and byte-compares it with the
+bundle.
 A final read-only job safely unpacks that bundle, binds its exact member set,
 repository order, paths, and digests back to the source lock, independently
 regenerates the four catalogs, and compares every byte.
 
-Only after binary and catalog verification succeeds does the write-capable
-publish job receive static artifacts. It rejects missing or extra assets,
-creates a source- and artifact-bound `release-manifest.json`, computes
-`checksums.txt` over every binary, SBOM, source lock, input manifest, projection
-bundle, catalog, and the release manifest, attests the complete set, and creates
-the immutable GitHub release. It never parses projections or executes the
-catalog generator while holding publication authority.
+Only after binary and catalog verification succeeds does a read-only
+publication-preparation job create a source- and artifact-bound
+`release-manifest.json` and compute `checksums.txt` over every binary, SBOM,
+source lock, input manifest, projection bundle, catalog, and the release
+manifest. A separate read-only job rejects missing, extra, or mismatched
+publication assets before the complete set is attested. The write-capable
+publisher receives only that static set, verifies every attestation, and
+creates the immutable GitHub release. It never generates or modifies a release
+asset while holding publication authority.
 
 Later releases follow semantic versioning. Never replace release artifacts or
 move tags; publish a new patch release for corrections.

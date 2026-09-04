@@ -391,6 +391,9 @@ func TestReleaseWorkflowPublishesVerifiedCohesionCatalogs(t *testing.T) {
 		"  assemble-catalog:\n",
 		"  verify-projection:\n",
 		"  verify-catalog:\n",
+		"  prepare-publication:\n",
+		"  verify-publication:\n",
+		"  attest-publication:\n",
 		"max-parallel: 8",
 		"persist-credentials: false",
 		"submodules: false",
@@ -411,6 +414,9 @@ func TestReleaseWorkflowPublishesVerifiedCohesionCatalogs(t *testing.T) {
 		"catalog-engineering.md",
 		"gzip -n",
 		"needs: [build, verify-catalog]",
+		"needs: prepare-publication",
+		"needs: verify-publication",
+		"needs: attest-publication",
 	} {
 		if !strings.Contains(content, required) {
 			t.Errorf("release workflow lacks catalog publication contract %q", required)
@@ -435,7 +441,7 @@ func TestReleaseWorkflowPublishesVerifiedCohesionCatalogs(t *testing.T) {
 			t.Errorf("projection verifier lacks %q", required)
 		}
 	}
-	verifyCatalog, _, found := strings.Cut(content[verifyCatalogStart:], "\n  publish:\n")
+	verifyCatalog, _, found := strings.Cut(content[verifyCatalogStart:], "\n  prepare-publication:\n")
 	if !found || !strings.Contains(verifyCatalog, "needs: [prepare-catalog, assemble-catalog, verify-projection]") {
 		t.Fatal("catalog verification must wait for independent projection verification")
 	}
@@ -450,21 +456,65 @@ func TestReleaseWorkflowPublishesVerifiedCohesionCatalogs(t *testing.T) {
 			t.Errorf("catalog verifier lacks source-lock binding %q", required)
 		}
 	}
+	prepareStart := strings.Index(content, "  prepare-publication:\n")
+	verifyStart := strings.Index(content, "  verify-publication:\n")
+	attestStart := strings.Index(content, "  attest-publication:\n")
 	publishStart := strings.Index(content, "  publish:\n")
-	if publishStart < 0 {
-		t.Fatal("release workflow has no publish job")
+	if prepareStart < 0 || verifyStart < 0 || attestStart < 0 || publishStart < 0 ||
+		prepareStart >= verifyStart || verifyStart >= attestStart || attestStart >= publishStart {
+		t.Fatal("release workflow must prepare, verify, attest, then publish immutable assets")
+	}
+	prepare := content[prepareStart:verifyStart]
+	for _, required := range []string{
+		"release-manifest.json",
+		"checksums.txt",
+		"name: release-publication",
+	} {
+		if !strings.Contains(prepare, required) {
+			t.Errorf("publication preparation lacks %q", required)
+		}
+	}
+	verify := content[verifyStart:attestStart]
+	for _, required := range []string{
+		"needs: prepare-publication",
+		"name: release-publication",
+		"sha256sum --check checksums.txt",
+		"release-manifest.json",
+		"checksums.txt",
+	} {
+		if !strings.Contains(verify, required) {
+			t.Errorf("publication verification lacks %q", required)
+		}
+	}
+	attest := content[attestStart:publishStart]
+	if !strings.Contains(attest, "needs: verify-publication") ||
+		!strings.Contains(attest, "actions/attest@") ||
+		!strings.Contains(attest, "name: release-publication") {
+		t.Error("attestation must consume the independently verified publication set")
 	}
 	publish := content[publishStart:]
-	for _, forbidden := range []string{"golib cohesion", "go run", "make ", "--clobber"} {
+	for _, required := range []string{
+		"needs: attest-publication",
+		"name: release-publication",
+		"gh attestation verify",
+		"gh release create",
+	} {
+		if !strings.Contains(publish, required) {
+			t.Errorf("static publisher lacks %q", required)
+		}
+	}
+	for _, forbidden := range []string{
+		"golib cohesion",
+		"go run",
+		"make ",
+		"--clobber",
+		">dist/release-manifest.json",
+		">dist/checksums.txt",
+		"actions/attest@",
+	} {
 		if strings.Contains(publish, forbidden) {
 			t.Errorf("write-capable publish job contains forbidden execution %q", forbidden)
 		}
-	}
-	manifest := strings.Index(publish, ">dist/release-manifest.json")
-	checksums := strings.Index(publish, ">dist/checksums.txt")
-	release := strings.Index(publish, "gh release create")
-	if manifest < 0 || checksums < 0 || release < 0 || manifest > checksums || checksums > release {
-		t.Fatal("publish job must create the manifest, then checksums, then the release")
 	}
 }
 
