@@ -346,41 +346,110 @@ registry at `release/cohesion-authorizations.json`, independently of repository
 receipts and projections. Its versioned schema identity is
 `schema/cohesion-authorization-registry-v1.schema.json`.
 The registry MUST contain only its schema identity and version, goal ID,
-requirements digest, immutable revision, predecessor digest, declared entry
-count, bounded sorted entries, and an optional non-authorizing bootstrap
-freeze-review digest. The canonical source lock and aggregate inputs MUST pin
-its schema identity, exact path, immutable revision, content digest, goal ID,
-and requirements digest before any receipt or projection is read.
+requirements digest, positive integer `registry_revision`,
+`predecessor_sha256`, declared entry count, and bounded sorted entries. It MAY
+also contain `bootstrap_freeze_sha256`, a non-authorizing lowercase exact-byte
+SHA-256 of the bootstrap freeze-review record. The genesis registry revision
+MUST equal `1`, and its `predecessor_sha256` MUST be `null`.
+Every successor MUST carry the lowercase exact-byte SHA-256 of its immediate
+predecessor in `predecessor_sha256`.
+Every successor revision MUST equal its predecessor revision plus one. This
+logical registry revision is distinct from the source-lock Git revision and
+MUST NOT identify or contain the commit that contains the registry. The
+canonical source lock and aggregate inputs MUST independently pin the registry
+repository, schema identity, exact path, Git source revision, content digest,
+goal ID, and requirements digest before any receipt or projection is read. For
+a successor registry, those inputs MUST also supply a bounded, oldest-first
+chain of predecessor registry repository, path, Git source revision,
+`registry_revision`, and exact-byte digest tuples through the genesis registry. Final
+verification MUST resolve every tuple from its locked clean checkout, verify
+its exact bytes, validate every snapshot against the pinned registry schema,
+and require the same registry repository, path, schema identity, goal ID, and
+requirements digest throughout the chain. It MUST reject an unavailable,
+extra, reordered, cross-identity, or non-genesis chain. The versioned
+source-lock schema MUST set a positive maximum predecessor count, and
+verification MUST reject a chain above that bound before resolving its entries.
 
-Each closed registry entry MUST discriminate a decision/review authorization
-from a release-authority authorization. Every entry MUST contain one
-authorization ID, authorization subject, authorization-record digest, and
-issuer identity. A decision/review authorization MUST also contain reviewer
-identity when review is required. A release-authority authorization MUST
-contain its release verifier identity. Its subject MUST bind the goal ID and
-requirements digest, repository, module, dimension, evidence kind, receipt
-path, receipt SHA-256, and entry ID as one tuple, source revision,
-applicable-input-manifest digest, and accepted outcome. Entries MUST sort
-deterministically by authorization ID and then the complete subject tuple. Both
-the authorization ID and subject tuple MUST be unique. The declared count MUST
-equal the entry count, and schema-defined byte, entry-count, string, and
-collection bounds MUST be enforced before allocation.
+The closed authorization-kind enum is exactly `decision-review`,
+`release-authority`, and `integration-role-decision`. Every registry entry
+MUST contain one authorization ID, exactly one `authorization_kind` from that
+enum, exactly one closed authorization subject, an authorization-record
+reference, and issuer identity. The bounded reference MUST bind the
+coordinator-record repository, safe repository-relative regular-file path, Git
+source revision, and exact-byte SHA-256 independently of the receipt or
+projection. The canonical source lock and aggregate inputs MUST independently
+pin the same record repository, path, Git source revision, and digest for the
+authorization ID. Each input MUST carry a declared count and a schema-bounded,
+authorization-ID-sorted array of unique record pins. Their complete pin sets
+MUST be identical, each declared count MUST equal its array length, and each set
+MUST reconcile one-to-one with the current registry entries; an omitted, extra,
+duplicate, conflicting, or unreferenced pin is invalid. That SHA-256 is the
+authorization-record digest; it is not a digest of the registry entry itself.
+Final verification MUST resolve only the independently pinned reference from
+its locked clean checkout, verify the exact record bytes, and cross-check the
+registry reference against that pin.
 
-The first registry snapshot MUST have no predecessor. A later registry MUST be
-a new immutable snapshot that binds the exact prior registry digest or an
-equivalently exact same-subject supersession chain. It MUST NOT mutate or
-reinterpret an existing identity and MUST remain a complete snapshot of current
-authorizations. Applicable current authorizations MUST reconcile exactly with
-projections and the residual/release-blocker register; omission, downgrade,
-duplication, conflict, or silent supersession MUST be rejected. A
-`release-attestation` MUST bind its matching authorization entry.
+An authorization record MUST be a bounded UTF-8 JSON object conforming to the
+independently pinned versioned schema identity
+`schema/cohesion-authorization-record-v1.schema.json`. Producers MUST emit its
+exact canonical JSON representation under [RFC8785]. Decoders MUST reject
+invalid UTF-8, duplicate member names, non-canonical encodings, unknown fields,
+and schema or semantic failures before comparison or unbounded allocation.
+
+The resolved bounded record MUST bind the same authorization ID,
+`authorization_kind`, complete tagged subject tuple, issuer identity, and
+kind-specific identity as its registry entry. A `decision-review` authorization
+MUST contain reviewer identity and MUST NOT contain release-verifier identity.
+An `integration-role-decision` MUST contain reviewer identity and MUST NOT
+contain release-verifier identity. A `release-authority` authorization MUST
+contain release-verifier identity and MUST NOT contain reviewer identity.
+
+An authorization subject MUST be exactly one member of this tagged union:
+
+- `delivery` binds the goal ID and requirements digest, repository, module,
+  dimension, evidence kind, receipt path, receipt SHA-256, exact entry ID,
+  source revision, applicable-input-manifest digest, and the exact outcome
+  `accepted` as one tuple; or
+- `integration-role` binds the goal ID and requirements digest, repository,
+  module, target, selected role, and accepted outcome as one tuple.
+
+An `integration-role-decision` MUST carry an `integration-role` subject whose
+accepted outcome is exactly `accepted` and MUST NOT satisfy an implementation,
+hardening, release, blocked, or
+not-applicable delivery dimension. A `decision-review` authorization MUST carry
+a `delivery` subject whose evidence kind is `source-acceptance`,
+`blocked-decision`, or `not-applicable-decision`. A `release-authority`
+authorization MUST carry a `delivery` subject whose evidence kind is
+`release-attestation`. A `gate-attestation` MUST NOT require or accept a
+registry authorization. No other authorization-kind, subject-kind, or
+evidence-kind combination is valid. Entries MUST sort
+deterministically by authorization ID and then the complete tagged subject
+tuple. Both the authorization ID and subject tuple MUST be unique. The declared
+count MUST equal the entry count, and schema-defined byte, entry-count, string,
+and collection bounds MUST be enforced before allocation.
+
+The first registry snapshot MUST have revision `1` and no predecessor. A later
+registry MUST be a new immutable snapshot whose revision is exactly one greater
+than its predecessor and that binds the prior registry's exact-byte SHA-256.
+Any same-subject supersession MUST preserve the subject tuple and bind the
+superseded authorization ID and authorization-record digest of the unique
+same-subject entry in the immediately preceding registry. An unchanged current
+authorization MUST carry forward the identical entry without supersession
+fields. A new subject with no entry in the immediate predecessor MUST NOT carry
+supersession fields, and a replacement MUST NOT skip the immediate predecessor
+or bind an older entry. The registry MUST NOT mutate or reinterpret an existing
+identity and MUST remain a complete snapshot of current authorizations.
+Applicable current authorizations MUST reconcile exactly with projections and
+the residual/release-blocker register; omission, downgrade, duplication,
+conflict, or silent supersession MUST be rejected. A `release-attestation` MUST
+bind its matching authorization entry.
 
 Final aggregation MUST authenticate the registry solely through the
-coordinator-controlled revision and digest pinned independently by the source
-lock and aggregate inputs. It MUST verify every entry, subject, identity,
-outcome, record digest, receipt binding, and complete current-set reconciliation.
-The registry MUST NOT define or accept signer keys, PKI, certificates, or
-signature algorithms.
+source-lock Git revision and digest pinned independently by the source lock and
+aggregate inputs. It MUST verify every entry, subject, identity, outcome,
+record digest, receipt binding, and complete current-set reconciliation. The
+registry MUST NOT define or accept signer keys, PKI, certificates, or signature
+algorithms.
 
 The verifier and gate policy MUST use immutable identities and digests supplied
 by the Cohesion coordinator through the canonical source lock and aggregate
@@ -513,6 +582,15 @@ coordinator-accepted qualifying direct-persistence decision MUST equal one
 or an explicit planned engineering identity. Extra, omitted, duplicate,
 conflicting, nonexistent, and wrong-owner targets are invalid.
 
+Every `integration_roles` entry MUST match exactly one accepted
+`integration-role-decision` authorization with the same goal ID, requirements
+digest, repository, module, target, and selected role. The authorization
+subject and independently resolved decision record MUST both carry the exact
+outcome `accepted` and otherwise match the complete authorization kind, ID,
+subject tuple, issuer identity, and reviewer identity. An authorization for
+another goal digest, role, or delivery dimension MUST NOT satisfy that
+requirement.
+
 `domain-owned` is valid only when the domain module owns the persisted semantic
 model and backend behavior; importing a driver alone is insufficient. The
 initial classification audit MUST cover at least `go-audit/postgres`,
@@ -540,11 +618,11 @@ Implementation MUST first prove failures for:
 10. aggregate omission, duplication, order drift, source-revision drift,
     projection substitution, extra archive members, or mixed schema states;
 11. final aggregation with a non-terminal implementation or hardening module;
-12. invalid, duplicate, conflicting, or unsupported integration roles; and
+12. invalid, duplicate, conflicting, or unsupported integration roles;
 13. direct persistence labeled `domain-owned` without the reviewed ownership
     decision;
 14. missing, unauthorized, forged, digest-mismatched, or non-accepted decision,
-    review, or release authorization; and
+    review, or release authorization;
 15. a freeze review whose reviewer, source commit, contract digest, outcome, or
     record digest does not match the freeze record;
 16. a missing, substituted, malformed, oversized, unsorted, wrong-schema, or
@@ -554,9 +632,39 @@ Implementation MUST first prove failures for:
     accepted blocker;
 18. an authorization whose repository, module, dimension, evidence kind,
     receipt triple, source revision, input digest, or outcome differs from its
-    receipt or projection; and
+    receipt or projection;
 19. an omitted, extra, empty-when-applicable, nonexistent, wrong-owner, or
-    conflicting integration-role target.
+    conflicting integration-role target;
+20. a missing authorization kind, an authorization kind paired with the wrong
+    tagged subject, delivery evidence satisfied by an
+    `integration-role-decision`, decision/review and release-authority
+    evidence-kind crossing in either direction, a `gate-attestation` with a
+    registry authorization, kind-inapplicable identity fields, or an
+    integration role without its matching accepted role decision;
+21. a genesis registry whose revision is not `1`, or a successor whose revision
+    does not equal its predecessor revision plus one, whose predecessor chain
+    cannot be resolved from the locked inputs, or whose chain is unavailable,
+    extra, reordered, cross-schema, cross-goal, cross-requirements,
+    cross-repository, cross-path, over the schema-defined bound, or does not
+    terminate at genesis;
+22. a genesis registry with a missing or non-null `predecessor_sha256`, or a
+    successor with a missing, null, malformed, or wrong predecessor digest;
+23. a missing, unsafe, directory, symlink, non-regular, or unresolved
+    authorization-record target; malformed, duplicate-key, non-canonical,
+    wrong-schema, or oversized record bytes; repository, path, source-revision,
+    record field, identity, kind, or subject substitution; an omitted, extra,
+    duplicate, conflicting, unsorted, or unreferenced record pin; a declared
+    pin count that differs from its array length; unequal source-lock and
+    aggregate pin sets; mismatch against the independently pinned locator; or
+    mismatch between the declared digest and the exact coordinator-record
+    bytes;
+24. an absent `bootstrap_freeze_sha256` being rejected, or a present digest
+    that is malformed, mismatched, authorizing, or retroactively establishes
+    the bootstrap freeze; and
+25. a same-subject supersession with a missing or mismatched superseded
+    authorization ID or record digest, an altered subject tuple, a skipped
+    immediate-predecessor entry, or unexpected supersession fields for a new
+    or unchanged subject.
 
 Passing characterization and green fixtures MUST cover untouched v1 and v2
 manifests without semantic rewrite; the allowed receipt-and-manifest-only
@@ -566,9 +674,17 @@ module with non-terminal release; fully verified release evidence; an entirely
 not-applicable module; multiple modules that cannot share evidence; valid
 domain-owned persistence; accepted decision, review, and release
 authorizations; a valid first authorization registry and successor bound to its
-predecessor; exact canonical source-lock aggregation; and a valid freeze review
-whose reviewer, reviewed source commit and contract digest, accepted no-findings
-outcome, review-record digest, tag peel, and tagged contract bytes all match.
+predecessor with revisions `1` and `2`, plus chains immediately below and at the
+schema-defined count bound; matching delivery and integration-role subjects
+that cannot cross-satisfy; an integration role with the same requirements
+digest and its independently resolved accepted decision-record locator, exact
+byte digest, and `accepted` outcome; a valid unchanged authorization carry
+forward, new subject, and same-subject replacement that binds the immediate
+predecessor's authorization ID and record digest; both an absent bootstrap
+freeze digest and a valid present non-authorizing digest; exact canonical
+source-lock aggregation; and a valid freeze review whose reviewer, reviewed
+source commit and contract digest, accepted no-findings outcome, review-record
+digest, tag peel, and tagged contract bytes all match.
 
 The matrix MUST exercise all 25 implementation-and-hardening state pairs
 crossed with all five release states. It MUST accept or reject all 125 cases
@@ -578,8 +694,21 @@ Authorization-registry schema, decoding, semantic validation, lifecycle,
 substitution, reconciliation, and subject-binding paths MUST be fuzzed. The
 registry tests MUST cover an exact initial pin, exact path/digest/schema
 binding, a valid successor with its predecessor digest, stale or unknown
-predecessors, mutation or identity reuse, duplicate or conflicting subjects,
-wrong-goal and cross-binding cases, and source-lock/registry substitution.
+predecessors, skipped or repeated logical revisions, mutation or identity
+reuse, incomplete or reordered predecessor chains, duplicate or conflicting
+subjects, every authorization-kind, subject-kind, and evidence-kind crossing,
+missing authorization kinds, missing required or forbidden kind-specific
+identities, missing or wrong-requirements-digest role decisions, every
+authorization-record repository, path-kind, source-revision, digest, kind,
+subject, entry-ID, issuer, reviewer, and release-verifier substitution, missing
+or extra record pins, mismatched declared counts, and unequal pin sets, record
+canonicalization and duplicate-key rejection, missing or mismatched
+same-subject supersession bindings, skipped predecessor entries, spurious
+supersession metadata, absent and present
+`bootstrap_freeze_sha256` values,
+predecessor-chain counts immediately below, at, and above the schema-defined
+bound, wrong-goal and cross-binding cases, and source-lock/registry
+substitution.
 
 ## Immutable Identity, Versioning, And Digests
 
@@ -603,8 +732,10 @@ The directly bound independent accepted review record is the bootstrap trust
 root for this contract freeze. The authorization registry MUST NOT authorize
 the canonical contract freeze because this contract defines that registry. The
 first later registry MAY mirror and cross-bind the freeze review only through
-its non-authorizing bootstrap freeze-review digest, which MUST equal the digest
-bound by the freeze record. It MUST NOT establish the freeze retroactively.
+its non-authorizing `bootstrap_freeze_sha256`, which MUST equal the digest bound
+by the freeze record. It MUST NOT establish the freeze retroactively.
+
+[RFC8785]: https://www.rfc-editor.org/rfc/rfc8785
 
 After the freeze, these canonical bytes MUST NOT be rewritten under the same
 goal ID. Any semantic change MUST publish a new versioned contract and stable
