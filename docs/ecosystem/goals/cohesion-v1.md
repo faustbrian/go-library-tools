@@ -289,6 +289,16 @@ Hardening covers all applicable final-input module, risk, and reverse-consumer
 gates. Release reports whether a Cohesion-bearing version, tag, artifacts, and
 clean external resolution have been verified.
 
+Every delivery dimension uses these exact states and meanings:
+
+| State | Meaning |
+| --- | --- |
+| `not-started` | The dimension applies, but scoped work or evidence has not begun. |
+| `in-progress` | Work or evidence exists, but terminal proof is incomplete. |
+| `blocked` | A matching blocker decision identifies an actual impasse. |
+| `not-applicable` | A matching audited decision proves the dimension imposes no requirement. |
+| `verified` | Exact immutable evidence proves module, goal, dimension, and final input. |
+
 Terminal states require these exact evidence kinds:
 
 | Dimension state | Required evidence kind |
@@ -316,6 +326,12 @@ sorted per-file applicable-input manifest, its digest, and the reason each
 input category is included. Evidence paths MUST be bounded, tracked,
 repository-relative regular files and MUST NOT be symlinks. Declared and actual
 digests MUST match.
+
+Every `source-acceptance`, `blocked-decision`, and `not-applicable-decision`
+receipt MUST bind a coordinator-authorized immutable decision or review record,
+its digest, issuer and reviewer identities, and an accepted outcome. Final
+aggregation MUST resolve and cross-check that record independently of the
+receipt and projection.
 
 The verifier and gate policy MUST use immutable identities and digests supplied
 by the Cohesion coordinator through the canonical source lock and aggregate
@@ -421,6 +437,10 @@ checkouts with the independently locked verifier and gate policy. It MUST NOT
 establish truth by comparing values supplied by the same projection or by
 trusting an internally consistent manifest and bundle without the independent
 source-lock binding.
+
+A final Cohesion catalog MUST be rejected unless every releasable module has
+terminal implementation and hardening states. Release MAY remain non-terminal
+or blocked and MUST remain visible under the release-reporting rules.
 
 ## Immutable Identity, Versioning, And Digests
 
