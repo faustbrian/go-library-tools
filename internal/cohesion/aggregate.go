@@ -324,7 +324,7 @@ func aggregateWithOperations(inputsPath string, identity Identity, operations ag
 			if module.Repository != input.Repository {
 				return Artifacts{}, fmt.Errorf("cohesion module repository identity does not match for %s", module.ModulePath)
 			}
-			if module.ModulePath != input.Repository && !strings.HasPrefix(module.ModulePath, input.Repository+"/") {
+			if module.Releasable && module.ModulePath != input.Repository && !strings.HasPrefix(module.ModulePath, input.Repository+"/") {
 				return Artifacts{}, fmt.Errorf("cohesion module path identity does not match repository %s", input.Repository)
 			}
 			if _, exists := seenModules[module.ModulePath]; exists {
