@@ -7,6 +7,8 @@ lockstep release train.
 
 - [Design language](design-language.md): construction, ownership, lifecycle,
   errors, adapters, compatibility, and explicit composition.
+- [Cohesion goal contract](goals/cohesion-v1.md): the versioned ecosystem
+  outcome, delivery phases, evidence semantics, and completion rules.
 
 The reviewed repository revisions and their adopted tooling identities are
 declared in the closed
