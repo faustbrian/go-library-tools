@@ -421,6 +421,11 @@ identities and legacy decoded meaning while introducing the versioned Cohesion
 delivery contract. Mixed-schema previews MUST remain non-terminal and MUST NOT
 be published as final Cohesion catalogs.
 
+Final aggregation MUST accept only catalog-v2 projections whose recorded
+manifest schema is v3 for every source. Homogeneous legacy and mixed-version
+input sets MAY produce previews only and MUST NOT be published as final
+Cohesion catalogs.
+
 The delivery MUST include regression evidence that:
 
 - every new source-lock, delivery-evidence, manifest, catalog, and aggregation
