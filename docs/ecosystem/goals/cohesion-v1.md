@@ -337,9 +337,9 @@ digests MUST match.
 
 Every `source-acceptance`, `blocked-decision`, and `not-applicable-decision`
 receipt MUST bind a coordinator-authorized immutable decision or review record,
-its digest, issuer and reviewer identities, and an accepted outcome. Final
-aggregation MUST resolve and cross-check that record independently of the
-receipt and projection.
+its digest, issuer identity, reviewer identity where review is required, and an
+accepted outcome. Final aggregation MUST resolve and cross-check that record
+independently of the receipt and projection.
 
 The Cohesion coordinator MUST publish the closed version-1 authorization
 registry at `release/cohesion-authorizations.json`, independently of repository
@@ -347,30 +347,33 @@ receipts and projections. Its versioned schema identity is
 `schema/cohesion-authorization-registry-v1.schema.json`.
 The registry MUST contain only its schema identity and version, goal ID,
 requirements digest, immutable revision, predecessor digest, declared entry
-count, and bounded sorted entries. The canonical source lock and aggregate
-inputs MUST pin its schema identity, exact path, immutable revision, content
-digest, goal ID, and requirements digest before any receipt or projection is
-read.
+count, bounded sorted entries, and an optional non-authorizing bootstrap
+freeze-review digest. The canonical source lock and aggregate inputs MUST pin
+its schema identity, exact path, immutable revision, content digest, goal ID,
+and requirements digest before any receipt or projection is read.
 
-Each closed registry entry MUST contain one authorization ID, authorization
-subject, record digest, issuer identity, reviewer identity, and verifier
-identity. Its subject MUST bind the goal ID and requirements digest,
-repository, module, dimension, evidence kind, receipt path, receipt SHA-256,
-and entry ID as one tuple, source revision, applicable-input-manifest digest,
-and accepted outcome. Entries MUST sort
+Each closed registry entry MUST discriminate a decision/review authorization
+from a release-authority authorization. Every entry MUST contain one
+authorization ID, authorization subject, authorization-record digest, and
+issuer identity. A decision/review authorization MUST also contain reviewer
+identity when review is required. A release-authority authorization MUST
+contain its release verifier identity. Its subject MUST bind the goal ID and
+requirements digest, repository, module, dimension, evidence kind, receipt
+path, receipt SHA-256, and entry ID as one tuple, source revision,
+applicable-input-manifest digest, and accepted outcome. Entries MUST sort
 deterministically by authorization ID and then the complete subject tuple. Both
 the authorization ID and subject tuple MUST be unique. The declared count MUST
 equal the entry count, and schema-defined byte, entry-count, string, and
 collection bounds MUST be enforced before allocation.
 
-The first registry snapshot MUST have no predecessor. Every successor MUST bind
-the exact predecessor registry digest and remain a complete snapshot of current
-authorizations. An authorization MUST NOT disappear or change without an
-explicit accepted successor record that names the superseded authorization.
-Applicable current authorizations MUST reconcile exactly with projections and
-the residual/release-blocker register; omission, downgrade, duplication,
-conflict, or silent supersession MUST be rejected. A `release-attestation` MUST
-bind its matching authorization entry.
+The first registry snapshot MUST have no predecessor. A later registry MUST be
+a new immutable snapshot that binds the exact prior registry digest or an
+equivalently exact same-subject supersession chain. It MUST NOT mutate or
+reinterpret an existing identity and MUST remain a complete snapshot of current
+authorizations. Applicable current authorizations MUST reconcile exactly with
+projections and the residual/release-blocker register; omission, downgrade,
+duplication, conflict, or silent supersession MUST be rejected. A
+`release-attestation` MUST bind its matching authorization entry.
 
 Final aggregation MUST authenticate the registry solely through the
 coordinator-controlled revision and digest pinned independently by the source
@@ -599,8 +602,9 @@ compatibility contract.
 The directly bound independent accepted review record is the bootstrap trust
 root for this contract freeze. The authorization registry MUST NOT authorize
 the canonical contract freeze because this contract defines that registry. The
-first later registry MAY mirror and cross-bind the freeze review, but it MUST
-NOT establish the freeze retroactively.
+first later registry MAY mirror and cross-bind the freeze review only through
+its non-authorizing bootstrap freeze-review digest, which MUST equal the digest
+bound by the freeze record. It MUST NOT establish the freeze retroactively.
 
 After the freeze, these canonical bytes MUST NOT be rewritten under the same
 goal ID. Any semantic change MUST publish a new versioned contract and stable
