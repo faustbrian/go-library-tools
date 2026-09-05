@@ -333,6 +333,14 @@ its digest, issuer and reviewer identities, and an accepted outcome. Final
 aggregation MUST resolve and cross-check that record independently of the
 receipt and projection.
 
+The Cohesion coordinator MUST publish an immutable digest-bound authorization
+registry independently of repository receipts and projections. The registry
+MUST enumerate every accepted decision or review record and release
+attestation, its issuer, reviewer or verifier identity, accepted outcome, and
+digest. A `release-attestation` MUST bind its matching authorization entry.
+Final aggregation MUST independently authenticate the registry and verify each
+selected authorization, identity, outcome, and digest.
+
 The verifier and gate policy MUST use immutable identities and digests supplied
 by the Cohesion coordinator through the canonical source lock and aggregate
 inputs, independently of a receipt or projection being verified.
@@ -447,6 +455,59 @@ A final Cohesion catalog MUST be rejected unless every releasable module has
 terminal implementation and hardening states. Release MAY remain non-terminal
 or blocked and MUST remain visible under the release-reporting rules.
 
+### Integration Roles
+
+Every schema-v3 module with non-null Cohesion metadata, including every
+releasable module, MUST declare a closed `integration_roles` array. Each entry
+MUST bind one exact package or module path to `adapter`, `domain-owned`, or
+`companion`, plus a reviewed rationale or decision reference. A path MUST
+appear at most once. Non-releasable fixtures, examples, benchmarks, harnesses,
+and internal tools MAY omit Cohesion metadata and the array.
+
+`domain-owned` is valid only when the domain module owns the persisted semantic
+model and backend behavior; importing a driver alone is insufficient. The
+initial classification audit MUST cover at least `go-audit/postgres`,
+`go-authorization/{postgres,valkey}`, `go-calendar/postgres`, and
+`go-capability/{postgres,valkey}`. Adapter and companion projections MUST be
+derived from these roles so conflicting lists cannot drift.
+
+### Executable Delivery Matrix
+
+Implementation MUST first prove failures for:
+
+1. an unknown goal ID or wrong requirements digest;
+2. every mutually exclusive goal-status truth-table violation;
+3. `verified`, `blocked`, or `not-applicable` without its exact evidence kind;
+4. evidence reused across dimensions, modules, repositories, or goal digests;
+5. unsafe, missing, oversized, directory, symlink, digest-mismatched, or
+   missing-entry receipt paths;
+6. stale complete-input fingerprints after source, test, dependency, tool,
+   policy, documentation, or reverse-consumer changes;
+7. release receipts with a mismatched peeled source revision, nested tag
+   derivation, manifest, checksums, artifacts, or clean-consumer result;
+8. a historical schema `$id` or reference graph resolving to a new schema;
+9. a catalog projection dropping or changing goal, roles, evidence, or
+   fingerprints;
+10. aggregate omission, duplication, order drift, source-revision drift,
+    projection substitution, extra archive members, or mixed schema states;
+11. final aggregation with a non-terminal implementation or hardening module;
+12. invalid, duplicate, conflicting, or unsupported integration roles; and
+13. direct persistence labeled `domain-owned` without the reviewed ownership
+    decision;
+14. missing, unauthorized, forged, digest-mismatched, or non-accepted decision,
+    review, or release authorization; and
+15. a freeze review whose reviewer, source commit, contract digest, outcome, or
+    record digest does not match the freeze record.
+
+Passing characterization and green fixtures MUST cover untouched v1 and v2
+manifests without semantic rewrite; the allowed receipt-and-manifest-only
+descendant with an unchanged dimension fingerprint; a v3 all-not-started
+module; partial progress; blocked implementation or hardening; a complete
+module with non-terminal release; fully verified release evidence; an entirely
+not-applicable module; multiple modules that cannot share evidence; valid
+domain-owned persistence; accepted decision and release authorizations; and
+exact canonical source-lock aggregation.
+
 ## Immutable Identity, Versioning, And Digests
 
 The stable goal ID for this contract version is `golib-cohesion-v1`. The
@@ -457,11 +518,13 @@ goal ID and requirements digest and MUST reject another ID or digest.
 The canonical contract MUST receive an accepted independent review with no
 unresolved findings before its source tag and digest are frozen. The freeze
 record MUST bind the exact source commit, immutable semantic-version tag,
-contract path, and requirements digest. The tag MUST peel to that source commit,
-and the recorded requirements digest MUST equal the SHA-256 of the contract at
-that path in the tagged commit. Public catalogs and evidence MUST cite that
-immutable identity; a default-branch path alone is not a compatibility
-contract.
+contract path, requirements digest, and immutable review-record digest. The
+review binding MUST identify the reviewer, reviewed source commit and contract
+digest, and accepted no-findings outcome. The tag MUST peel to that source
+commit, and the recorded requirements digest MUST equal the SHA-256 of the
+contract at that path in the tagged commit. Public catalogs and evidence MUST
+cite that immutable identity; a default-branch path alone is not a
+compatibility contract.
 
 After the freeze, these canonical bytes MUST NOT be rewritten under the same
 goal ID. Any semantic change MUST publish a new versioned contract and stable
