@@ -2,6 +2,10 @@
   "version": "0.2",
   "language": "en",
   "useGitignore": true,
+  "ignorePaths": [
+    "docs/ecosystem/catalog-consumer.md",
+    "docs/ecosystem/catalog-engineering.md"
+  ],
   "words": [
     "amd64",
     "apidiff",

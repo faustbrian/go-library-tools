@@ -22,6 +22,11 @@ indented, or inline code is treated as code rather than navigation. It then
 runs CSpell `10.0.0` from an
 embedded lockfile in the task-owned workspace. Consumer repositories retain
 only their word policy in `cspell.json`, not shared npm manifests or lockfiles.
+The immutable ecosystem catalog Markdown mirrors are excluded from this
+repository-level spelling pass because their bytes must remain identical to the
+attested release assets. Source documentation remains spell-checked by its
+owning repository; catalog publication independently verifies the generated
+mirror bytes.
 External links are checked by checksum-pinned Lychee `0.24.2` binaries for
 Linux and macOS on amd64 and arm64. Archives are bounded and treated as
 untrusted input; the verifier reads only the expected executable after checking
