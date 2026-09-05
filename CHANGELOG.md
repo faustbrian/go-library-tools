@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Mirrored the immutable v1.5.3 consumer and engineering catalogs into the
+  versioned ecosystem documentation tree.
+
+### Fixed
+
+- Excluded the byte-identical generated catalog Markdown from repository-level
+  spelling checks while retaining spelling validation in every source
+  repository.
+
 ## 1.5.3 - 2026-09-05
 
 ### Fixed
