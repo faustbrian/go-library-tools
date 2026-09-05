@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.5.2 - 2026-09-05
+
+### Fixed
+
+- Allowed non-releasable fixture and engineering modules to retain synthetic
+  module paths in aggregate catalogs while preserving repository ownership and
+  namespace enforcement for releasable modules.
+
 ## 1.5.1 - 2026-09-04
 
 ### Added
