@@ -335,11 +335,19 @@ input category is included. Evidence paths MUST be bounded, tracked,
 repository-relative regular files and MUST NOT be symlinks. Declared and actual
 digests MUST match.
 
-Every `source-acceptance`, `blocked-decision`, and `not-applicable-decision`
-receipt MUST bind a coordinator-authorized immutable decision or review record,
-its digest, issuer identity, reviewer identity where review is required, and an
-accepted outcome. Final aggregation MUST resolve and cross-check that record
-independently of the receipt and projection.
+Every `source-acceptance`, `blocked-decision`, `not-applicable-decision`, and
+`release-attestation` receipt entry MUST carry exactly one stable
+`authorization_id` forward reference. A `gate-attestation` MUST NOT carry one.
+The receipt MUST NOT carry an authorization-record repository, path, source
+revision, schema identity, or digest; registry revision or digest; issuer,
+reviewer, or release-verifier identity; or accepted outcome. The authorization
+ID alone is non-authorizing and MUST NOT establish terminal acceptance. Final
+aggregation MUST resolve it through the independently pinned current registry
+and record set and cross-check the record's complete tagged subject against the
+exact receipt path, receipt SHA-256, entry ID, source revision,
+applicable-input-manifest digest, repository, module, dimension, evidence kind,
+goal ID, and requirements digest, and MUST require the record subject's outcome
+to equal `accepted`.
 
 The Cohesion coordinator MUST publish the closed version-1 authorization
 registry at `release/cohesion-authorizations.json`, independently of repository
@@ -447,9 +455,19 @@ bind its matching authorization entry.
 Final aggregation MUST authenticate the registry solely through the
 source-lock Git revision and digest pinned independently by the source lock and
 aggregate inputs. It MUST verify every entry, subject, identity, outcome,
-record digest, receipt binding, and complete current-set reconciliation. The
-registry MUST NOT define or accept signer keys, PKI, certificates, or signature
-algorithms.
+record digest, authorization ID, receipt-derived subject field, and complete
+current-set reconciliation. An unresolved, noncurrent, missing, duplicate,
+wrong-kind, or mismatched authorization ID MUST be rejected. The registry MUST
+NOT define or accept signer keys, PKI, certificates, or signature algorithms.
+
+Authorization publication MUST follow this acyclic construction order: first
+preallocate the authorization ID in the receipt; then publish the authorization
+record binding that immutable receipt's exact digest; then publish the registry
+binding the record's exact-byte digest; and finally publish source-lock and
+aggregate inputs that independently bind the registry and complete record-pin
+set. Receipt bytes MUST NOT contain a self-digest or an edge to the
+authorization-record bytes or digest. Final publication MUST NOT occur until
+the record, current registry, and every independent control pin resolve.
 
 The verifier and gate policy MUST use immutable identities and digests supplied
 by the Cohesion coordinator through the canonical source lock and aggregate
@@ -710,6 +728,54 @@ predecessor-chain counts immediately below, at, and above the schema-defined
 bound, wrong-goal and cross-binding cases, and source-lock/registry
 substitution.
 
+### Non-Circular Authorization Cases
+
+Implementation MUST prove these valid cases:
+
+- **V1:** a receipt containing a preallocated authorization ID is hashed; a
+  matching canonical record binds that receipt digest; the current registry
+  binds the record; source-lock and aggregate inputs carry identical
+  independent pins; and final verification succeeds;
+- **V2:** the authorization record is published after the immutable receipt
+  without changing the receipt bytes;
+- **V3:** each of the four authorization-bearing evidence kinds resolves only
+  to its permitted authorization kind and tagged subject, while a
+  `gate-attestation` validates without an authorization ID; and
+- **V4:** registry revision and supersession rules remain unchanged, while a
+  refreshed receipt creates a new subject and predecessor history retains the
+  retired subject.
+
+Implementation MUST reject these invalid cases:
+
+- **I1:** a required authorization ID is missing, or a `gate-attestation`
+  carries one;
+- **I2:** receipt bytes contain any authorization-record locator or digest,
+  registry pin, issuer, reviewer, release verifier, or accepted outcome;
+- **I3:** an authorization ID is unresolved, noncurrent, duplicated within one
+  snapshot, reused for another record or subject, or paired with the wrong
+  authorization kind;
+- **I4:** any tagged-subject field differs from the receipt's path, receipt
+  digest, entry ID, source revision, applicable-input-manifest digest,
+  repository, module, dimension, evidence kind, goal ID, or requirements
+  digest, or the subject outcome is not exactly `accepted`;
+- **I5:** an authorization-record locator or digest differs across the
+  registry, source lock, and aggregate inputs, or record bytes change after
+  they are pinned;
+- **I6:** receipt bytes change after record publication, or the record binds a
+  receipt that names another authorization ID;
+- **I7:** any self-digest or receipt-to-record-digest edge is introduced; and
+- **I8:** final publication occurs before the record, current registry, and all
+  independent control pins resolve.
+
+The v1.5.4 tag, contract bytes, review, and freeze remain immutable superseded
+history. This corrected contract requires its own exact-byte review and freeze
+with v1.5.5. Version-1 and version-2 manifests, APIs, and CLI behavior remain
+unchanged. No released schema-v3 artifact exists, so there is no migration or
+grandfathering: any experimental schema-v3 receipt containing an authorization
+record locator or digest MUST be rejected and regenerated. Authorization IDs
+MAY be preallocated, but terminal and final validity begins only after the
+matching current record, registry, and independent control pins resolve.
+
 ## Immutable Identity, Versioning, And Digests
 
 The stable goal ID for this contract version is `golib-cohesion-v1`. The
@@ -737,10 +803,21 @@ by the freeze record. It MUST NOT establish the freeze retroactively.
 
 [RFC8785]: https://www.rfc-editor.org/rfc/rfc8785
 
-After the freeze, these canonical bytes MUST NOT be rewritten under the same
-goal ID. Any semantic change MUST publish a new versioned contract and stable
-goal ID, preserve the prior contract and digest, define migration and
-compatibility treatment, and receive a new independent review and freeze.
+After the first conforming schema-v3 artifact is published, these canonical
+bytes MUST NOT be rewritten under the same goal ID. Any later semantic change
+MUST publish a new versioned contract and stable goal ID, preserve the prior
+contract and digest, define migration and compatibility treatment, and receive
+a new independent review and freeze.
+
+Before the first conforming schema-v3 artifact is published, a
+source-confirmed cryptographic or construction defect MAY be corrected by a
+superseding patch release under the same goal ID only when no conforming
+artifact or migration exists; the earlier bytes, tag, review, and freeze remain
+immutable historical evidence; the correction only makes an already required
+trust relation constructible without broadening the goal; compatibility
+treatment explicitly preserves version-1 and version-2 behavior and rejects
+and regenerates experimental schema-v3 artifacts; and the replacement receives
+a fresh independent exact-byte review and freeze.
 
 Generated catalogs, compatibility sets, receipts, and release reports MUST be
 deterministic and digest-bound. Publishing a new artifact MUST NOT mutate,

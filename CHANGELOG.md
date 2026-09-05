@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.5.5 - 2026-09-06
+
+### Fixed
+
+- Replaced circular authorization-record receipt bindings with stable forward
+  references and independently pinned final verification.
+
 ## 1.5.4 - 2026-09-05
 
 ### Added
