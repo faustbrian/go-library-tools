@@ -1,6 +1,7 @@
 package cohesion
 
 import (
+	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
@@ -383,6 +384,53 @@ func TestAggregateRejectsModuleFromAnotherRepository(t *testing.T) {
 	}
 }
 
+func TestAggregateRejectsNonReleasableModuleFromAnotherRepository(t *testing.T) {
+	root, inputsPath, identity := writeValidAggregateInputs(t)
+	projectionPath := filepath.Join(root, "repository.json")
+	data, err := os.ReadFile(projectionPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var projection aggregateEngineeringEnvelope
+	if err := json.Unmarshal(data, &projection); err != nil {
+		t.Fatal(err)
+	}
+	projection.Modules[0].Repository = "github.com/faustbrian/go-other"
+	projection.Modules[0].ModulePath = "example.com/analysis-coverage"
+	projection.Modules[0].Kind = "fixture"
+	projection.Modules[0].Releasable = false
+	projection.Modules[0].Cohesion = nil
+	data, err = json.Marshal(projection)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(projectionPath, data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	manifestData, err := os.ReadFile(inputsPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var inputs aggregateInputManifest
+	if err := json.Unmarshal(manifestData, &inputs); err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(data)
+	inputs.Repositories[0].SHA256 = hex.EncodeToString(digest[:])
+	manifestData, err = json.Marshal(inputs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(inputsPath, manifestData, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := Aggregate(inputsPath, identity); err == nil || !strings.Contains(err.Error(), "module repository identity") {
+		t.Fatalf("Aggregate() error = %v, want non-releasable module repository identity rejection", err)
+	}
+}
+
 func TestAggregateRejectsRepositoryProjectionWithoutModules(t *testing.T) {
 	root, inputsPath, identity := writeValidAggregateInputs(t)
 	projectionPath := filepath.Join(root, "repository.json")
@@ -464,6 +512,73 @@ func TestAggregateRejectsModulePathOutsideRepository(t *testing.T) {
 
 	if _, err := Aggregate(inputsPath, identity); err == nil || !strings.Contains(err.Error(), "module path identity") {
 		t.Fatalf("Aggregate() error = %v, want module-path identity rejection", err)
+	}
+}
+
+func TestAggregateAllowsNonReleasableModulePathsOutsideRepository(t *testing.T) {
+	root, inputsPath, identity := writeValidAggregateInputs(t)
+	projectionPath := filepath.Join(root, "repository.json")
+	data, err := os.ReadFile(projectionPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var projection aggregateEngineeringEnvelope
+	if err := json.Unmarshal(data, &projection); err != nil {
+		t.Fatal(err)
+	}
+	variants := []struct {
+		directory  string
+		modulePath string
+		kind       string
+	}{
+		{directory: "testdata/coverage", modulePath: "example.com/analysis-coverage", kind: "fixture"},
+		{directory: "benchmarks/load", modulePath: "example.com/analysis-benchmark", kind: "benchmark harness"},
+	}
+	for _, variant := range variants {
+		module := projection.Modules[0]
+		module.Directory = variant.directory
+		module.ModulePath = variant.modulePath
+		module.Kind = variant.kind
+		module.Releasable = false
+		module.Cohesion = nil
+		projection.Modules = append(projection.Modules, module)
+	}
+	data, err = json.Marshal(projection)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(projectionPath, data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	manifestData, err := os.ReadFile(inputsPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var inputs aggregateInputManifest
+	if err := json.Unmarshal(manifestData, &inputs); err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(data)
+	inputs.Repositories[0].SHA256 = hex.EncodeToString(digest[:])
+	manifestData, err = json.Marshal(inputs)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(inputsPath, manifestData, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	artifacts, err := Aggregate(inputsPath, identity)
+	if err != nil {
+		t.Fatalf("Aggregate() error = %v, want fixture module accepted", err)
+	}
+	for _, variant := range variants {
+		if !bytes.Contains(artifacts.EngineeringJSON, []byte(`"module_path": "`+variant.modulePath+`"`)) {
+			t.Fatalf("engineering catalog omitted %s module outside repository namespace", variant.kind)
+		}
+		if bytes.Contains(artifacts.ConsumerJSON, []byte(variant.modulePath)) {
+			t.Fatalf("consumer catalog included non-releasable %s module", variant.kind)
+		}
 	}
 }
 

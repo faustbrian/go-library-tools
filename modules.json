@@ -11,7 +11,7 @@
       "purpose": "Strict shared repository tooling for independently released Go libraries.",
       "lifecycle": "stable",
       "releasable": true,
-      "version": "1.5.1",
+      "version": "1.5.2",
       "tag_prefix": "v",
       "gates": {
         "api_compatibility": false,
