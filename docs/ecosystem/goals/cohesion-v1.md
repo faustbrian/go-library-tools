@@ -299,19 +299,32 @@ Terminal states require these exact evidence kinds:
 | any dimension `blocked` | `blocked-decision` for that dimension |
 | any dimension `not-applicable` | `not-applicable-decision` for that dimension |
 
+The evidence-kind set is closed to `source-acceptance`, `gate-attestation`,
+`release-attestation`, `blocked-decision`, and `not-applicable-decision`.
 An evidence kind for one row MUST NOT satisfy another row. A `not-started` or
 `in-progress` dimension is non-terminal and MUST NOT cite terminal evidence as
 if it had completed.
 
-A terminal evidence receipt MUST bind the goal ID and requirements digest, the
-exact repository and module, exactly one dimension, source revision, evidence
-kind, artifact identities and digests, verifier identity and checksum, exact Go
-toolchain, gate-policy digest, exact reverse-consumer revisions, and a
+Each evidence reference MUST bind one tracked repository-relative receipt path,
+the receipt file's SHA-256, and exactly one entry ID. A terminal evidence
+receipt MUST bind the goal ID and requirements digest, the exact repository and
+module, exactly one dimension, source revision, evidence kind, artifact
+identities and digests, verifier identity and checksum, exact Go toolchain,
+gate-policy identity and digest, exact reverse-consumer revisions, and a
 deterministic complete applicable-input fingerprint. It MUST also bind the
 sorted per-file applicable-input manifest, its digest, and the reason each
 input category is included. Evidence paths MUST be bounded, tracked,
 repository-relative regular files and MUST NOT be symlinks. Declared and actual
 digests MUST match.
+
+The verifier and gate policy MUST use immutable identities and digests supplied
+by the Cohesion coordinator through the canonical source lock and aggregate
+inputs, independently of a receipt or projection being verified.
+The dimension fingerprint MUST normalize the module manifest once, retaining
+every non-delivery field, `cohesion.integration_roles`, the goal ID, and the
+requirements digest while omitting only the derived goal status, the three
+dimension statuses, and delivery evidence references. Receipt files MUST also
+be excluded so no status or receipt can validate or invalidate itself.
 
 A current terminal claim MUST be rejected when any applicable source, test,
 dependency, build, toolchain, policy, API, specification, documentation, or
@@ -320,6 +333,8 @@ only when recomputation proves that the complete applicable-input fingerprint
 is unchanged. Status fields and receipt files MUST NOT validate or invalidate
 the evidence they report.
 
+The implementation, hardening, and release dimension-state enum is exactly
+`not-started`, `in-progress`, `blocked`, `not-applicable`, and `verified`.
 Each schema-v3 module's goal-status enum is exactly `not-started`,
 `in-progress`, `blocked`, `complete`, and `not-applicable`. Its goal object MUST
 be non-null and match the canonical goal ID and requirements digest. The module
@@ -354,15 +369,17 @@ delta or recorded release blocker MUST NOT by itself prevent Cohesion
 completion when implementation and hardening meet the completion rule.
 
 A verified release state MUST bind the peeled source revision, Cohesion-bearing
-module version and its derived matching tag, release manifest and checksum set,
-published artifact digests, and exact clean-consumer result. A version or tag
+module version and its exact tag derived through the manifest-declared module
+identity and tag prefix, release-manifest and checksum-set digests, published
+artifact digests, and exact clean-consumer input and result. A version or tag
 name alone is insufficient. An older stable release MUST NOT prove a later
 Cohesion change.
 
-Every truthful non-terminal release state MUST remain visible in the
-residual/release-blocker register and be handed to the ordered downstream
-release work. A later release receipt and catalog refresh MAY report delivery
-without reopening or invalidating an already completed Cohesion goal.
+Every truthful non-terminal release state and every blocked release state MUST
+remain visible in the residual/release-blocker register and be handed to the
+ordered downstream release work. A later release receipt and catalog refresh
+MAY report delivery without reopening or invalidating an already completed
+Cohesion goal.
 
 Each such register entry MUST identify the repository and module, the release
 dimension, its exact current state, any blocking condition, the owner, and the
@@ -400,9 +417,10 @@ The delivery MUST include regression evidence that:
   unreferenced members.
 
 The final aggregate MUST recompute source-backed evidence from clean read-only
-checkouts. It MUST NOT establish truth by comparing values supplied by the same
-projection or by trusting an internally consistent manifest and bundle without
-the independent source-lock binding.
+checkouts with the independently locked verifier and gate policy. It MUST NOT
+establish truth by comparing values supplied by the same projection or by
+trusting an internally consistent manifest and bundle without the independent
+source-lock binding.
 
 ## Immutable Identity, Versioning, And Digests
 
@@ -411,11 +429,14 @@ requirements digest is the lowercase SHA-256 of the exact canonical bytes of
 this file. Released tooling that validates this goal MUST embed both the exact
 goal ID and requirements digest and MUST reject another ID or digest.
 
-The canonical contract MUST be independently reviewed before its source tag and
-digest are frozen. The freeze record MUST bind the exact source commit,
-immutable semantic-version tag, contract path, and requirements digest. Public
-catalogs and evidence MUST cite that immutable identity; a default-branch path
-alone is not a compatibility contract.
+The canonical contract MUST receive an accepted independent review with no
+unresolved findings before its source tag and digest are frozen. The freeze
+record MUST bind the exact source commit, immutable semantic-version tag,
+contract path, and requirements digest. The tag MUST peel to that source commit,
+and the recorded requirements digest MUST equal the SHA-256 of the contract at
+that path in the tagged commit. Public catalogs and evidence MUST cite that
+immutable identity; a default-branch path alone is not a compatibility
+contract.
 
 After the freeze, these canonical bytes MUST NOT be rewritten under the same
 goal ID. Any semantic change MUST publish a new versioned contract and stable
