@@ -281,6 +281,14 @@ The Cohesion goal is complete only when:
 - Cohesion was achieved without creating a framework, umbrella dependency,
   service container, global runtime, or hidden magic.
 
+The coordinator MUST publish a final report with an acceptance matrix that has
+one row for every Phase 1 through Phase 6 requirement and every completion
+criterion above. Each row MUST bind its immutable evidence and the current
+canonical source-lock revision and digest. The goal MUST NOT be archived while
+any row is missing, failed, stale, or unresolved. A schema-based phase or
+completion manifest MUST NOT replace this reviewed coordinator report or be
+added to standalone module schemas.
+
 ## Evidence And Completion Semantics
 
 Implementation, hardening, and release are independent delivery dimensions.
@@ -333,13 +341,43 @@ its digest, issuer and reviewer identities, and an accepted outcome. Final
 aggregation MUST resolve and cross-check that record independently of the
 receipt and projection.
 
-The Cohesion coordinator MUST publish an immutable digest-bound authorization
-registry independently of repository receipts and projections. The registry
-MUST enumerate every accepted decision or review record and release
-attestation, its issuer, reviewer or verifier identity, accepted outcome, and
-digest. A `release-attestation` MUST bind its matching authorization entry.
-Final aggregation MUST independently authenticate the registry and verify each
-selected authorization, identity, outcome, and digest.
+The Cohesion coordinator MUST publish the closed version-1 authorization
+registry at `release/cohesion-authorizations.json`, independently of repository
+receipts and projections. Its versioned schema identity is
+`schema/cohesion-authorization-registry-v1.schema.json`.
+The registry MUST contain only its schema identity and version, goal ID,
+requirements digest, immutable revision, predecessor digest, declared entry
+count, and bounded sorted entries. The canonical source lock and aggregate
+inputs MUST pin its schema identity, exact path, immutable revision, content
+digest, goal ID, and requirements digest before any receipt or projection is
+read.
+
+Each closed registry entry MUST contain one authorization ID, authorization
+subject, record digest, issuer identity, reviewer identity, and verifier
+identity. Its subject MUST bind the goal ID and requirements digest,
+repository, module, dimension, evidence kind, receipt path, receipt SHA-256,
+and entry ID as one tuple, source revision, applicable-input-manifest digest,
+and accepted outcome. Entries MUST sort
+deterministically by authorization ID and then the complete subject tuple. Both
+the authorization ID and subject tuple MUST be unique. The declared count MUST
+equal the entry count, and schema-defined byte, entry-count, string, and
+collection bounds MUST be enforced before allocation.
+
+The first registry snapshot MUST have no predecessor. Every successor MUST bind
+the exact predecessor registry digest and remain a complete snapshot of current
+authorizations. An authorization MUST NOT disappear or change without an
+explicit accepted successor record that names the superseded authorization.
+Applicable current authorizations MUST reconcile exactly with projections and
+the residual/release-blocker register; omission, downgrade, duplication,
+conflict, or silent supersession MUST be rejected. A `release-attestation` MUST
+bind its matching authorization entry.
+
+Final aggregation MUST authenticate the registry solely through the
+coordinator-controlled revision and digest pinned independently by the source
+lock and aggregate inputs. It MUST verify every entry, subject, identity,
+outcome, record digest, receipt binding, and complete current-set reconciliation.
+The registry MUST NOT define or accept signer keys, PKI, certificates, or
+signature algorithms.
 
 The verifier and gate policy MUST use immutable identities and digests supplied
 by the Cohesion coordinator through the canonical source lock and aggregate
@@ -464,6 +502,14 @@ MUST bind one exact package or module path to `adapter`, `domain-owned`, or
 appear at most once. Non-releasable fixtures, examples, benchmarks, harnesses,
 and internal tools MAY omit Cohesion metadata and the array.
 
+`integration_roles` is the sole authority for these classifications. It MUST
+equal the complete reviewed role set. Every emitted adapter or companion
+catalog identity MUST equal exactly one same-role entry, and every
+coordinator-accepted qualifying direct-persistence decision MUST equal one
+`domain-owned` entry. Every target MUST resolve to a manifest module or package
+or an explicit planned engineering identity. Extra, omitted, duplicate,
+conflicting, nonexistent, and wrong-owner targets are invalid.
+
 `domain-owned` is valid only when the domain module owns the persisted semantic
 model and backend behavior; importing a driver alone is insufficient. The
 initial classification audit MUST cover at least `go-audit/postgres`,
@@ -497,7 +543,17 @@ Implementation MUST first prove failures for:
 14. missing, unauthorized, forged, digest-mismatched, or non-accepted decision,
     review, or release authorization; and
 15. a freeze review whose reviewer, source commit, contract digest, outcome, or
-    record digest does not match the freeze record.
+    record digest does not match the freeze record;
+16. a missing, substituted, malformed, oversized, unsorted, wrong-schema, or
+    digest-, revision-, goal-, or predecessor-mismatched authorization registry;
+17. duplicate authorization IDs or subject tuples, conflicting authorizations,
+    silent supersession, an omitted current authorization, or a downgraded
+    accepted blocker;
+18. an authorization whose repository, module, dimension, evidence kind,
+    receipt triple, source revision, input digest, or outcome differs from its
+    receipt or projection; and
+19. an omitted, extra, empty-when-applicable, nonexistent, wrong-owner, or
+    conflicting integration-role target.
 
 Passing characterization and green fixtures MUST cover untouched v1 and v2
 manifests without semantic rewrite; the allowed receipt-and-manifest-only
@@ -505,8 +561,22 @@ descendant with an unchanged dimension fingerprint; a v3 all-not-started
 module; partial progress; blocked implementation or hardening; a complete
 module with non-terminal release; fully verified release evidence; an entirely
 not-applicable module; multiple modules that cannot share evidence; valid
-domain-owned persistence; accepted decision and release authorizations; and
-exact canonical source-lock aggregation.
+domain-owned persistence; accepted decision, review, and release
+authorizations; a valid first authorization registry and successor bound to its
+predecessor; exact canonical source-lock aggregation; and a valid freeze review
+whose reviewer, reviewed source commit and contract digest, accepted no-findings
+outcome, review-record digest, tag peel, and tagged contract bytes all match.
+
+The matrix MUST exercise all 25 implementation-and-hardening state pairs
+crossed with all five release states. It MUST accept or reject all 125 cases
+according to the exact goal-status truth table and release independence, and
+MUST cover matching and missing terminal evidence for each applicable state.
+Authorization-registry schema, decoding, semantic validation, lifecycle,
+substitution, reconciliation, and subject-binding paths MUST be fuzzed. The
+registry tests MUST cover an exact initial pin, exact path/digest/schema
+binding, a valid successor with its predecessor digest, stale or unknown
+predecessors, mutation or identity reuse, duplicate or conflicting subjects,
+wrong-goal and cross-binding cases, and source-lock/registry substitution.
 
 ## Immutable Identity, Versioning, And Digests
 
@@ -525,6 +595,12 @@ commit, and the recorded requirements digest MUST equal the SHA-256 of the
 contract at that path in the tagged commit. Public catalogs and evidence MUST
 cite that immutable identity; a default-branch path alone is not a
 compatibility contract.
+
+The directly bound independent accepted review record is the bootstrap trust
+root for this contract freeze. The authorization registry MUST NOT authorize
+the canonical contract freeze because this contract defines that registry. The
+first later registry MAY mirror and cross-bind the freeze review, but it MUST
+NOT establish the freeze retroactively.
 
 After the freeze, these canonical bytes MUST NOT be rewritten under the same
 goal ID. Any semantic change MUST publish a new versioned contract and stable
