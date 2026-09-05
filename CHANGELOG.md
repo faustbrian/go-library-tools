@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.5.3 - 2026-09-05
+
+### Fixed
+
+- Bound GitHub release creation to the workflow repository so the static
+  publication job does not depend on an unavailable Git checkout.
+
 ## 1.5.2 - 2026-09-05
 
 ### Fixed

@@ -503,6 +503,13 @@ func TestReleaseWorkflowPublishesVerifiedCohesionCatalogs(t *testing.T) {
 			t.Errorf("static publisher lacks %q", required)
 		}
 	}
+	_, releaseCreate, found := strings.Cut(publish, "gh release create")
+	if !found {
+		t.Fatal("static publisher lacks release creation command")
+	}
+	if !strings.Contains(releaseCreate, `--repo "${GITHUB_REPOSITORY}"`) {
+		t.Error("static publisher must bind release creation to the workflow repository")
+	}
 	for _, forbidden := range []string{
 		"golib cohesion",
 		"go run",
