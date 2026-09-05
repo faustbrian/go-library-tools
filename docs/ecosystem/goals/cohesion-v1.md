@@ -305,10 +305,13 @@ if it had completed.
 
 A terminal evidence receipt MUST bind the goal ID and requirements digest, the
 exact repository and module, exactly one dimension, source revision, evidence
-kind, artifact identities and digests, verifier identity, toolchain and policy,
-and a deterministic complete applicable-input fingerprint. Evidence paths MUST
-be bounded, tracked, repository-relative regular files and MUST NOT be
-symlinks. Declared and actual digests MUST match.
+kind, artifact identities and digests, verifier identity and checksum, exact Go
+toolchain, gate-policy digest, exact reverse-consumer revisions, and a
+deterministic complete applicable-input fingerprint. It MUST also bind the
+sorted per-file applicable-input manifest, its digest, and the reason each
+input category is included. Evidence paths MUST be bounded, tracked,
+repository-relative regular files and MUST NOT be symlinks. Declared and actual
+digests MUST match.
 
 A current terminal claim MUST be rejected when any applicable source, test,
 dependency, build, toolchain, policy, API, specification, documentation, or
@@ -317,12 +320,28 @@ only when recomputation proves that the complete applicable-input fingerprint
 is unchanged. Status fields and receipt files MUST NOT validate or invalidate
 the evidence they report.
 
-The Cohesion goal is complete only when implementation and hardening are each
-verified or supported by a matching audited not-applicable decision, and at
-least one of those dimensions is verified. The goal is not applicable only
-when both implementation and hardening are supported by matching
-not-applicable decisions. A blocked claim requires a matching dimension-scoped
-blocker decision and an actual impasse.
+Each schema-v3 module's goal-status enum is exactly `not-started`,
+`in-progress`, `blocked`, `complete`, and `not-applicable`. Its goal object MUST
+be non-null and match the canonical goal ID and requirements digest. The module
+goal status MUST satisfy exactly one of these relations:
+
+- `complete` if and only if implementation and hardening are each `verified`
+  or `not-applicable`, and at least one is `verified`;
+- `not-applicable` if and only if implementation and hardening are both
+  `not-applicable` with matching decisions;
+- `blocked` if and only if the goal is not complete and implementation or
+  hardening is `blocked` with a matching decision;
+- `not-started` if and only if the goal is neither complete nor blocked,
+  implementation and hardening are each `not-started` or `not-applicable`, and
+  at least one is `not-started`; and
+- `in-progress` if and only if the goal is not complete, blocked, or
+  not-started and at least one of implementation or hardening is `in-progress`
+  or `verified`.
+
+Release state MUST NOT affect this module goal-status derivation. In
+particular, a blocked release MUST NOT make the module goal `blocked`.
+Ecosystem-wide completion remains subject to every phase and completion
+criterion in this contract; a terminal module goal does not establish it.
 
 Documentation-only evidence MUST NOT be presented as proof of runtime,
 compatibility, hardening, or release behavior. Expensive evidence MAY be reused
@@ -335,14 +354,19 @@ delta or recorded release blocker MUST NOT by itself prevent Cohesion
 completion when implementation and hardening meet the completion rule.
 
 A verified release state MUST bind the peeled source revision, Cohesion-bearing
-version and tag, release manifest and checksum set, published artifact digests,
-and exact clean-consumer result. A version or tag name alone is insufficient.
-An older stable release MUST NOT prove a later Cohesion change.
+module version and its derived matching tag, release manifest and checksum set,
+published artifact digests, and exact clean-consumer result. A version or tag
+name alone is insufficient. An older stable release MUST NOT prove a later
+Cohesion change.
 
 Every truthful non-terminal release state MUST remain visible in the
 residual/release-blocker register and be handed to the ordered downstream
 release work. A later release receipt and catalog refresh MAY report delivery
 without reopening or invalidating an already completed Cohesion goal.
+
+Each such register entry MUST identify the repository and module, the release
+dimension, its exact current state, any blocking condition, the owner, and the
+next action or removal condition.
 
 ## Residual Exceptions
 
