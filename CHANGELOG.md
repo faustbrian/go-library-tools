@@ -11,6 +11,8 @@ All notable changes to this project are documented in this file.
 - Defined the pre-freeze `golib-cohesion-v1` consumer contract for the six-phase
   outcome, delivery evidence, completion, release reporting, residual
   exceptions, and future schema handoff.
+- Defined non-self-referential authorization-registry revisions and distinct
+  delivery and integration-role authorization subjects.
 - Mirrored the immutable v1.5.3 consumer and engineering catalogs into the
   versioned ecosystem documentation tree.
 
