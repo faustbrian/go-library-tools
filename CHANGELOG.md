@@ -4,8 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.5.4 - 2026-09-05
+
 ### Added
 
+- Defined the pre-freeze `golib-cohesion-v1` consumer contract for the six-phase
+  outcome, delivery evidence, completion, release reporting, residual
+  exceptions, and future schema handoff.
 - Mirrored the immutable v1.5.3 consumer and engineering catalogs into the
   versioned ecosystem documentation tree.
 
