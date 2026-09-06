@@ -203,6 +203,7 @@ jobs:
           [[ "${runner_uid}" != '0' && "${runner_uid}" != '65534' ]]
           [[ "${runner_gid}" != '0' && "${runner_gid}" != '65534' ]]
           test -x /usr/bin/setpriv
+          test -x /usr/bin/sudo
           sudo -n systemd-run --quiet --no-block --service-type=exec \
             --unit="${unit}" \
             --property=Delegate=yes \
@@ -212,7 +213,7 @@ jobs:
             --property="Group=${runner_gid}" \
             --property="StandardOutput=append:${GITHUB_WORKSPACE}/${log}" \
             --property="StandardError=append:${GITHUB_WORKSPACE}/${log}" \
-            +/usr/bin/setpriv \
+            /usr/bin/sudo -n /usr/bin/setpriv \
             --clear-groups \
             --reuid="${runner_uid}" \
             --regid="${runner_gid}" \
