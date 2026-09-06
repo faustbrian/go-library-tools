@@ -119,6 +119,31 @@ func TestBoundedDiagnosticCapsRetainedOutput(t *testing.T) {
 	}
 }
 
+func TestValidAppArmorProfileName(t *testing.T) {
+	t.Parallel()
+
+	for _, test := range []struct {
+		name  string
+		value string
+		want  bool
+	}{
+		{name: "amd64", value: "golib-schema-v3-1-1-amd64", want: true},
+		{name: "arm64", value: "golib-schema-v3-1-1-arm64", want: true},
+		{name: "missing suffix", value: "golib-schema-v3-"},
+		{name: "wrong prefix", value: "schema-v3-1-1-amd64"},
+		{name: "path separator", value: "golib-schema-v3-1/1-amd64"},
+		{name: "uppercase", value: "golib-schema-v3-1-1-AMD64"},
+		{name: "too long", value: "golib-schema-v3-" + strings.Repeat("a", 112)},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+			if got := validAppArmorProfileName(test.value); got != test.want {
+				t.Fatalf("validAppArmorProfileName(%q)=%t want=%t", test.value, got, test.want)
+			}
+		})
+	}
+}
+
 func TestProbeLeaseCompletesBreak(t *testing.T) {
 	if os.Getenv("COHESION_PROBE_FOCUSED") != "lease" {
 		t.Skip("requires the opt-in hosted Linux lease probe")
@@ -139,8 +164,8 @@ func TestMain(testingMain *testing.M) {
 
 func runProbe() {
 	var err error
-	if len(os.Args) == 4 && os.Args[1] == "delegated-launcher" {
-		err = launchDelegatedProbe(os.Args[2], os.Args[3])
+	if len(os.Args) == 5 && os.Args[1] == "delegated-launcher" {
+		err = launchDelegatedProbe(os.Args[2], os.Args[3], os.Args[4])
 		if err != nil {
 			fmt.Fprintln(os.Stderr, "unsupported:", err)
 			os.Exit(1)
@@ -175,7 +200,7 @@ func runProbe() {
 	}
 }
 
-func launchDelegatedProbe(uidText, gidText string) error {
+func launchDelegatedProbe(uidText, gidText, appArmorProfile string) error {
 	expectedUID, err := parseLauncherID("uid", uidText)
 	if err != nil {
 		return err
@@ -233,12 +258,28 @@ func launchDelegatedProbe(uidText, gidText string) error {
 	if value, ok := statusField(status, "NoNewPrivs:"); !ok || value != "0" {
 		return fmt.Errorf("launcher no_new_privs=%q", value)
 	}
+	if !validAppArmorProfileName(appArmorProfile) {
+		return fmt.Errorf("invalid AppArmor profile name %q", appArmorProfile)
+	}
 	executable, err := os.Executable()
 	if err != nil {
 		return fmt.Errorf("resolve probe executable: %w", err)
 	}
 	fmt.Printf("launcher-identity=uid:%d gid:%d groups:empty active-capabilities:empty bounding:namespace-only no-new-privs:0\n", expectedUID, expectedGID)
-	return unix.Exec(executable, []string{executable}, []string{})
+	return unix.Exec(executable, []string{executable}, []string{"PROBE_APPARMOR_PROFILE=" + appArmorProfile})
+}
+
+func validAppArmorProfileName(name string) bool {
+	const prefix = "golib-schema-v3-"
+	if !strings.HasPrefix(name, prefix) || len(name) == len(prefix) || len(name) > 128 {
+		return false
+	}
+	for _, character := range name {
+		if character != '-' && (character < '0' || character > '9') && (character < 'a' || character > 'z') {
+			return false
+		}
+	}
+	return true
 }
 
 func dropLauncherCapabilities() error {
@@ -346,6 +387,32 @@ func probeKernelAndIdentity() (string, error) {
 			return "", fmt.Errorf("%s must be empty, got %q", field, value)
 		}
 	}
+	profile := os.Getenv("PROBE_APPARMOR_PROFILE")
+	if !validAppArmorProfileName(profile) {
+		return "", fmt.Errorf("invalid expected AppArmor profile %q", profile)
+	}
+	labelBytes, err := os.ReadFile("/proc/self/attr/current")
+	if err != nil {
+		return "", fmt.Errorf("read AppArmor profile label: %w", err)
+	}
+	label := strings.TrimSpace(string(labelBytes))
+	if label != profile+" (unconfined)" {
+		return "", fmt.Errorf("AppArmor profile label=%q want=%q", label, profile+" (unconfined)")
+	}
+	restrictionBytes, err := os.ReadFile("/proc/sys/kernel/apparmor_restrict_unprivileged_userns")
+	if err != nil {
+		return "", fmt.Errorf("read AppArmor user namespace restriction: %w", err)
+	}
+	restriction := strings.TrimSpace(string(restrictionBytes))
+	if restriction != "1" {
+		return "", fmt.Errorf("AppArmor user namespace restriction=%q want=1", restriction)
+	}
+	seccomp, seccompOK := statusField(string(status), "Seccomp:")
+	filters, filtersOK := statusField(string(status), "Seccomp_filters:")
+	if !seccompOK || seccomp != "0" || !filtersOK || filters != "0" {
+		return "", fmt.Errorf("inherited seccomp mode=%q filters=%q want=0/0", seccomp, filters)
+	}
+	fmt.Printf("host-security=apparmor-profile:%s apparmor-userns-restriction:%s seccomp:%s seccomp-filters:%s\n", profile, restriction, seccomp, filters)
 	return release, nil
 }
 

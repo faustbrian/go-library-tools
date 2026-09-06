@@ -11,6 +11,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Attached a task-scoped AppArmor user-namespace profile to the hosted Linux
+  probe while preserving unprivileged execution and fail-closed cleanup.
 - Corrected hosted Linux lease-break validation to accept the kernel-reported
   unlock target while still requiring explicit release and final-state proof.
 - Cleared inherited supplementary groups before the unprivileged schema-v3
