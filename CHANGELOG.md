@@ -11,6 +11,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Corrected hosted Linux lease-break validation to accept the kernel-reported
+  unlock target while still requiring explicit release and final-state proof.
 - Added exact module selection to local and hosted release checks and rehearsals
   so independently versioned modules are not blocked by an already released
   sibling tag.
