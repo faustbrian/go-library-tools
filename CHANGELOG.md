@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added a fail-closed, manually dispatched Linux capability probe for bounded
+  amd64 and arm64 schema-v3 host feasibility checks.
+
 ### Fixed
 
 - Added exact module selection to local and hosted release checks and rehearsals
