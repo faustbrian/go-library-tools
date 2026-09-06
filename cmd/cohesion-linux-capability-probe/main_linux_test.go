@@ -40,10 +40,11 @@ const (
 	bpfJumpEqual        = 0x15
 	bpfReturn           = 0x06
 
-	securebitsLocked            = 1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<5 | 1<<6 | 1<<7
-	childDiagnosticLimit        = 4096
-	launcherActiveCapabilitySet = "0000000000000040"
-	namespaceCapabilityBoundSet = "0000000000201140"
+	securebitsLocked             = 1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<5 | 1<<6 | 1<<7
+	childDiagnosticLimit         = 4096
+	launcherActiveCapabilitySet  = "0000000000000040"
+	namespaceActiveCapabilitySet = "0000000000201100"
+	namespaceCapabilityBoundSet  = "0000000000201140"
 )
 
 var landlockHandled = uint64(
@@ -870,13 +871,26 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 	if strings.TrimSpace(string(setgroups)) != "deny" {
 		return fmt.Errorf("setgroups=%q", setgroups)
 	}
+	statusBytes, err := os.ReadFile("/proc/self/status")
+	if err != nil {
+		return fmt.Errorf("read namespace capability state: %w", err)
+	}
+	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapAmb:"} {
+		value, ok := statusField(string(statusBytes), field)
+		if !ok || value != namespaceActiveCapabilitySet {
+			return fmt.Errorf("namespace initial %s=%q want %q", field, value, namespaceActiveCapabilitySet)
+		}
+	}
+	if value, ok := statusField(string(statusBytes), "CapBnd:"); !ok || value != namespaceCapabilityBoundSet {
+		return fmt.Errorf("namespace initial CapBnd:=%q want %q", value, namespaceCapabilityBoundSet)
+	}
 	if err := probeNamespaceMountAndNetwork(os.Getenv("PROBE_MOUNT_ROOT")); err != nil {
 		return err
 	}
 	if err := dropCapabilities(); err != nil {
 		return err
 	}
-	statusBytes, err := os.ReadFile("/proc/self/status")
+	statusBytes, err = os.ReadFile("/proc/self/status")
 	if err != nil {
 		return err
 	}
