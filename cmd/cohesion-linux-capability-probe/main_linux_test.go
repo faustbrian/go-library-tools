@@ -245,12 +245,15 @@ func probeStaticExecutable(parent context.Context) error {
 	}
 	defer func() { _ = stopAndReap(command) }()
 	_ = right.Close()
-	if err := left.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
-		return err
-	}
-	if _, err := left.Read(make([]byte, 1)); err != nil {
+	data := make([]byte, 1)
+	count, _, err := recvmsgBounded(int(left.Fd()), data, nil, 5*time.Second)
+	if err != nil {
 		_ = stopAndReap(command)
 		return fmt.Errorf("static ELF child handshake: %w", err)
+	}
+	if count != 1 {
+		_ = stopAndReap(command)
+		return fmt.Errorf("static ELF child handshake bytes=%d", count)
 	}
 	if err := command.Wait(); err != nil {
 		return fmt.Errorf("static ELF child: %w", err)
@@ -278,9 +281,6 @@ func probePIDFDCredentials(parent context.Context) error {
 	}
 	defer func() { _ = stopAndReap(command) }()
 	_ = sender.Close()
-	if err := receiver.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
-		return err
-	}
 	data := make([]byte, 1)
 	control := make([]byte, unix.CmsgSpace(4))
 	count, controlCount, recvErr := recvmsgBounded(int(receiver.Fd()), data, control, 5*time.Second)
@@ -609,9 +609,6 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 		return err
 	}
 	_ = childSock.Close()
-	if err := parentSock.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
-		return err
-	}
 	message := make([]byte, 16)
 	control := make([]byte, unix.CmsgSpace(4))
 	n, controlN, recvErr := recvmsgBounded(int(parentSock.Fd()), message, control, 5*time.Second)
