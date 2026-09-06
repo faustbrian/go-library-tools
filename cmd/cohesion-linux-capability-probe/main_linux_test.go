@@ -1050,8 +1050,11 @@ func bringLoopbackUp() error {
 	if err := unix.IoctlIfreq(socket, unix.SIOCGIFFLAGS, request); err != nil {
 		return fmt.Errorf("read loopback flags: %w", err)
 	}
-	request.SetUint16(request.Uint16() | unix.IFF_UP)
-	if err := unix.IoctlIfreq(socket, unix.SIOCSIFFLAGS, request); err != nil {
+	loopback, err := net.InterfaceByName("lo")
+	if err != nil {
+		return fmt.Errorf("resolve loopback interface: %w", err)
+	}
+	if err := setLoopbackUpNetlink(loopback.Index); err != nil {
 		return fmt.Errorf("bring loopback up: %w", err)
 	}
 	if err := unix.IoctlIfreq(socket, unix.SIOCGIFFLAGS, request); err != nil {
@@ -1059,6 +1062,59 @@ func bringLoopbackUp() error {
 	}
 	if request.Uint16()&(unix.IFF_LOOPBACK|unix.IFF_UP) != unix.IFF_LOOPBACK|unix.IFF_UP {
 		return fmt.Errorf("loopback flags=%#x", request.Uint16())
+	}
+	return nil
+}
+
+func setLoopbackUpNetlink(index int) error {
+	const sequence = 1
+	if index <= 0 {
+		return fmt.Errorf("invalid loopback interface index=%d", index)
+	}
+	name := []byte{'l', 'o', 0}
+	attributeLength := unix.SizeofRtAttr + len(name)
+	messageLength := unix.SizeofNlMsghdr + unix.SizeofIfInfomsg + (attributeLength+3)&^3
+	message := make([]byte, messageLength)
+	*(*unix.NlMsghdr)(unsafe.Pointer(&message[0])) = unix.NlMsghdr{
+		Len: uint32(messageLength), Type: unix.RTM_NEWLINK,
+		Flags: unix.NLM_F_REQUEST | unix.NLM_F_ACK, Seq: sequence,
+	}
+	*(*unix.IfInfomsg)(unsafe.Pointer(&message[unix.SizeofNlMsghdr])) = unix.IfInfomsg{
+		Family: unix.AF_UNSPEC, Index: int32(index), Flags: unix.IFF_UP, Change: unix.IFF_UP,
+	}
+	attributeOffset := unix.SizeofNlMsghdr + unix.SizeofIfInfomsg
+	*(*unix.RtAttr)(unsafe.Pointer(&message[attributeOffset])) = unix.RtAttr{
+		Len: uint16(attributeLength), Type: unix.IFLA_IFNAME,
+	}
+	copy(message[attributeOffset+unix.SizeofRtAttr:], name)
+
+	socket, err := unix.Socket(unix.AF_NETLINK, unix.SOCK_RAW|unix.SOCK_CLOEXEC|unix.SOCK_NONBLOCK, unix.NETLINK_ROUTE)
+	if err != nil {
+		return fmt.Errorf("open route netlink socket: %w", err)
+	}
+	defer unix.Close(socket)
+	if err := unix.Bind(socket, &unix.SockaddrNetlink{Family: unix.AF_NETLINK}); err != nil {
+		return fmt.Errorf("bind route netlink socket: %w", err)
+	}
+	if err := unix.Sendto(socket, message, 0, &unix.SockaddrNetlink{Family: unix.AF_NETLINK}); err != nil {
+		return fmt.Errorf("send RTM_NEWLINK: %w", err)
+	}
+	reply := make([]byte, 4096)
+	replyN, _, err := recvmsgBounded(socket, reply, nil, 5*time.Second)
+	if err != nil {
+		return fmt.Errorf("receive RTM_NEWLINK acknowledgement: %w", err)
+	}
+	if replyN < unix.SizeofNlMsghdr+4 {
+		return fmt.Errorf("short RTM_NEWLINK acknowledgement: bytes=%d", replyN)
+	}
+	header := *(*unix.NlMsghdr)(unsafe.Pointer(&reply[0]))
+	if header.Type != unix.NLMSG_ERROR || header.Seq != sequence || header.Pid != 0 ||
+		header.Len < uint32(unix.SizeofNlMsghdr+4) || header.Len != uint32(replyN) {
+		return fmt.Errorf("invalid RTM_NEWLINK acknowledgement: type=%d seq=%d pid=%d length=%d bytes=%d", header.Type, header.Seq, header.Pid, header.Len, replyN)
+	}
+	code := *(*int32)(unsafe.Pointer(&reply[unix.SizeofNlMsghdr]))
+	if code != 0 {
+		return unix.Errno(-code)
 	}
 	return nil
 }
