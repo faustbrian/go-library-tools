@@ -483,8 +483,8 @@ func probeLease(parent context.Context, root string) error {
 			if leaseErr != nil {
 				return fmt.Errorf("lease state after break: %w", leaseErr)
 			}
-			if lease != unix.F_RDLCK {
-				return fmt.Errorf("lease state after break=%d want=%d", lease, unix.F_RDLCK)
+			if lease != unix.F_UNLCK {
+				return fmt.Errorf("lease break target=%d want=%d", lease, unix.F_UNLCK)
 			}
 			break
 		} else if !errors.Is(err, unix.EAGAIN) || time.Now().After(deadline) {

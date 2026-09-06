@@ -157,6 +157,11 @@ jobs:
           log=".verification/cohesion/linux-probe-${EXPECTED_ARCH}.log"
           printf 'repository=%s\nrun_id=%s\nrun_attempt=%s\nevent=%s\nworkflow_ref=%s\nworkflow_sha=%s\nhead_ref=%s\nhead_sha=%s\nexpected_sha=%s\nrunner_os=%s\nrunner_arch=%s\nrunner_image_version=%s\narchitecture=%s\n' \
             "${REPOSITORY}" "${GITHUB_RUN_ID}" "${RUN_ATTEMPT}" "${RUN_EVENT}" "${WORKFLOW_REF}" "${WORKFLOW_SHA}" "${HEAD_REF}" "${HEAD_SHA}" "${EXPECTED_SHA}" "${RUNNER_OS_VALUE}" "${RUNNER_ARCH_VALUE}" "${ImageVersion}" "${EXPECTED_ARCH}" > "${log}"
+          COHESION_PROBE_FOCUSED=lease CGO_ENABLED=1 GOOS=linux GOARCH="${EXPECTED_ARCH}" \
+            GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            GOENV=off GOWORK=off \
+            go test -race -trimpath -buildvcs=false -run '^TestProbeLeaseCompletesBreak$' -count=1 \
+              ./cmd/cohesion-linux-capability-probe | tee -a "${log}"
           CGO_ENABLED=0 GOOS=linux GOARCH="${EXPECTED_ARCH}" \
             GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
             GOENV=off GOWORK=off \
