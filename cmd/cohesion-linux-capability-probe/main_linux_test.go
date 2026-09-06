@@ -18,6 +18,7 @@ import (
 	"strconv"
 	"strings"
 	"syscall"
+	"testing"
 	"time"
 	"unsafe"
 
@@ -75,7 +76,16 @@ type fOwnerEx struct {
 	PID  int32
 }
 
-func main() {
+func TestMain(testingMain *testing.M) {
+	for _, argument := range os.Args[1:] {
+		if strings.HasPrefix(argument, "-test.") {
+			os.Exit(testingMain.Run())
+		}
+	}
+	runProbe()
+}
+
+func runProbe() {
 	var err error
 	switch strings.Join(os.Args[1:], " ") {
 	case "pidfd-sender":

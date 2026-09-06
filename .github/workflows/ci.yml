@@ -160,7 +160,7 @@ jobs:
           CGO_ENABLED=0 GOOS=linux GOARCH="${EXPECTED_ARCH}" \
             GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
             GOENV=off GOWORK=off \
-            go build -trimpath -buildvcs=false -o "${task}/probe" ./cmd/cohesion-linux-capability-probe
+            go test -c -trimpath -buildvcs=false -o "${task}/probe" ./cmd/cohesion-linux-capability-probe
           file "${task}/probe" | tee -a "${log}"
           if readelf --program-headers "${task}/probe" | grep -q INTERP; then
             printf '%s\n' 'probe executable unexpectedly has an interpreter' >&2
