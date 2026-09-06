@@ -136,6 +136,14 @@ func TestMain(testingMain *testing.M) {
 
 func runProbe() {
 	var err error
+	if len(os.Args) == 4 && os.Args[1] == "delegated-launcher" {
+		err = launchDelegatedProbe(os.Args[2], os.Args[3])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "unsupported:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	switch strings.Join(os.Args[1:], " ") {
 	case "pidfd-sender":
 		err = writeByteToFD(3)
@@ -162,6 +170,58 @@ func runProbe() {
 		fmt.Fprintln(os.Stderr, "unsupported:", err)
 		os.Exit(1)
 	}
+}
+
+func launchDelegatedProbe(uidText, gidText string) error {
+	expectedUID, err := parseLauncherID("uid", uidText)
+	if err != nil {
+		return err
+	}
+	expectedGID, err := parseLauncherID("gid", gidText)
+	if err != nil {
+		return err
+	}
+	ruid, euid, suid := unix.Getresuid()
+	rgid, egid, sgid := unix.Getresgid()
+	if ruid != expectedUID || euid != expectedUID || suid != expectedUID ||
+		rgid != expectedGID || egid != expectedGID || sgid != expectedGID {
+		return fmt.Errorf("launcher identity uid=%d/%d/%d gid=%d/%d/%d", ruid, euid, suid, rgid, egid, sgid)
+	}
+	groups, err := os.Getgroups()
+	if err != nil {
+		return fmt.Errorf("read launcher supplementary groups: %w", err)
+	}
+	if len(groups) != 0 {
+		return fmt.Errorf("launcher supplementary groups=%v", groups)
+	}
+	statusBytes, err := os.ReadFile("/proc/self/status")
+	if err != nil {
+		return fmt.Errorf("read launcher capability state: %w", err)
+	}
+	status := string(statusBytes)
+	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapAmb:"} {
+		value, ok := statusField(status, field)
+		if !ok || value != "0000000000000000" {
+			return fmt.Errorf("launcher %s must be empty, got %q", field, value)
+		}
+	}
+	if value, ok := statusField(status, "NoNewPrivs:"); !ok || value != "0" {
+		return fmt.Errorf("launcher no_new_privs=%q", value)
+	}
+	executable, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("resolve probe executable: %w", err)
+	}
+	fmt.Printf("launcher-identity=uid:%d gid:%d groups:empty capabilities:empty no-new-privs:0\n", expectedUID, expectedGID)
+	return unix.Exec(executable, []string{executable}, []string{})
+}
+
+func parseLauncherID(name, value string) (int, error) {
+	parsed, err := strconv.Atoi(value)
+	if err != nil || strconv.Itoa(parsed) != value || parsed <= 0 || parsed == overflowID {
+		return 0, fmt.Errorf("invalid launcher %s %q", name, value)
+	}
+	return parsed, nil
 }
 
 func run(ctx context.Context) (resultErr error) {
