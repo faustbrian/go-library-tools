@@ -13,6 +13,11 @@ on:
         required: false
         type: boolean
         default: false
+      release_module:
+        description: Rehearse exactly one module directory; blank rehearses every module
+        required: false
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -95,11 +100,21 @@ jobs:
 
   release-rehearsal:
     name: Release rehearsal
-    if: github.event_name == 'workflow_dispatch' && inputs.release_rehearsal
+    if: github.event_name == 'workflow_dispatch' && (inputs.release_rehearsal || inputs.release_module != '')
     needs: quality
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     steps:
+      - name: Validate release inputs
+        env:
+          RELEASE_MODULE: ${{ inputs.release_module }}
+          RELEASE_REHEARSAL: ${{ inputs.release_rehearsal }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${RELEASE_MODULE}" && "${RELEASE_REHEARSAL}" != true ]]; then
+            echo 'release_module requires release_rehearsal: true' >&2
+            exit 1
+          fi
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
@@ -112,13 +127,20 @@ jobs:
           node-version: '24.4.1'
           package-manager-cache: false
       - name: Run pre-tag release dry-run
+        env:
+          RELEASE_MODULE: ${{ inputs.release_module }}
         run: |
           set -euo pipefail
           task="$(mktemp -d "${RUNNER_TEMP}/golib-release-rehearsal.XXXXXX")"
           trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
-          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
-            go run ./cmd/golib release dry-run
+          if [[ -n "${RELEASE_MODULE}" ]]; then
+            GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+              go run ./cmd/golib release dry-run --module "${RELEASE_MODULE}"
+          else
+            GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+              go run ./cmd/golib release dry-run
+          fi
       - name: Upload release evidence
         if: always()
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6

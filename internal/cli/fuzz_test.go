@@ -26,6 +26,11 @@ func FuzzModuleSelection(f *testing.F) {
 		if !reflect.DeepEqual(first, second) || errorText(firstErr) != errorText(secondErr) {
 			t.Fatal("module selection is not deterministic")
 		}
+		firstRelease, firstReleaseErr := releaseModuleSelection(args)
+		secondRelease, secondReleaseErr := releaseModuleSelection(args)
+		if firstRelease != secondRelease || errorText(firstReleaseErr) != errorText(secondReleaseErr) {
+			t.Fatal("release module selection is not deterministic")
+		}
 	})
 }
 

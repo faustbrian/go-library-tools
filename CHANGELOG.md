@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Added exact module selection to local and hosted release checks and rehearsals
+  so independently versioned modules are not blocked by an already released
+  sibling tag.
+
 ## 1.5.5 - 2026-09-06
 
 ### Fixed

@@ -65,17 +65,26 @@ fine-grained cross-repository `GOLIB_ROLLOUT_TOKEN` described in the
 parity-reviewed migration rather than an automated upgrade.
 
 Run `golib release check` before preparing a tag and `golib release dry-run`
-against the final source. The dry-run must happen before creating the tag: it
-rejects existing tag identities and verifies each module through a task-owned
-local proxy before running all gates. Releasable modules must use stable
+against the final source. In a repository whose modules release independently,
+pass `--module DIR` to both commands so metadata, tag collision, clean proxy
+consumption, and module gates apply only to that exact module. Repository
+structure and specification validation remain global prerequisites. Omitting
+the selector or passing `--all` selects every releasable module. The dry-run
+must happen before creating the tag. Releasable modules must use stable
 versions, canonical tag prefixes, and all mandatory gates.
 
 For a release candidate on `main`, dispatch the `CI` workflow with
-`release_rehearsal` enabled. The ordinary quality and CodeQL jobs must pass,
-then the release-rehearsal job runs the complete dry-run in GitHub Actions.
-This keeps process-lifecycle and cleanup tests in their isolated CI boundary
-instead of running them on a maintainer workstation. Do not create the tag
-until the workflow's stable `Required` job passes.
+`release_rehearsal` enabled. Set `release_module` to the exact independently
+versioned module directory, or leave it blank for the repository-wide dry-run.
+The ordinary quality and CodeQL jobs must pass, then the release-rehearsal job
+runs the selected complete dry-run in GitHub Actions. This keeps
+process-lifecycle and cleanup tests in their isolated CI boundary instead of
+running them on a maintainer workstation. Do not create the tag until the
+workflow's stable `Required` job passes.
+
+Reusable-workflow consumers must expose a `release_module` dispatch input and
+forward it to `library-ci.yml` before relying on a root-only hosted rehearsal.
+Updating only the tooling pin does not add or wire that caller input.
 
 Consumers can verify an archive with:
 

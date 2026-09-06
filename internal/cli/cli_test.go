@@ -22,7 +22,7 @@ func TestExecuteShowsHelp(t *testing.T) {
 	if code != 0 || stderr.Len() != 0 {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
-	for _, command := range []string{"check", "cohesion check [--json]", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "specification check [--online]", "workflows check", "services cycle", "release dry-run", "upgrade <plan|apply>"} {
+	for _, command := range []string{"check", "cohesion check [--json]", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "specification check [--online]", "workflows check", "services cycle", "release check [--all|--module <directory>]", "release dry-run [--all|--module <directory>]", "upgrade <plan|apply>"} {
 		if !strings.Contains(stdout.String(), command) {
 			t.Errorf("help does not contain %q", command)
 		}

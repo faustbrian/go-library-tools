@@ -1,7 +1,9 @@
 package repository_test
 
 import (
+	"encoding/json"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -9,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/faustbrian/go-library-tools/internal/config"
+	"go.yaml.in/yaml/v3"
 )
 
 var remoteAction = regexp.MustCompile(`(?m)^\s*- uses: ([^./][^@\s]+)@([^\s#]+)`)
@@ -67,6 +70,309 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 	if strings.Contains(content, "packages: read") {
 		t.Fatal("reusable workflow requests package access that consumer callers do not grant")
 	}
+}
+
+func TestReusableWorkflowBuildsReleaseModuleMatrix(t *testing.T) {
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &workflow); err != nil {
+		t.Fatal(err)
+	}
+	input, exists := workflow.On.WorkflowCall.Inputs["release_module"]
+	if !exists || input.Type != "string" || input.Default != "" {
+		t.Fatalf("release_module workflow input = %#v, present = %v", input, exists)
+	}
+	var matrixScript string
+	for _, step := range workflow.Jobs["prepare"].Steps {
+		if step.ID == "modules" {
+			if step.Env["RELEASE_MODULE"] != "${{ inputs.release_module }}" || step.Env["RELEASE_DRY_RUN"] != "${{ inputs.release_dry_run }}" {
+				t.Fatalf("module-matrix environment = %#v", step.Env)
+			}
+			matrixScript = step.Run
+			break
+		}
+	}
+	if matrixScript == "" {
+		t.Fatal("reusable workflow has no executable module-matrix step")
+	}
+
+	bin := t.TempDir()
+	golib := filepath.Join(bin, "golib")
+	stub := "#!/bin/sh\ncase \"$*\" in\n  'inventory --json') printf '%s\\n' \"$INVENTORY\" ;;\n  'config show --json') printf '%s\\n' '{\"runtimes\":{}}' ;;\n  *) exit 64 ;;\nesac\n"
+	if err := os.WriteFile(golib, []byte(stub), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	inventory := `{"modules":[{"directory":".","releasable":true},{"directory":"nested","releasable":true},{"directory":"fixture","releasable":false}]}`
+	tests := []struct {
+		name      string
+		dryRun    string
+		module    string
+		want      []string
+		wantError string
+	}{
+		{name: "default", dryRun: "false", want: []string{".", "nested", "fixture"}},
+		{name: "all releasable", dryRun: "true", want: []string{".", "nested"}},
+		{name: "selected releasable", dryRun: "true", module: "nested", want: []string{"nested"}},
+		{name: "unknown selection", dryRun: "true", module: "missing", wantError: "release module is unknown or not releasable: missing"},
+		{name: "non-releasable selection", dryRun: "true", module: "fixture", wantError: "release module is unknown or not releasable: fixture"},
+		{name: "selection outside rehearsal", dryRun: "false", module: "nested", wantError: "release_module requires release_dry_run: true"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			output := filepath.Join(t.TempDir(), "github-output")
+			command := exec.CommandContext(t.Context(), "bash", "-c", matrixScript)
+			command.Env = append(os.Environ(),
+				"PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
+				"INVENTORY="+inventory,
+				"GITHUB_OUTPUT="+output,
+				"RELEASE_DRY_RUN="+test.dryRun,
+				"RELEASE_MODULE="+test.module,
+			)
+			combined, err := command.CombinedOutput()
+			if test.wantError != "" {
+				if err == nil || !strings.Contains(string(combined), test.wantError) {
+					t.Fatalf("matrix step error = %v, output = %q", err, combined)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("matrix step error = %v, output = %q", err, combined)
+			}
+			contents, err := os.ReadFile(output)
+			if err != nil {
+				t.Fatal(err)
+			}
+			line, _, _ := strings.Cut(string(contents), "\n")
+			encoded, found := strings.CutPrefix(line, "matrix=")
+			if !found {
+				t.Fatalf("matrix output = %q", contents)
+			}
+			var entries []struct {
+				Directory string `json:"directory"`
+			}
+			if err := json.Unmarshal([]byte(encoded), &entries); err != nil {
+				t.Fatal(err)
+			}
+			got := make([]string, 0, len(entries))
+			for _, entry := range entries {
+				got = append(got, entry.Directory)
+			}
+			if strings.Join(got, ",") != strings.Join(test.want, ",") {
+				t.Fatalf("matrix directories = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
+
+func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
+	var reusable workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &reusable); err != nil {
+		t.Fatal(err)
+	}
+	assertReleaseStep := func(job, name, expectedIf, expectedInput, expectedCommand string) string {
+		t.Helper()
+		for _, step := range reusable.Jobs[job].Steps {
+			if step.Name == name {
+				if step.If != expectedIf || step.Env["RELEASE_MODULE"] != expectedInput || !strings.Contains(step.Run, expectedCommand) {
+					t.Fatalf("%s/%s does not preserve release routing: if=%q env=%#v run=%q", job, name, step.If, step.Env, step.Run)
+				}
+				return step.Run
+			}
+		}
+		t.Fatalf("%s has no %q step", job, name)
+		return ""
+	}
+	releaseCheckScript := assertReleaseStep("repository-contract", "Validate release contract", "inputs.release_dry_run == true", "${{ inputs.release_module }}", `golib release check --module "${RELEASE_MODULE}"`)
+	qualityRehearsalScript := assertReleaseStep("quality", "Run release rehearsal", "inputs.release_dry_run == true", "${{ matrix.directory }}", `golib release dry-run --module "${RELEASE_MODULE}"`)
+	ordinaryContract := false
+	for _, step := range reusable.Jobs["quality"].Steps {
+		if step.Name == "Run module contract" {
+			ordinaryContract = true
+			if step.If != "inputs.release_dry_run != true" {
+				t.Fatalf("ordinary module contract guard = %q", step.If)
+			}
+		}
+	}
+	if !ordinaryContract {
+		t.Fatal("quality job has no ordinary module contract step")
+	}
+
+	golibBin := t.TempDir()
+	golibInvocations := filepath.Join(t.TempDir(), "golib-invocations")
+	golibStub := "#!/bin/sh\nprintf '%s\\n' \"$*\" >>\"$INVOCATIONS\"\n"
+	if err := os.WriteFile(filepath.Join(golibBin, "golib"), []byte(golibStub), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		name   string
+		module string
+		want   string
+	}{
+		{name: "blank", want: "release check"},
+		{name: "selected", module: "nested", want: "release check --module nested"},
+	} {
+		t.Run("reusable release check "+test.name, func(t *testing.T) {
+			if err := os.WriteFile(golibInvocations, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			command := exec.CommandContext(t.Context(), "bash", "-c", releaseCheckScript)
+			command.Env = append(os.Environ(),
+				"PATH="+golibBin+string(os.PathListSeparator)+os.Getenv("PATH"),
+				"INVOCATIONS="+golibInvocations,
+				"RELEASE_MODULE="+test.module,
+			)
+			if combined, err := command.CombinedOutput(); err != nil {
+				t.Fatalf("release check error = %v, output = %q", err, combined)
+			}
+			contents, err := os.ReadFile(golibInvocations)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.TrimSpace(string(contents)) != test.want {
+				t.Fatalf("golib invocation = %q, want %q", contents, test.want)
+			}
+		})
+	}
+	if err := os.WriteFile(golibInvocations, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	qualityCommand := exec.CommandContext(t.Context(), "bash", "-c", qualityRehearsalScript)
+	qualityCommand.Env = append(os.Environ(),
+		"PATH="+golibBin+string(os.PathListSeparator)+os.Getenv("PATH"),
+		"INVOCATIONS="+golibInvocations,
+		"RELEASE_MODULE=nested",
+	)
+	if combined, err := qualityCommand.CombinedOutput(); err != nil {
+		t.Fatalf("quality release rehearsal error = %v, output = %q", err, combined)
+	}
+	qualityInvocation, err := os.ReadFile(golibInvocations)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.TrimSpace(string(qualityInvocation)) != "release dry-run --module nested" {
+		t.Fatalf("quality golib invocation = %q", qualityInvocation)
+	}
+
+	var caller workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/ci.yml")), &caller); err != nil {
+		t.Fatal(err)
+	}
+	input, exists := caller.On.WorkflowDispatch.Inputs["release_module"]
+	if !exists || input.Type != "string" || input.Default != "" {
+		t.Fatalf("tooling release_module dispatch input = %#v, present = %v", input, exists)
+	}
+	rehearsal := caller.Jobs["release-rehearsal"]
+	if rehearsal.If != "github.event_name == 'workflow_dispatch' && (inputs.release_rehearsal || inputs.release_module != '')" {
+		t.Fatalf("tooling release rehearsal condition = %q", rehearsal.If)
+	}
+	var validationScript, rehearsalScript string
+	for _, step := range rehearsal.Steps {
+		switch step.Name {
+		case "Validate release inputs":
+			if step.Env["RELEASE_MODULE"] != "${{ inputs.release_module }}" || step.Env["RELEASE_REHEARSAL"] != "${{ inputs.release_rehearsal }}" {
+				t.Fatalf("tooling input validation environment = %#v", step.Env)
+			}
+			validationScript = step.Run
+		case "Run pre-tag release dry-run":
+			if step.Env["RELEASE_MODULE"] != "${{ inputs.release_module }}" || !strings.Contains(step.Run, `release dry-run --module "${RELEASE_MODULE}"`) {
+				t.Fatalf("tooling rehearsal does not propagate the release selector: env=%#v run=%q", step.Env, step.Run)
+			}
+			rehearsalScript = step.Run
+		}
+	}
+	if validationScript == "" || rehearsalScript == "" {
+		t.Fatalf("tooling workflow release scripts missing: validation=%v rehearsal=%v", validationScript != "", rehearsalScript != "")
+	}
+
+	for _, test := range []struct {
+		name      string
+		rehearsal string
+		module    string
+		wantError string
+	}{
+		{name: "blank", rehearsal: "true"},
+		{name: "selected", rehearsal: "true", module: "nested"},
+		{name: "selector without rehearsal", rehearsal: "false", module: "nested", wantError: "release_module requires release_rehearsal: true"},
+	} {
+		t.Run("input "+test.name, func(t *testing.T) {
+			command := exec.CommandContext(t.Context(), "bash", "-c", validationScript)
+			command.Env = append(os.Environ(), "RELEASE_REHEARSAL="+test.rehearsal, "RELEASE_MODULE="+test.module)
+			combined, err := command.CombinedOutput()
+			if test.wantError == "" && err != nil {
+				t.Fatalf("input validation error = %v, output = %q", err, combined)
+			}
+			if test.wantError != "" && (err == nil || !strings.Contains(string(combined), test.wantError)) {
+				t.Fatalf("input validation error = %v, output = %q", err, combined)
+			}
+		})
+	}
+
+	bin := t.TempDir()
+	invocations := filepath.Join(t.TempDir(), "go-invocations")
+	stub := "#!/bin/sh\nprintf '%s\\n' \"$*\" >>\"$INVOCATIONS\"\n"
+	if err := os.WriteFile(filepath.Join(bin, "go"), []byte(stub), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		name   string
+		module string
+		want   string
+	}{
+		{name: "blank", want: "run ./cmd/golib release dry-run"},
+		{name: "selected", module: "nested", want: "run ./cmd/golib release dry-run --module nested"},
+	} {
+		t.Run("rehearsal "+test.name, func(t *testing.T) {
+			if err := os.WriteFile(invocations, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			command := exec.CommandContext(t.Context(), "bash", "-c", rehearsalScript)
+			command.Env = append(os.Environ(),
+				"PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
+				"INVOCATIONS="+invocations,
+				"RELEASE_MODULE="+test.module,
+				"RUNNER_TEMP="+t.TempDir(),
+			)
+			if combined, err := command.CombinedOutput(); err != nil {
+				t.Fatalf("release rehearsal error = %v, output = %q", err, combined)
+			}
+			contents, err := os.ReadFile(invocations)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.TrimSpace(string(contents)) != test.want {
+				t.Fatalf("go invocation = %q, want %q", contents, test.want)
+			}
+		})
+	}
+}
+
+type workflowDocument struct {
+	On struct {
+		WorkflowCall struct {
+			Inputs map[string]workflowInput `yaml:"inputs"`
+		} `yaml:"workflow_call"`
+		WorkflowDispatch struct {
+			Inputs map[string]workflowInput `yaml:"inputs"`
+		} `yaml:"workflow_dispatch"`
+	} `yaml:"on"`
+	Jobs map[string]workflowJob `yaml:"jobs"`
+}
+
+type workflowInput struct {
+	Type    string `yaml:"type"`
+	Default any    `yaml:"default"`
+}
+
+type workflowJob struct {
+	If    string         `yaml:"if"`
+	Steps []workflowStep `yaml:"steps"`
+}
+
+type workflowStep struct {
+	ID   string            `yaml:"id"`
+	Name string            `yaml:"name"`
+	If   string            `yaml:"if"`
+	Env  map[string]string `yaml:"env"`
+	Run  string            `yaml:"run"`
 }
 
 func TestReusableWorkflowConfiguresBootstrapProxyForEveryGoBuild(t *testing.T) {
