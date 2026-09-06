@@ -40,7 +40,8 @@ const (
 	bpfJumpEqual        = 0x15
 	bpfReturn           = 0x06
 
-	securebitsLocked = 1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<5 | 1<<6 | 1<<7
+	securebitsLocked     = 1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<5 | 1<<6 | 1<<7
+	childDiagnosticLimit = 4096
 )
 
 var landlockHandled = uint64(
@@ -75,6 +76,44 @@ type landlockPathBeneathAttr struct {
 type fOwnerEx struct {
 	Type int32
 	PID  int32
+}
+
+type boundedDiagnostic struct {
+	data []byte
+}
+
+func (diagnostic *boundedDiagnostic) Write(data []byte) (int, error) {
+	remaining := childDiagnosticLimit - len(diagnostic.data)
+	if remaining > len(data) {
+		remaining = len(data)
+	}
+	if remaining > 0 {
+		diagnostic.data = append(diagnostic.data, data[:remaining]...)
+	}
+	return len(data), nil
+}
+
+func (diagnostic *boundedDiagnostic) String() string {
+	return strings.TrimSpace(string(diagnostic.data))
+}
+
+func TestBoundedDiagnosticCapsRetainedOutput(t *testing.T) {
+	payload := strings.Repeat("x", childDiagnosticLimit+1) + "\n"
+	var diagnostic boundedDiagnostic
+
+	written, err := diagnostic.Write([]byte(payload))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if written != len(payload) {
+		t.Fatalf("reported write length=%d want=%d", written, len(payload))
+	}
+	if got := len(diagnostic.data); got != childDiagnosticLimit {
+		t.Fatalf("retained diagnostic bytes=%d want=%d", got, childDiagnosticLimit)
+	}
+	if got := diagnostic.String(); got != strings.Repeat("x", childDiagnosticLimit) {
+		t.Fatalf("retained diagnostic=%q", got)
+	}
 }
 
 func TestProbeLeaseCompletesBreak(t *testing.T) {
@@ -598,6 +637,8 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 	defer cancel()
 	command = exec.CommandContext(ctx, os.Args[0], "namespace-cgroup-child")
 	configureGracefulCancel(command)
+	var childDiagnostic boundedDiagnostic
+	command.Stderr = &childDiagnostic
 	command.ExtraFiles = []*os.File{cgroupFile, childSock}
 	command.Env = []string{"PROBE_MOUNT_ROOT=" + taskRoot}
 	command.SysProcAttr = &syscall.SysProcAttr{
@@ -624,6 +665,10 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 	n, controlN, recvErr := recvmsgBounded(int(parentSock.Fd()), message, control, 5*time.Second)
 	if recvErr != nil {
 		return fmt.Errorf("mapped clone3 readiness: %w", recvErr)
+	}
+	if n == 0 {
+		waitErr := command.Wait()
+		return fmt.Errorf("mapped clone3 readiness closed: child=%v: %s", waitErr, childDiagnostic.String())
 	}
 	if string(message[:n]) != "ready" {
 		return fmt.Errorf("mapped clone3 readiness bytes=%q", message[:n])
@@ -665,7 +710,7 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 		return fmt.Errorf("cgroup.kill: %w", err)
 	}
 	if err := command.Wait(); err != nil {
-		return fmt.Errorf("namespace init reap: %w", err)
+		return fmt.Errorf("namespace init reap: %w: %s", err, childDiagnostic.String())
 	}
 	if _, err := os.Stat(filepath.Join("/proc", strconv.Itoa(command.Process.Pid))); !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("namespace init cleanup left pid %d", command.Process.Pid)
