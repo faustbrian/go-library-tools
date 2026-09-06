@@ -881,8 +881,8 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 			return fmt.Errorf("namespace initial %s=%q want %q", field, value, namespaceActiveCapabilitySet)
 		}
 	}
-	if value, ok := statusField(string(statusBytes), "CapBnd:"); !ok || value != namespaceCapabilityBoundSet {
-		return fmt.Errorf("namespace initial CapBnd:=%q want %q", value, namespaceCapabilityBoundSet)
+	if err := verifyNamespaceOwnership(); err != nil {
+		return err
 	}
 	if err := probeNamespaceMountAndNetwork(os.Getenv("PROBE_MOUNT_ROOT")); err != nil {
 		return err
@@ -948,6 +948,31 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 	status, ok := exitError.Sys().(syscall.WaitStatus)
 	if !ok || !status.Signaled() || status.Signal() != unix.SIGKILL {
 		return fmt.Errorf("cgroup child status=%v", status)
+	}
+	return nil
+}
+
+func verifyNamespaceOwnership() error {
+	userNamespace, err := unix.Open("/proc/self/ns/user", unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	if err != nil {
+		return fmt.Errorf("open current user namespace: %w", err)
+	}
+	defer unix.Close(userNamespace)
+	for _, namespace := range []string{"mnt", "net", "pid"} {
+		namespaceFD, err := unix.Open("/proc/self/ns/"+namespace, unix.O_RDONLY|unix.O_CLOEXEC, 0)
+		if err != nil {
+			return fmt.Errorf("open current %s namespace: %w", namespace, err)
+		}
+		ownerFD, ownerErr := unix.IoctlRetInt(namespaceFD, unix.NS_GET_USERNS)
+		_ = unix.Close(namespaceFD)
+		if ownerErr != nil {
+			return fmt.Errorf("read %s namespace owner: %w", namespace, ownerErr)
+		}
+		identityErr := sameFileIdentity(userNamespace, ownerFD)
+		_ = unix.Close(ownerFD)
+		if identityErr != nil {
+			return fmt.Errorf("%s namespace owner: %w", namespace, identityErr)
+		}
 	}
 	return nil
 }
