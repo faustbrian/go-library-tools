@@ -76,6 +76,12 @@ type fOwnerEx struct {
 	PID  int32
 }
 
+func TestProbeLeaseCompletesBreak(t *testing.T) {
+	if err := probeLease(t.Context(), t.TempDir()); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestMain(testingMain *testing.M) {
 	for _, argument := range os.Args[1:] {
 		if strings.HasPrefix(argument, "-test.") {
