@@ -1096,19 +1096,43 @@ func setLoopbackUpNetlink(index int) error {
 	if err := unix.Bind(socket, &unix.SockaddrNetlink{Family: unix.AF_NETLINK}); err != nil {
 		return fmt.Errorf("bind route netlink socket: %w", err)
 	}
+	localAddress, err := unix.Getsockname(socket)
+	if err != nil {
+		return fmt.Errorf("read route netlink address: %w", err)
+	}
+	localNetlink, ok := localAddress.(*unix.SockaddrNetlink)
+	if !ok || localNetlink.Pid == 0 || localNetlink.Groups != 0 {
+		return fmt.Errorf("invalid route netlink address: %#v", localAddress)
+	}
+	(*unix.NlMsghdr)(unsafe.Pointer(&message[0])).Pid = localNetlink.Pid
 	if err := unix.Sendto(socket, message, 0, &unix.SockaddrNetlink{Family: unix.AF_NETLINK}); err != nil {
 		return fmt.Errorf("send RTM_NEWLINK: %w", err)
 	}
 	reply := make([]byte, 4096)
-	replyN, _, err := recvmsgBounded(socket, reply, nil, 5*time.Second)
+	pollFDs := []unix.PollFd{{Fd: int32(socket), Events: unix.POLLIN}}
+	count, err := unix.Poll(pollFDs, 5000)
+	if err != nil {
+		return fmt.Errorf("poll RTM_NEWLINK acknowledgement: %w", err)
+	}
+	if count != 1 || pollFDs[0].Revents&unix.POLLIN == 0 {
+		return fmt.Errorf("RTM_NEWLINK acknowledgement timed out or closed: events=%#x", pollFDs[0].Revents)
+	}
+	replyN, _, flags, sourceAddress, err := unix.Recvmsg(socket, reply, nil, unix.MSG_DONTWAIT)
 	if err != nil {
 		return fmt.Errorf("receive RTM_NEWLINK acknowledgement: %w", err)
+	}
+	if flags&(unix.MSG_TRUNC|unix.MSG_CTRUNC) != 0 {
+		return fmt.Errorf("truncated RTM_NEWLINK acknowledgement: flags=%#x", flags)
+	}
+	sourceNetlink, ok := sourceAddress.(*unix.SockaddrNetlink)
+	if !ok || sourceNetlink.Pid != 0 || sourceNetlink.Groups != 0 {
+		return fmt.Errorf("invalid RTM_NEWLINK acknowledgement source: %#v", sourceAddress)
 	}
 	if replyN < unix.SizeofNlMsghdr+4 {
 		return fmt.Errorf("short RTM_NEWLINK acknowledgement: bytes=%d", replyN)
 	}
 	header := *(*unix.NlMsghdr)(unsafe.Pointer(&reply[0]))
-	if header.Type != unix.NLMSG_ERROR || header.Seq != sequence || header.Pid != 0 ||
+	if header.Type != unix.NLMSG_ERROR || header.Seq != sequence || header.Pid != localNetlink.Pid ||
 		header.Len < uint32(unix.SizeofNlMsghdr+4) || header.Len != uint32(replyN) {
 		return fmt.Errorf("invalid RTM_NEWLINK acknowledgement: type=%d seq=%d pid=%d length=%d bytes=%d", header.Type, header.Seq, header.Pid, header.Len, replyN)
 	}
