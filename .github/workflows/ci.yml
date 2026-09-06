@@ -166,6 +166,7 @@ jobs:
             printf '%s\n' 'probe executable unexpectedly has an interpreter' >&2
             exit 1
           fi
+          COHESION_PROBE_FOCUSED=lease "${task}/probe" -test.run '^TestProbeLeaseCompletesBreak$' -test.v >> "${log}" 2>&1
           "${task}/probe" >> "${log}" 2>&1
           cat "${log}"
       - name: Upload capability evidence

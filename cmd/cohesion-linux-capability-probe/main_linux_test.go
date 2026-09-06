@@ -77,6 +77,9 @@ type fOwnerEx struct {
 }
 
 func TestProbeLeaseCompletesBreak(t *testing.T) {
+	if os.Getenv("COHESION_PROBE_FOCUSED") != "lease" {
+		t.Skip("requires the opt-in hosted Linux lease probe")
+	}
 	if err := probeLease(t.Context(), t.TempDir()); err != nil {
 		t.Fatal(err)
 	}
