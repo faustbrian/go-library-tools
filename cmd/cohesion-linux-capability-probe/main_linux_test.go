@@ -107,7 +107,7 @@ func runProbe() {
 		err = run(ctx)
 		stop()
 	default:
-		err = fmt.Errorf("unknown probe mode")
+		err = errors.New("unknown probe mode")
 	}
 	if err != nil {
 		fmt.Fprintln(os.Stderr, "unsupported:", err)
@@ -170,7 +170,7 @@ func run(ctx context.Context) (resultErr error) {
 
 func probeKernelAndIdentity() (string, error) {
 	if runtime.GOOS != "linux" || (runtime.GOARCH != "amd64" && runtime.GOARCH != "arm64") {
-		return "", fmt.Errorf("platform must be linux/amd64 or linux/arm64")
+		return "", errors.New("platform must be linux/amd64 or linux/arm64")
 	}
 	var name unix.Utsname
 	if err := unix.Uname(&name); err != nil {
@@ -219,7 +219,7 @@ func probeStaticExecutable(parent context.Context) error {
 	}
 	for _, program := range file.Progs {
 		if program.Type == elf.PT_INTERP {
-			return fmt.Errorf("executing ELF has an interpreter")
+			return errors.New("executing ELF has an interpreter")
 		}
 	}
 	libraries, err := file.ImportedLibraries()
@@ -227,7 +227,7 @@ func probeStaticExecutable(parent context.Context) error {
 		return fmt.Errorf("read ELF dependencies: %w", err)
 	}
 	if len(libraries) != 0 {
-		return fmt.Errorf("executing ELF has dynamic dependencies")
+		return errors.New("executing ELF has dynamic dependencies")
 	}
 	ctx, cancel := context.WithTimeout(parent, 5*time.Second)
 	defer cancel()
@@ -243,7 +243,7 @@ func probeStaticExecutable(parent context.Context) error {
 	if err := command.Start(); err != nil {
 		return fmt.Errorf("execute static ELF: %w", err)
 	}
-	defer stopAndReap(command)
+	defer func() { _ = stopAndReap(command) }()
 	_ = right.Close()
 	if err := left.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
 		return err
@@ -276,7 +276,7 @@ func probePIDFDCredentials(parent context.Context) error {
 	if err := command.Start(); err != nil {
 		return err
 	}
-	defer stopAndReap(command)
+	defer func() { _ = stopAndReap(command) }()
 	_ = sender.Close()
 	if err := receiver.SetReadDeadline(time.Now().Add(5 * time.Second)); err != nil {
 		return err
@@ -291,7 +291,7 @@ func probePIDFDCredentials(parent context.Context) error {
 	messages, err := unix.ParseSocketControlMessage(control[:controlCount])
 	if err != nil || len(messages) != 1 || messages[0].Header.Level != unix.SOL_SOCKET || messages[0].Header.Type != unix.SCM_PIDFD || len(messages[0].Data) != 4 {
 		_ = stopAndReap(command)
-		return fmt.Errorf("SCM_PIDFD control shape is unavailable")
+		return errors.New("SCM_PIDFD control shape is unavailable")
 	}
 	peerFD := int(*(*int32)(unsafe.Pointer(&messages[0].Data[0])))
 	defer unix.Close(peerFD)
@@ -326,8 +326,11 @@ func probeLandlock(parent context.Context, root string) error {
 
 func probeLandlockChild(root string) error {
 	abi, _, errno := unix.Syscall6(unix.SYS_LANDLOCK_CREATE_RULESET, 0, 0, landlockRulesetVersion, 0, 0, 0)
-	if errno != 0 || abi < 4 {
-		return fmt.Errorf("Landlock ABI=%d errno=%v", abi, errno)
+	if errno != 0 {
+		return fmt.Errorf("query Landlock ABI: %w", errno)
+	}
+	if abi < 4 {
+		return fmt.Errorf("Landlock ABI=%d want>=4", abi)
 	}
 	allowed := filepath.Join(root, "landlock-allowed")
 	denied := filepath.Join(root, "landlock-denied")
@@ -346,7 +349,7 @@ func probeLandlockChild(root string) error {
 	attr := landlockRulesetAttr{HandledAccessFS: landlockHandled}
 	ruleset, _, errno := unix.Syscall6(unix.SYS_LANDLOCK_CREATE_RULESET, uintptr(unsafe.Pointer(&attr)), unsafe.Sizeof(attr), 0, 0, 0, 0)
 	if errno != 0 {
-		return fmt.Errorf("landlock_create_ruleset: %v", errno)
+		return fmt.Errorf("landlock_create_ruleset: %w", errno)
 	}
 	defer unix.Close(int(ruleset))
 	allowedFD, err := unix.Open(allowed, unix.O_PATH|unix.O_DIRECTORY|unix.O_CLOEXEC, 0)
@@ -370,13 +373,19 @@ func probeLandlockChild(root string) error {
 	}
 	_, _, errno = unix.Syscall6(unix.SYS_LANDLOCK_RESTRICT_SELF, ruleset, 0, 0, 0, 0, 0)
 	if errno != 0 {
-		return fmt.Errorf("landlock_restrict_self: %v", errno)
+		return fmt.Errorf("landlock_restrict_self: %w", errno)
 	}
 	if err := os.Rename(filepath.Join(allowed, "source"), filepath.Join(denied, "moved")); !errors.Is(err, syscall.EXDEV) && !errors.Is(err, syscall.EACCES) {
-		return fmt.Errorf("Landlock REFER denial=%v", err)
+		if err == nil {
+			return errors.New("Landlock REFER operation unexpectedly succeeded")
+		}
+		return fmt.Errorf("Landlock REFER denial: %w", err)
 	}
 	if err := os.Truncate(filepath.Join(denied, "target"), 0); !errors.Is(err, syscall.EACCES) {
-		return fmt.Errorf("Landlock TRUNCATE denial=%v", err)
+		if err == nil {
+			return errors.New("Landlock TRUNCATE operation unexpectedly succeeded")
+		}
+		return fmt.Errorf("Landlock TRUNCATE denial: %w", err)
 	}
 	if err := os.Truncate(filepath.Join(allowed, "source"), 0); err != nil {
 		return fmt.Errorf("Landlock permitted truncate: %w", err)
@@ -388,7 +397,7 @@ func addLandlockPathRule(ruleset, parentFD int, access uint64) error {
 	pathRule := landlockPathBeneathAttr{AllowedAccess: access, ParentFD: int32(parentFD)}
 	_, _, errno := unix.Syscall6(unix.SYS_LANDLOCK_ADD_RULE, uintptr(ruleset), landlockRulePathBeneath, uintptr(unsafe.Pointer(&pathRule)), 0, 0, 0)
 	if errno != 0 {
-		return fmt.Errorf("landlock_add_rule: %v", errno)
+		return fmt.Errorf("landlock_add_rule: %w", errno)
 	}
 	return nil
 }
@@ -419,7 +428,7 @@ func probeLease(parent context.Context, root string) error {
 	if err := unix.PthreadSigmask(unix.SIG_BLOCK, &mask, &previousMask); err != nil {
 		return fmt.Errorf("block lease signal: %w", err)
 	}
-	defer unix.PthreadSigmask(unix.SIG_SETMASK, &previousMask, nil)
+	defer func() { _ = unix.PthreadSigmask(unix.SIG_SETMASK, &previousMask, nil) }()
 	signalFD, err := unix.Signalfd(-1, &mask, unix.SFD_CLOEXEC|unix.SFD_NONBLOCK)
 	if err != nil {
 		return fmt.Errorf("signalfd: %w", err)
@@ -435,8 +444,11 @@ func probeLease(parent context.Context, root string) error {
 		}
 	}()
 	lease, err := unix.FcntlInt(file.Fd(), unix.F_GETLEASE, 0)
-	if err != nil || lease != unix.F_RDLCK {
-		return fmt.Errorf("F_GETLEASE=%d err=%v", lease, err)
+	if err != nil {
+		return fmt.Errorf("F_GETLEASE: %w", err)
+	}
+	if lease != unix.F_RDLCK {
+		return fmt.Errorf("F_GETLEASE=%d want=%d", lease, unix.F_RDLCK)
 	}
 	ctx, cancel := context.WithTimeout(parent, 10*time.Second)
 	defer cancel()
@@ -446,7 +458,7 @@ func probeLease(parent context.Context, root string) error {
 	if err := command.Start(); err != nil {
 		return err
 	}
-	defer stopAndReap(command)
+	defer func() { _ = stopAndReap(command) }()
 	deadline := time.Now().Add(5 * time.Second)
 	for {
 		if err := parent.Err(); err != nil {
@@ -456,11 +468,14 @@ func probeLease(parent context.Context, root string) error {
 		if count, err := unix.Read(signalFD, buffer); err == nil {
 			info := (*unix.SignalfdSiginfo)(unsafe.Pointer(&buffer[0]))
 			if count != len(buffer) || info.Signo != uint32(leaseSignal) || info.Fd != int32(file.Fd()) {
-				return fmt.Errorf("unexpected signalfd lease-break record")
+				return errors.New("unexpected signalfd lease-break record")
 			}
 			lease, leaseErr := unix.FcntlInt(file.Fd(), unix.F_GETLEASE, 0)
-			if leaseErr != nil || lease != unix.F_RDLCK {
-				return fmt.Errorf("lease state after break=%d err=%v", lease, leaseErr)
+			if leaseErr != nil {
+				return fmt.Errorf("lease state after break: %w", leaseErr)
+			}
+			if lease != unix.F_RDLCK {
+				return fmt.Errorf("lease state after break=%d want=%d", lease, unix.F_RDLCK)
 			}
 			break
 		} else if !errors.Is(err, unix.EAGAIN) || time.Now().After(deadline) {
@@ -478,8 +493,11 @@ func probeLease(parent context.Context, root string) error {
 		return fmt.Errorf("lease-break writer: %w", err)
 	}
 	lease, err = unix.FcntlInt(file.Fd(), unix.F_GETLEASE, 0)
-	if err != nil || lease != unix.F_UNLCK {
-		return fmt.Errorf("final lease state=%d err=%v", lease, err)
+	if err != nil {
+		return fmt.Errorf("final lease state: %w", err)
+	}
+	if lease != unix.F_UNLCK {
+		return fmt.Errorf("final lease state=%d want=%d", lease, unix.F_UNLCK)
 	}
 	return nil
 }
@@ -511,7 +529,7 @@ func probeSeccompChild() error {
 	}
 	_, _, errno := unix.Syscall6(unix.SYS_CLONE3, 0, 0, 0, 0, 0, 0)
 	if errno != unix.EPERM {
-		return fmt.Errorf("seccomp clone3 denial=%v", errno)
+		return fmt.Errorf("seccomp clone3 denial: %w", errno)
 	}
 	return nil
 }
@@ -552,7 +570,7 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 	cgroupFile := os.NewFile(uintptr(cgroupFD), "cgroup")
 	if cgroupFile == nil {
 		_ = unix.Close(cgroupFD)
-		return fmt.Errorf("own cgroup descriptor")
+		return errors.New("own cgroup descriptor")
 	}
 	cgroupFileClosed := false
 	defer func() {
@@ -597,16 +615,25 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 	message := make([]byte, 16)
 	control := make([]byte, unix.CmsgSpace(4))
 	n, controlN, recvErr := recvmsgBounded(int(parentSock.Fd()), message, control, 5*time.Second)
-	if recvErr != nil || string(message[:n]) != "ready" {
-		return fmt.Errorf("mapped clone3 readiness: bytes=%q err=%v", message[:n], recvErr)
+	if recvErr != nil {
+		return fmt.Errorf("mapped clone3 readiness: %w", recvErr)
+	}
+	if string(message[:n]) != "ready" {
+		return fmt.Errorf("mapped clone3 readiness bytes=%q", message[:n])
 	}
 	messages, err := unix.ParseSocketControlMessage(control[:controlN])
-	if err != nil || len(messages) != 1 {
-		return fmt.Errorf("mapped clone3 pidfd transfer")
+	if err != nil {
+		return fmt.Errorf("parse mapped clone3 pidfd transfer: %w", err)
+	}
+	if len(messages) != 1 {
+		return errors.New("mapped clone3 pidfd transfer")
 	}
 	fds, err := unix.ParseUnixRights(&messages[0])
-	if err != nil || len(fds) != 1 {
-		return fmt.Errorf("mapped clone3 pidfd rights")
+	if err != nil {
+		return fmt.Errorf("parse mapped clone3 pidfd rights: %w", err)
+	}
+	if len(fds) != 1 {
+		return errors.New("mapped clone3 pidfd rights")
 	}
 	childPIDFD := fds[0]
 	defer unix.Close(childPIDFD)
@@ -636,8 +663,10 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 	if _, err := os.Stat(filepath.Join("/proc", strconv.Itoa(command.Process.Pid))); !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("namespace init cleanup left pid %d", command.Process.Pid)
 	}
-	if _, err := oneCgroupPID(leaf); err == nil || !strings.Contains(err.Error(), "zero") {
-		return fmt.Errorf("cgroup leaf did not drain: %v", err)
+	if _, err := oneCgroupPID(leaf); err == nil {
+		return errors.New("cgroup leaf did not drain")
+	} else if !strings.Contains(err.Error(), "zero") {
+		return fmt.Errorf("cgroup leaf did not drain: %w", err)
 	}
 	return nil
 }
@@ -666,20 +695,32 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 		return fmt.Errorf("inner identity uid=%d/%d/%d gid=%d/%d/%d", ruid, euid, suid, rgid, egid, sgid)
 	}
 	groups, err := os.Getgroups()
-	if err != nil || len(groups) != 0 {
-		return fmt.Errorf("supplementary groups=%v err=%v", groups, err)
+	if err != nil {
+		return fmt.Errorf("read supplementary groups: %w", err)
+	}
+	if len(groups) != 0 {
+		return fmt.Errorf("supplementary groups=%v", groups)
 	}
 	uidMap, err := os.ReadFile("/proc/self/uid_map")
-	if err != nil || strings.Join(strings.Fields(string(uidMap)), " ") != fmt.Sprintf("%d %d 1", overflowID, outerID("uid")) {
-		return fmt.Errorf("uid_map=%q err=%v", uidMap, err)
+	if err != nil {
+		return fmt.Errorf("read uid_map: %w", err)
+	}
+	if strings.Join(strings.Fields(string(uidMap)), " ") != fmt.Sprintf("%d %d 1", overflowID, outerID("uid")) {
+		return fmt.Errorf("uid_map=%q", uidMap)
 	}
 	gidMap, err := os.ReadFile("/proc/self/gid_map")
-	if err != nil || strings.Join(strings.Fields(string(gidMap)), " ") != fmt.Sprintf("%d %d 1", overflowID, outerID("gid")) {
-		return fmt.Errorf("gid_map=%q err=%v", gidMap, err)
+	if err != nil {
+		return fmt.Errorf("read gid_map: %w", err)
+	}
+	if strings.Join(strings.Fields(string(gidMap)), " ") != fmt.Sprintf("%d %d 1", overflowID, outerID("gid")) {
+		return fmt.Errorf("gid_map=%q", gidMap)
 	}
 	setgroups, err := os.ReadFile("/proc/self/setgroups")
-	if err != nil || strings.TrimSpace(string(setgroups)) != "deny" {
-		return fmt.Errorf("setgroups=%q err=%v", setgroups, err)
+	if err != nil {
+		return fmt.Errorf("read setgroups: %w", err)
+	}
+	if strings.TrimSpace(string(setgroups)) != "deny" {
+		return fmt.Errorf("setgroups=%q", setgroups)
 	}
 	if err := probeNamespaceMountAndNetwork(os.Getenv("PROBE_MOUNT_ROOT")); err != nil {
 		return err
@@ -697,20 +738,18 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 			return fmt.Errorf("%s=%q", field, value)
 		}
 	}
-	var noNewPrivileges uintptr
 	if value, ok := statusField(string(statusBytes), "NoNewPrivs:"); !ok || value != "0" {
 		return fmt.Errorf("unexpected initial no_new_privs=%q", value)
 	}
 	if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
 		return err
 	}
-	if _, _, errno := unix.Syscall6(unix.SYS_PRCTL, unix.PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0, 0); errno != 0 {
+	noNewPrivileges, _, errno := unix.Syscall6(unix.SYS_PRCTL, unix.PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0, 0)
+	if errno != 0 {
 		return errno
-	} else {
-		noNewPrivileges = 1
 	}
 	if noNewPrivileges != 1 {
-		return fmt.Errorf("no_new_privs not set")
+		return errors.New("no_new_privs not set")
 	}
 	if os.Getpid() != 1 {
 		return fmt.Errorf("PID namespace init pid=%d", os.Getpid())
@@ -727,18 +766,18 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 	if err := command.Start(); err != nil {
 		return fmt.Errorf("clone3(CLONE_PIDFD|CLONE_INTO_CGROUP): %w", err)
 	}
-	defer stopAndReap(command)
+	defer func() { _ = stopAndReap(command) }()
 	if pidfd < 0 {
-		return fmt.Errorf("clone3 did not return pidfd")
+		return errors.New("clone3 did not return pidfd")
 	}
-	defer unix.Close(int(pidfd))
-	rights := unix.UnixRights(int(pidfd))
+	defer unix.Close(pidfd)
+	rights := unix.UnixRights(pidfd)
 	if err := unix.Sendmsg(4, []byte("ready"), rights, nil, 0); err != nil {
 		return fmt.Errorf("send clone pidfd: %w", err)
 	}
 	waitErr := command.Wait()
 	if waitErr == nil {
-		return fmt.Errorf("cgroup child exited without cgroup.kill")
+		return errors.New("cgroup child exited without cgroup.kill")
 	}
 	var exitError *exec.ExitError
 	if !errors.As(waitErr, &exitError) {
@@ -752,15 +791,13 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 }
 
 func probeCgroupLeafChild() error {
-	select {
-	case <-time.After(20 * time.Second):
-		return fmt.Errorf("cgroup.kill was not observed")
-	}
+	<-time.After(20 * time.Second)
+	return errors.New("cgroup.kill was not observed")
 }
 
 func probeNamespaceMountAndNetwork(taskRoot string) (resultErr error) {
 	if taskRoot == "" {
-		return fmt.Errorf("missing task-owned mount root")
+		return errors.New("missing task-owned mount root")
 	}
 	if err := bringLoopbackUp(); err != nil {
 		return err
@@ -799,8 +836,11 @@ func probeNamespaceMountAndNetwork(taskRoot string) (resultErr error) {
 		return fmt.Errorf("write task tmpfs: %w", err)
 	}
 	content, err := os.ReadFile(path)
-	if err != nil || string(content) != "mounted" {
-		return fmt.Errorf("read task tmpfs=%q err=%v", content, err)
+	if err != nil {
+		return fmt.Errorf("read task tmpfs: %w", err)
+	}
+	if string(content) != "mounted" {
+		return fmt.Errorf("read task tmpfs=%q", content)
 	}
 	if err := os.Remove(path); err != nil {
 		return err
@@ -843,13 +883,16 @@ func dropCapabilities() error {
 		return fmt.Errorf("lock securebits: %w", err)
 	}
 	securebits, _, errno := unix.Syscall6(unix.SYS_PRCTL, unix.PR_GET_SECUREBITS, 0, 0, 0, 0, 0)
-	if errno != 0 || securebits != securebitsLocked {
-		return fmt.Errorf("securebits=%#x want=%#x err=%v", securebits, securebitsLocked, errno)
+	if errno != 0 {
+		return fmt.Errorf("read securebits: %w", errno)
+	}
+	if securebits != securebitsLocked {
+		return fmt.Errorf("securebits=%#x want=%#x", securebits, securebitsLocked)
 	}
 	if err := unix.Prctl(unix.PR_CAP_AMBIENT, unix.PR_CAP_AMBIENT_CLEAR_ALL, 0, 0, 0); err != nil {
 		return fmt.Errorf("clear ambient capabilities: %w", err)
 	}
-	for capability := 0; capability < 64; capability++ {
+	for capability := range 64 {
 		if err := unix.Prctl(unix.PR_CAPBSET_DROP, uintptr(capability), 0, 0, 0); err != nil && !errors.Is(err, unix.EINVAL) {
 			return fmt.Errorf("drop bounding capability %d: %w", capability, err)
 		}
@@ -892,7 +935,7 @@ func cleanupCgroup(leaf string, command *exec.Cmd) error {
 			break
 		}
 		if time.Now().After(deadline) {
-			cleanupErr = errors.Join(cleanupErr, fmt.Errorf("cgroup remained populated"))
+			cleanupErr = errors.Join(cleanupErr, errors.New("cgroup remained populated"))
 			break
 		}
 		time.Sleep(10 * time.Millisecond)
@@ -901,7 +944,7 @@ func cleanupCgroup(leaf string, command *exec.Cmd) error {
 		cleanupErr = errors.Join(cleanupErr, err)
 	}
 	if _, err := os.Stat(leaf); !errors.Is(err, os.ErrNotExist) {
-		cleanupErr = errors.Join(cleanupErr, fmt.Errorf("cgroup leaf still exists"))
+		cleanupErr = errors.Join(cleanupErr, errors.New("cgroup leaf still exists"))
 	}
 	return cleanupErr
 }
@@ -913,7 +956,7 @@ func cgroupPopulated(leaf string) (bool, error) {
 	}
 	value, ok := statusField(string(data), "populated")
 	if !ok || (value != "0" && value != "1") {
-		return false, fmt.Errorf("invalid cgroup.events populated state")
+		return false, errors.New("invalid cgroup.events populated state")
 	}
 	return value == "1", nil
 }
@@ -924,13 +967,13 @@ func currentCgroupDirectory() (string, error) {
 		return "", err
 	}
 	var path string
-	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
-		if strings.HasPrefix(line, "0::") {
-			path = strings.TrimPrefix(line, "0::")
+	for line := range strings.SplitSeq(strings.TrimSpace(string(data)), "\n") {
+		if value, ok := strings.CutPrefix(line, "0::"); ok {
+			path = value
 		}
 	}
 	if path == "" || strings.Contains(path, "..") {
-		return "", fmt.Errorf("unified cgroup v2 membership unavailable")
+		return "", errors.New("unified cgroup v2 membership unavailable")
 	}
 	root := filepath.Join("/sys/fs/cgroup", filepath.Clean("/"+path))
 	if _, err := os.Stat(filepath.Join(root, "cgroup.controllers")); err != nil {
@@ -942,8 +985,11 @@ func currentCgroupDirectory() (string, error) {
 func verifyLimits(leaf string, limits map[string]string) error {
 	for name, want := range limits {
 		data, err := os.ReadFile(filepath.Join(leaf, name))
-		if err != nil || strings.TrimSpace(string(data)) != want {
-			return fmt.Errorf("%s=%q want=%q err=%v", name, strings.TrimSpace(string(data)), want, err)
+		if err != nil {
+			return fmt.Errorf("read %s: %w", name, err)
+		}
+		if strings.TrimSpace(string(data)) != want {
+			return fmt.Errorf("%s=%q want=%q", name, strings.TrimSpace(string(data)), want)
 		}
 	}
 	return nil
@@ -956,7 +1002,7 @@ func oneCgroupPID(leaf string) (int, error) {
 	}
 	fields := strings.Fields(string(data))
 	if len(fields) == 0 {
-		return 0, fmt.Errorf("zero cgroup processes")
+		return 0, errors.New("zero cgroup processes")
 	}
 	if len(fields) != 1 {
 		return 0, fmt.Errorf("cgroup processes=%d", len(fields))
@@ -975,7 +1021,7 @@ func socketPair() (*os.File, *os.File, error) {
 func recvmsgBounded(fd int, payload, control []byte, timeout time.Duration) (int, int, error) {
 	milliseconds := int(timeout / time.Millisecond)
 	if milliseconds <= 0 {
-		return 0, 0, fmt.Errorf("receive timeout must be positive")
+		return 0, 0, errors.New("receive timeout must be positive")
 	}
 	pollFDs := []unix.PollFd{{Fd: int32(fd), Events: unix.POLLIN}}
 	count, err := unix.Poll(pollFDs, milliseconds)
@@ -1024,7 +1070,7 @@ func stopAndReap(command *exec.Cmd) error {
 	case <-done:
 		return nil
 	case <-time.After(2 * time.Second):
-		return fmt.Errorf("process reap timed out")
+		return errors.New("process reap timed out")
 	}
 }
 
@@ -1033,7 +1079,7 @@ func removeAndVerify(path string) error {
 		return err
 	}
 	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
-		return fmt.Errorf("path still exists")
+		return errors.New("path still exists")
 	}
 	return nil
 }
@@ -1047,15 +1093,15 @@ func sameFileIdentity(left, right int) error {
 		return err
 	}
 	if leftStat.Dev != rightStat.Dev || leftStat.Ino != rightStat.Ino || leftStat.Ino == 0 {
-		return fmt.Errorf("pidfd identities differ")
+		return errors.New("pidfd identities differ")
 	}
 	return nil
 }
 
 func statusField(status, name string) (string, bool) {
-	for _, line := range strings.Split(status, "\n") {
-		if strings.HasPrefix(line, name) {
-			return strings.TrimSpace(strings.TrimPrefix(line, name)), true
+	for line := range strings.SplitSeq(status, "\n") {
+		if value, ok := strings.CutPrefix(line, name); ok {
+			return strings.TrimSpace(value), true
 		}
 	}
 	return "", false
