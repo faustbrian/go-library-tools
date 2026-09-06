@@ -7,6 +7,7 @@ require (
 	github.com/yuin/goldmark v1.8.5
 	go.yaml.in/yaml/v3 v3.0.4
 	golang.org/x/mod v0.40.0
+	golang.org/x/sys v0.47.0
 )
 
 require golang.org/x/text v0.14.0 // indirect
