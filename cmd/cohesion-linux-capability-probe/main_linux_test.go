@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	overflowID = 65534
+	overflowID                = 65534
+	delegatedSupervisorCgroup = "golib-supervisor"
 
 	landlockRulesetVersion  = 1
 	landlockRulePathBeneath = 1
@@ -982,10 +983,71 @@ func currentCgroupDirectory() (string, error) {
 		return "", errors.New("unified cgroup v2 membership unavailable")
 	}
 	root := filepath.Join("/sys/fs/cgroup", filepath.Clean("/"+path))
+	if filepath.Base(root) == delegatedSupervisorCgroup {
+		delegatedRoot := filepath.Dir(root)
+		if err := prepareSystemdDelegation(delegatedRoot, root); err != nil {
+			return "", err
+		}
+		root = delegatedRoot
+	}
 	if _, err := os.Stat(filepath.Join(root, "cgroup.controllers")); err != nil {
 		return "", fmt.Errorf("cgroup v2 controllers: %w", err)
 	}
 	return root, nil
+}
+
+func prepareSystemdDelegation(root, supervisor string) error {
+	marker := make([]byte, 1)
+	count, err := unix.Getxattr(root, "user.delegate", marker)
+	if err != nil || count != 1 || marker[0] != '1' {
+		return errors.New("systemd cgroup delegation marker unavailable")
+	}
+	processes, err := os.ReadFile(filepath.Join(root, "cgroup.procs"))
+	if err != nil {
+		return fmt.Errorf("read delegated root processes: %w", err)
+	}
+	if len(strings.Fields(string(processes))) != 0 {
+		return errors.New("delegated root contains processes")
+	}
+	processes, err = os.ReadFile(filepath.Join(supervisor, "cgroup.procs"))
+	if err != nil {
+		return fmt.Errorf("read delegated supervisor processes: %w", err)
+	}
+	fields := strings.Fields(string(processes))
+	if len(fields) != 1 || fields[0] != strconv.Itoa(os.Getpid()) {
+		return fmt.Errorf("delegated supervisor processes=%q", fields)
+	}
+	controllers, err := os.ReadFile(filepath.Join(root, "cgroup.controllers"))
+	if err != nil {
+		return fmt.Errorf("read delegated controllers: %w", err)
+	}
+	available := map[string]bool{}
+	for _, controller := range strings.Fields(string(controllers)) {
+		available[controller] = true
+	}
+	for _, controller := range []string{"cpu", "memory", "pids"} {
+		if !available[controller] {
+			return fmt.Errorf("delegated controller %s unavailable", controller)
+		}
+	}
+	control := filepath.Join(root, "cgroup.subtree_control")
+	if err := os.WriteFile(control, []byte("+cpu +memory +pids"), 0o600); err != nil {
+		return fmt.Errorf("enable delegated controllers: %w", err)
+	}
+	enabled, err := os.ReadFile(control)
+	if err != nil {
+		return fmt.Errorf("read delegated subtree controllers: %w", err)
+	}
+	enabledSet := map[string]bool{}
+	for _, controller := range strings.Fields(string(enabled)) {
+		enabledSet[controller] = true
+	}
+	for _, controller := range []string{"cpu", "memory", "pids"} {
+		if !enabledSet[controller] {
+			return fmt.Errorf("delegated controller %s not enabled", controller)
+		}
+	}
+	return nil
 }
 
 func verifyLimits(leaf string, limits map[string]string) error {
