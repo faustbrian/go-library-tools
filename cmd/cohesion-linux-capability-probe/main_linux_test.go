@@ -798,6 +798,7 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 	command = exec.CommandContext(ctx, os.Args[0], "namespace-cgroup-child")
 	configureGracefulCancel(command)
 	var childDiagnostic boundedDiagnostic
+	command.Stdout = os.Stdout
 	command.Stderr = &childDiagnostic
 	command.ExtraFiles = []*os.File{cgroupFile, childSock}
 	command.Env = []string{
