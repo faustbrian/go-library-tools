@@ -185,6 +185,10 @@ func runProbe() {
 		ctx, stop := signal.NotifyContext(context.Background(), unix.SIGINT, unix.SIGTERM)
 		err = probeNamespaceCgroupChild(ctx)
 		stop()
+	case "namespace-cgroup-post-drop":
+		ctx, stop := signal.NotifyContext(context.Background(), unix.SIGINT, unix.SIGTERM)
+		err = probeNamespaceCgroupPostDrop(ctx)
+		stop()
 	case "cgroup-leaf-child":
 		err = probeCgroupLeafChild()
 	case "":
@@ -388,16 +392,8 @@ func probeKernelAndIdentity() (string, error) {
 		}
 	}
 	profile := os.Getenv("PROBE_APPARMOR_PROFILE")
-	if !validAppArmorProfileName(profile) {
-		return "", fmt.Errorf("invalid expected AppArmor profile %q", profile)
-	}
-	labelBytes, err := os.ReadFile("/proc/self/attr/current")
-	if err != nil {
-		return "", fmt.Errorf("read AppArmor profile label: %w", err)
-	}
-	label := strings.TrimSpace(string(labelBytes))
-	if label != profile+" (unconfined)" {
-		return "", fmt.Errorf("AppArmor profile label=%q want=%q", label, profile+" (unconfined)")
+	if err := verifyCurrentAppArmorProfile(profile); err != nil {
+		return "", err
 	}
 	restrictionBytes, err := os.ReadFile("/proc/sys/kernel/apparmor_restrict_unprivileged_userns")
 	if err != nil {
@@ -804,7 +800,11 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 	var childDiagnostic boundedDiagnostic
 	command.Stderr = &childDiagnostic
 	command.ExtraFiles = []*os.File{cgroupFile, childSock}
-	command.Env = []string{"PROBE_MOUNT_ROOT=" + taskRoot}
+	command.Env = []string{
+		"PROBE_APPARMOR_PROFILE=" + os.Getenv("PROBE_APPARMOR_PROFILE"),
+		"PROBE_CGROUP_LEAF=" + leaf,
+		"PROBE_MOUNT_ROOT=" + taskRoot,
+	}
 	command.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags:                 unix.CLONE_NEWUSER | unix.CLONE_NEWNS | unix.CLONE_NEWNET | unix.CLONE_NEWPID,
 		UidMappings:                []syscall.SysProcIDMap{{ContainerID: overflowID, HostID: os.Geteuid(), Size: 1}},
@@ -954,31 +954,48 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 	if err := dropCapabilities(); err != nil {
 		return err
 	}
-	statusBytes, err = os.ReadFile("/proc/self/status")
+	if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+		return fmt.Errorf("set no_new_privs before post-drop exec: %w", err)
+	}
+	executable, err := os.Executable()
 	if err != nil {
-		return err
+		return fmt.Errorf("resolve post-drop executable: %w", err)
+	}
+	return unix.Exec(executable, []string{executable, "namespace-cgroup-post-drop"}, []string{
+		"PROBE_APPARMOR_PROFILE=" + os.Getenv("PROBE_APPARMOR_PROFILE"),
+		"PROBE_CGROUP_LEAF=" + os.Getenv("PROBE_CGROUP_LEAF"),
+	})
+}
+
+func probeNamespaceCgroupPostDrop(parent context.Context) error {
+	if os.Getpid() != 1 {
+		return fmt.Errorf("PID namespace init pid=%d", os.Getpid())
+	}
+	statusBytes, err := os.ReadFile("/proc/self/status")
+	if err != nil {
+		return fmt.Errorf("read post-drop capability state: %w", err)
 	}
 	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapBnd:", "CapAmb:"} {
 		value, ok := statusField(string(statusBytes), field)
 		if !ok || value != "0000000000000000" {
-			return fmt.Errorf("%s=%q", field, value)
+			return fmt.Errorf("post-drop %s=%q want zero", field, value)
 		}
 	}
-	if value, ok := statusField(string(statusBytes), "NoNewPrivs:"); !ok || value != "0" {
-		return fmt.Errorf("unexpected initial no_new_privs=%q", value)
+	if value, ok := statusField(string(statusBytes), "NoNewPrivs:"); !ok || value != "1" {
+		return fmt.Errorf("post-drop no_new_privs=%q want=1", value)
 	}
-	if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+	securebits, _, errno := unix.Syscall6(unix.SYS_PRCTL, unix.PR_GET_SECUREBITS, 0, 0, 0, 0, 0)
+	if errno != 0 {
+		return fmt.Errorf("read post-drop securebits: %w", errno)
+	}
+	if securebits != securebitsLocked {
+		return fmt.Errorf("post-drop securebits=%#x want=%#x", securebits, securebitsLocked)
+	}
+	if err := verifyCurrentAppArmorProfile(os.Getenv("PROBE_APPARMOR_PROFILE")); err != nil {
 		return err
 	}
-	noNewPrivileges, _, errno := unix.Syscall6(unix.SYS_PRCTL, unix.PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0, 0)
-	if errno != 0 {
-		return errno
-	}
-	if noNewPrivileges != 1 {
-		return errors.New("no_new_privs not set")
-	}
-	if os.Getpid() != 1 {
-		return fmt.Errorf("PID namespace init pid=%d", os.Getpid())
+	if err := verifyPostDropDescriptors(os.Getenv("PROBE_CGROUP_LEAF")); err != nil {
+		return err
 	}
 	unix.CloseOnExec(3)
 	unix.CloseOnExec(4)
@@ -1012,6 +1029,54 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 	status, ok := exitError.Sys().(syscall.WaitStatus)
 	if !ok || !status.Signaled() || status.Signal() != unix.SIGKILL {
 		return fmt.Errorf("cgroup child status=%v", status)
+	}
+	return nil
+}
+
+func verifyCurrentAppArmorProfile(profile string) error {
+	if !validAppArmorProfileName(profile) {
+		return fmt.Errorf("invalid expected AppArmor profile %q", profile)
+	}
+	labelBytes, err := os.ReadFile("/proc/self/attr/current")
+	if err != nil {
+		return fmt.Errorf("read AppArmor profile label: %w", err)
+	}
+	label := strings.TrimSpace(string(labelBytes))
+	if label != profile+" (unconfined)" {
+		return fmt.Errorf("AppArmor profile label=%q want=%q", label, profile+" (unconfined)")
+	}
+	return nil
+}
+
+func verifyPostDropDescriptors(cgroupLeaf string) error {
+	cleanLeaf := filepath.Clean(cgroupLeaf)
+	if cgroupLeaf != cleanLeaf || !strings.HasPrefix(cleanLeaf, "/sys/fs/cgroup/") {
+		return fmt.Errorf("invalid post-drop cgroup leaf %q", cgroupLeaf)
+	}
+	var descriptorStat, pathStat unix.Stat_t
+	if err := unix.Fstat(3, &descriptorStat); err != nil {
+		return fmt.Errorf("inspect post-drop cgroup descriptor: %w", err)
+	}
+	if err := unix.Stat(cleanLeaf, &pathStat); err != nil {
+		return fmt.Errorf("inspect post-drop cgroup leaf: %w", err)
+	}
+	if descriptorStat.Dev != pathStat.Dev || descriptorStat.Ino != pathStat.Ino || descriptorStat.Ino == 0 || descriptorStat.Mode&unix.S_IFMT != unix.S_IFDIR {
+		return errors.New("post-drop cgroup descriptor identity mismatch")
+	}
+	if flags, err := unix.FcntlInt(3, unix.F_GETFD, 0); err != nil {
+		return fmt.Errorf("inspect post-drop cgroup descriptor flags: %w", err)
+	} else if flags&unix.FD_CLOEXEC != 0 {
+		return errors.New("post-drop cgroup descriptor was close-on-exec")
+	}
+	if socketType, err := unix.GetsockoptInt(4, unix.SOL_SOCKET, unix.SO_TYPE); err != nil {
+		return fmt.Errorf("inspect post-drop transfer socket: %w", err)
+	} else if socketType != unix.SOCK_SEQPACKET {
+		return fmt.Errorf("post-drop transfer socket type=%d want=%d", socketType, unix.SOCK_SEQPACKET)
+	}
+	if flags, err := unix.FcntlInt(4, unix.F_GETFD, 0); err != nil {
+		return fmt.Errorf("inspect post-drop transfer socket flags: %w", err)
+	} else if flags&unix.FD_CLOEXEC != 0 {
+		return errors.New("post-drop transfer socket was close-on-exec")
 	}
 	return nil
 }
