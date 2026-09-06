@@ -40,8 +40,9 @@ const (
 	bpfJumpEqual        = 0x15
 	bpfReturn           = 0x06
 
-	securebitsLocked     = 1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<5 | 1<<6 | 1<<7
-	childDiagnosticLimit = 4096
+	securebitsLocked      = 1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<5 | 1<<6 | 1<<7
+	childDiagnosticLimit  = 4096
+	launcherCapabilitySet = "0000000000000140"
 )
 
 var landlockHandled = uint64(
@@ -187,6 +188,22 @@ func launchDelegatedProbe(uidText, gidText string) error {
 		rgid != expectedGID || egid != expectedGID || sgid != expectedGID {
 		return fmt.Errorf("launcher identity uid=%d/%d/%d gid=%d/%d/%d", ruid, euid, suid, rgid, egid, sgid)
 	}
+	statusBytes, err := os.ReadFile("/proc/self/status")
+	if err != nil {
+		return fmt.Errorf("read launcher initial capability state: %w", err)
+	}
+	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapBnd:", "CapAmb:"} {
+		value, ok := statusField(string(statusBytes), field)
+		if !ok || value != launcherCapabilitySet {
+			return fmt.Errorf("launcher initial %s=%q want %q", field, value, launcherCapabilitySet)
+		}
+	}
+	if err := unix.Setgroups([]int{}); err != nil {
+		return fmt.Errorf("clear launcher supplementary groups: %w", err)
+	}
+	if err := dropCapabilities(); err != nil {
+		return fmt.Errorf("drop launcher capabilities: %w", err)
+	}
 	groups, err := os.Getgroups()
 	if err != nil {
 		return fmt.Errorf("read launcher supplementary groups: %w", err)
@@ -194,12 +211,12 @@ func launchDelegatedProbe(uidText, gidText string) error {
 	if len(groups) != 0 {
 		return fmt.Errorf("launcher supplementary groups=%v", groups)
 	}
-	statusBytes, err := os.ReadFile("/proc/self/status")
+	statusBytes, err = os.ReadFile("/proc/self/status")
 	if err != nil {
 		return fmt.Errorf("read launcher capability state: %w", err)
 	}
 	status := string(statusBytes)
-	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapAmb:"} {
+	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapBnd:", "CapAmb:"} {
 		value, ok := statusField(status, field)
 		if !ok || value != "0000000000000000" {
 			return fmt.Errorf("launcher %s must be empty, got %q", field, value)

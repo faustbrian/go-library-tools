@@ -202,8 +202,6 @@ jobs:
           runner_gid="$(id -g)"
           [[ "${runner_uid}" != '0' && "${runner_uid}" != '65534' ]]
           [[ "${runner_gid}" != '0' && "${runner_gid}" != '65534' ]]
-          test -x /usr/bin/setpriv
-          test -x /usr/bin/sudo
           sudo -n systemd-run --quiet --no-block --service-type=exec \
             --unit="${unit}" \
             --property=Delegate=yes \
@@ -211,16 +209,11 @@ jobs:
             --property=RemainAfterExit=yes \
             --property="User=${runner_uid}" \
             --property="Group=${runner_gid}" \
+            --property="AmbientCapabilities=CAP_SETGID CAP_SETPCAP" \
+            --property="CapabilityBoundingSet=CAP_SETGID CAP_SETPCAP" \
             --property="StandardOutput=append:${GITHUB_WORKSPACE}/${log}" \
             --property="StandardError=append:${GITHUB_WORKSPACE}/${log}" \
-            /usr/bin/sudo -n /usr/bin/setpriv \
-            --clear-groups \
-            --reuid="${runner_uid}" \
-            --regid="${runner_gid}" \
-            --inh-caps=-all \
-            --ambient-caps=-all \
-            --bounding-set=-all \
-            -- "${task}/probe" delegated-launcher "${runner_uid}" "${runner_gid}"
+            "${task}/probe" delegated-launcher "${runner_uid}" "${runner_gid}"
           for _ in $(seq 1 100); do
             unit_cgroup="$(sudo -n systemctl show --property=ControlGroup --value "${unit}")"
             [[ -n "${unit_cgroup}" && -d "/sys/fs/cgroup${unit_cgroup}" ]] && break
