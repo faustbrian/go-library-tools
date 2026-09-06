@@ -997,6 +997,7 @@ func probeNamespaceCgroupPostDrop(parent context.Context) error {
 	if err := verifyPostDropDescriptors(os.Getenv("PROBE_CGROUP_LEAF")); err != nil {
 		return err
 	}
+	fmt.Printf("post-drop=pid:1 capabilities:empty bounding:empty securebits:%#x no-new-privs:1 apparmor-profile:%s cgroup-fd:verified transfer-socket:verified\n", securebits, os.Getenv("PROBE_APPARMOR_PROFILE"))
 	unix.CloseOnExec(3)
 	unix.CloseOnExec(4)
 	pidfd := -1
