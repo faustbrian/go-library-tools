@@ -206,7 +206,6 @@ jobs:
             --unit="${unit}" \
             --property=Delegate=yes \
             --property=DelegateSubgroup=golib-supervisor \
-            --property=NoNewPrivileges=yes \
             --property=RemainAfterExit=yes \
             --property="User=${runner_uid}" \
             --property="Group=${runner_gid}" \
