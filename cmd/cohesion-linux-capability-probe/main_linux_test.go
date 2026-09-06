@@ -834,7 +834,7 @@ func verifyNamespaceIsolation(pid int) error {
 			return fmt.Errorf("%s namespace was not isolated", namespace)
 		}
 	}
-	return nil
+	return verifyNamespaceOwnership(pid)
 }
 
 func probeNamespaceCgroupChild(parent context.Context) error {
@@ -880,9 +880,6 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 		if !ok || value != namespaceActiveCapabilitySet {
 			return fmt.Errorf("namespace initial %s=%q want %q", field, value, namespaceActiveCapabilitySet)
 		}
-	}
-	if err := verifyNamespaceOwnership(); err != nil {
-		return err
 	}
 	if err := probeNamespaceMountAndNetwork(os.Getenv("PROBE_MOUNT_ROOT")); err != nil {
 		return err
@@ -952,16 +949,17 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 	return nil
 }
 
-func verifyNamespaceOwnership() error {
-	userNamespace, err := unix.Open("/proc/self/ns/user", unix.O_RDONLY|unix.O_CLOEXEC, 0)
+func verifyNamespaceOwnership(pid int) error {
+	childNamespaceRoot := filepath.Join("/proc", strconv.Itoa(pid), "ns")
+	userNamespace, err := unix.Open(filepath.Join(childNamespaceRoot, "user"), unix.O_RDONLY|unix.O_CLOEXEC, 0)
 	if err != nil {
-		return fmt.Errorf("open current user namespace: %w", err)
+		return fmt.Errorf("open child user namespace: %w", err)
 	}
 	defer unix.Close(userNamespace)
 	for _, namespace := range []string{"mnt", "net", "pid"} {
-		namespaceFD, err := unix.Open("/proc/self/ns/"+namespace, unix.O_RDONLY|unix.O_CLOEXEC, 0)
+		namespaceFD, err := unix.Open(filepath.Join(childNamespaceRoot, namespace), unix.O_RDONLY|unix.O_CLOEXEC, 0)
 		if err != nil {
-			return fmt.Errorf("open current %s namespace: %w", namespace, err)
+			return fmt.Errorf("open child %s namespace: %w", namespace, err)
 		}
 		ownerFD, ownerErr := unix.IoctlRetInt(namespaceFD, unix.NS_GET_USERNS)
 		_ = unix.Close(namespaceFD)
