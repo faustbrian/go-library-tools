@@ -40,9 +40,10 @@ const (
 	bpfJumpEqual        = 0x15
 	bpfReturn           = 0x06
 
-	securebitsLocked      = 1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<5 | 1<<6 | 1<<7
-	childDiagnosticLimit  = 4096
-	launcherCapabilitySet = "0000000000000140"
+	securebitsLocked            = 1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<5 | 1<<6 | 1<<7
+	childDiagnosticLimit        = 4096
+	launcherActiveCapabilitySet = "0000000000000040"
+	namespaceCapabilityBoundSet = "0000000000201140"
 )
 
 var landlockHandled = uint64(
@@ -192,16 +193,19 @@ func launchDelegatedProbe(uidText, gidText string) error {
 	if err != nil {
 		return fmt.Errorf("read launcher initial capability state: %w", err)
 	}
-	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapBnd:", "CapAmb:"} {
+	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapAmb:"} {
 		value, ok := statusField(string(statusBytes), field)
-		if !ok || value != launcherCapabilitySet {
-			return fmt.Errorf("launcher initial %s=%q want %q", field, value, launcherCapabilitySet)
+		if !ok || value != launcherActiveCapabilitySet {
+			return fmt.Errorf("launcher initial %s=%q want %q", field, value, launcherActiveCapabilitySet)
 		}
+	}
+	if value, ok := statusField(string(statusBytes), "CapBnd:"); !ok || value != namespaceCapabilityBoundSet {
+		return fmt.Errorf("launcher initial CapBnd:=%q want %q", value, namespaceCapabilityBoundSet)
 	}
 	if err := unix.Setgroups([]int{}); err != nil {
 		return fmt.Errorf("clear launcher supplementary groups: %w", err)
 	}
-	if err := dropCapabilities(); err != nil {
+	if err := dropLauncherCapabilities(); err != nil {
 		return fmt.Errorf("drop launcher capabilities: %w", err)
 	}
 	groups, err := os.Getgroups()
@@ -216,11 +220,14 @@ func launchDelegatedProbe(uidText, gidText string) error {
 		return fmt.Errorf("read launcher capability state: %w", err)
 	}
 	status := string(statusBytes)
-	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapBnd:", "CapAmb:"} {
+	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapAmb:"} {
 		value, ok := statusField(status, field)
 		if !ok || value != "0000000000000000" {
 			return fmt.Errorf("launcher %s must be empty, got %q", field, value)
 		}
+	}
+	if value, ok := statusField(status, "CapBnd:"); !ok || value != namespaceCapabilityBoundSet {
+		return fmt.Errorf("launcher CapBnd:=%q want %q", value, namespaceCapabilityBoundSet)
 	}
 	if value, ok := statusField(status, "NoNewPrivs:"); !ok || value != "0" {
 		return fmt.Errorf("launcher no_new_privs=%q", value)
@@ -229,8 +236,20 @@ func launchDelegatedProbe(uidText, gidText string) error {
 	if err != nil {
 		return fmt.Errorf("resolve probe executable: %w", err)
 	}
-	fmt.Printf("launcher-identity=uid:%d gid:%d groups:empty capabilities:empty no-new-privs:0\n", expectedUID, expectedGID)
+	fmt.Printf("launcher-identity=uid:%d gid:%d groups:empty active-capabilities:empty bounding:namespace-only no-new-privs:0\n", expectedUID, expectedGID)
 	return unix.Exec(executable, []string{executable}, []string{})
+}
+
+func dropLauncherCapabilities() error {
+	if err := unix.Prctl(unix.PR_CAP_AMBIENT, unix.PR_CAP_AMBIENT_CLEAR_ALL, 0, 0, 0); err != nil {
+		return fmt.Errorf("clear ambient capabilities: %w", err)
+	}
+	header := unix.CapUserHeader{Version: unix.LINUX_CAPABILITY_VERSION_3, Pid: 0}
+	data := [2]unix.CapUserData{}
+	if err := unix.Capset(&header, &data[0]); err != nil {
+		return fmt.Errorf("clear capability sets: %w", err)
+	}
+	return nil
 }
 
 func parseLauncherID(name, value string) (int, error) {
