@@ -866,12 +866,122 @@ func TestExecuteRoutesReleaseChecks(t *testing.T) {
 	if code := execute([]string{"release", "dry-run"}, root, &stdout, &stderr, factory); code != 1 || stderr.Len() == 0 {
 		t.Fatalf("execute(release dry-run) = %d, %q", code, stderr.String())
 	}
-	for _, args := range [][]string{{"release"}, {"release", "publish"}, {"release", "check", "extra"}} {
+	for _, args := range [][]string{{"release"}, {"release", "publish"}, {"release", "check", "extra"}, {"release", "check", "--module"}, {"release", "check", "--all", "extra"}, {"release", "check", "--module", ".", "--module", "."}} {
 		stderr.Reset()
 		if code := execute(args, root, &stdout, &stderr, nil); code != 2 || !strings.Contains(stderr.String(), "usage: golib release") {
 			t.Fatalf("execute(%v) = %d, %q", args, code, stderr.String())
 		}
 	}
+}
+
+func TestExecuteSelectsExactlyOneReleaseModule(t *testing.T) {
+	root := releaseSelectionFixture(t)
+
+	var stdout, stderr bytes.Buffer
+	if code := execute([]string{"release", "check", "--module", "."}, root, &stdout, &stderr, nil); code != 0 || stderr.Len() != 0 || stdout.String() != "release contract passed for 1 module(s)\n" {
+		t.Fatalf("execute(release check --module .) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	stdout.Reset()
+	if code := execute([]string{"release", "check", "--all"}, root, &stdout, &stderr, nil); code != 0 || stderr.Len() != 0 || stdout.String() != "release contract passed for 2 module(s)\n" {
+		t.Fatalf("execute(release check --all) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	stdout.Reset()
+	if code := execute([]string{"release", "check", "--module", "missing"}, root, &stdout, &stderr, nil); code != 1 || !strings.Contains(stderr.String(), "unknown module: missing") {
+		t.Fatalf("execute(release check --module missing) = %d, %q", code, stderr.String())
+	}
+
+	tagQueries := []string{}
+	proxyQueries := []string{}
+	gateDirectories := []string{}
+	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return releaseSelectionExecutor{directory: t.TempDir(), existingTag: "nested/v1.0.0", tagQueries: &tagQueries, proxyQueries: &proxyQueries, gateDirectories: &gateDirectories}, func() error { return nil }, nil
+	}
+	stderr.Reset()
+	if code := execute([]string{"release", "dry-run", "--module", "."}, root, &stdout, &stderr, factory); code != 1 || !strings.Contains(stderr.String(), "injected gate stop") {
+		t.Fatalf("execute(release dry-run --module .) = %d, %q", code, stderr.String())
+	}
+	if got := strings.Join(tagQueries, ","); got != "v1.1.0" {
+		t.Fatalf("selected release tag queries = %q", got)
+	}
+	if got := strings.Join(proxyQueries, ","); got != "github.com/example/library@v1.1.0" {
+		t.Fatalf("selected release proxy queries = %q", got)
+	}
+	if got := strings.Join(gateDirectories, ","); got != root {
+		t.Fatalf("selected release gate directories = %q", got)
+	}
+
+	tagQueries = tagQueries[:0]
+	proxyQueries = proxyQueries[:0]
+	gateDirectories = gateDirectories[:0]
+	nestedFactory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return releaseSelectionExecutor{directory: t.TempDir(), tagQueries: &tagQueries, proxyQueries: &proxyQueries, gateDirectories: &gateDirectories}, func() error { return nil }, nil
+	}
+	stderr.Reset()
+	if code := execute([]string{"release", "dry-run", "--module", "nested"}, root, &stdout, &stderr, nestedFactory); code != 1 || !strings.Contains(stderr.String(), "injected gate stop") {
+		t.Fatalf("execute(release dry-run --module nested) = %d, %q", code, stderr.String())
+	}
+	if got := strings.Join(tagQueries, ","); got != "nested/v1.0.0" {
+		t.Fatalf("nested release tag queries = %q", got)
+	}
+	if got := strings.Join(proxyQueries, ","); got != "github.com/example/library/nested@v1.0.0" {
+		t.Fatalf("nested release proxy queries = %q", got)
+	}
+	if got := strings.Join(gateDirectories, ","); got != filepath.Join(root, "nested") {
+		t.Fatalf("nested release gate directories = %q", got)
+	}
+
+	tagQueries = tagQueries[:0]
+	stderr.Reset()
+	if code := execute([]string{"release", "dry-run"}, root, &stdout, &stderr, factory); code != 1 || !strings.Contains(stderr.String(), "release tag already exists: nested/v1.0.0") {
+		t.Fatalf("execute(release dry-run) = %d, %q", code, stderr.String())
+	}
+	if got := strings.Join(tagQueries, ","); got != "v1.1.0,nested/v1.0.0" {
+		t.Fatalf("default release tag queries = %q", got)
+	}
+}
+
+func TestExecuteReleaseSelectionRetainsGlobalRepositoryPrerequisites(t *testing.T) {
+	t.Run("invalid sibling module", func(t *testing.T) {
+		root := releaseSelectionFixture(t)
+		if err := os.WriteFile(filepath.Join(root, "nested", "go.mod"), []byte("module github.com/example/library/wrong\n\ngo 1.27.0\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		var stdout, stderr bytes.Buffer
+		if code := execute([]string{"release", "check", "--module", "."}, root, &stdout, &stderr, nil); code != 1 || !strings.Contains(stderr.String(), "module path does not match catalog") {
+			t.Fatalf("execute(release check --module .) = %d, %q", code, stderr.String())
+		}
+	})
+
+	t.Run("invalid sibling specification", func(t *testing.T) {
+		root := releaseSelectionFixture(t)
+		if err := os.MkdirAll(filepath.Join(root, "nested", "specification"), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		var stdout, stderr bytes.Buffer
+		if code := execute([]string{"release", "check", "--module", "."}, root, &stdout, &stderr, nil); code != 1 || !strings.Contains(stderr.String(), "specification artifacts but does not declare specifications") {
+			t.Fatalf("execute(release check --module .) = %d, %q", code, stderr.String())
+		}
+	})
+}
+
+func releaseSelectionFixture(t *testing.T) string {
+	t.Helper()
+	root := internalFixture(t)
+	for path, content := range map[string]string{
+		"go.mod":        "module github.com/example/library\n\ngo 1.27.0\n",
+		"nested/go.mod": "module github.com/example/library/nested\n\ngo 1.27.0\n",
+		"go.work":       "go 1.27.0\n\nuse (\n\t.\n\t./nested\n)\n",
+		"modules.json":  `{"schema_version":1,"repository":"github.com/example/library","go_version":"1.27.0","modules":[{"directory":".","module_path":"github.com/example/library","go_version":"1.27.0","kind":"public","releasable":true,"version":"1.1.0","tag_prefix":"v","gates":{"coverage":true,"documentation":true,"lint":true,"mutation":true,"race":true,"security":true,"tests":true},"packages":[]},{"directory":"nested","module_path":"github.com/example/library/nested","go_version":"1.27.0","kind":"public","releasable":true,"version":"1.0.0","tag_prefix":"nested/v","gates":{"coverage":true,"documentation":true,"lint":true,"mutation":true,"race":true,"security":true,"tests":true},"packages":[]}]}`,
+		"packages.json": `{"schema_version":1,"repository":"github.com/example/library","packages":[]}`,
+	} {
+		if err := os.MkdirAll(filepath.Dir(filepath.Join(root, path)), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(root, path), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return root
 }
 
 func TestExecuteReportsReleaseContractFailures(t *testing.T) {
@@ -909,6 +1019,32 @@ type cliWorkspaceExecutor struct {
 
 func (cliWorkspaceExecutor) Run(context.Context, gates.Command) error { return nil }
 func (executor cliWorkspaceExecutor) TemporaryDirectory() string      { return executor.directory }
+
+type releaseSelectionExecutor struct {
+	directory       string
+	existingTag     string
+	tagQueries      *[]string
+	proxyQueries    *[]string
+	gateDirectories *[]string
+}
+
+func (executor releaseSelectionExecutor) Run(_ context.Context, command gates.Command) error {
+	if command.Name == "git" && len(command.Args) == 3 && command.Args[0] == "tag" && command.Args[1] == "--list" {
+		*executor.tagQueries = append(*executor.tagQueries, command.Args[2])
+		if executor.existingTag != "" && command.Args[2] == executor.existingTag {
+			_, _ = io.WriteString(command.Stdout, command.Args[2]+"\n")
+		}
+		return nil
+	}
+	if command.Name == "go" && len(command.Args) > 0 && command.Args[0] == "list" {
+		*executor.proxyQueries = append(*executor.proxyQueries, command.Args[2])
+		return nil
+	}
+	*executor.gateDirectories = append(*executor.gateDirectories, command.Dir)
+	return errors.New("injected gate stop")
+}
+
+func (executor releaseSelectionExecutor) TemporaryDirectory() string { return executor.directory }
 
 type apiExecutor struct{}
 

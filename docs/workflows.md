@@ -19,6 +19,9 @@ on:
       release_dry_run:
         type: boolean
         default: false
+      release_module:
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -30,6 +33,7 @@ jobs:
     with:
       tooling_sha: 0123456789abcdef0123456789abcdef01234567
       release_dry_run: ${{ inputs.release_dry_run || false }}
+      release_module: ${{ inputs.release_module || '' }}
 
   required:
     name: Required
@@ -69,7 +73,15 @@ contract per matrix entry, uploads repository-owned `.verification` evidence,
 and runs CodeQL. The caller's final `required` job converts the reusable-call
 result into the stable `Required` check used by branch protection.
 Set `release_dry_run: true` only for an explicit release rehearsal; this first
-validates the stable release contract and then checks every releasable module.
+validates the stable release contract and then runs the complete release
+dry-run for every releasable module. Set `release_module` to an exact module
+directory to limit the release matrix and module-scoped release checks to that
+independently versioned module. Whole-repository structure, specification, and
+CodeQL checks still run. A blank selector preserves the all-module rehearsal,
+and a non-blank selector without `release_dry_run: true` fails closed. Existing
+consumer callers must expose and forward `release_module` before they can
+dispatch an exact-module hosted rehearsal; a tooling-pin upgrade alone does not
+wire the caller input.
 
 Consumer workflows retain least-privileged permissions, explicit concurrency,
 module matrices, attributable evidence artifacts, scheduled checks, CodeQL,

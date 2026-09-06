@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -17,14 +18,31 @@ var requiredGates = []string{
 	"coverage", "documentation", "lint", "mutation", "race", "security", "tests",
 }
 
-// Validate returns deterministic releasable module directories only when all
-// release metadata and mandatory gates are valid.
-func Validate(catalog inventory.Inventory, policy config.Config) ([]string, error) {
+// Validate returns deterministic releasable module directories only when the
+// selected release metadata and mandatory gates are valid. With no selection,
+// it preserves the repository-wide release contract.
+func Validate(catalog inventory.Inventory, policy config.Config, selected ...string) ([]string, error) {
 	if !semver.IsValid(policy.ToolVersion) || semver.Major(policy.ToolVersion) == "v0" {
 		return nil, errors.New("tool policy must require a stable semantic version")
 	}
-	directories := make([]string, 0, len(catalog.Modules))
-	for _, module := range catalog.Modules {
+	modules := catalog.Modules
+	if len(selected) > 1 {
+		return nil, errors.New("release validation accepts at most one selected module")
+	}
+	if len(selected) == 1 {
+		index := slices.IndexFunc(catalog.Modules, func(module inventory.Module) bool {
+			return module.Directory == selected[0]
+		})
+		if index < 0 {
+			return nil, fmt.Errorf("unknown module: %s", selected[0])
+		}
+		if !catalog.Modules[index].Releasable {
+			return nil, fmt.Errorf("module %s is not releasable", selected[0])
+		}
+		modules = catalog.Modules[index : index+1]
+	}
+	directories := make([]string, 0, len(modules))
+	for _, module := range modules {
 		if !module.Releasable {
 			continue
 		}

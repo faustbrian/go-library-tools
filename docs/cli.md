@@ -61,11 +61,15 @@ Core commands:
 - `golib services cycle [--module DIR]` starts each selected module's declared
   fixtures, waits for readiness, and closes the exact task-owned lease. It does
   not expose detached service state.
-- `golib release check` validates stable versions, tag prefixes, mandatory
-  gates, and repository structure. Before a tag exists, `golib release dry-run`
-  also rejects tag collisions, builds task-owned module-proxy archives, proves
-  clean module resolution, and executes the complete contract for every
-  releasable module.
+- `golib release check [--all|--module DIR]` validates stable versions, tag
+  prefixes, mandatory gates, and repository structure. Before a tag exists,
+  `golib release dry-run [--all|--module DIR]` also rejects tag collisions,
+  builds task-owned module-proxy archives, proves clean module resolution, and
+  executes the complete contract. Omitting the selector or using `--all`
+  preserves all-module release validation; `--module` confines release
+  metadata, tag collision, proxy-consumption, and module-gate work to exactly
+  one independently releasable module. Repository structure and specification
+  integrity remain repository-wide prerequisites.
 - `golib upgrade plan|apply --version VERSION --workflow-sha SHA
   --checksums-sha256 DIGEST [--json]` validates and updates the tool version,
   release checksum-set digest, reusable-workflow reference, and workflow input

@@ -48,8 +48,8 @@ Usage:
   golib api update
   golib docs check [--module <directory>]
 	golib services cycle [--module <directory>]
-  golib release check
-  golib release dry-run
+  golib release check [--all|--module <directory>]
+  golib release dry-run [--all|--module <directory>]
   golib evidence inspect
   golib upgrade <plan|apply> --version <version> --workflow-sha <sha> --checksums-sha256 <digest> [--json]
 `
@@ -261,10 +261,20 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).ServiceCycle(ctx, selection)
 		})
 	case "release":
-		if len(args) != 2 || (args[1] != "check" && args[1] != "dry-run") {
-			return usage(stderr, "usage: golib release <check|dry-run>")
+		if len(args) < 2 || (args[1] != "check" && args[1] != "dry-run") {
+			return usage(stderr, "usage: golib release <check|dry-run> [--all|--module <directory>]")
 		}
-		selection, validationError := releasecheck.Validate(catalog, policy)
+		directory, usageError := releaseModuleSelection(args[2:])
+		if usageError != nil {
+			return usage(stderr, usageError.Error())
+		}
+		var selection []string
+		var validationError error
+		if directory == "" {
+			selection, validationError = releasecheck.Validate(catalog, policy)
+		} else {
+			selection, validationError = releasecheck.Validate(catalog, policy, directory)
+		}
 		if validationError != nil {
 			return failure(stderr, validationError)
 		}
@@ -644,6 +654,16 @@ func moduleSelection(args []string, modules []inventory.Module) ([]string, error
 		return []string{args[1]}, nil
 	}
 	return nil, errors.New("usage: golib check [--all|--module <directory>]")
+}
+
+func releaseModuleSelection(args []string) (string, error) {
+	if len(args) == 0 || (len(args) == 1 && args[0] == "--all") {
+		return "", nil
+	}
+	if len(args) == 2 && args[0] == "--module" && args[1] != "" {
+		return args[1], nil
+	}
+	return "", errors.New("usage: golib release <check|dry-run> [--all|--module <directory>]")
 }
 
 func findRoot(start string) (string, error) {

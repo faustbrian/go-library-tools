@@ -20,6 +20,42 @@ func TestValidateReturnsStableReleasableModules(t *testing.T) {
 	}
 }
 
+func TestValidateReturnsExactlyTheSelectedReleasableModule(t *testing.T) {
+	invalidSibling := module("invalid", "invalid/v")
+	invalidSibling.Version = "0.9.0"
+	catalog := inventory.Inventory{Modules: []inventory.Module{
+		invalidSibling,
+		{Directory: "reference", Releasable: false},
+		module(".", "v"),
+	}}
+	directories, err := Validate(catalog, stablePolicy(), ".")
+	if err != nil || strings.Join(directories, ",") != "." {
+		t.Fatalf("Validate(selected) = %#v, %v", directories, err)
+	}
+}
+
+func TestValidateRejectsInvalidReleaseSelections(t *testing.T) {
+	catalog := inventory.Inventory{Modules: []inventory.Module{
+		module(".", "v"),
+		{Directory: "reference", Releasable: false},
+	}}
+	for _, test := range []struct {
+		name      string
+		selection []string
+		want      string
+	}{
+		{name: "unknown", selection: []string{"missing"}, want: "unknown module: missing"},
+		{name: "not releasable", selection: []string{"reference"}, want: "module reference is not releasable"},
+		{name: "multiple", selection: []string{".", "reference"}, want: "at most one"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if _, err := Validate(catalog, stablePolicy(), test.selection...); err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("Validate(%v) error = %v, want %q", test.selection, err, test.want)
+			}
+		})
+	}
+}
+
 func TestValidateRejectsInvalidReleaseContracts(t *testing.T) {
 	tests := []struct {
 		name   string
