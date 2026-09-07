@@ -87,9 +87,7 @@ type boundedDiagnostic struct {
 
 func (diagnostic *boundedDiagnostic) Write(data []byte) (int, error) {
 	remaining := childDiagnosticLimit - len(diagnostic.data)
-	if remaining > len(data) {
-		remaining = len(data)
-	}
+	remaining = min(remaining, len(data))
 	if remaining > 0 {
 		diagnostic.data = append(diagnostic.data, data[:remaining]...)
 	}
@@ -795,7 +793,10 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 	}
 	if n == 0 {
 		waitErr := command.Wait()
-		return fmt.Errorf("mapped clone3 readiness closed: child=%v: %s", waitErr, childDiagnostic.String())
+		if waitErr != nil {
+			return fmt.Errorf("mapped clone3 readiness closed: child: %w: %s", waitErr, childDiagnostic.String())
+		}
+		return fmt.Errorf("mapped clone3 readiness closed: child exited without error: %s", childDiagnostic.String())
 	}
 	if string(message[:n]) != "ready" {
 		return fmt.Errorf("mapped clone3 readiness bytes=%q", message[:n])
@@ -867,7 +868,7 @@ func verifyNamespaceIsolation(pid int) error {
 	return verifyNamespaceOwnership(pid)
 }
 
-func probeNamespaceCgroupChild(parent context.Context) error {
+func probeNamespaceCgroupChild(_ context.Context) error {
 	ruid, euid, suid := unix.Getresuid()
 	rgid, egid, sgid := unix.Getresgid()
 	if ruid != overflowID || euid != overflowID || suid != overflowID || rgid != overflowID || egid != overflowID || sgid != overflowID {
@@ -1376,7 +1377,7 @@ func prepareSystemdDelegation(root, supervisor string) error {
 		return fmt.Errorf("read delegated controllers: %w", err)
 	}
 	available := map[string]bool{}
-	for _, controller := range strings.Fields(string(controllers)) {
+	for controller := range strings.FieldsSeq(string(controllers)) {
 		available[controller] = true
 	}
 	for _, controller := range []string{"cpu", "memory", "pids"} {
@@ -1393,7 +1394,7 @@ func prepareSystemdDelegation(root, supervisor string) error {
 		return fmt.Errorf("read delegated subtree controllers: %w", err)
 	}
 	enabledSet := map[string]bool{}
-	for _, controller := range strings.Fields(string(enabled)) {
+	for controller := range strings.FieldsSeq(string(enabled)) {
 		enabledSet[controller] = true
 	}
 	for _, controller := range []string{"cpu", "memory", "pids"} {
