@@ -232,7 +232,7 @@ jobs:
           runner_uid="$(id -u)"
           runner_gid="$(id -g)"
           [[ "${runner_uid}" != '0' && "${runner_uid}" != '65534' ]]
-          [[ "${runner_gid}" != '0' && "${runner_gid}" != '65534' ]]
+          [[ "${runner_gid}" != '65534' ]]
           sudo -n systemd-run --quiet --no-block --service-type=exec \
             --unit="${unit}" \
             --property=Delegate=yes \

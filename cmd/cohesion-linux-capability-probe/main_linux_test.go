@@ -26,7 +26,6 @@ import (
 )
 
 const (
-	overflowID                = 65534
 	delegatedSupervisorCgroup = "golib-supervisor"
 
 	landlockRulesetVersion  = 1
@@ -258,14 +257,6 @@ func dropLauncherCapabilities() error {
 	return nil
 }
 
-func parseLauncherID(name, value string) (int, error) {
-	parsed, err := strconv.Atoi(value)
-	if err != nil || strconv.Itoa(parsed) != value || parsed <= 0 || parsed == overflowID {
-		return 0, fmt.Errorf("invalid launcher %s %q", name, value)
-	}
-	return parsed, nil
-}
-
 func run(ctx context.Context) (resultErr error) {
 	kernelRelease, err := probeKernelAndIdentity()
 	if err != nil {
@@ -338,8 +329,11 @@ func probeKernelAndIdentity() (string, error) {
 		return "", fmt.Errorf("kernel %q is older than 6.9", release)
 	}
 	uid, gid := os.Geteuid(), os.Getegid()
-	if uid == 0 || gid == 0 || uid == overflowID || gid == overflowID {
-		return "", fmt.Errorf("outer identity uid=%d gid=%d is root or reserved", uid, gid)
+	if err := validateLauncherID("uid", uid); err != nil {
+		return "", err
+	}
+	if err := validateLauncherID("gid", gid); err != nil {
+		return "", err
 	}
 	status, err := os.ReadFile("/proc/self/status")
 	if err != nil {

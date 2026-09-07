@@ -19,6 +19,8 @@ All notable changes to this project are documented in this file.
 - Cleared inherited supplementary groups before the unprivileged schema-v3
   probe enters a user namespace while retaining exact identity and capability
   checks.
+- Aligned schema-v3 probe identity validation with the frozen contract by
+  allowing a non-root caller whose primary group ID is zero.
 - Added exact module selection to local and hosted release checks and rehearsals
   so independently versioned modules are not blocked by an already released
   sibling tag.
