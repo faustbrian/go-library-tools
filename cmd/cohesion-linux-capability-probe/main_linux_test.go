@@ -26,7 +26,7 @@ import (
 )
 
 const (
-	overflowID = 65534
+	delegatedSupervisorCgroup = "golib-supervisor"
 
 	landlockRulesetVersion  = 1
 	landlockRulePathBeneath = 1
@@ -39,7 +39,11 @@ const (
 	bpfJumpEqual        = 0x15
 	bpfReturn           = 0x06
 
-	securebitsLocked = 1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<5 | 1<<6 | 1<<7
+	securebitsLocked             = 1<<0 | 1<<1 | 1<<2 | 1<<3 | 1<<5 | 1<<6 | 1<<7
+	childDiagnosticLimit         = 4096
+	launcherActiveCapabilitySet  = "0000000000000040"
+	namespaceActiveCapabilitySet = "0000000000201100"
+	namespaceCapabilityBoundSet  = "0000000000201140"
 )
 
 var landlockHandled = uint64(
@@ -76,6 +80,51 @@ type fOwnerEx struct {
 	PID  int32
 }
 
+type boundedDiagnostic struct {
+	data []byte
+}
+
+func (diagnostic *boundedDiagnostic) Write(data []byte) (int, error) {
+	remaining := childDiagnosticLimit - len(diagnostic.data)
+	remaining = min(remaining, len(data))
+	if remaining > 0 {
+		diagnostic.data = append(diagnostic.data, data[:remaining]...)
+	}
+	return len(data), nil
+}
+
+func (diagnostic *boundedDiagnostic) String() string {
+	return strings.TrimSpace(string(diagnostic.data))
+}
+
+func TestBoundedDiagnosticCapsRetainedOutput(t *testing.T) {
+	payload := strings.Repeat("x", childDiagnosticLimit+1) + "\n"
+	var diagnostic boundedDiagnostic
+
+	written, err := diagnostic.Write([]byte(payload))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if written != len(payload) {
+		t.Fatalf("reported write length=%d want=%d", written, len(payload))
+	}
+	if got := len(diagnostic.data); got != childDiagnosticLimit {
+		t.Fatalf("retained diagnostic bytes=%d want=%d", got, childDiagnosticLimit)
+	}
+	if got := diagnostic.String(); got != strings.Repeat("x", childDiagnosticLimit) {
+		t.Fatalf("retained diagnostic=%q", got)
+	}
+}
+
+func TestProbeLeaseCompletesBreak(t *testing.T) {
+	if os.Getenv("COHESION_PROBE_FOCUSED") != "lease" {
+		t.Skip("requires the opt-in hosted Linux lease probe")
+	}
+	if err := probeLease(t.Context(), t.TempDir()); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestMain(testingMain *testing.M) {
 	for _, argument := range os.Args[1:] {
 		if strings.HasPrefix(argument, "-test.") {
@@ -87,6 +136,14 @@ func TestMain(testingMain *testing.M) {
 
 func runProbe() {
 	var err error
+	if len(os.Args) == 5 && os.Args[1] == "delegated-launcher" {
+		err = launchDelegatedProbe(os.Args[2], os.Args[3], os.Args[4])
+		if err != nil {
+			fmt.Fprintln(os.Stderr, "unsupported:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	switch strings.Join(os.Args[1:], " ") {
 	case "pidfd-sender":
 		err = writeByteToFD(3)
@@ -99,6 +156,10 @@ func runProbe() {
 	case "namespace-cgroup-child":
 		ctx, stop := signal.NotifyContext(context.Background(), unix.SIGINT, unix.SIGTERM)
 		err = probeNamespaceCgroupChild(ctx)
+		stop()
+	case "namespace-cgroup-post-drop":
+		ctx, stop := signal.NotifyContext(context.Background(), unix.SIGINT, unix.SIGTERM)
+		err = probeNamespaceCgroupPostDrop(ctx)
 		stop()
 	case "cgroup-leaf-child":
 		err = probeCgroupLeafChild()
@@ -113,6 +174,87 @@ func runProbe() {
 		fmt.Fprintln(os.Stderr, "unsupported:", err)
 		os.Exit(1)
 	}
+}
+
+func launchDelegatedProbe(uidText, gidText, appArmorProfile string) error {
+	expectedUID, err := parseLauncherID("uid", uidText)
+	if err != nil {
+		return err
+	}
+	expectedGID, err := parseLauncherID("gid", gidText)
+	if err != nil {
+		return err
+	}
+	ruid, euid, suid := unix.Getresuid()
+	rgid, egid, sgid := unix.Getresgid()
+	if ruid != expectedUID || euid != expectedUID || suid != expectedUID ||
+		rgid != expectedGID || egid != expectedGID || sgid != expectedGID {
+		return fmt.Errorf("launcher identity uid=%d/%d/%d gid=%d/%d/%d", ruid, euid, suid, rgid, egid, sgid)
+	}
+	statusBytes, err := os.ReadFile("/proc/self/status")
+	if err != nil {
+		return fmt.Errorf("read launcher initial capability state: %w", err)
+	}
+	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapAmb:"} {
+		value, ok := statusField(string(statusBytes), field)
+		if !ok || value != launcherActiveCapabilitySet {
+			return fmt.Errorf("launcher initial %s=%q want %q", field, value, launcherActiveCapabilitySet)
+		}
+	}
+	if value, ok := statusField(string(statusBytes), "CapBnd:"); !ok || value != namespaceCapabilityBoundSet {
+		return fmt.Errorf("launcher initial CapBnd:=%q want %q", value, namespaceCapabilityBoundSet)
+	}
+	if err := unix.Setgroups([]int{}); err != nil {
+		return fmt.Errorf("clear launcher supplementary groups: %w", err)
+	}
+	if err := dropLauncherCapabilities(); err != nil {
+		return fmt.Errorf("drop launcher capabilities: %w", err)
+	}
+	groups, err := os.Getgroups()
+	if err != nil {
+		return fmt.Errorf("read launcher supplementary groups: %w", err)
+	}
+	if len(groups) != 0 {
+		return fmt.Errorf("launcher supplementary groups=%v", groups)
+	}
+	statusBytes, err = os.ReadFile("/proc/self/status")
+	if err != nil {
+		return fmt.Errorf("read launcher capability state: %w", err)
+	}
+	status := string(statusBytes)
+	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapAmb:"} {
+		value, ok := statusField(status, field)
+		if !ok || value != "0000000000000000" {
+			return fmt.Errorf("launcher %s must be empty, got %q", field, value)
+		}
+	}
+	if value, ok := statusField(status, "CapBnd:"); !ok || value != namespaceCapabilityBoundSet {
+		return fmt.Errorf("launcher CapBnd:=%q want %q", value, namespaceCapabilityBoundSet)
+	}
+	if value, ok := statusField(status, "NoNewPrivs:"); !ok || value != "0" {
+		return fmt.Errorf("launcher no_new_privs=%q", value)
+	}
+	if !validAppArmorProfileName(appArmorProfile) {
+		return fmt.Errorf("invalid AppArmor profile name %q", appArmorProfile)
+	}
+	executable, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("resolve probe executable: %w", err)
+	}
+	fmt.Printf("launcher-identity=uid:%d gid:%d groups:empty active-capabilities:empty bounding:namespace-only no-new-privs:0\n", expectedUID, expectedGID)
+	return unix.Exec(executable, []string{executable}, []string{"PROBE_APPARMOR_PROFILE=" + appArmorProfile})
+}
+
+func dropLauncherCapabilities() error {
+	if err := unix.Prctl(unix.PR_CAP_AMBIENT, unix.PR_CAP_AMBIENT_CLEAR_ALL, 0, 0, 0); err != nil {
+		return fmt.Errorf("clear ambient capabilities: %w", err)
+	}
+	header := unix.CapUserHeader{Version: unix.LINUX_CAPABILITY_VERSION_3, Pid: 0}
+	data := [2]unix.CapUserData{}
+	if err := unix.Capset(&header, &data[0]); err != nil {
+		return fmt.Errorf("clear capability sets: %w", err)
+	}
+	return nil
 }
 
 func run(ctx context.Context) (resultErr error) {
@@ -187,8 +329,11 @@ func probeKernelAndIdentity() (string, error) {
 		return "", fmt.Errorf("kernel %q is older than 6.9", release)
 	}
 	uid, gid := os.Geteuid(), os.Getegid()
-	if uid == 0 || gid == 0 || uid == overflowID || gid == overflowID {
-		return "", fmt.Errorf("outer identity uid=%d gid=%d is root or reserved", uid, gid)
+	if err := validateLauncherID("uid", uid); err != nil {
+		return "", err
+	}
+	if err := validateLauncherID("gid", gid); err != nil {
+		return "", err
 	}
 	status, err := os.ReadFile("/proc/self/status")
 	if err != nil {
@@ -200,6 +345,24 @@ func probeKernelAndIdentity() (string, error) {
 			return "", fmt.Errorf("%s must be empty, got %q", field, value)
 		}
 	}
+	profile := os.Getenv("PROBE_APPARMOR_PROFILE")
+	if err := verifyCurrentAppArmorProfile(profile); err != nil {
+		return "", err
+	}
+	restrictionBytes, err := os.ReadFile("/proc/sys/kernel/apparmor_restrict_unprivileged_userns")
+	if err != nil {
+		return "", fmt.Errorf("read AppArmor user namespace restriction: %w", err)
+	}
+	restriction := strings.TrimSpace(string(restrictionBytes))
+	if restriction != "1" {
+		return "", fmt.Errorf("AppArmor user namespace restriction=%q want=1", restriction)
+	}
+	seccomp, seccompOK := statusField(string(status), "Seccomp:")
+	filters, filtersOK := statusField(string(status), "Seccomp_filters:")
+	if !seccompOK || seccomp != "0" || !filtersOK || filters != "0" {
+		return "", fmt.Errorf("inherited seccomp mode=%q filters=%q want=0/0", seccomp, filters)
+	}
+	fmt.Printf("host-security=apparmor-profile:%s apparmor-userns-restriction:%s seccomp:%s seccomp-filters:%s\n", profile, restriction, seccomp, filters)
 	return release, nil
 }
 
@@ -474,8 +637,8 @@ func probeLease(parent context.Context, root string) error {
 			if leaseErr != nil {
 				return fmt.Errorf("lease state after break: %w", leaseErr)
 			}
-			if lease != unix.F_RDLCK {
-				return fmt.Errorf("lease state after break=%d want=%d", lease, unix.F_RDLCK)
+			if lease != unix.F_UNLCK {
+				return fmt.Errorf("lease break target=%d want=%d", lease, unix.F_UNLCK)
 			}
 			break
 		} else if !errors.Is(err, unix.EAGAIN) || time.Now().After(deadline) {
@@ -588,8 +751,15 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 	defer cancel()
 	command = exec.CommandContext(ctx, os.Args[0], "namespace-cgroup-child")
 	configureGracefulCancel(command)
+	var childDiagnostic boundedDiagnostic
+	command.Stdout = os.Stdout
+	command.Stderr = &childDiagnostic
 	command.ExtraFiles = []*os.File{cgroupFile, childSock}
-	command.Env = []string{"PROBE_MOUNT_ROOT=" + taskRoot}
+	command.Env = []string{
+		"PROBE_APPARMOR_PROFILE=" + os.Getenv("PROBE_APPARMOR_PROFILE"),
+		"PROBE_CGROUP_LEAF=" + leaf,
+		"PROBE_MOUNT_ROOT=" + taskRoot,
+	}
 	command.SysProcAttr = &syscall.SysProcAttr{
 		Cloneflags:                 unix.CLONE_NEWUSER | unix.CLONE_NEWNS | unix.CLONE_NEWNET | unix.CLONE_NEWPID,
 		UidMappings:                []syscall.SysProcIDMap{{ContainerID: overflowID, HostID: os.Geteuid(), Size: 1}},
@@ -614,6 +784,13 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 	n, controlN, recvErr := recvmsgBounded(int(parentSock.Fd()), message, control, 5*time.Second)
 	if recvErr != nil {
 		return fmt.Errorf("mapped clone3 readiness: %w", recvErr)
+	}
+	if n == 0 {
+		waitErr := command.Wait()
+		if waitErr != nil {
+			return fmt.Errorf("mapped clone3 readiness closed: child: %w: %s", waitErr, childDiagnostic.String())
+		}
+		return fmt.Errorf("mapped clone3 readiness closed: child exited without error: %s", childDiagnostic.String())
 	}
 	if string(message[:n]) != "ready" {
 		return fmt.Errorf("mapped clone3 readiness bytes=%q", message[:n])
@@ -655,7 +832,7 @@ func probeCgroupAndNamespaces(parent context.Context, taskRoot string) (resultEr
 		return fmt.Errorf("cgroup.kill: %w", err)
 	}
 	if err := command.Wait(); err != nil {
-		return fmt.Errorf("namespace init reap: %w", err)
+		return fmt.Errorf("namespace init reap: %w: %s", err, childDiagnostic.String())
 	}
 	if _, err := os.Stat(filepath.Join("/proc", strconv.Itoa(command.Process.Pid))); !errors.Is(err, os.ErrNotExist) {
 		return fmt.Errorf("namespace init cleanup left pid %d", command.Process.Pid)
@@ -682,10 +859,10 @@ func verifyNamespaceIsolation(pid int) error {
 			return fmt.Errorf("%s namespace was not isolated", namespace)
 		}
 	}
-	return nil
+	return verifyNamespaceOwnership(pid)
 }
 
-func probeNamespaceCgroupChild(parent context.Context) error {
+func probeNamespaceCgroupChild(_ context.Context) error {
 	ruid, euid, suid := unix.Getresuid()
 	rgid, egid, sgid := unix.Getresgid()
 	if ruid != overflowID || euid != overflowID || suid != overflowID || rgid != overflowID || egid != overflowID || sgid != overflowID {
@@ -719,38 +896,66 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 	if strings.TrimSpace(string(setgroups)) != "deny" {
 		return fmt.Errorf("setgroups=%q", setgroups)
 	}
+	statusBytes, err := os.ReadFile("/proc/self/status")
+	if err != nil {
+		return fmt.Errorf("read namespace capability state: %w", err)
+	}
+	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapAmb:"} {
+		value, ok := statusField(string(statusBytes), field)
+		if !ok || value != namespaceActiveCapabilitySet {
+			return fmt.Errorf("namespace initial %s=%q want %q", field, value, namespaceActiveCapabilitySet)
+		}
+	}
 	if err := probeNamespaceMountAndNetwork(os.Getenv("PROBE_MOUNT_ROOT")); err != nil {
 		return err
 	}
 	if err := dropCapabilities(); err != nil {
 		return err
 	}
+	if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+		return fmt.Errorf("set no_new_privs before post-drop exec: %w", err)
+	}
+	executable, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("resolve post-drop executable: %w", err)
+	}
+	return unix.Exec(executable, []string{executable, "namespace-cgroup-post-drop"}, []string{
+		"PROBE_APPARMOR_PROFILE=" + os.Getenv("PROBE_APPARMOR_PROFILE"),
+		"PROBE_CGROUP_LEAF=" + os.Getenv("PROBE_CGROUP_LEAF"),
+	})
+}
+
+func probeNamespaceCgroupPostDrop(parent context.Context) error {
+	if os.Getpid() != 1 {
+		return fmt.Errorf("PID namespace init pid=%d", os.Getpid())
+	}
 	statusBytes, err := os.ReadFile("/proc/self/status")
 	if err != nil {
-		return err
+		return fmt.Errorf("read post-drop capability state: %w", err)
 	}
 	for _, field := range []string{"CapInh:", "CapPrm:", "CapEff:", "CapBnd:", "CapAmb:"} {
 		value, ok := statusField(string(statusBytes), field)
 		if !ok || value != "0000000000000000" {
-			return fmt.Errorf("%s=%q", field, value)
+			return fmt.Errorf("post-drop %s=%q want zero", field, value)
 		}
 	}
-	if value, ok := statusField(string(statusBytes), "NoNewPrivs:"); !ok || value != "0" {
-		return fmt.Errorf("unexpected initial no_new_privs=%q", value)
+	if value, ok := statusField(string(statusBytes), "NoNewPrivs:"); !ok || value != "1" {
+		return fmt.Errorf("post-drop no_new_privs=%q want=1", value)
 	}
-	if err := unix.Prctl(unix.PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0); err != nil {
+	securebits, _, errno := unix.Syscall6(unix.SYS_PRCTL, unix.PR_GET_SECUREBITS, 0, 0, 0, 0, 0)
+	if errno != 0 {
+		return fmt.Errorf("read post-drop securebits: %w", errno)
+	}
+	if securebits != securebitsLocked {
+		return fmt.Errorf("post-drop securebits=%#x want=%#x", securebits, securebitsLocked)
+	}
+	if err := verifyCurrentAppArmorProfile(os.Getenv("PROBE_APPARMOR_PROFILE")); err != nil {
 		return err
 	}
-	noNewPrivileges, _, errno := unix.Syscall6(unix.SYS_PRCTL, unix.PR_GET_NO_NEW_PRIVS, 0, 0, 0, 0, 0)
-	if errno != 0 {
-		return errno
+	if err := verifyPostDropDescriptors(os.Getenv("PROBE_CGROUP_LEAF")); err != nil {
+		return err
 	}
-	if noNewPrivileges != 1 {
-		return errors.New("no_new_privs not set")
-	}
-	if os.Getpid() != 1 {
-		return fmt.Errorf("PID namespace init pid=%d", os.Getpid())
-	}
+	fmt.Printf("post-drop=pid:1 capabilities:empty bounding:empty securebits:%#x no-new-privs:1 apparmor-profile:%s cgroup-fd:verified transfer-socket:verified\n", securebits, os.Getenv("PROBE_APPARMOR_PROFILE"))
 	unix.CloseOnExec(3)
 	unix.CloseOnExec(4)
 	pidfd := -1
@@ -783,6 +988,80 @@ func probeNamespaceCgroupChild(parent context.Context) error {
 	status, ok := exitError.Sys().(syscall.WaitStatus)
 	if !ok || !status.Signaled() || status.Signal() != unix.SIGKILL {
 		return fmt.Errorf("cgroup child status=%v", status)
+	}
+	return nil
+}
+
+func verifyCurrentAppArmorProfile(profile string) error {
+	if !validAppArmorProfileName(profile) {
+		return fmt.Errorf("invalid expected AppArmor profile %q", profile)
+	}
+	labelBytes, err := os.ReadFile("/proc/self/attr/current")
+	if err != nil {
+		return fmt.Errorf("read AppArmor profile label: %w", err)
+	}
+	label := strings.TrimSpace(string(labelBytes))
+	if label != profile+" (unconfined)" {
+		return fmt.Errorf("AppArmor profile label=%q want=%q", label, profile+" (unconfined)")
+	}
+	return nil
+}
+
+func verifyPostDropDescriptors(cgroupLeaf string) error {
+	cleanLeaf := filepath.Clean(cgroupLeaf)
+	if cgroupLeaf != cleanLeaf || !strings.HasPrefix(cleanLeaf, "/sys/fs/cgroup/") {
+		return fmt.Errorf("invalid post-drop cgroup leaf %q", cgroupLeaf)
+	}
+	var descriptorStat, pathStat unix.Stat_t
+	if err := unix.Fstat(3, &descriptorStat); err != nil {
+		return fmt.Errorf("inspect post-drop cgroup descriptor: %w", err)
+	}
+	if err := unix.Stat(cleanLeaf, &pathStat); err != nil {
+		return fmt.Errorf("inspect post-drop cgroup leaf: %w", err)
+	}
+	if descriptorStat.Dev != pathStat.Dev || descriptorStat.Ino != pathStat.Ino || descriptorStat.Ino == 0 || descriptorStat.Mode&unix.S_IFMT != unix.S_IFDIR {
+		return errors.New("post-drop cgroup descriptor identity mismatch")
+	}
+	if flags, err := unix.FcntlInt(3, unix.F_GETFD, 0); err != nil {
+		return fmt.Errorf("inspect post-drop cgroup descriptor flags: %w", err)
+	} else if flags&unix.FD_CLOEXEC != 0 {
+		return errors.New("post-drop cgroup descriptor was close-on-exec")
+	}
+	if socketType, err := unix.GetsockoptInt(4, unix.SOL_SOCKET, unix.SO_TYPE); err != nil {
+		return fmt.Errorf("inspect post-drop transfer socket: %w", err)
+	} else if socketType != unix.SOCK_SEQPACKET {
+		return fmt.Errorf("post-drop transfer socket type=%d want=%d", socketType, unix.SOCK_SEQPACKET)
+	}
+	if flags, err := unix.FcntlInt(4, unix.F_GETFD, 0); err != nil {
+		return fmt.Errorf("inspect post-drop transfer socket flags: %w", err)
+	} else if flags&unix.FD_CLOEXEC != 0 {
+		return errors.New("post-drop transfer socket was close-on-exec")
+	}
+	return nil
+}
+
+func verifyNamespaceOwnership(pid int) error {
+	childNamespaceRoot := filepath.Join("/proc", strconv.Itoa(pid), "ns")
+	userNamespace, err := unix.Open(filepath.Join(childNamespaceRoot, "user"), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+	if err != nil {
+		return fmt.Errorf("open child user namespace: %w", err)
+	}
+	defer unix.Close(userNamespace)
+	for _, namespace := range []string{"mnt", "net", "pid"} {
+		namespaceFD, err := unix.Open(filepath.Join(childNamespaceRoot, namespace), unix.O_RDONLY|unix.O_CLOEXEC, 0)
+		if err != nil {
+			return fmt.Errorf("open child %s namespace: %w", namespace, err)
+		}
+		ownerFD, ownerErr := unix.IoctlRetInt(namespaceFD, unix.NS_GET_USERNS)
+		_ = unix.Close(namespaceFD)
+		if ownerErr != nil {
+			return fmt.Errorf("read %s namespace owner: %w", namespace, ownerErr)
+		}
+		identityErr := sameFileIdentity(userNamespace, ownerFD)
+		_ = unix.Close(ownerFD)
+		if identityErr != nil {
+			return fmt.Errorf("%s namespace owner: %w", namespace, identityErr)
+		}
 	}
 	return nil
 }
@@ -862,8 +1141,11 @@ func bringLoopbackUp() error {
 	if err := unix.IoctlIfreq(socket, unix.SIOCGIFFLAGS, request); err != nil {
 		return fmt.Errorf("read loopback flags: %w", err)
 	}
-	request.SetUint16(request.Uint16() | unix.IFF_UP)
-	if err := unix.IoctlIfreq(socket, unix.SIOCSIFFLAGS, request); err != nil {
+	loopback, err := net.InterfaceByName("lo")
+	if err != nil {
+		return fmt.Errorf("resolve loopback interface: %w", err)
+	}
+	if err := setLoopbackUpNetlink(loopback.Index); err != nil {
 		return fmt.Errorf("bring loopback up: %w", err)
 	}
 	if err := unix.IoctlIfreq(socket, unix.SIOCGIFFLAGS, request); err != nil {
@@ -871,6 +1153,83 @@ func bringLoopbackUp() error {
 	}
 	if request.Uint16()&(unix.IFF_LOOPBACK|unix.IFF_UP) != unix.IFF_LOOPBACK|unix.IFF_UP {
 		return fmt.Errorf("loopback flags=%#x", request.Uint16())
+	}
+	return nil
+}
+
+func setLoopbackUpNetlink(index int) error {
+	const sequence = 1
+	if index <= 0 {
+		return fmt.Errorf("invalid loopback interface index=%d", index)
+	}
+	name := []byte{'l', 'o', 0}
+	attributeLength := unix.SizeofRtAttr + len(name)
+	messageLength := unix.SizeofNlMsghdr + unix.SizeofIfInfomsg + (attributeLength+3)&^3
+	message := make([]byte, messageLength)
+	*(*unix.NlMsghdr)(unsafe.Pointer(&message[0])) = unix.NlMsghdr{
+		Len: uint32(messageLength), Type: unix.RTM_NEWLINK,
+		Flags: unix.NLM_F_REQUEST | unix.NLM_F_ACK, Seq: sequence,
+	}
+	*(*unix.IfInfomsg)(unsafe.Pointer(&message[unix.SizeofNlMsghdr])) = unix.IfInfomsg{
+		Family: unix.AF_UNSPEC, Index: int32(index), Flags: unix.IFF_UP, Change: unix.IFF_UP,
+	}
+	attributeOffset := unix.SizeofNlMsghdr + unix.SizeofIfInfomsg
+	*(*unix.RtAttr)(unsafe.Pointer(&message[attributeOffset])) = unix.RtAttr{
+		Len: uint16(attributeLength), Type: unix.IFLA_IFNAME,
+	}
+	copy(message[attributeOffset+unix.SizeofRtAttr:], name)
+
+	socket, err := unix.Socket(unix.AF_NETLINK, unix.SOCK_RAW|unix.SOCK_CLOEXEC|unix.SOCK_NONBLOCK, unix.NETLINK_ROUTE)
+	if err != nil {
+		return fmt.Errorf("open route netlink socket: %w", err)
+	}
+	defer unix.Close(socket)
+	if err := unix.Bind(socket, &unix.SockaddrNetlink{Family: unix.AF_NETLINK}); err != nil {
+		return fmt.Errorf("bind route netlink socket: %w", err)
+	}
+	localAddress, err := unix.Getsockname(socket)
+	if err != nil {
+		return fmt.Errorf("read route netlink address: %w", err)
+	}
+	localNetlink, ok := localAddress.(*unix.SockaddrNetlink)
+	if !ok || localNetlink.Pid == 0 || localNetlink.Groups != 0 {
+		return fmt.Errorf("invalid route netlink address: %#v", localAddress)
+	}
+	(*unix.NlMsghdr)(unsafe.Pointer(&message[0])).Pid = localNetlink.Pid
+	if err := unix.Sendto(socket, message, 0, &unix.SockaddrNetlink{Family: unix.AF_NETLINK}); err != nil {
+		return fmt.Errorf("send RTM_NEWLINK: %w", err)
+	}
+	reply := make([]byte, 4096)
+	pollFDs := []unix.PollFd{{Fd: int32(socket), Events: unix.POLLIN}}
+	count, err := unix.Poll(pollFDs, 5000)
+	if err != nil {
+		return fmt.Errorf("poll RTM_NEWLINK acknowledgement: %w", err)
+	}
+	if count != 1 || pollFDs[0].Revents&unix.POLLIN == 0 {
+		return fmt.Errorf("RTM_NEWLINK acknowledgement timed out or closed: events=%#x", pollFDs[0].Revents)
+	}
+	replyN, _, flags, sourceAddress, err := unix.Recvmsg(socket, reply, nil, unix.MSG_DONTWAIT)
+	if err != nil {
+		return fmt.Errorf("receive RTM_NEWLINK acknowledgement: %w", err)
+	}
+	if flags&(unix.MSG_TRUNC|unix.MSG_CTRUNC) != 0 {
+		return fmt.Errorf("truncated RTM_NEWLINK acknowledgement: flags=%#x", flags)
+	}
+	sourceNetlink, ok := sourceAddress.(*unix.SockaddrNetlink)
+	if !ok || sourceNetlink.Pid != 0 || sourceNetlink.Groups != 0 {
+		return fmt.Errorf("invalid RTM_NEWLINK acknowledgement source: %#v", sourceAddress)
+	}
+	if replyN < unix.SizeofNlMsghdr+4 {
+		return fmt.Errorf("short RTM_NEWLINK acknowledgement: bytes=%d", replyN)
+	}
+	header := *(*unix.NlMsghdr)(unsafe.Pointer(&reply[0]))
+	if header.Type != unix.NLMSG_ERROR || header.Seq != sequence || header.Pid != localNetlink.Pid ||
+		header.Len < uint32(unix.SizeofNlMsghdr+4) || header.Len != uint32(replyN) {
+		return fmt.Errorf("invalid RTM_NEWLINK acknowledgement: type=%d seq=%d pid=%d length=%d bytes=%d", header.Type, header.Seq, header.Pid, header.Len, replyN)
+	}
+	code := *(*int32)(unsafe.Pointer(&reply[unix.SizeofNlMsghdr]))
+	if code != 0 {
+		return unix.Errno(-code)
 	}
 	return nil
 }
@@ -973,10 +1332,71 @@ func currentCgroupDirectory() (string, error) {
 		return "", errors.New("unified cgroup v2 membership unavailable")
 	}
 	root := filepath.Join("/sys/fs/cgroup", filepath.Clean("/"+path))
+	if filepath.Base(root) == delegatedSupervisorCgroup {
+		delegatedRoot := filepath.Dir(root)
+		if err := prepareSystemdDelegation(delegatedRoot, root); err != nil {
+			return "", err
+		}
+		root = delegatedRoot
+	}
 	if _, err := os.Stat(filepath.Join(root, "cgroup.controllers")); err != nil {
 		return "", fmt.Errorf("cgroup v2 controllers: %w", err)
 	}
 	return root, nil
+}
+
+func prepareSystemdDelegation(root, supervisor string) error {
+	marker := make([]byte, 1)
+	count, err := unix.Getxattr(root, "user.delegate", marker)
+	if err != nil || count != 1 || marker[0] != '1' {
+		return errors.New("systemd cgroup delegation marker unavailable")
+	}
+	processes, err := os.ReadFile(filepath.Join(root, "cgroup.procs"))
+	if err != nil {
+		return fmt.Errorf("read delegated root processes: %w", err)
+	}
+	if len(strings.Fields(string(processes))) != 0 {
+		return errors.New("delegated root contains processes")
+	}
+	processes, err = os.ReadFile(filepath.Join(supervisor, "cgroup.procs"))
+	if err != nil {
+		return fmt.Errorf("read delegated supervisor processes: %w", err)
+	}
+	fields := strings.Fields(string(processes))
+	if len(fields) != 1 || fields[0] != strconv.Itoa(os.Getpid()) {
+		return fmt.Errorf("delegated supervisor processes=%q", fields)
+	}
+	controllers, err := os.ReadFile(filepath.Join(root, "cgroup.controllers"))
+	if err != nil {
+		return fmt.Errorf("read delegated controllers: %w", err)
+	}
+	available := map[string]bool{}
+	for controller := range strings.FieldsSeq(string(controllers)) {
+		available[controller] = true
+	}
+	for _, controller := range []string{"cpu", "memory", "pids"} {
+		if !available[controller] {
+			return fmt.Errorf("delegated controller %s unavailable", controller)
+		}
+	}
+	control := filepath.Join(root, "cgroup.subtree_control")
+	if err := os.WriteFile(control, []byte("+cpu +memory +pids"), 0o600); err != nil {
+		return fmt.Errorf("enable delegated controllers: %w", err)
+	}
+	enabled, err := os.ReadFile(control)
+	if err != nil {
+		return fmt.Errorf("read delegated subtree controllers: %w", err)
+	}
+	enabledSet := map[string]bool{}
+	for controller := range strings.FieldsSeq(string(enabled)) {
+		enabledSet[controller] = true
+	}
+	for _, controller := range []string{"cpu", "memory", "pids"} {
+		if !enabledSet[controller] {
+			return fmt.Errorf("delegated controller %s not enabled", controller)
+		}
+	}
+	return nil
 }
 
 func verifyLimits(leaf string, limits map[string]string) error {
