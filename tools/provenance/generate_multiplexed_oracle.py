@@ -21,6 +21,8 @@ SOURCES = {
     "schema/cohesion-catalog-v1.schema.json": ("release/cohesion-catalog-v1-accepted-corpus.json", "release/cohesion-catalog-v1-rejected-corpus.json"),
     "schema/cohesion-inputs-v1.schema.json": ("release/cohesion-inputs-v1-accepted-corpus.json", "release/cohesion-inputs-v1-rejected-corpus.json"),
     "schema/cohesion-sources-v1.schema.json": ("release/cohesion-sources-v1-accepted-corpus.json", "release/cohesion-sources-v1-rejected-corpus.json"),
+    "schema/cohesion-go-toolchains-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-go-toolchains-v1-forward-oracle.json",),
+    "schema/cohesion-gate-policy-v1.schema.json": ("release/cohesion-gate-policy-v1-accepted-corpus.json", "release/cohesion-gate-policy-v1-rejected-corpus.json"),
     "schema/cohesion-contract-freeze-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json",),
     "schema/cohesion-contract-review-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-contract-review-v1-forward-oracle.json",),
     "schema/cohesion-diagnostic-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-diagnostic-v1-forward-oracle.json",),
@@ -38,6 +40,7 @@ CORPUS_SCHEMAS = {
     "schema/modules-v1.schema.json", "schema/modules-v2.schema.json",
     "schema/cohesion-catalog-v1.schema.json", "schema/cohesion-inputs-v1.schema.json",
     "schema/cohesion-sources-v1.schema.json",
+    "schema/cohesion-gate-policy-v1.schema.json",
 }
 
 
