@@ -78,6 +78,8 @@ jobs:
         run: python3 tools/forward-oracle/verify_contract_freeze.py
       - name: Verify all forward-oracle lanes
         run: python3 tools/forward-oracle/verify_all.py
+      - name: Verify compatibility sets
+        run: python3 tools/compatibility/generate.py
       - name: Reproduce contract-freeze forward oracle
         run: |
           set -euo pipefail

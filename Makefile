@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: build check ci cohesion config consumers inventory repository-check workflows
+.PHONY: build check ci cohesion compatibility config consumers inventory repository-check workflows
 
 define run_go
 	set -euo pipefail; \
@@ -26,10 +26,13 @@ consumers:
 cohesion:
 	$(call run_go,run ./cmd/golib cohesion check)
 
+compatibility:
+	python3 tools/compatibility/generate.py
+
 workflows:
 	$(call run_go,run ./cmd/golib workflows check)
 
 check:
 	$(call run_go,run ./cmd/golib check --all)
 
-ci: repository-check consumers cohesion workflows check
+ci: repository-check consumers cohesion workflows compatibility check
