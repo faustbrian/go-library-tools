@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/cohesion-residual-inventory-v1.schema.json",
+  "title": "Cohesion Residual Inventory V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "goal_id", "requirements_sha256", "source_count", "sources", "item_count", "items"],
+  "properties": {
+    "schema_id": {"const": "urn:golib:cohesion:residual-inventory:v1"},
+    "schema_version": {"const": 1},
+    "goal_id": {"const": "golib-cohesion-v1"},
+    "requirements_sha256": {"const": "sha256:6e5ac948c2cf1ec439fdf90c53c0648befb74a65c3eca2eb595737ee8211891c", "description": "Exact-byte SHA-256 of the complete superseding goal-contract file; no field is omitted."},
+    "source_count": {"const": 7},
+    "sources": {
+      "type": "array", "minItems": 7, "maxItems": 7,
+      "$comment": "Semantic validation requires every row to carry the same release and requires release_url to equal the GitHub release download URL formed from that release and the row's fixed asset.",
+      "prefixItems": [
+        {"allOf": [{"$ref": "#/$defs/release_asset"}, {"properties": {"asset": {"const": "cohesion-phase1-exception-register.md"}, "release_url": {"pattern": "^https://github\\.com/faustbrian/go-library-tools/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+/cohesion-phase1-exception-register\\.md$"}}, "required": ["asset", "release_url"]}]},
+        {"allOf": [{"$ref": "#/$defs/release_asset"}, {"properties": {"asset": {"const": "cohesion-phase1-inventory-cohort-a.md"}, "release_url": {"pattern": "^https://github\\.com/faustbrian/go-library-tools/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+/cohesion-phase1-inventory-cohort-a\\.md$"}}, "required": ["asset", "release_url"]}]},
+        {"allOf": [{"$ref": "#/$defs/release_asset"}, {"properties": {"asset": {"const": "cohesion-phase1-inventory-cohort-b.md"}, "release_url": {"pattern": "^https://github\\.com/faustbrian/go-library-tools/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+/cohesion-phase1-inventory-cohort-b\\.md$"}}, "required": ["asset", "release_url"]}]},
+        {"allOf": [{"$ref": "#/$defs/release_asset"}, {"properties": {"asset": {"const": "cohesion-phase1-inventory-cohort-c.md"}, "release_url": {"pattern": "^https://github\\.com/faustbrian/go-library-tools/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+/cohesion-phase1-inventory-cohort-c\\.md$"}}, "required": ["asset", "release_url"]}]},
+        {"allOf": [{"$ref": "#/$defs/release_asset"}, {"properties": {"asset": {"const": "cohesion-phase1-inventory-cohort-d.md"}, "release_url": {"pattern": "^https://github\\.com/faustbrian/go-library-tools/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+/cohesion-phase1-inventory-cohort-d\\.md$"}}, "required": ["asset", "release_url"]}]},
+        {"allOf": [{"$ref": "#/$defs/release_asset"}, {"properties": {"asset": {"const": "cohesion-phase1-inventory-cohort-e.md"}, "release_url": {"pattern": "^https://github\\.com/faustbrian/go-library-tools/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+/cohesion-phase1-inventory-cohort-e\\.md$"}}, "required": ["asset", "release_url"]}]},
+        {"allOf": [{"$ref": "#/$defs/release_asset"}, {"properties": {"asset": {"const": "cohesion-phase1-inventory-cohort-f.md"}, "release_url": {"pattern": "^https://github\\.com/faustbrian/go-library-tools/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+/cohesion-phase1-inventory-cohort-f\\.md$"}}, "required": ["asset", "release_url"]}]}
+      ],
+      "items": false
+    },
+    "item_count": {"type": "integer", "minimum": 0, "maximum": 4096},
+    "items": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/item"}}
+  },
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "identity": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?:[a-z0-9]|[a-z0-9][a-z0-9./:_-]{0,126}[a-z0-9])$"},
+    "relative_path": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^[A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)*$", "not": {"anyOf": [{"const": "."}, {"pattern": "(?:^|/)\\.{1,2}(?:/|$)"}]}},
+    "asset_name": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^[A-Za-z0-9._-]+$", "not": {"enum": [".", ".."]}},
+    "text": {"type": "string", "minLength": 1, "maxLength": 1048576, "pattern": "\\S"},
+    "locator": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "classification": {"enum": ["justified-domain-specific", "intentional-compatibility", "temporary-pre-v1", "stale-documentation-or-metadata", "naming-or-package-layout-debt", "unsafe-or-ambiguous-public-behavior", "unresolved-maintainer-decision"]},
+    "release_asset": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "release", "release_url", "asset", "bytes_sha256"],
+      "properties": {
+        "repository": {"const": "github.com/faustbrian/go-library-tools"}, "release": {"type": "string", "maxLength": 128, "pattern": "^v(?:1\\.(?:5\\.(?:[6-9]|[1-9][0-9]+)|(?:[6-9]|[1-9][0-9]+)\\.[0-9]+)|(?:[2-9]|[1-9][0-9]+)\\.[0-9]+\\.[0-9]+)$"},
+        "release_url": {"$ref": "#/$defs/locator"}, "asset": {"$ref": "#/$defs/asset_name"},
+        "bytes_sha256": {"$ref": "#/$defs/digest", "description": "Exact-byte SHA-256 of the released asset; no field is omitted."}
+      }
+    },
+    "source_slice": {
+      "type": "object", "additionalProperties": false,
+      "required": ["asset", "bytes_sha256", "section", "start_byte", "end_byte", "item_sha256"],
+      "properties": {
+        "asset": {"$ref": "#/$defs/asset_name"}, "bytes_sha256": {"$ref": "#/$defs/digest", "description": "Exact-byte SHA-256 of the released source asset; no field is omitted."},
+        "section": {"$ref": "#/$defs/text"}, "start_byte": {"type": "integer", "minimum": 0},
+        "end_byte": {"type": "integer", "minimum": 1}, "item_sha256": {"$ref": "#/$defs/digest", "description": "Exact-byte SHA-256 of the half-open source slice; no field is omitted from that slice."}
+      }
+    },
+    "item": {
+      "type": "object", "additionalProperties": false,
+      "required": ["inventory_item_id", "repository", "module", "difference", "classification", "source"],
+      "properties": {
+        "inventory_item_id": {"$ref": "#/$defs/identity"}, "repository": {"$ref": "#/$defs/identity"},
+        "module": {"$ref": "#/$defs/identity"}, "difference": {"$ref": "#/$defs/text"},
+        "classification": {"$ref": "#/$defs/classification"}, "source": {"$ref": "#/$defs/source_slice"}
+      }
+    }
+  }
+}

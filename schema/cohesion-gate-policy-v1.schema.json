@@ -1,0 +1,155 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/cohesion-gate-policy-v1.schema.json",
+  "title": "Cohesion Effective Gate Policy V1",
+  "type": "object", "additionalProperties": false,
+  "required": ["rule_id", "schema_id", "schema_version", "sources", "config", "modules", "packages", "policy_sha256"],
+  "properties": {
+    "rule_id": {"const": "golib-gate-policy-v1"},
+    "schema_id": {"const": "urn:golib:cohesion:gate-policy:v1"},
+    "schema_version": {"const": 1},
+    "sources": {
+      "type": "array", "minItems": 4, "maxItems": 4,
+      "prefixItems": [
+        {"$ref": "#/$defs/embedded_defaults"},
+        {"$ref": "#/$defs/repository_config"},
+        {"$ref": "#/$defs/module_manifest_source"},
+        {"$ref": "#/$defs/package_manifest_source"}
+      ],
+      "items": false
+    },
+    "config": {"$ref": "#/$defs/normalized_config"},
+    "modules": {"oneOf": [{"type": "null"}, {"$ref": "modules-v1.schema.json"}, {"$ref": "modules-v2.schema.json"}, {"$ref": "modules-v3.schema.json"}], "$comment": "The selected versioned schema must equal the manifest source's decoded schema_version; semantic validation reports that cross-row mismatch explicitly."},
+    "packages": {"$ref": "#/$defs/package_manifest"},
+    "policy_sha256": {"$ref": "#/$defs/digest", "description": "Semantic-object SHA-256 of the RFC 8785 canonical closed policy object containing exactly rule_id, schema_id, schema_version, sources, config, modules, and packages; only policy_sha256 itself is omitted."}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"sources": {"prefixItems": [{}, {}, {"properties": {"present": {"const": false}}, "required": ["present"]}]}}},
+      "then": {"properties": {"modules": {"type": "null"}}},
+      "else": {"properties": {"modules": {"oneOf": [{"$ref": "modules-v1.schema.json"}, {"$ref": "modules-v2.schema.json"}, {"$ref": "modules-v3.schema.json"}]}}}
+    },
+    {
+      "if": {"properties": {"sources": {"prefixItems": [{}, {}, {}, {"properties": {"present": {"const": false}}, "required": ["present"]}]}}},
+      "then": {"properties": {"packages": {"type": "null"}}},
+      "else": {"properties": {"packages": {"$ref": "#/$defs/package_manifest_present"}}}
+    }
+  ],
+  "$defs": {
+    "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "git_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "identity": {"type": "string", "minLength": 1, "maxLength": 128, "pattern": "^(?:[a-z0-9]|[a-z0-9][a-z0-9./:_-]{0,126}[a-z0-9])$"},
+    "repository_path": {"type": "string", "minLength": 1, "maxLength": 4096, "not": {"anyOf": [{"pattern": "^(?:/|[A-Za-z]:[\\\\/])"}, {"pattern": "(^|[\\\\/])\\.\\.([\\\\/]|$)"}]}},
+    "root_or_relative_path": {"$ref": "#/$defs/repository_path"},
+    "file_path": {"allOf": [{"$ref": "#/$defs/repository_path"}, {"not": {"enum": [".", "./"]}}], "$comment": "Semantic validation additionally requires filepath.Clean(value) != '.'."},
+    "package_pattern": {"type": "string", "minLength": 1, "maxLength": 4096, "pattern": "^(?:\\.|\\./[^/\\\\]+(?:/[^/\\\\]+)*)$", "not": {"anyOf": [{"pattern": "\u0000"}, {"pattern": "^\\./\\.{1,2}(?:/|$)"}, {"pattern": "/\\.{1,2}(?:/|$)"}, {"pattern": "(?:^|/)\\.\\.\\.(?:/.+)$"}]}},
+    "positive_duration": {"type": "string", "minLength": 2, "maxLength": 1048576, "pattern": "^\\+?[0-9.]+(?:ns|us|µs|μs|ms|s|m|h)(?:[0-9.]+(?:ns|us|µs|μs|ms|s|m|h))*$", "$comment": "Semantic validation uses time.ParseDuration and requires the parsed duration to be greater than zero."},
+    "positive_budget": {"oneOf": [{"type": "string", "maxLength": 1048576, "pattern": "^0*[1-9][0-9]*x$", "$comment": "Semantic validation parses the iteration count as uint64."}, {"$ref": "#/$defs/positive_duration"}]},
+    "embedded_defaults": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "locator", "present", "release", "tag_object_sha", "peeled_commit", "checksums_sha256", "semantic_sha256"],
+      "properties": {
+        "kind": {"const": "embedded-defaults"}, "locator": {"const": "embedded://golib-gate-policy-v1"}, "present": {"const": true},
+        "release": {"type": "string", "maxLength": 128, "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$"},
+        "tag_object_sha": {"$ref": "#/$defs/git_sha"}, "peeled_commit": {"$ref": "#/$defs/git_sha"},
+        "checksums_sha256": {"$ref": "#/$defs/digest", "description": "Exact-byte SHA-256 of the checksums asset; no field is omitted."},
+        "semantic_sha256": {"$ref": "#/$defs/digest", "description": "Semantic-object SHA-256 of the RFC 8785 canonical closed defaults object containing exactly manifest.modules=modules.json, manifest.packages=packages.json, evidence.root=.verification, mutation.root=.verification/mutation, step.timeout=20m, go-test.packages=[./...], go-test.count=1, fuzz.budget=10000x, and benchmark.budget=100ms; semantic_sha256 and all release-locator metadata are omitted."}
+      }
+    },
+    "present_file_base": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "path", "present", "bytes_sha256"],
+      "properties": {"kind": {"enum": ["repository-config", "module-manifest", "package-manifest"]}, "path": {"$ref": "#/$defs/file_path"}, "present": {"const": true}, "bytes_sha256": {"$ref": "#/$defs/digest", "description": "Exact-byte SHA-256 of the source file; no field is omitted."}}
+    },
+    "repository_config": {
+      "type": "object", "additionalProperties": false,
+      "required": ["kind", "path", "present", "bytes_sha256"],
+      "properties": {"kind": {"const": "repository-config"}, "path": {"const": ".golib.yaml"}, "present": {"const": true}, "bytes_sha256": {"$ref": "#/$defs/digest", "description": "Exact-byte SHA-256 of .golib.yaml; no field is omitted."}}
+    },
+    "present_module_manifest": {"type": "object", "additionalProperties": false, "required": ["kind", "path", "present", "bytes_sha256"], "properties": {"kind": {"const": "module-manifest"}, "path": {"$ref": "#/$defs/file_path"}, "present": {"const": true}, "bytes_sha256": {"$ref": "#/$defs/digest", "description": "Exact-byte SHA-256 of the module manifest; no field is omitted."}}},
+    "absent_module_manifest": {"type": "object", "additionalProperties": false, "required": ["kind", "path", "present"], "properties": {"kind": {"const": "module-manifest"}, "path": {"$ref": "#/$defs/file_path"}, "present": {"const": false}}},
+    "module_manifest_source": {"oneOf": [{"$ref": "#/$defs/present_module_manifest"}, {"$ref": "#/$defs/absent_module_manifest"}]},
+    "present_package_manifest": {"type": "object", "additionalProperties": false, "required": ["kind", "path", "present", "bytes_sha256"], "properties": {"kind": {"const": "package-manifest"}, "path": {"$ref": "#/$defs/file_path"}, "present": {"const": true}, "bytes_sha256": {"$ref": "#/$defs/digest", "description": "Exact-byte SHA-256 of the package manifest; no field is omitted."}}},
+    "absent_package_manifest": {"type": "object", "additionalProperties": false, "required": ["kind", "path", "present"], "properties": {"kind": {"const": "package-manifest"}, "path": {"$ref": "#/$defs/file_path"}, "present": {"const": false}}},
+    "package_manifest_source": {"oneOf": [{"$ref": "#/$defs/present_package_manifest"}, {"$ref": "#/$defs/absent_package_manifest"}]},
+    "package": {
+      "type": "object", "additionalProperties": false,
+      "required": ["module_directory", "directory", "name", "import_path", "kind", "production", "executable", "coverage_required", "build_required", "build_tags"],
+      "properties": {
+        "module_directory": {"$ref": "#/$defs/root_or_relative_path"}, "directory": {"$ref": "#/$defs/root_or_relative_path"},
+        "name": {"type": "string", "minLength": 1, "maxLength": 1048576}, "import_path": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "kind": {"type": "string", "minLength": 1, "maxLength": 1048576}, "production": {"type": "boolean"}, "executable": {"type": "boolean"},
+        "coverage_required": {"type": "boolean"}, "build_required": {"type": "boolean"},
+        "build_tags": {"type": "array", "maxItems": 4096, "uniqueItems": true, "items": {"type": "string", "minLength": 1, "maxLength": 1048576}}
+      }
+    },
+    "package_manifest_present": {
+      "type": "object", "additionalProperties": false, "required": ["schema_version", "repository", "packages"],
+      "properties": {"schema_version": {"const": 1}, "repository": {"$ref": "#/$defs/identity"}, "packages": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/package"}}}
+    },
+    "package_manifest": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/package_manifest_present"}
+      ]
+    },
+    "normalized_config": {
+      "type": "object", "additionalProperties": false,
+      "$comment": "This is the frozen normalized v3 policy projection, not the historical YAML-input schema. Defaults are materialized in manifest, evidence, mutation.root, and each operation step.",
+      "required": ["schema_version", "tool_version", "manifest", "evidence", "mutation", "runtimes"],
+      "properties": {
+        "schema_version": {"const": 1}, "tool_version": {"type": "string", "pattern": "^v[0-9]+\\.[0-9]+\\.[0-9]+$", "maxLength": 128},
+        "tool_checksums_sha256": {"$ref": "#/$defs/digest", "description": "Exact-byte SHA-256 of the tooling checksums asset; no field is omitted."},
+        "manifest": {"type": "object", "additionalProperties": false, "required": ["modules", "packages"], "properties": {"modules": {"$ref": "#/$defs/file_path"}, "packages": {"$ref": "#/$defs/file_path"}}},
+        "evidence": {"type": "object", "additionalProperties": false, "required": ["root"], "properties": {"root": {"$ref": "#/$defs/root_or_relative_path"}}},
+        "mutation": {"type": "object", "additionalProperties": false, "required": ["root"], "properties": {"root": {"$ref": "#/$defs/root_or_relative_path"}, "imports": {"type": "array", "maxItems": 4096, "items": {"type": "object", "additionalProperties": false, "required": ["module", "archive", "ledger"], "properties": {"module": {"$ref": "#/$defs/root_or_relative_path"}, "archive": {"$ref": "#/$defs/file_path"}, "ledger": {"$ref": "#/$defs/file_path"}}}}}},
+        "api": {
+          "type": "object", "additionalProperties": false,
+          "properties": {
+            "baselines": {
+              "type": "array", "maxItems": 4096,
+              "items": {
+                "type": "object", "additionalProperties": false,
+                "required": ["module", "mode", "path"],
+                "properties": {
+                  "module": {"$ref": "#/$defs/root_or_relative_path"}, "mode": {"enum": ["apidiff", "go-doc"]},
+                  "path": {"$ref": "#/$defs/file_path"},
+                  "packages": {"type": "array", "minItems": 1, "maxItems": 4096, "uniqueItems": true, "items": {"allOf": [{"$ref": "#/$defs/package_pattern"}, {"not": {"pattern": "(?:^|/)\\.\\.\\.$"}}]}}
+                },
+                "allOf": [
+                  {"if": {"properties": {"mode": {"const": "go-doc"}}, "required": ["mode"]}, "then": {"required": ["packages"]}},
+                  {"if": {"properties": {"mode": {"const": "apidiff"}}, "required": ["mode"]}, "then": {"not": {"required": ["packages"]}}}
+                ]
+              }
+            }
+          }
+        },
+        "runtimes": {"type": "object", "additionalProperties": false, "properties": {"deno": {"type": "string", "maxLength": 1048576, "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"}, "zsh": {"const": "5.9"}}},
+        "operations": {"type": "array", "maxItems": 4096, "items": {"$ref": "#/$defs/operation"}}
+      }
+    },
+    "operation": {
+      "type": "object", "additionalProperties": false, "required": ["module", "gate", "steps"],
+      "properties": {"module": {"$ref": "#/$defs/root_or_relative_path"}, "gate": {"enum": ["api", "benchmark", "conformance", "docs", "fuzz", "interoperability", "test"]}, "steps": {"type": "array", "minItems": 1, "maxItems": 4096, "items": {"$ref": "#/$defs/step"}}},
+      "allOf": [
+        {
+          "if": {"properties": {"gate": {"const": "test"}}, "required": ["gate"]},
+          "then": {"properties": {"steps": {"items": {"not": {"anyOf": [{"required": ["benchmark"]}, {"required": ["fuzz"]}, {"required": ["budget"]}]}}}}}
+        }
+      ]
+    },
+    "step": {"oneOf": [{"$ref": "#/$defs/go_test_step"}, {"$ref": "#/$defs/make_step"}]},
+    "go_test_step": {
+      "type": "object", "additionalProperties": false, "required": ["type", "packages", "count", "timeout"],
+      "properties": {"type": {"const": "go-test"}, "packages": {"type": "array", "minItems": 1, "maxItems": 4096, "items": {"$ref": "#/$defs/package_pattern"}}, "run": {"type": "string", "minLength": 1, "maxLength": 1048576}, "benchmark": {"type": "string", "minLength": 1, "maxLength": 1048576}, "fuzz": {"type": "string", "minLength": 1, "maxLength": 1048576}, "budget": {"$ref": "#/$defs/positive_budget"}, "count": {"type": "integer", "minimum": 1}, "timeout": {"$ref": "#/$defs/positive_duration"}},
+      "allOf": [
+        {"not": {"anyOf": [{"required": ["run", "benchmark"]}, {"required": ["run", "fuzz"]}, {"required": ["benchmark", "fuzz"]}]}},
+        {"if": {"anyOf": [{"required": ["benchmark"]}, {"required": ["fuzz"]}]}, "then": {"required": ["budget"]}, "else": {"not": {"required": ["budget"]}}}
+      ]
+    },
+    "make_step": {
+      "type": "object", "additionalProperties": false, "required": ["type", "makefile", "target", "timeout"],
+      "properties": {"type": {"const": "make"}, "makefile": {"$ref": "#/$defs/file_path"}, "target": {"type": "string", "minLength": 1, "maxLength": 1048576, "pattern": "^[A-Za-z0-9][A-Za-z0-9_.:/-]*$"}, "timeout": {"$ref": "#/$defs/positive_duration"}}
+    }
+  }
+}
