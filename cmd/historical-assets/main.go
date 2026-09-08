@@ -132,5 +132,7 @@ func pathContains(parent, child string) bool {
 }
 func fatalf(format string, args ...interface{}) {
 	_, _ = fmt.Fprintf(os.Stderr, format+"\n", args...)
-	os.Exit(1)
+	exitProcess(1)
 }
+
+var exitProcess = os.Exit
