@@ -19,12 +19,12 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"slices"
 	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
-	"unsafe"
 
 	"github.com/faustbrian/go-library-tools/internal/jcs"
 )
@@ -1490,7 +1490,7 @@ func resolvedReferenceGraphWithBudget(schemaRoot, entryPath string, budget *grap
 	}
 	scheduled := make([]string, 0, maximumGraphNodes)
 	scheduled = append(scheduled, entry.path)
-	if err := resolver.budget.chargeAllocation(int64(maximumGraphNodes) * int64(unsafe.Sizeof(referenceGraphNode{}))); err != nil {
+	if err := resolver.budget.chargeAllocation(int64(maximumGraphNodes) * int64(reflect.TypeOf(referenceGraphNode{}).Size())); err != nil {
 		return nil, err
 	}
 	nodes := make([]referenceGraphNode, 0, maximumGraphNodes)
@@ -1549,7 +1549,7 @@ func canonicalReferenceGraph(nodes []referenceGraphNode, budget *graphBudget) ([
 		return nil, err
 	}
 	values := make([]any, len(nodes))
-	memberBytes := int64(unsafe.Sizeof(jcs.Member{}))
+	memberBytes := int64(reflect.TypeOf(jcs.Member{}).Size())
 	for nodeIndex, node := range nodes {
 		if err := budget.chargeAllocation(3 * memberBytes); err != nil {
 			return nil, err
@@ -1677,7 +1677,7 @@ func (resolver *graphResolver) load(relativePath string) (*schemaDocument, error
 	if identity != wantIdentity {
 		return nil, fmt.Errorf("schema $id %q does not equal path identity %q", identity, wantIdentity)
 	}
-	if err := resolver.budget.chargeAllocation(int64(unsafe.Sizeof(schemaDocument{}))); err != nil {
+	if err := resolver.budget.chargeAllocation(int64(reflect.TypeOf(schemaDocument{}).Size())); err != nil {
 		return nil, err
 	}
 	document := &schemaDocument{bytes: data, identity: identity, path: canonicalPath, value: value}
