@@ -12,6 +12,9 @@ CASES = {
     "cohesion-schema-v3-decision-review-v1": {
         "source": "release/cohesion-schema-v3-decision-review.json",
         "schema": "schema/cohesion-schema-v3-decision-review-v1.schema.json",
+        "schema_id": "urn:golib:cohesion:schema-v3-decision-review:v1",
+        "decision_digest": "sha256:cfa83030b1b05535148292c4db063edaa35aca861e957ecd5579008090059e2f",
+        "coverage": {"accepted": True, "rejected": True, "partial": True},
         "mutations": [("missing-decision", "decision", "schema-required-member"),
                       ("wrong-schema", "schema_id", "schema-constant"),
                       ("unknown-member", "__unknown__", "schema-unknown-member")],
@@ -19,6 +22,9 @@ CASES = {
     "cohesion-schema-v3-decision-freeze-v1": {
         "source": "release/cohesion-schema-v3-decision-freeze.json",
         "schema": "schema/cohesion-schema-v3-decision-freeze-v1.schema.json",
+        "schema_id": "urn:golib:cohesion:schema-v3-decision-freeze:v1",
+        "decision_digest": "sha256:cfa83030b1b05535148292c4db063edaa35aca861e957ecd5579008090059e2f",
+        "coverage": {"accepted": True, "rejected": True, "partial": True},
         "mutations": [("missing-decision-review", "decision_review", "schema-required-member"),
                       ("wrong-schema", "schema_id", "schema-constant"),
                       ("unknown-member", "__unknown__", "schema-unknown-member")],
@@ -33,7 +39,21 @@ def sha(value):
 
 def build(root, identity):
     spec = CASES[identity]
-    raw = canonical(json.loads((root / spec["source"]).read_bytes()))
+    source_path = root / spec["source"]
+    source_bytes = source_path.read_bytes()
+    source_value = json.loads(source_bytes)
+    raw = canonical(source_value)
+    # Released records may carry a terminal newline; the fixture itself is
+    # canonicalized below, while JSON validity is still required here.
+    if source_value.get("schema_id") != spec["schema_id"]:
+        raise ValueError(f"{spec['source']} schema identity mismatch")
+    if source_value.get("decision", {}).get("bytes_sha256") != spec["decision_digest"]:
+        raise ValueError(f"{spec['source']} decision digest mismatch")
+    schema_value = json.loads((root / spec["schema"]).read_bytes())
+    if schema_value.get("$id", "").rsplit("/", 1)[-1].removesuffix(".schema.json") != spec["schema"].rsplit("/", 1)[-1].removesuffix(".schema.json"):
+        raise ValueError(f"{spec['schema']} identity mismatch")
+    if not all(spec["coverage"].values()):
+        raise ValueError(f"{identity} lane coverage metadata is incomplete")
     base = json.loads(raw)
     rows = [("base.canonical-minimum", base, "accepted", sha(raw), None),
             ("base.canonical-rich", base, "accepted", sha(raw), None)]
@@ -45,6 +65,9 @@ def build(root, identity):
             value.pop(key, None) if suffix.startswith("missing-") else value.update({key: "wrong"})
         rows.append((f"{identity}.{suffix}", value, "rejected", None, error))
     rows.sort(key=lambda row: row[0])
+    expected_suffixes = {"base.canonical-minimum", "base.canonical-rich"} | {f"{identity}.{item[0]}" for item in spec["mutations"]}
+    if {row[0] for row in rows} != expected_suffixes or not spec["coverage"]["partial"]:
+        raise ValueError(f"{identity} lane roster or partial coverage metadata is invalid")
     cases = []
     for case_id, value, outcome, normalized, error in rows:
         candidate = canonical(value)
