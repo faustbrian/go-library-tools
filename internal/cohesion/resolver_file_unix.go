@@ -26,7 +26,11 @@ func readResolutionFile(path string, maximumBytes int64) ([]byte, error) {
 	if err != nil {
 		return nil, errors.New("open resolution root")
 	}
-	defer unix.Close(current)
+	defer func() {
+		if current >= 0 {
+			_ = unix.Close(current)
+		}
+	}()
 	for index, component := range components {
 		if component == "" || component == "." || component == ".." {
 			return nil, errors.New("resolution file path contains an unsafe component")
@@ -59,6 +63,7 @@ func readResolutionFile(path string, maximumBytes int64) ([]byte, error) {
 	if file == nil {
 		return nil, errors.New("adopt resolution file descriptor")
 	}
+	current = -1
 	defer file.Close()
 	data, err := io.ReadAll(io.LimitReader(file, maximumBytes+1))
 	if err != nil {
