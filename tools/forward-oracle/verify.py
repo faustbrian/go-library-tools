@@ -44,13 +44,22 @@ def main():
     }
     if value["case_count"] != len(expected) or [row["case_id"] for row in value["cases"]] != expected:
         raise SystemExit("case roster mismatch")
+    used_fixtures = set()
     for row in value["cases"]:
         if row["outcome"] not in {"accepted", "rejected"}:
             raise SystemExit("unknown outcome")
         if row["input"]["kind"] == "fixture":
-            candidate = fixtures[row["input"]["fixture_id"]]
+            fixture_id = row["input"]["fixture_id"]
+            if fixture_id not in fixtures:
+                raise SystemExit("unknown fixture reference")
+            used_fixtures.add(fixture_id)
+            candidate = fixtures[fixture_id]
         else:
-            source = fixtures[row["input"]["fixture_id"]]
+            fixture_id = row["input"]["fixture_id"]
+            if fixture_id not in fixtures:
+                raise SystemExit("unknown fixture reference")
+            used_fixtures.add(fixture_id)
+            source = fixtures[fixture_id]
             splice = row["input"]["splices"][0]
             insert = base64.b64decode(splice["insert_base64"], validate=True)
             if splice["offset"] < 0 or splice["delete_count"] < 0 or splice["offset"] + splice["delete_count"] > len(source):
@@ -62,6 +71,8 @@ def main():
             raise SystemExit("rejected row carries normalized digest")
         if row["outcome"] == "rejected" and row["error_code"] != expected_errors[row["case_id"]]:
             raise SystemExit("rejected row error code mismatch")
+    if used_fixtures != set(fixtures):
+        raise SystemExit("unreferenced fixture")
     print("diagnostic forward oracle verified")
 
 
