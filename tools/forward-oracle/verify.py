@@ -69,6 +69,8 @@ def main():
             candidate = source[:splice["offset"]] + insert + source[splice["offset"] + splice["delete_count"]:]
         if row["outcome"] == "accepted" and row["normalized_value_sha256"] != sha(candidate):
             raise SystemExit("accepted digest mismatch")
+        if row["outcome"] == "accepted" and row["error_code"] is not None:
+            raise SystemExit("accepted row carries error code")
         if row["outcome"] == "rejected" and row["normalized_value_sha256"] is not None:
             raise SystemExit("rejected row carries normalized digest")
         if row["outcome"] == "rejected" and row["error_code"] != expected_errors[row["case_id"]]:

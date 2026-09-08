@@ -34,6 +34,7 @@ def main():
    try: normalized=canonical(json.loads(candidate.decode("utf-8")))
    except Exception as exc: raise SystemExit(f"accepted input is not valid JSON: {exc}")
    if x["normalized_value_sha256"]!=sha(normalized): raise SystemExit("accepted digest mismatch")
+  if x["outcome"]=="accepted" and x["error_code"] is not None: raise SystemExit("accepted row carries error code")
   if x["outcome"]=="rejected" and (x["normalized_value_sha256"] is not None or x["error_code"]!=errors[x["case_id"]]): raise SystemExit("rejection mismatch")
  if used != set(fs): raise SystemExit("unreferenced fixture")
  print("contract-review forward oracle verified")
