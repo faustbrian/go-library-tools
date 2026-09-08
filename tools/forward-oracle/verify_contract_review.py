@@ -13,6 +13,9 @@ def main():
   fid=fixture["fixture_id"]
   if fid in fs: raise SystemExit("duplicate fixture id")
   raw=base64.b64decode(fixture["bytes_base64"],validate=True)
+  try: fixture_value=json.loads(raw.decode("utf-8"))
+  except Exception as exc: raise SystemExit(f"fixture is not valid JSON: {exc}")
+  if canonical(fixture_value)!=raw: raise SystemExit("fixture is not canonical JSON")
   if fixture.get("bytes_sha256") != sha(raw): raise SystemExit("fixture digest mismatch")
   fs[fid]=raw
  errors={"contract-review.invalid.goal":"schema-constant","contract-review.invalid.contract":"semantic-external-identity","contract-review.invalid.reviewed-commit":"semantic-external-identity","contract-review.invalid.accepted-findings":"schema-union","contract-review.invalid.rejected-findings":"schema-union","contract-review.invalid.workflow-id":"schema-range","contract-review.invalid.workflow-outcome":"schema-constant","contract-review.invalid.release-url":"schema-pattern","json.bom":"json-bom","json.invalid-utf8":"json-invalid-utf8","json.trailing-value":"json-trailing-value","json.duplicate-key":"json-duplicate-key","json.lone-surrogate":"json-lone-surrogate","json.noncharacter":"json-noncharacter","json.negative-zero":"json-negative-zero","json.fraction":"json-noninteger-number","json.exponent":"json-noninteger-number","json.integer-overflow":"json-integer-overflow","json.depth-65":"limit-depth","schema.missing-required":"schema-required-member","schema.unknown-member":"schema-unknown-member","schema.wrong-type":"schema-type"}

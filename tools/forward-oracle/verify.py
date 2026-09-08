@@ -30,6 +30,12 @@ def main():
         if row["fixture_id"] in fixtures:
             raise SystemExit("duplicate fixture id")
         fixtures[row["fixture_id"]] = base64.b64decode(row["bytes_base64"], validate=True)
+        try:
+            fixture_value = json.loads(fixtures[row["fixture_id"]].decode("utf-8"))
+        except Exception as exc:
+            raise SystemExit(f"fixture is not valid JSON: {exc}")
+        if canonical(fixture_value) != fixtures[row["fixture_id"]]:
+            raise SystemExit("fixture is not canonical JSON")
     for row in value["fixtures"]:
         if sha(fixtures[row["fixture_id"]]) != row["bytes_sha256"]:
             raise SystemExit("fixture digest mismatch")
