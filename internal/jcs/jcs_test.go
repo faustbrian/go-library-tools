@@ -173,7 +173,7 @@ func TestCanonicalizeExactObjectAndFileBoundaries(t *testing.T) {
 	object := func(size int) string {
 		var value strings.Builder
 		value.WriteByte('{')
-		for index := 0; index < size; index++ {
+		for index := range size {
 			if index != 0 {
 				value.WriteByte(',')
 			}
@@ -260,7 +260,7 @@ func TestManagedCollectionsRejectBeforeCapacityGrowth(t *testing.T) {
 		t.Fatal("byte buffer changed after rejected capacity request")
 	}
 
-	arrayValues := &managedValues{data: make([]any, 1, 1), budget: &allocationBudget{limit: 1}}
+	arrayValues := &managedValues{data: make([]any, 1), budget: &allocationBudget{limit: 1}}
 	arrayPointer := &arrayValues.data[0]
 	if err := arrayValues.append(true); err == nil {
 		t.Fatal("array capacity growth above budget accepted")
@@ -269,7 +269,7 @@ func TestManagedCollectionsRejectBeforeCapacityGrowth(t *testing.T) {
 		t.Fatal("array buffer changed after rejected capacity request")
 	}
 
-	objectValues := &managedMembers{data: make([]Member, 1, 1), budget: &allocationBudget{limit: 1}}
+	objectValues := &managedMembers{data: make([]Member, 1), budget: &allocationBudget{limit: 1}}
 	objectPointer := &objectValues.data[0]
 	if err := objectValues.append(Member{Name: "next"}); err == nil {
 		t.Fatal("object capacity growth above budget accepted")

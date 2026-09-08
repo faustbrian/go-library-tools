@@ -1,3 +1,5 @@
+// Package jcs implements deterministic JSON canonicalization and bounded
+// decoding helpers.
 package jcs
 
 import (
@@ -21,12 +23,16 @@ const (
 	maximumAllocationBytes   = 2*maximumArtifactBytes + (8 << 20)
 )
 
+// Member is an object member used by the canonical JSON value model.
 type Member struct {
 	Name  string
 	Value any
 }
 
+// Object is an ordered collection of JSON object members.
 type Object []Member
+
+// Number stores a canonical JSON number representation.
 type Number string
 
 type allocationBudget struct {
@@ -52,6 +58,7 @@ func (budget *allocationBudget) charge(size int) error {
 	return nil
 }
 
+// Canonicalize parses strict I-JSON input and returns RFC 8785 canonical JSON.
 func Canonicalize(data []byte) ([]byte, error) {
 	return canonicalizeWithBudget(data, &allocationBudget{})
 }
@@ -63,6 +70,7 @@ func CanonicalizeHistorical(data []byte) ([]byte, error) {
 	return canonicalizeHistoricalWithBudget(data, &allocationBudget{})
 }
 
+// Decode parses strict I-JSON input into the package's JSON value model.
 func Decode(data []byte) (any, error) {
 	return decodeWithBudget(data, &allocationBudget{})
 }
@@ -76,6 +84,7 @@ func DecodeWithCharge(data []byte, charge func(int) error) (any, error) {
 	return decodeWithBudget(data, &allocationBudget{chargeExternal: charge})
 }
 
+// CanonicalizeValue renders a supported JSON value as RFC 8785 canonical JSON.
 func CanonicalizeValue(value any) ([]byte, error) {
 	output := managedBytes{budget: &allocationBudget{}, maximum: maximumArtifactBytes, maximumError: "canonical JSON exceeds 32 MiB"}
 	if err := appendValue(&output, value); err != nil {
@@ -146,7 +155,7 @@ func convertGoValue(value reflect.Value, budget *allocationBudget, depth int) (a
 		}
 		for _, runeValue := range text {
 			if isNoncharacter(runeValue) {
-				return nil, fmt.Errorf("Unicode noncharacter U+%04X", runeValue)
+				return nil, fmt.Errorf("unicode noncharacter U+%04X", runeValue)
 			}
 		}
 		return text, nil
@@ -184,7 +193,7 @@ func convertGoValue(value reflect.Value, budget *allocationBudget, depth int) (a
 			return nil, errors.New("array exceeds 4096 elements")
 		}
 		values := managedValues{budget: budget}
-		for index := 0; index < value.Len(); index++ {
+		for index := range value.Len() {
 			converted, err := convertGoValue(value.Index(index), budget, depth+1)
 			if err != nil {
 				return nil, err
@@ -226,7 +235,7 @@ func convertGoValue(value reflect.Value, budget *allocationBudget, depth int) (a
 		}
 		members := managedMembers{budget: budget}
 		typeValue := value.Type()
-		for index := 0; index < value.NumField(); index++ {
+		for index := range value.NumField() {
 			field := typeValue.Field(index)
 			if field.PkgPath != "" {
 				continue
@@ -465,7 +474,7 @@ func (parser *parser) string() (string, error) {
 		if current != '\\' {
 			runeValue, size := utf8.DecodeRune(parser.data[parser.index:])
 			if !parser.options.allowNoncharacters && isNoncharacter(runeValue) {
-				return "", fmt.Errorf("Unicode noncharacter U+%04X", runeValue)
+				return "", fmt.Errorf("unicode noncharacter U+%04X", runeValue)
 			}
 			if err := decoded.append(parser.data[parser.index : parser.index+size]...); err != nil {
 				return "", err
@@ -510,7 +519,7 @@ func (parser *parser) string() (string, error) {
 				return "", err
 			}
 			if !parser.options.allowNoncharacters && isNoncharacter(runeValue) {
-				return "", fmt.Errorf("Unicode noncharacter U+%04X", runeValue)
+				return "", fmt.Errorf("unicode noncharacter U+%04X", runeValue)
 			}
 			var encoded [utf8.UTFMax]byte
 			size := utf8.EncodeRune(encoded[:], runeValue)
@@ -750,7 +759,7 @@ func (values *managedValues) append(value any) error {
 		if capacity > maximum {
 			capacity = maximum
 		}
-		if err := values.budget.charge(capacity * int(reflect.TypeOf((*any)(nil)).Elem().Size())); err != nil {
+		if err := values.budget.charge(capacity * int(reflect.TypeFor[any]().Size())); err != nil {
 			return err
 		}
 		grown := make([]any, len(values.data), capacity)
@@ -778,7 +787,7 @@ func (members *managedMembers) append(member Member) error {
 		if capacity > maximum {
 			capacity = maximum
 		}
-		if err := members.budget.charge(capacity * int(reflect.TypeOf(Member{}).Size())); err != nil {
+		if err := members.budget.charge(capacity * int(reflect.TypeFor[Member]().Size())); err != nil {
 			return err
 		}
 		grown := make([]Member, len(members.data), capacity)
