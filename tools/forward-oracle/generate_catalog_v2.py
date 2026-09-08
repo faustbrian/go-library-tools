@@ -32,7 +32,9 @@ def main():
     cases = [("base.canonical-minimum", base, "accepted", digest(raw), None), ("base.canonical-rich", base, "accepted", digest(raw), None)]
     missing = copy.deepcopy(base); missing.pop("modules")
     unknown = copy.deepcopy(base); unknown["__unknown__"] = None
-    cases += [("catalog-v2.invalid.missing-modules", missing, "rejected", None, "schema-required-member"), ("catalog-v2.invalid.unknown-member", unknown, "rejected", None, "schema-unknown-member")]
+    final_input = copy.deepcopy(base); final_input["publication_status"] = "final-input"
+    final_input["tooling"] = {"kind": "release", "repository": "github.com/faustbrian/go-library-tools", "release": "v1.6.0", "tag_object_sha": "0" * 40, "peeled_commit": "0" * 40, "goos": "darwin", "goarch": "arm64", "executable_asset": "tool", "executable_url": "https://github.com/faustbrian/go-library-tools/releases/download/v1.6.0/tool", "platform_artifact_sha256": "sha256:" + "0" * 64, "checksums_asset": "checksums", "checksums_url": "https://github.com/faustbrian/go-library-tools/releases/download/v1.6.0/checksums", "checksums_sha256": "sha256:" + "0" * 64, "release_manifest_asset": "manifest", "release_manifest_url": "https://github.com/faustbrian/go-library-tools/releases/download/v1.6.0/manifest", "release_manifest_sha256": "sha256:" + "0" * 64}
+    cases += [("catalog-v2.invalid.final-input-manifest-version", final_input, "rejected", None, "semantic-cross-field"), ("catalog-v2.invalid.missing-modules", missing, "rejected", None, "schema-required-member"), ("catalog-v2.invalid.unknown-member", unknown, "rejected", None, "schema-unknown-member")]
     rows=[]
     for case_id, value, outcome, normalized, error in sorted(cases):
         candidate = canonical(value)
