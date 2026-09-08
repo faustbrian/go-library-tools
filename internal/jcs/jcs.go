@@ -10,7 +10,6 @@ import (
 	"strings"
 	"unicode/utf16"
 	"unicode/utf8"
-	"unsafe"
 )
 
 const (
@@ -751,7 +750,7 @@ func (values *managedValues) append(value any) error {
 		if capacity > maximum {
 			capacity = maximum
 		}
-		if err := values.budget.charge(capacity * int(unsafe.Sizeof(value))); err != nil {
+		if err := values.budget.charge(capacity * int(reflect.TypeOf((*any)(nil)).Elem().Size())); err != nil {
 			return err
 		}
 		grown := make([]any, len(values.data), capacity)
@@ -779,7 +778,7 @@ func (members *managedMembers) append(member Member) error {
 		if capacity > maximum {
 			capacity = maximum
 		}
-		if err := members.budget.charge(capacity * int(unsafe.Sizeof(member))); err != nil {
+		if err := members.budget.charge(capacity * int(reflect.TypeOf(Member{}).Size())); err != nil {
 			return err
 		}
 		grown := make([]Member, len(members.data), capacity)
