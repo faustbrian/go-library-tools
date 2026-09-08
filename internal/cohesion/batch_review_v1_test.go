@@ -69,22 +69,36 @@ func TestVerifySchemaV3BatchReviewRejectsEachStructuralInvariant(t *testing.T) {
 			map[string]any{"reviewer_id": "verification", "dimension": "verification", "reviewed_sha256": digest, "evidence_sha256": digest, "coverage": []any{}, "checker_source_sha256": digest, "checker_version": "v1", "outcome": "accepted-no-findings"},
 		}, "created_at": "2026-09-08T00:00:00Z",
 	}
-	canonical := func() []byte { data, err := canonicalMarshal(value, 4<<20); if err != nil { t.Fatal(err) }; return data }
-	if err := verifySchemaV3BatchReview(canonical(), digest, paths); err != nil { t.Fatalf("baseline rejected: %v", err) }
+	canonical := func() []byte {
+		data, err := canonicalMarshal(value, 4<<20)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return data
+	}
+	if err := verifySchemaV3BatchReview(canonical(), digest, paths); err != nil {
+		t.Fatalf("baseline rejected: %v", err)
+	}
 	base := value
 	mutations := []func(map[string]any){
 		func(value map[string]any) { value["schema_id"] = "wrong" },
 		func(value map[string]any) { value["schema_version"] = 2 },
 		func(value map[string]any) { value["decision"].(map[string]any)["bytes_sha256"] = "wrong" },
-		func(value map[string]any) { value["oracle_manifest"].([]any)[0].(map[string]any)["oracle_sha256"] = "wrong" },
+		func(value map[string]any) {
+			value["oracle_manifest"].([]any)[0].(map[string]any)["oracle_sha256"] = "wrong"
+		},
 		func(value map[string]any) { value["oracle_manifest"].([]any)[0].(map[string]any)["case_count"] = 0 },
-		func(value map[string]any) { value["oracle_manifest"].([]any)[0].(map[string]any)["source_revision"] = "short" },
+		func(value map[string]any) {
+			value["oracle_manifest"].([]any)[0].(map[string]any)["source_revision"] = "short"
+		},
 		func(value map[string]any) { value["reviews"] = []any{} },
 	}
 	for index, mutate := range mutations {
 		value = cloneBatchReviewValue(base)
 		mutate(value)
-		if err := verifySchemaV3BatchReview(canonical(), digest, paths); err == nil { t.Fatalf("mutation %d accepted", index) }
+		if err := verifySchemaV3BatchReview(canonical(), digest, paths); err == nil {
+			t.Fatalf("mutation %d accepted", index)
+		}
 	}
 }
 
