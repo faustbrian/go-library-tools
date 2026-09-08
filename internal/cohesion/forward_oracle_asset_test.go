@@ -48,3 +48,10 @@ func TestContractFreezeForwardOracleAssetMatchesFrozenMatrix(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestCatalogV2ForwardOracleAssetMatchesFrozenMatrix(t *testing.T) {
+	data, err := os.ReadFile("../../testdata/cohesion/forward-oracles/cohesion-catalog-v2-forward-oracle.json")
+	if err != nil { t.Fatal(err) }
+	want := []string{"base.canonical-minimum", "base.canonical-rich", "catalog-v2.invalid.missing-modules", "catalog-v2.invalid.unknown-member"}
+	if err := verifyForwardOracleV2(data, forwardOracleV2Expectation{SchemaIdentity: "https://github.com/faustbrian/go-library-tools/schema/cohesion-catalog-v2.schema.json", CaseCount: len(want), MaximumBytes: 4 << 20, CaseIDs: want, OraclePath: "testdata/cohesion/forward-oracles/cohesion-catalog-v2-forward-oracle.json"}); err != nil { t.Fatal(err) }
+}
