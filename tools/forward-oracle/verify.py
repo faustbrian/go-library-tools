@@ -46,6 +46,8 @@ def main():
         raise SystemExit("case roster mismatch")
     used_fixtures = set()
     for row in value["cases"]:
+        if set(row) != {"case_id", "input", "outcome", "normalized_value_sha256", "error_code"}:
+            raise SystemExit("case row shape mismatch")
         if row["outcome"] not in {"accepted", "rejected"}:
             raise SystemExit("unknown outcome")
         if row["input"]["kind"] == "fixture":

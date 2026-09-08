@@ -20,6 +20,7 @@ def main():
  if v["case_count"]!=27 or [x["case_id"] for x in v["cases"]]!=ids: raise SystemExit("case roster mismatch")
  used=set()
  for x in v["cases"]:
+  if set(x)!={"case_id","input","outcome","normalized_value_sha256","error_code"}: raise SystemExit("case row shape mismatch")
   if x["outcome"] not in {"accepted","rejected"}: raise SystemExit("unknown outcome")
   i=x["input"]
   if i["fixture_id"] not in fs: raise SystemExit("unknown fixture reference")
