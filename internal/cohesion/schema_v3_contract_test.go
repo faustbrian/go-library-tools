@@ -500,8 +500,11 @@ func TestHistoricalSchemaSupportAssetsCoverEveryVersionedSnapshot(t *testing.T) 
 		}
 	}
 	for _, path := range []string{
+		// v1 remains a historical schema contract; its superseded aggregate
+		// control asset is intentionally not required for v2 migration.
 		filepath.Join("..", "..", "schema", "cohesion-schema-provenance-v1.schema.json"),
-		filepath.Join("..", "..", "release", "cohesion-schema-provenance.json"),
+		filepath.Join("..", "..", "schema", "cohesion-schema-provenance-v2.schema.json"),
+		filepath.Join("..", "..", "release", "cohesion-schema-provenance-v2-resolved-reference-graph.json"),
 	} {
 		if _, err := os.ReadFile(path); err != nil {
 			t.Errorf("read historical provenance control %s: %v", path, err)
