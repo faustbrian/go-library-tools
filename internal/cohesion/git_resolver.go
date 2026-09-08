@@ -1,3 +1,4 @@
+//nolint:staticcheck // diagnostic capitalization is part of the established contract
 package cohesion
 
 import (

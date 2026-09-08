@@ -1,5 +1,6 @@
 //go:build darwin || linux
 
+//nolint:modernize,noctx,staticcheck // preserve platform and diagnostic contracts
 package cohesion
 
 import (

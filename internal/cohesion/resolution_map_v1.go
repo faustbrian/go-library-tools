@@ -30,12 +30,14 @@ type ResolutionMapV1 struct {
 	ModuleProxy ResolutionModuleProxyV1
 }
 
+// ResolutionSourceV1 identifies a locked source repository and root.
 type ResolutionSourceV1 struct {
 	Repository     string
 	SourceRevision string
 	Root           string
 }
 
+// ResolutionReleaseV1 identifies a locked release and its source objects.
 type ResolutionReleaseV1 struct {
 	Repository   string
 	Release      string
@@ -44,6 +46,7 @@ type ResolutionReleaseV1 struct {
 	Root         string
 }
 
+// ResolutionToolchainV1 identifies a locked Go toolchain artifact set.
 type ResolutionToolchainV1 struct {
 	Version            string
 	GOOS               string
@@ -55,6 +58,7 @@ type ResolutionToolchainV1 struct {
 	Root               string
 }
 
+// ResolutionModuleProxyV1 identifies a locked module proxy tree.
 type ResolutionModuleProxyV1 struct {
 	TreeSHA256 *string
 	Root       *string

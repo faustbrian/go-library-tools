@@ -10,6 +10,7 @@ import (
 	"slices"
 )
 
+// ErrV2TargetExists reports that a publication target already exists.
 var ErrV2TargetExists = errors.New("cohesion v2 publication target already exists")
 
 // V2DurabilityUnknownError means publication committed the immutable name but
@@ -148,7 +149,6 @@ func publishAggregateV2(artifacts map[string][]byte, target string) error {
 	if err := publishDirectoryNoReplace(stage, target); err != nil {
 		return err
 	}
-	stage = ""
 	if err := syncDirectory(parent); err != nil {
 		return V2DurabilityUnknownError{Cause: err}
 	}

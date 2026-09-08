@@ -299,7 +299,7 @@ func (scanner *trustJSONScanner) stringValue() (string, error) {
 		} else {
 			_, width := utf8.DecodeRune(scanner.data[scanner.offset:])
 			_, _ = decoded.Write(scanner.data[scanner.offset : scanner.offset+width])
-			scanner.offset = scanner.offset + width
+			scanner.offset += width
 		}
 	}
 	scanner.offset = probe.offset
@@ -321,7 +321,7 @@ func (scanner *trustJSONScanner) scanStringLength() (int, error) {
 		if current < 0x20 {
 			return 0, scanner.failure("string contains an unescaped control character")
 		}
-		added := 0
+		var added int
 		if current == '\\' {
 			width, err := scanner.escapeWidth()
 			if err != nil {
@@ -333,7 +333,7 @@ func (scanner *trustJSONScanner) scanStringLength() (int, error) {
 			if noncharacter(runeValue) {
 				return 0, scanner.failure("string contains a Unicode noncharacter")
 			}
-			scanner.offset = scanner.offset + width
+			scanner.offset += width
 			added = width
 		}
 		decodedBytes += added
@@ -711,7 +711,7 @@ func assignTrustJSONValue(destination reflect.Value, value any, budget *trustJSO
 }
 
 func trustJSONStructField(destination reflect.Value, name string) (reflect.Value, bool) {
-	for index := 0; index < destination.NumField(); index++ {
+	for index := range destination.NumField() {
 		fieldType := destination.Type().Field(index)
 		if fieldType.IsExported() {
 			fieldName := fieldType.Name

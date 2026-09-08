@@ -11,44 +11,60 @@ import (
 const cohesionGoalID = "golib-cohesion-v1"
 const maximumManifestDeliveryBytes = 1 << 20
 
+// DimensionState describes the lifecycle state of a delivery dimension.
 type DimensionState string
 
 const (
-	DimensionNotStarted    DimensionState = "not-started"
-	DimensionInProgress    DimensionState = "in-progress"
-	DimensionBlocked       DimensionState = "blocked"
+	// DimensionNotStarted indicates that work has not begun.
+	DimensionNotStarted DimensionState = "not-started"
+	// DimensionInProgress indicates that work is underway.
+	DimensionInProgress DimensionState = "in-progress"
+	// DimensionBlocked indicates that work cannot proceed.
+	DimensionBlocked DimensionState = "blocked"
+	// DimensionNotApplicable indicates that a dimension does not apply.
 	DimensionNotApplicable DimensionState = "not-applicable"
-	DimensionVerified      DimensionState = "verified"
+	// DimensionVerified indicates that a dimension has passed its checks.
+	DimensionVerified DimensionState = "verified"
 )
 
+// GoalStatus describes the aggregate delivery goal state.
 type GoalStatus string
 
 const (
-	GoalNotStarted    GoalStatus = "not-started"
-	GoalInProgress    GoalStatus = "in-progress"
-	GoalBlocked       GoalStatus = "blocked"
-	GoalComplete      GoalStatus = "complete"
+	// GoalNotStarted indicates that no delivery dimension has started.
+	GoalNotStarted GoalStatus = "not-started"
+	// GoalInProgress indicates that at least one dimension is underway.
+	GoalInProgress GoalStatus = "in-progress"
+	// GoalBlocked indicates that at least one dimension is blocked.
+	GoalBlocked GoalStatus = "blocked"
+	// GoalComplete indicates that all required dimensions are verified.
+	GoalComplete GoalStatus = "complete"
+	// GoalNotApplicable indicates that no delivery dimension applies.
 	GoalNotApplicable GoalStatus = "not-applicable"
 )
 
+// DeliveryGoal identifies the frozen cohesion delivery goal.
 type DeliveryGoal struct {
 	ID                 string     `json:"id"`
 	RequirementsSHA256 string     `json:"requirements_sha256"`
 	Status             GoalStatus `json:"status"`
 }
 
+// EvidenceReference identifies one delivery evidence artifact.
 type EvidenceReference struct {
 	ReceiptPath   string `json:"receipt_path"`
 	ReceiptSHA256 string `json:"receipt_sha256"`
 	EntryID       string `json:"entry_id"`
 }
 
+// ManifestEvidence contains delivery evidence references.
 type ManifestEvidence struct {
 	Implementation []EvidenceReference `json:"implementation"`
 	Hardening      []EvidenceReference `json:"hardening"`
 	Release        []EvidenceReference `json:"release"`
 }
 
+// ManifestDelivery contains the goal and evidence for a module delivery.
 type ManifestDelivery struct {
 	Goal           DeliveryGoal     `json:"goal"`
 	Implementation DimensionState   `json:"implementation"`
@@ -116,6 +132,8 @@ func deriveGoalStatus(implementation, hardening DimensionState) GoalStatus {
 
 func evidenceKindForDimensionState(dimension string, state DimensionState) (string, bool) {
 	switch state {
+	case DimensionNotStarted, DimensionInProgress:
+		return "", false
 	case DimensionBlocked:
 		return "blocked-decision", validDimension(dimension)
 	case DimensionNotApplicable:

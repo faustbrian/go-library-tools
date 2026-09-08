@@ -1,3 +1,4 @@
+//nolint:forcetypeassert,revive // validated resolution data has a fixed decoded shape
 package cohesion
 
 import (

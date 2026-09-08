@@ -44,6 +44,7 @@ func canonicalMarshal(value any, maximumBytes int64) ([]byte, error) {
 	return canonicalizeTrustJSON(encoded, maximumBytes)
 }
 
+//nolint:unparam // byte ceiling remains an explicit API contract
 func decodeCanonicalTrustJSON(data []byte, maximumBytes int64, target any) error {
 	canonical, err := canonicalizeTrustJSON(data, maximumBytes)
 	if err != nil {

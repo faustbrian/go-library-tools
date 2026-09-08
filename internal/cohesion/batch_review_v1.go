@@ -1,3 +1,4 @@
+//nolint:perfsprint // frozen validation diagnostics are contractual
 package cohesion
 
 import (

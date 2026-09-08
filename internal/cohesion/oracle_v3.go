@@ -1,9 +1,11 @@
+//nolint:gocritic,perfsprint,staticcheck // frozen oracle diagnostics and wire behavior are contractual
 package cohesion
 
 import (
 	"bytes"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
@@ -71,7 +73,8 @@ func verifyForwardOracleV2(data []byte, expectation forwardOracleV2Expectation) 
 				return fmt.Errorf("forward oracle case %s: normalized digest or nullable outcome mismatch", testCase.CaseID)
 			}
 		case "rejected":
-			failure, ok := normalizeErr.(schemaV3Failure)
+			var failure schemaV3Failure
+			ok := errors.As(normalizeErr, &failure)
 			if !ok || testCase.ErrorCode == nil || failure.Code != *testCase.ErrorCode || testCase.NormalizedValueSHA256 != nil {
 				return fmt.Errorf("forward oracle case %s: rejection mismatch", testCase.CaseID)
 			}

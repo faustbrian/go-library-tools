@@ -1,13 +1,16 @@
+//nolint:forcetypeassert // schema validation establishes the decoded object shape
 package cohesion
 
 import (
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 )
 
 const maximumManifestV3Bytes = 1 << 20
 
+//nolint:unparam // requirements digest is part of the validation contract
 func validateManifestV3(data []byte, requirementsSHA256 string) error {
 	if !v3SHA256Pattern.MatchString(requirementsSHA256) {
 		return errors.New("manifest-goal: frozen requirements digest is invalid")
@@ -165,9 +168,9 @@ func manifestV3PathContainsMember(path []trustJSONPathStep, name string) bool {
 }
 
 func nearestManifestV3Field(path []trustJSONPathStep) string {
-	for index := len(path) - 1; index >= 0; index-- {
-		if path[index].kind == trustJSONObjectMember {
-			return path[index].name
+	for _, step := range slices.Backward(path) {
+		if step.kind == trustJSONObjectMember {
+			return step.name
 		}
 	}
 	return ""

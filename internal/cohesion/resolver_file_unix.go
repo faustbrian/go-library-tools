@@ -59,7 +59,6 @@ func readResolutionFile(path string, maximumBytes int64) ([]byte, error) {
 	if file == nil {
 		return nil, errors.New("adopt resolution file descriptor")
 	}
-	current = -1
 	defer file.Close()
 	data, err := io.ReadAll(io.LimitReader(file, maximumBytes+1))
 	if err != nil {

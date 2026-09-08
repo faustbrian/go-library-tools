@@ -1,3 +1,4 @@
+//nolint:forcetypeassert // schema validation establishes the decoded object shape
 package cohesion
 
 import (
