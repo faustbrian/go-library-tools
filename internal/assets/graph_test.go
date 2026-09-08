@@ -204,7 +204,7 @@ func TestResolvedReferenceGraphEnforcesCanonicalJSONStructuralBoundaries(t *test
 	object := func(size int) string {
 		var value strings.Builder
 		value.WriteByte('{')
-		for index := 0; index < size; index++ {
+		for index := range size {
 			if index != 0 {
 				value.WriteByte(',')
 			}
@@ -260,7 +260,7 @@ func TestGraphReferenceAndNodeCountBoundaries(t *testing.T) {
 	t.Parallel()
 	for _, size := range []int{maximumGraphUniqueReferences - 1, maximumGraphUniqueReferences} {
 		values := make([]any, 0, size)
-		for index := 0; index < size; index++ {
+		for index := range size {
 			values = append(values, jcs.Object{{Name: "$ref", Value: "schema-" + strconv.Itoa(index) + ".schema.json"}})
 		}
 		if _, err := collectReferences(values, &graphBudget{}); err != nil {
@@ -285,7 +285,7 @@ func TestGraphReferenceAndNodeCountBoundaries(t *testing.T) {
 		t.Fatal(err)
 	}
 	resolver := &graphResolver{repositoryRoot: root, schemaRoot: filepath.Join(root, "schema"), loaded: make([]*schemaDocument, 0, maximumGraphNodes)}
-	for index := 0; index < maximumGraphNodes-1; index++ {
+	for index := range maximumGraphNodes - 1 {
 		resolver.loaded = append(resolver.loaded, &schemaDocument{path: "existing-" + strconv.Itoa(index)})
 	}
 	if _, err := resolver.load("schema/a.schema.json"); err != nil {

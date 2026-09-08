@@ -1,3 +1,4 @@
+// Package assets generates and validates historical compatibility assets.
 package assets
 
 import (
@@ -29,6 +30,7 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/jcs"
 )
 
+// Generator configures generation of historical compatibility assets.
 type Generator struct {
 	Repository         string
 	SchemaDir          string
@@ -87,6 +89,7 @@ type baseline struct {
 	RejectedCorpusSHA256   string           `json:"rejected_corpus_sha256"`
 }
 
+// Generate produces the configured historical asset bundle.
 func (generator Generator) Generate() (digests map[string]string, resultErr error) {
 	if generator.Repository == "" || generator.SchemaDir == "" || generator.OutputDir == "" || generator.TaskRoot == "" || generator.GoBinary == "" || generator.GitBinary == "" || generator.ModuleProxy == "" || generator.WorkspaceRoot == "" || len(generator.RunnerTemplateDirs) == 0 {
 		return nil, errors.New("generator paths and Go binary are required")
@@ -414,7 +417,9 @@ func snapshotProxyModules(source, destination string, modules []proxyModule) (ma
 					return nil, fmt.Errorf("proxy go.mod content hash mismatch for %s %s", module.path, module.version)
 				}
 			case ".info":
-				var metadata struct{ Version string }
+				var metadata struct {
+					Version string `json:"Version"`
+				}
 				if err := json.Unmarshal(data, &metadata); err != nil || metadata.Version != module.version {
 					return nil, fmt.Errorf("proxy info identity mismatch for %s %s", module.path, module.version)
 				}
@@ -601,7 +606,7 @@ func validateHistoricalRequirements(checkout string) error {
 		allowed[module.path] = module
 	}
 	requirements := map[string]string{}
-	for _, line := range strings.Split(string(data), "\n") {
+	for line := range strings.SplitSeq(string(data), "\n") {
 		fields := strings.Fields(strings.SplitN(line, "//", 2)[0])
 		var path, version string
 		if len(fields) == 2 && strings.HasPrefix(fields[1], "v") {
@@ -629,7 +634,7 @@ func validateHistoricalRequirements(checkout string) error {
 }
 
 func containsExactLine(data []byte, line string) bool {
-	for _, candidate := range strings.Split(strings.TrimSpace(string(data)), "\n") {
+	for candidate := range strings.SplitSeq(strings.TrimSpace(string(data)), "\n") {
 		if candidate == line {
 			return true
 		}
@@ -960,12 +965,12 @@ func extractTarArchive(input io.Reader, destination, commit string) error {
 }
 
 type listedPackage struct {
-	ImportPath string
-	Export     string
+	ImportPath string `json:"ImportPath"`
+	Export     string `json:"Export"`
 	Module     *struct {
-		Path string
-		Main bool
-	}
+		Path string `json:"Path"`
+		Main bool   `json:"Main"`
+	} `json:"Module"`
 }
 
 func (generator Generator) extractExports(root, cacheName string) (exports []exportRow, resultErr error) {
@@ -981,8 +986,7 @@ func (generator Generator) extractExports(root, cacheName string) (exports []exp
 	command.Env = boundedGoEnvironment(cacheRoot, generator.ModuleProxy, generator.GoBinary)
 	output, err := command.Output()
 	if err != nil {
-		var exit *exec.ExitError
-		if errors.As(err, &exit) {
+		if exit, ok := errors.AsType[*exec.ExitError](err); ok {
 			return nil, fmt.Errorf("go list: %w: %s", err, strings.TrimSpace(string(exit.Stderr)))
 		}
 		return nil, err
@@ -1068,11 +1072,11 @@ func packageExports(pkg *types.Package) []exportRow {
 			continue
 		}
 		if structure, ok := named.Underlying().(*types.Struct); ok {
-			for index := range structure.NumFields() {
-				field := structure.Field(index)
+			for fieldIndex := range structure.NumFields() {
+				field := structure.Field(fieldIndex)
 				if field.Exported() {
 					signature := types.ObjectString(field, qualifier)
-					if tag := structure.Tag(index); tag != "" {
+					if tag := structure.Tag(fieldIndex); tag != "" {
 						signature += " tag " + strconv.Quote(tag)
 					}
 					rows = append(rows, exportRow{Identifier: pkg.Path() + "." + name + "." + field.Name(), Signature: signature})
@@ -1081,8 +1085,7 @@ func packageExports(pkg *types.Package) []exportRow {
 		}
 		if contract, ok := named.Underlying().(*types.Interface); ok {
 			contract.Complete()
-			for index := range contract.NumMethods() {
-				method := contract.Method(index)
+			for method := range contract.Methods() {
 				if method.Exported() {
 					rows = append(rows, exportRow{Identifier: pkg.Path() + "." + name + "." + method.Name(), Signature: types.ObjectString(method, qualifier)})
 				}
@@ -1090,8 +1093,8 @@ func packageExports(pkg *types.Package) []exportRow {
 		}
 		for _, typ := range []types.Type{named, types.NewPointer(named)} {
 			methods := types.NewMethodSet(typ)
-			for index := range methods.Len() {
-				method := methods.At(index).Obj()
+			for method := range methods.Methods() {
+				method := method.Obj()
 				if method.Exported() {
 					rows = append(rows, exportRow{Identifier: pkg.Path() + "." + name + "." + method.Name(), Signature: types.ObjectString(method, qualifier)})
 				}
@@ -1490,7 +1493,7 @@ func resolvedReferenceGraphWithBudget(schemaRoot, entryPath string, budget *grap
 	}
 	scheduled := make([]string, 0, maximumGraphNodes)
 	scheduled = append(scheduled, entry.path)
-	if err := resolver.budget.chargeAllocation(int64(maximumGraphNodes) * int64(reflect.TypeOf(referenceGraphNode{}).Size())); err != nil {
+	if err := resolver.budget.chargeAllocation(int64(maximumGraphNodes) * int64(reflect.TypeFor[referenceGraphNode]().Size())); err != nil {
 		return nil, err
 	}
 	nodes := make([]referenceGraphNode, 0, maximumGraphNodes)
@@ -1549,7 +1552,7 @@ func canonicalReferenceGraph(nodes []referenceGraphNode, budget *graphBudget) ([
 		return nil, err
 	}
 	values := make([]any, len(nodes))
-	memberBytes := int64(reflect.TypeOf(jcs.Member{}).Size())
+	memberBytes := int64(reflect.TypeFor[jcs.Member]().Size())
 	for nodeIndex, node := range nodes {
 		if err := budget.chargeAllocation(3 * memberBytes); err != nil {
 			return nil, err
@@ -1677,7 +1680,7 @@ func (resolver *graphResolver) load(relativePath string) (*schemaDocument, error
 	if identity != wantIdentity {
 		return nil, fmt.Errorf("schema $id %q does not equal path identity %q", identity, wantIdentity)
 	}
-	if err := resolver.budget.chargeAllocation(int64(reflect.TypeOf(schemaDocument{}).Size())); err != nil {
+	if err := resolver.budget.chargeAllocation(int64(reflect.TypeFor[schemaDocument]().Size())); err != nil {
 		return nil, err
 	}
 	document := &schemaDocument{bytes: data, identity: identity, path: canonicalPath, value: value}
@@ -1763,8 +1766,8 @@ func verifyFragment(document any, fragment string) error {
 		return fmt.Errorf("unsupported non-pointer fragment %q", decodedFragment)
 	}
 	current := document
-	for _, token := range strings.Split(strings.TrimPrefix(decodedFragment, "/"), "/") {
-		for index := 0; index < len(token); index++ {
+	for token := range strings.SplitSeq(strings.TrimPrefix(decodedFragment, "/"), "/") {
+		for index := range len(token) {
 			if token[index] == '~' && (index+1 == len(token) || (token[index+1] != '0' && token[index+1] != '1')) {
 				return fmt.Errorf("invalid JSON Pointer escape in fragment %q", decodedFragment)
 			}
@@ -1799,14 +1802,13 @@ func objectValue(object jcs.Object, name string) (any, bool) {
 	return nil, false
 }
 
-func setObjectValue(object jcs.Object, name string, value any) bool {
+func setObjectValue(object jcs.Object, name string, value any) {
 	for index := range object {
 		if object[index].Name == name {
 			object[index].Value = value
-			return true
+			return
 		}
 	}
-	return false
 }
 
 func requiredObjectString(object jcs.Object, name string) (string, error) {

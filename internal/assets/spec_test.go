@@ -145,15 +145,16 @@ func TestPackageExportsRetainsConstantValuesAndStructTags(t *testing.T) {
 	types.NewNamed(name, structure, nil)
 	pkg.Scope().Insert(name)
 	rows := packageExports(pkg)
-	joined := ""
+	var joined strings.Builder
 	for _, row := range rows {
-		joined += row.Identifier + "=" + row.Signature + "\n"
+		joined.WriteString(row.Identifier + "=" + row.Signature + "\n")
 	}
-	if !strings.Contains(joined, "Answer") || !strings.Contains(joined, "42") {
-		t.Fatalf("constant value missing: %s", joined)
+	joinedText := joined.String()
+	if !strings.Contains(joinedText, "Answer") || !strings.Contains(joinedText, "42") {
+		t.Fatalf("constant value missing: %s", joinedText)
 	}
-	if !strings.Contains(joined, `tag "json:\"name\""`) {
-		t.Fatalf("struct tag missing: %s", joined)
+	if !strings.Contains(joinedText, `tag "json:\"name\""`) {
+		t.Fatalf("struct tag missing: %s", joinedText)
 	}
 }
 

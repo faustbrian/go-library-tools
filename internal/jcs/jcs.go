@@ -23,6 +23,8 @@ const (
 	maximumAllocationBytes   = 2*maximumArtifactBytes + (8 << 20)
 )
 
+const unicodeNoncharacterError = "Unicode noncharacter"
+
 // Member is an object member used by the canonical JSON value model.
 type Member struct {
 	Name  string
@@ -155,7 +157,7 @@ func convertGoValue(value reflect.Value, budget *allocationBudget, depth int) (a
 		}
 		for _, runeValue := range text {
 			if isNoncharacter(runeValue) {
-				return nil, fmt.Errorf("unicode noncharacter U+%04X", runeValue)
+				return nil, fmt.Errorf("%s U+%04X", unicodeNoncharacterError, runeValue)
 			}
 		}
 		return text, nil
@@ -474,7 +476,7 @@ func (parser *parser) string() (string, error) {
 		if current != '\\' {
 			runeValue, size := utf8.DecodeRune(parser.data[parser.index:])
 			if !parser.options.allowNoncharacters && isNoncharacter(runeValue) {
-				return "", fmt.Errorf("unicode noncharacter U+%04X", runeValue)
+				return "", fmt.Errorf("%s U+%04X", unicodeNoncharacterError, runeValue)
 			}
 			if err := decoded.append(parser.data[parser.index : parser.index+size]...); err != nil {
 				return "", err
@@ -519,7 +521,7 @@ func (parser *parser) string() (string, error) {
 				return "", err
 			}
 			if !parser.options.allowNoncharacters && isNoncharacter(runeValue) {
-				return "", fmt.Errorf("unicode noncharacter U+%04X", runeValue)
+				return "", fmt.Errorf("%s U+%04X", unicodeNoncharacterError, runeValue)
 			}
 			var encoded [utf8.UTFMax]byte
 			size := utf8.EncodeRune(encoded[:], runeValue)

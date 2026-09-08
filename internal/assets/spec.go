@@ -1,5 +1,6 @@
 package assets
 
+// Spec describes one historical asset generation target.
 type Spec struct {
 	Base             string
 	Commit           string
@@ -16,10 +17,12 @@ type Spec struct {
 	RuntimeRunners   []RuntimeRunner
 }
 
+// RuntimeRunner describes an additional runtime characterization test.
 type RuntimeRunner struct {
 	Runner, Directory, Test string
 }
 
+// Specs lists the historical asset generation targets.
 var Specs = []Spec{
 	{
 		Base: "modules-v1", Commit: "368b815e2e1b444b388cf405823afd0daf031ab6",
@@ -62,6 +65,7 @@ var Specs = []Spec{
 	},
 }
 
+// AssetNames returns the generated filenames for a specification.
 func AssetNames(spec Spec) []string {
 	return []string{
 		spec.Base + "-historical-baseline.json",
