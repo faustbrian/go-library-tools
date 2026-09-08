@@ -1,10 +1,29 @@
 #!/usr/bin/env python3
-"""Independent structural checker for the contract-freeze oracle asset."""
+"""Independent structural and mutation-semantic checker for the oracle asset."""
 import base64, hashlib, json
 from pathlib import Path
 
 def canonical(value): return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode()
 def sha(value): return "sha256:" + hashlib.sha256(value).hexdigest()
+
+def check_candidate(case_id, candidate):
+    """Check the frozen contract shape and each declared mutation directly."""
+    if not isinstance(candidate, dict): raise SystemExit("candidate is not an object")
+    required = {"schema_id", "goal_id", "contract", "review", "created_at"}
+    if case_id in {"base.canonical-minimum", "base.canonical-rich", "contract-freeze.valid"}:
+        if set(candidate) != required: raise SystemExit("accepted candidate shape mismatch")
+        return
+    if case_id.endswith("unknown-member"):
+        if "unknown" not in candidate: raise SystemExit("unknown-member mutation missing")
+    elif case_id.endswith("missing-review"):
+        if "review" in candidate: raise SystemExit("missing-review mutation retained review")
+    else:
+        if not required.issubset(candidate): raise SystemExit("rejected candidate missing required field")
+    if case_id.endswith(".schema") and candidate.get("schema_id") == "urn:golib:cohesion:contract-freeze:v1": raise SystemExit("schema mutation was not applied")
+    if case_id.endswith(".goal") and candidate.get("goal_id") == "golib-cohesion-v1": raise SystemExit("goal mutation was not applied")
+    if case_id.endswith(".contract") and candidate.get("contract", {}).get("tag") == "v1.5.5": raise SystemExit("contract mutation was not applied")
+    if case_id.endswith("review-path") and candidate.get("review", {}).get("record_path") == ".ai/cohesion/phase3/contract-releases/v1.5.5/CONTRACT_REVIEW.json": raise SystemExit("review-path mutation was not applied")
+    if case_id.endswith("timestamp") and candidate.get("created_at") != "2026-02-31T03:32:14Z": raise SystemExit("timestamp mutation was not applied")
 
 def main():
     path = Path(__file__).resolve().parents[2] / "testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json"
@@ -25,6 +44,8 @@ def main():
     errors = {"contract-freeze.invalid.schema": "schema-constant", "contract-freeze.invalid.goal": "schema-constant", "contract-freeze.invalid.contract": "semantic-external-identity", "contract-freeze.invalid.review-path": "semantic-external-identity", "contract-freeze.invalid.timestamp": "semantic-cross-field", "contract-freeze.invalid.missing-review": "schema-required-member", "contract-freeze.invalid.unknown-member": "schema-unknown-member"}
     for row in value["cases"]:
         if set(row) != {"case_id", "input", "outcome", "normalized_value_sha256", "error_code"}: raise SystemExit("case row shape mismatch")
+        if not isinstance(row["outcome"], str) or row["outcome"] not in {"accepted", "rejected"}: raise SystemExit("unknown outcome")
+        if row["error_code"] is not None and not isinstance(row["error_code"], str): raise SystemExit("error code must be string or null")
         inp = row["input"]
         if inp.get("fixture_id") not in fixture_bytes: raise SystemExit("unknown fixture")
         if inp.get("kind") == "fixture":
@@ -37,6 +58,10 @@ def main():
             if item["offset"] != 0 or item["delete_count"] != len(src): raise SystemExit("splice bounds mismatch")
             candidate = inserted
         else: raise SystemExit("input kind mismatch")
+        try: candidate_value = json.loads(candidate.decode())
+        except Exception:
+            candidate_value = None
+        check_candidate(row["case_id"], candidate_value)
         if row["outcome"] == "accepted":
             if row["error_code"] is not None or row["normalized_value_sha256"] != sha(candidate): raise SystemExit("accepted result mismatch")
         elif row["error_code"] != errors.get(row["case_id"]) or row["normalized_value_sha256"] is not None: raise SystemExit("rejected result mismatch")
