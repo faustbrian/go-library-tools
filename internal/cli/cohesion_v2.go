@@ -159,7 +159,7 @@ func parseSingletonFlags(args []string, allowed, required map[string]bool) (map[
 	if len(args)%2 != 0 {
 		return nil, errors.New("flag is missing its value")
 	}
-	values := make(map[string]string, len(args)/2)
+	values := make(map[string]string)
 	for index := 0; index < len(args); index += 2 {
 		name, value := args[index], args[index+1]
 		if !allowed[name] {

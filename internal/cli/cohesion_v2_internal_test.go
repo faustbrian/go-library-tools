@@ -59,6 +59,29 @@ func TestParseCohesionV2InvocationRejectsIncompleteOrAmbiguousFlags(t *testing.T
 	}
 }
 
+func TestParseCohesionV2InvocationMatchesCommandBoundariesAndViews(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+		want string
+	}{
+		{"project boundary", []string{"catalog", "project", "consumer"}, "required flag"},
+		{"recover boundary", []string{"catalog", "project", "recover", "engineering"}, "required flag"},
+		{"aggregate boundary", []string{"aggregate", "generate"}, "required flag"},
+		{"sources check boundary", []string{"sources", "check"}, "required flag"},
+		{"sources verify boundary", []string{"sources", "verify"}, "required flag"},
+		{"project unknown view", []string{"catalog", "project", "other"}, "unknown cohesion schema-v2 command"},
+		{"recover unknown view", []string{"catalog", "project", "recover", "other"}, "unknown cohesion schema-v2 command"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if _, err := parseCohesionV2Invocation(test.args); err == nil || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("parseCohesionV2Invocation(%v) error = %v, want %q", test.args, err, test.want)
+			}
+		})
+	}
+}
+
 func TestIsCohesionV2InvocationRecognizesOnlyV2Markers(t *testing.T) {
 	for _, test := range []struct {
 		args []string
