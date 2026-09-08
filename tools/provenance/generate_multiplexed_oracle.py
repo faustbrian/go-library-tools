@@ -28,6 +28,13 @@ SOURCES = {
     "schema/cohesion-schema-v3-decision-freeze-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-schema-v3-decision-freeze-v1-forward-oracle.json",),
 }
 
+# Every semantic lane must at least exercise the canonical pair and required
+# member/unknown-member boundaries. Decision lanes additionally require the
+# malformed-input boundaries used by the contract-review oracle; their current
+# five-case assets are therefore deliberately partial.
+BASE_EXPECTED_CASES = ("base.canonical-minimum", "base.canonical-rich", "schema.missing-required", "schema.unknown-member")
+DECISION_EXPECTED_CASES = BASE_EXPECTED_CASES + ("json.duplicate-key", "json.trailing-value")
+
 
 def sha(path: Path) -> str:
     return "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
@@ -59,6 +66,9 @@ def build() -> dict:
         cases.sort(key=lambda row: (row["case_id"], row["source_path"]))
         outcomes = {case["outcome"] for case in cases}
         absent = sorted({"accepted", "rejected"} - outcomes)
+        expected_case_ids = DECISION_EXPECTED_CASES if "schema-v3-decision-" in schema_path else BASE_EXPECTED_CASES
+        present_case_ids = {case["case_id"] for case in cases}
+        missing_required_cases = sorted(set(expected_case_ids) - present_case_ids)
         if absent:
             missing.append({
                 "schema_path": schema_path,
@@ -72,6 +82,9 @@ def build() -> dict:
             "sources": source_rows,
             "case_count": len(cases),
             "cases": cases,
+            "expected_case_ids": list(expected_case_ids),
+            "missing_required_cases": missing_required_cases,
+            "completeness": "complete" if not missing_required_cases else ("missing" if not cases else "partial"),
         })
     return {
         "format": "golib-cohesion-schema-provenance-v2-multiplexed-oracle",

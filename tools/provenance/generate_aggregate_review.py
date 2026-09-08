@@ -30,8 +30,17 @@ def sha(path: Path) -> str:
 def build() -> dict:
     oracle = ROOT / ORACLE_REL
     value = json.loads(oracle.read_text(encoding="utf-8"))
-    entries = [{"schema_path": e["schema_path"], "schema_bytes_sha256": e["schema_bytes_sha256"]} for e in value["entries"]]
+    entries = [{
+        "schema_path": e["schema_path"],
+        "schema_bytes_sha256": e["schema_bytes_sha256"],
+        "completeness": e["completeness"],
+        "expected_case_ids": e["expected_case_ids"],
+        "missing_required_cases": e["missing_required_cases"],
+    } for e in value["entries"]]
     missing = value["missing_case_report"]["missing"]
+    complete = sum(e["completeness"] == "complete" for e in value["entries"])
+    partial = sum(e["completeness"] == "partial" for e in value["entries"])
+    absent = sum(e["completeness"] == "missing" for e in value["entries"])
     return {
         "format": "golib-cohesion-schema-provenance-v2-aggregate-review",
         "schema_id": "urn:golib:cohesion:schema-provenance:v2",
@@ -39,7 +48,7 @@ def build() -> dict:
         "status": "incomplete-non-authorizing",
         "authorization": {"authorized": False, "reason": f"{len(missing)} schema paths lack authoritative accepted and rejected semantic fixtures"},
         "oracle": {"path": ORACLE_REL, "bytes_sha256": sha(oracle), "schema_count": value["schema_count"], "case_count": sum(e["case_count"] for e in value["entries"])},
-        "schema_inventory": {"entry_count": len(entries), "entries": entries},
+        "schema_inventory": {"entry_count": len(entries), "entries": entries, "completeness_counts": {"complete": complete, "partial": partial, "missing": absent}},
         "missing_case_report": {"missing_count": len(missing), "missing": missing},
         "unprovable_case_report": {
             "schemas": [
@@ -54,9 +63,9 @@ def build() -> dict:
             "count": len(STRUCTURAL_ONLY),
         },
         "dimensions": [
-            {"name": "coverage", "authored_by": "codex-coverage", "outcome": "incomplete", "basis": "oracle entries are complete only where released semantic fixtures exist", "covered_schema_count": len(SCHEMA_PATHS) - len(missing), "missing_schema_count": len(missing)},
+            {"name": "coverage", "authored_by": "codex-coverage", "outcome": "incomplete", "basis": "oracle entries are complete only when every expected case is present", "complete_schema_count": complete, "partial_schema_count": partial, "missing_schema_count": absent},
             {"name": "integrity", "authored_by": "codex-integrity", "outcome": "pass", "basis": "the oracle verifier binds every listed schema, source, and case digest"},
-            {"name": "reachability", "authored_by": "codex-reachability", "outcome": "incomplete", "basis": f"{len(missing)} schema paths have no accepted and rejected fixture pair to exercise"},
+            {"name": "reachability", "authored_by": "codex-reachability", "outcome": "incomplete", "basis": "partial and missing entries still lack one or more required case IDs"},
         ],
     }
 
