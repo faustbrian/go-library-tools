@@ -34,11 +34,11 @@ def main():
     rows.append(("base.canonical-minimum", fixtures[0][1], "accepted", digest(fixtures[0][1]), None))
     rows.append(("base.canonical-rich", fixtures[1][1], "accepted", digest(fixtures[1][1]), None))
     mutations = [
-        ("diagnostic.invalid.empty", lambda v: v.update(diagnostics=[]), "schema-range"),
         ("diagnostic.invalid.code", lambda v: v["diagnostics"][0].update(code="BAD"), "schema-pattern"),
-        ("diagnostic.invalid.path", lambda v: v["diagnostics"][0].update(path="not-pointer"), "schema-pattern"),
-        ("diagnostic.invalid.message", lambda v: v["diagnostics"][0].update(message=""), "schema-range"),
+        ("diagnostic.invalid.empty", lambda v: v.update(diagnostics=[]), "schema-range"),
         ("diagnostic.invalid.empty-causes", lambda v: v["diagnostics"][0].update(causes=[]), "schema-range"),
+        ("diagnostic.invalid.message", lambda v: v["diagnostics"][0].update(message=""), "schema-range"),
+        ("diagnostic.invalid.path", lambda v: v["diagnostics"][0].update(path="not-pointer"), "schema-pattern"),
         ("diagnostic.invalid.unknown-cause", lambda v: v["diagnostics"][0].update(extra=True), "schema-unknown-member"),
     ]
     for case_id, mutate, code in mutations:
