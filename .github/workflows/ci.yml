@@ -74,6 +74,8 @@ jobs:
         run: python3 tools/forward-oracle/verify.py
       - name: Verify contract-review forward oracle
         run: python3 tools/forward-oracle/verify_contract_review.py
+      - name: Verify contract-freeze forward oracle
+        run: python3 tools/forward-oracle/verify_contract_freeze.py
       - name: Inventory provenance inputs
         run: python3 tools/provenance/check.py
       - name: Run repository contract
