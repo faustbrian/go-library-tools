@@ -7,6 +7,17 @@ import (
 	"testing"
 )
 
+func TestV2DurabilityUnknownErrorPreservesCause(t *testing.T) {
+	cause := errors.New("sync failed")
+	failure := V2DurabilityUnknownError{Cause: cause}
+	if got := failure.Error(); got != "cohesion v2 publication committed but durability is unknown" {
+		t.Fatalf("Error() = %q", got)
+	}
+	if !errors.Is(failure, cause) {
+		t.Fatal("V2DurabilityUnknownError does not unwrap its cause")
+	}
+}
+
 func TestPublishProjectV2CreatesImmutableTargetWithoutReplacement(t *testing.T) {
 	root := t.TempDir()
 	target := filepath.Join(root, "catalog.json")

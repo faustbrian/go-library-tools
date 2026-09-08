@@ -5,6 +5,15 @@ import (
 	"testing"
 )
 
+func TestSchemaV3FailureErrorFormatsCodeAndDetail(t *testing.T) {
+	if got := (schemaV3Failure{Code: "schema-type"}).Error(); got != "schema-type" {
+		t.Fatalf("Error() without detail = %q", got)
+	}
+	if got := (schemaV3Failure{Code: "schema-type", Detail: "expected object"}).Error(); got != "schema-type: expected object" {
+		t.Fatalf("Error() with detail = %q", got)
+	}
+}
+
 func TestSchemaV3ErrorCodesAreClosedAndOrdered(t *testing.T) {
 	t.Parallel()
 

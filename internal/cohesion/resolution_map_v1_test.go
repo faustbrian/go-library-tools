@@ -2,9 +2,26 @@ package cohesion
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestParseResolutionMapV1FileReadsAndRejectsMapFiles(t *testing.T) {
+	root := canonicalTempDir(t)
+	path := filepath.Join(root, "resolution-map.json")
+	valid := `{"sources":[],"releases":[],"toolchains":[],"module_proxy":{"tree_sha256":null,"root":null}}`
+	if err := os.WriteFile(path, []byte(valid), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if got, err := ParseResolutionMapV1File(path); err != nil || len(got.Sources) != 0 {
+		t.Fatalf("ParseResolutionMapV1File(valid) = %#v, error = %v", got, err)
+	}
+	if _, err := ParseResolutionMapV1File(filepath.Join(root, "missing.json")); err == nil {
+		t.Fatal("ParseResolutionMapV1File(missing) error = nil")
+	}
+}
 
 func TestParseResolutionMapV1AcceptsCanonicalClosedMap(t *testing.T) {
 	input := []byte(`{"sources":[{"repository":"github.com/faustbrian/example","source_revision":"0123456789abcdef0123456789abcdef01234567","root":"/srv/sources/example"}],"releases":[{"repository":"github.com/faustbrian/go-library-tools","release":"v1.5.6","tag_object_sha":"1111111111111111111111111111111111111111","peeled_commit":"2222222222222222222222222222222222222222","root":"/srv/releases/tooling"}],"toolchains":[{"version":"go1.26.6","goos":"linux","goarch":"amd64","distribution_sha256":"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","tree_sha256":"sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","binary_sha256":"sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc","archive":"/srv/toolchains/go1.26.6.tar.gz","root":"/srv/toolchains/go1.26.6"}],"module_proxy":{"tree_sha256":"sha256:dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd","root":"/srv/proxy"}}`)
