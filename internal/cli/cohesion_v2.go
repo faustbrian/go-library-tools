@@ -98,31 +98,47 @@ func parseCohesionV2Invocation(args []string) (cohesionV2Invocation, error) {
 	var flagArgs []string
 	var allowed, required map[string]bool
 
-	switch {
-	case len(args) >= 3 && args[0] == "catalog" && args[1] == "project" && (args[2] == "consumer" || args[2] == "engineering"):
-		invocation.action, invocation.view = "project", args[2]
-		flagArgs = args[3:]
+	if len(args) < 2 {
+		return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
+	}
+	switch args[0] {
+	case "catalog":
+		if args[1] != "project" || len(args) < 3 {
+			return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
+		}
+		if args[2] == "recover" {
+			if len(args) < 4 || (args[3] != "consumer" && args[3] != "engineering") {
+				return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
+			}
+			invocation.action, invocation.view = "project-recover", args[3]
+			flagArgs = args[4:]
+		} else if args[2] == "consumer" || args[2] == "engineering" {
+			invocation.action, invocation.view = "project", args[2]
+			flagArgs = args[3:]
+		} else {
+			return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
+		}
 		allowed = flagSet("--schema-version", "--mode", "--repository", "--inputs", "--resolution-map", "--output")
 		required = allowed
-	case len(args) >= 4 && args[0] == "catalog" && args[1] == "project" && args[2] == "recover" && (args[3] == "consumer" || args[3] == "engineering"):
-		invocation.action, invocation.view = "project-recover", args[3]
-		flagArgs = args[4:]
-		allowed = flagSet("--schema-version", "--mode", "--repository", "--inputs", "--resolution-map", "--output")
-		required = allowed
-	case len(args) >= 2 && args[0] == "aggregate" && (args[1] == "generate" || args[1] == "check" || args[1] == "recover"):
+	case "aggregate":
+		if args[1] != "generate" && args[1] != "check" && args[1] != "recover" {
+			return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
+		}
 		invocation.action = "aggregate-" + args[1]
 		flagArgs = args[2:]
 		allowed = flagSet("--schema-version", "--mode", "--inputs", "--resolution-map", "--output")
 		required = allowed
-	case len(args) >= 2 && args[0] == "sources" && args[1] == "check":
-		invocation.action = "sources-check"
+	case "sources":
+		if args[1] == "check" {
+			invocation.action = "sources-check"
+			allowed = flagSet("--schema-version", "--inputs")
+		} else if args[1] == "verify" {
+			invocation.action = "sources-verify"
+			allowed = flagSet("--schema-version", "--inputs", "--repository", "--resolution-map")
+		} else {
+			return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
+		}
 		flagArgs = args[2:]
-		allowed = flagSet("--schema-version", "--inputs")
-		required = allowed
-	case len(args) >= 2 && args[0] == "sources" && args[1] == "verify":
-		invocation.action = "sources-verify"
-		flagArgs = args[2:]
-		allowed = flagSet("--schema-version", "--inputs", "--repository", "--resolution-map")
 		required = allowed
 	default:
 		return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
