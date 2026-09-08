@@ -1,3 +1,4 @@
+//nolint:intrange,modernize // loop bounds intentionally exercise index semantics
 package cohesion
 
 import (

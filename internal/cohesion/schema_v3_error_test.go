@@ -1,3 +1,4 @@
+//nolint:copyloopvar,modernize // parallel subtests intentionally capture immutable cases
 package cohesion
 
 import (

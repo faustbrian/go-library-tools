@@ -1,3 +1,4 @@
+//nolint:gocritic // whitespace key is an intentional hostile fixture
 package cohesion
 
 import (

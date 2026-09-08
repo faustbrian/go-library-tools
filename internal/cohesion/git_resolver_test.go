@@ -1,3 +1,4 @@
+//nolint:makezero,noctx,prealloc // subprocess and byte-layout fixtures are bounded
 package cohesion
 
 import (

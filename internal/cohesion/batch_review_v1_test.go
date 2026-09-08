@@ -1,3 +1,4 @@
+//nolint:forcetypeassert // controlled fixture shapes
 package cohesion
 
 import (

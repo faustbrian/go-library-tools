@@ -1,3 +1,4 @@
+//nolint:copyloopvar,forcetypeassert,modernize,revive // controlled fixture shapes and local test names
 package cohesion
 
 import (

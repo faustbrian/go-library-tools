@@ -1,3 +1,4 @@
+//nolint:copyloopvar,intrange,modernize,unused // fixture loops and retained fields are intentional
 package cohesion
 
 import (

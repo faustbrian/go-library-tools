@@ -1,3 +1,4 @@
+//nolint:copyloopvar,errorlint,forcetypeassert,modernize // controlled fixture shapes and value errors
 package cohesion
 
 import (

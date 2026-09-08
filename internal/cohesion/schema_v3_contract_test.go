@@ -1,3 +1,4 @@
+//nolint:copyloopvar,forcetypeassert,modernize // controlled fixture shapes
 package cohesion_test
 
 import (

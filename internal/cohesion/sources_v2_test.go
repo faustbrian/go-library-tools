@@ -1,3 +1,4 @@
+//nolint:forcetypeassert,modernize // controlled fixture map copying
 package cohesion
 
 import (
