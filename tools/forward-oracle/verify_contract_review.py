@@ -15,7 +15,10 @@ def main():
   if i["kind"]=="fixture": candidate=fs[i["fixture_id"]]
   else:
    s=i["splices"][0]; src=fs[i["fixture_id"]]; ins=base64.b64decode(s["insert_base64"],validate=True); candidate=src[:s["offset"]]+ins+src[s["offset"]+s["delete_count"]:]
-  if x["outcome"]=="accepted" and x["normalized_value_sha256"]!=(sha(fs["base.canonical-rich"]) if x["case_id"]=="json.noncanonical" else sha(candidate)): raise SystemExit("accepted digest mismatch")
+  if x["outcome"]=="accepted":
+   try: normalized=canonical(json.loads(candidate.decode("utf-8")))
+   except Exception as exc: raise SystemExit(f"accepted input is not valid JSON: {exc}")
+   if x["normalized_value_sha256"]!=sha(normalized): raise SystemExit("accepted digest mismatch")
   if x["outcome"]=="rejected" and (x["normalized_value_sha256"] is not None or x["error_code"]!=errors[x["case_id"]]): raise SystemExit("rejection mismatch")
  print("contract-review forward oracle verified")
 if __name__=="__main__": main()
