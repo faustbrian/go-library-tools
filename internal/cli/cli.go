@@ -674,7 +674,11 @@ func findRoot(start string) (string, error) {
 	for {
 		info, statErr := os.Stat(filepath.Join(current, ".golib.yaml"))
 		if statErr == nil && !info.IsDir() {
-			return current, nil
+			canonical, err := filepath.EvalSymlinks(current)
+			if err != nil {
+				return "", fmt.Errorf("locate repository root: canonicalize root: %w", err)
+			}
+			return canonical, nil
 		}
 		if statErr != nil && !errors.Is(statErr, os.ErrNotExist) {
 			return "", fmt.Errorf("locate repository root: %w", statErr)
