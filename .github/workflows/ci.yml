@@ -89,6 +89,23 @@ jobs:
         run: python3 tools/provenance/check.py
       - name: Inventory proportional provenance v2 inputs
         run: python3 tools/provenance/check_v2.py
+      - name: Verify v2 multiplexed oracle
+        run: python3 tools/provenance/verify_multiplexed_oracle.py testdata/cohesion/schema-provenance-v2-multiplexed-oracle.json
+      - name: Verify v2 aggregate review
+        run: python3 tools/provenance/verify_aggregate_review.py testdata/cohesion/schema-provenance-v2-aggregate-review.json
+      - name: Reproduce v2 evidence indexes
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-provenance-v2.XXXXXX")"
+          trap 'find "${task}" -depth -delete' EXIT
+          python3 tools/provenance/generate_multiplexed_oracle.py \
+            --output "${task}/schema-provenance-v2-multiplexed-oracle.json"
+          cmp -- "${task}/schema-provenance-v2-multiplexed-oracle.json" \
+            testdata/cohesion/schema-provenance-v2-multiplexed-oracle.json
+          python3 tools/provenance/generate_aggregate_review.py \
+            --output "${task}/schema-provenance-v2-aggregate-review.json"
+          cmp -- "${task}/schema-provenance-v2-aggregate-review.json" \
+            testdata/cohesion/schema-provenance-v2-aggregate-review.json
       - name: Run repository contract
         run: make ci
       - name: Upload verification evidence
