@@ -21,8 +21,6 @@ SOURCES = {
     "schema/cohesion-catalog-v1.schema.json": ("release/cohesion-catalog-v1-accepted-corpus.json", "release/cohesion-catalog-v1-rejected-corpus.json"),
     "schema/cohesion-inputs-v1.schema.json": ("release/cohesion-inputs-v1-accepted-corpus.json", "release/cohesion-inputs-v1-rejected-corpus.json"),
     "schema/cohesion-sources-v1.schema.json": ("release/cohesion-sources-v1-accepted-corpus.json", "release/cohesion-sources-v1-rejected-corpus.json"),
-    "schema/cohesion-sources-v2.schema.json": ("testdata/cohesion/forward-oracles/cohesion-sources-v2-forward-oracle.json",),
-    "schema/cohesion-inputs-v2.schema.json": ("testdata/cohesion/forward-oracles/cohesion-inputs-v2-forward-oracle.json",),
     "schema/cohesion-go-toolchains-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-go-toolchains-v1-forward-oracle.json",),
     "schema/cohesion-gate-policy-v1.schema.json": ("release/cohesion-gate-policy-v1-accepted-corpus.json", "release/cohesion-gate-policy-v1-rejected-corpus.json"),
     "schema/cohesion-contract-freeze-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json",),
