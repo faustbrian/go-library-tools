@@ -22,7 +22,13 @@ def main():
     value = json.loads(data)
     if value["format"] != "golib-forward-oracle-v2" or value["fixture_count"] != 2:
         raise SystemExit("oracle header mismatch")
-    fixtures = {row["fixture_id"]: base64.b64decode(row["bytes_base64"], validate=True) for row in value["fixtures"]}
+    if len(value["fixtures"]) != value["fixture_count"]:
+        raise SystemExit("fixture count mismatch")
+    fixtures = {}
+    for row in value["fixtures"]:
+        if row["fixture_id"] in fixtures:
+            raise SystemExit("duplicate fixture id")
+        fixtures[row["fixture_id"]] = base64.b64decode(row["bytes_base64"], validate=True)
     for row in value["fixtures"]:
         if sha(fixtures[row["fixture_id"]]) != row["bytes_sha256"]:
             raise SystemExit("fixture digest mismatch")
@@ -44,6 +50,8 @@ def main():
             source = fixtures[row["input"]["fixture_id"]]
             splice = row["input"]["splices"][0]
             insert = base64.b64decode(splice["insert_base64"], validate=True)
+            if splice["offset"] < 0 or splice["delete_count"] < 0 or splice["offset"] + splice["delete_count"] > len(source):
+                raise SystemExit("splice bounds mismatch")
             candidate = source[:splice["offset"]] + insert + source[splice["offset"] + splice["delete_count"]:]
         if row["outcome"] == "accepted" and row["normalized_value_sha256"] != sha(candidate):
             raise SystemExit("accepted digest mismatch")
