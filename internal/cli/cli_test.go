@@ -27,6 +27,17 @@ func TestExecuteShowsHelp(t *testing.T) {
 			t.Errorf("help does not contain %q", command)
 		}
 	}
+	for _, command := range []string{
+		"cohesion catalog project <consumer|engineering> --schema-version 2 --mode <preview|final>",
+		"cohesion catalog project recover <consumer|engineering> --schema-version 2 --mode <preview|final>",
+		"cohesion aggregate <generate|check|recover> --schema-version 2 --mode <preview|final>",
+		"cohesion sources check --schema-version 2 --inputs <file>",
+		"cohesion sources verify --schema-version 2 --inputs <file> --repository <identity> --resolution-map <file>",
+	} {
+		if !strings.Contains(stdout.String(), command) {
+			t.Errorf("help does not contain %q", command)
+		}
+	}
 	for _, unsupported := range []string{"services start", "services stop"} {
 		if strings.Contains(stdout.String(), unsupported) {
 			t.Errorf("help advertises unsupported command %q", unsupported)
@@ -76,6 +87,38 @@ func TestExecuteProjectsRepositoryCohesionCatalogs(t *testing.T) {
 		if err := json.Unmarshal(stdout.Bytes(), &envelope); err != nil || envelope.View != test.view || len(envelope.Modules) != test.count {
 			t.Fatalf("catalog %s = %#v, error = %v", test.view, envelope, err)
 		}
+	}
+}
+
+func TestExecuteCohesionV2UsesClosedMachineDiagnostics(t *testing.T) {
+	root := fixture(t)
+	input := filepath.Join(root, "sources-v2.json")
+	write(t, input, `{}`)
+	for _, test := range []struct {
+		name string
+		args []string
+		code int
+		want string
+	}{
+		{"syntax", []string{"cohesion", "sources", "check", "--schema-version", "2", "--inputs", input, "--inputs", input}, 2, "invalid-invocation"},
+		{"validation", []string{"cohesion", "sources", "check", "--schema-version", "2", "--inputs", input}, 1, "schema-required-member"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			if got := cli.Execute(test.args, root, &stdout, &stderr); got != test.code || stdout.Len() != 0 {
+				t.Fatalf("Execute(%v) = %d, stdout %q, stderr %q", test.args, got, stdout.String(), stderr.String())
+			}
+			var diagnostic struct {
+				SchemaID    string `json:"schema_id"`
+				Status      string `json:"status"`
+				Diagnostics []struct {
+					Code string `json:"code"`
+				} `json:"diagnostics"`
+			}
+			if err := json.Unmarshal(stderr.Bytes(), &diagnostic); err != nil || diagnostic.SchemaID != "urn:golib:cohesion:diagnostic:v1" || diagnostic.Status != "failed" || len(diagnostic.Diagnostics) != 1 || diagnostic.Diagnostics[0].Code != test.want {
+				t.Fatalf("diagnostic = %#v, error = %v, bytes = %q", diagnostic, err, stderr.String())
+			}
+		})
 	}
 }
 

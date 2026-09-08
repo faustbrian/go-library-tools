@@ -32,8 +32,13 @@ Usage:
   golib check [--all|--module <directory>]
   golib cohesion check [--json]
   golib cohesion catalog <consumer|engineering> [--json]
+  golib cohesion catalog project <consumer|engineering> --schema-version 2 --mode <preview|final> --repository <identity> --inputs <file> --resolution-map <file> --output <file>
+  golib cohesion catalog project recover <consumer|engineering> --schema-version 2 --mode <preview|final> --repository <identity> --inputs <file> --resolution-map <file> --output <file>
   golib cohesion aggregate <generate|check> --inputs <file> --output <directory>
+  golib cohesion aggregate <generate|check|recover> --schema-version 2 --mode <preview|final> --inputs <file> --resolution-map <file> --output <directory>
   golib cohesion sources <check --inputs <file>|verify --inputs <file> --repository <identity>>
+  golib cohesion sources check --schema-version 2 --inputs <file>
+  golib cohesion sources verify --schema-version 2 --inputs <file> --repository <identity> --resolution-map <file>
   golib config validate
 	golib config show --json
   golib inventory [--json]
@@ -321,6 +326,9 @@ func usesCohesionGeneratorIdentity(args []string) bool {
 }
 
 func executeCohesion(args []string, root string, policy config.Config, stdout, stderr io.Writer) int {
+	if isCohesionV2Invocation(args) {
+		return executeCohesionV2(args, root, stdout, stderr)
+	}
 	if len(args) > 0 && args[0] == "sources" {
 		usageMessage := "usage: golib cohesion sources <check --inputs <file>|verify --inputs <file> --repository <identity>>"
 		if len(args) != 4 && len(args) != 6 {
