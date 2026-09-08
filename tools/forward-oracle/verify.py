@@ -22,7 +22,8 @@ def main():
     value = json.loads(data)
     if value["format"] != "golib-forward-oracle-v2" or value["fixture_count"] != 2:
         raise SystemExit("oracle header mismatch")
-    if len(value["fixtures"]) != value["fixture_count"]:
+    expected_fixtures = ["base.canonical-minimum", "base.canonical-rich"]
+    if len(value["fixtures"]) != value["fixture_count"] or [row["fixture_id"] for row in value["fixtures"]] != expected_fixtures:
         raise SystemExit("fixture count mismatch")
     fixtures = {}
     for row in value["fixtures"]:
@@ -44,6 +45,8 @@ def main():
     if value["case_count"] != len(expected) or [row["case_id"] for row in value["cases"]] != expected:
         raise SystemExit("case roster mismatch")
     for row in value["cases"]:
+        if row["outcome"] not in {"accepted", "rejected"}:
+            raise SystemExit("unknown outcome")
         if row["input"]["kind"] == "fixture":
             candidate = fixtures[row["input"]["fixture_id"]]
         else:

@@ -6,7 +6,8 @@ def sha(b): return "sha256:"+hashlib.sha256(b).hexdigest()
 def main():
  p=Path(__file__).resolve().parents[2]/"testdata/cohesion/forward-oracles/cohesion-contract-review-v1-forward-oracle.json"; data=p.read_bytes(); v=json.loads(data)
  if data!=canonical(v): raise SystemExit("oracle is not canonical JSON")
- if v.get("fixture_count") != 2 or len(v.get("fixtures", [])) != 2: raise SystemExit("fixture count mismatch")
+ expected_fixtures=["base.canonical-minimum","base.canonical-rich"]
+ if v.get("fixture_count") != 2 or len(v.get("fixtures", [])) != 2 or [x.get("fixture_id") for x in v["fixtures"]]!=expected_fixtures: raise SystemExit("fixture count mismatch")
  fs={}
  for fixture in v["fixtures"]:
   fid=fixture["fixture_id"]
@@ -18,6 +19,7 @@ def main():
  ids=sorted(["base.canonical-minimum","base.canonical-rich","contract-review.valid.accepted","contract-review.valid.rejected","json.noncanonical",*errors])
  if v["case_count"]!=27 or [x["case_id"] for x in v["cases"]]!=ids: raise SystemExit("case roster mismatch")
  for x in v["cases"]:
+  if x["outcome"] not in {"accepted","rejected"}: raise SystemExit("unknown outcome")
   i=x["input"]
   if i["kind"]=="fixture": candidate=fs[i["fixture_id"]]
   else:
