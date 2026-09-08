@@ -97,6 +97,58 @@ func TestValidateDeliveryEvidenceV1SemanticsBindsCountIdentityAndInputManifestDi
 	assertContainsSchemaV3Failure(t, failures, "semantic-digest-mismatch", "/entries/0/input_manifest_sha256")
 }
 
+func TestValidateDeliveryEvidenceV1SemanticsChecksOptionalPolicyDigest(t *testing.T) {
+	manifest := map[string]any{"ordinary": []any{}, "normalized_manifests": []any{}}
+	policy := map[string]any{"mode": "strict", "policy_sha256": ""}
+	digest, err := semanticObjectSHA256(policy, "policy_sha256", maximumDefaultSchemaV3ArtifactBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy["policy_sha256"] = digest
+	base := map[string]any{"entry_count": json.Number("1"), "entries": []any{map[string]any{
+		"entry_id": "receipt.1", "requirements_sha256": schemaV3GoalRequirementsSHA256,
+		"input_manifest": manifest, "input_manifest_sha256": mustCanonicalDigest(t, manifest), "policy": policy,
+	}}}
+	if failures := validateDeliveryEvidenceV1Semantics(base); len(failures) != 0 {
+		t.Fatalf("valid policy = %#v", failures)
+	}
+	policy["policy_sha256"] = "sha256:" + strings.Repeat("f", 64)
+	assertSchemaV3FailurePresent(t, validateDeliveryEvidenceV1Semantics(base), "semantic-digest-mismatch", "/entries/0/policy/policy_sha256")
+}
+
+func mustCanonicalDigest(t *testing.T, value any) string {
+	t.Helper()
+	data, err := canonicalMarshal(value, maximumDefaultSchemaV3ArtifactBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return exactBytesSHA256(data)
+}
+
+func TestValidateModulesV3SemanticsReportsMarshalAndManifestFailures(t *testing.T) {
+	t.Parallel()
+	if failures := validateModulesV3Semantics(map[string]any{"unsupported": func() {}}); len(failures) != 1 || failures[0].Code != "semantic-unsupported" {
+		t.Fatalf("unsupported value failures = %#v", failures)
+	}
+	if failures := validateModulesV3Semantics(map[string]any{"modules": []any{}}); len(failures) != 1 || failures[0].Code != "semantic-cross-field" {
+		t.Fatalf("invalid manifest failures = %#v", failures)
+	}
+}
+
+func TestValidateGatePolicyV1SemanticsBindsPolicyDigest(t *testing.T) {
+	policy := map[string]any{"rules": []any{"cohesion"}, "policy_sha256": ""}
+	digest, err := semanticObjectSHA256(policy, "policy_sha256", maximumSchemaV3ArtifactBytes)
+	if err != nil {
+		t.Fatal(err)
+	}
+	policy["policy_sha256"] = digest
+	if failures := validateGatePolicyV1Semantics(policy); len(failures) != 0 {
+		t.Fatalf("valid policy failures = %#v", failures)
+	}
+	policy["policy_sha256"] = "sha256:" + strings.Repeat("0", 64)
+	assertSchemaV3FailurePresent(t, validateGatePolicyV1Semantics(policy), "semantic-digest-mismatch", "/policy_sha256")
+}
+
 func TestValidateAuthorizationRecordV1SemanticsRejectsUnsafeReceiptPathAndImpossibleTimestamp(t *testing.T) {
 	value := map[string]any{
 		"created_at": "2026-02-30T00:00:00Z",
