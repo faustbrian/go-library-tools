@@ -32,6 +32,32 @@ func TestCheckSourcesV2UsesStrictProductionPipelineAndNoFollowRead(t *testing.T)
 	}
 }
 
+func TestVerifySourcesV2RejectsUnreadableInputsAndInvocationMaps(t *testing.T) {
+	t.Run("missing source-lock input", func(t *testing.T) {
+		err := VerifySourcesV2(filepath.Join(t.TempDir(), "missing.json"), "github.com/faustbrian/example", filepath.Join(t.TempDir(), "map.json"))
+		if err == nil || err.Error() != "resolve source-lock input" {
+			t.Fatalf("VerifySourcesV2(missing input) error = %v", err)
+		}
+	})
+
+	t.Run("invalid source-lock stops before invocation map", func(t *testing.T) {
+		root := canonicalTempDir(t)
+		input := filepath.Join(root, "sources.json")
+		if err := os.WriteFile(input, []byte(`{}`), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		// The source lock is validated before the invocation map is read.  Keep
+		// the map path absent to ensure this assertion protects that ordering.
+		err := VerifySourcesV2(input, "github.com/faustbrian/example", filepath.Join(root, "missing-map.json"))
+		if err == nil {
+			t.Fatal("VerifySourcesV2(invalid source lock) error = nil")
+		}
+		if diagnostic, ok := DiagnosticFromV3Error(err); !ok || diagnostic.Code != "schema-required-member" {
+			t.Fatalf("VerifySourcesV2(invalid source lock) error = %v, diagnostic = %#v", err, diagnostic)
+		}
+	})
+}
+
 func TestVerifyLockedCommitSourceResolvesPinnedManifestFromObjectTree(t *testing.T) {
 	root := canonicalTempDir(t)
 	runGitResolverTestCommand(t, root, "init", "-q")
