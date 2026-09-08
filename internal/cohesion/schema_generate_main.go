@@ -41,6 +41,7 @@ func main() {
 		{input: "../../schema/cohesion-go-official-downloads-oracle-review-v1.schema.json", output: "go_official_downloads_oracle_review_v1_schema_generated.go", constant: "goOfficialDownloadsOracleReviewV1SchemaJSON"},
 		{input: "../../schema/cohesion-engineering-identities-v1.schema.json", output: "engineering_identities_v1_schema_generated.go", constant: "engineeringIdentitiesV1SchemaJSON"},
 		{input: "../../schema/cohesion-schema-provenance-v1.schema.json", output: "schema_provenance_v1_schema_generated.go", constant: "schemaProvenanceV1SchemaJSON"},
+		{input: "../../schema/cohesion-schema-provenance-v2.schema.json", output: "schema_provenance_v2_schema_generated.go", constant: "schemaProvenanceV2SchemaJSON"},
 		{input: "../../schema/cohesion-diagnostic-v1.schema.json", output: "diagnostic_v1_schema_generated.go", constant: "diagnosticV1SchemaJSON"},
 	} {
 		data, err := os.ReadFile(schema.input)

@@ -80,6 +80,7 @@ func TestSchemaV3PublishesTheExactVersionedSchemaSet(t *testing.T) {
 		"cohesion-go-official-downloads-oracle-review-v1.schema.json",
 		"cohesion-engineering-identities-v1.schema.json",
 		"cohesion-schema-provenance-v1.schema.json",
+		"cohesion-schema-provenance-v2.schema.json",
 		"cohesion-schema-v3-decision-review-v1.schema.json",
 		"cohesion-schema-v3-decision-freeze-v1.schema.json",
 		"cohesion-contract-freeze-v1.schema.json",
