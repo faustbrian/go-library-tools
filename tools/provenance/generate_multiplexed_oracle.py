@@ -24,6 +24,8 @@ SOURCES = {
     "schema/cohesion-contract-freeze-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json",),
     "schema/cohesion-contract-review-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-contract-review-v1-forward-oracle.json",),
     "schema/cohesion-diagnostic-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-diagnostic-v1-forward-oracle.json",),
+    "schema/cohesion-schema-v3-decision-review-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-schema-v3-decision-review-v1-forward-oracle.json",),
+    "schema/cohesion-schema-v3-decision-freeze-v1.schema.json": ("testdata/cohesion/forward-oracles/cohesion-schema-v3-decision-freeze-v1-forward-oracle.json",),
 }
 
 
