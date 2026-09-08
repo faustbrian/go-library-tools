@@ -38,4 +38,12 @@ func TestVerifySchemaV3BatchReviewValidatesAllTwentyEntries(t *testing.T) {
 	if err := verifySchemaV3BatchReview(data, digest, paths); err != nil {
 		t.Fatalf("valid batch review rejected: %v", err)
 	}
+	manifest[1].(map[string]any)["oracle_path"] = manifest[0].(map[string]any)["oracle_path"]
+	mutated, err := canonicalMarshal(value, 4<<20)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := verifySchemaV3BatchReview(mutated, digest, paths); err == nil {
+		t.Fatal("duplicate manifest path accepted")
+	}
 }
