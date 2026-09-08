@@ -38,6 +38,18 @@
       "packages": [
         {
           "module_directory": ".",
+          "directory": "cmd/historical-assets",
+          "name": "main",
+          "import_path": "github.com/faustbrian/go-library-tools/cmd/historical-assets",
+          "kind": "command",
+          "production": true,
+          "executable": true,
+          "coverage_required": true,
+          "build_required": true,
+          "build_tags": []
+        },
+        {
+          "module_directory": ".",
           "directory": "cmd/golib",
           "name": "main",
           "import_path": "github.com/faustbrian/go-library-tools/cmd/golib",
@@ -45,6 +57,18 @@
           "production": true,
           "executable": true,
           "coverage_required": true,
+          "build_required": true,
+          "build_tags": []
+        },
+        {
+          "module_directory": ".",
+          "directory": "internal/assets",
+          "name": "assets",
+          "import_path": "github.com/faustbrian/go-library-tools/internal/assets",
+          "kind": "internal",
+          "production": true,
+          "executable": true,
+          "coverage_required": false,
           "build_required": true,
           "build_tags": []
         },
@@ -161,6 +185,18 @@
           "directory": "internal/inventory",
           "name": "inventory",
           "import_path": "github.com/faustbrian/go-library-tools/internal/inventory",
+          "kind": "internal",
+          "production": true,
+          "executable": true,
+          "coverage_required": true,
+          "build_required": true,
+          "build_tags": []
+        },
+        {
+          "module_directory": ".",
+          "directory": "internal/jcs",
+          "name": "jcs",
+          "import_path": "github.com/faustbrian/go-library-tools/internal/jcs",
           "kind": "internal",
           "production": true,
           "executable": true,
