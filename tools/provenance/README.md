@@ -35,3 +35,16 @@ claims. These tools do not create the multiplexed oracle or aggregate review.
 python3 tools/provenance/generate_v2.py --output /tmp/provenance-v2.json
 python3 tools/provenance/verify_v2.py /tmp/provenance-v2.json
 ```
+
+`generate_multiplexed_oracle.py` builds the v2 oracle index from exact existing
+release corpora and forward-oracle assets. `verify_multiplexed_oracle.py`
+rechecks every schema/source digest and case identity. Schemas lacking an
+authoritative accepted or rejected fixture remain explicit in the artifact's
+machine-readable `missing_case_report`; no semantic outcome is synthesized.
+
+```sh
+python3 tools/provenance/generate_multiplexed_oracle.py \
+  --output testdata/cohesion/schema-provenance-v2-multiplexed-oracle.json
+python3 tools/provenance/verify_multiplexed_oracle.py \
+  testdata/cohesion/schema-provenance-v2-multiplexed-oracle.json
+```
