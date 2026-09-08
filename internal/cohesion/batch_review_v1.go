@@ -27,7 +27,8 @@ func verifySchemaV3BatchReview(data []byte, decisionSHA256 string, expected []sc
 		return fmt.Errorf("batch review is not RFC 8785 canonical JSON")
 	}
 	top, err := oracleObject(value, "batch review", "schema_id", "schema_version", "decision", "contract", "oracle_manifest", "reviews", "created_at")
-	if err != nil || top["schema_id"] != "urn:golib:cohesion:schema-v3-decision-review:v1" || top["schema_version"] != 1 {
+	version, versionErr := oracleInteger(top["schema_version"])
+	if err != nil || versionErr != nil || top["schema_id"] != "urn:golib:cohesion:schema-v3-decision-review:v1" || version != 1 {
 		return fmt.Errorf("batch review identity is invalid")
 	}
 	decision, err := oracleObject(top["decision"], "batch review decision", "path", "bytes_sha256")
