@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
+	"slices"
 
 	"github.com/faustbrian/go-library-tools/internal/cohesion"
 )
@@ -30,15 +31,10 @@ func isCohesionV2Invocation(args []string) bool {
 	if len(args) >= 2 && args[0] == "catalog" && args[1] == "project" {
 		return true
 	}
-	for _, arg := range args {
-		if arg == "--schema-version" {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(args, "--schema-version")
 }
 
-func executeCohesionV2(args []string, root string, stdout, stderr io.Writer) int {
+func executeCohesionV2(args []string, root string, _ io.Writer, stderr io.Writer) int {
 	invocation, err := parseCohesionV2Invocation(args)
 	if err != nil {
 		return writeCohesionV2Diagnostic(stderr, 2, cohesion.DiagnosticV3{Code: "invalid-invocation", Message: "invalid cohesion schema-v2 invocation"})
@@ -106,16 +102,17 @@ func parseCohesionV2Invocation(args []string) (cohesionV2Invocation, error) {
 		if args[1] != "project" || len(args) < 3 {
 			return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
 		}
-		if args[2] == "recover" {
+		switch args[2] {
+		case "recover":
 			if len(args) < 4 || (args[3] != "consumer" && args[3] != "engineering") {
 				return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
 			}
 			invocation.action, invocation.view = "project-recover", args[3]
 			flagArgs = args[4:]
-		} else if args[2] == "consumer" || args[2] == "engineering" {
+		case "consumer", "engineering":
 			invocation.action, invocation.view = "project", args[2]
 			flagArgs = args[3:]
-		} else {
+		default:
 			return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
 		}
 		allowed = flagSet("--schema-version", "--mode", "--repository", "--inputs", "--resolution-map", "--output")
@@ -129,13 +126,14 @@ func parseCohesionV2Invocation(args []string) (cohesionV2Invocation, error) {
 		allowed = flagSet("--schema-version", "--mode", "--inputs", "--resolution-map", "--output")
 		required = allowed
 	case "sources":
-		if args[1] == "check" {
+		switch args[1] {
+		case "check":
 			invocation.action = "sources-check"
 			allowed = flagSet("--schema-version", "--inputs")
-		} else if args[1] == "verify" {
+		case "verify":
 			invocation.action = "sources-verify"
 			allowed = flagSet("--schema-version", "--inputs", "--repository", "--resolution-map")
-		} else {
+		default:
 			return cohesionV2Invocation{}, errors.New("unknown cohesion schema-v2 command")
 		}
 		flagArgs = args[2:]

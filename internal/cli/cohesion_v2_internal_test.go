@@ -44,8 +44,8 @@ func TestParseCohesionV2InvocationRejectsIncompleteOrAmbiguousFlags(t *testing.T
 		"unknown flag":              append(append([]string{}, valid...), "--other", "value"),
 		"wrong schema":              append(append([]string{}, valid[:4]...), append([]string{"3"}, valid[5:]...)...),
 		"wrong mode":                append(append([]string{}, valid[:6]...), append([]string{"other"}, valid[7:]...)...),
-		"source check resolver":     []string{"sources", "check", "--schema-version", "2", "--inputs", "sources.json", "--resolution-map", "map.json"},
-		"source verify no resolver": []string{"sources", "verify", "--schema-version", "2", "--inputs", "sources.json", "--repository", "github.com/faustbrian/example"},
+		"source check resolver":     {"sources", "check", "--schema-version", "2", "--inputs", "sources.json", "--resolution-map", "map.json"},
+		"source verify no resolver": {"sources", "verify", "--schema-version", "2", "--inputs", "sources.json", "--repository", "github.com/faustbrian/example"},
 	}
 	for name, args := range tests {
 		t.Run(name, func(t *testing.T) {
@@ -163,7 +163,7 @@ func TestExecuteCohesionV2DispatchesSuccessfulSourceOperations(t *testing.T) {
 func TestExecuteCohesionV2PreservesValidatorDiagnostics(t *testing.T) {
 	oldCheck, oldVerify := checkSourcesV2, verifySourcesV2
 	t.Cleanup(func() { checkSourcesV2, verifySourcesV2 = oldCheck, oldVerify })
-	checkSourcesV2 = func(path string) error { return cohesion.CheckSourcesV2(path) }
+	checkSourcesV2 = cohesion.CheckSourcesV2
 	verifySourcesV2 = func(string, string, string) error { return errors.New("generic verify failure") }
 	input := filepath.Join(t.TempDir(), "invalid.json")
 	if err := os.WriteFile(input, []byte(`{}`), 0o600); err != nil {
