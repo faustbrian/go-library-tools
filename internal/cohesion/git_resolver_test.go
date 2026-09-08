@@ -241,7 +241,10 @@ func TestParseGitIndexV2ValidAndMalformed(t *testing.T) {
 			t.Fatal("malformed index accepted")
 		}
 	}
-	if _, err := parseGitIndexV2(bytes.Replace(data, []byte("input.json"), []byte("../x"), 1)); err == nil {
+	unsafe := bytes.Replace(append([]byte(nil), data...), []byte("input.json"), []byte("../x....."), 1)
+	unsafeDigest := sha1.Sum(unsafe[:len(unsafe)-20])
+	copy(unsafe[len(unsafe)-20:], unsafeDigest[:])
+	if _, err := parseGitIndexV2(unsafe); err == nil {
 		t.Fatal("unsafe path accepted")
 	}
 }
