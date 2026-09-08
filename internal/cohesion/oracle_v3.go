@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	frozenSchemaV3DecisionSHA256     = "sha256:cfa83030b1b05535148292c4db063edaa35aca861e957ecd5579008090059e2f"
+	frozenSchemaV3DecisionSHA256     = "sha256:81f90106d873e8635f4aa4a8d120d5a074fdc0eb2146c767635e9aa9879d5776"
 	maximumForwardOracleFixtureBytes = 4 << 20
 	maximumForwardOracleSplices      = 32
 	maximumForwardOracleDeleteBytes  = 65535

@@ -223,7 +223,7 @@ func TestSchemaProvenanceNewContractsBindReviewedOracleLineage(t *testing.T) {
 
 			row := map[string]any{
 				"kind":                            "new-contract",
-				"decision_sha256":                 "sha256:cfa83030b1b05535148292c4db063edaa35aca861e957ecd5579008090059e2f",
+				"decision_sha256":                 "sha256:81f90106d873e8635f4aa4a8d120d5a074fdc0eb2146c767635e9aa9879d5776",
 				"decision_freeze":                 map[string]any{"repository": "github.com/faustbrian/go-library-tools", "release": "v1.5.6", "release_url": "https://github.com/faustbrian/go-library-tools/releases/download/v1.5.6/cohesion-schema-v3-decision-freeze.json", "asset": "cohesion-schema-v3-decision-freeze.json", "schema_id": "urn:golib:cohesion:schema-v3-decision-freeze:v1", "bytes_sha256": digest},
 				"goal_contract_release":           map[string]any{"goal_id": "golib-cohesion-v1", "requirements_sha256": "sha256:6e5ac948c2cf1ec439fdf90c53c0648befb74a65c3eca2eb595737ee8211891c", "repository": "github.com/faustbrian/go-library-tools", "path": "docs/ecosystem/goals/cohesion-v1.md", "release": "v1.5.5", "tag_object_sha": "6e54f464376865a60c618cce8f07fe70bcfabed0", "peeled_commit": "66d2874dc98afe43dd7dad379d6f5e7d1b613111"},
 				"goal_contract_sha256":            "sha256:6e5ac948c2cf1ec439fdf90c53c0648befb74a65c3eca2eb595737ee8211891c",
