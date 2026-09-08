@@ -71,6 +71,7 @@ func ExecuteContext(ctx context.Context, args []string, workingDirectory string,
 type executorFactory func(string, io.Writer, io.Writer) (gates.Executor, func() error, error)
 
 var renderCohesionCatalog = cohesion.RenderMarkdown
+var evalRootSymlinks = filepath.EvalSymlinks
 
 func execute(args []string, workingDirectory string, stdout, stderr io.Writer, createExecutor executorFactory) int {
 	return executeContext(context.Background(), args, workingDirectory, stdout, stderr, createExecutor)
@@ -674,7 +675,7 @@ func findRoot(start string) (string, error) {
 	for {
 		info, statErr := os.Stat(filepath.Join(current, ".golib.yaml"))
 		if statErr == nil && !info.IsDir() {
-			canonical, err := filepath.EvalSymlinks(current)
+			canonical, err := evalRootSymlinks(current)
 			if err != nil {
 				return "", fmt.Errorf("locate repository root: canonicalize root: %w", err)
 			}

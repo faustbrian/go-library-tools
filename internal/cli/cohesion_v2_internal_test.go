@@ -157,6 +157,35 @@ func TestParseSingletonFlagsRejectsOddAndEmptyValues(t *testing.T) {
 	}
 }
 
+func TestFindRootRejectsRelativeAndMissingRepositories(t *testing.T) {
+	if _, err := findRoot("relative"); err == nil {
+		t.Fatal("findRoot(relative) error = nil")
+	}
+	missing := t.TempDir()
+	if _, err := findRoot(missing); err == nil || !strings.Contains(err.Error(), ".golib.yaml not found") {
+		t.Fatalf("findRoot(missing) error = %v", err)
+	}
+	if err := os.Mkdir(filepath.Join(missing, ".golib.yaml"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := findRoot(missing); err == nil || !strings.Contains(err.Error(), ".golib.yaml not found") {
+		t.Fatalf("findRoot(directory marker) error = %v", err)
+	}
+}
+
+func TestFindRootReportsCanonicalizationFailure(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, ".golib.yaml"), []byte("schema_version: 1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	old := evalRootSymlinks
+	evalRootSymlinks = func(string) (string, error) { return "", errors.New("symlink failure") }
+	t.Cleanup(func() { evalRootSymlinks = old })
+	if _, err := findRoot(root); err == nil || !strings.Contains(err.Error(), "canonicalize root") {
+		t.Fatalf("findRoot(canonicalization failure) error = %v", err)
+	}
+}
+
 func structDiagnostic(code string) (d cohesion.DiagnosticV3) {
 	d.Code = code
 	d.Message = "message"
