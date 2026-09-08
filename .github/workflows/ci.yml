@@ -72,6 +72,8 @@ jobs:
             go build -trimpath -buildvcs=false -o "${RUNNER_TEMP}/golib" ./cmd/golib
       - name: Verify clean-room forward oracle
         run: python3 tools/forward-oracle/verify.py
+      - name: Verify contract-review forward oracle
+        run: python3 tools/forward-oracle/verify_contract_review.py
       - name: Run repository contract
         run: make ci
       - name: Upload verification evidence
