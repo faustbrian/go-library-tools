@@ -250,7 +250,6 @@ func TestAssignTrustJSONPopulatesTypedValuesWithoutReparsing(t *testing.T) {
 		Ptr    *int           `json:"ptr"`
 		Slice  []string       `json:"slice"`
 		Map    map[string]int `json:"map"`
-		hidden string
 	}
 	var got destination
 	value := map[string]any{

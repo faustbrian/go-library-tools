@@ -34,6 +34,7 @@ type resolvedGitEntry struct {
 	object string
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func resolveGitSourceFiles(root, repository, revision string, requests []gitSourceRequest) ([][]byte, error) {
 	repo, err := openLooseGitRepository(root, repository)
 	if err != nil {
@@ -82,6 +83,7 @@ func resolveGitSourceFiles(root, repository, revision string, requests []gitSour
 	return contents, nil
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func verifyGitReleaseTag(root, repository, release, tagObject, peeledCommit string) error {
 	repo, err := openLooseGitRepository(root, repository)
 	if err != nil {
@@ -105,6 +107,7 @@ func verifyGitReleaseTag(root, repository, release, tagObject, peeledCommit stri
 	return nil
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func openLooseGitRepository(root, repository string) (*looseGitRepository, error) {
 	rootFD, err := openAbsoluteDirectoryNoFollow(root)
 	if err != nil {
@@ -144,6 +147,7 @@ func (repo *looseGitRepository) close() {
 	}
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func (repo *looseGitRepository) rejectExternalObjectSources() error {
 	if entryExistsAt(repo.gitFD, "objects/info/alternates") {
 		return errors.New("Git alternates are not permitted")
@@ -186,6 +190,7 @@ func (repo *looseGitRepository) rejectExternalObjectSources() error {
 	return nil
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func (repo *looseGitRepository) requireHEAD(revision string) error {
 	head, _, err := readRegularAt(repo.gitFD, "HEAD", 4096)
 	if err != nil {
@@ -226,6 +231,7 @@ func packedReference(data []byte, ref string) ([]byte, error) {
 	return nil, errors.New("packed reference is unavailable")
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func (repo *looseGitRepository) readObject(id, expectedType string, maximumBytes int64) ([]byte, error) {
 	if !resolutionMapGitSHAPattern.MatchString(id) || maximumBytes < 0 {
 		return nil, errors.New("Git object identity is invalid")
@@ -266,6 +272,7 @@ func (repo *looseGitRepository) readObject(id, expectedType string, maximumBytes
 	return content, nil
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func (repo *looseGitRepository) readPackedObject(id, expectedType string, maximumBytes int64) ([]byte, error) {
 	command := exec.Command("/usr/bin/git", "-C", repo.root, "cat-file", "--batch")
 	command.Env = []string{"GIT_CONFIG_NOSYSTEM=1", "GIT_CONFIG_GLOBAL=/dev/null", "GIT_OPTIONAL_LOCKS=0", "PATH=/usr/bin:/bin"}
@@ -315,6 +322,7 @@ func (repo *looseGitRepository) readPackedObject(id, expectedType string, maximu
 	return content, nil
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func (repo *looseGitRepository) walkTree(id, prefix string, result map[string]resolvedGitEntry) error {
 	content, err := repo.readObject(id, "tree", maximumSchemaV3ArtifactBytes)
 	if err != nil {
@@ -361,6 +369,7 @@ func (repo *looseGitRepository) walkTree(id, prefix string, result map[string]re
 	return nil
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func (repo *looseGitRepository) requireCleanIndexAndWorktree(tree map[string]resolvedGitEntry) error {
 	index, _, err := readRegularAt(repo.gitFD, "index", 32<<20)
 	if err != nil {
@@ -390,6 +399,7 @@ func (repo *looseGitRepository) requireCleanIndexAndWorktree(tree map[string]res
 	return nil
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func parseGitIndexV2(data []byte) (map[string]resolvedGitEntry, error) {
 	if len(data) < 32 || string(data[:4]) != "DIRC" || binary.BigEndian.Uint32(data[4:8]) != 2 {
 		return nil, errors.New("Git index format is unsupported")
@@ -455,6 +465,7 @@ func parseGitIndexV2(data []byte) (map[string]resolvedGitEntry, error) {
 	return result, nil
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func commitTreeID(content []byte) (string, error) {
 	line, _, found := bytes.Cut(content, []byte{'\n'})
 	if !found || !bytes.HasPrefix(line, []byte("tree ")) {
@@ -488,6 +499,7 @@ func annotatedTagIdentity(content []byte) (string, string, string, error) {
 	return values["object"], values["type"], values["tag"], nil
 }
 
+//nolint:staticcheck // Git diagnostics retain their established capitalization.
 func originURLFromGitConfig(data []byte) (string, error) {
 	section := ""
 	remote := ""
