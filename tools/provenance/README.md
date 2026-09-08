@@ -14,3 +14,15 @@ the evidence set is incomplete.
 python3 tools/provenance/check.py
 python3 tools/provenance/check.py --strict
 ```
+
+## Proportional V2 envelope
+
+`check_v2.py` inventories the same frozen 25 schema entries using a compact
+v2 contract: one multiplexed oracle asset and one aggregate review asset cover
+the complete set. It is an inventory gate, not a provenance generator; absent
+assets remain explicit and v1 files and semantics are unchanged.
+
+```sh
+python3 tools/provenance/check_v2.py
+python3 tools/provenance/check_v2.py --strict
+```
