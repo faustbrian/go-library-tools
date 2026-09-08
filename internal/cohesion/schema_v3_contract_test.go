@@ -510,4 +510,63 @@ func TestHistoricalSchemaSupportAssetsCoverEveryVersionedSnapshot(t *testing.T) 
 			t.Errorf("read historical provenance control %s: %v", path, err)
 		}
 	}
+
+	// The v2 envelope is the active migration contract. Validate its identity,
+	// exact bytes, and graph output rather than treating file presence as proof.
+	schemaPath := filepath.Join("..", "..", "schema", "cohesion-schema-provenance-v2.schema.json")
+	schemaBytes, err := os.ReadFile(schemaPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var identity struct {
+		ID string `json:"$id"`
+	}
+	if err := json.Unmarshal(schemaBytes, &identity); err != nil {
+		t.Fatal(err)
+	}
+	if identity.ID != "https://github.com/faustbrian/go-library-tools/schema/cohesion-schema-provenance-v2.schema.json" {
+		t.Fatalf("v2 provenance schema id = %q", identity.ID)
+	}
+	graphPath := filepath.Join("..", "..", "release", "cohesion-schema-provenance-v2-resolved-reference-graph.json")
+	graphBytes, err := os.ReadFile(graphPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var graph []struct {
+		SchemaPath string `json:"schema_path"`
+		SchemaHash string `json:"schema_bytes_sha256"`
+		References []struct {
+			ResolvedPath string `json:"resolved_schema_path"`
+			ResolvedHash string `json:"resolved_schema_bytes_sha256"`
+		} `json:"references"`
+	}
+	if err := json.Unmarshal(graphBytes, &graph); err != nil || len(graph) == 0 {
+		t.Fatalf("invalid v2 provenance graph: %v", err)
+	}
+	foundRoot := false
+	for _, node := range graph {
+		if node.SchemaPath == "schema/cohesion-schema-provenance-v2.schema.json" {
+			foundRoot = true
+			digest := sha256.Sum256(schemaBytes)
+			want := "sha256:" + hex.EncodeToString(digest[:])
+			if node.SchemaHash != want {
+				t.Fatalf("v2 graph root digest = %q, want %q", node.SchemaHash, want)
+			}
+			if len(node.References) == 0 {
+				t.Fatal("v2 graph root has no resolved references")
+			}
+			for _, ref := range node.References {
+				if ref.ResolvedPath == "" || ref.ResolvedHash == "" {
+					t.Fatal("v2 graph contains incomplete resolved reference")
+				}
+			}
+		}
+	}
+	if !foundRoot {
+		t.Fatal("v2 provenance graph omits root schema")
+	}
+	legacy := filepath.Join("..", "..", "release", "cohesion-schema-provenance.json")
+	if _, err := os.Stat(legacy); !os.IsNotExist(err) {
+		t.Fatalf("legacy v1 aggregate provenance control remains authoritative: %v", err)
+	}
 }
