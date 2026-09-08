@@ -82,6 +82,26 @@ func TestParseCohesionV2InvocationMatchesCommandBoundariesAndViews(t *testing.T)
 	}
 }
 
+func TestParseCohesionV2InvocationRejectsCrossBoundaryMatches(t *testing.T) {
+	validProjectFlags := []string{"--schema-version", "2", "--mode", "preview", "--repository", "r", "--inputs", "i", "--resolution-map", "m", "--output", "o"}
+	validAggregateFlags := []string{"--schema-version", "2", "--mode", "preview", "--inputs", "i", "--resolution-map", "m", "--output", "o"}
+	validSourcesCheckFlags := []string{"--schema-version", "2", "--inputs", "i"}
+	validSourcesVerifyFlags := []string{"--schema-version", "2", "--inputs", "i", "--repository", "r", "--resolution-map", "m"}
+	tests := [][]string{
+		append([]string{"catalog", "wrong", "consumer"}, validProjectFlags...),
+		append([]string{"catalog", "project", "wrong", "consumer"}, validProjectFlags...),
+		append([]string{"catalog", "project", "recover", "wrong"}, validProjectFlags...),
+		append([]string{"aggregate", "wrong"}, validAggregateFlags...),
+		append([]string{"sources", "wrong"}, validSourcesCheckFlags...),
+		append([]string{"sources", "wrong"}, validSourcesVerifyFlags...),
+	}
+	for _, args := range tests {
+		if _, err := parseCohesionV2Invocation(args); err == nil || !strings.Contains(err.Error(), "unknown cohesion schema-v2 command") {
+			t.Fatalf("parseCohesionV2Invocation(%v) error = %v", args, err)
+		}
+	}
+}
+
 func TestIsCohesionV2InvocationRecognizesOnlyV2Markers(t *testing.T) {
 	for _, test := range []struct {
 		args []string
