@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -15,73 +17,127 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/assets"
 )
 
+type generatorFunc func(assets.Generator) (map[string]string, error)
+type commandFunc func(context.Context, string, []string, []string) ([]byte, error)
+
+var (
+	commandArguments               = func() []string { return os.Args[1:] }
+	standardOutput   io.Writer     = os.Stdout
+	standardError    io.Writer     = os.Stderr
+	exitProcess                    = os.Exit
+	absolutePath                   = filepath.Abs
+	runCommand       commandFunc   = runExternalCommand
+	relativePath                   = filepath.Rel
+	generateAssets   generatorFunc = func(generator assets.Generator) (map[string]string, error) {
+		return generator.Generate()
+	}
+)
+
 func main() {
-	var repository, schemaRoot, output, taskRoot, workspaceRoot, goBinary, gitBinary, expectedGo, moduleProxy, runnerTemplates string
-	flag.StringVar(&repository, "repository", "", "read-only go-library-tools Git repository")
-	flag.StringVar(&schemaRoot, "schema-root", "", "read-only root containing schema candidates")
-	flag.StringVar(&output, "output", "", "asset output directory")
-	flag.StringVar(&taskRoot, "task-root", "", "disposable checkout and cache directory")
-	flag.StringVar(&workspaceRoot, "workspace-root", "", "root confining output and task paths")
-	flag.StringVar(&goBinary, "go", "", "absolute Go executable path")
-	flag.StringVar(&gitBinary, "git", "", "absolute Git executable path")
-	flag.StringVar(&moduleProxy, "module-proxy", "", "read-only local Go module proxy root")
-	flag.StringVar(&runnerTemplates, "runner-templates", "", "read-only directory containing historical observation runners")
-	flag.StringVar(&expectedGo, "expected-go-version", "go1.27.0", "required exact Go version token")
-	flag.Parse()
-	for name, value := range map[string]string{"repository": repository, "schema-root": schemaRoot, "output": output, "task-root": taskRoot, "workspace-root": workspaceRoot, "go": goBinary, "git": gitBinary, "module-proxy": moduleProxy, "runner-templates": runnerTemplates} {
+	exitProcess(run(commandArguments(), standardOutput, standardError, generateAssets, runCommand))
+}
+
+func run(args []string, stdout, stderr io.Writer, generate generatorFunc, execute commandFunc) int {
+	options, err := parseOptions(args, stderr)
+	if err != nil {
+		return 2
+	}
+	for name, value := range map[string]string{
+		"repository":       options.repository,
+		"schema-root":      options.schemaRoot,
+		"output":           options.output,
+		"task-root":        options.taskRoot,
+		"workspace-root":   options.workspaceRoot,
+		"go":               options.goBinary,
+		"git":              options.gitBinary,
+		"module-proxy":     options.moduleProxy,
+		"runner-templates": options.runnerTemplates,
+	} {
 		if value == "" {
-			fatalf("--%s is required", name)
+			return reportError(stderr, "--%s is required", name)
 		}
 	}
-	repository, schemaRoot, output = absolute(repository), absolute(schemaRoot), absolute(output)
-	taskRoot, workspaceRoot, goBinary, gitBinary, moduleProxy = absolute(taskRoot), absolute(workspaceRoot), absolute(goBinary), absolute(gitBinary), absolute(moduleProxy)
-	runnerTemplateDirs := splitAbsolutePathList(runnerTemplates)
-	if err := within(workspaceRoot, output); err != nil {
-		fatalf("output: %v", err)
+
+	normalize := func(name, value string) (string, bool) {
+		result, normalizeErr := absolutePath(value)
+		if normalizeErr != nil {
+			reportError(stderr, "%s: absolute path: %v", name, normalizeErr)
+			return "", false
+		}
+		return filepath.Clean(result), true
 	}
-	if err := within(workspaceRoot, taskRoot); err != nil {
-		fatalf("task root: %v", err)
+	var ok bool
+	if options.repository, ok = normalize("repository", options.repository); !ok {
+		return 1
 	}
-	if err := within(repository, schemaRoot); err != nil {
-		fatalf("schema root: %v", err)
+	if options.schemaRoot, ok = normalize("schema root", options.schemaRoot); !ok {
+		return 1
 	}
-	if output == taskRoot || pathContains(output, taskRoot) || pathContains(taskRoot, output) {
-		fatalf("task root and output must not overlap")
+	if options.output, ok = normalize("output", options.output); !ok {
+		return 1
 	}
+	if options.taskRoot, ok = normalize("task root", options.taskRoot); !ok {
+		return 1
+	}
+	if options.workspaceRoot, ok = normalize("workspace root", options.workspaceRoot); !ok {
+		return 1
+	}
+	if options.goBinary, ok = normalize("go", options.goBinary); !ok {
+		return 1
+	}
+	if options.gitBinary, ok = normalize("git", options.gitBinary); !ok {
+		return 1
+	}
+	if options.moduleProxy, ok = normalize("module proxy", options.moduleProxy); !ok {
+		return 1
+	}
+	runnerTemplateDirs, splitErr := splitAbsolutePathListE(options.runnerTemplates)
+	if splitErr != nil {
+		return reportError(stderr, "%v", splitErr)
+	}
+	if err := within(options.workspaceRoot, options.output); err != nil {
+		return reportError(stderr, "output: %v", err)
+	}
+	if err := within(options.workspaceRoot, options.taskRoot); err != nil {
+		return reportError(stderr, "task root: %v", err)
+	}
+	if err := within(options.repository, options.schemaRoot); err != nil {
+		return reportError(stderr, "schema root: %v", err)
+	}
+	if options.output == options.taskRoot || pathContains(options.output, options.taskRoot) || pathContains(options.taskRoot, options.output) {
+		return reportError(stderr, "task root and output must not overlap")
+	}
+
 	rootContext, cancelRoot := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelRoot()
-	rootCommand := exec.CommandContext(rootContext, gitBinary, "-C", repository, "rev-parse", "--show-toplevel")
-	rootCommand.Env = []string{"PATH=" + filepath.Dir(gitBinary), "LANG=C.UTF-8", "LC_ALL=C.UTF-8"}
-	rootOutput, err := rootCommand.Output()
-	if err != nil || filepath.Clean(strings.TrimSpace(string(rootOutput))) != repository {
-		fatalf("repository is not the exact Git checkout root")
+	rootOutput, err := execute(rootContext, options.gitBinary, []string{"-C", options.repository, "rev-parse", "--show-toplevel"}, []string{"PATH=" + filepath.Dir(options.gitBinary), "LANG=C.UTF-8", "LC_ALL=C.UTF-8"})
+	if err != nil || filepath.Clean(strings.TrimSpace(string(rootOutput))) != options.repository {
+		return reportError(stderr, "repository is not the exact Git checkout root")
 	}
-	if info, err := os.Stat(moduleProxy); err != nil || !info.IsDir() {
-		fatalf("module proxy is not a directory")
+	if info, statErr := os.Stat(options.moduleProxy); statErr != nil || !info.IsDir() {
+		return reportError(stderr, "module proxy is not a directory")
 	}
 	for _, runnerTemplateDir := range runnerTemplateDirs {
-		if info, err := os.Stat(runnerTemplateDir); err != nil || !info.IsDir() {
-			fatalf("runner template root is not a directory: %s", runnerTemplateDir)
+		if info, statErr := os.Stat(runnerTemplateDir); statErr != nil || !info.IsDir() {
+			return reportError(stderr, "runner template root is not a directory: %s", runnerTemplateDir)
 		}
 	}
 	versionContext, cancelVersion := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancelVersion()
-	versionCommand := exec.CommandContext(versionContext, goBinary, "version")
-	versionCommand.Env = []string{"PATH=" + filepath.Dir(goBinary), "LANG=C.UTF-8", "LC_ALL=C.UTF-8", "GOTOOLCHAIN=local", "GOWORK=off", "GOENV=off"}
-	versionOutput, err := versionCommand.Output()
+	versionOutput, err := execute(versionContext, options.goBinary, []string{"version"}, []string{"PATH=" + filepath.Dir(options.goBinary), "LANG=C.UTF-8", "LC_ALL=C.UTF-8", "GOTOOLCHAIN=local", "GOWORK=off", "GOENV=off"})
 	if err != nil {
-		fatalf("Go version: %v", err)
+		return reportError(stderr, "Go version: %v", err)
 	}
 	fields := strings.Fields(string(versionOutput))
-	if len(fields) < 3 || fields[2] != expectedGo {
-		fatalf("Go version = %q, want %s", strings.TrimSpace(string(versionOutput)), expectedGo)
+	if len(fields) < 3 || fields[2] != options.expectedGo {
+		return reportError(stderr, "Go version = %q, want %s", strings.TrimSpace(string(versionOutput)), options.expectedGo)
 	}
-	if err := os.MkdirAll(taskRoot, 0o700); err != nil {
-		fatalf("task root: %v", err)
+	if err := os.MkdirAll(options.taskRoot, 0o700); err != nil {
+		return reportError(stderr, "task root: %v", err)
 	}
-	digests, err := (assets.Generator{Repository: repository, SchemaDir: schemaRoot, OutputDir: output, TaskRoot: taskRoot, GoBinary: goBinary, GitBinary: gitBinary, ModuleProxy: moduleProxy, WorkspaceRoot: workspaceRoot, RunnerTemplateDirs: runnerTemplateDirs}).Generate()
+	digests, err := generate(assets.Generator{Repository: options.repository, SchemaDir: options.schemaRoot, OutputDir: options.output, TaskRoot: options.taskRoot, GoBinary: options.goBinary, GitBinary: options.gitBinary, ModuleProxy: options.moduleProxy, WorkspaceRoot: options.workspaceRoot, RunnerTemplateDirs: runnerTemplateDirs})
 	if err != nil {
-		fatalf("generate: %v", err)
+		return reportError(stderr, "generate: %v", err)
 	}
 	names := make([]string, 0, len(digests))
 	for name := range digests {
@@ -93,31 +149,84 @@ func main() {
 		ordered[name] = digests[name]
 	}
 	encoded, _ := json.Marshal(ordered)
-	fmt.Println(string(encoded))
+	_, _ = fmt.Fprintln(stdout, string(encoded))
+	return 0
+}
+
+type options struct {
+	repository, schemaRoot, output, taskRoot, workspaceRoot string
+	goBinary, gitBinary, moduleProxy, runnerTemplates       string
+	expectedGo                                              string
+}
+
+func parseOptions(args []string, stderr io.Writer) (options, error) {
+	var result options
+	flags := flag.NewFlagSet("historical-assets", flag.ContinueOnError)
+	flags.SetOutput(stderr)
+	flags.StringVar(&result.repository, "repository", "", "read-only go-library-tools Git repository")
+	flags.StringVar(&result.schemaRoot, "schema-root", "", "read-only root containing schema candidates")
+	flags.StringVar(&result.output, "output", "", "asset output directory")
+	flags.StringVar(&result.taskRoot, "task-root", "", "disposable checkout and cache directory")
+	flags.StringVar(&result.workspaceRoot, "workspace-root", "", "root confining output and task paths")
+	flags.StringVar(&result.goBinary, "go", "", "absolute Go executable path")
+	flags.StringVar(&result.gitBinary, "git", "", "absolute Git executable path")
+	flags.StringVar(&result.moduleProxy, "module-proxy", "", "read-only local Go module proxy root")
+	flags.StringVar(&result.runnerTemplates, "runner-templates", "", "read-only directory containing historical observation runners")
+	flags.StringVar(&result.expectedGo, "expected-go-version", "go1.27.0", "required exact Go version token")
+	if err := flags.Parse(args); err != nil {
+		return options{}, err
+	}
+	return result, nil
+}
+
+func runExternalCommand(ctx context.Context, name string, args []string, env []string) ([]byte, error) {
+	command := exec.CommandContext(ctx, name, args...)
+	command.Env = env
+	return command.Output()
+}
+
+func reportError(stderr io.Writer, format string, args ...interface{}) int {
+	_, _ = fmt.Fprintf(stderr, format+"\n", args...)
+	return 1
 }
 
 func absolute(path string) string {
-	result, err := filepath.Abs(path)
+	result, err := absolutePath(path)
 	if err != nil {
 		fatalf("absolute path: %v", err)
 	}
 	return filepath.Clean(result)
 }
+
 func splitAbsolutePathList(value string) []string {
-	parts := filepath.SplitList(value)
-	result := make([]string, 0, len(parts))
-	for _, part := range parts {
-		if part != "" {
-			result = append(result, absolute(part))
-		}
-	}
-	if len(result) == 0 {
-		fatalf("--runner-templates must contain at least one directory")
+	result, err := splitAbsolutePathListE(value)
+	if err != nil {
+		fatalf("%v", err)
 	}
 	return result
 }
+
+func splitAbsolutePathListE(value string) ([]string, error) {
+	parts := filepath.SplitList(value)
+	result := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if part == "" {
+			continue
+		}
+		path, err := absolutePath(part)
+		if err != nil {
+			return nil, fmt.Errorf("absolute path: %w", err)
+		}
+		result = append(result, filepath.Clean(path))
+	}
+	if len(result) == 0 {
+		return nil, errors.New("--runner-templates must contain at least one directory")
+	}
+	return result, nil
+}
+
 func within(root, target string) error {
-	relative, err := filepath.Rel(root, target)
+	relative, err := relativePath(root, target)
 	if err != nil {
 		return err
 	}
@@ -126,13 +235,13 @@ func within(root, target string) error {
 	}
 	return nil
 }
+
 func pathContains(parent, child string) bool {
 	relative, err := filepath.Rel(parent, child)
 	return err == nil && relative != ".." && !filepath.IsAbs(relative) && !strings.HasPrefix(relative, ".."+string(filepath.Separator))
 }
+
 func fatalf(format string, args ...interface{}) {
 	_, _ = fmt.Fprintf(os.Stderr, format+"\n", args...)
 	exitProcess(1)
 }
-
-var exitProcess = os.Exit
