@@ -200,12 +200,26 @@ func TestVerifySourceRosterRejectsResolutionAndContentFailures(t *testing.T) {
 			}
 		})
 	}
+	if err := os.WriteFile(filepath.Join(root, "invalid.json"), []byte(`{}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGitResolverTestCommand(t, root, "add", "invalid.json")
+	runGitResolverTestCommand(t, root, "commit", "-q", "-m", "invalid fixture")
+	invalidRevision := strings.TrimSpace(runGitResolverTestCommand(t, root, "rev-parse", "HEAD"))
+	invalidControl := map[string]any{"repository": control["repository"], "path": "invalid.json", "source_revision": invalidRevision, "bytes_sha256": exactBytesSHA256([]byte(`{}`))}
+	invalidResolution := ResolutionMapV1{Sources: []ResolutionSourceV1{{Repository: control["repository"].(string), SourceRevision: invalidRevision, Root: root}}}
+	if err := verifySourceRoster(invalidControl, current, invalidResolution); err == nil || err.Error() != "source-roster schema is invalid" {
+		t.Fatalf("verifySourceRoster(invalid schema) error = %v", err)
+	}
 }
 
 func TestLockedSourceResolutionRejectsUnknownIdentity(t *testing.T) {
 	source := map[string]any{"repository": "github.com/faustbrian/example", "source_kind": "commit", "source_revision": strings.Repeat("a", 40)}
 	if _, err := lockedSourceResolution(source, ResolutionMapV1{}); err == nil || err.Error() != "invocation map is missing a locked source identity" {
 		t.Fatalf("lockedSourceResolution() error = %v", err)
+	}
+	if err := verifyLockedSourceManifest(source, ResolutionMapV1{}); err == nil || err.Error() != "invocation map is missing a locked source identity" {
+		t.Fatalf("verifyLockedSourceManifest(unknown identity) error = %v", err)
 	}
 }
 
