@@ -57,7 +57,7 @@ def main():
     payload = {"format": "golib-forward-oracle-v2", "fixture_count": 2, "fixtures": encoded_fixtures,
                "case_count": len(cases), "cases": cases}
     output.parent.mkdir(parents=True, exist_ok=True)
-    output.write_bytes(canonical(payload) + b"\n")
+    output.write_bytes(canonical(payload))
 
 
 if __name__ == "__main__":
