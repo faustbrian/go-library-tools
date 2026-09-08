@@ -27,7 +27,7 @@ func TestValidateSchemaV3DecisionReviewRunsStrictSchemaAndSemanticValidation(t *
 		case "duplicate reviewer":
 			candidate = replaceJSONOccurrence(candidate, "/root/schema_v6_execution_review", replacement)
 		case "mismatched decision":
-			candidate = replaceJSONOccurrence(candidate, "sha256:81f90106d873e8635f4aa4a8d120d5a074fdc0eb2146c767635e9aa9879d5776", replacement)
+			candidate = replaceJSONOccurrence(candidate, "sha256:cfa83030b1b05535148292c4db063edaa35aca861e957ecd5579008090059e2f", replacement)
 		case "wrong schema":
 			candidate = replaceJSONOccurrence(candidate, "urn:golib:cohesion:schema-v3-decision-review:v1", replacement)
 		}
