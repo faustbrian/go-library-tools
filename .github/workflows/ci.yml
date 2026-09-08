@@ -87,6 +87,8 @@ jobs:
             testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json
       - name: Inventory provenance inputs
         run: python3 tools/provenance/check.py
+      - name: Inventory proportional provenance v2 inputs
+        run: python3 tools/provenance/check_v2.py
       - name: Run repository contract
         run: make ci
       - name: Upload verification evidence
