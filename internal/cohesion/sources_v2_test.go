@@ -87,6 +87,11 @@ func TestVerifyLockedCommitSourceResolvesPinnedManifestFromObjectTree(t *testing
 	if err := verifyLockedSourceManifest(source, resolution); err == nil {
 		t.Fatal("verifyLockedSourceManifest(wrong digest) error = nil")
 	}
+	source["manifest_sha256"] = exactBytesSHA256(manifest)
+	source["manifest_path"] = "missing-modules.json"
+	if err := verifyLockedSourceManifest(source, resolution); err == nil || err.Error() != "resolve locked source manifest" {
+		t.Fatalf("verifyLockedSourceManifest(missing manifest) error = %v", err)
+	}
 }
 
 func TestVerifyLockedReleaseSourceResolvesEveryPinnedSchema(t *testing.T) {
@@ -153,4 +158,61 @@ func TestVerifySourceRosterRequiresExactCurrentMembership(t *testing.T) {
 	if err := verifySourceRoster(control, current, resolution); err == nil {
 		t.Fatal("verifySourceRoster(substitution) error = nil")
 	}
+}
+
+func TestVerifySourceRosterRejectsResolutionAndContentFailures(t *testing.T) {
+	root := canonicalTempDir(t)
+	runGitResolverTestCommand(t, root, "init", "-q")
+	runGitResolverTestCommand(t, root, "config", "user.name", "Test")
+	runGitResolverTestCommand(t, root, "config", "user.email", "test@example.invalid")
+	runGitResolverTestCommand(t, root, "remote", "add", "origin", "https://github.com/faustbrian/go-library-tools.git")
+	roster := []byte(`{"schema_version":1,"repository_count":1,"repositories":[{"repository":"github.com/faustbrian/go-a","source":{"kind":"commit","commit":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},"tooling":{"version":"v1.5.0","checksums_sha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}]}`)
+	if err := os.WriteFile(filepath.Join(root, "roster.json"), roster, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGitResolverTestCommand(t, root, "add", "roster.json")
+	runGitResolverTestCommand(t, root, "commit", "-q", "-m", "fixture")
+	revision := strings.TrimSpace(runGitResolverTestCommand(t, root, "rev-parse", "HEAD"))
+	control := map[string]any{"repository": "github.com/faustbrian/go-library-tools", "path": "roster.json", "source_revision": revision, "bytes_sha256": exactBytesSHA256(roster)}
+	current := []any{map[string]any{"repository": "github.com/faustbrian/go-a"}}
+
+	cases := []struct {
+		name       string
+		resolution ResolutionMapV1
+		control    map[string]any
+		current    []any
+		want       string
+	}{
+		{name: "missing identity", resolution: ResolutionMapV1{}, control: control, current: current, want: "invocation map is missing the source-roster identity"},
+		{name: "missing bytes", resolution: ResolutionMapV1{Sources: []ResolutionSourceV1{{Repository: control["repository"].(string), SourceRevision: revision, Root: root}}}, control: func() map[string]any { c := cloneMap(control); c["path"] = "missing.json"; return c }(), current: current, want: "resolve source-roster bytes"},
+		{name: "digest mismatch", resolution: ResolutionMapV1{Sources: []ResolutionSourceV1{{Repository: control["repository"].(string), SourceRevision: revision, Root: root}}}, control: func() map[string]any {
+			c := cloneMap(control)
+			c["bytes_sha256"] = "sha256:" + strings.Repeat("f", 64)
+			return c
+		}(), current: current, want: "source-roster digest does not match"},
+		{name: "membership count", resolution: ResolutionMapV1{Sources: []ResolutionSourceV1{{Repository: control["repository"].(string), SourceRevision: revision, Root: root}}}, control: control, current: []any{}, want: "source-roster membership count does not match"},
+		{name: "membership identity", resolution: ResolutionMapV1{Sources: []ResolutionSourceV1{{Repository: control["repository"].(string), SourceRevision: revision, Root: root}}}, control: control, current: []any{map[string]any{"repository": "github.com/faustbrian/go-b"}}, want: "source-roster membership does not match"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if err := verifySourceRoster(tc.control, tc.current, tc.resolution); err == nil || err.Error() != tc.want {
+				t.Fatalf("verifySourceRoster() error = %v, want %q", err, tc.want)
+			}
+		})
+	}
+}
+
+func TestLockedSourceResolutionRejectsUnknownIdentity(t *testing.T) {
+	source := map[string]any{"repository": "github.com/faustbrian/example", "source_kind": "commit", "source_revision": strings.Repeat("a", 40)}
+	if _, err := lockedSourceResolution(source, ResolutionMapV1{}); err == nil || err.Error() != "invocation map is missing a locked source identity" {
+		t.Fatalf("lockedSourceResolution() error = %v", err)
+	}
+}
+
+func cloneMap(input map[string]any) map[string]any {
+	output := make(map[string]any, len(input))
+	for key, value := range input {
+		output[key] = value
+	}
+	return output
 }
