@@ -56,6 +56,11 @@ func verifySchemaV3BatchReview(data []byte, decisionSHA256 string, expected []sc
 				return fmt.Errorf("batch review manifest digest %s is invalid", field)
 			}
 		}
+		caseCount, caseErr := oracleInteger(row["case_count"])
+		ceiling, ceilingErr := oracleInteger(row["serialized_ceiling"])
+		if caseErr != nil || caseCount < 1 || ceilingErr != nil || ceiling < 1 {
+			return fmt.Errorf("batch review manifest numeric bounds are invalid")
+		}
 		if revision, ok := row["source_revision"].(string); !ok || !validGitSHA(revision) {
 			return fmt.Errorf("batch review manifest source revision is invalid")
 		}
