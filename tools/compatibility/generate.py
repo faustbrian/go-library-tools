@@ -13,6 +13,10 @@ SOURCE = ROOT / "docs/ecosystem/compatibility-sets.json"
 OUTPUT = ROOT / "docs/ecosystem/compatibility-sets.md"
 SEMVER = re.compile(r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
 
+def allows_unverified_local_binding(item: dict) -> bool:
+    return (item.get("publication_status") == "unreleased" and not item.get("installable")
+            and "unverified" in item.get("evidence", {}).get("observation", "").lower())
+
 
 def load() -> dict:
     value = json.loads(SOURCE.read_text())
@@ -55,17 +59,19 @@ def load() -> dict:
             repo_dir = ROOT.parent / module["module_path"].rsplit("/", 1)[-1]
             revision = subprocess.run(["git", "-C", str(repo_dir), "cat-file", "-e", module["source_revision"]], capture_output=True)
             if revision.returncode != 0:
-                raise ValueError(f"source revision is not present locally: {module['module_path']}")
+                if not allows_unverified_local_binding(item):
+                    raise ValueError(f"source revision is not present locally: {module['module_path']}")
+                continue
             tags = subprocess.run(["git", "-C", str(repo_dir), "tag", "--points-at", module["source_revision"]], capture_output=True, text=True, check=True).stdout.split()
             if module["version"] not in tags and item["installable"]:
                 raise ValueError(f"installable module revision lacks matching local tag: {module['module_path']}")
         observation = item["evidence"].get("observation", "").lower()
         if item["publication_status"] == "unreleased" and "pending" not in observation:
             raise ValueError("unreleased scenarios require an explicitly pending observation")
-        if item["publication_status"] == "unreleased" and any(
-            not subprocess.run(["git", "-C", str(ROOT.parent / m["module_path"].rsplit("/", 1)[-1]), "tag", "--points-at", m["source_revision"]], capture_output=True, text=True, check=True).stdout.split()
-            for m in item["modules"]
-        ) and "unverified" not in observation:
+        def has_tag(m):
+            result = subprocess.run(["git", "-C", str(ROOT.parent / m["module_path"].rsplit("/", 1)[-1]), "tag", "--points-at", m["source_revision"]], capture_output=True, text=True)
+            return result.returncode == 0 and bool(result.stdout.split())
+        if item["publication_status"] == "unreleased" and any(not has_tag(m) for m in item["modules"]) and "unverified" not in observation:
             raise ValueError("unreleased sets with untagged revisions require an unverified observation")
         if not item["evidence"].get("content_sha256", "").startswith("sha256:"):
             raise ValueError("evidence requires a content fingerprint")
