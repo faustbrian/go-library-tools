@@ -178,6 +178,25 @@ func TestCanonicalizeTrustJSONChargesOutputAndKeyOrderingAllocations(t *testing.
 	}
 }
 
+func TestCanonicalWriterPropagatesAllocationBudgetFailures(t *testing.T) {
+	t.Parallel()
+
+	if _, err := canonicalizeTrustJSONValue(nil, 1, &trustJSONBudget{limit: 0}); err == nil {
+		t.Fatal("canonicalizeTrustJSONValue() budget failure = nil")
+	}
+	if _, err := canonicalizeTrustJSONValue(map[string]any{"key": "value"}, 0, &trustJSONBudget{limit: 0}); err == nil {
+		t.Fatal("canonicalizeTrustJSONValue() map budget failure = nil")
+	}
+
+	var output bytes.Buffer
+	if err := writeCanonicalJSON(&output, map[string]any{"key": "value"}, &trustJSONBudget{limit: 0}); err == nil {
+		t.Fatal("writeCanonicalJSON() map budget failure = nil")
+	}
+	if err := writeCanonicalJSON(&output, []any{map[string]any{"nested": map[string]any{"key": "value"}}}, &trustJSONBudget{limit: 24}); err == nil {
+		t.Fatal("writeCanonicalJSON() nested budget failure = nil")
+	}
+}
+
 func TestCanonicalizeTrustJSONAcceptsTheExactLargeArtifactBoundary(t *testing.T) {
 	t.Parallel()
 

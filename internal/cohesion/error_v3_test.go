@@ -30,6 +30,9 @@ func TestSchemaV3ErrorCodesAreClosedAndOrdered(t *testing.T) {
 	if _, err := newSchemaV3Failure("invented", 0, 0, ""); err == nil {
 		t.Fatal("unknown schema-v3 error code accepted")
 	}
+	if _, err := newSchemaV3Failure("schema-type", -1, 0, ""); err == nil {
+		t.Fatal("negative schema-v3 byte offset accepted")
+	}
 }
 
 func TestSelectSchemaV3FailureUsesFrozenPrecedence(t *testing.T) {
