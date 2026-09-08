@@ -543,8 +543,38 @@ func TestHistoricalSchemaSupportAssetsCoverEveryVersionedSnapshot(t *testing.T) 
 	if err := json.Unmarshal(graphBytes, &graph); err != nil || len(graph) == 0 {
 		t.Fatalf("invalid v2 provenance graph: %v", err)
 	}
+	var canonicalGraph []any
+	if err := json.Unmarshal(graphBytes, &canonicalGraph); err != nil {
+		t.Fatal(err)
+	}
+	canonicalBytes, err := json.Marshal(canonicalGraph)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(bytes.TrimSpace(graphBytes), canonicalBytes) {
+		t.Fatal("v2 provenance graph is not canonical JSON")
+	}
 	foundRoot := false
+	seenNodes := map[string]struct{}{}
 	for _, node := range graph {
+		if node.SchemaPath == "" {
+			t.Fatal("v2 provenance graph contains an empty schema path")
+		}
+		if _, exists := seenNodes[node.SchemaPath]; exists {
+			t.Fatalf("v2 provenance graph duplicates node %q", node.SchemaPath)
+		}
+		seenNodes[node.SchemaPath] = struct{}{}
+		for _, ref := range node.References {
+			resolvedBytes, readErr := os.ReadFile(filepath.Join("..", "..", ref.ResolvedPath))
+			if readErr != nil {
+				t.Fatalf("read resolved schema %s: %v", ref.ResolvedPath, readErr)
+			}
+			digest := sha256.Sum256(resolvedBytes)
+			want := "sha256:" + hex.EncodeToString(digest[:])
+			if ref.ResolvedHash != want {
+				t.Fatalf("resolved schema %s digest = %q, want %q", ref.ResolvedPath, ref.ResolvedHash, want)
+			}
+		}
 		if node.SchemaPath == "schema/cohesion-schema-provenance-v2.schema.json" {
 			foundRoot = true
 			digest := sha256.Sum256(schemaBytes)
