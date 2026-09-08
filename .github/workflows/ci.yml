@@ -76,6 +76,15 @@ jobs:
         run: python3 tools/forward-oracle/verify_contract_review.py
       - name: Verify contract-freeze forward oracle
         run: python3 tools/forward-oracle/verify_contract_freeze.py
+      - name: Reproduce contract-freeze forward oracle
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-contract-freeze.XXXXXX")"
+          trap 'find "${task}" -depth -delete' EXIT
+          python3 tools/forward-oracle/generate_contract_freeze.py \
+            --output "${task}/cohesion-contract-freeze-v1-forward-oracle.json"
+          cmp -- "${task}/cohesion-contract-freeze-v1-forward-oracle.json" \
+            testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json
       - name: Inventory provenance inputs
         run: python3 tools/provenance/check.py
       - name: Run repository contract

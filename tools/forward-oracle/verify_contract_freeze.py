@@ -6,7 +6,19 @@ from pathlib import Path
 def canonical(value): return json.dumps(value, ensure_ascii=False, separators=(",", ":"), sort_keys=True).encode()
 def sha(value): return "sha256:" + hashlib.sha256(value).hexdigest()
 
-def check_candidate(case_id, candidate):
+def changed_paths(before, after, prefix=""):
+    if isinstance(before, dict) and isinstance(after, dict):
+        paths = []
+        for key in sorted(set(before) | set(after)):
+            path = f"{prefix}/{key}"
+            if key not in before or key not in after:
+                paths.append(path)
+            else:
+                paths.extend(changed_paths(before[key], after[key], path))
+        return paths
+    return [] if before == after else [prefix]
+
+def check_candidate(case_id, candidate, base):
     """Check the frozen contract shape and each declared mutation directly."""
     if not isinstance(candidate, dict): raise SystemExit("candidate is not an object")
     required = {"schema_id", "goal_id", "contract", "review", "created_at"}
@@ -24,6 +36,17 @@ def check_candidate(case_id, candidate):
     if case_id.endswith(".contract") and candidate.get("contract", {}).get("tag") == "v1.5.5": raise SystemExit("contract mutation was not applied")
     if case_id.endswith("review-path") and candidate.get("review", {}).get("record_path") == ".ai/cohesion/phase3/contract-releases/v1.5.5/CONTRACT_REVIEW.json": raise SystemExit("review-path mutation was not applied")
     if case_id.endswith("timestamp") and candidate.get("created_at") != "2026-02-31T03:32:14Z": raise SystemExit("timestamp mutation was not applied")
+    expected_path = {
+        "contract-freeze.invalid.schema": "/schema_id",
+        "contract-freeze.invalid.goal": "/goal_id",
+        "contract-freeze.invalid.contract": "/contract/tag",
+        "contract-freeze.invalid.review-path": "/review/record_path",
+        "contract-freeze.invalid.timestamp": "/created_at",
+        "contract-freeze.invalid.missing-review": "/review",
+        "contract-freeze.invalid.unknown-member": "/unknown",
+    }.get(case_id)
+    if expected_path and changed_paths(base, candidate) != [expected_path]:
+        raise SystemExit(f"mutation changed unexpected paths for {case_id}")
 
 def main():
     path = Path(__file__).resolve().parents[2] / "testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json"
@@ -35,6 +58,7 @@ def main():
     fixture_bytes = {}
     for fixture in fixtures:
         raw = base64.b64decode(fixture["bytes_base64"], validate=True)
+        if base64.b64encode(raw).decode() != fixture["bytes_base64"]: raise SystemExit("fixture base64 is not canonical")
         if raw != canonical(json.loads(raw.decode())) or fixture.get("bytes_sha256") != sha(raw):
             raise SystemExit("fixture canonical bytes or digest mismatch")
         fixture_bytes[fixture["fixture_id"]] = raw
@@ -61,7 +85,7 @@ def main():
         try: candidate_value = json.loads(candidate.decode())
         except Exception:
             candidate_value = None
-        check_candidate(row["case_id"], candidate_value)
+        check_candidate(row["case_id"], candidate_value, json.loads(fixture_bytes["base.canonical-rich"].decode()))
         if row["outcome"] == "accepted":
             if row["error_code"] is not None or row["normalized_value_sha256"] != sha(candidate): raise SystemExit("accepted result mismatch")
         elif row["error_code"] != errors.get(row["case_id"]) or row["normalized_value_sha256"] is not None: raise SystemExit("rejected result mismatch")

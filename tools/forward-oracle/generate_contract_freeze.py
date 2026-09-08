@@ -5,7 +5,7 @@ The released contract-freeze document is the authoritative fixture. This
 script only canonicalizes that document and applies explicit, reviewable
 mutations; it does not import production Go code or create review evidence.
 """
-import base64, copy, hashlib, json
+import argparse, base64, copy, hashlib, json
 from pathlib import Path
 
 def canonical(value):
@@ -15,9 +15,12 @@ def sha(value):
     return "sha256:" + hashlib.sha256(value).hexdigest()
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--output", type=Path)
+    args = parser.parse_args()
     root = Path(__file__).resolve().parents[2]
     source = root / "release/cohesion-contract-freeze.json"
-    output = root / "testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json"
+    output = args.output or root / "testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json"
     raw = canonical(json.loads(source.read_bytes()))
     base = json.loads(raw)
     cases = {
