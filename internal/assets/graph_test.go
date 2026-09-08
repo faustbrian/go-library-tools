@@ -51,8 +51,8 @@ func TestPublishedResolvedReferenceGraphsMatchEveryVersionedSchema(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(paths) != 25 {
-		t.Fatalf("versioned schema count = %d, want 25", len(paths))
+	if len(paths) != 26 {
+		t.Fatalf("versioned schema count = %d, want 26", len(paths))
 	}
 	for _, path := range paths {
 		name := filepath.Base(path)
