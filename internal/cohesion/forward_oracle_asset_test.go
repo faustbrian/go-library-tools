@@ -37,3 +37,14 @@ func TestContractReviewForwardOracleAssetMatchesFrozenMatrix(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestContractFreezeForwardOracleAssetMatchesFrozenMatrix(t *testing.T) {
+	data, err := os.ReadFile("../../testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"base.canonical-minimum", "base.canonical-rich", "contract-freeze.invalid.contract", "contract-freeze.invalid.goal", "contract-freeze.invalid.missing-review", "contract-freeze.invalid.review-path", "contract-freeze.invalid.schema", "contract-freeze.invalid.timestamp", "contract-freeze.invalid.unknown-member", "contract-freeze.valid"}
+	if err := verifyForwardOracleV2(data, forwardOracleV2Expectation{SchemaIdentity: contractFreezeV1SchemaIdentity, CaseCount: len(want), MaximumBytes: 1 << 20, CaseIDs: want, OraclePath: "testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json"}); err != nil {
+		t.Fatal(err)
+	}
+}
