@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 
 from check_v2 import ROOT, SCHEMA_PATHS, digest
-from generate_multiplexed_oracle import BASE_EXPECTED_CASES, DECISION_EXPECTED_CASES, SOURCES, source_cases
+from generate_multiplexed_oracle import BASE_EXPECTED_CASES, CORPUS_SCHEMAS, DECISION_EXPECTED_CASES, SOURCES, source_cases
 
 
 def verify(path: Path) -> None:
@@ -41,9 +41,9 @@ def verify(path: Path) -> None:
         expected_cases = sorted(all_cases, key=lambda row: (row["case_id"], row["source_path"]))
         if entry.get("cases") != expected_cases or entry.get("case_count") != len(expected_cases):
             raise ValueError(f"case binding mismatch: {schema_path}")
-        expected_ids = DECISION_EXPECTED_CASES if "schema-v3-decision-" in schema_path else BASE_EXPECTED_CASES
+        expected_ids = tuple(sorted({case["case_id"] for case in expected_cases})) if schema_path in CORPUS_SCHEMAS else (DECISION_EXPECTED_CASES if "schema-v3-decision-" in schema_path else BASE_EXPECTED_CASES)
         missing_required = sorted(set(expected_ids) - {case["case_id"] for case in expected_cases})
-        completeness = "complete" if not missing_required else ("missing" if not expected_cases else "partial")
+        completeness = "complete" if schema_path in CORPUS_SCHEMAS and not missing_required else ("missing" if not expected_cases else "partial")
         if entry.get("expected_case_ids") != list(expected_ids) or entry.get("missing_required_cases") != missing_required or entry.get("completeness") != completeness:
             raise ValueError(f"completeness metadata mismatch: {schema_path}")
         outcomes = {case["outcome"] for case in expected_cases}

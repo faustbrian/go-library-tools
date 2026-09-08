@@ -34,6 +34,11 @@ SOURCES = {
 # five-case assets are therefore deliberately partial.
 BASE_EXPECTED_CASES = ("base.canonical-minimum", "base.canonical-rich", "schema.missing-required", "schema.unknown-member")
 DECISION_EXPECTED_CASES = BASE_EXPECTED_CASES + ("json.duplicate-key", "json.trailing-value")
+CORPUS_SCHEMAS = {
+    "schema/modules-v1.schema.json", "schema/modules-v2.schema.json",
+    "schema/cohesion-catalog-v1.schema.json", "schema/cohesion-inputs-v1.schema.json",
+    "schema/cohesion-sources-v1.schema.json",
+}
 
 
 def sha(path: Path) -> str:
@@ -66,7 +71,16 @@ def build() -> dict:
         cases.sort(key=lambda row: (row["case_id"], row["source_path"]))
         outcomes = {case["outcome"] for case in cases}
         absent = sorted({"accepted", "rejected"} - outcomes)
-        expected_case_ids = DECISION_EXPECTED_CASES if "schema-v3-decision-" in schema_path else BASE_EXPECTED_CASES
+        if schema_path in CORPUS_SCHEMAS:
+            # Released accepted/rejected corpora are the authoritative roster;
+            # do not reduce them to a guessed minimum.
+            expected_case_ids = tuple(sorted({case["case_id"] for case in cases}))
+        elif "schema-v3-decision-" in schema_path:
+            expected_case_ids = DECISION_EXPECTED_CASES
+        else:
+            # A forward oracle's local case list is not proof of completeness.
+            # Require explicit boundary IDs before calling it complete.
+            expected_case_ids = BASE_EXPECTED_CASES
         present_case_ids = {case["case_id"] for case in cases}
         missing_required_cases = sorted(set(expected_case_ids) - present_case_ids)
         if absent:
@@ -84,7 +98,9 @@ def build() -> dict:
             "cases": cases,
             "expected_case_ids": list(expected_case_ids),
             "missing_required_cases": missing_required_cases,
-            "completeness": "complete" if not missing_required_cases else ("missing" if not cases else "partial"),
+            # Forward-oracle case rosters are bounded probes, not completeness
+            # proofs. Only released corpus lanes may be called complete.
+            "completeness": "complete" if schema_path in CORPUS_SCHEMAS and not missing_required_cases else ("missing" if not cases else "partial"),
         })
     return {
         "format": "golib-cohesion-schema-provenance-v2-multiplexed-oracle",
