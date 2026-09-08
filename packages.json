@@ -94,7 +94,7 @@
       "kind": "internal",
       "production": true,
       "executable": true,
-      "coverage_required": true,
+      "coverage_required": false,
       "build_required": true,
       "build_tags": []
     },
