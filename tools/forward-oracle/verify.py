@@ -27,6 +27,14 @@ def main():
         if sha(fixtures[row["fixture_id"]]) != row["bytes_sha256"]:
             raise SystemExit("fixture digest mismatch")
     expected = ["base.canonical-minimum", "base.canonical-rich", "diagnostic.invalid.code", "diagnostic.invalid.empty", "diagnostic.invalid.empty-causes", "diagnostic.invalid.message", "diagnostic.invalid.path", "diagnostic.invalid.unknown-cause"]
+    expected_errors = {
+        "diagnostic.invalid.code": "schema-pattern",
+        "diagnostic.invalid.empty": "schema-range",
+        "diagnostic.invalid.empty-causes": "schema-range",
+        "diagnostic.invalid.message": "schema-range",
+        "diagnostic.invalid.path": "schema-pattern",
+        "diagnostic.invalid.unknown-cause": "schema-unknown-member",
+    }
     if value["case_count"] != len(expected) or [row["case_id"] for row in value["cases"]] != expected:
         raise SystemExit("case roster mismatch")
     for row in value["cases"]:
@@ -41,6 +49,8 @@ def main():
             raise SystemExit("accepted digest mismatch")
         if row["outcome"] == "rejected" and row["normalized_value_sha256"] is not None:
             raise SystemExit("rejected row carries normalized digest")
+        if row["outcome"] == "rejected" and row["error_code"] != expected_errors[row["case_id"]]:
+            raise SystemExit("rejected row error code mismatch")
     print("diagnostic forward oracle verified")
 
 
