@@ -26,3 +26,12 @@ assets remain explicit and v1 files and semantics are unchanged.
 python3 tools/provenance/check_v2.py
 python3 tools/provenance/check_v2.py --strict
 ```
+
+`generate_v2.py` can emit a deterministic, non-claiming inventory for review;
+`verify_v2.py` checks its exact 25-schema binding and rejects semantic outcome
+claims. These tools do not create the multiplexed oracle or aggregate review.
+
+```sh
+python3 tools/provenance/generate_v2.py --output /tmp/provenance-v2.json
+python3 tools/provenance/verify_v2.py /tmp/provenance-v2.json
+```
