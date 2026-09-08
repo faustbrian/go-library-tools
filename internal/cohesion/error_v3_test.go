@@ -66,3 +66,17 @@ func TestSelectSchemaV3FailureUsesFrozenPrecedence(t *testing.T) {
 		})
 	}
 }
+
+func TestCompareSchemaV3FailuresUsesDecodedPointersAndUnknownFallback(t *testing.T) {
+	t.Parallel()
+
+	if got := compareSchemaV3Failures(
+		schemaV3Failure{Code: "semantic-path", Pointer: "/~1"},
+		schemaV3Failure{Code: "semantic-path", Pointer: "/~0"},
+	); got >= 0 {
+		t.Fatalf("decoded semantic pointer comparison = %d, want negative", got)
+	}
+	if stage, rank := schemaV3FailureRank("invented"); stage != 8 || rank != 0 {
+		t.Fatalf("unknown schema-v3 rank = (%d, %d), want (8, 0)", stage, rank)
+	}
+}

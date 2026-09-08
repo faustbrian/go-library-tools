@@ -136,6 +136,21 @@ func TestCanonicalWriterCoversEveryIntegerOnlyPrimitiveAndEscape(t *testing.T) {
 	}
 }
 
+func TestUTF16CursorEmitsPendingSurrogateAndEndOfInput(t *testing.T) {
+	t.Parallel()
+
+	cursor := utf16Cursor{text: "😀"}
+	if _, ok := cursor.next(); !ok {
+		t.Fatal("utf16Cursor.next() high surrogate reported end of input")
+	}
+	if _, ok := cursor.next(); !ok {
+		t.Fatal("utf16Cursor.next() pending low surrogate reported end of input")
+	}
+	if _, ok := cursor.next(); ok {
+		t.Fatal("utf16Cursor.next() after input reported a unit")
+	}
+}
+
 func TestCanonicalWriterPanicsOnlyForAnImpossibleDecodedType(t *testing.T) {
 	t.Parallel()
 
