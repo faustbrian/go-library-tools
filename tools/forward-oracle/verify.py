@@ -55,6 +55,8 @@ def main():
             used_fixtures.add(fixture_id)
             candidate = fixtures[fixture_id]
         else:
+            if row["input"].get("kind") != "splice" or len(row["input"].get("splices", [])) != 1:
+                raise SystemExit("splice input shape mismatch")
             fixture_id = row["input"]["fixture_id"]
             if fixture_id not in fixtures:
                 raise SystemExit("unknown fixture reference")

@@ -26,6 +26,7 @@ def main():
   used.add(i["fixture_id"])
   if i["kind"]=="fixture": candidate=fs[i["fixture_id"]]
   else:
+   if i.get("kind")!="splice" or len(i.get("splices",[]))!=1: raise SystemExit("splice input shape mismatch")
    s=i["splices"][0]; src=fs[i["fixture_id"]]; ins=base64.b64decode(s["insert_base64"],validate=True)
    if s["offset"] < 0 or s["delete_count"] < 0 or s["offset"]+s["delete_count"] > len(src): raise SystemExit("splice bounds mismatch")
    candidate=src[:s["offset"]]+ins+src[s["offset"]+s["delete_count"]:]
