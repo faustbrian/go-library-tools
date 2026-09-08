@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import hashlib
 import re
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -51,8 +52,21 @@ def load() -> dict:
             catalog_version = catalog_versions.get(module["module_path"])
             if catalog_version is None or "v" + catalog_version.lstrip("v") != module["version"]:
                 raise ValueError(f"module identity is absent or version-mismatched: {module['module_path']}")
-        if item["publication_status"] == "unreleased" and "pending" not in item["evidence"].get("observation", "").lower():
+            repo_dir = ROOT.parent / module["module_path"].rsplit("/", 1)[-1]
+            revision = subprocess.run(["git", "-C", str(repo_dir), "cat-file", "-e", module["source_revision"]], capture_output=True)
+            if revision.returncode != 0:
+                raise ValueError(f"source revision is not present locally: {module['module_path']}")
+            tags = subprocess.run(["git", "-C", str(repo_dir), "tag", "--points-at", module["source_revision"]], capture_output=True, text=True, check=True).stdout.split()
+            if module["version"] not in tags and item["installable"]:
+                raise ValueError(f"installable module revision lacks matching local tag: {module['module_path']}")
+        observation = item["evidence"].get("observation", "").lower()
+        if item["publication_status"] == "unreleased" and "pending" not in observation:
             raise ValueError("unreleased scenarios require an explicitly pending observation")
+        if item["publication_status"] == "unreleased" and any(
+            not subprocess.run(["git", "-C", str(ROOT.parent / m["module_path"].rsplit("/", 1)[-1]), "tag", "--points-at", m["source_revision"]], capture_output=True, text=True, check=True).stdout.split()
+            for m in item["modules"]
+        ) and "unverified" not in observation:
+            raise ValueError("unreleased sets with untagged revisions require an unverified observation")
         if not item["evidence"].get("content_sha256", "").startswith("sha256:"):
             raise ValueError("evidence requires a content fingerprint")
         probe = dict(item)
@@ -74,7 +88,8 @@ def render(value: dict) -> str:
         lines += [f"## `{item['set_id']}`", "", f"**Status:** {status}; **{install}**. Observed `{item['observed_at']}`.", "", "### Modules", ""]
         for module in item["modules"]:
             lines.append(f"- `{module['module_path']}@{module['version']}` (source `{module['source_revision']}`)")
-        lines += ["", "### Covered scenarios", ""]
+        heading = "### Planned/unverified scenarios" if status == "unreleased" else "### Covered scenarios"
+        lines += ["", heading, ""]
         lines += [f"- {scenario}" for scenario in item["scenarios"]]
         lines += ["", f"**Go:** `{item['go']['version']}` on {', '.join(item['go']['os_arch'])}.", "", "### Caveats", ""]
         lines += [f"- {caveat}" for caveat in item["caveats"]]

@@ -12,7 +12,7 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 - `github.com/faustbrian/go-service@v1.0.0` (source `62fc1c1340c679c468d72e984efbaf41c01bcd2e`)
 - `github.com/faustbrian/go-tenancy@v1.0.0` (source `1c474f0a84ae3cc2c3988bb002d57d41cda3ae73`)
 
-### Covered scenarios
+### Planned/unverified scenarios
 
 - compose authenticated service startup with caller-owned lifecycle and tenant propagation
 - exercise shutdown and cancellation ordering without a framework bootstrap
@@ -28,5 +28,5 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 
 ### Evidence
 
-- Content fingerprint: `sha256:08f0e219e0856d409f16abd20641e90fb319ddfe3a5c9afbb324e22411daab7b`
-- Observation: `Exact local release tags and peeled commits; cross-module consumer execution remains pending.`
+- Content fingerprint: `sha256:992a9660735c5ee8e86b116dbd7b4aaba56b24a1be8cf44696be8a26362e3f4f`
+- Observation: `Local source commits verified; release tags unavailable for some modules; cross-module consumer execution remains pending and unverified.`
