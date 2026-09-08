@@ -150,7 +150,7 @@ func TestRunValidationAndExecutionFailures(t *testing.T) {
 			var calls []commandCall
 			execute := test.command
 			if execute == nil {
-				execute = func(repo string, calls *[]commandCall) commandFunc { return successfulCommand(repo, calls) }
+				execute = successfulCommand
 			}
 			var stderr bytes.Buffer
 			generate := test.generate

@@ -1,3 +1,4 @@
+// Package main provides the historical-assets command.
 package main
 
 import (
@@ -185,7 +186,7 @@ func runExternalCommand(ctx context.Context, name string, args []string, env []s
 	return command.Output()
 }
 
-func reportError(stderr io.Writer, format string, args ...interface{}) int {
+func reportError(stderr io.Writer, format string, args ...any) int {
 	_, _ = fmt.Fprintf(stderr, format+"\n", args...)
 	return 1
 }
@@ -241,7 +242,7 @@ func pathContains(parent, child string) bool {
 	return err == nil && relative != ".." && !filepath.IsAbs(relative) && !strings.HasPrefix(relative, ".."+string(filepath.Separator))
 }
 
-func fatalf(format string, args ...interface{}) {
+func fatalf(format string, args ...any) {
 	_, _ = fmt.Fprintf(os.Stderr, format+"\n", args...)
 	exitProcess(1)
 }
