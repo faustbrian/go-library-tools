@@ -8,9 +8,9 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 
 ### Modules
 
-- `github.com/faustbrian/go-authentication@v1.1.0` (source `d932f8e875c928daf8b63328ad4b2b8cb6b0c9fe`)
+- `github.com/faustbrian/go-authentication@v1.0.0` (source `d932f8e875c928daf8b63328ad4b2b8cb6b0c9fe`)
 - `github.com/faustbrian/go-service@v1.0.0` (source `62fc1c1340c679c468d72e984efbaf41c01bcd2e`)
-- `github.com/faustbrian/go-tenancy@v1.1.0` (source `1c474f0a84ae3cc2c3988bb002d57d41cda3ae73`)
+- `github.com/faustbrian/go-tenancy@v1.0.0` (source `1c474f0a84ae3cc2c3988bb002d57d41cda3ae73`)
 
 ### Covered scenarios
 
@@ -28,5 +28,5 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 
 ### Evidence
 
-- Content fingerprint: `sha256:415a9bffc06e45a24a5e99c2035468d1ee9bf343c9475deb4dbf0d13ccb2d455`
+- Content fingerprint: `sha256:08f0e219e0856d409f16abd20641e90fb319ddfe3a5c9afbb324e22411daab7b`
 - Observation: `Exact local release tags and peeled commits; cross-module consumer execution remains pending.`

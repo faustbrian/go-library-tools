@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import json
 import hashlib
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "docs/ecosystem/compatibility-sets.json"
 OUTPUT = ROOT / "docs/ecosystem/compatibility-sets.md"
+SEMVER = re.compile(r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
 
 
 def load() -> dict:
@@ -19,6 +21,11 @@ def load() -> dict:
     if not isinstance(sets, list) or not sets:
         raise ValueError("sets must be a non-empty array")
     seen = set()
+    catalogs = []
+    for catalog_name in ("catalog-consumer.json", "catalog-engineering.json"):
+        catalog = json.loads((ROOT / "docs/ecosystem" / catalog_name).read_text())
+        catalogs.extend(catalog.get("modules", []))
+    catalog_versions = {m.get("module_path"): m.get("version") for m in catalogs}
     for item in sets:
         required = {"set_id", "publication_status", "installable", "go", "modules", "scenarios", "observed_at", "evidence", "caveats", "source_references"}
         if set(item) != required:
@@ -37,10 +44,15 @@ def load() -> dict:
             if module["module_path"] in module_ids:
                 raise ValueError(f"duplicate module in {item['set_id']}")
             module_ids.add(module["module_path"])
-            if module["version"].startswith("v") is False:
+            if not isinstance(module["version"], str) or not SEMVER.fullmatch(module["version"]):
                 raise ValueError("module versions must be semantic-version strings")
-            if len(module["source_revision"]) != 40:
+            if not isinstance(module["source_revision"], str) or not re.fullmatch(r"[0-9a-f]{40}", module["source_revision"]):
                 raise ValueError("source revisions must be full Git identities")
+            catalog_version = catalog_versions.get(module["module_path"])
+            if catalog_version is None or "v" + catalog_version.lstrip("v") != module["version"]:
+                raise ValueError(f"module identity is absent or version-mismatched: {module['module_path']}")
+        if item["publication_status"] == "unreleased" and "pending" not in item["evidence"].get("observation", "").lower():
+            raise ValueError("unreleased scenarios require an explicitly pending observation")
         if not item["evidence"].get("content_sha256", "").startswith("sha256:"):
             raise ValueError("evidence requires a content fingerprint")
         probe = dict(item)

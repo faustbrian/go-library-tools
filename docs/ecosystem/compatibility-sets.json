@@ -10,9 +10,9 @@
         "os_arch": ["darwin/arm64", "linux/amd64", "linux/arm64"]
       },
       "modules": [
-        {"module_path": "github.com/faustbrian/go-authentication", "version": "v1.1.0", "source_revision": "d932f8e875c928daf8b63328ad4b2b8cb6b0c9fe"},
+        {"module_path": "github.com/faustbrian/go-authentication", "version": "v1.0.0", "source_revision": "d932f8e875c928daf8b63328ad4b2b8cb6b0c9fe"},
         {"module_path": "github.com/faustbrian/go-service", "version": "v1.0.0", "source_revision": "62fc1c1340c679c468d72e984efbaf41c01bcd2e"},
-        {"module_path": "github.com/faustbrian/go-tenancy", "version": "v1.1.0", "source_revision": "1c474f0a84ae3cc2c3988bb002d57d41cda3ae73"}
+        {"module_path": "github.com/faustbrian/go-tenancy", "version": "v1.0.0", "source_revision": "1c474f0a84ae3cc2c3988bb002d57d41cda3ae73"}
       ],
       "scenarios": [
         "compose authenticated service startup with caller-owned lifecycle and tenant propagation",
@@ -21,7 +21,7 @@
       ],
       "observed_at": "2026-09-08T00:00:00Z",
       "evidence": {
-        "content_sha256": "sha256:415a9bffc06e45a24a5e99c2035468d1ee9bf343c9475deb4dbf0d13ccb2d455",
+        "content_sha256": "sha256:08f0e219e0856d409f16abd20641e90fb319ddfe3a5c9afbb324e22411daab7b",
         "observation": "Exact local release tags and peeled commits; cross-module consumer execution remains pending."
       },
       "caveats": [
