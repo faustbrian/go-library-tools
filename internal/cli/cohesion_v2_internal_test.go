@@ -57,6 +57,9 @@ func TestParseCohesionV2InvocationRejectsIncompleteOrAmbiguousFlags(t *testing.T
 	if _, err := parseCohesionV2Invocation([]string{"not-a-command"}); err == nil {
 		t.Fatal("parseCohesionV2Invocation(unknown) error = nil")
 	}
+	if _, err := parseCohesionV2Invocation([]string{"unknown", "command"}); err == nil {
+		t.Fatal("parseCohesionV2Invocation(unknown pair) error = nil")
+	}
 }
 
 func TestParseCohesionV2InvocationMatchesCommandBoundariesAndViews(t *testing.T) {
@@ -66,6 +69,8 @@ func TestParseCohesionV2InvocationMatchesCommandBoundariesAndViews(t *testing.T)
 		want string
 	}{
 		{"project boundary", []string{"catalog", "project", "consumer"}, "required flag"},
+		{"project missing view", []string{"catalog", "project"}, "unknown cohesion schema-v2 command"},
+		{"catalog wrong command", []string{"catalog", "wrong", "consumer"}, "unknown cohesion schema-v2 command"},
 		{"recover boundary", []string{"catalog", "project", "recover", "engineering"}, "required flag"},
 		{"aggregate boundary", []string{"aggregate", "generate"}, "required flag"},
 		{"sources check boundary", []string{"sources", "check"}, "required flag"},
