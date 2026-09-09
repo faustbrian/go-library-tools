@@ -6,6 +6,19 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Added the closed compatibility-set registry, exact 112-module stable
+  recommendation, clean public-proxy verifier, three-platform CI matrix,
+  release-asset bindings, and application/operator adoption paths.
+
+## 1.6.0 - 2026-09-09
+
+### Added
+
+- Added the initial non-installable compatibility-set draft, deterministic
+  rendering, and structural module identity checks.
+- Added closed schema-v3 validation, canonical normalization, reviewed forward
+  oracles, immutable provenance, and deterministic resolved-reference graphs
+  for the Cohesion contract and release tooling.
 - Added a fail-closed, manually dispatched Linux capability probe for bounded
   amd64 and arm64 schema-v3 host feasibility checks.
 
