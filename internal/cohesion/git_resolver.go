@@ -15,10 +15,10 @@ type gitSourceRequest struct {
 // repository revision and reads the blob from that immutable object tree.
 func ResolveGitSourceFile(root, repository, revision, path string, maximumBytes int64) ([]byte, error) {
 	if !resolutionMapIdentityPattern.MatchString(repository) || !resolutionMapGitSHAPattern.MatchString(revision) || !safeRelativePath(path) || len(path) > 4096 || maximumBytes < 0 {
-		return nil, errors.New("Git source identity is invalid")
+		return nil, errors.New("Git source identity is invalid") //nolint:staticcheck // Canonical diagnostic is externally matched.
 	}
 	if !filepath.IsAbs(root) || filepath.Clean(root) != root {
-		return nil, errors.New("Git source root is invalid")
+		return nil, errors.New("Git source root is invalid") //nolint:staticcheck // Canonical diagnostic is externally matched.
 	}
 	contents, err := resolveGitSourceFiles(root, repository, revision, []gitSourceRequest{{path: path, maximumBytes: maximumBytes}})
 	if err != nil {
