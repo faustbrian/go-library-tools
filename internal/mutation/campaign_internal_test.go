@@ -548,21 +548,28 @@ func TestCampaignRejectsSymlinkedRoots(t *testing.T) {
 	}
 }
 
-func TestCampaignRejectsMissingMalformedZeroAndChangedReports(t *testing.T) {
-	zero := `{"files":[]}`
+func TestCampaignRejectsMalformedChangedAndStorageFailures(t *testing.T) {
 	malformed := `{}`
 	for _, test := range []struct {
 		name    string
 		report  *string
-		skip    bool
 		mutate  bool
 		prepare func(*Campaign, *campaignProcess)
 	}{
-		{"missing", nil, true, false, nil},
-		{"malformed", &malformed, false, false, nil},
-		{"unreviewed zero", &zero, false, false, nil},
-		{"changed input", nil, false, true, nil},
-		{"package cache", nil, false, false, func(campaign *Campaign, _ *campaignProcess) {
+		{"malformed", &malformed, false, nil},
+		{"changed input", nil, true, nil},
+		{"missing report without no-results signal", nil, false, func(_ *Campaign, process *campaignProcess) {
+			process.skipReport = true
+		}},
+		{"near no-results signal", nil, false, func(_ *Campaign, process *campaignProcess) {
+			process.skipReport = true
+			process.mutationOutput = "No results to report. extra\n"
+		}},
+		{"no-results signal beyond bounded output", nil, false, func(_ *Campaign, process *campaignProcess) {
+			process.skipReport = true
+			process.mutationOutput = strings.Repeat("x", 2<<20) + "\nNo results to report.\n"
+		}},
+		{"package cache", nil, false, func(campaign *Campaign, _ *campaignProcess) {
 			if err := os.MkdirAll(filepath.Join(campaign.Workspace, "mutation-cache"), 0o700); err != nil {
 				t.Fatal(err)
 			}
@@ -570,18 +577,18 @@ func TestCampaignRejectsMissingMalformedZeroAndChangedReports(t *testing.T) {
 				t.Fatal(err)
 			}
 		}},
-		{"stale report", nil, false, false, func(campaign *Campaign, _ *campaignProcess) {
+		{"stale report", nil, false, func(campaign *Campaign, _ *campaignProcess) {
 			path := filepath.Join(campaign.Workspace, "report-root.json")
 			if err := os.MkdirAll(filepath.Join(path, "child"), 0o700); err != nil {
 				t.Fatal(err)
 			}
 		}},
-		{"report store", nil, false, false, func(campaign *Campaign, process *campaignProcess) {
+		{"report store", nil, false, func(campaign *Campaign, process *campaignProcess) {
 			process.afterMutation = func() error {
 				return os.WriteFile(filepath.Join(campaign.MutationRoot, "reports"), []byte("file"), 0o600)
 			}
 		}},
-		{"evidence store", nil, false, false, func(campaign *Campaign, process *campaignProcess) {
+		{"evidence store", nil, false, func(campaign *Campaign, process *campaignProcess) {
 			process.afterMutation = func() error {
 				return os.WriteFile(filepath.Join(campaign.EvidenceRoot, "by-input"), []byte("file"), 0o600)
 			}
@@ -590,7 +597,6 @@ func TestCampaignRejectsMissingMalformedZeroAndChangedReports(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			campaign, process := campaignFixture(t)
 			process.report = test.report
-			process.skipReport = test.skip
 			process.mutateSource = test.mutate
 			if test.prepare != nil {
 				test.prepare(&campaign, process)
@@ -616,8 +622,32 @@ func TestCampaignAcceptsReviewedZeroReportAndDefaultOutputClock(t *testing.T) {
 		Reason: "The package has declarations only and no viable mutation points after complete manual review.",
 	}}}
 	process.skipReport = true
+	process.mutationOutput = "No results to report.\n"
 	if err := campaign.Run(context.Background()); err != nil {
 		t.Fatalf("Run(reviewed zero) error = %v", err)
+	}
+}
+
+func TestCampaignAcceptsSuccessfulNoResultWithoutReview(t *testing.T) {
+	campaign, process := campaignFixture(t)
+	process.skipReport = true
+	process.mutationOutput = "No results to report.\n"
+	var output bytes.Buffer
+	campaign.Output = &output
+
+	if err := campaign.Run(context.Background()); err != nil {
+		t.Fatalf("Run(no result) error = %v", err)
+	}
+	if !strings.Contains(output.String(), "has zero viable mutants") {
+		t.Fatalf("Run(no result) output = %q", output.String())
+	}
+	_, input, err := campaign.packageInput(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	reused, result, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", ".", input)
+	if err != nil || !reused || result.Mutants != 0 {
+		t.Fatalf("Reuse(no result) = %v, %#v, %v", reused, result, err)
 	}
 }
 

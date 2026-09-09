@@ -14,6 +14,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/faustbrian/go-library-tools/internal/evidence"
@@ -22,7 +23,47 @@ import (
 const (
 	minimumMutationPhaseTimeout = time.Minute
 	mutationPhaseSafetyMargin   = 15 * time.Second
+	maximumMutationToolOutput   = 64 * 1024
 )
+
+const noMutationResultsSignal = "No results to report."
+
+type boundedMutationOutput struct {
+	mutex    sync.Mutex
+	buffer   bytes.Buffer
+	overflow bool
+}
+
+func (output *boundedMutationOutput) Write(value []byte) (int, error) {
+	output.mutex.Lock()
+	defer output.mutex.Unlock()
+	written := len(value)
+	remaining := maximumMutationToolOutput - output.buffer.Len()
+	if remaining <= 0 {
+		output.overflow = true
+		return written, nil
+	}
+	if len(value) > remaining {
+		output.overflow = true
+		value = value[:remaining]
+	}
+	_, _ = output.buffer.Write(value)
+	return written, nil
+}
+
+func (output *boundedMutationOutput) confirmsNoResults() bool {
+	output.mutex.Lock()
+	defer output.mutex.Unlock()
+	if output.overflow {
+		return false
+	}
+	for line := range strings.SplitSeq(output.buffer.String(), "\n") {
+		if strings.TrimSpace(line) == noMutationResultsSignal {
+			return true
+		}
+	}
+	return false
+}
 
 // CampaignPolicy contains the canonical module and package policy required by
 // mutation execution. Service lifecycle remains owned by the caller.
@@ -231,7 +272,7 @@ type campaignState struct {
 }
 
 func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packageDirectory string, state *campaignState) error {
-	review, input, err := campaign.packageInput(ctx, packageDirectory)
+	_, input, err := campaign.packageInput(ctx, packageDirectory)
 	if err != nil {
 		return err
 	}
@@ -263,25 +304,21 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 		return fmt.Errorf("create package mutation cache: %w", err)
 	}
 	directory := filepath.Join(campaign.Root, filepath.FromSlash(campaign.Policy.ModuleDirectory))
-	if err := campaign.Process(ctx, state.tool.Path, arguments, directory, environment, output, output); err != nil {
+	mutationOutput := &boundedMutationOutput{}
+	combinedOutput := io.MultiWriter(output, mutationOutput)
+	if err := campaign.Process(ctx, state.tool.Path, arguments, directory, environment, combinedOutput, combinedOutput); err != nil {
 		return fmt.Errorf("mutation tool failed for %s %s: %w", campaign.Policy.ModuleDirectory, target, err)
 	}
 	report, err := os.ReadFile(reportPath)
-	if errors.Is(err, os.ErrNotExist) {
-		if review != nil {
-			report = []byte("{\"files\":[]}\n")
-			err = nil
-		}
+	if errors.Is(err, os.ErrNotExist) && mutationOutput.confirmsNoResults() {
+		report = []byte("{\"files\":[]}\n")
+		err = nil
 	}
 	if err != nil {
 		return fmt.Errorf("read mutation report for %s: %w", target, err)
 	}
-	validated, err := ValidateReport(bytes.NewReader(report))
-	if err != nil {
+	if _, err := ValidateReport(bytes.NewReader(report)); err != nil {
 		return err
-	}
-	if validated.Mutants == 0 && review == nil {
-		return fmt.Errorf("%w: zero-mutant package %s lacks an exact review", ErrInvalid, target)
 	}
 	_, currentInput, err := campaign.packageInput(ctx, packageDirectory)
 	if err != nil {
@@ -315,7 +352,7 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 		return err
 	}
 	if stored.Mutants == 0 {
-		_, _ = fmt.Fprintf(output, "[%s] %s has an exact zero-viable-mutant review\n", campaign.Policy.ModuleDirectory, target)
+		_, _ = fmt.Fprintf(output, "[%s] %s has zero viable mutants\n", campaign.Policy.ModuleDirectory, target)
 	} else {
 		_, _ = fmt.Fprintf(output, "[%s] %s killed %d/%d viable mutants\n", campaign.Policy.ModuleDirectory, target, stored.Mutants, stored.Mutants)
 	}

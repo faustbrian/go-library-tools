@@ -190,7 +190,7 @@ jobs:
           bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}
       - name: Run module contract
         if: inputs.release_dry_run != true
-        run: golib check --module '${{ matrix.directory }}'
+        run: golib check --local --module '${{ matrix.directory }}'
       - name: Run release rehearsal
         if: inputs.release_dry_run == true
         env:

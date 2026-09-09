@@ -29,7 +29,7 @@ const help = `golib validates and executes the Go library repository contract.
 
 Usage:
   golib --version
-  golib check [--all|--local|--module <directory>]
+  golib check [--local] [--all|--module <directory>]
   golib cohesion check [--json]
   golib cohesion catalog <consumer|engineering> [--json]
   golib cohesion aggregate <generate|check> --inputs <file> --output <directory>
@@ -111,18 +111,21 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 
 	switch args[0] {
 	case "check":
-		if len(args) == 2 && args[1] == "--local" {
-			selection, _ := moduleSelection([]string{"--all"}, catalog.Modules)
-			return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-				return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Local(ctx, selection)
-			})
+		local := len(args) > 1 && args[1] == "--local"
+		selectionArguments := args[1:]
+		if local {
+			selectionArguments = args[2:]
 		}
-		selection, usageError := moduleSelection(args[1:], catalog.Modules)
+		selection, usageError := moduleSelection(selectionArguments, catalog.Modules)
 		if usageError != nil {
-			return usage(stderr, usageError.Error())
+			return usage(stderr, "usage: golib check [--local] [--all|--module <directory>]")
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Check(ctx, selection)
+			runner := gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}
+			if local {
+				return runner.Local(ctx, selection)
+			}
+			return runner.Check(ctx, selection)
 		})
 	case "config":
 		if len(args) == 2 && args[1] == "validate" {
