@@ -58,6 +58,24 @@ func TestExtractTarArchiveAcceptsGitGlobalPAXMetadataWithoutCreatingAnEntry(t *t
 	}
 }
 
+func TestExtractTarArchiveRejectsExactParentPathBeforeFilesystemAccess(t *testing.T) {
+	t.Parallel()
+
+	var archive bytes.Buffer
+	writer := tar.NewWriter(&archive)
+	if err := writer.WriteHeader(&tar.Header{Name: "..", Typeflag: tar.TypeReg, Mode: 0o644}); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	err := extractTarArchive(bytes.NewReader(archive.Bytes()), t.TempDir(), strings.Repeat("a", 40))
+	if err == nil || err.Error() != `unsafe archive path ".."` {
+		t.Fatalf("extractTarArchive(parent path) error = %v", err)
+	}
+}
+
 func TestSpecificationsProduceExactlyTwentyUniqueAssets(t *testing.T) {
 	t.Parallel()
 

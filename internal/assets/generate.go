@@ -935,7 +935,7 @@ func extractTarArchive(input io.Reader, destination, commit string) error {
 			continue
 		}
 		clean := filepath.Clean(header.Name)
-		if clean == "." || filepath.IsAbs(clean) || strings.HasPrefix(clean, ".."+string(filepath.Separator)) {
+		if clean == "." || !filepath.IsLocal(clean) {
 			return fmt.Errorf("unsafe archive path %q", header.Name)
 		}
 		path := filepath.Join(destination, clean)
