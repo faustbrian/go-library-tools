@@ -2,7 +2,7 @@
   "format": "golib-compatibility-sets-v1",
   "sets": [
     {
-      "set_id": "golib-core-2026-09",
+      "set_id": "draft-20260908.1",
       "publication_status": "unreleased",
       "installable": false,
       "go": {
@@ -21,7 +21,7 @@
       ],
       "observed_at": "2026-09-08T00:00:00Z",
       "evidence": {
-        "content_sha256": "sha256:51635ec7e8cf236760d33a9cf3a8eb115e729187545c0cb14c88aa567292d3fd",
+        "content_sha256": "sha256:2005e9ae4a382f470757c8a9b09909a62e76c604f5bae9efd3794e3832116406",
         "observation": "Local source commits verified; release tags unavailable for some modules; cross-module consumer execution remains pending and unverified."
       },
       "caveats": [

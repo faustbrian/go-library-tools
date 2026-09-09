@@ -90,6 +90,10 @@ Consumer workflows retain least-privileged permissions, explicit concurrency,
 module matrices, attributable evidence artifacts, scheduled checks, CodeQL,
 release dry-runs, and one stable final required job.
 
+Pull requests that change only Markdown, `LICENSE`, or `NOTICE` run repository
+structural validation without launching module-quality or CodeQL jobs. Source,
+configuration, workflow, structured metadata, push, scheduled, and explicit
+release-rehearsal events retain the complete applicable runtime path.
 Pull-request runs review dependency changes before the final required job.
 Workflow syntax and expression validation are available locally through
 `golib workflows check`, run as part of the repository `make ci` contract, and

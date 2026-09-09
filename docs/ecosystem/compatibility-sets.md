@@ -2,7 +2,7 @@
 
 Generated from `compatibility-sets.json`; edit the JSON source only.
 
-## `golib-core-2026-09`
+## `draft-20260908.1`
 
 **Status:** unreleased; **non-installable**. Observed `2026-09-08T00:00:00Z`.
 
@@ -28,5 +28,5 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 
 ### Evidence
 
-- Content fingerprint: `sha256:51635ec7e8cf236760d33a9cf3a8eb115e729187545c0cb14c88aa567292d3fd`
+- Content fingerprint: `sha256:2005e9ae4a382f470757c8a9b09909a62e76c604f5bae9efd3794e3832116406`
 - Observation: `Local source commits verified; release tags unavailable for some modules; cross-module consumer execution remains pending and unverified.`

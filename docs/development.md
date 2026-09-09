@@ -15,6 +15,11 @@ for releases or changes whose identified risks require it. Expensive mutation,
 race, fuzz, benchmark, and external-service checks are selected for those risks
 rather than imposed on every milestone.
 
+Release validation requires the ordinary tests, documentation, lint, and
+security gates. Coverage, race, and mutation remain available when the changed
+behavior's risk classification selects them; disabling one of those gates for
+a module does not by itself prevent an otherwise verified release.
+
 Docker fixture behavior is unit-tested behind process boundaries; use
 designated CI or an explicit manual environment for real service rehearsals.
 

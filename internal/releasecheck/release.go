@@ -15,7 +15,7 @@ import (
 )
 
 var requiredGates = []string{
-	"coverage", "documentation", "lint", "mutation", "race", "security", "tests",
+	"documentation", "lint", "security", "tests",
 }
 
 // Validate returns deterministic releasable module directories only when the
