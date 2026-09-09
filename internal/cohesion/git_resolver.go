@@ -1,4 +1,4 @@
-//nolint:staticcheck // diagnostic capitalization is part of the established contract
+//lint:file-ignore ST1005 Git diagnostic capitalization is part of the established contract.
 package cohesion
 
 import (

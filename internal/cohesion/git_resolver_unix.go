@@ -1,5 +1,6 @@
 //go:build darwin || linux
 
+//lint:file-ignore ST1005 Git diagnostic capitalization is part of the established contract.
 //nolint:modernize,noctx // preserve platform contract
 package cohesion
 
