@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.6.2 - 2026-09-09
+
+### Fixed
+
+- Restored task-owned service fixtures and their environment for modules that
+  declare required services when the bounded local or pull-request check runs.
+- Allowed nested-module documentation to link to files owned by its containing
+  repository while retaining repository-boundary enforcement.
+
 ## 1.6.1 - 2026-09-09
 
 ### Fixed

@@ -170,7 +170,9 @@ func (runner Runner) Local(ctx context.Context, selection []string) error {
 		output = io.Discard
 	}
 	for _, module := range modules {
-		if err := runner.checkModuleLocal(ctx, output, module); err != nil {
+		if err := runner.withModuleServices(ctx, module, func(scoped Runner) error {
+			return scoped.checkModuleLocal(ctx, output, module)
+		}); err != nil {
 			return err
 		}
 	}
@@ -437,7 +439,7 @@ func (runner Runner) checkModuleLocal(ctx context.Context, output io.Writer, mod
 	}
 	if module.Gates["documentation"] {
 		if err := announce(output, module.Directory, "docs-local", func() error {
-			return docscheck.Check(directory)
+			return docscheck.CheckWithin(runner.Root, directory)
 		}); err != nil {
 			return err
 		}

@@ -21,6 +21,40 @@ func TestCheckAcceptsNavigableDocumentation(t *testing.T) {
 	}
 }
 
+func TestCheckWithinAcceptsNestedDocumentationLinksToRepositoryFiles(t *testing.T) {
+	root := t.TempDir()
+	module := filepath.Join(root, "adapters", "example")
+	write(t, filepath.Join(root, "SECURITY.md"), "# Security\n")
+	write(t, filepath.Join(module, "README.md"), "[security](../../SECURITY.md)\n")
+	write(t, filepath.Join(module, "docs", "guide.md"), "[module](../README.md)\n")
+	if err := CheckWithin(root, module); err != nil {
+		t.Fatalf("CheckWithin() error = %v", err)
+	}
+}
+
+func TestCheckWithinRejectsDocumentationOutsideRepository(t *testing.T) {
+	root := t.TempDir()
+	module := t.TempDir()
+	write(t, filepath.Join(module, "README.md"), "# Module\n")
+	if err := CheckWithin(root, module); err == nil || !strings.Contains(err.Error(), "inside repository") {
+		t.Fatalf("CheckWithin() error = %v", err)
+	}
+}
+
+func TestCheckWithinRejectsLinksThroughRepositorySymlinks(t *testing.T) {
+	root := t.TempDir()
+	module := filepath.Join(root, "adapters", "example")
+	outside := t.TempDir()
+	write(t, filepath.Join(outside, "policy.md"), "# Outside\n")
+	if err := os.Symlink(outside, filepath.Join(root, "policy-link")); err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(module, "README.md"), "[policy](../../policy-link/policy.md)\n")
+	if err := CheckWithin(root, module); err == nil || !strings.Contains(err.Error(), "symlink") {
+		t.Fatalf("CheckWithin() error = %v", err)
+	}
+}
+
 func TestCheckIgnoresLinkShapedCode(t *testing.T) {
 	root := basic(t)
 	write(t, filepath.Join(root, "docs", "code.md"), "# Code\n\n```go\nbuilder := structplan.New[User](validation.DefaultLimits())\n```\n\n~~~go\n[value](missing)\n~~~\n\n    [indented](missing)\n\n`structplan.New[User](validation.DefaultLimits())`\n")
