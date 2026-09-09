@@ -183,18 +183,28 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			return fmt.Errorf("%w: duplicate checkpoint identity %s %s", ErrInvalid, checkpoint.Module, checkpoint.Package)
 		}
 		seen[identity] = struct{}{}
-		review, currentInput, legacyInput, err := campaign.packageInputs(ctx, checkpoint.Package)
+		verifierDigest := ledger.VerifierMigrationReview.GremlinsVerifierSHA256
+		if !supportedLegacyVerifierDigest(verifierDigest) {
+			return fmt.Errorf("approve checkpoint %s %s: %w: unsupported legacy verifier identity", checkpoint.Module, checkpoint.Package, ErrUnapproved)
+		}
+		inputs, err := campaign.packageInputsForVerifiers(ctx, checkpoint.Package, LegacyVerifierDigest(), verifierDigest)
 		if err != nil {
 			return err
 		}
-		if checkpoint.Mutants == 0 && review == nil {
-			return fmt.Errorf("%w: zero-mutant package %s lacks an exact review", ErrInvalid, packageTarget(checkpoint.Package))
+		currentInputs := inputs[LegacyVerifierDigest()]
+		approvalInputs := []string{strings.TrimPrefix(currentInputs.legacy, "sha256:")}
+		if verifierDigest != LegacyVerifierDigest() {
+			legacyInputs := inputs[verifierDigest]
+			approvalInputs = append(approvalInputs,
+				strings.TrimPrefix(legacyInputs.current, "sha256:"),
+				strings.TrimPrefix(legacyInputs.legacy, "sha256:"),
+			)
 		}
-		if err := ledger.approveTransition(
+		if err := ledger.approveCandidates(
 			checkpoint,
-			strings.TrimPrefix(currentInput, "sha256:"),
-			strings.TrimPrefix(legacyInput, "sha256:"),
-			LegacyVerifierDigest(),
+			strings.TrimPrefix(currentInputs.current, "sha256:"),
+			approvalInputs,
+			verifierDigest,
 		); err != nil {
 			if errors.Is(err, ErrInputChanged) {
 				changedInputs = errors.Join(changedInputs, fmt.Errorf("%s %s: %w", checkpoint.Module, checkpoint.Package, err))
@@ -204,7 +214,7 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			}
 			return fmt.Errorf("approve checkpoint %s %s: %w", checkpoint.Module, checkpoint.Package, err)
 		}
-		_, _, stored, storedReport, err := storeReport(operatingReportFiles{}, campaign.MutationRoot, currentInput, checkpoint.Report)
+		_, _, stored, storedReport, err := storeReport(operatingReportFiles{}, campaign.MutationRoot, currentInputs.current, checkpoint.Report)
 		if err != nil {
 			return err
 		}
@@ -218,11 +228,11 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 		record := evidence.Record{
 			SchemaVersion: evidence.SchemaVersion, Repository: campaign.Policy.Repository,
 			Module: campaign.Policy.ModuleDirectory, Package: checkpoint.Package, Gate: "mutation",
-			InputDigest: currentInput, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
+			InputDigest: currentInputs.current, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
 			ReportDigest: stored.Digest, CompletedAt: now().UTC(),
 			Environment: importedEnvironment(checkpoint.Environment),
 		}
-		existing, loadErr := evidence.Load(campaign.EvidenceRoot, "mutation", currentInput)
+		existing, loadErr := evidence.Load(campaign.EvidenceRoot, "mutation", currentInputs.current)
 		if loadErr == nil && existing.ReportDigest == legacyCanonicalReportDigest(storedReport) {
 			record.ReportDigest = existing.ReportDigest
 		} else if loadErr != nil && !errors.Is(loadErr, os.ErrNotExist) {
@@ -365,15 +375,28 @@ func (campaign Campaign) packageInput(ctx context.Context, packageDirectory stri
 }
 
 func (campaign Campaign) packageInputs(ctx context.Context, packageDirectory string) (*ZeroReview, string, string, error) {
-	root, err := filepath.EvalSymlinks(campaign.Root)
-	if err != nil {
-		return nil, "", "", fmt.Errorf("%w: resolve repository root: %s", ErrInvalid, err.Error())
-	}
-	source, err := SourceDigest(root, campaign.Policy.ModuleDirectory, packageDirectory)
+	inputs, err := campaign.packageInputsForVerifiers(ctx, packageDirectory, LegacyVerifierDigest())
 	if err != nil {
 		return nil, "", "", err
 	}
-	review, _ := campaign.ZeroReviews.Review(campaign.Policy.ModuleDirectory, packageDirectory, source, GremlinsVersion, LegacyVerifierDigest())
+	current := inputs[LegacyVerifierDigest()]
+	return current.review, current.current, current.legacy, nil
+}
+
+type verifierPackageInputs struct {
+	review          *ZeroReview
+	current, legacy string
+}
+
+func (campaign Campaign) packageInputsForVerifiers(ctx context.Context, packageDirectory string, verifiers ...string) (map[string]verifierPackageInputs, error) {
+	root, err := filepath.EvalSymlinks(campaign.Root)
+	if err != nil {
+		return nil, fmt.Errorf("%w: resolve repository root: %s", ErrInvalid, err.Error())
+	}
+	source, err := SourceDigest(root, campaign.Policy.ModuleDirectory, packageDirectory)
+	if err != nil {
+		return nil, err
+	}
 	policy := InputPolicy{
 		ModuleDirectory: campaign.Policy.ModuleDirectory, PackageDirectory: packageDirectory,
 		ModulePath: campaign.Policy.ModulePath, GoVersion: campaign.Policy.GoVersion,
@@ -388,10 +411,21 @@ func (campaign Campaign) packageInputs(ctx context.Context, packageDirectory str
 	arguments = append(arguments, packageTarget(packageDirectory))
 	directory := filepath.Join(root, filepath.FromSlash(campaign.Policy.ModuleDirectory))
 	if err := campaign.Process(ctx, "go", arguments, directory, campaign.commandEnvironment(), &listing, io.Discard); err != nil {
-		return nil, "", "", fmt.Errorf("list mutation input for %s: %w", packageDirectory, err)
+		return nil, fmt.Errorf("list mutation input for %s: %w", packageDirectory, err)
 	}
-	current, legacy, err := inputDigests(root, policy, strings.NewReader(listing.String()), review, campaign.Root)
-	return review, current, legacy, err
+	result := make(map[string]verifierPackageInputs, len(verifiers))
+	for _, verifier := range verifiers {
+		if _, exists := result[verifier]; exists {
+			continue
+		}
+		review, _ := campaign.ZeroReviews.Review(campaign.Policy.ModuleDirectory, packageDirectory, source, GremlinsVersion, verifier)
+		current, legacy, inputErr := inputDigestsForVerifier(root, policy, strings.NewReader(listing.String()), review, verifier, campaign.Root)
+		if inputErr != nil {
+			return nil, inputErr
+		}
+		result[verifier] = verifierPackageInputs{review: review, current: current, legacy: legacy}
+	}
+	return result, nil
 }
 
 func (campaign Campaign) prepareExecution(ctx context.Context, state *campaignState) error {
