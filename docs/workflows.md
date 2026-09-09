@@ -76,8 +76,11 @@ Set `release_dry_run: true` only for an explicit release rehearsal; this first
 validates the stable release contract and then runs the complete release
 dry-run for every releasable module. Set `release_module` to an exact module
 directory to limit the release matrix and module-scoped release checks to that
-independently versioned module. Whole-repository structure, specification, and
-CodeQL checks still run. A blank selector preserves the all-module rehearsal,
+independently versioned module. Whole-repository structure, offline
+specification validation, and CodeQL checks still run. Mutable online authority
+and errata monitoring is separate from pull-request and release feedback and
+runs only on the caller's scheduled monitoring event. A blank selector
+preserves the all-module rehearsal,
 and a non-blank selector without `release_dry_run: true` fails closed. Existing
 consumer callers must expose and forward `release_module` before they can
 dispatch an exact-module hosted rehearsal; a tooling-pin upgrade alone does not
@@ -107,3 +110,11 @@ thin CI caller and never force-pushes an existing rollout branch.
 
 This repository bootstraps its own CI from source so the first release does not
 depend on itself. Consumer repositories always use released binaries.
+
+Tooling tags publish only the four platform archives, their SBOMs, the release
+manifest, and checksums by default. Catalog and source-lock assets are added
+only at a defined ecosystem milestone: refresh and review the source lock, then
+set the repository variable `GOLIB_CATALOG_MILESTONE_TAG` to the exact new tag
+before pushing it. The exact-tag comparison prevents a stale variable from
+expanding later tooling releases. Previously published release assets remain
+immutable.

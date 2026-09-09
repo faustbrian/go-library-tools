@@ -12,6 +12,9 @@ const (
 	GremlinsVersion  = "v0.6.0"
 	gremlinsSum      = "h1:3G2ROO0I3q4bb5bxElQIUITTuEbl1iOfVYFqunGwrJI="
 	gremlinsGoModSum = "h1:LLbvJR33CWsu1sgvQ4qMzU2rqkwYJK3Qy/Al59eHKjA="
+	// This verifier identity was published by v1.0.0 through v1.5.6. Its
+	// mutation semantics remain compatible with the per-phase timeout fix.
+	publishedVerifierDigestV1 = "9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108"
 )
 
 //go:embed assets/*
@@ -39,8 +42,7 @@ func VerifierAssets() map[string][]byte {
 	return assets
 }
 
-// LegacyVerifierDigest reproduces the verifier identity recorded by existing
-// approved mutation checkpoints.
+// LegacyVerifierDigest reproduces the current embedded verifier identity.
 func LegacyVerifierDigest() string {
 	assets := VerifierAssets()
 	hash := sha256.New()
@@ -52,4 +54,8 @@ func LegacyVerifierDigest() string {
 		_, _ = fmt.Fprintf(hash, "file\t%s\t%s\n", asset.identity, hex.EncodeToString(assetHash[:]))
 	}
 	return hex.EncodeToString(hash.Sum(nil))
+}
+
+func supportedLegacyVerifierDigest(digest string) bool {
+	return digest == LegacyVerifierDigest() || digest == publishedVerifierDigestV1
 }

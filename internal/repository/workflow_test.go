@@ -52,6 +52,7 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 		"security-events: write",
 		"golib repository check",
 		"golib workflows check",
+		"golib specification check",
 		"golib specification check --online",
 		"golib check --local --module",
 		"github/codeql-action/init@",
@@ -69,6 +70,32 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 	}
 	if strings.Contains(content, "packages: read") {
 		t.Fatal("reusable workflow requests package access that consumer callers do not grant")
+	}
+}
+
+func TestReusableWorkflowKeepsOnlineSpecificationMonitoringOutOfOrdinaryPullRequests(t *testing.T) {
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &workflow); err != nil {
+		t.Fatal(err)
+	}
+	offline := 0
+	online := 0
+	for _, step := range workflow.Jobs["repository-contract"].Steps {
+		switch strings.TrimSpace(step.Run) {
+		case "golib specification check":
+			if step.If != "" {
+				t.Fatalf("offline specification check condition = %q, want unconditional", step.If)
+			}
+			offline++
+		case "golib specification check --online":
+			if step.If != "github.event_name == 'schedule'" {
+				t.Fatalf("online specification check condition = %q, want scheduled monitoring only", step.If)
+			}
+			online++
+		}
+	}
+	if offline != 1 || online != 1 {
+		t.Fatalf("specification steps = offline %d, online %d; want one of each", offline, online)
 	}
 }
 
@@ -709,7 +736,7 @@ func TestReleaseWorkflowBuildsAndAttestsEverySupportedPlatform(t *testing.T) {
 	}
 }
 
-func TestReleaseWorkflowPublishesVerifiedCohesionCatalogs(t *testing.T) {
+func TestReleaseWorkflowPublishesCatalogsOnlyForExplicitMilestones(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/release.yml")
 	for _, required := range []string{
 		"  prepare-catalog:\n",
@@ -743,6 +770,8 @@ func TestReleaseWorkflowPublishesVerifiedCohesionCatalogs(t *testing.T) {
 		"needs: prepare-publication",
 		"needs: verify-publication",
 		"needs: attest-publication",
+		"if: vars.GOLIB_CATALOG_MILESTONE_TAG == github.ref_name",
+		"PUBLISH_CATALOGS: ${{ vars.GOLIB_CATALOG_MILESTONE_TAG == github.ref_name }}",
 	} {
 		if !strings.Contains(content, required) {
 			t.Errorf("release workflow lacks catalog publication contract %q", required)
@@ -792,6 +821,9 @@ func TestReleaseWorkflowPublishesVerifiedCohesionCatalogs(t *testing.T) {
 	}
 	prepare := content[prepareStart:verifyStart]
 	for _, required := range []string{
+		"if: always() && needs.build.result == 'success'",
+		"needs.verify-catalog.result == 'skipped'",
+		"if: needs.verify-catalog.result == 'success'",
 		"release-manifest.json",
 		"checksums.txt",
 		"name: release-publication",
@@ -803,6 +835,8 @@ func TestReleaseWorkflowPublishesVerifiedCohesionCatalogs(t *testing.T) {
 	verify := content[verifyStart:attestStart]
 	for _, required := range []string{
 		"needs: prepare-publication",
+		"PUBLISH_CATALOGS: ${{ vars.GOLIB_CATALOG_MILESTONE_TAG == github.ref_name }}",
+		"--argjson expected_count",
 		"name: release-publication",
 		"sha256sum --check checksums.txt",
 		"release-manifest.json",

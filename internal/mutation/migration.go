@@ -152,7 +152,7 @@ func detailedReason(name, reason string) error {
 // Approve verifies the complete old checkpoint identity and, when necessary,
 // its exact replacement input identity.
 func (ledger MigrationLedger) Approve(checkpoint Checkpoint, currentInput, expectedVerifier string) error {
-	return ledger.approve(checkpoint, currentInput, "", expectedVerifier)
+	return ledger.approve(checkpoint, currentInput, nil, expectedVerifier)
 }
 
 // approveTransition accepts the current input identity when the same observed
@@ -160,15 +160,21 @@ func (ledger MigrationLedger) Approve(checkpoint Checkpoint, currentInput, expec
 // built-in removal of unobserved sibling modules from package identity without
 // treating unrelated repository structure as a source change.
 func (ledger MigrationLedger) approveTransition(checkpoint Checkpoint, currentInput, legacyInput, expectedVerifier string) error {
-	return ledger.approve(checkpoint, currentInput, legacyInput, expectedVerifier)
+	return ledger.approve(checkpoint, currentInput, []string{legacyInput}, expectedVerifier)
 }
 
-func (ledger MigrationLedger) approve(checkpoint Checkpoint, currentInput, legacyInput, expectedVerifier string) error {
+func (ledger MigrationLedger) approveCandidates(checkpoint Checkpoint, currentInput string, alternativeInputs []string, expectedVerifier string) error {
+	return ledger.approve(checkpoint, currentInput, alternativeInputs, expectedVerifier)
+}
+
+func (ledger MigrationLedger) approve(checkpoint Checkpoint, currentInput string, alternativeInputs []string, expectedVerifier string) error {
 	if !digestRE.MatchString(currentInput) {
 		return fmt.Errorf("%w: requested identity is malformed", ErrUnapproved)
 	}
-	if legacyInput != "" && !digestRE.MatchString(legacyInput) {
-		return fmt.Errorf("%w: requested identity is malformed", ErrUnapproved)
+	for _, input := range alternativeInputs {
+		if input != "" && !digestRE.MatchString(input) {
+			return fmt.Errorf("%w: requested identity is malformed", ErrUnapproved)
+		}
 	}
 	if !digestRE.MatchString(expectedVerifier) {
 		return fmt.Errorf("%w: requested identity is malformed", ErrUnapproved)
@@ -189,8 +195,18 @@ func (ledger MigrationLedger) approve(checkpoint Checkpoint, currentInput, legac
 	if ledger.inputApproved(checkpoint, currentInput, expectedVerifier) {
 		return nil
 	}
-	if legacyInput != "" && legacyInput != currentInput && ledger.inputApproved(checkpoint, legacyInput, expectedVerifier) {
-		return nil
+	seen := map[string]struct{}{currentInput: {}}
+	for _, input := range alternativeInputs {
+		if input == "" {
+			continue
+		}
+		if _, duplicate := seen[input]; duplicate {
+			continue
+		}
+		seen[input] = struct{}{}
+		if ledger.inputApproved(checkpoint, input, expectedVerifier) {
+			return nil
+		}
 	}
 	return fmt.Errorf("%w: %w: replacement input identity is not uniquely approved for requested replacement %s", ErrUnapproved, ErrInputChanged, currentInput)
 }

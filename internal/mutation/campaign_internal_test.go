@@ -133,6 +133,88 @@ func TestCampaignImportReusesApprovedLegacyEvidenceReportIdentity(t *testing.T) 
 	}
 }
 
+func TestCampaignImportsPublishedLegacyVerifierEvidence(t *testing.T) {
+	const publishedVerifier = "9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108"
+	for name, selectPublishedInput := range map[string]func(verifierPackageInputs) string{
+		"v2": func(inputs verifierPackageInputs) string { return inputs.current },
+		"v1": func(inputs verifierPackageInputs) string { return inputs.legacy },
+	} {
+		t.Run(name, func(t *testing.T) {
+			campaign, _ := campaignFixture(t)
+			inputs, err := campaign.packageInputsForVerifiers(context.Background(), ".", LegacyVerifierDigest(), publishedVerifier)
+			if err != nil {
+				t.Fatal(err)
+			}
+			currentInput := inputs[LegacyVerifierDigest()].current
+			publishedInput := selectPublishedInput(inputs[publishedVerifier])
+			if publishedInput == currentInput {
+				t.Fatal("fixture does not exercise the published verifier input identity")
+			}
+			checkpoint, ledger := approvedImportFixture(t, publishedInput)
+			checkpoint.VerifierDigest = publishedVerifier
+			ledger.VerifierMigrationReview.GremlinsVerifierSHA256 = publishedVerifier
+			for index := range ledger.VerifierMigrations {
+				ledger.VerifierMigrations[index].GremlinsVerifierSHA256 = publishedVerifier
+			}
+			for index := range ledger.Entries {
+				ledger.Entries[index].GremlinsVerifierSHA256 = publishedVerifier
+			}
+
+			if err := campaign.Import(context.Background(), []Checkpoint{checkpoint}, ledger); err != nil {
+				t.Fatalf("Import(published legacy verifier) error = %v", err)
+			}
+			reused, _, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", ".", currentInput)
+			if err != nil || !reused {
+				t.Fatalf("Reuse(current input) = %v, %v", reused, err)
+			}
+			record, err := evidence.Load(campaign.EvidenceRoot, "mutation", currentInput)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if record.VerifierDigest != SemanticVerifierDigest() {
+				t.Fatalf("stored verifier = %s, want current %s", record.VerifierDigest, SemanticVerifierDigest())
+			}
+		})
+	}
+}
+
+func TestCampaignImportsPublishedLegacyZeroMutantEvidenceWithoutCurrentReview(t *testing.T) {
+	campaign, _ := campaignFixture(t)
+	const publishedVerifier = "9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108"
+	inputs, err := campaign.packageInputsForVerifiers(context.Background(), ".", LegacyVerifierDigest(), publishedVerifier)
+	if err != nil {
+		t.Fatal(err)
+	}
+	currentInput := inputs[LegacyVerifierDigest()].current
+	checkpoint, ledger := approvedImportFixture(t, inputs[publishedVerifier].current)
+	checkpoint.VerifierDigest = publishedVerifier
+	checkpoint.Report = []byte(`{"files":[]}`)
+	result, err := ValidateReport(bytes.NewReader(checkpoint.Report))
+	if err != nil {
+		t.Fatal(err)
+	}
+	checkpoint.ReportDigest = result.Digest
+	checkpoint.Mutants = 0
+	reportDigest := strings.TrimPrefix(result.Digest, "sha256:")
+	ledger.VerifierMigrationReview.GremlinsVerifierSHA256 = publishedVerifier
+	for index := range ledger.VerifierMigrations {
+		ledger.VerifierMigrations[index].GremlinsVerifierSHA256 = publishedVerifier
+		ledger.VerifierMigrations[index].ReportSHA256 = reportDigest
+	}
+	for index := range ledger.Entries {
+		ledger.Entries[index].GremlinsVerifierSHA256 = publishedVerifier
+		ledger.Entries[index].ReportSHA256 = reportDigest
+	}
+
+	if err := campaign.Import(context.Background(), []Checkpoint{checkpoint}, ledger); err != nil {
+		t.Fatalf("Import(published zero-mutant verifier) error = %v", err)
+	}
+	reused, reusedResult, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", ".", currentInput)
+	if err != nil || !reused || reusedResult.Mutants != 0 {
+		t.Fatalf("Reuse(current zero-mutant input) = %v, %#v, %v", reused, reusedResult, err)
+	}
+}
+
 func TestCampaignImportRejectsUnapprovedExistingReportIdentity(t *testing.T) {
 	campaign, _ := campaignFixture(t)
 	_, currentInput, err := campaign.packageInput(context.Background(), ".")
@@ -307,25 +389,20 @@ func TestCampaignImportFailsClosedAtEachBoundary(t *testing.T) {
 			process.fail = "list"
 			return []Checkpoint{*checkpoint}
 		},
-		"zero mutants without review": func(_ *Campaign, _ *campaignProcess, checkpoint *Checkpoint, ledger *MigrationLedger) []Checkpoint {
-			result, err := ValidateReport(strings.NewReader(`{"files":[]}`))
-			if err != nil {
-				t.Fatal(err)
-			}
-			checkpoint.Report = []byte(`{"files":[]}`)
-			checkpoint.ReportDigest = result.Digest
-			checkpoint.Mutants = 0
-			digest := strings.TrimPrefix(result.Digest, "sha256:")
-			ledger.VerifierMigrations[0].ReportSHA256 = digest
-			ledger.Entries[0].ReportSHA256 = digest
-			return []Checkpoint{*checkpoint}
-		},
 		"unapproved current input": func(_ *Campaign, _ *campaignProcess, checkpoint *Checkpoint, ledger *MigrationLedger) []Checkpoint {
 			ledger.Entries[0].ReplacementInputDigest = strings.Repeat("b", 64)
 			return []Checkpoint{*checkpoint}
 		},
 		"unapproved verifier": func(_ *Campaign, _ *campaignProcess, checkpoint *Checkpoint, ledger *MigrationLedger) []Checkpoint {
 			ledger.VerifierMigrations = nil
+			return []Checkpoint{*checkpoint}
+		},
+		"unsupported verifier": func(_ *Campaign, _ *campaignProcess, checkpoint *Checkpoint, ledger *MigrationLedger) []Checkpoint {
+			unsupported := strings.Repeat("f", 64)
+			checkpoint.VerifierDigest = unsupported
+			ledger.VerifierMigrationReview.GremlinsVerifierSHA256 = unsupported
+			ledger.VerifierMigrations[0].GremlinsVerifierSHA256 = unsupported
+			ledger.Entries[0].GremlinsVerifierSHA256 = unsupported
 			return []Checkpoint{*checkpoint}
 		},
 		"report store": func(campaign *Campaign, _ *campaignProcess, checkpoint *Checkpoint, _ *MigrationLedger) []Checkpoint {
