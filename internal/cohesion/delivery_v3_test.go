@@ -203,6 +203,10 @@ func TestValidateManifestDeliveryJSONRunsStrictSchemaAndSemanticValidation(t *te
 	if err := validateManifestDeliveryJSON(encode(valid), requirements); err != nil {
 		t.Fatalf("validateManifestDeliveryJSON(valid) error = %v", err)
 	}
+	otherRequirements := "sha256:" + strings.Repeat("d", 64)
+	if err := validateManifestDeliveryJSON(encode(valid), otherRequirements); err == nil {
+		t.Fatal("validateManifestDeliveryJSON(wrong requirements digest) error = nil")
+	}
 
 	for name, path := range map[string]string{
 		"one below":       strings.Repeat("a", 4095),

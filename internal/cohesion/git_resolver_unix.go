@@ -572,7 +572,10 @@ func openRegularAt(rootFD int, path string) (int, uint32, error) {
 		_ = unix.Close(fd)
 		return -1, 0, errors.New("resolved path is not a regular file")
 	}
-	return fd, uint32(stat.Mode), nil
+	// Stat_t.Mode is uint16 on Darwin and uint32 on Linux. Normalize through
+	// uint64 so both platform builds retain an explicit width-normalizing cast.
+	mode := uint64(stat.Mode)
+	return fd, uint32(mode), nil
 }
 
 func openAtComponents(rootFD int, path string, finalFlags int) (int, error) {
