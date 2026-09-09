@@ -65,14 +65,15 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 
 ## Evidence
 
-- Evidence identity MUST include every behavior-affecting source, test,
-  configuration, fixture, service, verifier, and tool input.
+- Reused expensive evidence and Tier D trust-boundary evidence MUST bind the
+  material immutable inputs needed to prove its exact claim. Routine Tier A,
+  B, and C results MAY remain ephemeral when no later decision relies on them.
 - Git commits, branches, tags, and history shape MAY be metadata but MUST NOT
   invalidate content-identical evidence.
-- Completed evidence MUST be persisted atomically as soon as it is received.
+- Evidence selected for durable publication MUST be persisted atomically.
   Unrelated changes MUST NOT trigger broad reruns.
 - Missing, partial, corrupt, forged, ambiguous, or mismatched evidence MUST be
-  rejected.
+  rejected when an applicable risk-selected or Tier D gate requires it.
 
 ## Git And Delivery
 

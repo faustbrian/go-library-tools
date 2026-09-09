@@ -34,6 +34,23 @@ func TestValidateReturnsExactlyTheSelectedReleasableModule(t *testing.T) {
 	}
 }
 
+func TestValidateAllowsRiskSelectedGatesToBeDisabled(t *testing.T) {
+	for _, gate := range []string{"coverage", "mutation", "race"} {
+		t.Run(gate, func(t *testing.T) {
+			selected := module(".", "v")
+			selected.Gates[gate] = false
+
+			directories, err := Validate(
+				inventory.Inventory{Modules: []inventory.Module{selected}},
+				stablePolicy(),
+			)
+			if err != nil || strings.Join(directories, ",") != "." {
+				t.Fatalf("Validate() = %#v, %v", directories, err)
+			}
+		})
+	}
+}
+
 func TestValidateRejectsInvalidReleaseSelections(t *testing.T) {
 	catalog := inventory.Inventory{Modules: []inventory.Module{
 		module(".", "v"),
@@ -69,7 +86,7 @@ func TestValidateRejectsInvalidReleaseContracts(t *testing.T) {
 		{"prerelease module", stablePolicy(), func() inventory.Module { value := module(".", "v"); value.Version = "0.9.0"; return value }(), "stable version"},
 		{"root prefix", stablePolicy(), module(".", "root/v"), "tag prefix"},
 		{"nested prefix", stablePolicy(), module("nested", "v"), "tag prefix"},
-		{"disabled gate", stablePolicy(), func() inventory.Module { value := module(".", "v"); value.Gates["mutation"] = false; return value }(), "mutation is disabled"},
+		{"disabled gate", stablePolicy(), func() inventory.Module { value := module(".", "v"); value.Gates["tests"] = false; return value }(), "tests is disabled"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

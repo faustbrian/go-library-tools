@@ -4,6 +4,29 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.7.0 - 2026-09-09
+
+### Added
+
+- Added backward-compatible structured compatibility-set fields for recipes,
+  external versions, upgrade and rollback guidance, and exclusions.
+
+### Fixed
+
+- Resolved nested compatibility modules through their owning repositories and
+  tag prefixes, and enforced immutable draft and published-set identities.
+- Required published sets to remain installable and verified against exact
+  remote tags plus the public Go proxy without weakening drafts or depending
+  on unrelated sibling checkouts.
+- Kept risk-selected coverage, race, and mutation optional during release
+  validation instead of forcing every releasable module to enable them.
+- Kept documentation-only pull requests on structural validation without
+  launching module quality, release rehearsal, or CodeQL work.
+- Limited durable evidence binding to reused expensive results and Tier D
+  trust boundaries instead of imposing recursive evidence on routine work.
+- Limited aggregate catalog and source-lock publication wording to ecosystem
+  milestones rather than every tooling release.
+
 ## 1.6.2 - 2026-09-09
 
 ### Fixed

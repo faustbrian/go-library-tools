@@ -190,6 +190,131 @@ func TestReusableWorkflowBuildsReleaseModuleMatrix(t *testing.T) {
 	}
 }
 
+func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &workflow); err != nil {
+		t.Fatal(err)
+	}
+	prepare := workflow.Jobs["prepare"]
+	var scopeScript string
+	for _, step := range prepare.Steps {
+		if step.ID == "scope" {
+			scopeScript = step.Run
+			break
+		}
+	}
+	if scopeScript == "" {
+		t.Fatal("reusable workflow has no executable change-scope selector")
+	}
+	if workflow.Jobs["quality"].If != "needs.prepare.outputs.runtime == 'true'" {
+		t.Fatalf("quality condition = %q", workflow.Jobs["quality"].If)
+	}
+	if workflow.Jobs["codeql"].If != "needs.prepare.outputs.runtime == 'true'" {
+		t.Fatalf("CodeQL condition = %q", workflow.Jobs["codeql"].If)
+	}
+
+	repository := t.TempDir()
+	run := func(t *testing.T, event, dryRun, changedPath string, rename bool) string {
+		t.Helper()
+		if combined, err := exec.CommandContext(t.Context(), "git", "init", "-q", repository).CombinedOutput(); err != nil {
+			t.Fatalf("git init: %v\n%s", err, combined)
+		}
+		command := exec.CommandContext(t.Context(), "git", "config", "user.email", "fixture@example.com")
+		command.Dir = repository
+		if combined, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git config: %v\n%s", err, combined)
+		}
+		command = exec.CommandContext(t.Context(), "git", "config", "user.name", "Fixture")
+		command.Dir = repository
+		if combined, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git config: %v\n%s", err, combined)
+		}
+		baseline := filepath.Join(repository, "baseline.go")
+		if err := os.WriteFile(baseline, []byte("package fixture\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		command = exec.CommandContext(t.Context(), "git", "add", "baseline.go")
+		command.Dir = repository
+		if combined, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git add: %v\n%s", err, combined)
+		}
+		command = exec.CommandContext(t.Context(), "git", "commit", "-q", "-m", "baseline")
+		command.Dir = repository
+		if combined, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git commit: %v\n%s", err, combined)
+		}
+		command = exec.CommandContext(t.Context(), "git", "rev-parse", "HEAD")
+		command.Dir = repository
+		baseBytes, err := command.Output()
+		if err != nil {
+			t.Fatal(err)
+		}
+		base := strings.TrimSpace(string(baseBytes))
+		path := filepath.Join(repository, changedPath)
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if rename {
+			command = exec.CommandContext(t.Context(), "git", "mv", "baseline.go", changedPath)
+			command.Dir = repository
+			if combined, err := command.CombinedOutput(); err != nil {
+				t.Fatalf("git mv: %v\n%s", err, combined)
+			}
+		} else {
+			if err := os.WriteFile(path, []byte("changed\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+		}
+		command = exec.CommandContext(t.Context(), "git", "add", changedPath)
+		command.Dir = repository
+		if combined, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git add: %v\n%s", err, combined)
+		}
+		command = exec.CommandContext(t.Context(), "git", "commit", "-q", "-m", "change")
+		command.Dir = repository
+		if combined, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git commit: %v\n%s", err, combined)
+		}
+		output := filepath.Join(t.TempDir(), "github-output")
+		command = exec.CommandContext(t.Context(), "bash", "-c", scopeScript)
+		command.Dir = repository
+		command.Env = append(os.Environ(),
+			"BASE_SHA="+base,
+			"EVENT_NAME="+event,
+			"GITHUB_OUTPUT="+output,
+			"RELEASE_DRY_RUN="+dryRun,
+		)
+		if combined, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("scope selector: %v\n%s", err, combined)
+		}
+		contents, err := os.ReadFile(output)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return strings.TrimSpace(strings.TrimPrefix(string(contents), "runtime="))
+	}
+
+	for _, test := range []struct {
+		name, event, dryRun, path, want string
+		rename                          bool
+	}{
+		{name: "policy only", event: "pull_request", dryRun: "false", path: "AGENTS.md", want: "false"},
+		{name: "documentation only", event: "pull_request", dryRun: "false", path: "docs/usage.md", want: "false"},
+		{name: "structured documentation metadata", event: "pull_request", dryRun: "false", path: "docs/ecosystem/compatibility-sets.json", want: "true"},
+		{name: "source renamed to documentation", event: "pull_request", dryRun: "false", path: "docs/baseline.md", want: "true", rename: true},
+		{name: "source", event: "pull_request", dryRun: "false", path: "internal/example/example.go", want: "true"},
+		{name: "release rehearsal", event: "pull_request", dryRun: "true", path: "AGENTS.md", want: "true"},
+		{name: "main push", event: "push", dryRun: "false", path: "AGENTS.md", want: "true"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			repository = t.TempDir()
+			if got := run(t, test.event, test.dryRun, test.path, test.rename); got != test.want {
+				t.Fatalf("runtime = %q, want %q", got, test.want)
+			}
+		})
+	}
+}
+
 func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 	var reusable workflowDocument
 	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &reusable); err != nil {
