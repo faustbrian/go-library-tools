@@ -19,6 +19,11 @@ import (
 	"github.com/faustbrian/go-library-tools/internal/evidence"
 )
 
+const (
+	minimumMutationPhaseTimeout = time.Minute
+	mutationPhaseSafetyMargin   = 15 * time.Second
+)
+
 // CampaignPolicy contains the canonical module and package policy required by
 // mutation execution. Service lifecycle remains owned by the caller.
 type CampaignPolicy struct {
@@ -373,9 +378,18 @@ func (campaign Campaign) prepareExecution(ctx context.Context, state *campaignSt
 	if err := campaign.Process(ctx, "go", arguments, directory, campaign.commandEnvironment(), io.Discard, io.Discard); err != nil {
 		return fmt.Errorf("build shared mutation coverage: %w", err)
 	}
-	elapsed := max(time.Since(started).Round(time.Second), time.Second)
-	state.coverageElapsed = elapsed.String()
+	state.coverageElapsed = mutationPhaseTimeout(time.Since(started)).String()
 	return nil
+}
+
+func mutationPhaseTimeout(baseline time.Duration) time.Duration {
+	// Round upward so sub-second measurement differences cannot shorten the
+	// budget, then add room for the cold compile owned by each verifier phase.
+	measured := baseline.Truncate(time.Second)
+	if baseline > measured {
+		measured += time.Second
+	}
+	return max(measured+mutationPhaseSafetyMargin, minimumMutationPhaseTimeout)
 }
 
 func appendTagArgument(arguments, tags []string) []string {

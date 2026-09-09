@@ -1,6 +1,7 @@
 package cohesion_test
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"strings"
@@ -46,6 +47,48 @@ func TestCheckCountsAValidReleasableClassifiedModule(t *testing.T) {
 		report.Summary.ClassifiedModules == nil || *report.Summary.ClassifiedModules != 1 ||
 		report.Summary.ErrorCount != 0 || len(report.Diagnostics) != 0 {
 		t.Fatalf("Check(valid) = %#v", report)
+	}
+}
+
+func TestCheckValidatesOptionalSchemaV3CohesionMetadata(t *testing.T) {
+	root := fixture(t, 2, ",\n    \"cohesion\": "+validCohesion)
+	path := filepath.Join(root, "modules.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var manifest map[string]any
+	if err := json.Unmarshal(data, &manifest); err != nil {
+		t.Fatal(err)
+	}
+	manifest["schema_id"] = "urn:golib:cohesion:module-manifest:v3"
+	manifest["schema_version"] = 3
+	modules, ok := manifest["modules"].([]any)
+	if !ok || len(modules) != 1 {
+		t.Fatalf("schema v3 fixture modules = %#v", manifest["modules"])
+	}
+	module, ok := modules[0].(map[string]any)
+	if !ok {
+		t.Fatalf("schema v3 fixture module = %#v", modules[0])
+	}
+	for _, field := range []string{"goal_status", "goal_files", "goal_evidence", "provenance"} {
+		delete(module, field)
+	}
+	metadata, ok := module["cohesion"].(map[string]any)
+	if !ok {
+		t.Fatalf("schema v3 fixture cohesion = %#v", module["cohesion"])
+	}
+	delete(metadata, "delivery")
+	metadata["family"] = "foundations"
+	encoded, err := json.Marshal(manifest)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, path, string(encoded))
+
+	report := cohesion.Check(root, policy())
+	if report.Valid || !hasDiagnostic(report, "invalid-value", "/modules/0/cohesion/family") {
+		t.Fatalf("Check(schema v3 family mismatch) = %#v", report)
 	}
 }
 

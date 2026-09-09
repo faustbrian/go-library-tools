@@ -21,7 +21,7 @@ func TestArgumentsMatchPinnedCampaignContract(t *testing.T) {
 	want := []string{
 		"unleash", "./adapter", "--integration", "--coverpkg", "./adapter",
 		"--exclude-files", "^.+/", "--workers", "4", "--test-cpu", "1",
-		"--timeout-coefficient", "10", "--threshold-efficacy", "100",
+		"--timeout-coefficient", "1", "--threshold-efficacy", "100",
 		"--threshold-mcover", "100", "--arithmetic-base", "--conditionals-boundary",
 		"--conditionals-negation", "--invert-assignments", "--invert-bitwise",
 		"--invert-bwassign", "--increment-decrement", "--invert-logical",

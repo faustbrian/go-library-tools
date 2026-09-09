@@ -58,6 +58,46 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 	}
 }
 
+func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
+	root := fixture(t)
+	write(t, filepath.Join(root, "README.md"), "# Example\n")
+	executor := &recordingExecutor{}
+	var output bytes.Buffer
+	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{
+		Directory: ".",
+		Gates: map[string]bool{
+			"api_compatibility": false, "coverage": true, "documentation": true,
+			"fuzz": true, "lint": true, "mutation": true, "race": true,
+			"security": true, "tests": true,
+		},
+	}}}, Executor: executor, Output: &output}
+
+	if err := runner.Local(context.Background(), []string{"."}); err != nil {
+		t.Fatalf("Local() error = %v", err)
+	}
+	want := []string{
+		"gofmt -l -- example.go",
+		"go mod tidy -diff",
+		"go vet ./...",
+		"go test ./... -count=1 -timeout=20m",
+		"go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1 run --allow-parallel-runners --timeout=10m ./...",
+		"go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...",
+	}
+	if !reflect.DeepEqual(executor.commands, want) {
+		t.Fatalf("commands = %#v, want %#v", executor.commands, want)
+	}
+	for _, gate := range []string{"format-check", "tidy-check", "safety", "vet", "test", "lint", "staticcheck", "docs-local"} {
+		if !strings.Contains(output.String(), "[.] "+gate+"\n") {
+			t.Errorf("output does not include gate %q: %s", gate, output.String())
+		}
+	}
+	for _, gate := range []string{"coverage", "mutation", "race", "vulnerability", "fuzz"} {
+		if strings.Contains(output.String(), "[.] "+gate+"\n") {
+			t.Errorf("bounded local output includes risk-selected gate %q: %s", gate, output.String())
+		}
+	}
+}
+
 func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
 	root := fixture(t)
 	write(t, filepath.Join(root, "README.md"), "# Example\n")

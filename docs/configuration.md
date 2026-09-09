@@ -40,6 +40,12 @@ goal file, requirements digest, implementation artifacts, verification gates,
 and implementation status. Unknown record fields are rejected. This metadata
 documents goal traceability but does not select or waive verification gates.
 
+Module manifests may use schema v1, v2, or v3. Schema v3 is optional and adds a
+fixed schema identity while limiting its module and cohesion fields to facts
+owned by the repository. Goal status, review state, provenance chains, and
+delivery receipts remain outside the repository manifest. Existing v1 and v2
+manifests continue to work without migration.
+
 Consumer repositories pin both `tool_version` and the lowercase SHA-256 digest
 of that release's `checksums.txt` asset. The setup action verifies this digest
 before trusting the archive checksum selected for the current platform. The

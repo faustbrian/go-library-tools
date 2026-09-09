@@ -15,7 +15,7 @@ checksum-verified release binaries and immutable workflow references.
 go build -o ./bin/golib ./cmd/golib
 ./bin/golib config validate
 ./bin/golib repository check
-./bin/golib check --all
+make local-ci
 ```
 
 A consumer keeps policy in `.golib.yaml`, module facts in `modules.json`,
@@ -24,7 +24,8 @@ package facts in `packages.json`, and source-specific evidence under
 
 ## Guarantees
 
-- exact production-package coverage and mutation requirements;
+- fast repository-local feedback with exact coverage and mutation available
+  for risk-selected aggregate milestones;
 - task-owned Go caches, temporary files, credentials, and service resources;
 - no shell evaluation of repository configuration;
 - evidence keyed by behavior-affecting content rather than Git history;

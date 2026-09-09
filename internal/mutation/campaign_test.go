@@ -56,6 +56,15 @@ func TestCampaignExecutesPersistsAndReusesPackageEvidence(t *testing.T) {
 	if process.mutations != 2 || !strings.Contains(output.String(), "killed 1/1") {
 		t.Fatalf("first campaign mutations/output = %d, %q", process.mutations, output.String())
 	}
+	if len(process.coverageElapsed) != 2 {
+		t.Fatalf("mutation phase budgets = %v", process.coverageElapsed)
+	}
+	for _, budget := range process.coverageElapsed {
+		parsed, err := time.ParseDuration(budget)
+		if err != nil || parsed < time.Minute {
+			t.Fatalf("mutation phase budget = %q, %v", budget, err)
+		}
+	}
 	records, err := evidence.Inspect(root, ".verification", "example", []string{"."})
 	if err != nil || len(records) != 2 {
 		t.Fatalf("Inspect() = %#v, %v", records, err)
@@ -77,18 +86,38 @@ func TestCampaignExecutesPersistsAndReusesPackageEvidence(t *testing.T) {
 	}
 }
 
+func TestMutationPhaseTimeoutIncludesMeasuredColdCompileAndMinimum(t *testing.T) {
+	tests := []struct {
+		name     string
+		baseline time.Duration
+		want     time.Duration
+	}{
+		{name: "minimum", baseline: time.Second, want: time.Minute},
+		{name: "rounds up", baseline: 45*time.Second + time.Nanosecond, want: 61 * time.Second},
+		{name: "measured baseline", baseline: 2 * time.Minute, want: 2*time.Minute + 15*time.Second},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := mutationPhaseTimeout(test.baseline); got != test.want {
+				t.Fatalf("mutationPhaseTimeout(%s) = %s, want %s", test.baseline, got, test.want)
+			}
+		})
+	}
+}
+
 type campaignProcess struct {
-	root           string
-	verifierSource string
-	mutations      int
-	listCalls      int
-	fail           string
-	report         *string
-	skipReport     bool
-	mutateSource   bool
-	afterMutation  func() error
-	requireTags    bool
-	requireSerial  bool
+	root            string
+	verifierSource  string
+	mutations       int
+	listCalls       int
+	fail            string
+	report          *string
+	skipReport      bool
+	mutateSource    bool
+	afterMutation   func() error
+	requireTags     bool
+	requireSerial   bool
+	coverageElapsed []string
 }
 
 func (process *campaignProcess) run(_ context.Context, name string, args []string, _ string, environment map[string]string, stdout, _ io.Writer) error {
@@ -162,6 +191,7 @@ func (process *campaignProcess) run(_ context.Context, name string, args []strin
 		}
 	case strings.HasSuffix(name, "golib-gremlins"):
 		process.mutations++
+		process.coverageElapsed = append(process.coverageElapsed, environment["GOLIB_GREMLINS_COVERAGE_ELAPSED"])
 		if process.fail == "mutation" {
 			return errors.New("mutation failed")
 		}

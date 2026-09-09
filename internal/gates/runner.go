@@ -157,6 +157,26 @@ func (runner Runner) Check(ctx context.Context, selection []string) error {
 	return nil
 }
 
+// Local runs the bounded repository-owned checks used for ordinary pull
+// requests. Expensive evidence gates remain explicit Check operations selected
+// for a material risk or release milestone.
+func (runner Runner) Local(ctx context.Context, selection []string) error {
+	modules, err := runner.selectModules(selection)
+	if err != nil {
+		return err
+	}
+	output := runner.Output
+	if output == nil {
+		output = io.Discard
+	}
+	for _, module := range modules {
+		if err := runner.checkModuleLocal(ctx, output, module); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // Coverage runs only exact production-package coverage for selected modules.
 func (runner Runner) Coverage(ctx context.Context, selection []string) error {
 	modules, err := runner.selectModules(selection)
@@ -372,6 +392,59 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 		}
 		if err := announce(output, module.Directory, gate, func() error {
 			return runner.runOperation(ctx, directory, module, operation)
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (runner Runner) checkModuleLocal(ctx context.Context, output io.Writer, module inventory.Module) error {
+	directory := filepath.Join(runner.Root, module.Directory)
+	if err := announce(output, module.Directory, "format-check", func() error {
+		return runner.checkFormatting(ctx, directory)
+	}); err != nil {
+		return err
+	}
+	if err := runner.command(ctx, output, module.Directory, "tidy-check", directory, "mod", "tidy", "-diff"); err != nil {
+		return err
+	}
+	if err := announce(output, module.Directory, "safety", func() error {
+		return checkSafety(directory)
+	}); err != nil {
+		return err
+	}
+	if module.Gates["lint"] {
+		if err := runner.command(ctx, output, module.Directory, "vet", directory, "vet", "./..."); err != nil {
+			return err
+		}
+	}
+	if module.Gates["tests"] {
+		if err := runner.command(ctx, output, module.Directory, "test", directory, testArguments(module.TestTags, false)...); err != nil {
+			return err
+		}
+	}
+	if module.Gates["lint"] {
+		if err := runner.goTool(ctx, output, module.Directory, "lint", directory,
+			"github.com/golangci/golangci-lint/v2/cmd/golangci-lint@"+golangCILintVersion,
+			"run", "--allow-parallel-runners", "--timeout=10m", "./..."); err != nil {
+			return err
+		}
+		if err := runner.goTool(ctx, output, module.Directory, "staticcheck", directory,
+			"honnef.co/go/tools/cmd/staticcheck@"+staticcheckVersion, "./..."); err != nil {
+			return err
+		}
+	}
+	if module.Gates["documentation"] {
+		if err := announce(output, module.Directory, "docs-local", func() error {
+			return docscheck.Check(directory)
+		}); err != nil {
+			return err
+		}
+	}
+	if module.Gates["api_compatibility"] {
+		if err := announce(output, module.Directory, "api", func() error {
+			return runner.apiModule(ctx, output, module, false)
 		}); err != nil {
 			return err
 		}
