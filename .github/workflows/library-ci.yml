@@ -56,6 +56,47 @@ jobs:
           RELEASE_DRY_RUN: ${{ inputs.release_dry_run }}
         run: |
           set -euo pipefail
+          reusable_pin_only() {
+            local path="$1"
+            local line payload direction
+            local old_uses='' new_uses='' old_input='' new_input=''
+            local old_uses_count=0 new_uses_count=0 old_input_count=0 new_input_count=0
+            local uses_pattern='^[[:space:]]*uses:[[:space:]]+faustbrian/go-library-tools/\.github/workflows/library-ci\.yml@([0-9a-f]{40})([[:space:]]+#[[:space:]]*v[0-9]+\.[0-9]+\.[0-9]+)?[[:space:]]*$'
+            local input_pattern='^[[:space:]]*tooling_sha:[[:space:]]+([0-9a-f]{40})[[:space:]]*$'
+            while IFS= read -r line; do
+              case "${line}" in
+                ---*|+++*|@@*) continue ;;
+                +*|-*)
+                  direction="${line:0:1}"
+                  payload="${line:1}"
+                  if [[ "${payload}" =~ ${uses_pattern} ]]; then
+                    if [[ "${direction}" == + ]]; then
+                      new_uses="${BASH_REMATCH[1]}"
+                      ((new_uses_count += 1))
+                    else
+                      old_uses="${BASH_REMATCH[1]}"
+                      ((old_uses_count += 1))
+                    fi
+                    continue
+                  fi
+                  if [[ "${payload}" =~ ${input_pattern} ]]; then
+                    if [[ "${direction}" == + ]]; then
+                      new_input="${BASH_REMATCH[1]}"
+                      ((new_input_count += 1))
+                    else
+                      old_input="${BASH_REMATCH[1]}"
+                      ((old_input_count += 1))
+                    fi
+                    continue
+                  fi
+                  return 1
+                  ;;
+              esac
+            done < <(git diff --no-ext-diff --unified=0 "${BASE_SHA}" HEAD -- "${path}")
+            [[ "${old_uses_count}" -eq 1 && "${new_uses_count}" -eq 1 &&
+              "${old_input_count}" -eq 1 && "${new_input_count}" -eq 1 &&
+              "${old_uses}" == "${old_input}" && "${new_uses}" == "${new_input}" ]]
+          }
           runtime=true
           if [[ "${EVENT_NAME}" == pull_request && "${RELEASE_DRY_RUN}" != true ]]; then
             runtime=false
@@ -65,6 +106,9 @@ jobs:
               changed=true
               case "${path}" in
                 *.md|LICENSE|LICENSE.*|NOTICE|NOTICE.*) ;;
+                .github/workflows/ci.yml)
+                  reusable_pin_only "${path}" || { runtime=true; break; }
+                  ;;
                 *) runtime=true; break ;;
               esac
             done < <(git diff --no-renames --name-only "${BASE_SHA}" HEAD)
@@ -218,7 +262,14 @@ jobs:
           bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}
       - name: Run module contract
         if: inputs.release_dry_run != true
-        run: golib check --local --module '${{ matrix.directory }}'
+        env:
+          MODULE_DIRECTORY: ${{ matrix.directory }}
+        run: |
+          if golib --help | grep -Fq 'golib check [--local]'; then
+            golib check --local --module "${MODULE_DIRECTORY}"
+          else
+            golib check --module "${MODULE_DIRECTORY}"
+          fi
       - name: Run release rehearsal
         if: inputs.release_dry_run == true
         env:

@@ -52,6 +52,9 @@ The setup action reads the exact `tool_version` from `.golib.yaml`, selects the
 Linux or macOS amd64/arm64 archive, downloads it with GitHub CLI, verifies its
 SHA-256 checksum and GitHub artifact attestation, and only then extracts the
 binary. It never evaluates a downloaded installer.
+The workflow detects whether that installed version supports the bounded local
+check mode and otherwise uses the older module-check form, so updating an
+immutable workflow pin does not force a simultaneous tool-manifest migration.
 
 Repositories whose initial dependency graph cannot be reconstructed from the
 public Go proxy may define both `GOLIB_BOOTSTRAP_PROXY_URL` and
@@ -91,9 +94,12 @@ module matrices, attributable evidence artifacts, scheduled checks, CodeQL,
 release dry-runs, and one stable final required job.
 
 Pull requests that change only Markdown, `LICENSE`, or `NOTICE` run repository
-structural validation without launching module-quality or CodeQL jobs. Source,
-configuration, workflow, structured metadata, push, scheduled, and explicit
-release-rehearsal events retain the complete applicable runtime path.
+structural validation without launching module-quality or CodeQL jobs. An
+otherwise lightweight pull request may also update only the canonical
+reusable-workflow SHA and matching `tooling_sha`; structural validation still
+checks that caller. Source, configuration, substantive workflow changes,
+structured metadata, push, scheduled, and explicit release-rehearsal events
+retain the complete applicable runtime path.
 Pull-request runs review dependency changes before the final required job.
 Workflow syntax and expression validation are available locally through
 `golib workflows check`, run as part of the repository `make ci` contract, and

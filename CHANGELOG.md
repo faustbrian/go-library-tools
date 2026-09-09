@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.7.1 - 2026-09-09
+
+### Fixed
+
+- Kept the reusable module-quality workflow compatible with supported older
+  tool manifests by using the local-check mode only when the installed binary
+  advertises it.
+- Kept policy and documentation pull requests lightweight when their only
+  workflow change updates the canonical reusable-workflow pin, while retaining
+  runtime checks for substantive workflow changes.
+
 ## 1.7.0 - 2026-09-09
 
 ### Added
