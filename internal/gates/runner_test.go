@@ -98,6 +98,29 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 	}
 }
 
+func TestLocalNestedDocumentationCanLinkToRepositoryPolicy(t *testing.T) {
+	root := fixture(t)
+	moduleRoot := filepath.Join(root, "adapters", "example")
+	if err := os.MkdirAll(moduleRoot, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	write(t, filepath.Join(root, "SECURITY.md"), "# Security\n")
+	write(t, filepath.Join(moduleRoot, "go.mod"), "module example/adapters/example\n\ngo 1.27.0\n")
+	write(t, filepath.Join(moduleRoot, "example.go"), "package example\n")
+	write(t, filepath.Join(moduleRoot, "README.md"), "[security](../../SECURITY.md)\n")
+	runner := gates.Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{
+			Directory: "adapters/example",
+			Gates:     map[string]bool{"documentation": true},
+		}}},
+		Executor: &recordingExecutor{},
+	}
+	if err := runner.Local(context.Background(), []string{"adapters/example"}); err != nil {
+		t.Fatalf("Local() error = %v", err)
+	}
+}
+
 func TestCheckRunsTypedOperationsWithoutShellInterpretation(t *testing.T) {
 	root := fixture(t)
 	write(t, filepath.Join(root, "README.md"), "# Example\n")

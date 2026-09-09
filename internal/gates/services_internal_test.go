@@ -125,6 +125,54 @@ func TestServiceCycleStartsAndClosesSelectedFixtures(t *testing.T) {
 	}
 }
 
+func TestLocalUsesModuleServiceScope(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module example\n\ngo 1.27.0\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "source.go"), []byte("package example\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	lease := &fakeServiceLease{environment: map[string]string{
+		"POSTGRES_URL": "postgres://fixture",
+		"VALKEY_ADDR":  "127.0.0.1:6379",
+	}}
+	executor := &serviceRecordingExecutor{workspace: filepath.Join(root, ".task")}
+	runner := Runner{
+		Root: root,
+		Catalog: inventory.Inventory{Modules: []inventory.Module{{
+			Directory: ".", ModulePath: "example", GoVersion: "1.27.0",
+			RequiredServices: []string{"postgresql", "valkey"},
+			Gates:            map[string]bool{"tests": true},
+		}}},
+		Executor: executor,
+		startServices: func(_ context.Context, names []string) (serviceLease, error) {
+			if !reflect.DeepEqual(names, []string{"postgresql", "valkey"}) {
+				t.Fatalf("service selection = %#v", names)
+			}
+			return lease, nil
+		},
+	}
+	if err := runner.Local(context.Background(), []string{"."}); err != nil {
+		t.Fatalf("Local() error = %v", err)
+	}
+	var testCommand *Command
+	for index := range executor.commands {
+		command := &executor.commands[index]
+		if command.Name == "go" && len(command.Args) > 0 && command.Args[0] == "test" {
+			testCommand = command
+			break
+		}
+	}
+	if testCommand == nil || testCommand.Env["POSTGRES_URL"] != "postgres://fixture" ||
+		testCommand.Env["VALKEY_ADDR"] != "127.0.0.1:6379" {
+		t.Fatalf("local test command = %#v", testCommand)
+	}
+	if lease.closes != 1 {
+		t.Fatalf("service lease closes = %d, want 1", lease.closes)
+	}
+}
+
 func TestDefaultServiceStarterUsesExecutorWithoutDockerInTests(t *testing.T) {
 	executor := &serviceRecordingExecutor{workspace: "/task", respond: true}
 	runner := Runner{Executor: executor}
