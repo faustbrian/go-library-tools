@@ -214,7 +214,7 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 	}
 
 	repository := t.TempDir()
-	run := func(t *testing.T, event, dryRun, changedPath string, rename bool) string {
+	run := func(t *testing.T, event, dryRun, changedPath string, rename bool, pinMode string) string {
 		t.Helper()
 		if combined, err := exec.CommandContext(t.Context(), "git", "init", "-q", repository).CombinedOutput(); err != nil {
 			t.Fatalf("git init: %v\n%s", err, combined)
@@ -233,7 +233,21 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 		if err := os.WriteFile(baseline, []byte("package fixture\n"), 0o600); err != nil {
 			t.Fatal(err)
 		}
-		command = exec.CommandContext(t.Context(), "git", "add", "baseline.go")
+		if changedPath == ".github/workflows/ci.yml" {
+			workflow := filepath.Join(repository, changedPath)
+			if err := os.MkdirAll(filepath.Dir(workflow), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			content := "jobs:\n  ci:\n    uses: faustbrian/go-library-tools/.github/workflows/library-ci.yml@" + strings.Repeat("a", 40) + " # v1.4.0\n    with:\n      tooling_sha: " + strings.Repeat("a", 40) + "\n"
+			if err := os.WriteFile(workflow, []byte(content), 0o600); err != nil {
+				t.Fatal(err)
+			}
+		}
+		addArguments := []string{"add", "baseline.go"}
+		if changedPath == ".github/workflows/ci.yml" {
+			addArguments = append(addArguments, changedPath)
+		}
+		command = exec.CommandContext(t.Context(), "git", addArguments...)
 		command.Dir = repository
 		if combined, err := command.CombinedOutput(); err != nil {
 			t.Fatalf("git add: %v\n%s", err, combined)
@@ -261,11 +275,32 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 				t.Fatalf("git mv: %v\n%s", err, combined)
 			}
 		} else {
-			if err := os.WriteFile(path, []byte("changed\n"), 0o600); err != nil {
+			content := "changed\n"
+			if pinMode != "" {
+				usesSHA := strings.Repeat("b", 40)
+				inputSHA := usesSHA
+				switch pinMode {
+				case "tooling-only":
+					usesSHA = strings.Repeat("a", 40)
+				case "mismatched":
+					inputSHA = strings.Repeat("c", 40)
+				}
+				content = "jobs:\n  ci:\n    uses: faustbrian/go-library-tools/.github/workflows/library-ci.yml@" + usesSHA + " # v1.7.1\n    with:\n      tooling_sha: " + inputSHA + "\n"
+				if err := os.WriteFile(filepath.Join(repository, "AGENTS.md"), []byte("policy update\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			} else if changedPath == ".github/workflows/ci.yml" {
+				content = "permissions: write-all\njobs:\n  ci:\n    uses: faustbrian/go-library-tools/.github/workflows/library-ci.yml@" + strings.Repeat("a", 40) + " # v1.4.0\n    with:\n      tooling_sha: " + strings.Repeat("a", 40) + "\n"
+			}
+			if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 				t.Fatal(err)
 			}
 		}
-		command = exec.CommandContext(t.Context(), "git", "add", changedPath)
+		changedArguments := []string{"add", changedPath}
+		if pinMode != "" {
+			changedArguments = append(changedArguments, "AGENTS.md")
+		}
+		command = exec.CommandContext(t.Context(), "git", changedArguments...)
 		command.Dir = repository
 		if combined, err := command.CombinedOutput(); err != nil {
 			t.Fatalf("git add: %v\n%s", err, combined)
@@ -297,9 +332,14 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 	for _, test := range []struct {
 		name, event, dryRun, path, want string
 		rename                          bool
+		pinMode                         string
 	}{
 		{name: "policy only", event: "pull_request", dryRun: "false", path: "AGENTS.md", want: "false"},
 		{name: "documentation only", event: "pull_request", dryRun: "false", path: "docs/usage.md", want: "false"},
+		{name: "policy and reusable workflow pin only", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "false", pinMode: "matched"},
+		{name: "one-sided reusable workflow pin", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "true", pinMode: "tooling-only"},
+		{name: "mismatched reusable workflow pins", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "true", pinMode: "mismatched"},
+		{name: "substantive workflow change", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "true"},
 		{name: "structured documentation metadata", event: "pull_request", dryRun: "false", path: "docs/ecosystem/compatibility-sets.json", want: "true"},
 		{name: "source renamed to documentation", event: "pull_request", dryRun: "false", path: "docs/baseline.md", want: "true", rename: true},
 		{name: "source", event: "pull_request", dryRun: "false", path: "internal/example/example.go", want: "true"},
@@ -308,7 +348,7 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			repository = t.TempDir()
-			if got := run(t, test.event, test.dryRun, test.path, test.rename); got != test.want {
+			if got := run(t, test.event, test.dryRun, test.path, test.rename, test.pinMode); got != test.want {
 				t.Fatalf("runtime = %q, want %q", got, test.want)
 			}
 		})
@@ -342,8 +382,12 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 			if step.If != "inputs.release_dry_run != true" {
 				t.Fatalf("ordinary module contract guard = %q", step.If)
 			}
-			if step.Run != "golib check --local --module '${{ matrix.directory }}'" {
-				t.Fatalf("ordinary module contract command = %q", step.Run)
+			if step.Env["MODULE_DIRECTORY"] != "${{ matrix.directory }}" {
+				t.Fatalf("ordinary module contract environment = %#v", step.Env)
+			}
+			if !strings.Contains(step.Run, `golib check --local --module "${MODULE_DIRECTORY}"`) ||
+				!strings.Contains(step.Run, `golib check --module "${MODULE_DIRECTORY}"`) {
+				t.Fatalf("ordinary module contract lacks mixed-version routing: %q", step.Run)
 			}
 		}
 	}
@@ -495,6 +539,77 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 			}
 			if strings.TrimSpace(string(contents)) != test.want {
 				t.Fatalf("go invocation = %q, want %q", contents, test.want)
+			}
+		})
+	}
+}
+
+func TestReusableWorkflowAdaptsModuleCheckToInstalledToolCapability(t *testing.T) {
+	var reusable workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &reusable); err != nil {
+		t.Fatal(err)
+	}
+
+	var contract workflowStep
+	for _, step := range reusable.Jobs["quality"].Steps {
+		if step.Name == "Run module contract" {
+			contract = step
+			break
+		}
+	}
+	if contract.Run == "" {
+		t.Fatal("quality job has no module contract step")
+	}
+	if contract.Env["MODULE_DIRECTORY"] != "${{ matrix.directory }}" {
+		t.Fatalf("module contract environment = %#v", contract.Env)
+	}
+
+	golibBin := t.TempDir()
+	invocations := filepath.Join(t.TempDir(), "golib-invocations")
+	stub := `#!/bin/sh
+if [ "$1" = "--help" ]; then
+	if [ "$LEGACY" = "true" ]; then
+		printf '%s\n' 'golib check [--all|--module <directory>]'
+	else
+		printf '%s\n' 'golib check [--local] [--all|--module <directory>]'
+	fi
+	exit 0
+fi
+printf '%s\n' "$*" >>"$INVOCATIONS"
+`
+	if err := os.WriteFile(filepath.Join(golibBin, "golib"), []byte(stub), 0o700); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range []struct {
+		name   string
+		legacy string
+		want   string
+	}{
+		{name: "v1.4 tool", legacy: "true", want: "check --module nested"},
+		{name: "v1.5 tool", legacy: "true", want: "check --module nested"},
+		{name: "local capable tool", legacy: "false", want: "check --local --module nested"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if err := os.WriteFile(invocations, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			command := exec.CommandContext(t.Context(), "bash", "-euo", "pipefail", "-c", contract.Run)
+			command.Env = append(os.Environ(),
+				"PATH="+golibBin+string(os.PathListSeparator)+os.Getenv("PATH"),
+				"INVOCATIONS="+invocations,
+				"LEGACY="+test.legacy,
+				"MODULE_DIRECTORY=nested",
+			)
+			if combined, err := command.CombinedOutput(); err != nil {
+				t.Fatalf("module contract error = %v, output = %q", err, combined)
+			}
+			contents, err := os.ReadFile(invocations)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := strings.TrimSpace(string(contents)); got != test.want {
+				t.Fatalf("golib invocation = %q, want %q", got, test.want)
 			}
 		})
 	}
