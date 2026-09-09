@@ -58,6 +58,11 @@ linters:
     presets:
       - common-false-positives
       - std-error-handling
+    rules:
+      - path: internal/cohesion/git_resolver_unix\.go$
+        linters:
+          - staticcheck
+        text: "ST1005"
 
 formatters:
   enable:

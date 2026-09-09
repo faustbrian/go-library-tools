@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/cohesion-schema-v3-decision-review-v1.schema.json",
+  "title": "Cohesion Schema V3 Decision Review V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "decision", "contract", "review_count", "reviews", "created_at"],
+  "properties": {
+    "schema_id": {"const": "urn:golib:cohesion:schema-v3-decision-review:v1"},
+    "schema_version": {"const": 1},
+    "decision": {"$ref": "#/$defs/decision"},
+    "contract": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/contract"},
+    "review_count": {"const": 3},
+    "reviews": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "prefixItems": [
+        {"$ref": "#/$defs/contract_review"},
+        {"$ref": "#/$defs/execution_review"},
+        {"$ref": "#/$defs/verification_review"}
+      ],
+      "items": false
+    },
+    "created_at": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/timestamp"}
+  },
+  "$defs": {
+    "decision": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes_sha256"],
+      "properties": {
+        "path": {"const": ".ai/cohesion/phase3/SCHEMA_V3_DECISIONS.md"},
+        "bytes_sha256": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/digest"}
+      }
+    },
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["reviewer_id", "dimension", "outcome", "reviewed_sha256"],
+      "properties": {
+        "reviewer_id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "dimension": {"enum": ["contract", "execution-adversary", "verification"]},
+        "outcome": {"const": "accepted-no-findings"},
+        "reviewed_sha256": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/digest"}
+      }
+    },
+    "contract_review": {"allOf": [{"$ref": "#/$defs/review"}, {"properties": {"dimension": {"const": "contract"}}}]},
+    "execution_review": {"allOf": [{"$ref": "#/$defs/review"}, {"properties": {"dimension": {"const": "execution-adversary"}}}]},
+    "verification_review": {"allOf": [{"$ref": "#/$defs/review"}, {"properties": {"dimension": {"const": "verification"}}}]}
+  }
+}

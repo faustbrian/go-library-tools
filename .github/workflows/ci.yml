@@ -70,6 +70,46 @@ jobs:
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
             go build -trimpath -buildvcs=false -o "${RUNNER_TEMP}/golib" ./cmd/golib
+      - name: Verify clean-room forward oracle
+        run: python3 tools/forward-oracle/verify.py
+      - name: Verify contract-review forward oracle
+        run: python3 tools/forward-oracle/verify_contract_review.py
+      - name: Verify contract-freeze forward oracle
+        run: python3 tools/forward-oracle/verify_contract_freeze.py
+      - name: Verify all forward-oracle lanes
+        run: python3 tools/forward-oracle/verify_all.py
+      - name: Verify compatibility sets
+        run: python3 tools/compatibility/generate.py
+      - name: Reproduce contract-freeze forward oracle
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-contract-freeze.XXXXXX")"
+          trap 'find "${task}" -depth -delete' EXIT
+          python3 tools/forward-oracle/generate_contract_freeze.py \
+            --output "${task}/cohesion-contract-freeze-v1-forward-oracle.json"
+          cmp -- "${task}/cohesion-contract-freeze-v1-forward-oracle.json" \
+            testdata/cohesion/forward-oracles/cohesion-contract-freeze-v1-forward-oracle.json
+      - name: Inventory provenance inputs
+        run: python3 tools/provenance/check.py
+      - name: Inventory proportional provenance v2 inputs
+        run: python3 tools/provenance/check_v2.py
+      - name: Verify v2 multiplexed oracle
+        run: python3 tools/provenance/verify_multiplexed_oracle.py testdata/cohesion/schema-provenance-v2-multiplexed-oracle.json
+      - name: Verify v2 aggregate review
+        run: python3 tools/provenance/verify_aggregate_review.py testdata/cohesion/schema-provenance-v2-aggregate-review.json
+      - name: Reproduce v2 evidence indexes
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-provenance-v2.XXXXXX")"
+          trap 'find "${task}" -depth -delete' EXIT
+          python3 tools/provenance/generate_multiplexed_oracle.py \
+            --output "${task}/schema-provenance-v2-multiplexed-oracle.json"
+          cmp -- "${task}/schema-provenance-v2-multiplexed-oracle.json" \
+            testdata/cohesion/schema-provenance-v2-multiplexed-oracle.json
+          python3 tools/provenance/generate_aggregate_review.py \
+            --output "${task}/schema-provenance-v2-aggregate-review.json"
+          cmp -- "${task}/schema-provenance-v2-aggregate-review.json" \
+            testdata/cohesion/schema-provenance-v2-aggregate-review.json
       - name: Run repository contract
         run: make ci
       - name: Upload verification evidence

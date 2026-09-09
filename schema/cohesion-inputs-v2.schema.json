@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/cohesion-inputs-v2.schema.json",
+  "title": "Golib cohesion aggregate inputs schema v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "source_lock", "control_pins", "projection_count", "projections"],
+  "properties": {
+    "schema_id": {"const": "urn:golib:cohesion:inputs:v2"},
+    "schema_version": {"const": 2},
+    "source_lock": {"$ref": "#/$defs/source_lock"},
+    "control_pins": {"$ref": "cohesion-sources-v2.schema.json#/$defs/controls"},
+    "projection_count": {"const": 92},
+    "projections": {"type": "array", "minItems": 92, "maxItems": 92, "items": {"$ref": "#/$defs/projection"}}
+  },
+  "$defs": {
+    "digest": {"description": "A lowercase SHA-256 digest over the exact bytes identified by the containing field; absent inputs are omitted rather than represented by a sentinel.", "type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "commit": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+    "repository": {"type": "string", "maxLength": 128, "pattern": "^github\\.com/faustbrian/go-[a-z0-9]+(?:-[a-z0-9]+)*$"},
+    "path": {"description": "A repository-relative regular-file path; the schema rejects absolute paths, backslashes, empty and dot segments, while the released safe-path algorithm and UTF-8 byte bound remain mandatory semantic checks without narrowing Unicode names.", "type": "string", "minLength": 1, "maxLength": 4096, "not": {"anyOf": [{"pattern": "^/"}, {"pattern": "\\\\"}, {"pattern": "//"}, {"pattern": "(?:^|/)\\.{1,2}(?:/|$)"}]}},
+    "source_lock": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "path", "source_revision", "schema_id", "bytes_sha256"],
+      "properties": {"repository": {"const": "github.com/faustbrian/go-library-tools"}, "path": {"const": "release/cohesion-sources-v2.json"}, "source_revision": {"$ref": "#/$defs/commit"}, "schema_id": {"const": "urn:golib:cohesion:sources:v2"}, "bytes_sha256": {"description": "SHA-256 of the exact source-lock bytes at source_revision; the source-lock is mandatory and never omitted.", "$ref": "#/$defs/digest"}}
+    },
+    "projection": {
+      "type": "object", "additionalProperties": false,
+      "required": ["repository", "source_kind", "projection", "bytes_sha256"],
+      "properties": {"repository": {"$ref": "#/$defs/repository"}, "source_kind": {"enum": ["commit", "release-source"]}, "projection": {"$ref": "#/$defs/path"}, "bytes_sha256": {"description": "SHA-256 of the exact canonical projection bytes; every source has one projection so this field is never omitted.", "$ref": "#/$defs/digest"}}
+    }
+  }
+}

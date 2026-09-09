@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/cohesion-schema-v3-decision-freeze-v1.schema.json",
+  "title": "Cohesion Schema V3 Decision Freeze V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "schema_version", "decision", "contract", "decision_review", "review_count", "reviews", "created_at"],
+  "properties": {
+    "schema_id": {"const": "urn:golib:cohesion:schema-v3-decision-freeze:v1"},
+    "schema_version": {"const": 1},
+    "decision": {"$ref": "cohesion-schema-v3-decision-review-v1.schema.json#/$defs/decision"},
+    "contract": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/contract"},
+    "decision_review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "bytes_sha256"],
+      "properties": {
+        "path": {"const": ".ai/cohesion/phase3/SCHEMA_V3_DECISION_REVIEW.json"},
+        "bytes_sha256": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/digest"}
+      }
+    },
+    "review_count": {"const": 3},
+    "reviews": {"$ref": "cohesion-schema-v3-decision-review-v1.schema.json#/properties/reviews"},
+    "created_at": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/timestamp"}
+  }
+}

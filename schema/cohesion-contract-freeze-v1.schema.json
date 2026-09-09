@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/cohesion-contract-freeze-v1.schema.json",
+  "title": "Cohesion Contract Freeze V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_id", "goal_id", "contract", "review", "created_at"],
+  "properties": {
+    "schema_id": {"const": "urn:golib:cohesion:contract-freeze:v1"},
+    "goal_id": {"const": "golib-cohesion-v1"},
+    "contract": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/contract"},
+    "review": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["record_path", "record_sha256", "reviewer_id", "reviewed_commit", "outcome"],
+      "properties": {
+        "record_path": {"type": "string", "pattern": "^(?:\\.*[A-Za-z0-9_-][A-Za-z0-9._-]*/)*CONTRACT_REVIEW\\.json$", "maxLength": 4096},
+        "record_sha256": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/digest"},
+        "reviewer_id": {"type": "string", "minLength": 1, "maxLength": 128},
+        "reviewed_commit": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/git_sha"},
+        "outcome": {"const": "accepted-no-findings"}
+      }
+    },
+    "created_at": {"$ref": "cohesion-contract-review-v1.schema.json#/$defs/timestamp"}
+  }
+}

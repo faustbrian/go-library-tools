@@ -1,0 +1,1110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/cohesion-sources-v2.schema.json",
+  "title": "Golib cohesion source lock schema v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_id",
+    "schema_version",
+    "repository_count",
+    "sources",
+    "controls"
+  ],
+  "properties": {
+    "schema_id": {
+      "const": "urn:golib:cohesion:sources:v2"
+    },
+    "schema_version": {
+      "const": 2
+    },
+    "repository_count": {
+      "const": 92
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 92,
+      "maxItems": 92,
+      "items": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/commit_source"
+          },
+          {
+            "$ref": "#/$defs/release_source"
+          }
+        ]
+      }
+    },
+    "controls": {
+      "$ref": "#/$defs/controls"
+    }
+  },
+  "$defs": {
+    "digest": {
+      "description": "A lowercase SHA-256 digest of the exact bytes named by the containing field; fields whose source is absent are omitted rather than populated with a sentinel digest.",
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "commit": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "repository": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^github\\.com/faustbrian/go-[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "identity": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z0-9](?:[a-z0-9._/:_-]*[a-z0-9])?$"
+    },
+    "path": {
+      "description": "A repository-relative regular-file path; the schema rejects absolute paths, backslashes, empty and dot segments, while the released safe-path algorithm and UTF-8 byte bound remain mandatory semantic checks without narrowing Unicode names.",
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "not": {"anyOf": [{"pattern": "^/"}, {"pattern": "\\\\"}, {"pattern": "//"}, {"pattern": "(?:^|/)\\.{1,2}(?:/|$)"}]}
+    },
+    "asset": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "schema_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "semver_tag": {
+      "type": "string",
+      "maxLength": 128,
+      "pattern": "^v(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$"
+    },
+    "release_url": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^https://github\\.com/faustbrian/go-[a-z0-9]+(?:-[a-z0-9]+)*/releases/tag/v(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)$"
+    },
+    "asset_url": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096,
+      "pattern": "^https://github\\.com/faustbrian/go-[a-z0-9]+(?:-[a-z0-9]+)*/releases/download/v(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*)/[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "released_tool": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "repository",
+        "release",
+        "tag_object_sha",
+        "peeled_commit",
+        "goos",
+        "goarch",
+        "executable_asset",
+        "executable_url",
+        "platform_artifact_sha256",
+        "checksums_asset",
+        "checksums_url",
+        "checksums_sha256",
+        "release_manifest_asset",
+        "release_manifest_url",
+        "release_manifest_sha256"
+      ],
+      "properties": {
+        "kind": {
+          "const": "release"
+        },
+        "repository": {
+          "const": "github.com/faustbrian/go-library-tools"
+        },
+        "release": {
+          "description": "A stable released tool version strictly greater than v1.5.5 and therefore capable of emitting schema v3 evidence.",
+          "type": "string",
+          "maxLength": 128,
+          "pattern": "^v(?:1\\.(?:5\\.(?:[6-9]|[1-9][0-9]+)|(?:[6-9]|[1-9][0-9]+)\\.(?:0|[1-9][0-9]*))|(?:[2-9]|[1-9][0-9]+)\\.(?:0|[1-9][0-9]*)\\.(?:0|[1-9][0-9]*))$"
+        },
+        "tag_object_sha": {
+          "$ref": "#/$defs/commit"
+        },
+        "peeled_commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "goos": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "goarch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "executable_asset": {
+          "$ref": "#/$defs/asset"
+        },
+        "executable_url": {
+          "$ref": "#/$defs/asset_url"
+        },
+        "platform_artifact_sha256": {
+          "description": "SHA-256 of the exact downloaded platform archive bytes; this field is required because the release tool is present.",
+          "$ref": "#/$defs/digest"
+        },
+        "checksums_asset": {
+          "$ref": "#/$defs/asset"
+        },
+        "checksums_url": {
+          "$ref": "#/$defs/asset_url"
+        },
+        "checksums_sha256": {
+          "description": "SHA-256 of the exact checksums asset bytes; this field is required because the checksums asset is present.",
+          "$ref": "#/$defs/digest"
+        },
+        "release_manifest_asset": {
+          "$ref": "#/$defs/asset"
+        },
+        "release_manifest_url": {
+          "$ref": "#/$defs/asset_url"
+        },
+        "release_manifest_sha256": {
+          "description": "SHA-256 of the exact release-manifest asset bytes; this field is required because the manifest asset is present.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "schema_row": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "$id",
+        "bytes_sha256"
+      ],
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "$id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "bytes_sha256": {
+          "description": "SHA-256 of the exact schema file bytes; the row is omitted if that schema is not part of the closed release-source set.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "commit_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "source_kind",
+        "source_revision",
+        "manifest_path",
+        "manifest_sha256",
+        "projection",
+        "projection_sha256",
+        "tooling"
+      ],
+      "properties": {
+        "repository": {
+          "$ref": "#/$defs/repository"
+        },
+        "source_kind": {
+          "const": "commit"
+        },
+        "source_revision": {
+          "$ref": "#/$defs/commit"
+        },
+        "manifest_path": {
+          "$ref": "#/$defs/path"
+        },
+        "manifest_sha256": {
+          "description": "SHA-256 of the exact source manifest bytes; required for every present commit source.",
+          "$ref": "#/$defs/digest"
+        },
+        "projection": {
+          "$ref": "#/$defs/path"
+        },
+        "projection_sha256": {
+          "description": "SHA-256 of the exact canonical projection bytes; required for every present source projection.",
+          "$ref": "#/$defs/digest"
+        },
+        "tooling": {
+          "$ref": "#/$defs/released_tool"
+        }
+      }
+    },
+    "release_source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "source_kind",
+        "tooling",
+        "schemas",
+        "manifest_path",
+        "manifest_sha256",
+        "projection",
+        "projection_sha256"
+      ],
+      "properties": {
+        "repository": {
+          "const": "github.com/faustbrian/go-library-tools"
+        },
+        "source_kind": {
+          "const": "release-source"
+        },
+        "tooling": {
+          "$ref": "#/$defs/released_tool"
+        },
+        "schemas": {
+          "type": "array",
+          "minItems": 25,
+          "maxItems": 25,
+          "prefixItems": [
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-authorization-record-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-authorization-record-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-authorization-registry-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-authorization-registry-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-catalog-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-catalog-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-catalog-v2.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-catalog-v2.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-contract-freeze-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-contract-freeze-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-contract-review-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-contract-review-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-delivery-evidence-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-delivery-evidence-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-diagnostic-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-diagnostic-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-engineering-identities-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-engineering-identities-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-gate-policy-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-gate-policy-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-go-official-downloads-oracle-review-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-go-official-downloads-oracle-review-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-go-official-downloads-oracle-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-go-official-downloads-oracle-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-go-toolchains-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-go-toolchains-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-inputs-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-inputs-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-inputs-v2.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-inputs-v2.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-residual-inventory-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-residual-inventory-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-residual-register-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-residual-register-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-schema-provenance-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-schema-provenance-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-schema-v3-decision-freeze-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-schema-v3-decision-freeze-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-schema-v3-decision-review-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-schema-v3-decision-review-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-sources-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-sources-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/cohesion-sources-v2.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-sources-v2.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/modules-v1.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/modules-v1.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/modules-v2.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/modules-v2.schema.json"}}},
+            {"$ref": "#/$defs/schema_row", "properties": {"path": {"const": "schema/modules-v3.schema.json"}, "$id": {"const": "https://github.com/faustbrian/go-library-tools/schema/modules-v3.schema.json"}}}
+          ],
+          "items": false
+        },
+        "manifest_path": {
+          "$ref": "#/$defs/path"
+        },
+        "manifest_sha256": {
+          "description": "SHA-256 of the exact release-source manifest bytes; required for the one release source.",
+          "$ref": "#/$defs/digest"
+        },
+        "projection": {
+          "$ref": "#/$defs/path"
+        },
+        "projection_sha256": {
+          "description": "SHA-256 of the exact canonical release-source projection bytes; required for the release-source projection.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "git_locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "path",
+        "source_revision",
+        "schema_id",
+        "bytes_sha256"
+      ],
+      "properties": {
+        "repository": {
+          "$ref": "#/$defs/repository"
+        },
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "source_revision": {
+          "$ref": "#/$defs/commit"
+        },
+        "schema_id": {
+          "$ref": "#/$defs/schema_id"
+        },
+        "bytes_sha256": {
+          "description": "SHA-256 of the exact Git blob bytes at source_revision; the locator is omitted when the source does not exist.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "release_locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "release",
+        "release_url",
+        "asset",
+        "schema_id",
+        "bytes_sha256"
+      ],
+      "properties": {
+        "repository": {
+          "$ref": "#/$defs/repository"
+        },
+        "release": {
+          "$ref": "#/$defs/semver_tag"
+        },
+        "release_url": {
+          "$ref": "#/$defs/release_url"
+        },
+        "asset": {
+          "$ref": "#/$defs/asset"
+        },
+        "schema_id": {
+          "$ref": "#/$defs/schema_id"
+        },
+        "bytes_sha256": {
+          "description": "SHA-256 of the exact release asset bytes; the locator is omitted when the asset does not exist.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "asset_locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "release",
+        "release_url",
+        "asset",
+        "bytes_sha256"
+      ],
+      "properties": {
+        "repository": {
+          "$ref": "#/$defs/repository"
+        },
+        "release": {
+          "$ref": "#/$defs/semver_tag"
+        },
+        "release_url": {
+          "$ref": "#/$defs/release_url"
+        },
+        "asset": {
+          "$ref": "#/$defs/asset"
+        },
+        "bytes_sha256": {
+          "description": "SHA-256 of the exact release asset bytes; the locator is omitted when the asset does not exist.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "authorization_record_locator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "authorization_id",
+        "repository",
+        "path",
+        "source_revision",
+        "schema_id",
+        "bytes_sha256"
+      ],
+      "properties": {
+        "authorization_id": {
+          "$ref": "#/$defs/identity"
+        },
+        "repository": {
+          "$ref": "#/$defs/repository"
+        },
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "source_revision": {
+          "$ref": "#/$defs/commit"
+        },
+        "schema_id": {
+          "const": "urn:golib:cohesion:authorization-record:v1"
+        },
+        "bytes_sha256": {
+          "description": "SHA-256 of the exact authorization-record bytes; absent records are omitted from entries.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "registry_predecessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "path",
+        "schema_id",
+        "source_revision",
+        "registry_revision",
+        "bytes_sha256"
+      ],
+      "properties": {
+        "repository": {
+          "const": "github.com/faustbrian/go-library-tools"
+        },
+        "path": {
+          "const": "release/cohesion-authorizations.json"
+        },
+        "schema_id": {
+          "const": "urn:golib:cohesion:authorization-registry:v1"
+        },
+        "source_revision": {
+          "$ref": "#/$defs/commit"
+        },
+        "registry_revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "bytes_sha256": {
+          "description": "SHA-256 of the exact predecessor registry bytes; absent predecessors are omitted from entries.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "counted_authorization_records": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "entries"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/authorization_record_locator"
+          }
+        }
+      }
+    },
+    "counted_predecessors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "entries"
+      ],
+      "properties": {
+        "count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 256
+        },
+        "entries": {
+          "type": "array",
+          "maxItems": 256,
+          "items": {
+            "$ref": "#/$defs/registry_predecessor"
+          }
+        }
+      }
+    },
+    "embedded_defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "locator",
+        "present",
+        "release",
+        "tag_object_sha",
+        "peeled_commit",
+        "checksums_sha256",
+        "semantic_sha256"
+      ],
+      "properties": {
+        "kind": {
+          "const": "embedded-defaults"
+        },
+        "locator": {
+          "const": "embedded://golib-gate-policy-v1"
+        },
+        "present": {
+          "const": true
+        },
+        "release": {
+          "$ref": "#/$defs/semver_tag"
+        },
+        "tag_object_sha": {
+          "$ref": "#/$defs/commit"
+        },
+        "peeled_commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "checksums_sha256": {
+          "description": "SHA-256 of the exact checksums asset bytes embedded into defaults; required for present embedded defaults.",
+          "$ref": "#/$defs/digest"
+        },
+        "semantic_sha256": {
+          "description": "Semantic-object SHA-256 of the RFC 8785 canonical closed defaults object containing exactly manifest.modules=modules.json, manifest.packages=packages.json, evidence.root=.verification, mutation.root=.verification/mutation, step.timeout=20m, go-test.packages=[./...], go-test.count=1, fuzz.budget=10000x, and benchmark.budget=100ms; semantic_sha256 and all release-locator metadata are omitted.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "present_policy_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "present",
+        "bytes_sha256"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "repository-config",
+            "module-manifest",
+            "package-manifest"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "present": {
+          "const": true
+        },
+        "bytes_sha256": {
+          "description": "SHA-256 of the exact present policy-file bytes; omitted, together with the field itself, in the absent-policy variant.",
+          "$ref": "#/$defs/digest"
+        }
+      }
+    },
+    "absent_policy_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "path",
+        "present"
+      ],
+      "properties": {
+        "kind": {
+          "enum": [
+            "module-manifest",
+            "package-manifest"
+          ]
+        },
+        "path": {
+          "$ref": "#/$defs/path"
+        },
+        "present": {
+          "const": false
+        }
+      }
+    },
+    "effective_policy_input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "sources"
+      ],
+      "properties": {
+        "repository": {
+          "$ref": "#/$defs/repository"
+        },
+        "sources": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "prefixItems": [
+            {
+              "$ref": "#/$defs/embedded_defaults"
+            },
+            {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/present_policy_file"
+                },
+                {
+                  "properties": {
+                    "kind": {
+                      "const": "repository-config"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              ]
+            },
+            {
+              "oneOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/present_policy_file"
+                    },
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "module-manifest"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/absent_policy_file"
+                    },
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "module-manifest"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "oneOf": [
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/present_policy_file"
+                    },
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "package-manifest"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/absent_policy_file"
+                    },
+                    {
+                      "properties": {
+                        "kind": {
+                          "const": "package-manifest"
+                        }
+                      },
+                      "required": [
+                        "kind"
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "items": false
+        }
+      }
+    },
+    "counted_policy_inputs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "count",
+        "entries"
+      ],
+      "properties": {
+        "count": {
+          "const": 92
+        },
+        "entries": {
+          "type": "array",
+          "minItems": 92,
+          "maxItems": 92,
+          "items": {
+            "$ref": "#/$defs/effective_policy_input"
+          }
+        }
+      }
+    },
+    "official_oracle": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "review",
+        "release",
+        "review_release",
+        "oracle_commit",
+        "oracle_review_commit",
+        "first_decoder_commit",
+        "decoder_paths"
+      ],
+      "properties": {
+        "source": {
+          "description": "Exact Git locator of the authored oracle; semantic validation requires its exact-byte digest to equal the oracle release locator digest.",
+          "allOf": [
+            {"$ref": "#/$defs/git_locator"},
+            {"properties": {
+              "repository": {"const": "github.com/faustbrian/go-library-tools"},
+              "path": {"const": "testdata/cohesion/go-official-downloads-oracle.json"},
+              "schema_id": {"const": "urn:golib:cohesion:go-official-downloads-oracle:v1"}
+            }}
+          ]
+        },
+        "review": {
+          "description": "Exact Git locator of the accepted oracle review; semantic validation requires its exact-byte digest to equal the review-release locator digest.",
+          "allOf": [
+            {"$ref": "#/$defs/git_locator"},
+            {"properties": {
+              "repository": {"const": "github.com/faustbrian/go-library-tools"},
+              "path": {"const": "testdata/cohesion/go-official-downloads-oracle-review.json"},
+              "schema_id": {"const": "urn:golib:cohesion:go-official-downloads-oracle-review:v1"}
+            }}
+          ]
+        },
+        "release": {
+          "description": "Exact release locator transporting the oracle byte-for-byte; its digest must equal source.bytes_sha256.",
+          "allOf": [
+            {"$ref": "#/$defs/release_locator"},
+            {"properties": {
+              "repository": {"const": "github.com/faustbrian/go-library-tools"},
+              "asset": {"const": "cohesion-go-official-downloads-oracle.json"},
+              "schema_id": {"const": "urn:golib:cohesion:go-official-downloads-oracle:v1"}
+            }}
+          ]
+        },
+        "review_release": {
+          "description": "Exact release locator transporting the oracle review byte-for-byte; its digest must equal review.bytes_sha256.",
+          "allOf": [
+            {"$ref": "#/$defs/release_locator"},
+            {"properties": {
+              "repository": {"const": "github.com/faustbrian/go-library-tools"},
+              "asset": {"const": "cohesion-go-official-downloads-oracle-review.json"},
+              "schema_id": {"const": "urn:golib:cohesion:go-official-downloads-oracle-review:v1"}
+            }}
+          ]
+        },
+        "oracle_commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "oracle_review_commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "first_decoder_commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "decoder_paths": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 4096,
+          "items": {
+            "$ref": "#/$defs/path"
+          }
+        }
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source_roster",
+        "authorization_registry",
+        "authorization_records",
+        "registry_predecessors",
+        "planned_identities",
+        "residual_inventory",
+        "residual_register",
+        "go_toolchains",
+        "go_toolchain_official_index",
+        "go_toolchain_official_oracle",
+        "contract_review",
+        "contract_freeze",
+        "schema_v3_decision_review",
+        "schema_v3_decision_freeze",
+        "schema_provenance",
+        "effective_policy_inputs"
+      ],
+      "properties": {
+        "source_roster": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/git_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "path": {
+                  "const": "release/cohesion-sources.json"
+                },
+                "source_revision": {
+                  "const": "0e94a17d4340321ee848efa1ebe20a51aa8b487e"
+                },
+                "schema_id": {
+                  "const": "https://github.com/faustbrian/go-library-tools/schema/cohesion-sources.schema.json"
+                },
+                "bytes_sha256": {
+                  "description": "SHA-256 of the exact frozen source-roster bytes; this control is mandatory and therefore never omitted.",
+                  "const": "sha256:c86bb9b2ee8c4f7464e378eb2025b1d3637f2fc4ad2fb7df1bf689a0c3e2246f"
+                }
+              }
+            }
+          ]
+        },
+        "authorization_registry": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/git_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "path": {
+                  "const": "release/cohesion-authorizations.json"
+                },
+                "schema_id": {
+                  "const": "urn:golib:cohesion:authorization-registry:v1"
+                }
+              }
+            }
+          ]
+        },
+        "authorization_records": {
+          "$ref": "#/$defs/counted_authorization_records"
+        },
+        "registry_predecessors": {
+          "$ref": "#/$defs/counted_predecessors"
+        },
+        "planned_identities": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/git_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "path": {
+                  "const": "release/cohesion-engineering-identities.json"
+                },
+                "schema_id": {
+                  "const": "urn:golib:cohesion:engineering-identities:v1"
+                }
+              }
+            }
+          ]
+        },
+        "residual_inventory": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/release_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "asset": {
+                  "const": "cohesion-residual-inventory.json"
+                },
+                "schema_id": {
+                  "const": "urn:golib:cohesion:residual-inventory:v1"
+                }
+              }
+            }
+          ]
+        },
+        "residual_register": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/git_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "path": {
+                  "const": "release/cohesion-residuals.json"
+                },
+                "schema_id": {
+                  "const": "urn:golib:cohesion:residual-register:v1"
+                }
+              }
+            }
+          ]
+        },
+        "go_toolchains": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/release_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "asset": {
+                  "const": "cohesion-go-toolchains.json"
+                },
+                "schema_id": {
+                  "const": "urn:golib:cohesion:go-toolchains:v1"
+                }
+              }
+            }
+          ]
+        },
+        "go_toolchain_official_index": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/asset_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "asset": {
+                  "const": "cohesion-go-official-downloads.json"
+                }
+              }
+            }
+          ]
+        },
+        "go_toolchain_official_oracle": {
+          "$ref": "#/$defs/official_oracle"
+        },
+        "contract_review": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/release_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "asset": {
+                  "const": "cohesion-contract-review.json"
+                },
+                "schema_id": {
+                  "const": "urn:golib:cohesion:contract-review:v1"
+                }
+              }
+            }
+          ]
+        },
+        "contract_freeze": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/release_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "asset": {
+                  "const": "cohesion-contract-freeze.json"
+                },
+                "schema_id": {
+                  "const": "urn:golib:cohesion:contract-freeze:v1"
+                }
+              }
+            }
+          ]
+        },
+        "schema_v3_decision_review": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/release_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "asset": {
+                  "const": "cohesion-schema-v3-decision-review.json"
+                },
+                "schema_id": {
+                  "const": "urn:golib:cohesion:schema-v3-decision-review:v1"
+                }
+              }
+            }
+          ]
+        },
+        "schema_v3_decision_freeze": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/release_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "asset": {
+                  "const": "cohesion-schema-v3-decision-freeze.json"
+                },
+                "schema_id": {
+                  "const": "urn:golib:cohesion:schema-v3-decision-freeze:v1"
+                }
+              }
+            }
+          ]
+        },
+        "schema_provenance": {
+          "allOf": [
+            {
+              "$ref": "#/$defs/release_locator"
+            },
+            {
+              "properties": {
+                "repository": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "asset": {
+                  "const": "cohesion-schema-provenance.json"
+                },
+                "schema_id": {
+                  "const": "urn:golib:cohesion:schema-provenance:v1"
+                }
+              }
+            }
+          ]
+        },
+        "effective_policy_inputs": {
+          "$ref": "#/$defs/counted_policy_inputs"
+        }
+      }
+    }
+  }
+}
