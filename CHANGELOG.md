@@ -19,6 +19,8 @@ All notable changes to this project are documented in this file.
 
 - Gave mutation unit and integration phases independent 60-second budgets so
   cold integration compilation cannot consume the unit phase's deadline.
+- Normalized a successful mutation run with no viable mutants into a canonical
+  empty report without requiring a separate review record.
 - Added exact module selection to local and hosted release checks and rehearsals
   so independently versioned modules are not blocked by an already released
   sibling tag.

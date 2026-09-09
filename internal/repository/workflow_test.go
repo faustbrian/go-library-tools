@@ -53,7 +53,7 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 		"golib repository check",
 		"golib workflows check",
 		"golib specification check --online",
-		"golib check --module",
+		"golib check --local --module",
 		"github/codeql-action/init@",
 		"github/codeql-action/analyze@",
 		"name: Required",
@@ -189,6 +189,9 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 			ordinaryContract = true
 			if step.If != "inputs.release_dry_run != true" {
 				t.Fatalf("ordinary module contract guard = %q", step.If)
+			}
+			if step.Run != "golib check --local --module '${{ matrix.directory }}'" {
+				t.Fatalf("ordinary module contract command = %q", step.Run)
 			}
 		}
 	}
