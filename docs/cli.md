@@ -13,9 +13,10 @@ Core commands:
 - `golib inventory [--json]` prints the canonical module inventory.
 - `golib consumers validate [--json]` validates the maintained consumer
   inventory and reports active, deferred, and tooling repository counts.
-- `golib cohesion check [--json]` validates schema-v2 family, ownership,
-  lifecycle, environment, dependency, and documentation metadata. Schema-v1
-  repositories receive an explicit adoption-required result.
+- `golib cohesion check [--json]` validates schema-v2 or optional schema-v3
+  family, ownership, lifecycle, environment, dependency, and documentation
+  metadata. Schema-v1 repositories receive an explicit adoption-required
+  result.
 - `golib cohesion catalog consumer|engineering [--json]` renders the validated
   repository projection. The consumer view contains only installable libraries
   and adapters; the engineering view retains every manifest module.
@@ -43,7 +44,10 @@ Core commands:
   monitored errata and release feeds against their reviewed digests.
 - `golib workflows check` validates GitHub Actions workflows with the centrally
   pinned Actionlint release.
-- `golib check [--all|--module DIR]` runs the enabled contract. Formatting is
+- `golib check --local` runs the bounded pull-request contract: formatting,
+  module tidiness, unsafe-import checks, tests, vet, configured lint/static
+  analysis, local documentation links, and applicable API compatibility.
+  `golib check [--all|--module DIR]` runs the complete enabled contract. Formatting is
   checked by the active `gofmt` executable, keeping it aligned with the Go
   toolchain selected for the repository rather than the CLI build toolchain.
   Configured mutation imports are materialized before mutation verification,

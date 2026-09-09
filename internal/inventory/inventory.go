@@ -12,16 +12,74 @@ import (
 
 	"github.com/faustbrian/go-library-tools/internal/config"
 	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
 const maximumManifestSize = 32 << 20
+const modulesSchemaIdentity = "https://github.com/faustbrian/go-library-tools/schema/modules.schema.json"
+const modulesV3SchemaIdentity = "https://github.com/faustbrian/go-library-tools/schema/modules-v3.schema.json"
+
+//go:generate go run schema_generate_main.go
+
+var compiledModulesV3Schema = func() *jsonschema.Schema {
+	compiler := jsonschema.NewCompiler()
+	for identity, source := range map[string]string{
+		modulesSchemaIdentity:   modulesSchemaJSON,
+		modulesV3SchemaIdentity: modulesV3SchemaJSON,
+	} {
+		document, err := jsonschema.UnmarshalJSON(bytes.NewReader([]byte(source)))
+		if err != nil {
+			panic(err)
+		}
+		if err := compiler.AddResource(identity, document); err != nil {
+			panic(err)
+		}
+	}
+	compiled, err := compiler.Compile(modulesV3SchemaIdentity)
+	if err != nil {
+		panic(err)
+	}
+	return compiled
+}()
 
 // Inventory is the validated repository catalog.
 type Inventory struct {
+	SchemaID      string   `json:"schema_id,omitempty"`
 	SchemaVersion int      `json:"schema_version"`
 	Repository    string   `json:"repository"`
 	GoVersion     string   `json:"go_version"`
 	Modules       []Module `json:"modules"`
+}
+
+// MarshalJSON keeps legacy output unchanged while ensuring optional schema-v3
+// output contains only repository-owned manifest fields.
+func (inventory Inventory) MarshalJSON() ([]byte, error) {
+	type rawInventory Inventory
+	encoded, err := json.Marshal(rawInventory(inventory))
+	if err != nil || inventory.SchemaVersion != 3 {
+		return encoded, err
+	}
+	var document map[string]any
+	if err := json.Unmarshal(encoded, &document); err != nil {
+		return nil, err
+	}
+	modules, ok := document["modules"].([]any)
+	if !ok {
+		return nil, errors.New("schema-v3 inventory modules must be an array")
+	}
+	for _, rawModule := range modules {
+		module, ok := rawModule.(map[string]any)
+		if !ok {
+			return nil, errors.New("schema-v3 inventory module must be an object")
+		}
+		for _, field := range []string{"goal_status", "goal_files", "goal_evidence", "provenance"} {
+			delete(module, field)
+		}
+		if metadata, ok := module["cohesion"].(map[string]any); ok {
+			delete(metadata, "delivery")
+		}
+	}
+	return json.Marshal(document)
 }
 
 // Module contains canonical module policy used by orchestration.
@@ -177,22 +235,41 @@ func LoadSnapshot(root string, policy config.Config) (Inventory, []byte, error) 
 }
 
 func load(root string, policy config.Config, moduleManifest []byte) (Inventory, error) {
-	var modules Inventory
-	var err error
 	if moduleManifest == nil {
-		err = decode(root, policy.Manifests.Modules, &modules)
-	} else {
-		err = decodeData(moduleManifest, &modules)
+		var err error
+		moduleManifest, err = repositoryfile.Read(root, policy.Manifests.Modules, maximumManifestSize)
+		if err != nil {
+			return Inventory{}, fmt.Errorf("load module manifest: %w", err)
+		}
 	}
-	if err != nil {
+	var header struct {
+		SchemaVersion int `json:"schema_version"`
+	}
+	if err := json.Unmarshal(moduleManifest, &header); err != nil {
+		return Inventory{}, fmt.Errorf("load module manifest: %w", err)
+	}
+	if header.SchemaVersion == 3 {
+		document, err := jsonschema.UnmarshalJSON(bytes.NewReader(moduleManifest))
+		if err != nil {
+			return Inventory{}, fmt.Errorf("load module manifest: %w", err)
+		}
+		if err := compiledModulesV3Schema.Validate(document); err != nil {
+			return Inventory{}, fmt.Errorf("load module manifest: schema v3: %w", err)
+		}
+	}
+	var modules Inventory
+	if err := decodeData(moduleManifest, &modules); err != nil {
 		return Inventory{}, fmt.Errorf("load module manifest: %w", err)
 	}
 	var packages packageInventory
 	if err := decode(root, policy.Manifests.Packages, &packages); err != nil {
 		return modules, fmt.Errorf("load package manifest: %w", err)
 	}
-	if (modules.SchemaVersion != 1 && modules.SchemaVersion != 2) || packages.SchemaVersion != 1 {
-		return modules, errors.New("module manifest schema_version must be 1 or 2 and package manifest schema_version must be 1")
+	if (modules.SchemaVersion != 1 && modules.SchemaVersion != 2 && modules.SchemaVersion != 3) || packages.SchemaVersion != 1 {
+		return modules, errors.New("module manifest schema_version must be 1, 2, or 3 and package manifest schema_version must be 1")
+	}
+	if modules.SchemaVersion < 3 && modules.SchemaID != "" {
+		return modules, errors.New("module manifest schema_version 1 or 2 must not contain schema_id")
 	}
 	if modules.SchemaVersion == 1 {
 		for _, module := range modules.Modules {

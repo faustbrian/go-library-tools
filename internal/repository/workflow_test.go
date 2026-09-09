@@ -403,25 +403,42 @@ func TestBootstrapProxyActionVerifiesArchiveBeforeExport(t *testing.T) {
 	}
 }
 
-func TestToolingWorkflowUploadsVerificationEvidenceOnEveryOutcome(t *testing.T) {
+func TestToolingWorkflowSeparatesFastPullRequestAndAggregateMilestoneChecks(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/ci.yml")
-	start := strings.Index(content, "- name: Upload verification evidence")
-	if start < 0 {
-		t.Fatal("tooling workflow does not upload verification evidence")
+	qualityStart := strings.Index(content, "  quality:\n")
+	milestoneStart := strings.Index(content, "  milestone:\n")
+	codeQLStart := strings.Index(content, "  codeql:\n")
+	if qualityStart < 0 || milestoneStart < 0 || codeQLStart < 0 || qualityStart >= milestoneStart || milestoneStart >= codeQLStart {
+		t.Fatal("tooling workflow does not define ordered quality and milestone jobs")
 	}
-	remainder := content[start:]
-	step, _, found := strings.Cut(remainder, "\n  codeql:")
-	if !found {
-		t.Fatal("tooling evidence upload is outside the quality job")
+	quality := content[qualityStart:milestoneStart]
+	milestone := content[milestoneStart:codeQLStart]
+	for _, required := range []string{"make local-ci", "Run mutation verifier behavior when affected", "-tags=verifierintegration"} {
+		if !strings.Contains(quality, required) {
+			t.Errorf("pull-request quality lacks %q", required)
+		}
 	}
-	for _, required := range []string{
-		"if: always()",
-		"uses: actions/upload-artifact@",
-		"path: .verification",
-		"include-hidden-files: true",
-	} {
-		if !strings.Contains(step, required) {
-			t.Errorf("tooling evidence upload lacks %q", required)
+	for _, forbidden := range []string{"make check", "golib check --all", "Upload verification evidence"} {
+		if strings.Contains(quality, forbidden) {
+			t.Errorf("pull-request quality includes aggregate work %q", forbidden)
+		}
+	}
+	for _, required := range []string{"if: github.event_name != 'pull_request'", "needs: quality", "make milestone-check"} {
+		if !strings.Contains(milestone, required) {
+			t.Errorf("milestone job lacks %q", required)
+		}
+	}
+	if strings.Contains(milestone, "make local-ci") {
+		t.Fatal("milestone job repeats the successful local contract")
+	}
+	makefile := readProjectFile(t, "Makefile")
+	if !strings.Contains(makefile, "local-ci:\n\t$(call run_go,run ./cmd/golib check --local)") ||
+		!strings.Contains(makefile, "milestone-check: consumers compatibility") {
+		t.Fatal("Makefile does not keep bounded local and aggregate checks separate")
+	}
+	for _, retired := range []string{"forward-oracle", "tools/provenance", "Upload verification evidence"} {
+		if strings.Contains(content, retired) {
+			t.Errorf("tooling workflow retains retired routine evidence machinery %q", retired)
 		}
 	}
 }

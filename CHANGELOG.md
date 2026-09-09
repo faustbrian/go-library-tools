@@ -4,26 +4,30 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.6.0 - 2026-09-09
+
 ### Added
 
-- Added a fail-closed, manually dispatched Linux capability probe for bounded
-  amd64 and arm64 schema-v3 host feasibility checks.
+- Added an optional repository-owned schema-v3 module manifest accepted
+  alongside the unchanged schema-v1 and schema-v2 contracts.
+- Added the initial non-installable compatibility-set draft, deterministic
+  rendering, and structural module identity checks.
+- Added fast local and pull-request checks plus separate consumer and
+  compatibility milestone checks, leaving expensive gates risk-selected.
 
 ### Fixed
 
-- Attached a task-scoped AppArmor user-namespace profile and post-setup
-  privilege-drop re-exec boundary to the hosted Linux probe while preserving
-  unprivileged execution and fail-closed cleanup.
-- Corrected hosted Linux lease-break validation to accept the kernel-reported
-  unlock target while still requiring explicit release and final-state proof.
-- Cleared inherited supplementary groups before the unprivileged schema-v3
-  probe enters a user namespace while retaining exact identity and capability
-  checks.
-- Aligned schema-v3 probe identity validation with the frozen contract by
-  allowing a non-root caller whose primary group ID is zero.
+- Gave mutation unit and integration phases independent 60-second budgets so
+  cold integration compilation cannot consume the unit phase's deadline.
 - Added exact module selection to local and hosted release checks and rehearsals
   so independently versioned modules are not blocked by an already released
   sibling tag.
+
+### Removed
+
+- Removed unpublished recursive authorization, review, freeze, control-schema,
+  forward-oracle, provenance, and resolved-reference-graph machinery.
+- Removed the unused schema-v3 fleet migrator and Linux capability probe.
 
 ## 1.5.5 - 2026-09-06
 

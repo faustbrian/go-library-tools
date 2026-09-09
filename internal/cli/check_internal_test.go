@@ -906,11 +906,7 @@ func TestExecuteSelectsExactlyOneReleaseModule(t *testing.T) {
 	if got := strings.Join(proxyQueries, ","); got != "github.com/example/library@v1.1.0" {
 		t.Fatalf("selected release proxy queries = %q", got)
 	}
-	canonicalRoot, err := filepath.EvalSymlinks(root)
-	if err != nil {
-		t.Fatalf("filepath.EvalSymlinks(root) = %v", err)
-	}
-	if got := strings.Join(gateDirectories, ","); got != canonicalRoot {
+	if got := strings.Join(gateDirectories, ","); got != root {
 		t.Fatalf("selected release gate directories = %q", got)
 	}
 
@@ -930,11 +926,7 @@ func TestExecuteSelectsExactlyOneReleaseModule(t *testing.T) {
 	if got := strings.Join(proxyQueries, ","); got != "github.com/example/library/nested@v1.0.0" {
 		t.Fatalf("nested release proxy queries = %q", got)
 	}
-	canonicalNested, err := filepath.EvalSymlinks(filepath.Join(root, "nested"))
-	if err != nil {
-		t.Fatalf("filepath.EvalSymlinks(nested) = %v", err)
-	}
-	if got := strings.Join(gateDirectories, ","); got != canonicalNested {
+	if got := strings.Join(gateDirectories, ","); got != filepath.Join(root, "nested") {
 		t.Fatalf("nested release gate directories = %q", got)
 	}
 

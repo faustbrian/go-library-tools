@@ -1,6 +1,7 @@
 package inventory_test
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -279,6 +280,113 @@ func TestLoadAcceptsAndPreservesSchemaV2CohesionMetadata(t *testing.T) {
 	}
 	if got.SchemaVersion != 2 || got.Modules[0].Cohesion == nil || got.Modules[0].Cohesion.Family != "tooling" {
 		t.Fatalf("Load(schema v2) = %#v", got)
+	}
+}
+
+func TestLoadAcceptsOptionalSchemaV3WithoutGlobalDeliveryMetadata(t *testing.T) {
+	root := fixture(t)
+	manifest := `{
+  "schema_id": "urn:golib:cohesion:module-manifest:v3",
+  "schema_version": 3,
+  "repository": "github.com/faustbrian/example",
+  "go_version": "1.27.0",
+  "modules": [{
+    "directory": ".",
+    "module_path": "github.com/faustbrian/example",
+    "go_version": "1.27.0",
+    "kind": "public tool",
+    "purpose": "Example tooling.",
+    "lifecycle": "stable",
+    "releasable": true,
+    "version": "1.0.0",
+    "tag_prefix": "v",
+    "gates": {},
+    "test_tags": [],
+    "build_tags": [],
+    "required_services": [],
+    "external_runtime_dependencies": [],
+    "interoperability_tools": [],
+    "conformance_corpora": [],
+    "specifications": [],
+    "owned_dependencies": [],
+    "reverse_owned_dependencies": [],
+    "packages": [],
+    "family": "tooling",
+    "family_label": "Tooling",
+    "family_description": "Repository tooling.",
+    "family_order": 1,
+    "cohesion": {
+      "family": "tooling",
+      "secondary_capabilities": ["testing-and-conformance"],
+      "responsibility": "Validate standalone repositories.",
+      "non_goals": ["Own application runtime behavior."],
+      "public_package_identifier": "none",
+      "primary_entry_packages": ["github.com/faustbrian/example/cmd/example"],
+      "package_selection": {"github.com/faustbrian/example/cmd/example": "Run repository checks."},
+      "lifecycle_status": "active",
+      "maturity": "stable",
+      "construction_styles": ["plain-function"],
+      "lifecycle_styles": ["stateless"],
+      "ownership": {"configuration": "caller", "mutable_inputs": ["copy"], "runtime_resources": "none", "background_work": "none"},
+      "optional_owned_dependencies": [],
+      "adapters": [],
+      "companions": [],
+      "supported_go": {"minimum": "1.27.0", "tested": ["1.27.0"]},
+      "supported_platforms": ["portable-go"],
+      "supported_backends": [],
+      "supported_protocols": [],
+      "documentation": {"readme": "README.md", "api": "https://pkg.go.dev/github.com/faustbrian/example", "adoption": null, "security": null, "compatibility": null, "performance": null, "examples": null, "faq": null, "changelog": "CHANGELOG.md", "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/example", "ecosystem_index": "https://example.com/ecosystem"},
+      "known_good_compatibility_sets": []
+    }
+  }]
+}`
+	path := filepath.Join(root, "modules.json")
+	write(t, path, manifest)
+
+	got, err := inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}})
+	if err != nil {
+		t.Fatalf("Load(schema v3) error = %v", err)
+	}
+	if got.SchemaVersion != 3 || got.Modules[0].Cohesion == nil || got.Modules[0].Cohesion.Family != "tooling" {
+		t.Fatalf("Load(schema v3) = %#v", got)
+	}
+	encoded, err := json.Marshal(got)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, path, string(encoded))
+	if _, err := inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}); err != nil {
+		t.Fatalf("Load(marshaled schema v3) error = %v", err)
+	}
+
+	for _, test := range []struct {
+		name     string
+		manifest string
+	}{
+		{"wrong identity", strings.Replace(manifest, "module-manifest:v3", "module-manifest:wrong", 1)},
+		{"global delivery metadata", strings.Replace(manifest, `"known_good_compatibility_sets": []`, `"known_good_compatibility_sets": [], "delivery": {"implementation": "verified", "hardening": "verified", "release": "verified"}`, 1)},
+		{"global goal metadata", strings.Replace(manifest, `"family_order": 1`, `"family_order": 1, "goal_files": [".ai/GOAL.md"]`, 1)},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			write(t, path, test.manifest)
+			if _, err := inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}); err == nil {
+				t.Fatal("Load(invalid schema v3) error = nil")
+			}
+		})
+	}
+}
+
+func TestLoadRejectsSchemaV3IdentityOnLegacyManifest(t *testing.T) {
+	root := fixture(t)
+	path := filepath.Join(root, "modules.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, path, strings.Replace(string(data), `"schema_version": 1`, `"schema_id": "urn:golib:cohesion:module-manifest:v3", "schema_version": 1`, 1))
+	_, err = inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}})
+	if err == nil || !strings.Contains(err.Error(), "must not contain schema_id") {
+		t.Fatalf("Load(legacy schema identity) error = %v", err)
 	}
 }
 

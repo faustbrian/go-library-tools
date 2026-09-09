@@ -72,14 +72,14 @@ func LoadAndCheck(root string, policy config.Config) (inventory.Inventory, Repor
 		if module.Cohesion != nil {
 			classified++
 		}
-		if catalog.SchemaVersion == 2 && module.Releasable && module.Cohesion == nil {
+		if catalog.SchemaVersion >= 2 && module.Releasable && module.Cohesion == nil {
 			diagnostics = append(diagnostics, Diagnostic{
 				Code:    "missing-metadata",
 				Path:    fmt.Sprintf("/modules/%d/cohesion", index),
 				Message: "releasable module requires cohesion metadata",
 			})
 		}
-		if catalog.SchemaVersion == 2 && module.Cohesion != nil {
+		if catalog.SchemaVersion >= 2 && module.Cohesion != nil {
 			diagnostics = append(diagnostics, validateModule(root, index, module)...)
 		}
 	}

@@ -48,7 +48,7 @@ func Arguments(target, output, tags string, discover bool, workers int) ([]strin
 		"unleash", target,
 		"--integration", "--coverpkg", target,
 		"--exclude-files", "^.+/",
-		"--workers", strconv.Itoa(workers), "--test-cpu", "1", "--timeout-coefficient", "10",
+		"--workers", strconv.Itoa(workers), "--test-cpu", "1", "--timeout-coefficient", "1",
 		"--threshold-efficacy", "100", "--threshold-mcover", "100",
 		"--arithmetic-base", "--conditionals-boundary", "--conditionals-negation",
 		"--invert-assignments", "--invert-bitwise", "--invert-bwassign",

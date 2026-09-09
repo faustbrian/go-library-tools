@@ -42,12 +42,22 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 - Behavioral work MUST establish an observable contract and meaningful test
   before implementation. Tests MUST cover outcomes, failure paths, hostile
   input, cancellation, concurrency, cleanup, and compatibility as applicable.
-- Every production package MUST have exact 100% statement coverage. Aggregate
-  percentages MUST NOT hide a package below 100%.
-- Every viable mutant MUST be killed. Equivalent or unreachable mutants require
-  narrow reviewed machine-readable records, never percentage exceptions.
-- Parsers and untrusted boundaries MUST be fuzzed. Concurrent code MUST pass
-  race tests. Performance claims require equivalent reproducible benchmarks.
+- Routine changes MUST use the least expensive current evidence that directly
+  covers their material risk. Documentation and metadata changes require
+  structural checks; internal behavior requires focused package tests and
+  applicable static analysis; public, security, persistence, or concurrency
+  changes require their directly affected integrations and consumers.
+- Fast local and pull-request checks MUST remain separate from aggregate
+  milestone, scheduled, and release checks. A routine pull request MUST NOT be
+  blocked by unrelated mutation, fuzz, race, benchmark, external-service,
+  release-rehearsal, or ecosystem-wide work.
+- Exact per-production-package coverage and complete viable-mutant accounting
+  are available aggregate controls when an identified risk or release boundary
+  requires them. Equivalent or unreachable mutants require narrow reviewed
+  machine-readable records, never percentage exceptions.
+- Parsers and untrusted boundaries MUST be fuzzed, concurrent code MUST pass
+  race tests, and performance claims require equivalent reproducible
+  benchmarks only when those checks exercise a material risk of the change.
 - NilAway is advisory; all other required quality, security, documentation,
   compatibility, and release gates fail closed.
 - Completion claims require fresh evidence for affected behavior and a final

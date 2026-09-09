@@ -1,7 +1,7 @@
 diff --git a/internal/engine/engine.go b/internal/engine/engine.go
 --- a/internal/engine/engine.go
 +++ b/internal/engine/engine.go
-@@ -188,5 +188 @@
+@@ -189,5 +189 @@ func (mu *Engine) mutationStatus(pos token.Position) mutator.Status {
 -	var status mutator.Status
 -
 -	if mu.codeData.Cov.IsCovered(pos) {
@@ -11,37 +11,38 @@ diff --git a/internal/engine/engine.go b/internal/engine/engine.go
 diff --git a/internal/engine/executor.go b/internal/engine/executor.go
 --- a/internal/engine/executor.go
 +++ b/internal/engine/executor.go
-@@ -197,2 +196,0 @@
--	cmd := m.execContext(ctx, "go", m.getTestArgs(pkg)...)
--	cmd.Dir = m.mutant.Workdir()
-@@ -200 +198,8 @@
--		cmd.Dir = rootDir
+@@ -193,0 +194,22 @@ func (m *mutantExecutor) runTests(rootDir, pkg string) mutator.Status {
++	if m.integrationMode {
 +		status := m.runTestCommand(
-+			ctx,
 +			m.mutant.Workdir(),
 +			m.getTestArgsFor(pkg, false, false),
 +		)
 +		if status != mutator.Lived {
 +			return status
 +		}
-@@ -201,0 +207,16 @@
++	}
 +
 +	workingDir := m.mutant.Workdir()
 +	if m.integrationMode {
 +		workingDir = rootDir
 +	}
 +
-+	return m.runTestCommand(ctx, workingDir, m.getTestArgs(pkg))
++	return m.runTestCommand(workingDir, m.getTestArgs(pkg))
 +}
 +
 +func (m *mutantExecutor) runTestCommand(
-+	ctx context.Context,
 +	workingDir string,
 +	args []string,
 +) mutator.Status {
+@@ -197,5 +219,2 @@ func (m *mutantExecutor) runTests(rootDir, pkg string) mutator.Status {
+-	cmd := m.execContext(ctx, "go", m.getTestArgs(pkg)...)
+-	cmd.Dir = m.mutant.Workdir()
+-	if m.integrationMode {
+-		cmd.Dir = rootDir
+-	}
 +	cmd := m.execContext(ctx, "go", args...)
 +	cmd.Dir = workingDir
-@@ -219,0 +241,7 @@
+@@ -219,0 +239,7 @@ func (m *mutantExecutor) getTestArgs(pkg string) []string {
 +	return m.getTestArgsFor(pkg, m.integrationMode, true)
 +}
 +
@@ -49,12 +50,12 @@ diff --git a/internal/engine/executor.go b/internal/engine/executor.go
 +	pkg string,
 +	integrationMode, includeBuildTags bool,
 +) []string {
-@@ -221 +249 @@
+@@ -221 +247 @@ func (m *mutantExecutor) getTestArgs(pkg string) []string {
 -	if m.buildTags != "" {
 +	if includeBuildTags && m.buildTags != "" {
-@@ -231 +259 @@
+@@ -231 +257 @@ func (m *mutantExecutor) getTestArgs(pkg string) []string {
 -		args = append(args, fmt.Sprintf("-cpu %d", m.testCPU))
 +		args = append(args, "-cpu", fmt.Sprint(m.testCPU))
-@@ -235 +263 @@
+@@ -235 +261 @@ func (m *mutantExecutor) getTestArgs(pkg string) []string {
 -	if m.integrationMode {
 +	if integrationMode {

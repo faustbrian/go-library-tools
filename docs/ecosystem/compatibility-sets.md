@@ -28,5 +28,5 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 
 ### Evidence
 
-- Content fingerprint: `sha256:992a9660735c5ee8e86b116dbd7b4aaba56b24a1be8cf44696be8a26362e3f4f`
+- Content fingerprint: `sha256:51635ec7e8cf236760d33a9cf3a8eb115e729187545c0cb14c88aa567292d3fd`
 - Observation: `Local source commits verified; release tags unavailable for some modules; cross-module consumer execution remains pending and unverified.`

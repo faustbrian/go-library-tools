@@ -19,3 +19,9 @@
 Migrate in bounded cohorts. Do not rerun expensive evidence because Git history
 changed, and do not migrate a checkpoint whose semantic identity cannot be
 proven.
+
+Schema v3 adoption is optional and repository-local. Existing schema-v1 and
+schema-v2 manifests remain supported. A repository may author a v3 manifest
+when its own module and cohesion facts benefit from the narrower contract; no
+fleet migration, authorization registry, or release solely for metadata is
+required.

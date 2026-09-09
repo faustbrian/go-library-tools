@@ -1,6 +1,8 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: build check ci cohesion compatibility config consumers inventory repository-check workflows
+.PHONY: build check check-packages ci cohesion compatibility config consumers inventory local-check local-ci milestone-check repository-check workflows
+
+PACKAGES ?=
 
 define run_go
 	set -euo pipefail; \
@@ -32,7 +34,20 @@ compatibility:
 workflows:
 	$(call run_go,run ./cmd/golib workflows check)
 
+check-packages:
+	@test -n "$(strip $(PACKAGES))" || { echo 'PACKAGES is required, for example PACKAGES=./internal/inventory' >&2; exit 2; }
+	$(call run_go,test $(PACKAGES))
+	$(call run_go,vet $(PACKAGES))
+
+local-check: config repository-check cohesion workflows
+
+local-ci:
+	$(call run_go,run ./cmd/golib check --local)
+	$(MAKE) local-check
+
+milestone-check: consumers compatibility
+
 check:
 	$(call run_go,run ./cmd/golib check --all)
 
-ci: repository-check consumers cohesion workflows compatibility check
+ci: local-ci milestone-check

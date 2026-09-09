@@ -1,9 +1,19 @@
 # Verification
 
-The standard contract validates formatting, module tidiness, unsafe imports,
-vet, tests, races, exact package coverage, mutation evidence, linting,
-vulnerabilities, secrets, licenses, fuzzing, documentation, API compatibility,
-conformance, interoperability, and benchmarks when enabled by the manifests.
+Verification is proportional to the change. Ordinary development uses focused
+package tests and applicable static analysis, then the fast repository-local
+checks. Pull requests run `make local-ci`, including formatting, module
+tidiness, safety, tests, vet, configured lint/static analysis, local Markdown
+links, and applicable API compatibility. Main, scheduled, and explicit
+milestones reuse that revision's successful local check and run
+`make milestone-check` only for consumer and compatibility validation.
+
+Mutation, broad fuzzing, race, benchmark, external-service, release-rehearsal,
+and ecosystem-wide checks do not block a routine change unless they directly
+exercise its material risk. `make check-packages PACKAGES=...` is the focused
+developer entry point, `make local-check` validates repository-owned metadata,
+and `make check` remains the explicit complete all-enabled repository gate for
+release work or a risk-selected aggregate run.
 Formatting and safety scans follow Go package discovery boundaries: they skip
 `testdata`, hidden, underscore-prefixed, vendored, and nested module
 directories. Repository namespace checks apply to releasable modules; fixture
@@ -35,13 +45,15 @@ Nested modules do not repeat repository-wide Markdown checks. Their enabled
 documentation gate runs the configured typed operation or a bounded Go example
 test when no module-specific operation is declared.
 
-Coverage is evaluated per production package and must be exactly 100%. The
+When selected for an aggregate milestone or release, coverage is evaluated per
+production package and must be exactly 100%. The
 runner instruments the exact production-package set once while executing the
 complete module test set. This keeps denominators production-specific while
 allowing integration and external-package tests to contribute only when they
 actually exercise a package.
-Mutation reports must account for every viable mutant and kill 100%; equivalent
-or unreachable cases require narrow reviewed records.
+When selected for an aggregate milestone or release, mutation reports must
+account for every viable mutant and kill 100%; equivalent or unreachable cases
+require narrow reviewed records.
 
 Evidence is keyed by complete behavior-affecting content and verifier identity,
 not Git history. It is persisted atomically when available. Code, tests,

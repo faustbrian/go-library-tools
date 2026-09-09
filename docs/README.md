@@ -9,6 +9,8 @@
   source pins, conformance evidence, and upstream monitoring.
 - [Legacy capability map](capabilities.md): replacement for each copied tool.
 - [Verification](verification.md): gates, evidence, coverage, and mutation.
+- [Assurance simplification](assurance-simplification.md): proportional checks
+  and retired unpublished evidence machinery.
 - [Service fixtures](services.md): supported services and lifecycle safety.
 - [Reusable workflows](workflows.md): immutable CI consumption.
 - [Consumer inventory](consumers.md): maintained repositories and bounded upgrades.
