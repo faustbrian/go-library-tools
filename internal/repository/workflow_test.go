@@ -821,7 +821,6 @@ func TestReleaseWorkflowPublishesCatalogsOnlyForExplicitMilestones(t *testing.T)
 	}
 	prepare := content[prepareStart:verifyStart]
 	for _, required := range []string{
-		"if: always() && needs.build.result == 'success'",
 		"needs.verify-catalog.result == 'skipped'",
 		"if: needs.verify-catalog.result == 'success'",
 		"release-manifest.json",
@@ -881,6 +880,24 @@ func TestReleaseWorkflowPublishesCatalogsOnlyForExplicitMilestones(t *testing.T)
 	} {
 		if strings.Contains(publish, forbidden) {
 			t.Errorf("write-capable publish job contains forbidden execution %q", forbidden)
+		}
+	}
+}
+
+func TestReleaseWorkflowContinuesLeanPublicationAfterSkippedCatalogJobs(t *testing.T) {
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/release.yml")), &workflow); err != nil {
+		t.Fatal(err)
+	}
+	want := map[string]string{
+		"prepare-publication": "always() && needs.build.result == 'success' && ((vars.GOLIB_CATALOG_MILESTONE_TAG != github.ref_name && needs.verify-catalog.result == 'skipped') || (vars.GOLIB_CATALOG_MILESTONE_TAG == github.ref_name && needs.verify-catalog.result == 'success'))",
+		"verify-publication":  "always() && needs.prepare-publication.result == 'success'",
+		"attest-publication":  "always() && needs.verify-publication.result == 'success'",
+		"publish":             "always() && needs.attest-publication.result == 'success'",
+	}
+	for job, condition := range want {
+		if got := workflow.Jobs[job].If; got != condition {
+			t.Errorf("%s condition = %q, want %q", job, got, condition)
 		}
 	}
 }
