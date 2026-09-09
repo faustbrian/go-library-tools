@@ -4,6 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.6.1 - 2026-09-09
+
+### Fixed
+
+- Decoupled routine tooling releases from catalog and source-lock publication,
+  which now runs only for an explicitly selected ecosystem milestone tag.
+- Kept lean release verification, attestation, and publication reachable after
+  the intentionally skipped catalog jobs while keeping milestone failures
+  closed.
+- Preserved imports from the published v1 mutation verifier after compatible
+  verifier timing changes, without requiring repository ledger rewrites.
+- Kept mutable upstream specification monitoring out of pull-request and
+  release feedback while retaining offline validation and scheduled monitoring.
+
 ## 1.6.0 - 2026-09-09
 
 ### Added
@@ -21,12 +35,6 @@ All notable changes to this project are documented in this file.
   cold integration compilation cannot consume the unit phase's deadline.
 - Normalized a successful mutation run with no viable mutants into a canonical
   empty report without requiring a separate review record.
-- Decoupled routine tooling releases from catalog and source-lock publication,
-  which now runs only for an explicitly selected ecosystem milestone tag.
-- Preserved imports from the published v1 mutation verifier after compatible
-  verifier timing changes, without requiring repository ledger rewrites.
-- Kept mutable upstream specification monitoring out of pull-request and
-  release feedback while retaining offline validation and scheduled monitoring.
 - Added exact module selection to local and hosted release checks and rehearsals
   so independently versioned modules are not blocked by an already released
   sibling tag.
