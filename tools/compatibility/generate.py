@@ -2,10 +2,17 @@
 """Validate and render the canonical ecosystem compatibility sets."""
 from __future__ import annotations
 
+import argparse
+import copy
+import concurrent.futures
+import datetime
 import json
 import hashlib
+import os
 import re
 import subprocess
+import sys
+import tempfile
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -14,6 +21,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "docs/ecosystem/compatibility-sets.json"
 OUTPUT = ROOT / "docs/ecosystem/compatibility-sets.md"
+CONSUMER_DIRECTORY = ROOT / "release/compatibility-consumer"
 SEMVER = re.compile(r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
 PUBLISHED_SET_ID = re.compile(r"^golib-compat-v1-[0-9]{8}\.[1-9][0-9]*$")
 DRAFT_SET_ID = re.compile(r"^draft-[0-9]{8}\.[1-9][0-9]*$")
@@ -23,7 +31,279 @@ REQUIRED_SET_FIELDS = {
 }
 OPTIONAL_SET_FIELDS = {
     "recipes", "external_versions", "upgrade", "rollback", "exclusions",
+    "roster",
 }
+
+
+def active_catalog_modules(catalog_modules: list[dict]) -> list[dict]:
+    selected = []
+    seen = set()
+    for module in catalog_modules:
+        cohesion = module.get("cohesion") or {}
+        if module.get("releasable") is not True:
+            continue
+        if cohesion.get("lifecycle_status") != "active":
+            continue
+        module_path = module.get("module_path")
+        validate_string(module_path, "catalog module path")
+        if module_path in seen:
+            raise ValueError(f"duplicate active catalog module: {module_path}")
+        seen.add(module_path)
+        selected.append(module)
+    return sorted(selected, key=lambda module: module["module_path"])
+
+
+def validate_roster(item: dict) -> None:
+    roster = item.get("roster")
+    if roster is None:
+        return
+    if not isinstance(roster, dict) or set(roster) != {"selection", "module_count"}:
+        raise ValueError("roster fields mismatch")
+    if roster["selection"] != "active-public":
+        raise ValueError("roster selection must be active-public")
+    if not isinstance(roster["module_count"], int) or roster["module_count"] < 1:
+        raise ValueError("roster module count must be a positive integer")
+    if len(item.get("modules", [])) != roster["module_count"]:
+        raise ValueError("roster mismatch: declared count does not match selected modules")
+
+
+def validate_complete_roster(item: dict, catalog_modules: list[dict]) -> None:
+    roster = item.get("roster")
+    if roster is None:
+        return
+    validate_roster(item)
+    expected = [module["module_path"] for module in active_catalog_modules(catalog_modules)]
+    actual = [module.get("module_path") for module in item.get("modules", [])]
+    if (
+        len(expected) != roster["module_count"]
+        or len(actual) != roster["module_count"]
+        or actual != expected
+    ):
+        raise ValueError(
+            f"roster mismatch: expected {len(expected)} active modules, got {len(actual)}"
+        )
+
+
+def build_candidate(
+    template: dict,
+    catalog_modules: list[dict],
+    *,
+    version_overrides=None,
+    remote_tag_lookup=None,
+    public_version_lookup=None,
+) -> dict:
+    if version_overrides is None:
+        version_overrides = {}
+    if remote_tag_lookup is None:
+        remote_tag_lookup = remote_tag_revision
+    if public_version_lookup is None:
+        public_version_lookup = public_module_version
+    item = copy.deepcopy(template)
+    selected = active_catalog_modules(catalog_modules)
+    selected_paths = {module["module_path"] for module in selected}
+    unknown_overrides = sorted(set(version_overrides) - selected_paths)
+    if unknown_overrides:
+        raise ValueError(
+            f"version override names unknown module: {unknown_overrides[0]}"
+        )
+    roster = item.get("roster")
+    if isinstance(roster, dict) and roster.get("module_count") != len(selected):
+        raise ValueError(
+            f"roster mismatch: expected {roster.get('module_count')} active modules, "
+            f"catalog has {len(selected)}"
+        )
+    def resolve(catalog_module: dict) -> dict:
+        version = version_overrides.get(
+            catalog_module["module_path"], catalog_module.get("version")
+        )
+        validate_string(version, "catalog module version")
+        version = "v" + version.removeprefix("v")
+        if not SEMVER.fullmatch(version):
+            raise ValueError(
+                f"catalog module version is not semantic: {catalog_module['module_path']}"
+            )
+        repository = repository_identity(catalog_module)
+        tag = expected_tag(catalog_module, version)
+        revision = remote_tag_lookup(repository, tag)
+        if revision is None:
+            raise ValueError(
+                f"active module lacks a remote release tag: {catalog_module['module_path']}"
+            )
+        if not re.fullmatch(r"[0-9a-f]{40}", revision):
+            raise ValueError(
+                f"active module has an invalid release revision: {catalog_module['module_path']}"
+            )
+        if not public_version_lookup(catalog_module["module_path"], version):
+            raise ValueError(
+                f"active module version is unavailable from the public proxy: {catalog_module['module_path']}"
+            )
+        return {
+            "module_path": catalog_module["module_path"],
+            "version": version,
+            "source_revision": revision,
+        }
+
+    with concurrent.futures.ThreadPoolExecutor(
+        max_workers=min(16, max(1, len(selected)))
+    ) as executor:
+        modules = list(executor.map(resolve, selected))
+    item["modules"] = modules
+    validate_complete_roster(item, catalog_modules)
+    evidence = item.get("evidence")
+    if not isinstance(evidence, dict):
+        raise ValueError("evidence must be an object")
+    evidence.pop("content_sha256", None)
+    evidence["content_sha256"] = content_fingerprint(item)
+    return item
+
+
+def render_clean_consumer(
+    item: dict, catalog_modules: list[dict]
+) -> tuple[str, str]:
+    by_path = {module.get("module_path"): module for module in catalog_modules}
+    requirements = []
+    imports = set()
+    for selected in item["modules"]:
+        module_path = selected["module_path"]
+        catalog_module = by_path.get(module_path)
+        if catalog_module is None:
+            raise ValueError(f"consumer module is absent from catalog: {module_path}")
+        requirements.append((module_path, selected["version"]))
+        package_names = {
+            package.get("import_path"): package.get("name")
+            for package in catalog_module.get("packages", [])
+        }
+        cohesion = catalog_module.get("cohesion") or {}
+        for entry in cohesion.get("primary_entry_packages", []):
+            if package_names.get(entry) != "main":
+                imports.add(entry)
+    requirements.sort()
+    go_version = item.get("go", {}).get("version")
+    validate_string(go_version, "Go version")
+    go_mod = [
+        "module github.com/faustbrian/go-library-tools/release/compatibility-consumer",
+        "",
+        f"go {go_version}",
+        "",
+        "require (",
+    ]
+    go_mod.extend(f"\t{module_path} {version}" for module_path, version in requirements)
+    go_mod += [")", ""]
+    test_source = ["package compatibilityconsumer_test", "", "import ("]
+    test_source.extend(f'\t_ "{entry}"' for entry in sorted(imports))
+    test_source += [")", ""]
+    return "\n".join(go_mod), "\n".join(test_source)
+
+
+def ephemeral_rebase_arguments(item: dict, go_mod: dict) -> list[str]:
+    if go_mod.get("Replace"):
+        raise ValueError("ephemeral compatibility rebases reject replace directives")
+    versions = {
+        module["module_path"]: module["version"] for module in item["modules"]
+    }
+    arguments = []
+    for requirement in sorted(
+        go_mod.get("Require") or [], key=lambda value: value.get("Path", "")
+    ):
+        module_path = requirement.get("Path")
+        version = versions.get(module_path)
+        if version is not None:
+            arguments.append(f"-require={module_path}@{version}")
+    return arguments
+
+
+def load_catalog_modules() -> list[dict]:
+    catalog_modules = {}
+    for catalog_name in ("catalog-consumer.json", "catalog-engineering.json"):
+        catalog = json.loads((ROOT / "docs/ecosystem" / catalog_name).read_text())
+        for module in catalog.get("modules", []):
+            module_path = module.get("module_path")
+            if module_path not in catalog_modules:
+                catalog_modules[module_path] = {}
+            catalog_modules[module_path].update(module)
+    return list(catalog_modules.values())
+
+
+def select_set(value: dict, set_id: str | None) -> dict:
+    sets = value.get("sets", [])
+    if set_id is None:
+        if len(sets) != 1:
+            raise ValueError("set id is required when multiple compatibility sets exist")
+        return sets[0]
+    for item in sets:
+        if item.get("set_id") == set_id:
+            return item
+    raise ValueError(f"unknown compatibility set: {set_id}")
+
+
+def select_candidate_template(value: dict) -> dict:
+    candidates = [
+        item
+        for item in value.get("sets", [])
+        if item.get("publication_status") == "unreleased"
+    ]
+    if len(candidates) != 1:
+        raise ValueError("candidate generation requires exactly one unreleased template")
+    return candidates[0]
+
+
+def select_clean_consumer_set(value: dict) -> dict | None:
+    roster_sets = [item for item in value.get("sets", []) if "roster" in item]
+    candidates = [
+        item
+        for item in roster_sets
+        if item.get("publication_status") == "unreleased"
+    ]
+    if len(candidates) > 1:
+        raise ValueError("multiple unreleased compatibility candidates")
+    if candidates:
+        return candidates[0]
+    published = [
+        item
+        for item in roster_sets
+        if item.get("publication_status") == "published"
+    ]
+    return published[-1] if published else None
+
+
+def write_candidate_artifacts(value: dict, item: dict, catalog_modules: list[dict]) -> None:
+    candidate_value = copy.deepcopy(value)
+    matching = [
+        index
+        for index, existing in enumerate(candidate_value.get("sets", []))
+        if existing.get("set_id") == item["set_id"]
+    ]
+    if not matching:
+        matching = [
+            index
+            for index, existing in enumerate(candidate_value.get("sets", []))
+            if existing.get("publication_status") == "unreleased"
+        ]
+    if len(matching) > 1:
+        raise ValueError("candidate write requires one replaceable compatibility set")
+    if matching:
+        candidate_value["sets"][matching[0]] = item
+    else:
+        candidate_value.setdefault("sets", []).append(item)
+    go_mod, test_source = render_clean_consumer(item, catalog_modules)
+    SOURCE.write_text(json.dumps(candidate_value, indent=2, ensure_ascii=False) + "\n")
+    OUTPUT.write_text(render(candidate_value))
+    CONSUMER_DIRECTORY.mkdir(parents=True, exist_ok=True)
+    (CONSUMER_DIRECTORY / "go.mod").write_text(go_mod)
+    (CONSUMER_DIRECTORY / "consumer_test.go").write_text(test_source)
+
+
+def check_clean_consumer(item: dict, catalog_modules: list[dict]) -> None:
+    if item.get("roster") is None:
+        return
+    go_mod, test_source = render_clean_consumer(item, catalog_modules)
+    expected = {
+        CONSUMER_DIRECTORY / "go.mod": go_mod,
+        CONSUMER_DIRECTORY / "consumer_test.go": test_source,
+    }
+    for path, content in expected.items():
+        if not path.is_file() or path.read_text() != content:
+            raise ValueError(f"generated compatibility consumer is stale: {path.name}")
 
 
 def expected_tag(catalog_module: dict, version: str) -> str:
@@ -176,6 +456,7 @@ def load(
     *,
     remote_tag_lookup=remote_tag_revision,
     public_version_lookup=public_module_version,
+    allow_stale_unreleased=False,
 ) -> dict:
     value = json.loads(SOURCE.read_text())
     if value.get("format") != "golib-compatibility-sets-v1":
@@ -184,16 +465,8 @@ def load(
     if not isinstance(sets, list) or not sets:
         raise ValueError("sets must be a non-empty array")
     seen = set()
-    catalogs = []
-    for catalog_name in ("catalog-consumer.json", "catalog-engineering.json"):
-        catalog = json.loads((ROOT / "docs/ecosystem" / catalog_name).read_text())
-        catalogs.extend(catalog.get("modules", []))
-    catalog_modules = {}
-    for module in catalogs:
-        module_path = module.get("module_path")
-        if module_path not in catalog_modules:
-            catalog_modules[module_path] = {}
-        catalog_modules[module_path].update(module)
+    catalogs = load_catalog_modules()
+    catalog_modules = {module.get("module_path"): module for module in catalogs}
     for item in sets:
         if not isinstance(item, dict):
             raise ValueError("sets must contain objects")
@@ -223,6 +496,7 @@ def load(
         if not item["modules"] or not item["scenarios"]:
             raise ValueError(f"set {item['set_id']} lacks modules or scenarios")
         validate_optional_fields(item)
+        validate_roster(item)
         evidence = item["evidence"]
         if not isinstance(evidence, dict):
             raise ValueError("evidence must be an object")
@@ -230,6 +504,7 @@ def load(
         validate_string(observation, "evidence observation")
         observation = observation.lower()
         module_ids = set()
+        public_bindings = []
         for module in item["modules"]:
             if set(module) != {"module_path", "version", "source_revision"}:
                 raise ValueError(f"module fields mismatch in {item['set_id']}")
@@ -242,22 +517,48 @@ def load(
                 raise ValueError("source revisions must be full Git identities")
             catalog_module = catalog_modules.get(module["module_path"])
             catalog_version = None if catalog_module is None else catalog_module.get("version")
-            if catalog_version is None or "v" + catalog_version.lstrip("v") != module["version"]:
+            if status == "published" and catalog_module is None:
                 raise ValueError(f"module identity is absent or version-mismatched: {module['module_path']}")
-            tag = expected_tag(catalog_module, module["version"])
-            repository = repository_identity(catalog_module)
-            if status == "published" and remote_tag_lookup(
-                repository, tag
-            ) != module["source_revision"]:
+            if status == "published":
+                tag = expected_tag(catalog_module, module["version"])
+                repository = repository_identity(catalog_module)
+                public_bindings.append((module, repository, tag))
+            elif not allow_stale_unreleased:
+                if (
+                    catalog_module is None
+                    or (
+                        item.get("roster") is None
+                        and (
+                            catalog_version is None
+                            or "v" + catalog_version.lstrip("v")
+                            != module["version"]
+                        )
+                    )
+                ):
+                    raise ValueError(
+                        "module identity is absent or version-mismatched: "
+                        + module["module_path"]
+                    )
+                expected_tag(catalog_module, module["version"])
+                repository_identity(catalog_module)
+
+        def verify_public_binding(binding: tuple[dict, str, str]) -> None:
+            module, repository, tag = binding
+            if remote_tag_lookup(repository, tag) != module["source_revision"]:
                 raise ValueError(
                     f"published module revision lacks matching remote tag: {module['module_path']}"
                 )
-            if status == "published" and not public_version_lookup(
-                module["module_path"], module["version"]
-            ):
+            if not public_version_lookup(module["module_path"], module["version"]):
                 raise ValueError(
                     f"published module version is unavailable from the public proxy: {module['module_path']}"
                 )
+
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=min(16, max(1, len(public_bindings)))
+        ) as executor:
+            list(executor.map(verify_public_binding, public_bindings))
+        if status == "unreleased" and not allow_stale_unreleased:
+            validate_complete_roster(item, catalogs)
         if item["publication_status"] == "unreleased" and "pending" not in observation:
             raise ValueError("unreleased scenarios require an explicitly pending observation")
         if not item["evidence"].get("content_sha256", "").startswith("sha256:"):
@@ -284,6 +585,14 @@ def render(value: dict) -> str:
         lines += [f"- {scenario}" for scenario in item["scenarios"]]
         lines += ["", f"**Go:** `{item['go']['version']}` on {', '.join(item['go']['os_arch'])}.", "", "### Caveats", ""]
         lines += [f"- {caveat}" for caveat in item["caveats"]]
+        if "roster" in item:
+            lines += [
+                "",
+                "### Roster",
+                "",
+                f"- Selection: `{item['roster']['selection']}`",
+                f"- Modules: `{item['roster']['module_count']}`",
+            ]
         if "recipes" in item:
             lines += ["", "### Recipes", ""]
             lines += [
@@ -315,9 +624,134 @@ def render(value: dict) -> str:
     return "\n".join(lines)
 
 
-if __name__ == "__main__":
+def parse_args(arguments: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        description="Generate and validate Golib compatibility-set artifacts."
+    )
+    subparsers = parser.add_subparsers(dest="command")
+    subparsers.add_parser("check")
+    candidate = subparsers.add_parser("candidate")
+    candidate.add_argument("--set-id", required=True)
+    candidate.add_argument("--observed-at", required=True)
+    candidate.add_argument("--module-count", required=True, type=int)
+    candidate.add_argument(
+        "--version",
+        action="append",
+        default=[],
+        metavar="MODULE@VERSION",
+    )
+    candidate.add_argument("--write", action="store_true")
+    rebase = subparsers.add_parser("rebase")
+    rebase.add_argument("--set-id")
+    rebase.add_argument("--go-mod", required=True, type=Path)
+    return parser.parse_args(arguments)
+
+
+def validate_candidate_request(set_id: str, observed_at: str, module_count: int) -> None:
+    if not DRAFT_SET_ID.fullmatch(set_id):
+        raise ValueError("unreleased set id must use the draft form")
+    try:
+        datetime.datetime.strptime(observed_at, "%Y-%m-%dT%H:%M:%SZ")
+    except ValueError as error:
+        raise ValueError("candidate observation time must use UTC RFC 3339 form") from error
+    if module_count < 1:
+        raise ValueError("candidate module count must be positive")
+
+
+def parse_version_overrides(bindings: list[str]) -> dict[str, str]:
+    overrides = {}
+    for binding in bindings:
+        if "@" not in binding:
+            raise ValueError("candidate version override must use MODULE@VERSION")
+        module_path, version = binding.rsplit("@", 1)
+        validate_string(module_path, "candidate version override module")
+        if not SEMVER.fullmatch(version):
+            raise ValueError("candidate version override must use a semantic version")
+        if module_path in overrides:
+            raise ValueError(f"duplicate candidate version override: {module_path}")
+        overrides[module_path] = version
+    return overrides
+
+
+def main(arguments: list[str] | None = None) -> int:
+    options = parse_args([] if arguments is None else arguments)
+    command = options.command or "check"
+    if command == "candidate":
+        validate_candidate_request(
+            options.set_id, options.observed_at, options.module_count
+        )
+        value = load(allow_stale_unreleased=True)
+        template = copy.deepcopy(select_candidate_template(value))
+        template.update(
+            {
+                "set_id": options.set_id,
+                "publication_status": "unreleased",
+                "installable": False,
+                "observed_at": options.observed_at,
+                "roster": {
+                    "selection": "active-public",
+                    "module_count": options.module_count,
+                },
+            }
+        )
+        template["evidence"] = {
+            "observation": "Pending final composition and native clean-consumer receipts."
+        }
+        catalogs = load_catalog_modules()
+        item = build_candidate(
+            template,
+            catalogs,
+            version_overrides=parse_version_overrides(options.version),
+        )
+        if options.write:
+            write_candidate_artifacts(value, item, catalogs)
+        else:
+            print(json.dumps(item, indent=2, ensure_ascii=False))
+        return 0
+    if command == "rebase":
+        data = load()
+        item = select_set(data, options.set_id)
+        with tempfile.TemporaryDirectory(prefix="golib-compatibility-rebase-") as task:
+            environment = dict(os.environ)
+            for name, directory in (
+                ("GOCACHE", "cache"),
+                ("GOMODCACHE", "mod"),
+                ("GOTMPDIR", "tmp"),
+            ):
+                path = Path(task) / directory
+                path.mkdir()
+                environment[name] = str(path)
+            result = subprocess.run(
+                ["go", "mod", "edit", "-json", str(options.go_mod)],
+                capture_output=True,
+                text=True,
+                check=True,
+                env=environment,
+            )
+            go_mod = json.loads(result.stdout)
+            edit_arguments = ephemeral_rebase_arguments(item, go_mod)
+            if edit_arguments:
+                subprocess.run(
+                    ["go", "mod", "edit", *edit_arguments, str(options.go_mod)],
+                    check=True,
+                    env=environment,
+                )
+        print(f"rebased {len(edit_arguments)} compatibility requirement(s)")
+        return 0
     data = load()
     rendered = render(data)
     if OUTPUT.exists() and OUTPUT.read_text() != rendered:
-        raise SystemExit("compatibility-sets.md is stale; regenerate it")
+        raise ValueError("compatibility-sets.md is stale; regenerate it")
+    catalogs = load_catalog_modules()
+    consumer_set = select_clean_consumer_set(data)
+    if consumer_set is not None:
+        check_clean_consumer(consumer_set, catalogs)
     print(f"validated {len(data['sets'])} compatibility set(s)")
+    return 0
+
+
+if __name__ == "__main__":
+    try:
+        raise SystemExit(main(sys.argv[1:]))
+    except (OSError, ValueError, subprocess.CalledProcessError) as error:
+        raise SystemExit(str(error)) from error

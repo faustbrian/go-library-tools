@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Added deterministic active-roster candidate and clean-consumer generation,
+  plus task-checkout dependency rebasing for composition receipts.
+
 ## 1.7.2 - 2026-09-09
 
 ### Fixed

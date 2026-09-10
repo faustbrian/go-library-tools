@@ -42,6 +42,43 @@ version. Set records can also carry structured recipe,
 external-version, upgrade, rollback, and exclusion details. Published
 identifiers are immutable; a later recommendation receives a new identifier.
 
+After the final aggregate consumer catalog contains the complete active public
+roster, generate one unreleased candidate and its clean-consumer module with:
+
+```sh
+make compatibility-candidate \
+  COMPATIBILITY_SET_ID=draft-YYYYMMDD.1 \
+  COMPATIBILITY_OBSERVED_AT=YYYY-MM-DDTHH:MM:SSZ \
+  COMPATIBILITY_MODULE_COUNT=<active-module-count> \
+  COMPATIBILITY_VERSION_OVERRIDES='<module>@<public-version> ...'
+```
+
+Generation selects only active, releasable catalog modules, sorts them by
+module path, applies any deliberate public-version overrides, resolves every
+selected version through its exact remote tag and the public Go proxy, and
+writes `compatibility-sets.{json,md}` together with
+`release/compatibility-consumer/{go.mod,consumer_test.go}`. A missing release,
+deprecated or planned module, stale catalog version, or roster-count mismatch
+fails before a candidate is written. Do not run the write command until the
+catalog, public releases, candidate metadata, and receipt sources are final.
+
+Composition receipts run from task-owned disposable source checkouts. Rebase
+only dependencies already required by that checkout, reject any local replace,
+then tidy and execute with public resolution:
+
+```sh
+make compatibility-rebase \
+  COMPATIBILITY_SET_ID=draft-YYYYMMDD.1 \
+  COMPATIBILITY_GO_MOD=/task/checkout/go.mod
+GOWORK=off go mod tidy
+GOWORK=off go test -mod=readonly ./...
+```
+
+`compatibility-rebase` reads the selected candidate, updates matching existing
+requirements to its versions, and leaves unrelated dependencies unchanged. It
+does not edit a maintained repository unless that repository is itself the
+explicit task-owned checkout.
+
 The development copy on a default branch is not an immutable compatibility
 contract. Published documents identify their design-language version, exact
 `go-library-tools` tag, and content digest.

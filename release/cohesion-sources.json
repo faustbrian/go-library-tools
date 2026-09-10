@@ -6,7 +6,7 @@
       "repository": "github.com/faustbrian/go-adaptive-throttle",
       "source": {
         "kind": "commit",
-        "commit": "7f8144365ad17b3d830875791c8946d3f04cb975"
+        "commit": "2c5928caf06bbd521c21e3cbf08f8eeb6b2ebf38"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -17,7 +17,7 @@
       "repository": "github.com/faustbrian/go-analysis",
       "source": {
         "kind": "commit",
-        "commit": "a7bf88538d1792674ea7b177854c09f589a06fdb"
+        "commit": "1d8534eae53e8584651957bcef0dee45a77a706e"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -28,7 +28,7 @@
       "repository": "github.com/faustbrian/go-api-query",
       "source": {
         "kind": "commit",
-        "commit": "f52a10e68221ec372e3cb1bc4b9e2b0d1b48b188"
+        "commit": "38a5e13ecaa11fba0b367d79da3e238bf3452c63"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -39,7 +39,7 @@
       "repository": "github.com/faustbrian/go-audit",
       "source": {
         "kind": "commit",
-        "commit": "239ba1f5694c631aca63fc365b0b2b0594c1ea83"
+        "commit": "25cc54ceaa01baf87aa81a59282a8f44ffcec4b1"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -50,18 +50,18 @@
       "repository": "github.com/faustbrian/go-authentication",
       "source": {
         "kind": "commit",
-        "commit": "0f702ecadfabb8780bd25d23b7e35cdb03b66d12"
+        "commit": "831b4121f7b46894ce699d2cadb736087cb0fad6"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.5.6",
+        "checksums_sha256": "5a40d9e67542f2b0a6bee16558a0eeb0e275b3459b10b6c754600eb65792dc7b"
       }
     },
     {
       "repository": "github.com/faustbrian/go-authorization",
       "source": {
         "kind": "commit",
-        "commit": "95065df2673373bff6934445856dff015431cfc9"
+        "commit": "1b5318a2cd0b78b236e7ad564703f18acb6a72c0"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -72,7 +72,7 @@
       "repository": "github.com/faustbrian/go-barcode",
       "source": {
         "kind": "commit",
-        "commit": "d31a9025876cf9083c0ef0b8bc77d513d2698503"
+        "commit": "d6d8ff8c47fbfeb91d7bf498ccb08d1de4d8d839"
       },
       "tooling": {
         "version": "v1.5.0",
@@ -83,7 +83,7 @@
       "repository": "github.com/faustbrian/go-bulkhead",
       "source": {
         "kind": "commit",
-        "commit": "1f110c8db9231e19f7d34eb6b27e2823fdcb74f6"
+        "commit": "e59e27324ec408e7a08b406a46f8cfa4f354dd07"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -94,7 +94,7 @@
       "repository": "github.com/faustbrian/go-cache",
       "source": {
         "kind": "commit",
-        "commit": "098f545ed6b11c1122aac31d54d38d1e8d4939b8"
+        "commit": "a7d1f698b52657a2615d233df1d42419d58b1463"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -105,7 +105,7 @@
       "repository": "github.com/faustbrian/go-calendar",
       "source": {
         "kind": "commit",
-        "commit": "f49051807b600f8b62fda8528e38347a77491f3d"
+        "commit": "0b61325c7080f92307274b9f22b94695dbbe3efc"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -116,18 +116,18 @@
       "repository": "github.com/faustbrian/go-capability",
       "source": {
         "kind": "commit",
-        "commit": "1ea3d41bc6255eb46f9bb7a3829e49039904aca9"
+        "commit": "9507345b79c3ef8da52c0e07ae989293250236b4"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-circuit-breaker",
       "source": {
         "kind": "commit",
-        "commit": "8849230e5e08fe31c9260a19ba135a7996930e68"
+        "commit": "f059caaaff6071be7907c521d444b64a5c1cc93c"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -138,7 +138,7 @@
       "repository": "github.com/faustbrian/go-cli",
       "source": {
         "kind": "commit",
-        "commit": "ed686fcb90d8f28d0fca20b61ecb0aca9f9aa033"
+        "commit": "d98f8322de4632d834396fd2d583dd4123cf76c8"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -149,7 +149,7 @@
       "repository": "github.com/faustbrian/go-clock",
       "source": {
         "kind": "commit",
-        "commit": "5663cc56c7876d10a32c7caebc2124feeaa2c69c"
+        "commit": "d47addcf56dc6bd23f62deb317d2be590f572d77"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -160,18 +160,18 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "source": {
         "kind": "commit",
-        "commit": "eb19cc134a7c56e27085a07b7130695c50d0ac86"
+        "commit": "3f544e935bc4a7ea21ac08acc5afacaeac114cf4"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-concurrency-limit",
       "source": {
         "kind": "commit",
-        "commit": "2c57f59e6e55aba905567387970b0284d9c26405"
+        "commit": "8a16afc31189743d2e5603ab4dd6a34a139639ad"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -182,29 +182,29 @@
       "repository": "github.com/faustbrian/go-config",
       "source": {
         "kind": "commit",
-        "commit": "6fe380b691907f7bf593ab5e783970f8b3cd7af4"
+        "commit": "d873eb55f2ec7d2c9d337d99af5a09cc8d1c158d"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-correlation",
       "source": {
         "kind": "commit",
-        "commit": "429c5dd5e4f16e25fa008692dd61b71922fe6843"
+        "commit": "5a8be2363ba20a295f8d0b8b5d15bd6d6e4683af"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.1",
+        "checksums_sha256": "9a93685df9ad17819a9f96d0cc62e64750ea2b02e808a045d45ca6cf1e908a21"
       }
     },
     {
       "repository": "github.com/faustbrian/go-ecma-regexp",
       "source": {
         "kind": "commit",
-        "commit": "fd603ad75dcf149381f7e0dda6ba4846da2e7f51"
+        "commit": "65e71c31a6dd043a77b2449bd675ba8debe8e300"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -215,18 +215,18 @@
       "repository": "github.com/faustbrian/go-event-sourcing",
       "source": {
         "kind": "commit",
-        "commit": "bfc211659f1d67c04ee744b17d2445b03f658006"
+        "commit": "62203879a9caac26fb385bd156a6db45587592ee"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.5.6",
+        "checksums_sha256": "5a40d9e67542f2b0a6bee16558a0eeb0e275b3459b10b6c754600eb65792dc7b"
       }
     },
     {
       "repository": "github.com/faustbrian/go-external-sort",
       "source": {
         "kind": "commit",
-        "commit": "100051031e76364448fd5e6462ad60234689949e"
+        "commit": "777d45561f7692680494a98b1c3b087bc2c51ca5"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -237,7 +237,7 @@
       "repository": "github.com/faustbrian/go-fault-injection",
       "source": {
         "kind": "commit",
-        "commit": "8f99b8b52290aa02fccd8f30b9a423aa6a65811f"
+        "commit": "86ccb23ecaeddb645e66abc95af03f621f446688"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -248,7 +248,7 @@
       "repository": "github.com/faustbrian/go-feature-flags",
       "source": {
         "kind": "commit",
-        "commit": "50e3c99f65984f3a03f9acc6c444ea480274157b"
+        "commit": "19149f252b73669ac92c300d1ad19f544dfbf52a"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -259,7 +259,7 @@
       "repository": "github.com/faustbrian/go-filesystem",
       "source": {
         "kind": "commit",
-        "commit": "2c7531685692f9b033d7c1db4309d6a27740f2b1"
+        "commit": "9e0b65c9e95312b2f6a808d8ff96b88d149b4cde"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -270,18 +270,18 @@
       "repository": "github.com/faustbrian/go-geo",
       "source": {
         "kind": "commit",
-        "commit": "d1e3e4ede0498eadac9799ed0a7e562181658c09"
+        "commit": "2520d8f0a2ad1c69412a297171e9e8ea84241cfd"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-hedge",
       "source": {
         "kind": "commit",
-        "commit": "aa2304955e0b826b8f80955941fd111a3bb3d9e6"
+        "commit": "dc7dee7e39bfc9d0bde9e71f0cef1cd39bebde75"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -292,7 +292,7 @@
       "repository": "github.com/faustbrian/go-http-client",
       "source": {
         "kind": "commit",
-        "commit": "88202e7473abe3772e7b8727b4c1e1873febd0c0"
+        "commit": "a60b15b20a770f0953a6081b8a7fd67d7b1c5c6c"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -303,7 +303,7 @@
       "repository": "github.com/faustbrian/go-http-middleware",
       "source": {
         "kind": "commit",
-        "commit": "5cb5594e9fe35e37b4b514e0f2e10c2bde020013"
+        "commit": "503638f169c74f36d19a310956d7a8af188aa2ea"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -314,7 +314,7 @@
       "repository": "github.com/faustbrian/go-http-signature",
       "source": {
         "kind": "commit",
-        "commit": "7d651cdce6b3b9cc0ff6cce74a41fc3a803565f7"
+        "commit": "0d63c67be58950e81c0c6b2ee098231eb909e090"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -325,29 +325,29 @@
       "repository": "github.com/faustbrian/go-idempotency",
       "source": {
         "kind": "commit",
-        "commit": "1cede0052f2ede6507238ed420f0cfdf6f0a1e0c"
+        "commit": "90732dbfb74b25cfac917902b6333982b8bb73a1"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.1",
+        "checksums_sha256": "9a93685df9ad17819a9f96d0cc62e64750ea2b02e808a045d45ca6cf1e908a21"
       }
     },
     {
       "repository": "github.com/faustbrian/go-identifier",
       "source": {
         "kind": "commit",
-        "commit": "88824b8036ba4fd61c0d7d312d18955787e358a5"
+        "commit": "13cd464025b27cca9519b6d59a7c4bfef32e340c"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-identity",
       "source": {
         "kind": "commit",
-        "commit": "aa2c7ef6f3809a98829851a23bc6bc4f41638e48"
+        "commit": "edf21106a061f76271dbf0f00fe403c4f4ac4ad0"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -358,18 +358,18 @@
       "repository": "github.com/faustbrian/go-international",
       "source": {
         "kind": "commit",
-        "commit": "9fe38110b4ec38a9d9064da2a3c558d1ea81d5c9"
+        "commit": "204d3e8d5d6379bda42993167f034492a5b0a129"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-json-schema",
       "source": {
         "kind": "commit",
-        "commit": "d85ffe98dba46e16edd53a697cf2a62ca02baff1"
+        "commit": "bd5711ca8a7fd4a57737f6fcf77360913f1bb6ba"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -380,7 +380,7 @@
       "repository": "github.com/faustbrian/go-jsonapi",
       "source": {
         "kind": "commit",
-        "commit": "aaf09b73c58205cbe0bb0186835e39fe231425fe"
+        "commit": "cb1ddb005b033e2fc60ddb631278a92d0afabab4"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -391,7 +391,7 @@
       "repository": "github.com/faustbrian/go-jsonrpc",
       "source": {
         "kind": "commit",
-        "commit": "188f7635522318f571a59fd8a8d0f3e995bc25c4"
+        "commit": "6f810956bdabe967e2f38d9b826dc7597270ed00"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -402,7 +402,7 @@
       "repository": "github.com/faustbrian/go-kafka",
       "source": {
         "kind": "commit",
-        "commit": "04b3279f5b36f629ca4b5f6f386ac19a14e3ccec"
+        "commit": "c57c32b2700fbb3b7fd4a750142f6c65f5708662"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -413,7 +413,7 @@
       "repository": "github.com/faustbrian/go-keyphrase",
       "source": {
         "kind": "commit",
-        "commit": "e236afc8ba47ebfe28e04bb1c10af34656fc9db6"
+        "commit": "dde23ca6b0ea3f69e98606fa1e3c04d9e1be6f25"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -424,18 +424,18 @@
       "repository": "github.com/faustbrian/go-knapsack",
       "source": {
         "kind": "commit",
-        "commit": "063c018b60165a8c7433ada4be1027c85624a966"
+        "commit": "504cc1d8d449d36dc067d35a0d2df2f2fc8410bf"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.1",
+        "checksums_sha256": "9a93685df9ad17819a9f96d0cc62e64750ea2b02e808a045d45ca6cf1e908a21"
       }
     },
     {
       "repository": "github.com/faustbrian/go-lease",
       "source": {
         "kind": "commit",
-        "commit": "bfcb4e4583985e60d63b63983a164764ab20e51e"
+        "commit": "8d53917cd04a9d0ab28673a21f45bd541cd5140f"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -452,18 +452,18 @@
       "repository": "github.com/faustbrian/go-localized",
       "source": {
         "kind": "commit",
-        "commit": "18d0df5c527926454b889caaf87177f955b092f1"
+        "commit": "8c477bf9d0df44a2bc4204973a17c8c8b8f423f4"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.1",
+        "checksums_sha256": "9a93685df9ad17819a9f96d0cc62e64750ea2b02e808a045d45ca6cf1e908a21"
       }
     },
     {
       "repository": "github.com/faustbrian/go-log",
       "source": {
         "kind": "commit",
-        "commit": "3f50ec5e7496290476c5c8022663235b5da0a834"
+        "commit": "56176e37f5d4a01e81434ca885de82fdbb475107"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -474,7 +474,7 @@
       "repository": "github.com/faustbrian/go-math",
       "source": {
         "kind": "commit",
-        "commit": "c6e855e026a3bbb7c4ffbae8373ca026d4b7abe1"
+        "commit": "3122a5c8264fbb2e6d5b059ad32617ebf5cb2e4d"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -485,7 +485,7 @@
       "repository": "github.com/faustbrian/go-measurement",
       "source": {
         "kind": "commit",
-        "commit": "a99e980e61dc9c164d8c89cc7857c40abe196c3f"
+        "commit": "c6cc2a03badc72c2e2d175dfda41202a5add3a98"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -496,7 +496,7 @@
       "repository": "github.com/faustbrian/go-merkle-patricia-trie",
       "source": {
         "kind": "commit",
-        "commit": "012780e10fc03cc0eeae7278652ae0c28a36b776"
+        "commit": "e76766cb99308ac941ab81a61ba046d0fad023ca"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -507,7 +507,7 @@
       "repository": "github.com/faustbrian/go-merkle-tree",
       "source": {
         "kind": "commit",
-        "commit": "986722eab8e30a551819d2a01a3eb2f0bc45bfed"
+        "commit": "971cc5118f12d0ba2e3d65e76315fab7daa9a193"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -518,7 +518,7 @@
       "repository": "github.com/faustbrian/go-migrations",
       "source": {
         "kind": "commit",
-        "commit": "47f051e64fc1fd90c2468e44ddac84682070c881"
+        "commit": "e5d667b08caf5bc36703da38416159ffd10a3381"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -529,7 +529,7 @@
       "repository": "github.com/faustbrian/go-money",
       "source": {
         "kind": "commit",
-        "commit": "9471519f348222cad633f5f1afd27c8555d9da11"
+        "commit": "4c348ec28d1267eae9e35bb6863fcb1663e5dbda"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -540,7 +540,7 @@
       "repository": "github.com/faustbrian/go-oauth-server",
       "source": {
         "kind": "commit",
-        "commit": "a5f24d77af0aafc3edba0f799a2119ffb06c6897"
+        "commit": "3fbf8e9b13630c3625f840c35df9ebe0030518ef"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -551,7 +551,7 @@
       "repository": "github.com/faustbrian/go-openapi",
       "source": {
         "kind": "commit",
-        "commit": "3e22bbe15164983bc1258a9047b9b2c45fd61631"
+        "commit": "60a54c74bc097a2b06e33f4eb1cb3ac315ae7dbd"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -562,18 +562,18 @@
       "repository": "github.com/faustbrian/go-opening-hours",
       "source": {
         "kind": "commit",
-        "commit": "8ec016c07a28bb2cb0cb4fb3a400b814dddbdc00"
+        "commit": "e498ad86f0913520bfbe3ccab2fc1a92524ab847"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-openrpc",
       "source": {
         "kind": "commit",
-        "commit": "9f0403e4640b72bdfd7771e84519bc310e054870"
+        "commit": "6b58951fe797761c0b2b3b3a1323adb8e32b9c65"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -584,7 +584,7 @@
       "repository": "github.com/faustbrian/go-organization",
       "source": {
         "kind": "commit",
-        "commit": "f669e51261b716e43ad9b3ca328dc950d3b4dc5d"
+        "commit": "0d190dfece64d5668f7a05b698261894d940d10e"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -595,7 +595,7 @@
       "repository": "github.com/faustbrian/go-passkey",
       "source": {
         "kind": "commit",
-        "commit": "a07391e495aadc9863198fe91582e7914c5dd849"
+        "commit": "926097e1f80174ae478c1ede56bfa7248d8fa9d1"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -606,18 +606,18 @@
       "repository": "github.com/faustbrian/go-password",
       "source": {
         "kind": "commit",
-        "commit": "00a4bec337c00700618042c595767d186d1e65a9"
+        "commit": "3ea5926b33e40eb8e515ee5281a4ebf5cb06916f"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.1",
+        "checksums_sha256": "9a93685df9ad17819a9f96d0cc62e64750ea2b02e808a045d45ca6cf1e908a21"
       }
     },
     {
       "repository": "github.com/faustbrian/go-postgres",
       "source": {
         "kind": "commit",
-        "commit": "4b3dbdab3f9bb56e55cf1c185acd64ef6e4a71c3"
+        "commit": "2f294c23e4832a0e7dd4f29476d613bd8c13ce1f"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -628,7 +628,7 @@
       "repository": "github.com/faustbrian/go-prompts",
       "source": {
         "kind": "commit",
-        "commit": "ec23ddc20bc6ce3d2affa50f77de17e3dd7d6652"
+        "commit": "cadd9cc351e57f31d9dec5812f35d0e496cc8dc4"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -639,29 +639,29 @@
       "repository": "github.com/faustbrian/go-queue",
       "source": {
         "kind": "commit",
-        "commit": "e44f4a3c2ac3d81e202ad413eb2ca1e8ec2acfd1"
+        "commit": "4e40d0f295e7a6133a5f108be452d73bda8ed686"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.5.6",
+        "checksums_sha256": "5a40d9e67542f2b0a6bee16558a0eeb0e275b3459b10b6c754600eb65792dc7b"
       }
     },
     {
       "repository": "github.com/faustbrian/go-queue-control-plane",
       "source": {
         "kind": "commit",
-        "commit": "2176c0cfc2ba3f3a64b5071514ca6b385508fea3"
+        "commit": "2685f0ccf8a69d2be3c76d6507a18a2817f2b51d"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-rabbitmq-queues",
       "source": {
         "kind": "commit",
-        "commit": "4f74c7bbbe7e512d1792c0cfe0d83c2bf4109d15"
+        "commit": "08b8479d540a22fd39ef2c0ae3da995222e8f066"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -672,18 +672,18 @@
       "repository": "github.com/faustbrian/go-rabbitmq-streams",
       "source": {
         "kind": "commit",
-        "commit": "0d2897f71a4eec5dc6a2623c18426edc014fc364"
+        "commit": "0819b45667588f4c7ad64b8d09367a4a0dd171d1"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.1",
+        "checksums_sha256": "9a93685df9ad17819a9f96d0cc62e64750ea2b02e808a045d45ca6cf1e908a21"
       }
     },
     {
       "repository": "github.com/faustbrian/go-rate-limit",
       "source": {
         "kind": "commit",
-        "commit": "8cbd87257f28df592cc0061289a5f551c6dfc10e"
+        "commit": "2c2d650353c689724430e622146e6a6ee22f35af"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -694,7 +694,7 @@
       "repository": "github.com/faustbrian/go-resilience",
       "source": {
         "kind": "commit",
-        "commit": "f6b245c5754c86a560a7bac62f8f774f6e04e8af"
+        "commit": "69d2522f5e1ed691a588939ad37c95e1a8bb7dbd"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -705,7 +705,7 @@
       "repository": "github.com/faustbrian/go-retry",
       "source": {
         "kind": "commit",
-        "commit": "43d76c71993bed309241b453fdc47514bddee4e6"
+        "commit": "f3b178ab980e17490b469556412c3ed5d60653f3"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -716,18 +716,18 @@
       "repository": "github.com/faustbrian/go-router",
       "source": {
         "kind": "commit",
-        "commit": "a4251835888582dac7c90ae52e75f3baceb77b8a"
+        "commit": "20be489b1a18c54c705625adbc9fec1318ed521e"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-rule-engine",
       "source": {
         "kind": "commit",
-        "commit": "1f1d7dad39e462c3241510a017faee147e868897"
+        "commit": "0826ccfde29bfc3597af502b954c206a05ee9fe0"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -738,18 +738,18 @@
       "repository": "github.com/faustbrian/go-scheduler",
       "source": {
         "kind": "commit",
-        "commit": "d5a71588c9ca662fe1df181a4925a3d6f50d5722"
+        "commit": "c09e8197260268000392f8d7532ecbd5f0b83905"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-schema-registry",
       "source": {
         "kind": "commit",
-        "commit": "12264738ec0018057aa84e6e3c8f5c4c9082c1f3"
+        "commit": "c4c904061da3060b6925bfd3ce0c8c890f153777"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -760,7 +760,7 @@
       "repository": "github.com/faustbrian/go-scim",
       "source": {
         "kind": "commit",
-        "commit": "f294e47cf0c97e5aeb7cdc6a95a5a97160a21c8d"
+        "commit": "2ac8d9e8046e12f5f6e0a5c61d471f9148f6743d"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -771,7 +771,7 @@
       "repository": "github.com/faustbrian/go-search",
       "source": {
         "kind": "commit",
-        "commit": "00680591f4151228e5392418e2cd9c3e942b1d09"
+        "commit": "bc396c41271a9cfad792b8beb834e61f34244521"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -782,7 +782,7 @@
       "repository": "github.com/faustbrian/go-secret-envelope",
       "source": {
         "kind": "commit",
-        "commit": "4478bdadc7eb5c85facba4b07bd74c015f5b1630"
+        "commit": "eabbdeddffc30c7af01e300185dbf3fdbca3e0c8"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -793,7 +793,7 @@
       "repository": "github.com/faustbrian/go-secret-store",
       "source": {
         "kind": "commit",
-        "commit": "3d5b5893f02c1235aade991ec67ed19fe62ff3cb"
+        "commit": "796cd86fadf9610574b58f1f9aba77581e5d89fb"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -804,7 +804,7 @@
       "repository": "github.com/faustbrian/go-semaphore",
       "source": {
         "kind": "commit",
-        "commit": "7b06c582cc1adcde7c8556bbc200e9526f89eb40"
+        "commit": "1ae8acfcfbfe5a6ae9665eaae00dfcd6db0c1d1b"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -815,29 +815,29 @@
       "repository": "github.com/faustbrian/go-sequencer",
       "source": {
         "kind": "commit",
-        "commit": "bc7f46c1213aa15eb689f6cdbf72e01132cc3a62"
+        "commit": "42da45582d806242691271f818efea3ef2652f21"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-service",
       "source": {
         "kind": "commit",
-        "commit": "afe89522835537b4ee203e14e3ca40c269c71029"
+        "commit": "1deb2fdd6f94c1e776ebf46d96be21d0d20e323a"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.2",
+        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
       }
     },
     {
       "repository": "github.com/faustbrian/go-settings",
       "source": {
         "kind": "commit",
-        "commit": "c48d317a1846a049c1229b3912622b1b84333df9"
+        "commit": "d5d35d83e79bf4c953b3a32315f2b111358fa55b"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -848,7 +848,7 @@
       "repository": "github.com/faustbrian/go-sso",
       "source": {
         "kind": "commit",
-        "commit": "ab35b0cb87b15ed53d35b95c53e8df8e149bd5d9"
+        "commit": "76692ab3a939cf29075b6fd6f3c12d638070cdca"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -859,7 +859,7 @@
       "repository": "github.com/faustbrian/go-state-machine",
       "source": {
         "kind": "commit",
-        "commit": "754a980b1d7229122e3c244acdaa61cb9842dd9b"
+        "commit": "f44329faf77464a23a07e7b7f23b1bd1f3c878d2"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -870,7 +870,7 @@
       "repository": "github.com/faustbrian/go-tabular",
       "source": {
         "kind": "commit",
-        "commit": "66b9b3f863a47670d66f90fb77c503c97a90b7c9"
+        "commit": "9a177cc5ad0f1302c35992139395b29d1ea1e97b"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -881,7 +881,7 @@
       "repository": "github.com/faustbrian/go-telemetry",
       "source": {
         "kind": "commit",
-        "commit": "46be32b4fe4294096e26c912f88035392f38ee14"
+        "commit": "84a35004b51b6a18a7d89f02cfdafba0d9bccbae"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -892,18 +892,18 @@
       "repository": "github.com/faustbrian/go-temporal",
       "source": {
         "kind": "commit",
-        "commit": "25e4a842237feb10d2e884a1ae5b389e01d4c0c5"
+        "commit": "ab22a5c36386b4605bf712aa88c3eed2cd00091f"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.1",
+        "checksums_sha256": "9a93685df9ad17819a9f96d0cc62e64750ea2b02e808a045d45ca6cf1e908a21"
       }
     },
     {
       "repository": "github.com/faustbrian/go-tenancy",
       "source": {
         "kind": "commit",
-        "commit": "6cc9c6dc6c4f74aa21ba500cc26a8433169f7b15"
+        "commit": "85f5ca22c385bc7909074f953667124a3ea795eb"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -914,7 +914,7 @@
       "repository": "github.com/faustbrian/go-transactional-outbox",
       "source": {
         "kind": "commit",
-        "commit": "dd8b315237f2454afefb3d072c8cd525f7254db3"
+        "commit": "b235f3bee0e3b5dcff34c15c0e81a4a1b1dde5ea"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -925,7 +925,7 @@
       "repository": "github.com/faustbrian/go-validation",
       "source": {
         "kind": "commit",
-        "commit": "efa9c227044ed32e3c3c49a4da04b0f1e0166717"
+        "commit": "28d2f7484962cb25bba41434078d8de93ad23723"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -936,7 +936,7 @@
       "repository": "github.com/faustbrian/go-verkle-tree",
       "source": {
         "kind": "commit",
-        "commit": "75f07940dd91eef9bb14428af7654cff7824121a"
+        "commit": "1cf97d3b87fd431fe38e5bece62f0797c9c8759a"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -947,7 +947,7 @@
       "repository": "github.com/faustbrian/go-webauthn",
       "source": {
         "kind": "commit",
-        "commit": "84efae31c12ea0d83163697ddfb81ba8c6eabefc"
+        "commit": "f9370768da51f41003630a4028fa37f9064c852a"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -958,18 +958,18 @@
       "repository": "github.com/faustbrian/go-webhook",
       "source": {
         "kind": "commit",
-        "commit": "5a246f4d092934c79388dab634f370a447453e7e"
+        "commit": "d29fbdf2a2b14a7d69bb703f3f7e668ade04695b"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v1.6.1",
+        "checksums_sha256": "9a93685df9ad17819a9f96d0cc62e64750ea2b02e808a045d45ca6cf1e908a21"
       }
     },
     {
       "repository": "github.com/faustbrian/go-wire",
       "source": {
         "kind": "commit",
-        "commit": "3874f783d04c04cdf0534112222412b5d83ae659"
+        "commit": "e624da69eaf50b3977952a4612a21dd4b8e9f6f8"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -980,7 +980,7 @@
       "repository": "github.com/faustbrian/go-workflow",
       "source": {
         "kind": "commit",
-        "commit": "014d122cf0c87f63f96c458646b4e6f7f1c494a1"
+        "commit": "486aafea5ba538fd6afb7bfc4ba2680f60072def"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -991,7 +991,7 @@
       "repository": "github.com/faustbrian/go-wsdl",
       "source": {
         "kind": "commit",
-        "commit": "d01583013a36d45a07bb0ed6b2fb3c5a97c7bba2"
+        "commit": "801b49582fe4fe24303c344c5c3e62bb592e84f8"
       },
       "tooling": {
         "version": "v1.4.0",
@@ -1002,7 +1002,7 @@
       "repository": "github.com/faustbrian/go-xsd",
       "source": {
         "kind": "commit",
-        "commit": "bcfaa791130650d0dc1e049af093e0293d831b4e"
+        "commit": "26cee97a3e6d0a52d87983caacac094f5561d2de"
       },
       "tooling": {
         "version": "v1.4.0",

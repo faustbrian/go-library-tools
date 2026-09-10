@@ -25,14 +25,17 @@ class CompatibilitySetTest(unittest.TestCase):
         self.old_root = generate.ROOT
         self.old_source = generate.SOURCE
         self.old_output = generate.OUTPUT
+        self.old_consumer_directory = generate.CONSUMER_DIRECTORY
         generate.ROOT = self.root
         generate.SOURCE = self.ecosystem / "compatibility-sets.json"
         generate.OUTPUT = self.ecosystem / "compatibility-sets.md"
+        generate.CONSUMER_DIRECTORY = self.root / "release/compatibility-consumer"
 
     def tearDown(self):
         generate.ROOT = self.old_root
         generate.SOURCE = self.old_source
         generate.OUTPUT = self.old_output
+        generate.CONSUMER_DIRECTORY = self.old_consumer_directory
         self.temp.cleanup()
 
     def create_repository(self, name="go-parent"):
@@ -133,6 +136,7 @@ class CompatibilitySetTest(unittest.TestCase):
             "module_path": "github.com/faustbrian/go-parent/adapters/foo",
             "version": "1.2.3",
             "tag_prefix": "adapters/foo/v",
+            "releasable": True,
         }
 
     def test_published_nested_module_uses_repository_and_tag_prefix(self):
@@ -336,6 +340,447 @@ class CompatibilitySetTest(unittest.TestCase):
         self.assertIn("### Upgrade", rendered)
         self.assertIn("### Rollback", rendered)
         self.assertIn("### Exclusions", rendered)
+
+    def test_candidate_generation_selects_complete_sorted_active_roster(self):
+        modules = []
+        revisions = {}
+        for index in range(128):
+            module = self.catalog_module()
+            module_path = f"github.com/faustbrian/go-parent/adapters/a{index:03d}"
+            module.update(
+                {
+                    "directory": f"adapters/a{index:03d}",
+                    "module_path": module_path,
+                    "version": "1.2.3",
+                    "tag_prefix": f"adapters/a{index:03d}/v",
+                    "cohesion": {"lifecycle_status": "active"},
+                }
+            )
+            modules.append(module)
+            revisions[(module["repository"], module["tag_prefix"] + "1.2.3")] = (
+                f"{index + 1:040x}"
+            )
+        for lifecycle in ("deprecated", "planned"):
+            module = self.catalog_module()
+            module["module_path"] += "/" + lifecycle
+            module["cohesion"] = {"lifecycle_status": lifecycle}
+            modules.append(module)
+
+        item = self.base_set("a" * 40)
+        item["modules"] = []
+        item["roster"] = {"selection": "active-public", "module_count": 128}
+        item = generate.build_candidate(
+            item,
+            list(reversed(modules)),
+            remote_tag_lookup=lambda repository, tag: revisions.get((repository, tag)),
+            public_version_lookup=lambda _module_path, _version: True,
+        )
+
+        self.assertEqual(len(item["modules"]), 128)
+        self.assertEqual(
+            [module["module_path"] for module in item["modules"]],
+            sorted(module["module_path"] for module in modules[:128]),
+        )
+        self.assertEqual(item["evidence"]["content_sha256"], self.fingerprint(item))
+
+    def test_candidate_generation_rejects_unpublished_active_module(self):
+        module = self.catalog_module()
+        module["cohesion"] = {"lifecycle_status": "active"}
+        item = self.base_set("a" * 40)
+        item["modules"] = []
+        item["roster"] = {"selection": "active-public", "module_count": 1}
+
+        with self.assertRaisesRegex(ValueError, "remote release tag"):
+            generate.build_candidate(
+                item,
+                [module],
+                remote_tag_lookup=lambda _repository, _tag: None,
+                public_version_lookup=lambda _module_path, _version: True,
+            )
+        with self.assertRaisesRegex(ValueError, "public proxy"):
+            generate.build_candidate(
+                item,
+                [module],
+                remote_tag_lookup=lambda _repository, _tag: "a" * 40,
+                public_version_lookup=lambda _module_path, _version: False,
+            )
+
+    def test_candidate_generation_accepts_deliberate_public_version_override(self):
+        module = self.catalog_module()
+        module["version"] = "1.0.0"
+        module["cohesion"] = {"lifecycle_status": "active"}
+        item = self.base_set("a" * 40)
+        item["modules"] = []
+        item["roster"] = {"selection": "active-public", "module_count": 1}
+        tags = []
+
+        candidate = generate.build_candidate(
+            item,
+            [module],
+            version_overrides={module["module_path"]: "v1.1.0"},
+            remote_tag_lookup=lambda _repository, tag: tags.append(tag) or "b" * 40,
+            public_version_lookup=lambda _module_path, _version: True,
+        )
+
+        self.assertEqual(candidate["modules"][0]["version"], "v1.1.0")
+        self.assertEqual(tags, ["adapters/foo/v1.1.0"])
+
+    def test_candidate_generation_rejects_unknown_version_override(self):
+        module = self.catalog_module()
+        module["cohesion"] = {"lifecycle_status": "active"}
+        item = self.base_set("a" * 40)
+        item["modules"] = []
+        item["roster"] = {"selection": "active-public", "module_count": 1}
+
+        with self.assertRaisesRegex(ValueError, "unknown module"):
+            generate.build_candidate(
+                item,
+                [module],
+                version_overrides={"github.com/faustbrian/go-unknown": "v1.1.0"},
+                remote_tag_lookup=lambda _repository, _tag: "a" * 40,
+                public_version_lookup=lambda _module_path, _version: True,
+            )
+
+    def test_complete_roster_rejects_missing_and_deprecated_modules(self):
+        active = self.catalog_module()
+        active["cohesion"] = {"lifecycle_status": "active"}
+        deprecated = dict(active)
+        deprecated["module_path"] += "/legacy"
+        deprecated["cohesion"] = {"lifecycle_status": "deprecated"}
+        item = self.base_set("a" * 40)
+        item["modules"] = []
+        item["roster"] = {"selection": "active-public", "module_count": 1}
+
+        with self.assertRaisesRegex(ValueError, "roster mismatch"):
+            generate.validate_complete_roster(item, [active, deprecated])
+        item["modules"] = [
+            {
+                "module_path": deprecated["module_path"],
+                "version": "v1.2.3",
+                "source_revision": "a" * 40,
+            }
+        ]
+        with self.assertRaisesRegex(ValueError, "roster mismatch"):
+            generate.validate_complete_roster(item, [active, deprecated])
+
+    def test_clean_consumer_covers_modules_and_importable_entry_points(self):
+        library = self.catalog_module()
+        library["cohesion"] = {
+            "lifecycle_status": "active",
+            "primary_entry_packages": [library["module_path"]],
+        }
+        library["packages"] = [
+            {"import_path": library["module_path"], "name": "foo"}
+        ]
+        command = dict(library)
+        command["module_path"] = "github.com/faustbrian/go-parent/cmd/tool"
+        command["cohesion"] = {
+            "lifecycle_status": "active",
+            "primary_entry_packages": [command["module_path"]],
+        }
+        command["packages"] = [
+            {"import_path": command["module_path"], "name": "main"}
+        ]
+        item = self.base_set("a" * 40)
+        item["modules"] = [
+            {
+                "module_path": library["module_path"],
+                "version": "v1.2.3",
+                "source_revision": "a" * 40,
+            },
+            {
+                "module_path": command["module_path"],
+                "version": "v1.2.3",
+                "source_revision": "b" * 40,
+            },
+        ]
+
+        go_mod, test_source = generate.render_clean_consumer(
+            item, [library, command]
+        )
+
+        self.assertIn(library["module_path"] + " v1.2.3", go_mod)
+        self.assertIn(command["module_path"] + " v1.2.3", go_mod)
+        self.assertIn('_ "' + library["module_path"] + '"', test_source)
+        self.assertNotIn('_ "' + command["module_path"] + '"', test_source)
+
+    def test_ephemeral_rebase_updates_only_existing_candidate_requirements(self):
+        item = self.base_set("a" * 40)
+        item["modules"].append(
+            {
+                "module_path": "github.com/faustbrian/go-other",
+                "version": "v2.0.0",
+                "source_revision": "b" * 40,
+            }
+        )
+        go_mod = {
+            "Require": [
+                {
+                    "Path": "github.com/faustbrian/go-parent/adapters/foo",
+                    "Version": "v1.0.0",
+                    "Indirect": False,
+                },
+                {
+                    "Path": "example.com/external",
+                    "Version": "v1.0.0",
+                    "Indirect": True,
+                },
+            ],
+            "Replace": None,
+        }
+
+        arguments = generate.ephemeral_rebase_arguments(item, go_mod)
+
+        self.assertEqual(
+            arguments,
+            [
+                "-require=github.com/faustbrian/go-parent/adapters/foo@v1.2.3"
+            ],
+        )
+
+    def test_ephemeral_rebase_rejects_local_replacements(self):
+        item = self.base_set("a" * 40)
+        with self.assertRaisesRegex(ValueError, "replace directives"):
+            generate.ephemeral_rebase_arguments(
+                item,
+                {
+                    "Require": [],
+                    "Replace": [{"Old": {"Path": "example.com/old"}}],
+                },
+            )
+
+    def test_rebase_command_updates_a_task_checkout(self):
+        revision = "a" * 40
+        self.write_catalogs([self.catalog_module()])
+        item = self.base_set(
+            revision,
+            set_id="draft-20260910.1",
+            publication_status="unreleased",
+            installable=False,
+            evidence={"observation": "pending final receipts"},
+        )
+        self.write_set(item)
+        checkout = Path(self.temp.name) / "receipt-checkout"
+        checkout.mkdir()
+        go_mod = checkout / "go.mod"
+        go_mod.write_text(
+            "module example.com/receipt\n\n"
+            "go 1.26.6\n\n"
+            "require github.com/faustbrian/go-parent/adapters/foo v1.0.0\n"
+        )
+
+        self.assertEqual(
+            generate.main(
+                [
+                    "rebase",
+                    "--set-id",
+                    item["set_id"],
+                    "--go-mod",
+                    str(go_mod),
+                ]
+            ),
+            0,
+        )
+
+        self.assertIn(
+            "github.com/faustbrian/go-parent/adapters/foo v1.2.3",
+            go_mod.read_text(),
+        )
+
+    def test_candidate_artifacts_are_generated_and_checked_together(self):
+        module = self.catalog_module()
+        module["cohesion"] = {
+            "lifecycle_status": "active",
+            "primary_entry_packages": [module["module_path"]],
+        }
+        module["packages"] = [
+            {"import_path": module["module_path"], "name": "foo"}
+        ]
+        item = self.base_set("a" * 40)
+        item["roster"] = {"selection": "active-public", "module_count": 1}
+        item["evidence"]["content_sha256"] = self.fingerprint(item)
+        value = {"format": "golib-compatibility-sets-v1", "sets": [item]}
+
+        generate.write_candidate_artifacts(value, item, [module])
+        generate.check_clean_consumer(item, [module])
+
+        self.assertEqual(
+            json.loads(generate.SOURCE.read_text())["sets"][0]["roster"]["module_count"],
+            1,
+        )
+        self.assertEqual(generate.OUTPUT.read_text(), generate.render(value))
+        self.assertTrue((generate.CONSUMER_DIRECTORY / "go.mod").is_file())
+        self.assertTrue(
+            (generate.CONSUMER_DIRECTORY / "consumer_test.go").is_file()
+        )
+        (generate.CONSUMER_DIRECTORY / "consumer_test.go").write_text("stale\n")
+        with self.assertRaisesRegex(ValueError, "consumer is stale"):
+            generate.check_clean_consumer(item, [module])
+
+    def test_candidate_write_preserves_published_sets(self):
+        module = self.catalog_module()
+        module["cohesion"] = {
+            "lifecycle_status": "active",
+            "primary_entry_packages": [module["module_path"]],
+        }
+        module["packages"] = [
+            {"import_path": module["module_path"], "name": "foo"}
+        ]
+        historical = self.base_set("b" * 40)
+        historical["set_id"] = "golib-compat-v1-20260909.1"
+        candidate = self.base_set(
+            "a" * 40,
+            set_id="draft-20260910.1",
+            publication_status="unreleased",
+            installable=False,
+            evidence={"observation": "pending final receipts"},
+        )
+        candidate["roster"] = {
+            "selection": "active-public",
+            "module_count": 1,
+        }
+        candidate["evidence"]["content_sha256"] = self.fingerprint(candidate)
+        value = {
+            "format": "golib-compatibility-sets-v1",
+            "sets": [historical, candidate],
+        }
+
+        generate.write_candidate_artifacts(value, candidate, [module])
+
+        written = json.loads(generate.SOURCE.read_text())
+        self.assertEqual(
+            [item["set_id"] for item in written["sets"]],
+            [historical["set_id"], candidate["set_id"]],
+        )
+
+    def test_published_roster_remains_valid_after_catalog_changes(self):
+        revision = "a" * 40
+        historical_module = self.catalog_module()
+        historical_module["version"] = "1.3.0"
+        historical_module["cohesion"] = {"lifecycle_status": "deprecated"}
+        active_module = self.catalog_module()
+        active_module.update(
+            {
+                "directory": "adapters/current",
+                "module_path": "github.com/faustbrian/go-parent/adapters/current",
+                "tag_prefix": "adapters/current/v",
+                "cohesion": {"lifecycle_status": "active"},
+            }
+        )
+        self.write_catalogs([historical_module, active_module])
+        historical = self.base_set(revision)
+        historical["roster"] = {
+            "selection": "active-public",
+            "module_count": 1,
+        }
+        historical["evidence"]["content_sha256"] = self.fingerprint(historical)
+        self.write_set(historical)
+        tags = []
+
+        self.load_published(
+            revision,
+            remote_tag_lookup=lambda _repository, tag: tags.append(tag) or revision,
+        )
+
+        self.assertEqual(tags, ["adapters/foo/v1.2.3"])
+
+    def test_clean_consumer_selects_current_candidate_over_history(self):
+        historical = self.base_set("a" * 40)
+        historical["roster"] = {
+            "selection": "active-public",
+            "module_count": 1,
+        }
+        candidate = self.base_set(
+            "b" * 40,
+            set_id="draft-20260910.1",
+            publication_status="unreleased",
+            installable=False,
+            evidence={"observation": "pending final receipts"},
+        )
+        candidate["roster"] = {
+            "selection": "active-public",
+            "module_count": 1,
+        }
+
+        selected = generate.select_clean_consumer_set(
+            {"sets": [historical, candidate]}
+        )
+
+        self.assertIs(selected, candidate)
+
+    def test_candidate_command_rejects_invalid_identity_before_resolution(self):
+        revision = "a" * 40
+        module = self.catalog_module()
+        module["cohesion"] = {"lifecycle_status": "active"}
+        self.write_catalogs([module])
+        item = self.base_set(
+            revision,
+            set_id="draft-20260910.1",
+            publication_status="unreleased",
+            installable=False,
+            evidence={"observation": "pending final receipts"},
+        )
+        self.write_set(item)
+
+        with self.assertRaisesRegex(ValueError, "draft form"):
+            generate.main(
+                [
+                    "candidate",
+                    "--set-id",
+                    "invalid",
+                    "--observed-at",
+                    "2026-09-10T00:00:00Z",
+                    "--module-count",
+                    "1",
+                ]
+            )
+        with self.assertRaisesRegex(ValueError, "observation time"):
+            generate.main(
+                [
+                    "candidate",
+                    "--set-id",
+                    "draft-20260910.2",
+                    "--observed-at",
+                    "now",
+                    "--module-count",
+                    "1",
+                ]
+            )
+
+    def test_candidate_command_replaces_a_stale_unreleased_template(self):
+        revision = "a" * 40
+        module = self.catalog_module()
+        module["version"] = "1.3.0"
+        module["cohesion"] = {"lifecycle_status": "active"}
+        self.write_catalogs([module])
+        stale = self.base_set(
+            revision,
+            set_id="draft-20260909.1",
+            publication_status="unreleased",
+            installable=False,
+            evidence={"observation": "pending catalog refresh"},
+        )
+        self.write_set(stale)
+
+        with mock.patch.object(
+            generate,
+            "build_candidate",
+            side_effect=lambda template, _catalogs, **_options: template,
+        ) as build_candidate, mock.patch("builtins.print"):
+            result = generate.main(
+                [
+                    "candidate",
+                    "--set-id",
+                    "draft-20260910.2",
+                    "--observed-at",
+                    "2026-09-10T00:00:00Z",
+                    "--module-count",
+                    "1",
+                ]
+            )
+
+        self.assertEqual(result, 0)
+        build_candidate.assert_called_once()
 
 
 if __name__ == "__main__":

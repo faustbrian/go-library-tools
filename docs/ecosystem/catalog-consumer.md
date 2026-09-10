@@ -1,6 +1,6 @@
 # Golib Consumer Catalog
 
-Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
+Design language `1.0` (`v1.7.2`); tooling `v1.7.2`.
 
 ## foundations
 
@@ -28,6 +28,8 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-authentication`: Turn Basic credentials, opaque bearer tokens, and API keys into immutable authenticated principals.
 
+- `github.com/faustbrian/go-authentication/adapters/otel`: Adapt bounded authentication observations to OpenTelemetry traces and metrics.
+
 - `github.com/faustbrian/go-authentication/authotel`: Adapt bounded authentication observations to OpenTelemetry traces and metrics.
 
 - `github.com/faustbrian/go-authentication/jwt`: Validate signed compact JWTs and operate bounded static or remote JWK sets at an authentication boundary.
@@ -50,7 +52,31 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-cloudevents`: Provide a transport-independent CloudEvents 1.0 envelope with bounded JSON, HTTP, and Kafka mappings.
 
+- `github.com/faustbrian/go-cloudevents/adapters/audit`: Provide an explicit target-oriented CloudEvents boundary for Golib audit metadata.
+
+- `github.com/faustbrian/go-cloudevents/adapters/correlation`: Provide an explicit target-oriented CloudEvents boundary for Golib correlation identifiers.
+
+- `github.com/faustbrian/go-cloudevents/adapters/event-sourcing`: Provide an explicit target-oriented CloudEvents boundary for Golib event-sourcing messages.
+
 - `github.com/faustbrian/go-cloudevents/adapters/golib`: Bridge CloudEvents explicitly to selected Golib event, transport, workflow, metadata, audit, telemetry, and schema contracts.
+
+- `github.com/faustbrian/go-cloudevents/adapters/jsonschema`: Provide an explicit target-oriented CloudEvents boundary for Golib compiled JSON Schema validation.
+
+- `github.com/faustbrian/go-cloudevents/adapters/kafka`: Provide an explicit target-oriented CloudEvents boundary for Golib Kafka records.
+
+- `github.com/faustbrian/go-cloudevents/adapters/outbox`: Provide an explicit target-oriented CloudEvents boundary for Golib transactional outbox envelopes.
+
+- `github.com/faustbrian/go-cloudevents/adapters/queue`: Provide an explicit target-oriented CloudEvents boundary for Golib queue jobs.
+
+- `github.com/faustbrian/go-cloudevents/adapters/rabbitstream`: Provide an explicit target-oriented CloudEvents boundary for Golib RabbitMQ Streams messages.
+
+- `github.com/faustbrian/go-cloudevents/adapters/schema-registry`: Provide an explicit target-oriented CloudEvents boundary for Golib schema-registry JSON Schema resolution.
+
+- `github.com/faustbrian/go-cloudevents/adapters/telemetry`: Provide an explicit target-oriented CloudEvents boundary for Golib telemetry trace context.
+
+- `github.com/faustbrian/go-cloudevents/adapters/tenancy`: Provide an explicit target-oriented CloudEvents boundary for Golib tenant routing identity.
+
+- `github.com/faustbrian/go-cloudevents/adapters/workflow`: Provide an explicit target-oriented CloudEvents boundary for Golib durable workflow history.
 
 - `github.com/faustbrian/go-http-signature`: Provide bounded HTTP Message Signatures, digest fields, structured-field interpretation, explicit signing and verification policy, key resolution, replay consumption, and HTTP adapters.
 
@@ -90,6 +116,10 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-event-sourcing/adapters/gotelemetry`: Instrument event-sourcing dispatch, storage, serialization, snapshots, projections, process managers, and Kafka context propagation with caller-supplied OpenTelemetry components.
 
+- `github.com/faustbrian/go-event-sourcing/adapters/kafka`: Adapt event-sourcing deliveries to Kafka records, synchronous dispatch, consumer handling, explicit poison and retry disposition, and dead-letter publication.
+
+- `github.com/faustbrian/go-event-sourcing/adapters/otel`: Instrument event-sourcing dispatch, storage, serialization, snapshots, projections, process managers, and Kafka context propagation with caller-supplied OpenTelemetry components.
+
 - `github.com/faustbrian/go-event-sourcing/adapters/outbox`: Atomically stage event rows and transactional-outbox envelopes through a savepoint in an existing caller-owned PostgreSQL transaction.
 
 - `github.com/faustbrian/go-event-sourcing/adapters/queue`: Adapt complete event-sourcing deliveries to bounded queue envelopes, synchronous enqueue dispatch, and explicit live or replay task handling.
@@ -110,9 +140,13 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-queue-control-plane`: Provide an authenticated administrative control plane for durable queue commands, desired state, audit history, fleet visibility, and optional Kubernetes workload scaling.
 
-- `github.com/faustbrian/go-queue/queueservice`: Integrate caller-selected queue producers and workers with go-service startup, readiness, supervision, admission closure, drain, and shutdown while preserving backend-owned delivery semantics.
+- `github.com/faustbrian/go-queue/adapters/rabbitmq`: Adapt the backend-neutral go-queue worker contract to RabbitMQ AMQP 0-9-1 publishing, consumption, recovery, settlement, retry, dead-letter, and shutdown policy owned by go-rabbitmq-queues.
 
-- `github.com/faustbrian/go-queue/rabbitmq`: Adapt the backend-neutral go-queue worker contract to RabbitMQ AMQP 0-9-1 publishing, consumption, recovery, settlement, retry, dead-letter, and shutdown policy owned by go-rabbitmq-queues.
+- `github.com/faustbrian/go-queue/adapters/service`: Integrate caller-selected queue producers and workers with go-service startup, readiness, supervision, admission closure, drain, and shutdown while preserving backend-owned delivery semantics.
+
+- `github.com/faustbrian/go-queue/queueservice`: Preserve the released queueservice import path while delegating every public type and operation to adapters/service.
+
+- `github.com/faustbrian/go-queue/rabbitmq`: Preserve the released RabbitMQ import path while delegating every public type and operation to adapters/rabbitmq.
 
 - `github.com/faustbrian/go-scheduler`: Provide code-defined recurring schedules, immutable compilation, bounded execution, fenced multi-replica coordination, explicit dispatch, and observable lifecycle integration.
 
@@ -122,13 +156,17 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-transactional-outbox`: Own PostgreSQL transactional outbox persistence, durable claims and state transitions, and caller-bounded at-least-once relay execution.
 
-- `github.com/faustbrian/go-transactional-outbox/adapters/gokafka`: Map one durable outbox envelope to one confirmed first-party Kafka record without acquiring or owning the producer.
+- `github.com/faustbrian/go-transactional-outbox/adapters/gokafka`: Preserve the released Kafka adapter contract while consumers migrate to the target-oriented adapters/kafka module.
 
-- `github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream`: Map one durable outbox envelope to one confirmed RabbitMQ Stream or Super Stream message without owning transport lifecycle.
+- `github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream`: Preserve the released RabbitMQ Streams adapter contract while consumers migrate to the target-oriented adapters/rabbitstream module.
+
+- `github.com/faustbrian/go-transactional-outbox/adapters/kafka`: Map one durable outbox envelope to one confirmed first-party Kafka record without acquiring or owning the producer.
 
 - `github.com/faustbrian/go-transactional-outbox/adapters/otel`: Add bounded outbox semantic spans, metrics, propagation, observations, and publisher instrumentation without owning telemetry infrastructure.
 
 - `github.com/faustbrian/go-transactional-outbox/adapters/queue`: Map one durable outbox envelope to one bounded deterministic first-party queue task while preserving acceptance ambiguity.
+
+- `github.com/faustbrian/go-transactional-outbox/adapters/rabbitstream`: Map one durable outbox envelope to one confirmed RabbitMQ Stream or Super Stream message without owning transport lifecycle.
 
 - `github.com/faustbrian/go-workflow`: Provide immutable workflow definitions and history, deterministic orchestration decisions, bounded durable work processing, explicit recovery semantics, and a PostgreSQL persistence adapter.
 
@@ -174,15 +212,23 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-kafka/adapters/mskiam`: Provide Kafka SASL/OAUTHBEARER authentication configuration through AWS MSK IAM credentials and signing.
 
+- `github.com/faustbrian/go-kafka/adapters/otel`: Translate Kafka observation and propagation contracts into OpenTelemetry spans and metrics.
+
+- `github.com/faustbrian/go-kafka/adapters/service`: Bridge go-kafka consumer and producer resources into the explicit go-service lifecycle.
+
 - `github.com/faustbrian/go-kafka/kafkaservice`: Bridge go-kafka consumer and producer resources into the explicit go-service lifecycle.
 
 - `github.com/faustbrian/go-rabbitmq-queues`: Provide bounded RabbitMQ-native AMQP 0-9-1 classic and quorum queue publishing, consumption, settlement, recovery, topology verification, health, and observation policy.
 
 - `github.com/faustbrian/go-rabbitmq-streams`: Provide vendor-neutral bounded policy for RabbitMQ Streams messages, publishing, consumption, replay, inspection, failures, lifecycle, and observations.
 
-- `github.com/faustbrian/go-rabbitmq-streams/otel`: Translate bounded RabbitMQ Streams observations into caller-owned OpenTelemetry metrics and propagate W3C Trace Context through message headers.
+- `github.com/faustbrian/go-rabbitmq-streams/adapters/otel`: Translate bounded RabbitMQ Streams observations into caller-owned OpenTelemetry metrics and propagate W3C Trace Context through message headers.
 
-- `github.com/faustbrian/go-rabbitmq-streams/rabbitmq`: Adapt the RabbitMQ-supported Go Streams client to bounded rabbitstream policy while owning protocol connections, sessions, cursors, recovery, and wire conversion.
+- `github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq`: Adapt the RabbitMQ-supported Go Streams client to bounded rabbitstream policy while owning protocol connections, sessions, cursors, recovery, and wire conversion.
+
+- `github.com/faustbrian/go-rabbitmq-streams/otel`: Preserve the released OpenTelemetry adapter import path, public type identities, instrumentation scope, errors, and behavior while delegating to adapters/otel.
+
+- `github.com/faustbrian/go-rabbitmq-streams/rabbitmq`: Preserve the released RabbitMQ Streams adapter import path, public type identities, errors, and behavior while delegating to adapters/rabbitmq.
 
 - `github.com/faustbrian/go-search`: Provide backend-neutral contracts for bounded document indexing, typed querying, cursor pagination, schema migration, projections, and reconciliation while treating application data as authoritative.
 
@@ -209,6 +255,8 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 - `github.com/faustbrian/go-knapsack`: Provide deterministic, bounded offline orthogonal packing, exact objectives, extension constraints, canonical plans, and independent verification.
 
 - `github.com/faustbrian/go-knapsack/objective/gomoney`: Adapt exact go-money values into deterministic Knapsack container-cost objective evaluation.
+
+- `github.com/faustbrian/go-knapsack/objective/money`: Adapt exact go-money values into deterministic Knapsack container-cost objective evaluation through the canonical target-oriented path.
 
 - `github.com/faustbrian/go-math`: Provide immutable arbitrary-precision integer, rational, decimal, and binary-float values with explicit precision, rounding, limits, conditions, and deterministic encodings.
 
@@ -242,4 +290,4 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-cli`: Provide explicit typed command construction, immutable compilation, deterministic parsing, lifecycle middleware, bounded output, and stable process-facing results.
 
-- `github.com/faustbrian/go-prompts`: Provide typed interactive prompts, deterministic non-interactive parsing, semantic rendering, caller-driven presentation, and an explicit terminal adapter.
+- `github.com/faustbrian/go-prompts`: Provide typed interactive prompts, deterministic non-interactive parsing, semantic rendering, caller-driven presentation, and an explicit target-oriented terminal adapter.
