@@ -61,7 +61,7 @@ jobs:
             local line payload direction
             local old_uses='' new_uses='' old_input='' new_input=''
             local old_uses_count=0 new_uses_count=0 old_input_count=0 new_input_count=0
-            local uses_pattern='^[[:space:]]*uses:[[:space:]]+faustbrian/go-library-tools/\.github/workflows/library-ci\.yml@([0-9a-f]{40})([[:space:]]+#[[:space:]]*v[0-9]+\.[0-9]+\.[0-9]+)?[[:space:]]*$'
+            local uses_pattern='^[[:space:]]*uses:[[:space:]]+faustbrian/go-library-tools/\.github/workflows/library-ci\.yml@([0-9a-f]{40})([[:space:]]+#[[:space:]]*v[0-9]+\.[0-9]+\.[0-9]+([[:space:]]+[^[:cntrl:]]*)?)?[[:space:]]*$'
             local input_pattern='^[[:space:]]*tooling_sha:[[:space:]]+([0-9a-f]{40})[[:space:]]*$'
             while IFS= read -r line; do
               case "${line}" in
@@ -141,6 +141,10 @@ jobs:
           set -euo pipefail
           inventory="$(golib inventory --json)"
           configuration="$(golib config show --json)"
+          release_module_capable=false
+          if golib --help | grep -Fq 'golib release dry-run [--all|--module <directory>]'; then
+            release_module_capable=true
+          fi
           if [[ -n "${RELEASE_MODULE}" && "${RELEASE_DRY_RUN}" != true ]]; then
             echo 'release_module requires release_dry_run: true' >&2
             exit 1
@@ -157,6 +161,9 @@ jobs:
           if [[ -n "${RELEASE_MODULE}" && "$(jq 'length' <<<"${matrix}")" -ne 1 ]]; then
             echo "release module is unknown or not releasable: ${RELEASE_MODULE}" >&2
             exit 1
+          fi
+          if [[ "${RELEASE_DRY_RUN}" == true && "${release_module_capable}" != true ]]; then
+            matrix='[{"directory":".","artifact":"legacy-all"}]'
           fi
           [[ "$(jq 'length' <<<"${matrix}")" -gt 0 ]]
           {
@@ -197,7 +204,7 @@ jobs:
           RELEASE_MODULE: ${{ inputs.release_module }}
         run: |
           set -euo pipefail
-          if [[ -n "${RELEASE_MODULE}" ]]; then
+          if [[ -n "${RELEASE_MODULE}" ]] && golib --help | grep -Fq 'golib release check [--all|--module <directory>]'; then
             golib release check --module "${RELEASE_MODULE}"
           else
             golib release check
@@ -274,7 +281,12 @@ jobs:
         if: inputs.release_dry_run == true
         env:
           RELEASE_MODULE: ${{ matrix.directory }}
-        run: golib release dry-run --module "${RELEASE_MODULE}"
+        run: |
+          if golib --help | grep -Fq 'golib release dry-run [--all|--module <directory>]'; then
+            golib release dry-run --module "${RELEASE_MODULE}"
+          else
+            golib release dry-run
+          fi
       - name: Upload attributable evidence
         if: always() && hashFiles('.verification/**') != ''
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6

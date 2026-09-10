@@ -124,7 +124,20 @@ func TestReusableWorkflowBuildsReleaseModuleMatrix(t *testing.T) {
 
 	bin := t.TempDir()
 	golib := filepath.Join(bin, "golib")
-	stub := "#!/bin/sh\ncase \"$*\" in\n  'inventory --json') printf '%s\\n' \"$INVENTORY\" ;;\n  'config show --json') printf '%s\\n' '{\"runtimes\":{}}' ;;\n  *) exit 64 ;;\nesac\n"
+	stub := `#!/bin/sh
+case "$*" in
+  '--help')
+    if [ "$LEGACY_RELEASE" = "true" ]; then
+      printf '%s\n' 'golib release dry-run'
+    else
+      printf '%s\n' 'golib release dry-run [--all|--module <directory>]'
+    fi
+    ;;
+  'inventory --json') printf '%s\n' "$INVENTORY" ;;
+  'config show --json') printf '%s\n' '{"runtimes":{}}' ;;
+  *) exit 64 ;;
+esac
+`
 	if err := os.WriteFile(golib, []byte(stub), 0o700); err != nil {
 		t.Fatal(err)
 	}
@@ -133,14 +146,19 @@ func TestReusableWorkflowBuildsReleaseModuleMatrix(t *testing.T) {
 		name      string
 		dryRun    string
 		module    string
+		legacy    string
 		want      []string
 		wantError string
 	}{
 		{name: "default", dryRun: "false", want: []string{".", "nested", "fixture"}},
 		{name: "all releasable", dryRun: "true", want: []string{".", "nested"}},
 		{name: "selected releasable", dryRun: "true", module: "nested", want: []string{"nested"}},
+		{name: "legacy all releasable runs once", dryRun: "true", legacy: "true", want: []string{"."}},
+		{name: "legacy selected module widens and runs once", dryRun: "true", module: "nested", legacy: "true", want: []string{"."}},
 		{name: "unknown selection", dryRun: "true", module: "missing", wantError: "release module is unknown or not releasable: missing"},
 		{name: "non-releasable selection", dryRun: "true", module: "fixture", wantError: "release module is unknown or not releasable: fixture"},
+		{name: "legacy unknown selection", dryRun: "true", module: "missing", legacy: "true", wantError: "release module is unknown or not releasable: missing"},
+		{name: "legacy non-releasable selection", dryRun: "true", module: "fixture", legacy: "true", wantError: "release module is unknown or not releasable: fixture"},
 		{name: "selection outside rehearsal", dryRun: "false", module: "nested", wantError: "release_module requires release_dry_run: true"},
 	}
 	for _, test := range tests {
@@ -153,6 +171,7 @@ func TestReusableWorkflowBuildsReleaseModuleMatrix(t *testing.T) {
 				"GITHUB_OUTPUT="+output,
 				"RELEASE_DRY_RUN="+test.dryRun,
 				"RELEASE_MODULE="+test.module,
+				"LEGACY_RELEASE="+test.legacy,
 			)
 			combined, err := command.CombinedOutput()
 			if test.wantError != "" {
@@ -238,7 +257,11 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 			if err := os.MkdirAll(filepath.Dir(workflow), 0o700); err != nil {
 				t.Fatal(err)
 			}
-			content := "jobs:\n  ci:\n    uses: faustbrian/go-library-tools/.github/workflows/library-ci.yml@" + strings.Repeat("a", 40) + " # v1.4.0\n    with:\n      tooling_sha: " + strings.Repeat("a", 40) + "\n"
+			comment := " # v1.4.0"
+			if strings.HasPrefix(pinMode, "legacy-comment") {
+				comment = " # v1.4.0 specification monitoring"
+			}
+			content := "jobs:\n  ci:\n    uses: faustbrian/go-library-tools/.github/workflows/library-ci.yml@" + strings.Repeat("a", 40) + comment + "\n    with:\n      tooling_sha: " + strings.Repeat("a", 40) + "\n"
 			if err := os.WriteFile(workflow, []byte(content), 0o600); err != nil {
 				t.Fatal(err)
 			}
@@ -283,6 +306,8 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 				case "tooling-only":
 					usesSHA = strings.Repeat("a", 40)
 				case "mismatched":
+					inputSHA = strings.Repeat("c", 40)
+				case "legacy-comment-mismatched":
 					inputSHA = strings.Repeat("c", 40)
 				}
 				content = "jobs:\n  ci:\n    uses: faustbrian/go-library-tools/.github/workflows/library-ci.yml@" + usesSHA + " # v1.7.1\n    with:\n      tooling_sha: " + inputSHA + "\n"
@@ -337,8 +362,10 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 		{name: "policy only", event: "pull_request", dryRun: "false", path: "AGENTS.md", want: "false"},
 		{name: "documentation only", event: "pull_request", dryRun: "false", path: "docs/usage.md", want: "false"},
 		{name: "policy and reusable workflow pin only", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "false", pinMode: "matched"},
+		{name: "policy and legacy-commented reusable workflow pin only", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "false", pinMode: "legacy-comment"},
 		{name: "one-sided reusable workflow pin", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "true", pinMode: "tooling-only"},
 		{name: "mismatched reusable workflow pins", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "true", pinMode: "mismatched"},
+		{name: "legacy-commented mismatched reusable workflow pins", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "true", pinMode: "legacy-comment-mismatched"},
 		{name: "substantive workflow change", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "true"},
 		{name: "structured documentation metadata", event: "pull_request", dryRun: "false", path: "docs/ecosystem/compatibility-sets.json", want: "true"},
 		{name: "source renamed to documentation", event: "pull_request", dryRun: "false", path: "docs/baseline.md", want: "true", rename: true},
@@ -373,8 +400,19 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 		t.Fatalf("%s has no %q step", job, name)
 		return ""
 	}
-	releaseCheckScript := assertReleaseStep("repository-contract", "Validate release contract", "inputs.release_dry_run == true", "${{ inputs.release_module }}", `golib release check --module "${RELEASE_MODULE}"`)
-	qualityRehearsalScript := assertReleaseStep("quality", "Run release rehearsal", "inputs.release_dry_run == true", "${{ matrix.directory }}", `golib release dry-run --module "${RELEASE_MODULE}"`)
+	releaseCheckScript := assertReleaseStep("repository-contract", "Validate release contract", "inputs.release_dry_run == true", "${{ inputs.release_module }}", `golib release check`)
+	qualityRehearsalScript := assertReleaseStep("quality", "Run release rehearsal", "inputs.release_dry_run == true", "${{ matrix.directory }}", `golib release dry-run`)
+	rehearsalOwners := make([]string, 0, 1)
+	for job, definition := range reusable.Jobs {
+		for _, step := range definition.Steps {
+			if step.Name == "Run release rehearsal" {
+				rehearsalOwners = append(rehearsalOwners, job)
+			}
+		}
+	}
+	if len(rehearsalOwners) != 1 || rehearsalOwners[0] != "quality" {
+		t.Fatalf("release rehearsal owners = %v, want one quality owner", rehearsalOwners)
+	}
 	ordinaryContract := false
 	for _, step := range reusable.Jobs["quality"].Steps {
 		if step.Name == "Run module contract" {
@@ -397,17 +435,28 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 
 	golibBin := t.TempDir()
 	golibInvocations := filepath.Join(t.TempDir(), "golib-invocations")
-	golibStub := "#!/bin/sh\nprintf '%s\\n' \"$*\" >>\"$INVOCATIONS\"\n"
+	golibStub := `#!/bin/sh
+if [ "$1" = "--help" ]; then
+	if [ "$LEGACY" = "true" ]; then
+		printf '%s\n' 'golib release check'
+		printf '%s\n' 'golib release dry-run'
+	else
+		printf '%s\n' 'golib release check [--all|--module <directory>]'
+		printf '%s\n' 'golib release dry-run [--all|--module <directory>]'
+	fi
+	exit 0
+fi
+printf '%s\n' "$*" >>"$INVOCATIONS"
+`
 	if err := os.WriteFile(filepath.Join(golibBin, "golib"), []byte(golibStub), 0o700); err != nil {
 		t.Fatal(err)
 	}
 	for _, test := range []struct {
-		name   string
-		module string
-		want   string
+		name, module, legacy, want string
 	}{
 		{name: "blank", want: "release check"},
-		{name: "selected", module: "nested", want: "release check --module nested"},
+		{name: "selected current tool", module: "nested", want: "release check --module nested"},
+		{name: "selected v1.4 tool", module: "nested", legacy: "true", want: "release check"},
 	} {
 		t.Run("reusable release check "+test.name, func(t *testing.T) {
 			if err := os.WriteFile(golibInvocations, nil, 0o600); err != nil {
@@ -418,6 +467,7 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 				"PATH="+golibBin+string(os.PathListSeparator)+os.Getenv("PATH"),
 				"INVOCATIONS="+golibInvocations,
 				"RELEASE_MODULE="+test.module,
+				"LEGACY="+test.legacy,
 			)
 			if combined, err := command.CombinedOutput(); err != nil {
 				t.Fatalf("release check error = %v, output = %q", err, combined)
@@ -431,24 +481,34 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 			}
 		})
 	}
-	if err := os.WriteFile(golibInvocations, nil, 0o600); err != nil {
-		t.Fatal(err)
-	}
-	qualityCommand := exec.CommandContext(t.Context(), "bash", "-c", qualityRehearsalScript)
-	qualityCommand.Env = append(os.Environ(),
-		"PATH="+golibBin+string(os.PathListSeparator)+os.Getenv("PATH"),
-		"INVOCATIONS="+golibInvocations,
-		"RELEASE_MODULE=nested",
-	)
-	if combined, err := qualityCommand.CombinedOutput(); err != nil {
-		t.Fatalf("quality release rehearsal error = %v, output = %q", err, combined)
-	}
-	qualityInvocation, err := os.ReadFile(golibInvocations)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if strings.TrimSpace(string(qualityInvocation)) != "release dry-run --module nested" {
-		t.Fatalf("quality golib invocation = %q", qualityInvocation)
+	for _, test := range []struct {
+		name, legacy, want string
+	}{
+		{name: "current tool", want: "release dry-run --module nested"},
+		{name: "v1.4 tool", legacy: "true", want: "release dry-run"},
+	} {
+		t.Run("quality release rehearsal "+test.name, func(t *testing.T) {
+			if err := os.WriteFile(golibInvocations, nil, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			qualityCommand := exec.CommandContext(t.Context(), "bash", "-c", qualityRehearsalScript)
+			qualityCommand.Env = append(os.Environ(),
+				"PATH="+golibBin+string(os.PathListSeparator)+os.Getenv("PATH"),
+				"INVOCATIONS="+golibInvocations,
+				"RELEASE_MODULE=nested",
+				"LEGACY="+test.legacy,
+			)
+			if combined, err := qualityCommand.CombinedOutput(); err != nil {
+				t.Fatalf("quality release rehearsal error = %v, output = %q", err, combined)
+			}
+			qualityInvocation, err := os.ReadFile(golibInvocations)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := strings.TrimSpace(string(qualityInvocation)); got != test.want {
+				t.Fatalf("quality golib invocation = %q, want %q", got, test.want)
+			}
+		})
 	}
 
 	var caller workflowDocument

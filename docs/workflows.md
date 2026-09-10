@@ -55,6 +55,8 @@ binary. It never evaluates a downloaded installer.
 The workflow detects whether that installed version supports the bounded local
 check mode and otherwise uses the older module-check form, so updating an
 immutable workflow pin does not force a simultaneous tool-manifest migration.
+Release rehearsals similarly omit module selectors when the installed tool
+predates module-scoped release commands.
 
 Repositories whose initial dependency graph cannot be reconstructed from the
 public Go proxy may define both `GOLIB_BOOTSTRAP_PROXY_URL` and
@@ -79,11 +81,13 @@ Set `release_dry_run: true` only for an explicit release rehearsal; this first
 validates the stable release contract and then runs the complete release
 dry-run for every releasable module. Set `release_module` to an exact module
 directory to limit the release matrix and module-scoped release checks to that
-independently versioned module. Whole-repository structure, offline
-specification validation, and CodeQL checks still run. Mutable online authority
-and errata monitoring is separate from pull-request and release feedback and
-runs only on the caller's scheduled monitoring event. A blank selector
-preserves the all-module rehearsal,
+independently versioned module when the installed tool supports release
+selectors. Older tools safely widen that request to one whole-repository
+release check and dry-run rather than repeating the full rehearsal per module.
+Whole-repository structure, offline specification validation, and CodeQL checks
+still run. Mutable online authority and errata monitoring is separate from
+pull-request and release feedback and runs only on the caller's scheduled
+monitoring event. A blank selector preserves the all-module rehearsal,
 and a non-blank selector without `release_dry_run: true` fails closed. Existing
 consumer callers must expose and forward `release_module` before they can
 dispatch an exact-module hosted rehearsal; a tooling-pin upgrade alone does not
@@ -97,9 +101,10 @@ Pull requests that change only Markdown, `LICENSE`, or `NOTICE` run repository
 structural validation without launching module-quality or CodeQL jobs. An
 otherwise lightweight pull request may also update only the canonical
 reusable-workflow SHA and matching `tooling_sha`; structural validation still
-checks that caller. Source, configuration, substantive workflow changes,
-structured metadata, push, scheduled, and explicit release-rehearsal events
-retain the complete applicable runtime path.
+checks that caller, including when the replaced release comment has a legacy
+descriptive suffix. Source, configuration, substantive or mismatched workflow
+changes, structured metadata, push, scheduled, and explicit release-rehearsal
+events retain the complete applicable runtime path.
 Pull-request runs review dependency changes before the final required job.
 Workflow syntax and expression validation are available locally through
 `golib workflows check`, run as part of the repository `make ci` contract, and
