@@ -88,15 +88,24 @@ def build_candidate(
     template: dict,
     catalog_modules: list[dict],
     *,
+    version_overrides=None,
     remote_tag_lookup=None,
     public_version_lookup=None,
 ) -> dict:
+    if version_overrides is None:
+        version_overrides = {}
     if remote_tag_lookup is None:
         remote_tag_lookup = remote_tag_revision
     if public_version_lookup is None:
         public_version_lookup = public_module_version
     item = copy.deepcopy(template)
     selected = active_catalog_modules(catalog_modules)
+    selected_paths = {module["module_path"] for module in selected}
+    unknown_overrides = sorted(set(version_overrides) - selected_paths)
+    if unknown_overrides:
+        raise ValueError(
+            f"version override names unknown module: {unknown_overrides[0]}"
+        )
     roster = item.get("roster")
     if isinstance(roster, dict) and roster.get("module_count") != len(selected):
         raise ValueError(
@@ -104,7 +113,9 @@ def build_candidate(
             f"catalog has {len(selected)}"
         )
     def resolve(catalog_module: dict) -> dict:
-        version = catalog_module.get("version")
+        version = version_overrides.get(
+            catalog_module["module_path"], catalog_module.get("version")
+        )
         validate_string(version, "catalog module version")
         version = "v" + version.removeprefix("v")
         if not SEMVER.fullmatch(version):
@@ -514,8 +525,15 @@ def load(
                 public_bindings.append((module, repository, tag))
             elif not allow_stale_unreleased:
                 if (
-                    catalog_version is None
-                    or "v" + catalog_version.lstrip("v") != module["version"]
+                    catalog_module is None
+                    or (
+                        item.get("roster") is None
+                        and (
+                            catalog_version is None
+                            or "v" + catalog_version.lstrip("v")
+                            != module["version"]
+                        )
+                    )
                 ):
                     raise ValueError(
                         "module identity is absent or version-mismatched: "
@@ -616,6 +634,12 @@ def parse_args(arguments: list[str]) -> argparse.Namespace:
     candidate.add_argument("--set-id", required=True)
     candidate.add_argument("--observed-at", required=True)
     candidate.add_argument("--module-count", required=True, type=int)
+    candidate.add_argument(
+        "--version",
+        action="append",
+        default=[],
+        metavar="MODULE@VERSION",
+    )
     candidate.add_argument("--write", action="store_true")
     rebase = subparsers.add_parser("rebase")
     rebase.add_argument("--set-id")
@@ -632,6 +656,21 @@ def validate_candidate_request(set_id: str, observed_at: str, module_count: int)
         raise ValueError("candidate observation time must use UTC RFC 3339 form") from error
     if module_count < 1:
         raise ValueError("candidate module count must be positive")
+
+
+def parse_version_overrides(bindings: list[str]) -> dict[str, str]:
+    overrides = {}
+    for binding in bindings:
+        if "@" not in binding:
+            raise ValueError("candidate version override must use MODULE@VERSION")
+        module_path, version = binding.rsplit("@", 1)
+        validate_string(module_path, "candidate version override module")
+        if not SEMVER.fullmatch(version):
+            raise ValueError("candidate version override must use a semantic version")
+        if module_path in overrides:
+            raise ValueError(f"duplicate candidate version override: {module_path}")
+        overrides[module_path] = version
+    return overrides
 
 
 def main(arguments: list[str] | None = None) -> int:
@@ -659,7 +698,11 @@ def main(arguments: list[str] | None = None) -> int:
             "observation": "Pending final composition and native clean-consumer receipts."
         }
         catalogs = load_catalog_modules()
-        item = build_candidate(template, catalogs)
+        item = build_candidate(
+            template,
+            catalogs,
+            version_overrides=parse_version_overrides(options.version),
+        )
         if options.write:
             write_candidate_artifacts(value, item, catalogs)
         else:

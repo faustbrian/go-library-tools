@@ -6,6 +6,7 @@ PACKAGES ?=
 COMPATIBILITY_SET_ID ?=
 COMPATIBILITY_OBSERVED_AT ?=
 COMPATIBILITY_MODULE_COUNT ?=
+COMPATIBILITY_VERSION_OVERRIDES ?=
 COMPATIBILITY_GO_MOD ?=
 
 define run_go
@@ -39,7 +40,7 @@ compatibility-candidate:
 	@test -n "$(strip $(COMPATIBILITY_SET_ID))" || { echo 'COMPATIBILITY_SET_ID is required' >&2; exit 2; }
 	@test -n "$(strip $(COMPATIBILITY_OBSERVED_AT))" || { echo 'COMPATIBILITY_OBSERVED_AT is required' >&2; exit 2; }
 	@test -n "$(strip $(COMPATIBILITY_MODULE_COUNT))" || { echo 'COMPATIBILITY_MODULE_COUNT is required' >&2; exit 2; }
-	python3 tools/compatibility/generate.py candidate --set-id "$(COMPATIBILITY_SET_ID)" --observed-at "$(COMPATIBILITY_OBSERVED_AT)" --module-count "$(COMPATIBILITY_MODULE_COUNT)" --write
+	python3 tools/compatibility/generate.py candidate --set-id "$(COMPATIBILITY_SET_ID)" --observed-at "$(COMPATIBILITY_OBSERVED_AT)" --module-count "$(COMPATIBILITY_MODULE_COUNT)" $(foreach binding,$(COMPATIBILITY_VERSION_OVERRIDES),--version "$(binding)") --write
 
 compatibility-rebase:
 	@test -n "$(strip $(COMPATIBILITY_SET_ID))" || { echo 'COMPATIBILITY_SET_ID is required' >&2; exit 2; }

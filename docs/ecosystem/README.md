@@ -49,12 +49,14 @@ roster, generate one unreleased candidate and its clean-consumer module with:
 make compatibility-candidate \
   COMPATIBILITY_SET_ID=draft-YYYYMMDD.1 \
   COMPATIBILITY_OBSERVED_AT=YYYY-MM-DDTHH:MM:SSZ \
-  COMPATIBILITY_MODULE_COUNT=<active-module-count>
+  COMPATIBILITY_MODULE_COUNT=<active-module-count> \
+  COMPATIBILITY_VERSION_OVERRIDES='<module>@<public-version> ...'
 ```
 
 Generation selects only active, releasable catalog modules, sorts them by
-module path, resolves each catalog version through its exact remote tag and the
-public Go proxy, and writes `compatibility-sets.{json,md}` together with
+module path, applies any deliberate public-version overrides, resolves every
+selected version through its exact remote tag and the public Go proxy, and
+writes `compatibility-sets.{json,md}` together with
 `release/compatibility-consumer/{go.mod,consumer_test.go}`. A missing release,
 deprecated or planned module, stale catalog version, or roster-count mismatch
 fails before a candidate is written. Do not run the write command until the

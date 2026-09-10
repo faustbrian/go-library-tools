@@ -405,6 +405,42 @@ class CompatibilitySetTest(unittest.TestCase):
                 public_version_lookup=lambda _module_path, _version: False,
             )
 
+    def test_candidate_generation_accepts_deliberate_public_version_override(self):
+        module = self.catalog_module()
+        module["version"] = "1.0.0"
+        module["cohesion"] = {"lifecycle_status": "active"}
+        item = self.base_set("a" * 40)
+        item["modules"] = []
+        item["roster"] = {"selection": "active-public", "module_count": 1}
+        tags = []
+
+        candidate = generate.build_candidate(
+            item,
+            [module],
+            version_overrides={module["module_path"]: "v1.1.0"},
+            remote_tag_lookup=lambda _repository, tag: tags.append(tag) or "b" * 40,
+            public_version_lookup=lambda _module_path, _version: True,
+        )
+
+        self.assertEqual(candidate["modules"][0]["version"], "v1.1.0")
+        self.assertEqual(tags, ["adapters/foo/v1.1.0"])
+
+    def test_candidate_generation_rejects_unknown_version_override(self):
+        module = self.catalog_module()
+        module["cohesion"] = {"lifecycle_status": "active"}
+        item = self.base_set("a" * 40)
+        item["modules"] = []
+        item["roster"] = {"selection": "active-public", "module_count": 1}
+
+        with self.assertRaisesRegex(ValueError, "unknown module"):
+            generate.build_candidate(
+                item,
+                [module],
+                version_overrides={"github.com/faustbrian/go-unknown": "v1.1.0"},
+                remote_tag_lookup=lambda _repository, _tag: "a" * 40,
+                public_version_lookup=lambda _module_path, _version: True,
+            )
+
     def test_complete_roster_rejects_missing_and_deprecated_modules(self):
         active = self.catalog_module()
         active["cohesion"] = {"lifecycle_status": "active"}
@@ -729,7 +765,7 @@ class CompatibilitySetTest(unittest.TestCase):
         with mock.patch.object(
             generate,
             "build_candidate",
-            side_effect=lambda template, _catalogs: template,
+            side_effect=lambda template, _catalogs, **_options: template,
         ) as build_candidate, mock.patch("builtins.print"):
             result = generate.main(
                 [
