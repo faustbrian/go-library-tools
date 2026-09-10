@@ -65,6 +65,86 @@ jobs:
             go test -tags=verifierintegration ./internal/mutation \
               -run '^TestPatchedVerifierRenewsTimeoutForEachIntegrationPhase$' -count=1 -timeout=2m
 
+  compatibility-consumer-scope:
+    name: Compatibility consumer scope
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      required: ${{ steps.scope.outputs.required }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+      - name: Detect compatibility-set publication changes
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-compatibility-scope.XXXXXX")"
+          trap 'find "${task}" -depth -delete' EXIT
+          git show "${BASE_SHA}:docs/ecosystem/compatibility-sets.json" >"${task}/base.json"
+          if jq -e --slurpfile base "${task}/base.json" '
+            any(.sets[];
+              .publication_status == "published" and
+              (.set_id as $id |
+                (($base[0].sets // []) |
+                  map(select(.set_id == $id)) |
+                  (.[0].publication_status // "absent")) != "published"))
+          ' docs/ecosystem/compatibility-sets.json >/dev/null; then
+            echo 'required=true' >>"${GITHUB_OUTPUT}"
+          else
+            echo 'required=false' >>"${GITHUB_OUTPUT}"
+          fi
+
+  compatibility-consumer:
+    name: Compatibility consumer (${{ matrix.platform }})
+    if: needs.compatibility-consumer-scope.outputs.required == 'true'
+    needs: compatibility-consumer-scope
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: darwin-arm64
+            runner: macos-latest
+            goos: darwin
+            goarch: arm64
+          - platform: linux-amd64
+            runner: ubuntu-24.04
+            goos: linux
+            goarch: amd64
+          - platform: linux-arm64
+            runner: ubuntu-24.04-arm
+            goos: linux
+            goarch: arm64
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
+        with:
+          go-version-file: .go-version
+          cache: false
+      - name: Resolve and test the public compatibility consumer
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-compatibility-consumer.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/cache" "${task}/consumer" "${task}/mod" "${task}/tmp"
+          cp release/compatibility-consumer/go.mod \
+            release/compatibility-consumer/consumer_test.go "${task}/consumer/"
+          cd "${task}/consumer"
+          export GOCACHE="${task}/cache"
+          export GOMODCACHE="${task}/mod"
+          export GOTMPDIR="${task}/tmp"
+          export GOPROXY='https://proxy.golang.org'
+          export GOSUMDB='sum.golang.org'
+          export GOWORK='off'
+          test "$(go env GOOS)/$(go env GOARCH)" = '${{ matrix.goos }}/${{ matrix.goarch }}'
+          go mod tidy
+          go test -mod=readonly -count=1 ./...
+
   milestone:
     name: Aggregate milestone
     if: github.event_name != 'pull_request'
@@ -162,18 +242,22 @@ jobs:
   required:
     name: Required
     if: always()
-    needs: [dependency-review, quality, milestone, codeql, release-rehearsal]
+    needs: [dependency-review, quality, compatibility-consumer-scope, compatibility-consumer, milestone, codeql, release-rehearsal]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - env:
           DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
+          COMPATIBILITY_SCOPE_RESULT: ${{ needs.compatibility-consumer-scope.result }}
+          COMPATIBILITY_CONSUMER_RESULT: ${{ needs.compatibility-consumer.result }}
           MILESTONE_RESULT: ${{ needs.milestone.result }}
           CODEQL_RESULT: ${{ needs.codeql.result }}
           RELEASE_REHEARSAL_RESULT: ${{ needs.release-rehearsal.result }}
         run: |
           test "${QUALITY_RESULT}" = success
+          test "${COMPATIBILITY_SCOPE_RESULT}" = success -o "${COMPATIBILITY_SCOPE_RESULT}" = skipped
+          test "${COMPATIBILITY_CONSUMER_RESULT}" = success -o "${COMPATIBILITY_CONSUMER_RESULT}" = skipped
           test "${MILESTONE_RESULT}" = success -o "${MILESTONE_RESULT}" = skipped
           test "${CODEQL_RESULT}" = success
           test "${DEPENDENCY_REVIEW_RESULT}" = success -o "${DEPENDENCY_REVIEW_RESULT}" = skipped
