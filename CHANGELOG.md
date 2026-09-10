@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.7.2 - 2026-09-09
+
+### Fixed
+
+- Kept reusable release rehearsals compatible and proportional with supported
+  older tool manifests by running their whole-repository fallback only once.
+- Kept policy-only workflow-pin updates lightweight when an older canonical
+  pin comment includes a descriptive suffix.
+
 ## 1.7.1 - 2026-09-09
 
 ### Fixed
