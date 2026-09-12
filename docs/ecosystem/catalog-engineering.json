@@ -6,10 +6,10 @@
   "design_language": {
     "version": "1.0",
     "sha256": "d767f6d4d5eb3ba73861d898255d42691fac49101ea55edb079af3b1969357c8",
-    "source_identity": "v1.8.3"
+    "source_identity": "v1.8.4"
   },
   "tooling": {
-    "version": "v1.8.3",
+    "version": "v1.8.4",
     "publication_status": "published"
   },
   "modules": [
@@ -15584,7 +15584,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-queue",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "purpose": "`queue` owns the backend-neutral worker model and root in-memory, Redis Pub/Sub, Redis Streams, Valkey Streams, NATS, and NSQ backends. The target-oriented Redis Streams package is released atomically with its compatibility facade; RabbitMQ and service lifecycle adapters are independently releasable nested modules.",
       "lifecycle": "stable",
@@ -15996,9 +15996,8 @@
           "github.com/faustbrian/go-transactional-outbox/adapters/queue"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6",
             "1.27.0"
           ]
         },
@@ -16706,7 +16705,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": "adapters/service",
       "module_path": "github.com/faustbrian/go-queue/adapters/service",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "purpose": "Target-oriented integration of caller-owned queue resources with go-service lifecycle.",
       "lifecycle": "stable",
@@ -16827,9 +16826,8 @@
           "github.com/faustbrian/go-queue/queueservice"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6",
             "1.27.0"
           ]
         },
@@ -16873,7 +16871,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": "queueservice",
       "module_path": "github.com/faustbrian/go-queue/queueservice",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "purpose": "Deprecated v1 compatibility facade for the target-oriented queue service lifecycle adapter.",
       "lifecycle": "stable",
@@ -16975,9 +16973,8 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6",
             "1.27.0"
           ]
         },
