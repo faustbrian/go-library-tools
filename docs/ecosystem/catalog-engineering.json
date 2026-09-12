@@ -2478,7 +2478,7 @@
       "module_path": "github.com/faustbrian/go-validation",
       "go_version": "1.27.0",
       "kind": "public library",
-      "purpose": "`validation` is a typed, transport-neutral validation package for Go 1.26 and later. Ordinary functions and `Validator[T]` are the primary API. Reports retain stable paths and rule codes without retaining rejected values.",
+      "purpose": "`validation` is a typed, transport-neutral validation package for Go 1.27 and later. Ordinary functions and `Validator[T]` are the primary API. Reports retain stable paths and rule codes without retaining rejected values.",
       "lifecycle": "stable",
       "releasable": true,
       "version": "1.1.0",
@@ -4788,7 +4788,7 @@
         "Pinned normative-source matrix and specification decision evidence"
       ],
       "specifications": [
-        "Go 1.27.0 net/http and context contracts",
+        "Go 1.26.6 net/http and context contracts",
         "RFC 9110 HTTP Semantics",
         "RFC 9111 HTTP Caching",
         "RFC 7239 Forwarded HTTP Extension",
@@ -5913,7 +5913,7 @@
         "Pinned normative-source matrix and ServeMux differential evidence"
       ],
       "specifications": [
-        "Go 1.27.0 net/http and net/url contracts",
+        "Go 1.26.6 net/http and net/url contracts",
         "RFC 3986 URI Generic Syntax",
         "RFC 9110 HTTP Semantics",
         "RFC 9112 HTTP/1.1 request-target forms"
@@ -11206,7 +11206,7 @@
         "Controlled body, replay, delivery, DNS, redirect, and SSRF matrices"
       ],
       "specifications": [
-        "Go 1.27.0 cryptography, HTTP, URL, address, time, and encoding contracts",
+        "Go 1.26.6 cryptography, HTTP, URL, address, time, and encoding contracts",
         "RFC 2104 HMAC and RFC 4231 HMAC-SHA-256/HMAC-SHA-512 vectors",
         "RFC 4648 Base-N Encodings",
         "RFC 3986 URI Generic Syntax",
@@ -15584,7 +15584,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-queue",
-      "go_version": "1.27.0",
+      "go_version": "1.26.6",
       "kind": "public library",
       "purpose": "`queue` owns the backend-neutral worker model and root in-memory, Redis Pub/Sub, Redis Streams, Valkey Streams, NATS, and NSQ backends. The target-oriented Redis Streams package is released atomically with its compatibility facade; RabbitMQ and service lifecycle adapters are independently releasable nested modules.",
       "lifecycle": "stable",
@@ -15996,9 +15996,9 @@
           "github.com/faustbrian/go-transactional-outbox/adapters/queue"
         ],
         "supported_go": {
-          "minimum": "1.27.0",
+          "minimum": "1.26.6",
           "tested": [
-            "1.27.0",
+            "1.26.6",
             "1.27.0"
           ]
         },
@@ -16708,7 +16708,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": "adapters/service",
       "module_path": "github.com/faustbrian/go-queue/adapters/service",
-      "go_version": "1.27.0",
+      "go_version": "1.26.6",
       "kind": "public library",
       "purpose": "Target-oriented integration of caller-owned queue resources with go-service lifecycle.",
       "lifecycle": "stable",
@@ -16829,9 +16829,9 @@
           "github.com/faustbrian/go-queue/queueservice"
         ],
         "supported_go": {
-          "minimum": "1.27.0",
+          "minimum": "1.26.6",
           "tested": [
-            "1.27.0",
+            "1.26.6",
             "1.27.0"
           ]
         },
@@ -16877,7 +16877,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": "queueservice",
       "module_path": "github.com/faustbrian/go-queue/queueservice",
-      "go_version": "1.27.0",
+      "go_version": "1.26.6",
       "kind": "public library",
       "purpose": "Deprecated v1 compatibility facade for the target-oriented queue service lifecycle adapter.",
       "lifecycle": "stable",
@@ -16979,9 +16979,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.27.0",
+          "minimum": "1.26.6",
           "tested": [
-            "1.27.0",
+            "1.26.6",
             "1.27.0"
           ]
         },
@@ -25289,10 +25289,10 @@
         "Codec differential, hostile-input, round-trip, and official format fixtures"
       ],
       "specifications": [
-        "Go 1.27.0 encoding/json contract",
-        "Go 1.27.0 encoding/xml contract",
-        "Go 1.27.0 errors package contract",
-        "Go 1.27.0 language specification",
+        "Go 1.26.6 encoding/json contract",
+        "Go 1.26.6 encoding/xml contract",
+        "Go 1.26.6 errors package contract",
+        "Go 1.26.6 language specification",
         "RFC 8259 JSON",
         "XML 1.0 Fifth Edition and Namespaces in XML 1.0 Third Edition",
         "SOAP 1.1 and SOAP 1.2 Part 1 Second Edition",

@@ -1929,7 +1929,7 @@
       "releasable": true,
       "version": "1.0.0",
       "specifications": [
-        "Go 1.27.0 net/http and context contracts",
+        "Go 1.26.6 net/http and context contracts",
         "RFC 9110 HTTP Semantics",
         "RFC 9111 HTTP Caching",
         "RFC 7239 Forwarded HTTP Extension",
@@ -2160,7 +2160,7 @@
       "releasable": true,
       "version": "1.0.0",
       "specifications": [
-        "Go 1.27.0 net/http and net/url contracts",
+        "Go 1.26.6 net/http and net/url contracts",
         "RFC 3986 URI Generic Syntax",
         "RFC 9110 HTTP Semantics",
         "RFC 9112 HTTP/1.1 request-target forms"
@@ -4563,7 +4563,7 @@
       "releasable": true,
       "version": "1.0.0",
       "specifications": [
-        "Go 1.27.0 cryptography, HTTP, URL, address, time, and encoding contracts",
+        "Go 1.26.6 cryptography, HTTP, URL, address, time, and encoding contracts",
         "RFC 2104 HMAC and RFC 4231 HMAC-SHA-256/HMAC-SHA-512 vectors",
         "RFC 4648 Base-N Encodings",
         "RFC 3986 URI Generic Syntax",
@@ -6550,7 +6550,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-queue",
-      "go_version": "1.27.0",
+      "go_version": "1.26.6",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -6637,9 +6637,9 @@
           "github.com/faustbrian/go-transactional-outbox/adapters/queue"
         ],
         "supported_go": {
-          "minimum": "1.27.0",
+          "minimum": "1.26.6",
           "tested": [
-            "1.27.0",
+            "1.26.6",
             "1.27.0"
           ]
         },
@@ -6925,7 +6925,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": "adapters/service",
       "module_path": "github.com/faustbrian/go-queue/adapters/service",
-      "go_version": "1.27.0",
+      "go_version": "1.26.6",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -6984,9 +6984,9 @@
           "github.com/faustbrian/go-queue/queueservice"
         ],
         "supported_go": {
-          "minimum": "1.27.0",
+          "minimum": "1.26.6",
           "tested": [
-            "1.27.0",
+            "1.26.6",
             "1.27.0"
           ]
         },
@@ -7032,7 +7032,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": "queueservice",
       "module_path": "github.com/faustbrian/go-queue/queueservice",
-      "go_version": "1.27.0",
+      "go_version": "1.26.6",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.1",
@@ -7087,9 +7087,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.27.0",
+          "minimum": "1.26.6",
           "tested": [
-            "1.27.0",
+            "1.26.6",
             "1.27.0"
           ]
         },
@@ -11422,10 +11422,10 @@
       "releasable": true,
       "version": "1.0.0",
       "specifications": [
-        "Go 1.27.0 encoding/json contract",
-        "Go 1.27.0 encoding/xml contract",
-        "Go 1.27.0 errors package contract",
-        "Go 1.27.0 language specification",
+        "Go 1.26.6 encoding/json contract",
+        "Go 1.26.6 encoding/xml contract",
+        "Go 1.26.6 errors package contract",
+        "Go 1.26.6 language specification",
         "RFC 8259 JSON",
         "XML 1.0 Fifth Edition and Namespaces in XML 1.0 Third Edition",
         "SOAP 1.1 and SOAP 1.2 Part 1 Second Edition",
