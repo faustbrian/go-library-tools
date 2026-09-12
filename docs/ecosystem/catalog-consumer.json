@@ -17,7 +17,7 @@
       "repository": "github.com/faustbrian/go-clock",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-clock",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -72,9 +72,9 @@
           "github.com/faustbrian/go-temporal"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -109,7 +109,7 @@
       "repository": "github.com/faustbrian/go-config",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-config",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -172,9 +172,9 @@
         ],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -215,7 +215,7 @@
       "repository": "github.com/faustbrian/go-config",
       "directory": "adapters/awssecretsmanager",
       "module_path": "github.com/faustbrian/go-config/adapters/awssecretsmanager",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -264,9 +264,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -305,7 +305,7 @@
       "repository": "github.com/faustbrian/go-correlation",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-correlation",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -391,9 +391,9 @@
           "github.com/faustbrian/go-telemetry"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -433,7 +433,7 @@
       "repository": "github.com/faustbrian/go-identifier",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-identifier",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -502,9 +502,9 @@
           "github.com/faustbrian/go-validation"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -548,7 +548,7 @@
       "repository": "github.com/faustbrian/go-international",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-international",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -630,9 +630,9 @@
           "github.com/faustbrian/go-international/internationaltest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -676,7 +676,7 @@
       "repository": "github.com/faustbrian/go-localized",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-localized",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -775,9 +775,9 @@
           "github.com/faustbrian/go-localized/match"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -819,7 +819,7 @@
       "repository": "github.com/faustbrian/go-tenancy",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-tenancy",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -881,9 +881,9 @@
           "github.com/faustbrian/go-tenancy/tenancytest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -923,7 +923,7 @@
       "repository": "github.com/faustbrian/go-validation",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-validation",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -1011,9 +1011,9 @@
           "github.com/faustbrian/go-validation/validationtext"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -1053,7 +1053,7 @@
       "repository": "github.com/faustbrian/go-api-query",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-api-query",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -1134,9 +1134,9 @@
           "github.com/faustbrian/go-api-query/cursor"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -1178,7 +1178,7 @@
       "repository": "github.com/faustbrian/go-authentication",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-authentication",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.2.0",
@@ -1251,9 +1251,9 @@
           "github.com/faustbrian/go-authentication/oidc"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -1291,7 +1291,7 @@
       "repository": "github.com/faustbrian/go-authentication",
       "directory": "adapters/otel",
       "module_path": "github.com/faustbrian/go-authentication/adapters/otel",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -1338,9 +1338,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -1377,7 +1377,7 @@
       "repository": "github.com/faustbrian/go-authentication",
       "directory": "authotel",
       "module_path": "github.com/faustbrian/go-authentication/authotel",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -1426,9 +1426,9 @@
           "github.com/faustbrian/go-authentication/adapters/otel"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -1463,7 +1463,7 @@
       "repository": "github.com/faustbrian/go-authentication",
       "directory": "jwt",
       "module_path": "github.com/faustbrian/go-authentication/jwt",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -1528,9 +1528,9 @@
           "github.com/faustbrian/go-authentication/oidc"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -1571,7 +1571,7 @@
       "repository": "github.com/faustbrian/go-authentication",
       "directory": "oidc",
       "module_path": "github.com/faustbrian/go-authentication/oidc",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -1633,9 +1633,9 @@
           "github.com/faustbrian/go-authentication/jwt"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -1674,7 +1674,7 @@
       "repository": "github.com/faustbrian/go-authorization",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-authorization",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -1765,9 +1765,9 @@
           "github.com/faustbrian/go-authorization/rbac"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -1808,7 +1808,7 @@
       "repository": "github.com/faustbrian/go-capability",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-capability",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -1877,9 +1877,9 @@
         ],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -1924,12 +1924,12 @@
       "repository": "github.com/faustbrian/go-http-middleware",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-http-middleware",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
       "specifications": [
-        "Go 1.26.6 net/http and context contracts",
+        "Go 1.27.0 net/http and context contracts",
         "RFC 9110 HTTP Semantics",
         "RFC 9111 HTTP Caching",
         "RFC 7239 Forwarded HTTP Extension",
@@ -2003,9 +2003,9 @@
           "github.com/faustbrian/go-telemetry"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -2043,7 +2043,7 @@
       "repository": "github.com/faustbrian/go-password",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-password",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -2114,9 +2114,9 @@
           "github.com/faustbrian/go-password/passwordtest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -2155,12 +2155,12 @@
       "repository": "github.com/faustbrian/go-router",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-router",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
       "specifications": [
-        "Go 1.26.6 net/http and net/url contracts",
+        "Go 1.27.0 net/http and net/url contracts",
         "RFC 3986 URI Generic Syntax",
         "RFC 9110 HTTP Semantics",
         "RFC 9112 HTTP/1.1 request-target forms"
@@ -2211,9 +2211,9 @@
           "github.com/faustbrian/go-service"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -2253,7 +2253,7 @@
       "repository": "github.com/faustbrian/go-service",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-service",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -2328,9 +2328,9 @@
           "github.com/faustbrian/go-telemetry"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -2370,7 +2370,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-cloudevents",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -2438,9 +2438,9 @@
         ],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -2479,7 +2479,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/audit",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/audit",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -2529,9 +2529,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -2568,7 +2568,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/correlation",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/correlation",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -2614,9 +2614,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -2653,7 +2653,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/event-sourcing",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/event-sourcing",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -2700,9 +2700,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -2739,7 +2739,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/golib",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/golib",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.1.0",
@@ -2817,9 +2817,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -2859,7 +2859,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/jsonschema",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/jsonschema",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -2905,9 +2905,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -2944,7 +2944,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/kafka",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/kafka",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -2990,9 +2990,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3029,7 +3029,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/outbox",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/outbox",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -3075,9 +3075,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3114,7 +3114,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/queue",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/queue",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -3161,9 +3161,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3200,7 +3200,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/rabbitstream",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/rabbitstream",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -3246,9 +3246,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3285,7 +3285,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/schema-registry",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/schema-registry",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -3331,9 +3331,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3370,7 +3370,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/telemetry",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/telemetry",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -3416,9 +3416,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3455,7 +3455,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/tenancy",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/tenancy",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -3501,9 +3501,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3540,7 +3540,7 @@
       "repository": "github.com/faustbrian/go-cloudevents",
       "directory": "adapters/workflow",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/workflow",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -3586,9 +3586,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3625,7 +3625,7 @@
       "repository": "github.com/faustbrian/go-http-signature",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-http-signature",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -3687,9 +3687,9 @@
           "github.com/faustbrian/go-http-signature/compatibility"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3730,7 +3730,7 @@
       "repository": "github.com/faustbrian/go-json-schema",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-json-schema",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -3785,9 +3785,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3827,7 +3827,7 @@
       "repository": "github.com/faustbrian/go-jsonapi",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-jsonapi",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -3888,9 +3888,9 @@
           "github.com/faustbrian/go-openapi"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -3933,7 +3933,7 @@
       "repository": "github.com/faustbrian/go-jsonrpc",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-jsonrpc",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -3991,9 +3991,9 @@
           "github.com/faustbrian/go-openrpc"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -4032,7 +4032,7 @@
       "repository": "github.com/faustbrian/go-openapi",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-openapi",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -4105,9 +4105,9 @@
           "github.com/faustbrian/go-openrpc"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -4158,7 +4158,7 @@
       "repository": "github.com/faustbrian/go-openrpc",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-openrpc",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -4218,9 +4218,9 @@
           "github.com/faustbrian/go-jsonrpc"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -4266,7 +4266,7 @@
       "repository": "github.com/faustbrian/go-schema-registry",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-schema-registry",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -4326,9 +4326,9 @@
           "github.com/faustbrian/go-schema-registry/providers/glue"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -4368,7 +4368,7 @@
       "repository": "github.com/faustbrian/go-schema-registry",
       "directory": "providers/confluent",
       "module_path": "github.com/faustbrian/go-schema-registry/providers/confluent",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -4421,9 +4421,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -4463,7 +4463,7 @@
       "repository": "github.com/faustbrian/go-schema-registry",
       "directory": "providers/glue",
       "module_path": "github.com/faustbrian/go-schema-registry/providers/glue",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -4516,9 +4516,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -4558,12 +4558,12 @@
       "repository": "github.com/faustbrian/go-webhook",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-webhook",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
       "specifications": [
-        "Go 1.26.6 cryptography, HTTP, URL, address, time, and encoding contracts",
+        "Go 1.27.0 cryptography, HTTP, URL, address, time, and encoding contracts",
         "RFC 2104 HMAC and RFC 4231 HMAC-SHA-256/HMAC-SHA-512 vectors",
         "RFC 4648 Base-N Encodings",
         "RFC 3986 URI Generic Syntax",
@@ -4648,9 +4648,9 @@
           "github.com/faustbrian/go-http-signature"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -4697,7 +4697,7 @@
       "repository": "github.com/faustbrian/go-wsdl",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-wsdl",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -4760,9 +4760,9 @@
           "github.com/faustbrian/go-http-client"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -4805,7 +4805,7 @@
       "repository": "github.com/faustbrian/go-xsd",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-xsd",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -4875,9 +4875,9 @@
           "github.com/faustbrian/go-xsd/xsdtest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -4916,7 +4916,7 @@
       "repository": "github.com/faustbrian/go-audit",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-audit",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -4967,9 +4967,9 @@
         ],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5004,7 +5004,7 @@
       "repository": "github.com/faustbrian/go-audit",
       "directory": "postgres",
       "module_path": "github.com/faustbrian/go-audit/postgres",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -5053,9 +5053,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5092,7 +5092,7 @@
       "repository": "github.com/faustbrian/go-cache",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-cache",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -5179,9 +5179,9 @@
           "github.com/faustbrian/go-cache/cachetest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5220,7 +5220,7 @@
       "repository": "github.com/faustbrian/go-event-sourcing",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-event-sourcing",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -5287,9 +5287,9 @@
           "github.com/faustbrian/go-cloudevents/adapters/golib"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5324,7 +5324,7 @@
       "repository": "github.com/faustbrian/go-event-sourcing",
       "directory": "adapters/gokafka",
       "module_path": "github.com/faustbrian/go-event-sourcing/adapters/gokafka",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.3",
@@ -5376,9 +5376,9 @@
           "github.com/faustbrian/go-event-sourcing/adapters/kafka"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5415,7 +5415,7 @@
       "repository": "github.com/faustbrian/go-event-sourcing",
       "directory": "adapters/gotelemetry",
       "module_path": "github.com/faustbrian/go-event-sourcing/adapters/gotelemetry",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.3",
@@ -5467,9 +5467,9 @@
           "github.com/faustbrian/go-event-sourcing/adapters/otel"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5506,7 +5506,7 @@
       "repository": "github.com/faustbrian/go-event-sourcing",
       "directory": "adapters/kafka",
       "module_path": "github.com/faustbrian/go-event-sourcing/adapters/kafka",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.2",
@@ -5559,9 +5559,9 @@
           "github.com/faustbrian/go-event-sourcing/adapters/otel"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5600,7 +5600,7 @@
       "repository": "github.com/faustbrian/go-event-sourcing",
       "directory": "adapters/otel",
       "module_path": "github.com/faustbrian/go-event-sourcing/adapters/otel",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.2",
@@ -5653,9 +5653,9 @@
           "github.com/faustbrian/go-event-sourcing/adapters/kafka"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5694,7 +5694,7 @@
       "repository": "github.com/faustbrian/go-event-sourcing",
       "directory": "adapters/outbox",
       "module_path": "github.com/faustbrian/go-event-sourcing/adapters/outbox",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -5744,9 +5744,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5783,7 +5783,7 @@
       "repository": "github.com/faustbrian/go-event-sourcing",
       "directory": "adapters/queue",
       "module_path": "github.com/faustbrian/go-event-sourcing/adapters/queue",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -5830,9 +5830,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5867,7 +5867,7 @@
       "repository": "github.com/faustbrian/go-event-sourcing",
       "directory": "postgres",
       "module_path": "github.com/faustbrian/go-event-sourcing/postgres",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -5915,9 +5915,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -5954,7 +5954,7 @@
       "repository": "github.com/faustbrian/go-feature-flags",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-feature-flags",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -6016,9 +6016,9 @@
           "github.com/faustbrian/go-feature-flags/featureflagstest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -6058,7 +6058,7 @@
       "repository": "github.com/faustbrian/go-idempotency",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-idempotency",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -6163,9 +6163,9 @@
           "github.com/faustbrian/go-idempotency/idempotencytest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -6209,7 +6209,7 @@
       "repository": "github.com/faustbrian/go-lease",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-lease",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -6294,9 +6294,9 @@
           "github.com/faustbrian/go-lease/leasetest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -6335,7 +6335,7 @@
       "repository": "github.com/faustbrian/go-migrations",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-migrations",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -6403,9 +6403,9 @@
           "github.com/faustbrian/go-transactional-outbox"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -6442,7 +6442,7 @@
       "repository": "github.com/faustbrian/go-postgres",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-postgres",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -6511,9 +6511,9 @@
           "github.com/faustbrian/go-postgres/postgrestest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -6550,7 +6550,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-queue",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -6637,9 +6637,9 @@
           "github.com/faustbrian/go-transactional-outbox/adapters/queue"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6",
+            "1.27.0",
             "1.27.0"
           ]
         },
@@ -6688,7 +6688,7 @@
       "repository": "github.com/faustbrian/go-queue-control-plane",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-queue-control-plane",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -6783,9 +6783,9 @@
           "github.com/faustbrian/go-queue-control-plane/ui"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -6925,7 +6925,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": "adapters/service",
       "module_path": "github.com/faustbrian/go-queue/adapters/service",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -6984,9 +6984,9 @@
           "github.com/faustbrian/go-queue/queueservice"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6",
+            "1.27.0",
             "1.27.0"
           ]
         },
@@ -7032,7 +7032,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "directory": "queueservice",
       "module_path": "github.com/faustbrian/go-queue/queueservice",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.1",
@@ -7087,9 +7087,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6",
+            "1.27.0",
             "1.27.0"
           ]
         },
@@ -7225,7 +7225,7 @@
       "repository": "github.com/faustbrian/go-scheduler",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-scheduler",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -7341,9 +7341,9 @@
           "github.com/faustbrian/go-scheduler/schedulertest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -7387,7 +7387,7 @@
       "repository": "github.com/faustbrian/go-sequencer",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-sequencer",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -7474,9 +7474,9 @@
           "github.com/faustbrian/go-sequencer/sequencertest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -7516,7 +7516,7 @@
       "repository": "github.com/faustbrian/go-settings",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-settings",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -7579,9 +7579,9 @@
           "github.com/faustbrian/go-settings/settingstest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -7622,7 +7622,7 @@
       "repository": "github.com/faustbrian/go-transactional-outbox",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-transactional-outbox",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -7678,9 +7678,9 @@
           "github.com/faustbrian/go-idempotency"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -7717,7 +7717,7 @@
       "repository": "github.com/faustbrian/go-transactional-outbox",
       "directory": "adapters/gokafka",
       "module_path": "github.com/faustbrian/go-transactional-outbox/adapters/gokafka",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -7767,9 +7767,9 @@
           "github.com/faustbrian/go-transactional-outbox/adapters/kafka"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -7806,7 +7806,7 @@
       "repository": "github.com/faustbrian/go-transactional-outbox",
       "directory": "adapters/gorabbitstream",
       "module_path": "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.2",
@@ -7856,9 +7856,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -7897,7 +7897,7 @@
       "repository": "github.com/faustbrian/go-transactional-outbox",
       "directory": "adapters/kafka",
       "module_path": "github.com/faustbrian/go-transactional-outbox/adapters/kafka",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -7945,9 +7945,9 @@
           "github.com/faustbrian/go-transactional-outbox/adapters/gokafka"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -7986,7 +7986,7 @@
       "repository": "github.com/faustbrian/go-transactional-outbox",
       "directory": "adapters/otel",
       "module_path": "github.com/faustbrian/go-transactional-outbox/adapters/otel",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -8033,9 +8033,9 @@
           "github.com/faustbrian/go-telemetry"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -8073,7 +8073,7 @@
       "repository": "github.com/faustbrian/go-transactional-outbox",
       "directory": "adapters/queue",
       "module_path": "github.com/faustbrian/go-transactional-outbox/adapters/queue",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -8119,9 +8119,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -8159,7 +8159,7 @@
       "repository": "github.com/faustbrian/go-transactional-outbox",
       "directory": "adapters/rabbitstream",
       "module_path": "github.com/faustbrian/go-transactional-outbox/adapters/rabbitstream",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.1",
@@ -8208,9 +8208,9 @@
           "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -8251,7 +8251,7 @@
       "repository": "github.com/faustbrian/go-workflow",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-workflow",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -8316,9 +8316,9 @@
           "github.com/faustbrian/go-temporal"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -8355,7 +8355,7 @@
       "repository": "github.com/faustbrian/go-adaptive-throttle",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-adaptive-throttle",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -8402,9 +8402,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -8439,7 +8439,7 @@
       "repository": "github.com/faustbrian/go-bulkhead",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-bulkhead",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -8490,9 +8490,9 @@
           "github.com/faustbrian/go-semaphore"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -8527,7 +8527,7 @@
       "repository": "github.com/faustbrian/go-circuit-breaker",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-circuit-breaker",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -8587,9 +8587,9 @@
           "github.com/faustbrian/go-semaphore"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -8624,7 +8624,7 @@
       "repository": "github.com/faustbrian/go-concurrency-limit",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-concurrency-limit",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -8678,9 +8678,9 @@
           "github.com/faustbrian/go-semaphore"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -8715,7 +8715,7 @@
       "repository": "github.com/faustbrian/go-fault-injection",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-fault-injection",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -8764,9 +8764,9 @@
           "github.com/faustbrian/go-retry"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -8801,7 +8801,7 @@
       "repository": "github.com/faustbrian/go-hedge",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-hedge",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -8854,9 +8854,9 @@
           "github.com/faustbrian/go-retry"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -8891,7 +8891,7 @@
       "repository": "github.com/faustbrian/go-rate-limit",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-rate-limit",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -8973,9 +8973,9 @@
           "github.com/faustbrian/go-rate-limit/valkey"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -9017,7 +9017,7 @@
       "repository": "github.com/faustbrian/go-resilience",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-resilience",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -9074,9 +9074,9 @@
           "github.com/faustbrian/go-semaphore"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -9111,7 +9111,7 @@
       "repository": "github.com/faustbrian/go-retry",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-retry",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -9187,9 +9187,9 @@
           "github.com/faustbrian/go-rate-limit"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -9228,7 +9228,7 @@
       "repository": "github.com/faustbrian/go-semaphore",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-semaphore",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -9278,9 +9278,9 @@
           "github.com/faustbrian/go-service"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -9315,7 +9315,7 @@
       "repository": "github.com/faustbrian/go-log",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-log",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -9380,9 +9380,9 @@
           "github.com/faustbrian/go-log/handler/stack"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -9419,7 +9419,7 @@
       "repository": "github.com/faustbrian/go-telemetry",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-telemetry",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.2.0",
@@ -9522,9 +9522,9 @@
           "github.com/faustbrian/go-telemetry/trace"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -9567,7 +9567,7 @@
       "repository": "github.com/faustbrian/go-external-sort",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-external-sort",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -9612,9 +9612,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -9652,7 +9652,7 @@
       "repository": "github.com/faustbrian/go-filesystem",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-filesystem",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -9726,9 +9726,9 @@
           "github.com/faustbrian/go-tabular"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -9775,7 +9775,7 @@
       "repository": "github.com/faustbrian/go-http-client",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-http-client",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -9848,9 +9848,9 @@
           "github.com/faustbrian/go-retry"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -9891,7 +9891,7 @@
       "repository": "github.com/faustbrian/go-kafka",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-kafka",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -9956,9 +9956,9 @@
           "github.com/faustbrian/go-kafka/kafkatest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -9997,7 +9997,7 @@
       "repository": "github.com/faustbrian/go-kafka",
       "directory": "adapters/gotelemetry",
       "module_path": "github.com/faustbrian/go-kafka/adapters/gotelemetry",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.1",
@@ -10048,9 +10048,9 @@
           "github.com/faustbrian/go-telemetry"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -10087,7 +10087,7 @@
       "repository": "github.com/faustbrian/go-kafka",
       "directory": "adapters/mskiam",
       "module_path": "github.com/faustbrian/go-kafka/adapters/mskiam",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.1.0",
@@ -10137,9 +10137,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -10179,7 +10179,7 @@
       "repository": "github.com/faustbrian/go-kafka",
       "directory": "adapters/otel",
       "module_path": "github.com/faustbrian/go-kafka/adapters/otel",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -10229,9 +10229,9 @@
           "github.com/faustbrian/go-telemetry"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -10270,7 +10270,7 @@
       "repository": "github.com/faustbrian/go-kafka",
       "directory": "adapters/service",
       "module_path": "github.com/faustbrian/go-kafka/adapters/service",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -10323,9 +10323,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -10364,7 +10364,7 @@
       "repository": "github.com/faustbrian/go-kafka",
       "directory": "kafkaservice",
       "module_path": "github.com/faustbrian/go-kafka/kafkaservice",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.1",
@@ -10418,9 +10418,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -10553,7 +10553,7 @@
       "repository": "github.com/faustbrian/go-rabbitmq-streams",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-rabbitmq-streams",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.1",
@@ -10610,9 +10610,9 @@
           "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -10651,7 +10651,7 @@
       "repository": "github.com/faustbrian/go-rabbitmq-streams",
       "directory": "adapters/otel",
       "module_path": "github.com/faustbrian/go-rabbitmq-streams/adapters/otel",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -10699,9 +10699,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -10740,7 +10740,7 @@
       "repository": "github.com/faustbrian/go-rabbitmq-streams",
       "directory": "adapters/rabbitmq",
       "module_path": "github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.1",
@@ -10796,9 +10796,9 @@
           "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -10838,7 +10838,7 @@
       "repository": "github.com/faustbrian/go-rabbitmq-streams",
       "directory": "otel",
       "module_path": "github.com/faustbrian/go-rabbitmq-streams/otel",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.1",
@@ -10885,9 +10885,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -10924,7 +10924,7 @@
       "repository": "github.com/faustbrian/go-rabbitmq-streams",
       "directory": "rabbitmq",
       "module_path": "github.com/faustbrian/go-rabbitmq-streams/rabbitmq",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.2",
@@ -10977,9 +10977,9 @@
           "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -11017,7 +11017,7 @@
       "repository": "github.com/faustbrian/go-search",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-search",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -11069,9 +11069,9 @@
         ],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -11106,7 +11106,7 @@
       "repository": "github.com/faustbrian/go-search",
       "directory": "adapters/opensearch",
       "module_path": "github.com/faustbrian/go-search/adapters/opensearch",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -11164,9 +11164,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -11207,7 +11207,7 @@
       "repository": "github.com/faustbrian/go-secret-envelope",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-secret-envelope",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -11269,9 +11269,9 @@
         ],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -11316,7 +11316,7 @@
       "repository": "github.com/faustbrian/go-tabular",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-tabular",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -11372,9 +11372,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -11417,15 +11417,15 @@
       "repository": "github.com/faustbrian/go-wire",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-wire",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
       "specifications": [
-        "Go 1.26.6 encoding/json contract",
-        "Go 1.26.6 encoding/xml contract",
-        "Go 1.26.6 errors package contract",
-        "Go 1.26.6 language specification",
+        "Go 1.27.0 encoding/json contract",
+        "Go 1.27.0 encoding/xml contract",
+        "Go 1.27.0 errors package contract",
+        "Go 1.27.0 language specification",
         "RFC 8259 JSON",
         "XML 1.0 Fifth Edition and Namespaces in XML 1.0 Third Edition",
         "SOAP 1.1 and SOAP 1.2 Part 1 Second Edition",
@@ -11491,9 +11491,9 @@
           "github.com/faustbrian/go-xsd"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -11540,7 +11540,7 @@
       "repository": "github.com/faustbrian/go-barcode",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-barcode",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -11627,9 +11627,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -11677,7 +11677,7 @@
       "repository": "github.com/faustbrian/go-calendar",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-calendar",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -11764,9 +11764,9 @@
           "github.com/faustbrian/go-temporal"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -11809,7 +11809,7 @@
       "repository": "github.com/faustbrian/go-ecma-regexp",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-ecma-regexp",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -11863,9 +11863,9 @@
           "github.com/faustbrian/go-json-schema"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -11904,7 +11904,7 @@
       "repository": "github.com/faustbrian/go-geo",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-geo",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -11976,9 +11976,9 @@
           "github.com/faustbrian/go-geo/wkt"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -12022,7 +12022,7 @@
       "repository": "github.com/faustbrian/go-keyphrase",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-keyphrase",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -12078,9 +12078,9 @@
           "github.com/faustbrian/go-keyphrase/keyphrasetest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -12117,7 +12117,7 @@
       "repository": "github.com/faustbrian/go-knapsack",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-knapsack",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -12187,9 +12187,9 @@
           "github.com/faustbrian/go-knapsack/visualize"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -12226,7 +12226,7 @@
       "repository": "github.com/faustbrian/go-knapsack",
       "directory": "objective/gomoney",
       "module_path": "github.com/faustbrian/go-knapsack/objective/gomoney",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.1.0",
@@ -12277,9 +12277,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -12312,7 +12312,7 @@
       "repository": "github.com/faustbrian/go-knapsack",
       "directory": "objective/money",
       "module_path": "github.com/faustbrian/go-knapsack/objective/money",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -12362,9 +12362,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -12399,7 +12399,7 @@
       "repository": "github.com/faustbrian/go-math",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-math",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -12463,9 +12463,9 @@
           "github.com/faustbrian/go-math/rational"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -12502,7 +12502,7 @@
       "repository": "github.com/faustbrian/go-measurement",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-measurement",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -12561,9 +12561,9 @@
         ],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -12603,7 +12603,7 @@
       "repository": "github.com/faustbrian/go-merkle-patricia-trie",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-merkle-patricia-trie",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -12663,9 +12663,9 @@
           "github.com/faustbrian/go-merkle-patricia-trie/memory"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -12708,7 +12708,7 @@
       "repository": "github.com/faustbrian/go-merkle-tree",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-merkle-tree",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -12755,9 +12755,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -12794,7 +12794,7 @@
       "repository": "github.com/faustbrian/go-money",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-money",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -12853,9 +12853,9 @@
           "github.com/faustbrian/go-money/moneytest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -12896,7 +12896,7 @@
       "repository": "github.com/faustbrian/go-opening-hours",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-opening-hours",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -12985,9 +12985,9 @@
           "github.com/faustbrian/go-opening-hours/openinghourstest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -13028,7 +13028,7 @@
       "repository": "github.com/faustbrian/go-rule-engine",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-rule-engine",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -13085,9 +13085,9 @@
           "github.com/faustbrian/go-feature-flags"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -13124,7 +13124,7 @@
       "repository": "github.com/faustbrian/go-rule-engine",
       "directory": "adapters/math",
       "module_path": "github.com/faustbrian/go-rule-engine/adapters/math",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -13174,9 +13174,9 @@
           "github.com/faustbrian/go-rule-engine/adapters/temporal"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -13211,7 +13211,7 @@
       "repository": "github.com/faustbrian/go-rule-engine",
       "directory": "adapters/measurement",
       "module_path": "github.com/faustbrian/go-rule-engine/adapters/measurement",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -13261,9 +13261,9 @@
           "github.com/faustbrian/go-rule-engine/adapters/temporal"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -13298,7 +13298,7 @@
       "repository": "github.com/faustbrian/go-rule-engine",
       "directory": "adapters/temporal",
       "module_path": "github.com/faustbrian/go-rule-engine/adapters/temporal",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "adapter",
       "releasable": true,
       "version": "1.0.0",
@@ -13349,9 +13349,9 @@
           "github.com/faustbrian/go-rule-engine/adapters/measurement"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -13388,7 +13388,7 @@
       "repository": "github.com/faustbrian/go-state-machine",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-state-machine",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -13453,9 +13453,9 @@
           "github.com/faustbrian/go-workflow"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -13497,7 +13497,7 @@
       "repository": "github.com/faustbrian/go-temporal",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-temporal",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -13582,9 +13582,9 @@
           "github.com/faustbrian/go-temporal/timeofday"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -13627,7 +13627,7 @@
       "repository": "github.com/faustbrian/go-verkle-tree",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-verkle-tree",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -13677,9 +13677,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -13716,7 +13716,7 @@
       "repository": "github.com/faustbrian/go-analysis",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-analysis",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -13812,9 +13812,9 @@
         "adapters": [],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -13851,7 +13851,7 @@
       "repository": "github.com/faustbrian/go-cli",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-cli",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.0.0",
@@ -13902,9 +13902,9 @@
           "github.com/faustbrian/go-cli/clitest"
         ],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
@@ -13942,7 +13942,7 @@
       "repository": "github.com/faustbrian/go-prompts",
       "directory": ".",
       "module_path": "github.com/faustbrian/go-prompts",
-      "go_version": "1.26.6",
+      "go_version": "1.27.0",
       "kind": "public library",
       "releasable": true,
       "version": "1.1.0",
@@ -13996,9 +13996,9 @@
         ],
         "companions": [],
         "supported_go": {
-          "minimum": "1.26.6",
+          "minimum": "1.27.0",
           "tested": [
-            "1.26.6"
+            "1.27.0"
           ]
         },
         "supported_platforms": [
