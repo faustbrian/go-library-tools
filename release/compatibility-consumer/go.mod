@@ -82,10 +82,10 @@ require (
 	github.com/faustbrian/go-password v1.1.0
 	github.com/faustbrian/go-postgres v1.1.0
 	github.com/faustbrian/go-prompts v1.1.0
-	github.com/faustbrian/go-queue v1.1.0
+	github.com/faustbrian/go-queue v1.1.1
 	github.com/faustbrian/go-queue-control-plane v1.1.0
 	github.com/faustbrian/go-queue/adapters/rabbitmq v1.0.0
-	github.com/faustbrian/go-queue/adapters/service v1.0.0
+	github.com/faustbrian/go-queue/adapters/service v1.0.1
 	github.com/faustbrian/go-rabbitmq-queues v1.1.0
 	github.com/faustbrian/go-rabbitmq-streams v1.1.1
 	github.com/faustbrian/go-rabbitmq-streams/adapters/otel v1.0.0

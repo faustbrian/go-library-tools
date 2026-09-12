@@ -180,7 +180,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -585,7 +585,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -722,7 +722,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -1090,7 +1090,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -1374,7 +1374,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -1803,7 +1803,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -2180,7 +2180,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.1/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -2463,7 +2463,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -2827,7 +2827,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -3159,7 +3159,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -3428,7 +3428,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -3563,7 +3563,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -3866,7 +3866,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -4027,7 +4027,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -4489,7 +4489,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -4740,7 +4740,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -5098,7 +5098,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -5867,7 +5867,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.1/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -6033,7 +6033,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -6607,7 +6607,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -6930,7 +6930,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -7067,7 +7067,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -7201,7 +7201,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -7335,7 +7335,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -7637,7 +7637,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -7770,7 +7770,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -7903,7 +7903,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -8037,7 +8037,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -8170,7 +8170,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -8303,7 +8303,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -8438,7 +8438,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -8572,7 +8572,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -8705,7 +8705,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -8887,7 +8887,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -9069,7 +9069,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.6/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -9234,7 +9234,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -9452,7 +9452,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -10037,7 +10037,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -10383,7 +10383,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -10584,7 +10584,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -10736,7 +10736,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -10892,7 +10892,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -11499,7 +11499,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -11810,7 +11810,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -12125,7 +12125,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -12277,7 +12277,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -12415,7 +12415,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -12791,7 +12791,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -13011,7 +13011,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -13446,7 +13446,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -13591,7 +13591,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -13732,7 +13732,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -13865,7 +13865,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -14006,7 +14006,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -14213,7 +14213,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -14686,7 +14686,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -15047,7 +15047,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -15291,7 +15291,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -15571,7 +15571,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -16033,9 +16033,7 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-queue",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
-        ],
+        "known_good_compatibility_sets": [],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "not-started",
@@ -16549,7 +16547,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -16695,7 +16693,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -16863,9 +16861,7 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-queue/adapters/service",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
-        ],
+        "known_good_compatibility_sets": [],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -17673,7 +17669,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -18179,7 +18175,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -18411,7 +18407,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -18596,7 +18592,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -19022,7 +19018,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -19162,7 +19158,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -19303,7 +19299,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -19448,7 +19444,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -19620,7 +19616,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -19755,7 +19751,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -19897,7 +19893,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -20072,7 +20068,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -20213,7 +20209,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -20349,7 +20345,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -20489,7 +20485,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -20852,7 +20848,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -21001,7 +20997,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -21285,7 +21281,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -21422,7 +21418,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -21664,7 +21660,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -22143,7 +22139,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -22273,7 +22269,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -22574,7 +22570,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -22747,7 +22743,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -22973,7 +22969,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -23265,7 +23261,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -23410,7 +23406,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -23556,7 +23552,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -23852,7 +23848,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -24004,7 +24000,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -24145,7 +24141,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -24301,7 +24297,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -24720,7 +24716,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -24882,7 +24878,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -25067,7 +25063,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -25240,7 +25236,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -25652,7 +25648,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -26068,7 +26064,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -26435,7 +26431,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -26610,7 +26606,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -27003,7 +26999,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -27218,7 +27214,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -27472,7 +27468,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.1/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -27737,7 +27733,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.1/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -27974,7 +27970,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -28157,7 +28153,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -28355,7 +28351,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -28496,7 +28492,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -28686,7 +28682,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -29037,7 +29033,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -29195,7 +29191,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -29327,7 +29323,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -29459,7 +29455,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -29594,7 +29590,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -29901,7 +29897,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -30327,7 +30323,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "in-progress",
@@ -30558,7 +30554,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -31083,7 +31079,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -31298,7 +31294,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",
@@ -31884,7 +31880,7 @@
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.5/docs/ecosystem/README.md"
         },
         "known_good_compatibility_sets": [
-          "golib-compat-v1-20260910.1"
+          "golib-compat-v1-20260912.2"
         ],
         "delivery": {
           "implementation": "not-started",

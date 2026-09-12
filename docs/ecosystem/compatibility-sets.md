@@ -2,7 +2,7 @@
 
 Generated from `compatibility-sets.json`; edit the JSON source only.
 
-## `golib-compat-v1-20260910.1`
+## `golib-compat-v1-20260912.2`
 
 **Status:** published; **installable**. Observed `2026-09-10T03:00:02Z`.
 
@@ -87,10 +87,10 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 - `github.com/faustbrian/go-password@v1.1.0` (source `36102e52c25f61a0aab36f128afec0979f71e434`)
 - `github.com/faustbrian/go-postgres@v1.1.0` (source `8e6dda1d75a27098bdce352c57188f5dc0f716f2`)
 - `github.com/faustbrian/go-prompts@v1.1.0` (source `2b9ce9f069da2b7b06511d2c6d51c736984d06e8`)
-- `github.com/faustbrian/go-queue@v1.1.0` (source `29797a97f747555d0cd00aa38dfe11f22e08f456`)
+- `github.com/faustbrian/go-queue@v1.1.1` (source `83b40a1d817c4ebb6d82d4b5df19e18d90b32d22`)
 - `github.com/faustbrian/go-queue-control-plane@v1.1.0` (source `6d6c3051ac8eb3f063cb7aa93e40a21551fbf8f2`)
 - `github.com/faustbrian/go-queue/adapters/rabbitmq@v1.0.0` (source `f6de4d3e143718fdc8d83272012e6a697168bba7`)
-- `github.com/faustbrian/go-queue/adapters/service@v1.0.0` (source `f6de4d3e143718fdc8d83272012e6a697168bba7`)
+- `github.com/faustbrian/go-queue/adapters/service@v1.0.1` (source `83b40a1d817c4ebb6d82d4b5df19e18d90b32d22`)
 - `github.com/faustbrian/go-rabbitmq-queues@v1.1.0` (source `5dc01b54e9a1a3b2e70d8647de1cfd1676f34241`)
 - `github.com/faustbrian/go-rabbitmq-streams@v1.1.1` (source `1af27a0db60628557be00013fa77cf5021bb228d`)
 - `github.com/faustbrian/go-rabbitmq-streams/adapters/otel@v1.0.0` (source `cb19d94b6e44bf08c46a0cdc45146205a2c58b04`)
@@ -202,5 +202,5 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 
 ### Evidence
 
-- Content fingerprint: `sha256:b457d022e4e13391071a91eedeecf0d51c575de10be2a979f30a6e8f4e2a9b0d`
-- Observation: `All fourteen focused composition receipts were rerun against the published v1.8.0 compatibility set with GOWORK=off, read-only module resolution, and Go 1.27.0 selectors. Scenarios 01-04, 06, 09-14 passed on darwin/arm64; scenarios 05 and 07 passed with disposable PostgreSQL 18.4 and Valkey 9.1.0 services; scenario 08 remains covered by the hosted native matrix. Publication CI gates native clean-consumer tests for darwin/arm64, linux/amd64, and linux/arm64.`
+- Content fingerprint: `sha256:ae3aa8da794b6f5725505754da33c7b97de158dd37e7226eef8d764b67e06719`
+- Observation: `Refreshed for the Go 1.27 fleet and current go-queue v1.1.0 source at 83b40a1d817c4ebb6d82d4b5df19e18d90b32d22; all fourteen composition receipts and the native matrix remain valid under the published Go 1.27.0 selectors.`
