@@ -22,9 +22,11 @@ ROOT = Path(__file__).resolve().parents[2]
 SOURCE = ROOT / "docs/ecosystem/compatibility-sets.json"
 OUTPUT = ROOT / "docs/ecosystem/compatibility-sets.md"
 CONSUMER_DIRECTORY = ROOT / "release/compatibility-consumer"
+RESIDUALS = ROOT / "release/cohesion-residuals.json"
 SEMVER = re.compile(r"^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$")
 PUBLISHED_SET_ID = re.compile(r"^golib-compat-v1-[0-9]{8}\.[1-9][0-9]*$")
 DRAFT_SET_ID = re.compile(r"^draft-[0-9]{8}\.[1-9][0-9]*$")
+GO_VERSION = re.compile(r"^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$")
 REQUIRED_SET_FIELDS = {
     "set_id", "publication_status", "installable", "go", "modules",
     "scenarios", "observed_at", "evidence", "caveats", "source_references",
@@ -100,6 +102,21 @@ def build_candidate(
         public_version_lookup = public_module_version
     item = copy.deepcopy(template)
     selected = active_catalog_modules(catalog_modules)
+    go_floor = item.get("go", {}).get("version")
+    validate_string(go_floor, "compatibility set Go version")
+    go_versions = [go_floor]
+    for module in selected:
+        module_go_version = module.get("go_version")
+        if module_go_version is not None:
+            validate_string(module_go_version, "catalog module Go version")
+            go_versions.append(module_go_version)
+    parsed_go_versions = []
+    for version in go_versions:
+        match = GO_VERSION.fullmatch(version)
+        if match is None:
+            raise ValueError(f"invalid Go version: {version}")
+        parsed_go_versions.append((tuple(map(int, match.groups())), version))
+    item["go"]["version"] = max(parsed_go_versions)[1]
     selected_paths = {module["module_path"] for module in selected}
     unknown_overrides = sorted(set(version_overrides) - selected_paths)
     if unknown_overrides:
@@ -212,16 +229,104 @@ def ephemeral_rebase_arguments(item: dict, go_mod: dict) -> list[str]:
     return arguments
 
 
-def load_catalog_modules() -> list[dict]:
+def load_catalog_modules(*, consumer_only: bool = False) -> list[dict]:
+    consumer_path = ROOT / "docs" / "ecosystem" / "catalog-consumer.json"
+    consumer_paths = {
+        module.get("module_path")
+        for module in json.loads(consumer_path.read_text()).get("modules", [])
+    }
     catalog_modules = {}
     for catalog_name in ("catalog-consumer.json", "catalog-engineering.json"):
         catalog = json.loads((ROOT / "docs/ecosystem" / catalog_name).read_text())
         for module in catalog.get("modules", []):
             module_path = module.get("module_path")
+            if consumer_only and module_path not in consumer_paths:
+                continue
             if module_path not in catalog_modules:
                 catalog_modules[module_path] = {}
             catalog_modules[module_path].update(module)
     return list(catalog_modules.values())
+
+
+def project_catalog_membership(value: dict, catalog: dict) -> dict:
+    memberships: dict[tuple[str, str], list[str]] = {}
+    for item in value.get("sets", []):
+        if item.get("publication_status") != "published":
+            continue
+        for module in item.get("modules", []):
+            key = (module["module_path"], module["version"].lstrip("v"))
+            memberships.setdefault(key, []).append(item["set_id"])
+
+    projected = copy.deepcopy(catalog)
+    for module in projected.get("modules", []):
+        cohesion = module.get("cohesion")
+        if not isinstance(cohesion, dict):
+            continue
+        key = (module.get("module_path"), str(module.get("version", "")).lstrip("v"))
+        cohesion["known_good_compatibility_sets"] = sorted(
+            memberships.get(key, [])
+        )
+    return projected
+
+
+def project_catalogs(value: dict, directory: Path, *, write: bool) -> None:
+    for name in ("catalog-consumer.json", "catalog-engineering.json"):
+        path = directory / name
+        projected = project_catalog_membership(value, json.loads(path.read_text()))
+        encoded = json.dumps(projected, indent=2, ensure_ascii=False) + "\n"
+        if write:
+            path.write_text(encoded)
+        elif path.read_text() != encoded:
+            raise ValueError(f"{name} compatibility-set membership is stale")
+
+
+def validate_residuals(residuals: dict, compatibility_sets: dict) -> None:
+    if set(residuals) != {
+        "format", "status", "compatibility_set", "residuals"
+    }:
+        raise ValueError("residual register fields mismatch")
+    if residuals["format"] != "golib-cohesion-residuals-v1":
+        raise ValueError("unexpected residual register format")
+    if residuals["status"] != "current":
+        raise ValueError("residual register status must be current")
+    set_ids = {item.get("set_id") for item in compatibility_sets.get("sets", [])}
+    if residuals["compatibility_set"] not in set_ids:
+        raise ValueError("residual register compatibility set is unknown")
+    published_set_ids = {
+        item.get("set_id")
+        for item in compatibility_sets.get("sets", [])
+        if item.get("publication_status") == "published"
+        and item.get("installable") is True
+    }
+    if residuals["compatibility_set"] not in published_set_ids:
+        raise ValueError("residual register compatibility set is not published")
+    entries = residuals["residuals"]
+    if not isinstance(entries, list) or not entries:
+        raise ValueError("residual register requires entries")
+    expected_fields = {
+        "id", "scope", "classification", "consumer_impact", "owner",
+        "removal_condition",
+    }
+    seen = set()
+    for entry in entries:
+        if not isinstance(entry, dict) or set(entry) != expected_fields:
+            raise ValueError("residual fields mismatch")
+        if not isinstance(entry["id"], str) or not re.fullmatch(
+            r"[a-z0-9]+(?:-[a-z0-9]+)*", entry["id"]
+        ):
+            raise ValueError("residual id must use lowercase kebab case")
+        if entry["id"] in seen:
+            raise ValueError(f"duplicate residual id: {entry['id']}")
+        seen.add(entry["id"])
+        scope = entry["scope"]
+        if (
+            not isinstance(scope, list) or not scope or
+            scope != sorted(set(scope)) or
+            any(not isinstance(item, str) or not item.strip() for item in scope)
+        ):
+            raise ValueError("residual scope must be sorted, unique, and nonempty")
+        for field in expected_fields - {"id", "scope"}:
+            validate_string(entry[field], f"residual {field}")
 
 
 def select_set(value: dict, set_id: str | None) -> dict:
@@ -264,6 +369,21 @@ def select_clean_consumer_set(value: dict) -> dict | None:
         if item.get("publication_status") == "published"
     ]
     return published[-1] if published else None
+
+
+def render_source_reference(reference: str, *, label: str | None = None) -> str:
+    github = re.fullmatch(
+        r"(github\.com/[^/@]+/[^/@]+)@([0-9a-f]{7,40})(?:/(.+))?", reference
+    )
+    if github is not None:
+        repository, revision, path = github.groups()
+        text = label or f"{repository}@{revision}"
+        rendered = f"[{text}](https://{repository}/commit/{revision})"
+        if path:
+            rendered += f" / `{path}`"
+        return rendered
+    relative = os.path.relpath(ROOT / reference, OUTPUT.parent)
+    return f"[{label or reference}]({Path(relative).as_posix()})"
 
 
 def write_candidate_artifacts(value: dict, item: dict, catalog_modules: list[dict]) -> None:
@@ -466,6 +586,7 @@ def load(
         raise ValueError("sets must be a non-empty array")
     seen = set()
     catalogs = load_catalog_modules()
+    roster_catalogs = load_catalog_modules(consumer_only=True)
     catalog_modules = {module.get("module_path"): module for module in catalogs}
     for item in sets:
         if not isinstance(item, dict):
@@ -558,7 +679,7 @@ def load(
         ) as executor:
             list(executor.map(verify_public_binding, public_bindings))
         if status == "unreleased" and not allow_stale_unreleased:
-            validate_complete_roster(item, catalogs)
+            validate_complete_roster(item, roster_catalogs)
         if item["publication_status"] == "unreleased" and "pending" not in observation:
             raise ValueError("unreleased scenarios require an explicitly pending observation")
         if not item["evidence"].get("content_sha256", "").startswith("sha256:"):
@@ -569,6 +690,9 @@ def load(
         for reference in item["source_references"]:
             if not (ROOT / reference).is_file():
                 raise ValueError(f"missing source reference: {reference}")
+    current = select_clean_consumer_set(value)
+    if current is not None and current.get("publication_status") == "published":
+        validate_complete_roster(current, roster_catalogs)
     return value
 
 
@@ -596,7 +720,8 @@ def render(value: dict) -> str:
         if "recipes" in item:
             lines += ["", "### Recipes", ""]
             lines += [
-                f"- `{recipe['id']}` ({recipe['status']}): `{recipe['source_reference']}`"
+                f"- `{recipe['id']}` ({recipe['status']}): "
+                f"{render_source_reference(recipe['source_reference'], label='source')}"
                 for recipe in item["recipes"]
             ]
         if "external_versions" in item:
@@ -620,6 +745,11 @@ def render(value: dict) -> str:
                 f"- **{exclusion['subject']}:** {exclusion['reason']}"
                 for exclusion in item["exclusions"]
             ]
+        lines += ["", "### Sources", ""]
+        lines += [
+            f"- {render_source_reference(reference)}"
+            for reference in item["source_references"]
+        ]
         lines += ["", "### Evidence", "", f"- Content fingerprint: `{item['evidence']['content_sha256']}`", f"- Observation: `{item['evidence']['observation']}`", ""]
     return "\n".join(lines)
 
@@ -644,6 +774,9 @@ def parse_args(arguments: list[str]) -> argparse.Namespace:
     rebase = subparsers.add_parser("rebase")
     rebase.add_argument("--set-id")
     rebase.add_argument("--go-mod", required=True, type=Path)
+    catalogs = subparsers.add_parser("catalogs")
+    catalogs.add_argument("--directory", required=True, type=Path)
+    catalogs.add_argument("--write", action="store_true")
     return parser.parse_args(arguments)
 
 
@@ -697,7 +830,7 @@ def main(arguments: list[str] | None = None) -> int:
         template["evidence"] = {
             "observation": "Pending final composition and native clean-consumer receipts."
         }
-        catalogs = load_catalog_modules()
+        catalogs = load_catalog_modules(consumer_only=True)
         item = build_candidate(
             template,
             catalogs,
@@ -738,10 +871,18 @@ def main(arguments: list[str] | None = None) -> int:
                 )
         print(f"rebased {len(edit_arguments)} compatibility requirement(s)")
         return 0
+    if command == "catalogs":
+        data = load()
+        project_catalogs(data, options.directory, write=options.write)
+        print("projected compatibility-set catalog membership")
+        return 0
     data = load()
     rendered = render(data)
     if OUTPUT.exists() and OUTPUT.read_text() != rendered:
         raise ValueError("compatibility-sets.md is stale; regenerate it")
+    project_catalogs(data, ROOT / "docs" / "ecosystem", write=False)
+    if RESIDUALS.exists():
+        validate_residuals(json.loads(RESIDUALS.read_text()), data)
     catalogs = load_catalog_modules()
     consumer_set = select_clean_consumer_set(data)
     if consumer_set is not None:

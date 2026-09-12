@@ -334,6 +334,7 @@ func aggregateWithOperations(inputsPath string, identity Identity, operations ag
 			modules = append(modules, module)
 		}
 	}
+	deriveReverseOwnedDependencies(modules)
 	slices.SortFunc(modules, compareEngineeringModules)
 
 	base := Envelope{
@@ -380,6 +381,29 @@ func aggregateWithOperations(inputsPath string, identity Identity, operations ag
 		}
 	}
 	return artifacts, nil
+}
+
+func deriveReverseOwnedDependencies(modules []engineeringModule) {
+	indices := make(map[string]int, len(modules))
+	for index, module := range modules {
+		indices[module.ModulePath] = index
+		modules[index].ReverseOwnedDependencies = []string{}
+	}
+	for _, module := range modules {
+		for _, dependency := range module.OwnedDependencies {
+			index, exists := indices[dependency]
+			if !exists {
+				continue
+			}
+			modules[index].ReverseOwnedDependencies = append(
+				modules[index].ReverseOwnedDependencies,
+				module.ModulePath,
+			)
+		}
+	}
+	for index := range modules {
+		slices.Sort(modules[index].ReverseOwnedDependencies)
+	}
 }
 
 func readBoundedAggregateFile(path string, maximum int64, label string) ([]byte, error) {

@@ -7,8 +7,18 @@ lockstep release train.
 
 - [Design language](design-language.md): construction, ownership, lifecycle,
   errors, adapters, compatibility, and explicit composition.
-- [Cohesion goal contract](goals/cohesion-v1.md): the versioned ecosystem
-  outcome, delivery phases, evidence semantics, and completion rules.
+- [Cohesion v1 contract](goals/cohesion-v1.md): current module, compatibility,
+  composition, assurance, and evolution boundaries.
+- [Consumer catalog](catalog-consumer.md): active and deprecated public modules
+  organized by capability and intended adoption boundary.
+- [Engineering catalog](catalog-engineering.md): complete repository-owned
+  module and package inventory for maintainers.
+- [Compatibility set and receipts](compatibility-sets.md): exact known-good
+  public versions, covered compositions, exclusions, and receipt sources.
+- [Residual register](../../release/cohesion-residuals.json): remaining
+  material exceptions, migrations, and removal conditions.
+- [Release process](../release.md): milestone validation, native consumer
+  matrix, immutable assets, and rollback boundary.
 
 At an ecosystem milestone, the reviewed repository revisions and adopted
 tooling identities are declared in
@@ -27,9 +37,10 @@ check` command byte-verifies the checked-in set. Aggregation accepts at most
 256 repositories, 256 MiB of projection input, and 4,096 modules; each rendered
 artifact is capped at 512 MiB.
 
-Only a selected ecosystem-milestone tooling release publishes the source lock,
-standalone input manifest, deterministic projection bundle, and four catalogs
-as checksum- and attestation-covered assets. That milestone pipeline
+Only a selected ecosystem-milestone tooling release publishes ten
+checksum- and attestation-covered assets: the source lock, residual register,
+compatibility-set JSON and Markdown, standalone input manifest, deterministic
+projection bundle, and four catalogs. That milestone pipeline
 independently regenerates locked projections and catalogs and binds bundle
 membership to the source lock before publication. Ordinary tooling and library
 releases do not refresh or publish these aggregate artifacts.
@@ -41,6 +52,22 @@ module to its owning repository's exact remote release tag and public Go proxy
 version. Set records can also carry structured recipe,
 external-version, upgrade, rollback, and exclusion details. Published
 identifiers are immutable; a later recommendation receives a new identifier.
+Matching module entries in the generated catalogs list the published set under
+`known_good_compatibility_sets`; unreleased drafts are never projected there.
+Candidate fingerprints withdrawn before the first publication are not public
+identities; `golib-compat-v1-20260910.1` becomes immutable only with its v1.8.0
+milestone release.
+
+## Adopt, upgrade, or roll back
+
+Select only the modules an application directly uses from the published set,
+apply those exact versions in the application's `go.mod`, and run its directly
+affected compositions with `GOWORK=off` and public proxy/SumDB resolution. The
+set is guidance, not an umbrella module or mandatory fleet upgrade.
+
+Upgrade one owned dependency boundary at a time. To roll back, restore the
+application's prior direct versions for that boundary and rerun the same
+focused compositions; unrelated module versions do not need to change.
 
 After the final aggregate consumer catalog contains the complete active public
 roster, generate one unreleased candidate and its clean-consumer module with:

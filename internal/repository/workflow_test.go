@@ -753,7 +753,12 @@ func TestToolingWorkflowSeparatesFastPullRequestAndAggregateMilestoneChecks(t *t
 			t.Errorf("pull-request quality includes aggregate work %q", forbidden)
 		}
 	}
-	for _, required := range []string{"if: github.event_name != 'pull_request'", "needs: quality", "make milestone-check"} {
+	for _, required := range []string{
+		"always() && needs.quality.result == 'success'",
+		"needs.compatibility-consumer-scope.outputs.required == 'true'",
+		"needs: [quality, compatibility-consumer-scope]",
+		"make milestone-check",
+	} {
 		if !strings.Contains(milestone, required) {
 			t.Errorf("milestone job lacks %q", required)
 		}
@@ -769,6 +774,36 @@ func TestToolingWorkflowSeparatesFastPullRequestAndAggregateMilestoneChecks(t *t
 	for _, retired := range []string{"forward-oracle", "tools/provenance", "Upload verification evidence"} {
 		if strings.Contains(content, retired) {
 			t.Errorf("tooling workflow retains retired routine evidence machinery %q", retired)
+		}
+	}
+}
+
+func TestCompatibilityConsumerMatrixPinsRuntimeToolchain(t *testing.T) {
+	content := readProjectFile(t, ".github/workflows/ci.yml")
+	var compatibilitySets struct {
+		Sets []struct {
+			Go struct {
+				Version string `json:"version"`
+			} `json:"go"`
+		} `json:"sets"`
+	}
+	if err := json.Unmarshal([]byte(readProjectFile(t, "docs/ecosystem/compatibility-sets.json")), &compatibilitySets); err != nil {
+		t.Fatal(err)
+	}
+	if len(compatibilitySets.Sets) != 1 {
+		t.Fatalf("compatibility sets = %d", len(compatibilitySets.Sets))
+	}
+	version := compatibilitySets.Sets[0].Go.Version
+	if got := strings.TrimSpace(readProjectFile(t, ".go-version")); got != version {
+		t.Fatalf("compatibility Go version = %q, .go-version = %q", version, got)
+	}
+	for _, required := range []string{
+		"go-version-file: .go-version",
+		`test "$(go env GOVERSION)" = 'go` + version + `'`,
+		`test "$(go env GOOS)/$(go env GOARCH)" = '${{ matrix.goos }}/${{ matrix.goarch }}'`,
+	} {
+		if !strings.Contains(content, required) {
+			t.Errorf("compatibility consumer matrix lacks %q", required)
 		}
 	}
 }
@@ -1059,8 +1094,11 @@ func TestReleaseWorkflowPublishesCatalogsOnlyForExplicitMilestones(t *testing.T)
 		"golib cohesion aggregate check",
 		"cmp --silent",
 		"cohesion-sources.json",
+		"cohesion-residuals.json",
 		"cohesion-inputs.json",
 		"cohesion-projections.tar.gz",
+		"compatibility-sets.json",
+		"compatibility-sets.md",
 		"catalog-consumer.json",
 		"catalog-consumer.md",
 		"catalog-engineering.json",

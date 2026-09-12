@@ -41,6 +41,24 @@ func TestCheckWithinRejectsDocumentationOutsideRepository(t *testing.T) {
 	}
 }
 
+func TestCheckWithinRejectsRelativeOrMissingDocumentationTrees(t *testing.T) {
+	root := basic(t)
+	if err := CheckWithin(root, "."); err == nil || !strings.Contains(err.Error(), "documentation tree must be absolute") {
+		t.Fatalf("CheckWithin(relative tree) error = %v", err)
+	}
+	missing := filepath.Join(root, "missing")
+	if err := CheckWithin(root, missing); err == nil || !strings.Contains(err.Error(), "resolve documentation tree") {
+		t.Fatalf("CheckWithin(missing tree) error = %v", err)
+	}
+}
+
+func TestCheckLinkAcceptsRepositoryRootTarget(t *testing.T) {
+	root := basic(t)
+	if err := checkLink(root, filepath.Join(root, "README.md"), "./"); err != nil {
+		t.Fatalf("checkLink(root target) error = %v", err)
+	}
+}
+
 func TestCheckWithinRejectsLinksThroughRepositorySymlinks(t *testing.T) {
 	root := t.TempDir()
 	module := filepath.Join(root, "adapters", "example")

@@ -426,7 +426,7 @@ func TestCatalogIdentityAndMarkdownContracts(t *testing.T) {
 		t.Fatal(err)
 	}
 	consumerMarkdown, err := RenderMarkdown(consumer)
-	wantConsumer := "# Golib Consumer Catalog\n\nDesign language `1.0` (`unpublished`); tooling `dev`.\n\n## foundations\n\n- `example.com/library`: Provide example values.\n\n- `example.com/zeta`: Provide zeta values.\n"
+	wantConsumer := "# Golib Consumer Catalog\n\nDesign language `1.0` (`unpublished`); tooling `dev`.\n\n## foundations\n\n- [example.com/library](https://pkg.go.dev/example.com/library@v1.0.0) — **active**, `v1.0.0`: Provide example values. ([README](https://example.com/repository/blob/v1.0.0/README.md))\n\n- [example.com/zeta](https://pkg.go.dev/example.com/zeta@v1.0.0) — **active**, `v1.0.0`: Provide zeta values. ([README](https://example.com/repository/blob/v1.0.0/README.md))\n"
 	if err != nil || string(consumerMarkdown) != wantConsumer || strings.Count(string(consumerMarkdown), "## foundations") != 1 {
 		t.Fatalf("RenderMarkdown(consumer) = %q, %v", consumerMarkdown, err)
 	}

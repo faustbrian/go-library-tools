@@ -6,10 +6,10 @@
   "design_language": {
     "version": "1.0",
     "sha256": "d767f6d4d5eb3ba73861d898255d42691fac49101ea55edb079af3b1969357c8",
-    "source_identity": "v1.7.2"
+    "source_identity": "v1.8.0"
   },
   "tooling": {
-    "version": "v1.7.2",
+    "version": "v1.8.0",
     "publication_status": "published"
   },
   "modules": [
@@ -47,6 +47,7 @@
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-authentication",
+        "github.com/faustbrian/go-authentication/adapters/otel",
         "github.com/faustbrian/go-authentication/authotel",
         "github.com/faustbrian/go-authentication/jwt",
         "github.com/faustbrian/go-authentication/oidc",
@@ -178,7 +179,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-clock",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -581,7 +584,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-config",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -716,7 +721,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-config/adapters/awssecretsmanager",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -763,14 +770,18 @@
       ],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-cache",
+        "github.com/faustbrian/go-cloudevents/adapters/audit",
+        "github.com/faustbrian/go-cloudevents/adapters/correlation",
         "github.com/faustbrian/go-cloudevents/adapters/golib",
         "github.com/faustbrian/go-config",
         "github.com/faustbrian/go-correlation/integration/siblings",
         "github.com/faustbrian/go-http-middleware/integration/siblings",
+        "github.com/faustbrian/go-kafka/adapters/service",
         "github.com/faustbrian/go-kafka/kafkaservice",
         "github.com/faustbrian/go-lease",
         "github.com/faustbrian/go-migrations",
         "github.com/faustbrian/go-postgres",
+        "github.com/faustbrian/go-queue/adapters/service",
         "github.com/faustbrian/go-queue/queueservice",
         "github.com/faustbrian/go-scheduler",
         "github.com/faustbrian/go-service",
@@ -779,6 +790,7 @@
         "github.com/faustbrian/go-service/integration/adoption",
         "github.com/faustbrian/go-service/integration/reference-http",
         "github.com/faustbrian/go-service/integration/reference-platform",
+        "github.com/faustbrian/go-service/integration/reference-recipes",
         "github.com/faustbrian/go-telemetry"
       ],
       "packages": [
@@ -1077,7 +1089,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-correlation",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -1144,12 +1158,13 @@
         "github.com/faustbrian/go-correlation",
         "github.com/faustbrian/go-correlation/integration/siblings",
         "github.com/faustbrian/go-http-middleware/integration/siblings",
+        "github.com/faustbrian/go-kafka/adapters/service",
         "github.com/faustbrian/go-kafka/kafkaservice",
         "github.com/faustbrian/go-lease",
         "github.com/faustbrian/go-migrations",
         "github.com/faustbrian/go-postgres",
         "github.com/faustbrian/go-queue-control-plane",
-        "github.com/faustbrian/go-queue/queueservice",
+        "github.com/faustbrian/go-queue/adapters/service",
         "github.com/faustbrian/go-scheduler",
         "github.com/faustbrian/go-service",
         "github.com/faustbrian/go-service/benchmarks/platform",
@@ -1157,6 +1172,7 @@
         "github.com/faustbrian/go-service/integration/adoption",
         "github.com/faustbrian/go-service/integration/reference-http",
         "github.com/faustbrian/go-service/integration/reference-platform",
+        "github.com/faustbrian/go-service/integration/reference-recipes",
         "github.com/faustbrian/go-telemetry"
       ],
       "packages": [
@@ -1357,7 +1373,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-identifier",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -1374,7 +1392,7 @@
       "purpose": "Typed, immutable international identifiers and metadata for Go services. Countries, subdivisions, languages, locales, currencies, phone numbers, and postal values remain distinct types with strict parsing, explicit canonicalization, offline behavior, and versioned dataset provenance.",
       "lifecycle": "stable",
       "releasable": true,
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tag_prefix": "v",
       "gates": {
         "api_compatibility": true,
@@ -1419,6 +1437,7 @@
       ],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-knapsack/objective/gomoney",
+        "github.com/faustbrian/go-knapsack/objective/money",
         "github.com/faustbrian/go-localized",
         "github.com/faustbrian/go-money"
       ],
@@ -1783,7 +1802,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-international",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -2158,7 +2179,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-localized",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.1/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -2206,7 +2229,11 @@
       "specifications": [],
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
+        "github.com/faustbrian/go-cloudevents/adapters/audit",
+        "github.com/faustbrian/go-cloudevents/adapters/event-sourcing",
         "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/adapters/queue",
+        "github.com/faustbrian/go-cloudevents/adapters/tenancy",
         "github.com/faustbrian/go-service/integration/reference-http"
       ],
       "packages": [
@@ -2435,7 +2462,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-tenancy",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -2797,7 +2826,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-validation",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -3127,7 +3158,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-api-query",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -3394,7 +3427,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-authentication",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -3527,7 +3562,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-authentication/adapters/otel",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -3828,7 +3865,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-authentication/jwt",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -3987,7 +4026,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-authentication/oidc",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -4004,7 +4045,7 @@
       "purpose": "`authorization` is an application-oriented authorization engine for typed Go policies. It uses explicit ACL, RBAC, and ABAC models rather than a positional string meta-model or separate policy language.",
       "lifecycle": "stable",
       "releasable": true,
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tag_prefix": "v",
       "gates": {
         "api_compatibility": true,
@@ -4447,7 +4488,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-authorization",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -4696,7 +4739,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-capability",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -5052,7 +5097,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-http-middleware",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -5819,7 +5866,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-password",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.1/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -5983,7 +6032,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-router",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -6034,6 +6085,7 @@
         "github.com/faustbrian/go-config",
         "github.com/faustbrian/go-http-middleware/integration/siblings",
         "github.com/faustbrian/go-kafka/adapters/service",
+        "github.com/faustbrian/go-kafka/kafkaservice",
         "github.com/faustbrian/go-lease",
         "github.com/faustbrian/go-migrations",
         "github.com/faustbrian/go-postgres",
@@ -6043,8 +6095,10 @@
         "github.com/faustbrian/go-service/benchmarks/platform",
         "github.com/faustbrian/go-service/compatibility",
         "github.com/faustbrian/go-service/integration/adoption",
+        "github.com/faustbrian/go-service/integration/reference-durability",
         "github.com/faustbrian/go-service/integration/reference-http",
         "github.com/faustbrian/go-service/integration/reference-platform",
+        "github.com/faustbrian/go-service/integration/reference-recipes",
         "github.com/faustbrian/go-telemetry"
       ],
       "packages": [
@@ -6552,7 +6606,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-service",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -6873,7 +6929,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -6921,7 +6979,8 @@
         "github.com/faustbrian/go-tenancy"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -7007,7 +7066,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/audit",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -7052,7 +7113,8 @@
       ],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-cloudevents/adapters/audit",
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -7138,7 +7200,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/correlation",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -7183,7 +7247,8 @@
         "github.com/faustbrian/go-tenancy"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -7269,7 +7334,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/event-sourcing",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -7283,8 +7350,8 @@
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/golib",
       "go_version": "1.26.6",
       "kind": "adapter",
-      "purpose": "`golib` is the optional integration module between the transport-independent CloudEvents package and Golib's canonical event, transport, workflow, metadata, audit, and schema contracts. Importing it performs no registration, network access, schema lookup, telemetry emission, or background work.",
-      "lifecycle": "stable",
+      "purpose": "`golib` is the deprecated compatibility facade between the transport-independent CloudEvents package and Golib's canonical event, transport, workflow, metadata, audit, and schema contracts. It remains available for v1 compatibility but is excluded from the recommended set because it brings the complete 26-dependency bridge into one module. Importing it performs no registration, network access, schema lookup, telemetry emission, or background work.",
+      "lifecycle": "deprecated",
       "releasable": true,
       "version": "1.1.0",
       "tag_prefix": "adapters/golib/v",
@@ -7373,7 +7440,7 @@
           "protocols-and-schemas",
           "transport-and-networking"
         ],
-        "responsibility": "Bridge CloudEvents explicitly to selected Golib event, transport, workflow, metadata, audit, telemetry, and schema contracts.",
+        "responsibility": "Preserve v1 compatibility for the former broad CloudEvents bridge while callers migrate to independently versioned target adapters.",
         "non_goals": [
           "Replace the canonical domain, store, queue, workflow, audit, telemetry, or transport state owned by another package.",
           "Perform import-time registration, network access, schema lookup, telemetry emission, or background work.",
@@ -7384,9 +7451,9 @@
           "github.com/faustbrian/go-cloudevents/adapters/golib"
         ],
         "package_selection": {
-          "github.com/faustbrian/go-cloudevents/adapters/golib": "Use only at a boundary that already owns both a Golib canonical value and a CloudEvents interoperability requirement; use the root module for CloudEvents-only mapping."
+          "github.com/faustbrian/go-cloudevents/adapters/golib": "Deprecated compatibility facade; retain for existing v1 consumers only. New code and migrations use the relevant target-oriented adapter from the parent adoption guide."
         },
-        "lifecycle_status": "active",
+        "lifecycle_status": "deprecated",
         "maturity": "stable",
         "construction_styles": [
           "new-config",
@@ -7482,7 +7549,8 @@
         "github.com/faustbrian/go-json-schema"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -7568,7 +7636,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/jsonschema",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -7612,7 +7682,8 @@
         "github.com/faustbrian/go-kafka"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -7698,7 +7769,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/kafka",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -7742,7 +7815,8 @@
         "github.com/faustbrian/go-transactional-outbox"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -7828,7 +7902,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/outbox",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -7873,7 +7949,8 @@
         "github.com/faustbrian/go-tenancy"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -7959,7 +8036,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/queue",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -8003,7 +8082,8 @@
         "github.com/faustbrian/go-rabbitmq-streams"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -8089,7 +8169,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/rabbitstream",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -8133,7 +8215,8 @@
         "github.com/faustbrian/go-schema-registry"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -8219,7 +8302,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/schema-registry",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -8265,7 +8350,8 @@
         "github.com/faustbrian/go-telemetry"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -8351,7 +8437,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/telemetry",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -8396,7 +8484,8 @@
       ],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-cloudevents/adapters/audit",
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -8482,7 +8571,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/tenancy",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -8526,7 +8617,8 @@
         "github.com/faustbrian/go-workflow"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/integration/target-adapters"
       ],
       "packages": [
         {
@@ -8612,7 +8704,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cloudevents/adapters/workflow",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -8792,7 +8886,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-http-signature",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -8847,6 +8943,7 @@
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/adapters/jsonschema",
         "github.com/faustbrian/go-json-schema/benchmarks/comparison",
         "github.com/faustbrian/go-openapi",
         "github.com/faustbrian/go-openapi/interoperability",
@@ -8971,7 +9068,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-json-schema",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.6/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -9029,7 +9128,8 @@
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-api-query",
-        "github.com/faustbrian/go-http-middleware/integration/siblings"
+        "github.com/faustbrian/go-http-middleware/integration/siblings",
+        "github.com/faustbrian/go-jsonapi/interoperability"
       ],
       "packages": [
         {
@@ -9133,7 +9233,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-jsonapi",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -9188,7 +9290,7 @@
         "github.com/faustbrian/go-authorization",
         "github.com/faustbrian/go-circuit-breaker/integration/consumers",
         "github.com/faustbrian/go-http-middleware/integration/siblings",
-        "github.com/faustbrian/go-openrpc",
+        "github.com/faustbrian/go-jsonrpc/interoperability",
         "github.com/faustbrian/go-service/integration/reference-http"
       ],
       "packages": [
@@ -9349,7 +9451,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-jsonrpc",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -9932,7 +10036,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-openapi",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -10276,7 +10382,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-openrpc",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -10338,6 +10446,7 @@
       ],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/adapters/schema-registry",
         "github.com/faustbrian/go-schema-registry/providers/confluent",
         "github.com/faustbrian/go-schema-registry/providers/glue"
       ],
@@ -10474,7 +10583,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-schema-registry",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -10624,7 +10735,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-schema-registry/providers/confluent",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -10778,7 +10891,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-schema-registry/providers/glue",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -11383,7 +11498,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-webhook",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -11692,7 +11809,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-wsdl",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -12005,7 +12124,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-xsd",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -12049,6 +12170,7 @@
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-audit/postgres",
+        "github.com/faustbrian/go-cloudevents/adapters/audit",
         "github.com/faustbrian/go-cloudevents/adapters/golib",
         "github.com/faustbrian/go-service/integration/reference-http"
       ],
@@ -12154,7 +12276,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-audit",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -12290,7 +12414,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-audit/postgres",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -12664,7 +12790,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cache",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -12705,15 +12833,16 @@
       "specifications": [],
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
+        "github.com/faustbrian/go-cloudevents/adapters/event-sourcing",
         "github.com/faustbrian/go-cloudevents/adapters/golib",
-        "github.com/faustbrian/go-event-sourcing/adapters/outbox",
-        "github.com/faustbrian/go-event-sourcing/adapters/queue",
-        "github.com/faustbrian/go-event-sourcing/benchmarks/competitors",
-        "github.com/faustbrian/go-event-sourcing/postgres",
         "github.com/faustbrian/go-event-sourcing/adapters/gokafka",
         "github.com/faustbrian/go-event-sourcing/adapters/gotelemetry",
         "github.com/faustbrian/go-event-sourcing/adapters/kafka",
-        "github.com/faustbrian/go-event-sourcing/adapters/otel"
+        "github.com/faustbrian/go-event-sourcing/adapters/otel",
+        "github.com/faustbrian/go-event-sourcing/adapters/outbox",
+        "github.com/faustbrian/go-event-sourcing/adapters/queue",
+        "github.com/faustbrian/go-event-sourcing/benchmarks/competitors",
+        "github.com/faustbrian/go-event-sourcing/postgres"
       ],
       "packages": [
         {
@@ -12881,7 +13010,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-event-sourcing",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -13314,7 +13445,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-event-sourcing/adapters/kafka",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -13457,7 +13590,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-event-sourcing/adapters/otel",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -13596,7 +13731,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-event-sourcing/adapters/outbox",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -13727,7 +13864,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-event-sourcing/adapters/queue",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -13866,7 +14005,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-event-sourcing/postgres",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -14071,7 +14212,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-feature-flags",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -14542,7 +14685,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-idempotency",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -14597,7 +14742,9 @@
         "github.com/faustbrian/go-queue",
         "github.com/faustbrian/go-service"
       ],
-      "reverse_owned_dependencies": [],
+      "reverse_owned_dependencies": [
+        "github.com/faustbrian/go-service/integration/adoption"
+      ],
       "packages": [
         {
           "module_directory": ".",
@@ -14899,7 +15046,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-lease",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -15141,7 +15290,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-migrations",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -15419,7 +15570,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-postgres",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -15482,19 +15635,22 @@
       "specifications": [],
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-queue/adapters/rabbitmq",
-        "github.com/faustbrian/go-queue/adapters/service",
         "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/adapters/queue",
         "github.com/faustbrian/go-event-sourcing/adapters/queue",
         "github.com/faustbrian/go-idempotency/compatibility/ecosystem",
         "github.com/faustbrian/go-lease",
-        "github.com/faustbrian/go-transactional-outbox/adapters/queue",
         "github.com/faustbrian/go-queue-control-plane",
+        "github.com/faustbrian/go-queue/adapters/rabbitmq",
+        "github.com/faustbrian/go-queue/adapters/service",
         "github.com/faustbrian/go-queue/queueservice",
+        "github.com/faustbrian/go-queue/rabbitmq",
         "github.com/faustbrian/go-scheduler",
         "github.com/faustbrian/go-service/compatibility",
         "github.com/faustbrian/go-service/integration/adoption",
         "github.com/faustbrian/go-service/integration/reference-durability",
+        "github.com/faustbrian/go-service/integration/reference-recipes",
+        "github.com/faustbrian/go-transactional-outbox/adapters/queue",
         "github.com/faustbrian/go-webhook"
       ],
       "packages": [
@@ -15877,7 +16033,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-queue",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "not-started",
@@ -16390,7 +16548,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-queue-control-plane",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -16534,7 +16694,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-queue/adapters/rabbitmq",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -16594,7 +16756,9 @@
       ],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-queue/queueservice",
-        "github.com/faustbrian/go-service/integration/adoption"
+        "github.com/faustbrian/go-service/integration/adoption",
+        "github.com/faustbrian/go-service/integration/reference-durability",
+        "github.com/faustbrian/go-service/integration/reference-recipes"
       ],
       "packages": [
         {
@@ -16699,7 +16863,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-queue/adapters/service",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -16746,9 +16912,7 @@
         "github.com/faustbrian/go-queue/adapters/service",
         "github.com/faustbrian/go-service"
       ],
-      "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-service/integration/adoption"
-      ],
+      "reverse_owned_dependencies": [],
       "packages": [
         {
           "module_directory": "queueservice",
@@ -17508,7 +17672,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-scheduler",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -18012,7 +18178,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-sequencer",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -18242,7 +18410,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-settings",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -18292,15 +18462,16 @@
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/adapters/outbox",
         "github.com/faustbrian/go-event-sourcing/adapters/outbox",
         "github.com/faustbrian/go-idempotency/compatibility/ecosystem",
+        "github.com/faustbrian/go-service/integration/reference-durability",
         "github.com/faustbrian/go-transactional-outbox/adapters/gokafka",
         "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream",
         "github.com/faustbrian/go-transactional-outbox/adapters/kafka",
         "github.com/faustbrian/go-transactional-outbox/adapters/otel",
         "github.com/faustbrian/go-transactional-outbox/adapters/queue",
         "github.com/faustbrian/go-transactional-outbox/adapters/rabbitstream",
-        "github.com/faustbrian/go-service/integration/reference-durability",
         "github.com/faustbrian/go-webhook"
       ],
       "packages": [
@@ -18424,7 +18595,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-transactional-outbox",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -18475,9 +18648,7 @@
         "github.com/faustbrian/go-kafka",
         "github.com/faustbrian/go-transactional-outbox"
       ],
-      "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-workflow"
-      ],
+      "reverse_owned_dependencies": [],
       "packages": [
         {
           "module_directory": "adapters/gokafka",
@@ -18850,7 +19021,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-transactional-outbox/adapters/kafka",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -18988,7 +19161,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-transactional-outbox/adapters/otel",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -19127,7 +19302,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-transactional-outbox/adapters/queue",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -19177,7 +19354,9 @@
         "github.com/faustbrian/go-rabbitmq-streams",
         "github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq"
       ],
-      "reverse_owned_dependencies": [],
+      "reverse_owned_dependencies": [
+        "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream"
+      ],
       "packages": [
         {
           "module_directory": "adapters/rabbitstream",
@@ -19268,7 +19447,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-transactional-outbox/adapters/rabbitstream",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -19317,7 +19498,8 @@
       "specifications": [],
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-cloudevents/adapters/golib"
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/adapters/workflow"
       ],
       "packages": [
         {
@@ -19437,7 +19619,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-workflow",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -19570,7 +19754,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-adaptive-throttle",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -19710,7 +19896,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-bulkhead",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -19883,7 +20071,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-circuit-breaker",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -20022,7 +20212,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-concurrency-limit",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -20156,7 +20348,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-fault-injection",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -20294,7 +20488,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-hedge",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -20655,7 +20851,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-rate-limit",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "not-started",
@@ -20802,7 +21000,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-resilience",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -21084,7 +21284,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-retry",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -21219,7 +21421,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-semaphore",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -21459,7 +21663,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-log",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -21531,6 +21737,7 @@
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-authorization/integration/contracts",
         "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/adapters/telemetry",
         "github.com/faustbrian/go-correlation/integration/siblings",
         "github.com/faustbrian/go-idempotency/compatibility/ecosystem",
         "github.com/faustbrian/go-queue-control-plane",
@@ -21935,7 +22142,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-telemetry",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -22063,7 +22272,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-external-sort",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -22362,7 +22573,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-filesystem",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -22533,7 +22746,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-http-client",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -22599,16 +22814,20 @@
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-cloudevents/adapters/kafka",
         "github.com/faustbrian/go-event-sourcing/adapters/gokafka",
         "github.com/faustbrian/go-event-sourcing/adapters/gotelemetry",
+        "github.com/faustbrian/go-event-sourcing/adapters/kafka",
+        "github.com/faustbrian/go-event-sourcing/adapters/otel",
         "github.com/faustbrian/go-kafka/adapters/gotelemetry",
         "github.com/faustbrian/go-kafka/adapters/mskiam",
         "github.com/faustbrian/go-kafka/adapters/otel",
         "github.com/faustbrian/go-kafka/adapters/service",
         "github.com/faustbrian/go-kafka/benchmarks/clients",
         "github.com/faustbrian/go-kafka/kafkaservice",
+        "github.com/faustbrian/go-service/integration/adoption",
         "github.com/faustbrian/go-transactional-outbox/adapters/gokafka",
-        "github.com/faustbrian/go-service/integration/adoption"
+        "github.com/faustbrian/go-transactional-outbox/adapters/kafka"
       ],
       "packages": [
         {
@@ -22753,7 +22972,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-kafka",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -22767,8 +22988,8 @@
       "module_path": "github.com/faustbrian/go-kafka/adapters/gotelemetry",
       "go_version": "1.26.6",
       "kind": "adapter",
-      "purpose": "`gotelemetry` is the independently versioned OpenTelemetry adapter for [`github.com/faustbrian/go-kafka`](../..). The root Kafka module remains vendor-neutral and does not import OpenTelemetry.",
-      "lifecycle": "stable",
+      "purpose": "`gotelemetry` preserves the released OpenTelemetry adapter import path and behavior while consumers migrate to the canonical `adapters/otel` successor.",
+      "lifecycle": "deprecated",
       "releasable": true,
       "version": "1.0.1",
       "tag_prefix": "adapters/gotelemetry/v",
@@ -22833,7 +23054,7 @@
           "observability",
           "protocols-and-schemas"
         ],
-        "responsibility": "Translate Kafka observation and propagation contracts into OpenTelemetry spans and metrics.",
+        "responsibility": "Preserve the released OpenTelemetry adapter path and behavior while delegating to the canonical adapters/otel successor.",
         "non_goals": [
           "Own global providers, SDK export, generic telemetry policy, or Kafka behavior."
         ],
@@ -22842,9 +23063,9 @@
           "github.com/faustbrian/go-kafka/adapters/gotelemetry"
         ],
         "package_selection": {
-          "github.com/faustbrian/go-kafka/adapters/gotelemetry": "Use the compatibility path to instrument go-kafka observations and W3C Trace Context propagation; new consumers should select adapters/otel."
+          "github.com/faustbrian/go-kafka/adapters/gotelemetry": "Use only as the deprecated compatibility facade while migrating to adapters/otel."
         },
-        "lifecycle_status": "active",
+        "lifecycle_status": "deprecated",
         "maturity": "stable",
         "construction_styles": [
           "new-config",
@@ -23043,7 +23264,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-kafka/adapters/mskiam",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -23092,7 +23315,9 @@
       "owned_dependencies": [
         "github.com/faustbrian/go-kafka"
       ],
-      "reverse_owned_dependencies": [],
+      "reverse_owned_dependencies": [
+        "github.com/faustbrian/go-kafka/adapters/gotelemetry"
+      ],
       "packages": [
         {
           "module_directory": "adapters/otel",
@@ -23184,7 +23409,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-kafka/adapters/otel",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -23235,6 +23462,7 @@
         "github.com/faustbrian/go-service"
       ],
       "reverse_owned_dependencies": [
+        "github.com/faustbrian/go-kafka/kafkaservice",
         "github.com/faustbrian/go-service/integration/adoption"
       ],
       "packages": [
@@ -23327,7 +23555,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-kafka/adapters/service",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -23341,8 +23571,8 @@
       "module_path": "github.com/faustbrian/go-kafka/kafkaservice",
       "go_version": "1.26.6",
       "kind": "public library",
-      "purpose": "`kafkaservice` is the independently versioned integration between [`github.com/faustbrian/go-kafka`](..) and `github.com/faustbrian/go-service`. The root Kafka production package does not import service, correlation, or OpenTelemetry APIs.",
-      "lifecycle": "stable",
+      "purpose": "`kafkaservice` preserves the released service-integration import path and behavior while consumers migrate to the canonical `adapters/service` successor.",
+      "lifecycle": "deprecated",
       "releasable": true,
       "version": "1.0.1",
       "tag_prefix": "kafkaservice/v",
@@ -23378,9 +23608,7 @@
         "github.com/faustbrian/go-kafka/adapters/service",
         "github.com/faustbrian/go-service"
       ],
-      "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-service/integration/adoption"
-      ],
+      "reverse_owned_dependencies": [],
       "packages": [
         {
           "module_directory": "kafkaservice",
@@ -23410,7 +23638,7 @@
           "http-and-service-edge",
           "observability"
         ],
-        "responsibility": "Bridge go-kafka consumer and producer resources into the explicit go-service lifecycle.",
+        "responsibility": "Preserve the released service-integration path and behavior while delegating to the canonical adapters/service successor.",
         "non_goals": [
           "Own Kafka backend choice, business retry, acknowledgement, redelivery, dead-letter policy, or a service container."
         ],
@@ -23419,9 +23647,9 @@
           "github.com/faustbrian/go-kafka/kafkaservice"
         ],
         "package_selection": {
-          "github.com/faustbrian/go-kafka/kafkaservice": "Use the compatibility path for go-service lifecycle composition; new consumers should select adapters/service."
+          "github.com/faustbrian/go-kafka/kafkaservice": "Use only as the deprecated compatibility facade while migrating to adapters/service."
         },
-        "lifecycle_status": "active",
+        "lifecycle_status": "deprecated",
         "maturity": "stable",
         "construction_styles": [
           "new-options"
@@ -23623,7 +23851,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-rabbitmq-queues",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -23665,11 +23895,13 @@
       "owned_dependencies": [],
       "reverse_owned_dependencies": [
         "github.com/faustbrian/go-cloudevents/adapters/golib",
-        "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream",
+        "github.com/faustbrian/go-cloudevents/adapters/rabbitstream",
         "github.com/faustbrian/go-rabbitmq-streams/adapters/otel",
         "github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq",
         "github.com/faustbrian/go-rabbitmq-streams/otel",
-        "github.com/faustbrian/go-rabbitmq-streams/rabbitmq"
+        "github.com/faustbrian/go-rabbitmq-streams/rabbitmq",
+        "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream",
+        "github.com/faustbrian/go-transactional-outbox/adapters/rabbitstream"
       ],
       "packages": [
         {
@@ -23771,7 +24003,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-rabbitmq-streams",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -23910,7 +24144,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-rabbitmq-streams/adapters/otel",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -23962,7 +24198,9 @@
         "github.com/faustbrian/go-rabbitmq-streams"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-rabbitmq-streams/rabbitmq"
+        "github.com/faustbrian/go-rabbitmq-streams/rabbitmq",
+        "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream",
+        "github.com/faustbrian/go-transactional-outbox/adapters/rabbitstream"
       ],
       "packages": [
         {
@@ -24062,7 +24300,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -24238,9 +24478,7 @@
         "github.com/faustbrian/go-rabbitmq-streams",
         "github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq"
       ],
-      "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream"
-      ],
+      "reverse_owned_dependencies": [],
       "packages": [
         {
           "module_directory": "rabbitmq",
@@ -24481,7 +24719,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-search",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -24641,7 +24881,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-search/adapters/opensearch",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -24824,7 +25066,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-secret-envelope",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.3/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -24882,7 +25126,9 @@
         "PKWARE APPNOTE 6.3.10"
       ],
       "owned_dependencies": [],
-      "reverse_owned_dependencies": [],
+      "reverse_owned_dependencies": [
+        "github.com/faustbrian/go-filesystem/integration/tabular-ingestion"
+      ],
       "packages": [
         {
           "module_directory": ".",
@@ -24993,7 +25239,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-tabular",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -25403,7 +25651,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-wire",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -25817,7 +26067,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-barcode",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -26182,7 +26434,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-calendar",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -26355,7 +26609,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-ecma-regexp",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -26746,7 +27002,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-geo",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "not-started",
@@ -26959,7 +27217,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-keyphrase",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -27211,7 +27471,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-knapsack",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.1/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -27225,8 +27487,8 @@
       "module_path": "github.com/faustbrian/go-knapsack/objective/gomoney",
       "go_version": "1.26.6",
       "kind": "adapter",
-      "purpose": "`gomoney` is an optional adapter that lets the Knapsack solvers minimize exact container costs. It depends on the owned Money module so the Knapsack core can remain independent of monetary policy.",
-      "lifecycle": "stable",
+      "purpose": "`gomoney` is the deprecated compatibility facade for the released exact-money objective path. It preserves the public API while delegating behavior to the canonical `objective/money` module.",
+      "lifecycle": "deprecated",
       "releasable": true,
       "version": "1.1.0",
       "tag_prefix": "objective/gomoney/v",
@@ -27286,20 +27548,20 @@
         "secondary_capabilities": [
           "configuration"
         ],
-        "responsibility": "Adapt exact go-money values into deterministic Knapsack container-cost objective evaluation.",
+        "responsibility": "Preserve the released exact-money objective API while delegating behavior to the canonical target-oriented module.",
         "non_goals": [
           "Own currencies, money arithmetic, exchange rates, taxes, discounts, shipping rates, or persistence.",
           "Perform packing, select application pricing policy, or hide missing container costs.",
-          "Rename or replace the released objective/gomoney compatibility path during cohesion metadata adoption."
+          "Own new exact-money objective behavior; new development belongs in objective/money."
         ],
         "public_package_identifier": "gomoney",
         "primary_entry_packages": [
           "github.com/faustbrian/go-knapsack/objective/gomoney"
         ],
         "package_selection": {
-          "github.com/faustbrian/go-knapsack/objective/gomoney": "Use when Knapsack container costs already exist as exact go-money values in one fixed currency context."
+          "github.com/faustbrian/go-knapsack/objective/gomoney": "Use only to preserve the released import path during migration; new code uses objective/money."
         },
-        "lifecycle_status": "active",
+        "lifecycle_status": "deprecated",
         "maturity": "stable",
         "construction_styles": [
           "validated-value"
@@ -27388,7 +27650,9 @@
         "github.com/faustbrian/go-measurement",
         "github.com/faustbrian/go-money"
       ],
-      "reverse_owned_dependencies": [],
+      "reverse_owned_dependencies": [
+        "github.com/faustbrian/go-knapsack/objective/gomoney"
+      ],
       "packages": [
         {
           "module_directory": "objective/money",
@@ -27472,7 +27736,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-knapsack/objective/money",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.1/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -27525,6 +27791,7 @@
         "github.com/faustbrian/go-knapsack",
         "github.com/faustbrian/go-knapsack/integration/references",
         "github.com/faustbrian/go-knapsack/objective/gomoney",
+        "github.com/faustbrian/go-knapsack/objective/money",
         "github.com/faustbrian/go-measurement",
         "github.com/faustbrian/go-money",
         "github.com/faustbrian/go-rule-engine/adapters/math",
@@ -27706,7 +27973,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-math",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -27762,6 +28031,7 @@
         "github.com/faustbrian/go-knapsack",
         "github.com/faustbrian/go-knapsack/integration/references",
         "github.com/faustbrian/go-knapsack/objective/gomoney",
+        "github.com/faustbrian/go-knapsack/objective/money",
         "github.com/faustbrian/go-rule-engine/adapters/measurement"
       ],
       "packages": [
@@ -27886,7 +28156,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-measurement",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -28082,7 +28354,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-merkle-patricia-trie",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -28221,7 +28495,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-merkle-tree",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -28269,7 +28545,8 @@
         "github.com/faustbrian/go-math"
       ],
       "reverse_owned_dependencies": [
-        "github.com/faustbrian/go-knapsack/objective/gomoney"
+        "github.com/faustbrian/go-knapsack/objective/gomoney",
+        "github.com/faustbrian/go-knapsack/objective/money"
       ],
       "packages": [
         {
@@ -28408,7 +28685,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-money",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -28757,7 +29036,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-opening-hours",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.6.2/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -28913,7 +29194,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-rule-engine",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -29043,7 +29326,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-rule-engine/adapters/math",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -29173,7 +29458,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-rule-engine/adapters/measurement",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -29306,7 +29593,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-rule-engine/adapters/temporal",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -29611,7 +29900,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-state-machine",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -30035,7 +30326,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-temporal",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "in-progress",
           "hardening": "in-progress",
@@ -30264,7 +30557,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-verkle-tree",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -30787,7 +31082,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-analysis",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -30831,11 +31128,12 @@
         "github.com/faustbrian/go-cache",
         "github.com/faustbrian/go-cli/benchmarks",
         "github.com/faustbrian/go-config",
+        "github.com/faustbrian/go-kafka/adapters/service",
         "github.com/faustbrian/go-kafka/kafkaservice",
         "github.com/faustbrian/go-lease",
         "github.com/faustbrian/go-migrations",
         "github.com/faustbrian/go-postgres",
-        "github.com/faustbrian/go-queue/queueservice",
+        "github.com/faustbrian/go-queue/adapters/service",
         "github.com/faustbrian/go-scheduler",
         "github.com/faustbrian/go-service",
         "github.com/faustbrian/go-service/benchmarks/platform",
@@ -30843,6 +31141,7 @@
         "github.com/faustbrian/go-service/integration/adoption",
         "github.com/faustbrian/go-service/integration/reference-http",
         "github.com/faustbrian/go-service/integration/reference-platform",
+        "github.com/faustbrian/go-service/integration/reference-recipes",
         "github.com/faustbrian/go-telemetry"
       ],
       "packages": [
@@ -30998,7 +31297,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-cli",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.4.0/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -31015,7 +31316,7 @@
       "purpose": "Strict shared repository tooling for independently released Go libraries.",
       "lifecycle": "stable",
       "releasable": true,
-      "version": "1.7.2",
+      "version": "1.8.0",
       "tag_prefix": "v",
       "gates": {
         "api_compatibility": false,
@@ -31341,7 +31642,7 @@
       "purpose": "`prompts` is an explicit, typed foundation for interactive terminal prompts and deterministic non-interactive fallbacks. Callers own the context, streams, terminal capabilities, interaction authority, and lifecycle.",
       "lifecycle": "stable",
       "releasable": true,
-      "version": "1.0.0",
+      "version": "1.1.0",
       "tag_prefix": "v",
       "gates": {
         "api_compatibility": true,
@@ -31582,7 +31883,9 @@
           "pkg_go_dev": "https://pkg.go.dev/github.com/faustbrian/go-prompts",
           "ecosystem_index": "https://github.com/faustbrian/go-library-tools/blob/v1.5.5/docs/ecosystem/README.md"
         },
-        "known_good_compatibility_sets": [],
+        "known_good_compatibility_sets": [
+          "golib-compat-v1-20260910.1"
+        ],
         "delivery": {
           "implementation": "not-started",
           "hardening": "not-started",
@@ -31903,7 +32206,7 @@
       "module_path": "github.com/faustbrian/go-cloudevents/integration/target-adapters",
       "go_version": "1.26.6",
       "kind": "integration",
-      "purpose": "Exercise the complete target-adapter compatibility and conversion contract without creating a releasable umbrella.",
+      "purpose": "Exercise the complete target-adapter compatibility, conversion, and application-composition recipes without creating a releasable umbrella.",
       "lifecycle": "internal",
       "releasable": false,
       "version": "0.0.0",

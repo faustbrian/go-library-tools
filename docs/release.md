@@ -35,9 +35,9 @@ creating the selected tag, refresh and review
 [`release/cohesion-sources.json`](../release/cohesion-sources.json), then set
 the repository variable `GOLIB_CATALOG_MILESTONE_TAG` to that exact tag. The
 exact-tag comparison prevents a stale variable from expanding later tooling
-releases. A selected milestone adds seven payloads: the source lock, input
-manifest, deterministic projection bundle, and both JSON and Markdown catalog
-views.
+releases. A selected milestone adds ten payloads: the source lock, residual
+register, compatibility-set JSON and Markdown, input manifest, deterministic
+projection bundle, and both JSON and Markdown catalog views.
 
 For a selected milestone, read-only jobs check out every locked revision
 without persisted credentials, submodules, or LFS. They execute no consumer
@@ -49,7 +49,7 @@ bounded read-only matrix independently regenerates every projection from the
 same locked commit and byte-compares it with the bundle. A final read-only job
 binds the bundle's member set, repository order, paths, and digests back to the
 source lock and independently regenerates all four catalogs. Only after those
-checks pass are the seven milestone payloads included in the same manifest,
+checks pass are the ten milestone payloads included in the same manifest,
 checksums, attestation, and immutable publication path as the tooling assets.
 
 Later releases follow semantic versioning. Never replace release artifacts or

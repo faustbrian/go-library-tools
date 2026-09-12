@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -100,7 +101,7 @@ func TestAggregateBuildsDeterministicEcosystemViewsFromRepositoryEngineeringProj
 
 	assertAggregateModules(t, artifacts.ConsumerJSON, "consumer", []string{alpha.ModulePath, beta.ModulePath})
 	assertAggregateModules(t, artifacts.EngineeringJSON, "engineering", []string{alpha.ModulePath, beta.ModulePath})
-	if got := string(artifacts.ConsumerMarkdown); !strings.Contains(got, "`github.com/faustbrian/go-alpha`") || !strings.Contains(got, "`github.com/faustbrian/go-beta`") {
+	if got := string(artifacts.ConsumerMarkdown); !strings.Contains(got, "[github.com/faustbrian/go-alpha](https://pkg.go.dev/github.com/faustbrian/go-alpha@v1.0.0)") || !strings.Contains(got, "[github.com/faustbrian/go-beta](https://pkg.go.dev/github.com/faustbrian/go-beta@v1.0.0)") {
 		t.Fatalf("consumer Markdown = %q", got)
 	}
 	if got := string(artifacts.EngineeringMarkdown); !strings.Contains(got, "`github.com/faustbrian/go-alpha`") || !strings.Contains(got, "`github.com/faustbrian/go-beta`") {
@@ -579,6 +580,30 @@ func TestAggregateAllowsNonReleasableModulePathsOutsideRepository(t *testing.T) 
 		if bytes.Contains(artifacts.ConsumerJSON, []byte(variant.modulePath)) {
 			t.Fatalf("consumer catalog included non-releasable %s module", variant.kind)
 		}
+	}
+}
+
+func TestDeriveReverseOwnedDependenciesIgnoresStaleReverseMetadata(t *testing.T) {
+	modules := []engineeringModule{
+		{
+			ModulePath:               "github.com/faustbrian/go-caller",
+			OwnedDependencies:        []string{"github.com/faustbrian/go-target"},
+			ReverseOwnedDependencies: []string{"github.com/faustbrian/go-stale"},
+		},
+		{
+			ModulePath:               "github.com/faustbrian/go-target",
+			ReverseOwnedDependencies: []string{"github.com/faustbrian/go-stale"},
+		},
+	}
+
+	deriveReverseOwnedDependencies(modules)
+
+	if len(modules[0].ReverseOwnedDependencies) != 0 {
+		t.Fatalf("caller reverse dependencies = %v", modules[0].ReverseOwnedDependencies)
+	}
+	want := []string{"github.com/faustbrian/go-caller"}
+	if !slices.Equal(modules[1].ReverseOwnedDependencies, want) {
+		t.Fatalf("target reverse dependencies = %v, want %v", modules[1].ReverseOwnedDependencies, want)
 	}
 }
 

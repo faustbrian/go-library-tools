@@ -26,16 +26,19 @@ class CompatibilitySetTest(unittest.TestCase):
         self.old_source = generate.SOURCE
         self.old_output = generate.OUTPUT
         self.old_consumer_directory = generate.CONSUMER_DIRECTORY
+        self.old_residuals = generate.RESIDUALS
         generate.ROOT = self.root
         generate.SOURCE = self.ecosystem / "compatibility-sets.json"
         generate.OUTPUT = self.ecosystem / "compatibility-sets.md"
         generate.CONSUMER_DIRECTORY = self.root / "release/compatibility-consumer"
+        generate.RESIDUALS = self.root / "release/cohesion-residuals.json"
 
     def tearDown(self):
         generate.ROOT = self.old_root
         generate.SOURCE = self.old_source
         generate.OUTPUT = self.old_output
         generate.CONSUMER_DIRECTORY = self.old_consumer_directory
+        generate.RESIDUALS = self.old_residuals
         self.temp.cleanup()
 
     def create_repository(self, name="go-parent"):
@@ -335,6 +338,9 @@ class CompatibilitySetTest(unittest.TestCase):
 
         self.assertIn("### Recipes", rendered)
         self.assertIn("`queue-worker` (verified)", rendered)
+        self.assertIn("[source](design-language.md)", rendered)
+        self.assertIn("### Sources", rendered)
+        self.assertIn("[docs/ecosystem/design-language.md](design-language.md)", rendered)
         self.assertIn("### External versions", rendered)
         self.assertIn("PostgreSQL: `18`", rendered)
         self.assertIn("### Upgrade", rendered)
@@ -424,6 +430,23 @@ class CompatibilitySetTest(unittest.TestCase):
 
         self.assertEqual(candidate["modules"][0]["version"], "v1.1.0")
         self.assertEqual(tags, ["adapters/foo/v1.1.0"])
+
+    def test_candidate_generation_raises_go_floor_to_selected_module_requirement(self):
+        module = self.catalog_module()
+        module["go_version"] = "1.27.0"
+        module["cohesion"] = {"lifecycle_status": "active"}
+        item = self.base_set("a" * 40)
+        item["modules"] = []
+        item["roster"] = {"selection": "active-public", "module_count": 1}
+
+        candidate = generate.build_candidate(
+            item,
+            [module],
+            remote_tag_lookup=lambda _repository, _tag: "b" * 40,
+            public_version_lookup=lambda _module_path, _version: True,
+        )
+
+        self.assertEqual(candidate["go"]["version"], "1.27.0")
 
     def test_candidate_generation_rejects_unknown_version_override(self):
         module = self.catalog_module()
@@ -674,7 +697,25 @@ class CompatibilitySetTest(unittest.TestCase):
             "module_count": 1,
         }
         historical["evidence"]["content_sha256"] = self.fingerprint(historical)
+        current = self.base_set(
+            revision,
+            set_id="golib-compat-v1-20260910.1",
+        )
+        current["modules"][0]["module_path"] = active_module["module_path"]
+        current["roster"] = {
+            "selection": "active-public",
+            "module_count": 1,
+        }
+        current["evidence"]["content_sha256"] = self.fingerprint(current)
         self.write_set(historical)
+        generate.SOURCE.write_text(
+            json.dumps(
+                {
+                    "format": "golib-compatibility-sets-v1",
+                    "sets": [historical, current],
+                }
+            )
+        )
         tags = []
 
         self.load_published(
@@ -682,7 +723,31 @@ class CompatibilitySetTest(unittest.TestCase):
             remote_tag_lookup=lambda _repository, tag: tags.append(tag) or revision,
         )
 
-        self.assertEqual(tags, ["adapters/foo/v1.2.3"])
+        self.assertEqual(
+            tags,
+            ["adapters/foo/v1.2.3", "adapters/current/v1.2.3"],
+        )
+
+    def test_current_published_roster_must_match_active_consumer_catalog(self):
+        revision = "a" * 40
+        active = self.catalog_module()
+        additional = self.catalog_module()
+        additional.update(
+            {
+                "directory": "adapters/current",
+                "module_path": "github.com/faustbrian/go-parent/adapters/current",
+                "tag_prefix": "adapters/current/v",
+                "cohesion": {"lifecycle_status": "active"},
+            }
+        )
+        self.write_catalogs([active, additional])
+        current = self.base_set(revision)
+        current["roster"] = {"selection": "active-public", "module_count": 1}
+        current["evidence"]["content_sha256"] = self.fingerprint(current)
+        self.write_set(current)
+
+        with self.assertRaisesRegex(ValueError, "roster mismatch"):
+            self.load_published(revision)
 
     def test_clean_consumer_selects_current_candidate_over_history(self):
         historical = self.base_set("a" * 40)
@@ -707,6 +772,207 @@ class CompatibilitySetTest(unittest.TestCase):
         )
 
         self.assertIs(selected, candidate)
+
+    def test_catalog_membership_projects_exact_published_module_versions(self):
+        item = self.base_set("a" * 40)
+        catalog = {
+            "modules": [
+                {
+                    "module_path": "github.com/faustbrian/go-parent/adapters/foo",
+                    "version": "1.2.3",
+                    "cohesion": {"known_good_compatibility_sets": []},
+                },
+                {
+                    "module_path": "github.com/faustbrian/go-other",
+                    "version": "v1.0.0",
+                    "cohesion": {
+                        "known_good_compatibility_sets": ["stale-set"]
+                    },
+                },
+            ]
+        }
+
+        projected = generate.project_catalog_membership(
+            {"sets": [item]}, catalog
+        )
+
+        self.assertEqual(
+            projected["modules"][0]["cohesion"][
+                "known_good_compatibility_sets"
+            ],
+            ["golib-compat-v1-20260909.1"],
+        )
+        self.assertEqual(
+            projected["modules"][1]["cohesion"][
+                "known_good_compatibility_sets"
+            ],
+            [],
+        )
+
+    def test_catalog_membership_ignores_unreleased_sets(self):
+        item = self.base_set(
+            "a" * 40,
+            set_id="draft-20260910.1",
+            publication_status="unreleased",
+            installable=False,
+            evidence={"observation": "pending final receipts"},
+        )
+        catalog = {
+            "modules": [
+                {
+                    "module_path": "github.com/faustbrian/go-parent/adapters/foo",
+                    "version": "1.2.3",
+                    "cohesion": {"known_good_compatibility_sets": []},
+                }
+            ]
+        }
+
+        projected = generate.project_catalog_membership(
+            {"sets": [item]}, catalog
+        )
+
+        self.assertEqual(
+            projected["modules"][0]["cohesion"][
+                "known_good_compatibility_sets"
+            ],
+            [],
+        )
+
+    def test_consumer_roster_loader_excludes_engineering_only_modules(self):
+        product = self.catalog_module()
+        tooling = copy.deepcopy(product)
+        tooling.update(
+            {
+                "repository": "github.com/faustbrian/go-tooling",
+                "module_path": "github.com/faustbrian/go-tooling",
+                "directory": ".",
+            }
+        )
+        self.write_catalogs([product, tooling])
+        consumer = json.loads(
+            (self.ecosystem / "catalog-consumer.json").read_text()
+        )
+        consumer["modules"] = [consumer["modules"][0]]
+        (self.ecosystem / "catalog-consumer.json").write_text(
+            json.dumps(consumer)
+        )
+
+        modules = generate.load_catalog_modules(consumer_only=True)
+
+        self.assertEqual(
+            [module["module_path"] for module in modules],
+            ["github.com/faustbrian/go-parent/adapters/foo"],
+        )
+
+    def test_residual_register_requires_actionable_removal_conditions(self):
+        residuals = {
+            "format": "golib-cohesion-residuals-v1",
+            "status": "current",
+            "compatibility_set": "golib-compat-v1-20260910.1",
+            "residuals": [
+                {
+                    "id": "planned-boundary",
+                    "scope": ["github.com/faustbrian/go-parent"],
+                    "classification": "planned-product-boundary",
+                    "consumer_impact": "No installable module exists.",
+                    "owner": "future goal",
+                    "removal_condition": "Publish the selected module.",
+                }
+            ],
+        }
+
+        generate.validate_residuals(
+            residuals,
+            {
+                "sets": [
+                    {
+                        "set_id": "golib-compat-v1-20260910.1",
+                        "publication_status": "published",
+                        "installable": True,
+                    }
+                ]
+            },
+        )
+        del residuals["residuals"][0]["removal_condition"]
+        with self.assertRaisesRegex(ValueError, "residual fields mismatch"):
+            generate.validate_residuals(
+                residuals,
+                {
+                    "sets": [
+                        {
+                            "set_id": "golib-compat-v1-20260910.1",
+                            "publication_status": "published",
+                            "installable": True,
+                        }
+                    ]
+                },
+            )
+
+    def test_residual_register_rejects_non_string_identifier(self):
+        residuals = {
+            "format": "golib-cohesion-residuals-v1",
+            "status": "current",
+            "compatibility_set": "golib-compat-v1-20260910.1",
+            "residuals": [
+                {
+                    "id": None,
+                    "scope": ["github.com/faustbrian/go-parent"],
+                    "classification": "planned-product-boundary",
+                    "consumer_impact": "No installable module exists.",
+                    "owner": "future goal",
+                    "removal_condition": "Publish the selected module.",
+                }
+            ],
+        }
+
+        with self.assertRaisesRegex(
+            ValueError, "residual id must use lowercase kebab case"
+        ):
+            generate.validate_residuals(
+                residuals,
+                {
+                    "sets": [
+                        {
+                            "set_id": "golib-compat-v1-20260910.1",
+                            "publication_status": "published",
+                            "installable": True,
+                        }
+                    ]
+                },
+            )
+
+    def test_residual_register_rejects_unpublished_compatibility_set(self):
+        residuals = {
+            "format": "golib-cohesion-residuals-v1",
+            "status": "current",
+            "compatibility_set": "draft-20260910.1",
+            "residuals": [
+                {
+                    "id": "planned-boundary",
+                    "scope": ["github.com/faustbrian/go-parent"],
+                    "classification": "planned-product-boundary",
+                    "consumer_impact": "No installable module exists.",
+                    "owner": "future goal",
+                    "removal_condition": "Publish the selected module.",
+                }
+            ],
+        }
+
+        with self.assertRaisesRegex(
+            ValueError, "residual register compatibility set is not published"
+        ):
+            generate.validate_residuals(
+                residuals,
+                {
+                    "sets": [
+                        {
+                            "set_id": "draft-20260910.1",
+                            "publication_status": "unreleased",
+                            "installable": False,
+                        }
+                    ]
+                },
+            )
 
     def test_candidate_command_rejects_invalid_identity_before_resolution(self):
         revision = "a" * 40
