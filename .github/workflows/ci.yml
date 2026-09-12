@@ -141,14 +141,18 @@ jobs:
           export GOPROXY='https://proxy.golang.org'
           export GOSUMDB='sum.golang.org'
           export GOWORK='off'
+          test "$(go env GOVERSION)" = 'go1.27.0'
           test "$(go env GOOS)/$(go env GOARCH)" = '${{ matrix.goos }}/${{ matrix.goarch }}'
           go mod tidy
           go test -mod=readonly -count=1 ./...
 
   milestone:
     name: Aggregate milestone
-    if: github.event_name != 'pull_request'
-    needs: quality
+    if: >-
+      always() && needs.quality.result == 'success' &&
+      (github.event_name != 'pull_request' ||
+      needs.compatibility-consumer-scope.outputs.required == 'true')
+    needs: [quality, compatibility-consumer-scope]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:

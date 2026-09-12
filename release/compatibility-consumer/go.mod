@@ -1,6 +1,6 @@
 module github.com/faustbrian/go-library-tools/release/compatibility-consumer
 
-go 1.26.6
+go 1.27.0
 
 require (
 	github.com/faustbrian/go-adaptive-throttle v1.0.0
@@ -25,7 +25,6 @@ require (
 	github.com/faustbrian/go-cloudevents/adapters/audit v1.0.0
 	github.com/faustbrian/go-cloudevents/adapters/correlation v1.0.0
 	github.com/faustbrian/go-cloudevents/adapters/event-sourcing v1.0.0
-	github.com/faustbrian/go-cloudevents/adapters/golib v1.1.0
 	github.com/faustbrian/go-cloudevents/adapters/jsonschema v1.0.0
 	github.com/faustbrian/go-cloudevents/adapters/kafka v1.0.0
 	github.com/faustbrian/go-cloudevents/adapters/outbox v1.0.0
@@ -62,17 +61,13 @@ require (
 	github.com/faustbrian/go-jsonapi v1.0.0
 	github.com/faustbrian/go-jsonrpc v1.0.0
 	github.com/faustbrian/go-kafka v1.1.0
-	github.com/faustbrian/go-kafka/adapters/gotelemetry v1.0.1
 	github.com/faustbrian/go-kafka/adapters/mskiam v1.1.0
 	github.com/faustbrian/go-kafka/adapters/otel v1.0.0
 	github.com/faustbrian/go-kafka/adapters/service v1.0.0
-	github.com/faustbrian/go-kafka/kafkaservice v1.0.1
 	github.com/faustbrian/go-keyphrase v1.0.0
 	github.com/faustbrian/go-knapsack v1.0.0
-	github.com/faustbrian/go-knapsack/objective/gomoney v1.1.0
 	github.com/faustbrian/go-knapsack/objective/money v1.0.0
 	github.com/faustbrian/go-lease v1.1.0
-	github.com/faustbrian/go-library-tools v1.7.2
 	github.com/faustbrian/go-localized v1.1.0
 	github.com/faustbrian/go-log v1.0.0
 	github.com/faustbrian/go-math v1.1.0

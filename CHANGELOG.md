@@ -4,10 +4,21 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.8.0 - 2026-09-10
+
 ### Added
 
-- Added deterministic active-roster candidate and clean-consumer generation,
-  plus task-checkout dependency rebasing for composition receipts.
+- Added deterministic active-roster compatibility-set generation, central
+  reverse-dependency projection, and a public clean-consumer contract.
+- Added native Darwin and Linux compatibility-consumer verification for
+  ecosystem milestone publication.
+
+### Changed
+
+- Published consumer and engineering catalogs now expose compatibility-set
+  membership, lifecycle state, and navigable adoption routes.
+- Replaced the superseded ceremony-heavy cohesion contract with proportional
+  assurance, receipt reuse, and centralized residual tracking.
 
 ## 1.7.2 - 2026-09-09
 

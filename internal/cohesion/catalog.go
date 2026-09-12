@@ -38,7 +38,24 @@ func RenderMarkdown(envelope Envelope) ([]byte, error) {
 				lastFamily = module.Cohesion.Family
 				_, _ = fmt.Fprintf(&output, "\n## %s\n", lastFamily)
 			}
-			_, _ = fmt.Fprintf(&output, "\n- `%s`: %s\n", module.ModulePath, module.Cohesion.Responsibility)
+			version := "v" + strings.TrimPrefix(module.Version, "v")
+			_, _ = fmt.Fprintf(
+				&output,
+				"\n- [%s](https://pkg.go.dev/%s@%s) — **%s**, `%s`: %s",
+				module.ModulePath,
+				module.ModulePath,
+				version,
+				module.Cohesion.LifecycleStatus,
+				version,
+				module.Cohesion.Responsibility,
+			)
+			if module.Cohesion.Documentation.README != nil {
+				_, _ = fmt.Fprintf(&output, " ([README](%s))", documentationURL(module.Repository, module.Directory, version, *module.Cohesion.Documentation.README))
+			}
+			if module.Cohesion.LifecycleStatus == "deprecated" && module.Cohesion.Documentation.Adoption != nil {
+				_, _ = fmt.Fprintf(&output, " ([migration](%s))", documentationURL(module.Repository, module.Directory, version, *module.Cohesion.Documentation.Adoption))
+			}
+			_ = output.WriteByte('\n')
 		}
 	case []engineeringModule:
 		for _, module := range modules {
@@ -58,6 +75,17 @@ func RenderMarkdown(envelope Envelope) ([]byte, error) {
 		return nil, errors.New("catalog modules do not match the envelope view")
 	}
 	return output.Bytes(), nil
+}
+
+func documentationURL(repository, directory, version, reference string) string {
+	if strings.HasPrefix(reference, "https://") {
+		return reference
+	}
+	tag := version
+	if directory != "." {
+		tag = strings.Trim(directory, "/") + "/" + version
+	}
+	return "https://" + repository + "/blob/" + tag + "/" + strings.TrimPrefix(reference, "/")
 }
 
 // Envelope is a deterministic repository or ecosystem catalog projection.
