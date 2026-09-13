@@ -142,7 +142,8 @@ jobs:
           inventory="$(golib inventory --json)"
           configuration="$(golib config show --json)"
           release_module_capable=false
-          if golib --help | grep -Fq 'golib release dry-run [--all|--module <directory>]'; then
+          golib_help="$(golib --help)"
+          if grep -Fq 'golib release dry-run [--all|--module <directory>]' <<<"${golib_help}"; then
             release_module_capable=true
           fi
           if [[ -n "${RELEASE_MODULE}" && "${RELEASE_DRY_RUN}" != true ]]; then
@@ -204,7 +205,8 @@ jobs:
           RELEASE_MODULE: ${{ inputs.release_module }}
         run: |
           set -euo pipefail
-          if [[ -n "${RELEASE_MODULE}" ]] && golib --help | grep -Fq 'golib release check [--all|--module <directory>]'; then
+          golib_help="$(golib --help)"
+          if [[ -n "${RELEASE_MODULE}" ]] && grep -Fq 'golib release check [--all|--module <directory>]' <<<"${golib_help}"; then
             golib release check --module "${RELEASE_MODULE}"
           else
             golib release check
