@@ -417,13 +417,25 @@ def check_clean_consumer(item: dict, catalog_modules: list[dict]) -> None:
     if item.get("roster") is None:
         return
     go_mod, test_source = render_clean_consumer(item, catalog_modules)
-    expected = {
-        CONSUMER_DIRECTORY / "go.mod": go_mod,
-        CONSUMER_DIRECTORY / "consumer_test.go": test_source,
-    }
-    for path, content in expected.items():
-        if not path.is_file() or path.read_text() != content:
-            raise ValueError(f"generated compatibility consumer is stale: {path.name}")
+    go_mod_path = CONSUMER_DIRECTORY / "go.mod"
+    if not go_mod_path.is_file() or not clean_consumer_go_mod_matches(
+        go_mod_path.read_text(), go_mod
+    ):
+        raise ValueError("generated compatibility consumer is stale: go.mod")
+    test_path = CONSUMER_DIRECTORY / "consumer_test.go"
+    if not test_path.is_file() or test_path.read_text() != test_source:
+        raise ValueError("generated compatibility consumer is stale: consumer_test.go")
+
+
+def clean_consumer_go_mod_matches(content: str, generated: str) -> bool:
+    if content == generated:
+        return True
+    if not content.startswith(generated):
+        return False
+    suffix = content[len(generated):]
+    return re.fullmatch(
+        r"\nrequire \(\n(?:\t\S+ \S+ // indirect\n)+\)\n", suffix
+    ) is not None
 
 
 def expected_tag(catalog_module: dict, version: str) -> str:

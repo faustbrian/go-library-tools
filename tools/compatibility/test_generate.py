@@ -627,6 +627,20 @@ class CompatibilitySetTest(unittest.TestCase):
         generate.write_candidate_artifacts(value, item, [module])
         generate.check_clean_consumer(item, [module])
 
+        go_mod = generate.CONSUMER_DIRECTORY / "go.mod"
+        go_mod.write_text(
+            go_mod.read_text()
+            + "\nrequire (\n\texample.com/transitive v1.0.0 // indirect\n)\n"
+        )
+        generate.check_clean_consumer(item, [module])
+
+        go_mod.write_text(
+            go_mod.read_text()
+            + "\nrequire example.com/unexpected v1.0.0\n"
+        )
+        with self.assertRaisesRegex(ValueError, "consumer is stale"):
+            generate.check_clean_consumer(item, [module])
+
         self.assertEqual(
             json.loads(generate.SOURCE.read_text())["sets"][0]["roster"]["module_count"],
             1,
