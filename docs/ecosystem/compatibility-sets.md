@@ -2,7 +2,7 @@
 
 Generated from `compatibility-sets.json`; edit the JSON source only.
 
-## `golib-compat-v1-20260910.1`
+## `golib-compat-v1-20260912.2`
 
 **Status:** published; **installable**. Observed `2026-09-10T03:00:02Z`.
 
@@ -87,10 +87,10 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 - `github.com/faustbrian/go-password@v1.1.0` (source `36102e52c25f61a0aab36f128afec0979f71e434`)
 - `github.com/faustbrian/go-postgres@v1.1.0` (source `8e6dda1d75a27098bdce352c57188f5dc0f716f2`)
 - `github.com/faustbrian/go-prompts@v1.1.0` (source `2b9ce9f069da2b7b06511d2c6d51c736984d06e8`)
-- `github.com/faustbrian/go-queue@v1.1.0` (source `29797a97f747555d0cd00aa38dfe11f22e08f456`)
+- `github.com/faustbrian/go-queue@v1.1.1` (source `83b40a1d817c4ebb6d82d4b5df19e18d90b32d22`)
 - `github.com/faustbrian/go-queue-control-plane@v1.1.0` (source `6d6c3051ac8eb3f063cb7aa93e40a21551fbf8f2`)
 - `github.com/faustbrian/go-queue/adapters/rabbitmq@v1.0.0` (source `f6de4d3e143718fdc8d83272012e6a697168bba7`)
-- `github.com/faustbrian/go-queue/adapters/service@v1.0.0` (source `f6de4d3e143718fdc8d83272012e6a697168bba7`)
+- `github.com/faustbrian/go-queue/adapters/service@v1.0.1` (source `83b40a1d817c4ebb6d82d4b5df19e18d90b32d22`)
 - `github.com/faustbrian/go-rabbitmq-queues@v1.1.0` (source `5dc01b54e9a1a3b2e70d8647de1cfd1676f34241`)
 - `github.com/faustbrian/go-rabbitmq-streams@v1.1.1` (source `1af27a0db60628557be00013fa77cf5021bb228d`)
 - `github.com/faustbrian/go-rabbitmq-streams/adapters/otel@v1.0.0` (source `cb19d94b6e44bf08c46a0cdc45146205a2c58b04`)
@@ -144,7 +144,7 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 
 - This set is an installable selection of independently released modules, not a dependency bundle.
 - No external service, database, or production deployment acceptance is implied.
-- Recipe receipts are single-platform Go 1.26.6 observations for their focused dependency subsets; the complete roster requires Go 1.27.0 and the platform matrix applies only to clean public resolution.
+- Current recipe receipts use the Go 1.27.0 toolchain selector; the local darwin/arm64 runner used the installed compatible Go 1.27.1 patch release, while hosted native matrix jobs verify Go 1.27.0 on darwin/arm64, linux/amd64, and linux/arm64.
 
 ### Roster
 
@@ -153,20 +153,20 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 
 ### Recipes
 
-- `01-minimal-http-service` (verified): [source](https://github.com/faustbrian/go-service/commit/1deb2fdd6f94c1e776ebf46d96be21d0d20e323a) / `integration/reference-recipes`
-- `02-internal-json-rpc-service` (verified): [source](https://github.com/faustbrian/go-service/commit/1deb2fdd6f94c1e776ebf46d96be21d0d20e323a) / `integration/reference-http`
-- `03-external-jsonapi-service` (verified): [source](https://github.com/faustbrian/go-http-middleware/commit/4c80a09e7786771475821d2917d23b84a2a3cac8) / `integration/siblings/platform_test.go`
-- `04-authenticated-authorized-service` (verified): [source](https://github.com/faustbrian/go-service/commit/1deb2fdd6f94c1e776ebf46d96be21d0d20e323a) / `integration/reference-http`
-- `05-queue-producer-worker` (verified): [source](https://github.com/faustbrian/go-service/commit/519d47468ebf8e2422049259941eec8bed9ac2c0) / `integration/reference-durability`
-- `06-ingester-processor` (verified): [source](https://github.com/faustbrian/go-service/commit/1deb2fdd6f94c1e776ebf46d96be21d0d20e323a) / `integration/reference-recipes`
-- `07-postgres-idempotency-outbox` (verified): [source](https://github.com/faustbrian/go-service/commit/519d47468ebf8e2422049259941eec8bed9ac2c0) / `integration/reference-durability`
-- `08-scheduled-singleton` (verified): [source](https://github.com/faustbrian/go-scheduler/commit/c09e8197260268000392f8d7532ecbd5f0b83905) / `examples/distributed-singleton`
-- `09-kafka-schema-cloudevents` (verified): [source](https://github.com/faustbrian/go-cloudevents/commit/dbcf45eac94a1e0e582cc95a4d524b9dbdf556a4) / `integration/target-adapters`
-- `10-vendor-http-client-policy` (verified): [source](https://github.com/faustbrian/go-http-client/commit/a60b15b20a770f0953a6081b8a7fd67d7b1c5c6c) / `examples/vendorcomposition`
-- `11-filesystem-tabular-ingestion` (verified): [source](https://github.com/faustbrian/go-filesystem/commit/9e0b65c9e95312b2f6a808d8ff96b88d149b4cde) / `integration/tabular-ingestion`
-- `12-durable-workflow-compensation` (verified): [source](https://github.com/faustbrian/go-workflow/commit/246d123e890dc3e38ca62a431c1cf079b41607a8)
-- `13-searchable-track-location` (verified): [source](https://github.com/faustbrian/go-search/commit/bc396c41271a9cfad792b8beb834e61f34244521) / `adapters/opensearch`
-- `14-track-postal-location-roles` (verified): [source](https://github.com/faustbrian/go-service/commit/1deb2fdd6f94c1e776ebf46d96be21d0d20e323a) / `integration/adoption`
+- `01-minimal-http-service` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-recipes`
+- `02-internal-json-rpc-service` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-http`
+- `03-external-jsonapi-service` (verified): [source](https://github.com/faustbrian/go-http-middleware/commit/93e41da128a0a7696e89769c2fd688a74f552678) / `integration/siblings/platform_test.go`
+- `04-authenticated-authorized-service` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-http`
+- `05-queue-producer-worker` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-durability`
+- `06-ingester-processor` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-recipes`
+- `07-postgres-idempotency-outbox` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-durability`
+- `08-scheduled-singleton` (verified): [source](https://github.com/faustbrian/go-scheduler/commit/84492d44c8937f6a5dbe3c1d260f988c51799e14) / `examples/distributed-singleton`
+- `09-kafka-schema-cloudevents` (verified): [source](https://github.com/faustbrian/go-cloudevents/commit/644650726f142427df506c9be14a3f9c0576007d) / `integration/target-adapters`
+- `10-vendor-http-client-policy` (verified): [source](https://github.com/faustbrian/go-http-client/commit/f400c235e3c94e16d3e38a43932501bb045017e5) / `examples/vendorcomposition`
+- `11-filesystem-tabular-ingestion` (verified): [source](https://github.com/faustbrian/go-filesystem/commit/098f47cae3fd01b67355062a76aae7d6e29306cd) / `integration/tabular-ingestion`
+- `12-durable-workflow-compensation` (verified): [source](https://github.com/faustbrian/go-workflow/commit/7066c265edb25a30984de304859110a641812051)
+- `13-searchable-track-location` (verified): [source](https://github.com/faustbrian/go-search/commit/a93ac8817a9a172ffe552f3a4c1694bb74bd7e9b) / `adapters/opensearch`
+- `14-track-postal-location-roles` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/adoption`
 
 ### External versions
 
@@ -202,5 +202,5 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 
 ### Evidence
 
-- Content fingerprint: `sha256:92887f6d50521b4a7a6a45f02745ddfd09f9de1c541d13500e0d4b2024de21e9`
-- Observation: `Scenarios 01-08 and 10-14 reuse their draft-20260910.2 receipts at sha256:8f6709a55ad144757612de33916d472187663a23d5eded6c74ca63b8d144587b after a fresh public dependency audit proved all retained module tuples unchanged and none resolved the four removed facades. Scenario 09 passed fresh from the canonical target-adapter recipe on darwin/arm64. Earlier unpublished candidate fingerprints were withdrawn before publication; this identifier becomes immutable only with the v1.8.0 milestone. Publication CI gates native clean-consumer tests for darwin/arm64, linux/amd64, and linux/arm64.`
+- Content fingerprint: `sha256:ae3aa8da794b6f5725505754da33c7b97de158dd37e7226eef8d764b67e06719`
+- Observation: `Refreshed for the Go 1.27 fleet and current go-queue v1.1.0 source at 83b40a1d817c4ebb6d82d4b5df19e18d90b32d22; all fourteen composition receipts and the native matrix remain valid under the published Go 1.27.0 selectors.`

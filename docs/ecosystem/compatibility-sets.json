@@ -2,7 +2,7 @@
   "format": "golib-compatibility-sets-v1",
   "sets": [
     {
-      "set_id": "golib-compat-v1-20260910.1",
+      "set_id": "golib-compat-v1-20260912.2",
       "publication_status": "published",
       "installable": true,
       "go": {
@@ -411,8 +411,8 @@
         },
         {
           "module_path": "github.com/faustbrian/go-queue",
-          "version": "v1.1.0",
-          "source_revision": "29797a97f747555d0cd00aa38dfe11f22e08f456"
+          "version": "v1.1.1",
+          "source_revision": "83b40a1d817c4ebb6d82d4b5df19e18d90b32d22"
         },
         {
           "module_path": "github.com/faustbrian/go-queue-control-plane",
@@ -426,8 +426,8 @@
         },
         {
           "module_path": "github.com/faustbrian/go-queue/adapters/service",
-          "version": "v1.0.0",
-          "source_revision": "f6de4d3e143718fdc8d83272012e6a697168bba7"
+          "version": "v1.0.1",
+          "source_revision": "83b40a1d817c4ebb6d82d4b5df19e18d90b32d22"
         },
         {
           "module_path": "github.com/faustbrian/go-rabbitmq-queues",
@@ -637,13 +637,13 @@
       ],
       "observed_at": "2026-09-10T03:00:02Z",
       "evidence": {
-        "observation": "Scenarios 01-08 and 10-14 reuse their draft-20260910.2 receipts at sha256:8f6709a55ad144757612de33916d472187663a23d5eded6c74ca63b8d144587b after a fresh public dependency audit proved all retained module tuples unchanged and none resolved the four removed facades. Scenario 09 passed fresh from the canonical target-adapter recipe on darwin/arm64. Earlier unpublished candidate fingerprints were withdrawn before publication; this identifier becomes immutable only with the v1.8.0 milestone. Publication CI gates native clean-consumer tests for darwin/arm64, linux/amd64, and linux/arm64.",
-        "content_sha256": "sha256:92887f6d50521b4a7a6a45f02745ddfd09f9de1c541d13500e0d4b2024de21e9"
+        "observation": "Refreshed for the Go 1.27 fleet and current go-queue v1.1.0 source at 83b40a1d817c4ebb6d82d4b5df19e18d90b32d22; all fourteen composition receipts and the native matrix remain valid under the published Go 1.27.0 selectors.",
+        "content_sha256": "sha256:ae3aa8da794b6f5725505754da33c7b97de158dd37e7226eef8d764b67e06719"
       },
       "caveats": [
         "This set is an installable selection of independently released modules, not a dependency bundle.",
         "No external service, database, or production deployment acceptance is implied.",
-        "Recipe receipts are single-platform Go 1.26.6 observations for their focused dependency subsets; the complete roster requires Go 1.27.0 and the platform matrix applies only to clean public resolution."
+        "Current recipe receipts use the Go 1.27.0 toolchain selector; the local darwin/arm64 runner used the installed compatible Go 1.27.1 patch release, while hosted native matrix jobs verify Go 1.27.0 on darwin/arm64, linux/amd64, and linux/arm64."
       ],
       "source_references": [
         "docs/ecosystem/catalog-consumer.json",
@@ -660,72 +660,72 @@
         {
           "id": "01-minimal-http-service",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/reference-recipes"
+          "source_reference": "github.com/faustbrian/go-service@61535b800e87ae68451a7134810cedfe0cd985f6/integration/reference-recipes"
         },
         {
           "id": "02-internal-json-rpc-service",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/reference-http"
+          "source_reference": "github.com/faustbrian/go-service@61535b800e87ae68451a7134810cedfe0cd985f6/integration/reference-http"
         },
         {
           "id": "03-external-jsonapi-service",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-http-middleware@4c80a09e7786771475821d2917d23b84a2a3cac8/integration/siblings/platform_test.go"
+          "source_reference": "github.com/faustbrian/go-http-middleware@93e41da128a0a7696e89769c2fd688a74f552678/integration/siblings/platform_test.go"
         },
         {
           "id": "04-authenticated-authorized-service",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/reference-http"
+          "source_reference": "github.com/faustbrian/go-service@61535b800e87ae68451a7134810cedfe0cd985f6/integration/reference-http"
         },
         {
           "id": "05-queue-producer-worker",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-service@519d47468ebf8e2422049259941eec8bed9ac2c0/integration/reference-durability"
+          "source_reference": "github.com/faustbrian/go-service@61535b800e87ae68451a7134810cedfe0cd985f6/integration/reference-durability"
         },
         {
           "id": "06-ingester-processor",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/reference-recipes"
+          "source_reference": "github.com/faustbrian/go-service@61535b800e87ae68451a7134810cedfe0cd985f6/integration/reference-recipes"
         },
         {
           "id": "07-postgres-idempotency-outbox",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-service@519d47468ebf8e2422049259941eec8bed9ac2c0/integration/reference-durability"
+          "source_reference": "github.com/faustbrian/go-service@61535b800e87ae68451a7134810cedfe0cd985f6/integration/reference-durability"
         },
         {
           "id": "08-scheduled-singleton",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-scheduler@c09e8197260268000392f8d7532ecbd5f0b83905/examples/distributed-singleton"
+          "source_reference": "github.com/faustbrian/go-scheduler@84492d44c8937f6a5dbe3c1d260f988c51799e14/examples/distributed-singleton"
         },
         {
           "id": "09-kafka-schema-cloudevents",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-cloudevents@dbcf45eac94a1e0e582cc95a4d524b9dbdf556a4/integration/target-adapters"
+          "source_reference": "github.com/faustbrian/go-cloudevents@644650726f142427df506c9be14a3f9c0576007d/integration/target-adapters"
         },
         {
           "id": "10-vendor-http-client-policy",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-http-client@a60b15b20a770f0953a6081b8a7fd67d7b1c5c6c/examples/vendorcomposition"
+          "source_reference": "github.com/faustbrian/go-http-client@f400c235e3c94e16d3e38a43932501bb045017e5/examples/vendorcomposition"
         },
         {
           "id": "11-filesystem-tabular-ingestion",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-filesystem@9e0b65c9e95312b2f6a808d8ff96b88d149b4cde/integration/tabular-ingestion"
+          "source_reference": "github.com/faustbrian/go-filesystem@098f47cae3fd01b67355062a76aae7d6e29306cd/integration/tabular-ingestion"
         },
         {
           "id": "12-durable-workflow-compensation",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-workflow@246d123e890dc3e38ca62a431c1cf079b41607a8"
+          "source_reference": "github.com/faustbrian/go-workflow@7066c265edb25a30984de304859110a641812051"
         },
         {
           "id": "13-searchable-track-location",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-search@bc396c41271a9cfad792b8beb834e61f34244521/adapters/opensearch"
+          "source_reference": "github.com/faustbrian/go-search@a93ac8817a9a172ffe552f3a4c1694bb74bd7e9b/adapters/opensearch"
         },
         {
           "id": "14-track-postal-location-roles",
           "status": "verified",
-          "source_reference": "github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/adoption"
+          "source_reference": "github.com/faustbrian/go-service@61535b800e87ae68451a7134810cedfe0cd985f6/integration/adoption"
         }
       ],
       "external_versions": [
