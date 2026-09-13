@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -30,6 +31,35 @@ func TestFormattingAndSafetyReportMalformedOrUnreadableTrees(t *testing.T) {
 	}
 	if err := runner.checkFormatting(context.Background(), filepath.Join(root, "missing")); err == nil {
 		t.Fatal("checkFormatting() missing root error = nil")
+	}
+}
+
+func TestCheckModuleLocalPropagatesEachCommandFailure(t *testing.T) {
+	root := t.TempDir()
+	for name, content := range map[string]string{
+		"go.mod":     "module example\n\ngo 1.27.0\n",
+		"example.go": "package example\n",
+		"README.md":  "# Example\n",
+	} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	module := inventory.Module{Directory: ".", Gates: map[string]bool{"lint": true, "tests": true, "documentation": true}}
+	for failAt := 1; failAt <= 6; failAt++ {
+		t.Run(fmt.Sprintf("command-%d", failAt), func(t *testing.T) {
+			calls := 0
+			runner := Runner{Root: root, Executor: executorFunction(func(context.Context, Command) error {
+				calls++
+				if calls == failAt {
+					return errors.New("injected command failure")
+				}
+				return nil
+			})}
+			if err := runner.checkModuleLocal(context.Background(), io.Discard, module); err == nil {
+				t.Fatal("checkModuleLocal() error = nil")
+			}
+		})
 	}
 }
 

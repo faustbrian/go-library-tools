@@ -92,6 +92,61 @@ func TestConsumerCatalogExcludesEachNonConsumerBoundary(t *testing.T) {
 	}
 }
 
+func TestConsumerCatalogMarkdownShowsLifecycleAndNavigation(t *testing.T) {
+	readme := "adapters/legacy/README.md"
+	adoption := "adapters/legacy/docs/migration.md"
+	pkgGoDev := "https://pkg.go.dev/github.com/faustbrian/example/adapters/legacy"
+	legacy := module("github.com/faustbrian/example/adapters/legacy", "adapter", true, "foundations", "deprecated")
+	legacy.Directory = "adapters/legacy"
+	legacy.Version = "1.2.3"
+	legacy.Cohesion.Documentation = inventory.Documentation{
+		README: &readme, Adoption: &adoption, PkgGoDev: &pkgGoDev,
+	}
+	catalog := inventory.Inventory{Repository: "github.com/faustbrian/example", Modules: []inventory.Module{legacy}}
+	identity := cohesion.Identity{DesignLanguageVersion: "1.0", DesignLanguageSHA256: strings.Repeat("a", 64), SourceIdentity: "unpublished", ToolingVersion: "dev", PublicationStatus: "unpublished"}
+
+	consumer, err := cohesion.Project(catalog, "consumer", identity)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rendered, err := cohesion.RenderMarkdown(consumer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, expected := range []string{
+		"**deprecated**",
+		"[github.com/faustbrian/example/adapters/legacy](https://pkg.go.dev/github.com/faustbrian/example/adapters/legacy@v1.2.3)",
+		"[README](https://github.com/faustbrian/example/blob/adapters/legacy/v1.2.3/adapters/legacy/README.md)",
+		"[migration](https://github.com/faustbrian/example/blob/adapters/legacy/v1.2.3/adapters/legacy/docs/migration.md)",
+	} {
+		if !strings.Contains(string(rendered), expected) {
+			t.Fatalf("consumer Markdown lacks %q: %s", expected, rendered)
+		}
+	}
+}
+
+func TestConsumerCatalogMarkdownPreservesAbsoluteDocumentationURLs(t *testing.T) {
+	readme := "https://docs.example.com/library/README.md"
+	public := module("github.com/faustbrian/example/library", "public library", true, "foundations", "active")
+	public.Directory = "."
+	public.Version = "1.0.0"
+	public.Cohesion.Documentation.README = &readme
+	catalog := inventory.Inventory{Repository: "github.com/faustbrian/example", Modules: []inventory.Module{public}}
+	identity := cohesion.Identity{DesignLanguageVersion: "1.0", DesignLanguageSHA256: strings.Repeat("a", 64), SourceIdentity: "unpublished", ToolingVersion: "dev", PublicationStatus: "unpublished"}
+
+	projected, err := cohesion.Project(catalog, "consumer", identity)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rendered, err := cohesion.RenderMarkdown(projected)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(rendered), "[README]("+readme+")") {
+		t.Fatalf("RenderMarkdown() did not preserve absolute README URL: %s", rendered)
+	}
+}
+
 func module(path, kind string, releasable bool, family, lifecycle string) inventory.Module {
 	module := inventory.Module{Directory: path, ModulePath: path, GoVersion: "1.27.0", Kind: kind, Releasable: releasable}
 	if family != "" {

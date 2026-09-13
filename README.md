@@ -1,13 +1,14 @@
 # Go Library Tools
 
-`golib` provides one strict, versioned repository contract for independently
-released Go libraries. It validates canonical manifests, runs quality gates in
-task-owned environments, preserves content-addressed verification evidence,
-and owns generic service fixtures without copying automation into every
-repository.
+`golib` provides a versioned repository contract for independently released Go
+libraries. It validates canonical manifests, runs proportional quality gates
+in task-owned environments, and owns generic service fixtures without copying
+automation into every repository.
 
-The current stable release is `v1.7.2`. Consumer repositories must use
-checksum-verified release binaries and immutable workflow references.
+The prepared ecosystem-milestone release is `v1.8.0`; `v1.7.2` remains the
+current published release until the milestone tag is created. Consumer
+repositories must use checksum-verified release binaries and immutable workflow
+references.
 
 ## Quick Start
 
@@ -24,22 +25,21 @@ package facts in `packages.json`, and source-specific evidence under
 
 ## Guarantees
 
-- fast repository-local feedback with exact coverage and mutation available
-  for risk-selected aggregate milestones;
+- fast repository-local feedback with expensive checks selected by material
+  risk;
 - task-owned Go caches, temporary files, credentials, and service resources;
 - no shell evaluation of repository configuration;
-- evidence keyed by behavior-affecting content rather than Git history;
 - strict schemas, deterministic ordering, bounded input, and fail-closed gates;
-- auditable specification decisions with executable evidence and monitored
-  authoritative errata or release feeds;
+- central consumer catalogs and known-good compatibility selections without a
+  fleet-wide dependency bundle; and
 - immutable release and GitHub Actions consumption.
 
 Start with the [documentation index](docs/README.md). See
 [CONTRIBUTING.md](CONTRIBUTING.md) for development, [SECURITY.md](SECURITY.md)
 for private reports, and [SUPPORT.md](SUPPORT.md) for support channels.
 
-Consumers composing independently released Golib modules should also read the
-versioned [Golib ecosystem design language](docs/ecosystem/design-language.md).
+Consumers composing independently released Golib modules should start at the
+[Golib ecosystem index](docs/ecosystem/README.md).
 
 ## Compatibility
 

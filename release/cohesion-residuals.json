@@ -1,0 +1,121 @@
+{
+  "format": "golib-cohesion-residuals-v1",
+  "status": "current",
+  "compatibility_set": "golib-compat-v1-20260912.2",
+  "residuals": [
+    {
+      "id": "planned-identity-platform",
+      "scope": [
+        "github.com/faustbrian/go-identity",
+        "github.com/faustbrian/go-oauth-server",
+        "github.com/faustbrian/go-organization",
+        "github.com/faustbrian/go-passkey",
+        "github.com/faustbrian/go-scim",
+        "github.com/faustbrian/go-secret-store",
+        "github.com/faustbrian/go-sso",
+        "github.com/faustbrian/go-webauthn"
+      ],
+      "classification": "planned-product-boundary",
+      "consumer_impact": "These repositories are design inventory and provide no installable public module.",
+      "owner": "identity-platform goal",
+      "removal_condition": "Implement, review, and publish each intentionally selected module before marking it active."
+    },
+    {
+      "id": "deprecated-compatibility-paths",
+      "scope": [
+        "github.com/faustbrian/go-authentication/authotel",
+        "github.com/faustbrian/go-cloudevents/adapters/golib",
+        "github.com/faustbrian/go-event-sourcing/adapters/gokafka",
+        "github.com/faustbrian/go-event-sourcing/adapters/gotelemetry",
+        "github.com/faustbrian/go-kafka/adapters/gotelemetry",
+        "github.com/faustbrian/go-kafka/kafkaservice",
+        "github.com/faustbrian/go-knapsack/objective/gomoney",
+        "github.com/faustbrian/go-queue/queueservice",
+        "github.com/faustbrian/go-queue/rabbitmq",
+        "github.com/faustbrian/go-rabbitmq-streams/otel",
+        "github.com/faustbrian/go-rabbitmq-streams/rabbitmq",
+        "github.com/faustbrian/go-transactional-outbox/adapters/gokafka",
+        "github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream"
+      ],
+      "classification": "released-compatibility-constraint",
+      "consumer_impact": "Existing imports remain supported, but new consumers should select the documented target-specific successors.",
+      "owner": "owning module maintainers",
+      "removal_condition": "Remove only in an authorized major release after owned and clean-consumer migration."
+    },
+    {
+      "id": "tooling-coverage-exceptions",
+      "scope": [
+        "github.com/faustbrian/go-library-tools/internal/assets",
+        "github.com/faustbrian/go-library-tools/internal/cohesion",
+        "github.com/faustbrian/go-library-tools/internal/jcs"
+      ],
+      "classification": "permanent-assurance-exception",
+      "consumer_impact": "Exact statement coverage is not claimed for these integration-heavy internal packages; focused contracts plus applicable test, race, lint, security, and mutation gates remain required.",
+      "owner": "go-library-tools maintainers",
+      "removal_condition": "Reassess only if the package boundaries change enough that exact coverage measures consumer behavior rather than synthetic external-process or duplicate-fixture branches."
+    },
+    {
+      "id": "math-gomath-package-name",
+      "scope": [
+        "github.com/faustbrian/go-math"
+      ],
+      "classification": "permanent-package-name-exception",
+      "consumer_impact": "The public package identifier gomath remains intentionally distinct from the Go standard-library math package.",
+      "owner": "go-math maintainers",
+      "removal_condition": "Reassess only at an authorized major-version boundary if migration evidence shows a clearer name without creating an import collision."
+    },
+    {
+      "id": "external-usage-uncertainty",
+      "scope": [
+        "public consumers outside faustbrian-owned repositories"
+      ],
+      "classification": "missing-external-evidence",
+      "consumer_impact": "Owned consumers, tags, and fixtures are measured, but external usage is not exhaustively known; released compatibility paths therefore retain their migration constraints.",
+      "owner": "ecosystem maintainers",
+      "removal_condition": "Complete authenticated public usage discovery and reconcile any consumers without weakening existing compatibility commitments."
+    },
+    {
+      "id": "repository-owned-release-boundaries",
+      "scope": [
+        "github.com/faustbrian/go-authentication",
+        "github.com/faustbrian/go-barcode",
+        "github.com/faustbrian/go-cloudevents",
+        "github.com/faustbrian/go-config",
+        "github.com/faustbrian/go-ecma-regexp",
+        "github.com/faustbrian/go-http-client",
+        "github.com/faustbrian/go-http-middleware",
+        "github.com/faustbrian/go-http-signature",
+        "github.com/faustbrian/go-json-schema",
+        "github.com/faustbrian/go-jsonapi",
+        "github.com/faustbrian/go-jsonrpc",
+        "github.com/faustbrian/go-math",
+        "github.com/faustbrian/go-measurement",
+        "github.com/faustbrian/go-merkle-patricia-trie",
+        "github.com/faustbrian/go-openapi",
+        "github.com/faustbrian/go-schema-registry",
+        "github.com/faustbrian/go-search",
+        "github.com/faustbrian/go-secret-envelope",
+        "github.com/faustbrian/go-tabular",
+        "github.com/faustbrian/go-temporal",
+        "github.com/faustbrian/go-verkle-tree",
+        "github.com/faustbrian/go-wire"
+      ],
+      "classification": "repository-owned-release-boundary",
+      "consumer_impact": "These repositories retain independently owned upstream-authority or published-checksum findings that must be resolved before their next affected release; the compatibility set does not waive them.",
+      "owner": "owning repository maintainers",
+      "removal_condition": "Remove each repository only after its recorded authority or checksum finding is classified and its next affected release boundary passes."
+    },
+    {
+      "id": "downstream-documentation-routes",
+      "scope": [
+        "downstream documentation: combined operations",
+        "downstream documentation: contributor workflow",
+        "downstream documentation: laravel and php migration"
+      ],
+      "classification": "downstream-discoverability-gap",
+      "consumer_impact": "Product guidance exists in package and Cohesion artifacts, but these three task-oriented public navigation routes do not yet exist.",
+      "owner": "downstream documentation goal",
+      "removal_condition": "Publish and link the Laravel/PHP migration, combined backend operations, and contributor workflow routes from the public documentation portal."
+    }
+  ]
+}

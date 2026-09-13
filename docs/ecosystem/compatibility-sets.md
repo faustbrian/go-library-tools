@@ -2,9 +2,9 @@
 
 Generated from `compatibility-sets.json`; edit the JSON source only.
 
-## `draft-20260910.2`
+## `golib-compat-v1-20260912.2`
 
-**Status:** unreleased; **non-installable**. Observed `2026-09-10T01:24:30Z`.
+**Status:** published; **installable**. Observed `2026-09-10T03:00:02Z`.
 
 ### Modules
 
@@ -30,7 +30,6 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 - `github.com/faustbrian/go-cloudevents/adapters/audit@v1.0.0` (source `0c5122a604444f7e2a2f9d5626483d873e27884a`)
 - `github.com/faustbrian/go-cloudevents/adapters/correlation@v1.0.0` (source `87da29c422c63fa9b96a5864d274937b0b063cfc`)
 - `github.com/faustbrian/go-cloudevents/adapters/event-sourcing@v1.0.0` (source `87da29c422c63fa9b96a5864d274937b0b063cfc`)
-- `github.com/faustbrian/go-cloudevents/adapters/golib@v1.1.0` (source `769570e67012ae631de48e8cb6e08dab6d35a1bf`)
 - `github.com/faustbrian/go-cloudevents/adapters/jsonschema@v1.0.0` (source `87da29c422c63fa9b96a5864d274937b0b063cfc`)
 - `github.com/faustbrian/go-cloudevents/adapters/kafka@v1.0.0` (source `87da29c422c63fa9b96a5864d274937b0b063cfc`)
 - `github.com/faustbrian/go-cloudevents/adapters/outbox@v1.0.0` (source `87da29c422c63fa9b96a5864d274937b0b063cfc`)
@@ -67,17 +66,13 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 - `github.com/faustbrian/go-jsonapi@v1.0.0` (source `0ce0f6acfbedb33b166a8b0ba1d14cc90f2916fe`)
 - `github.com/faustbrian/go-jsonrpc@v1.0.0` (source `9812dee1bae988287b8aa2a7c6244598781a50b3`)
 - `github.com/faustbrian/go-kafka@v1.1.0` (source `bbe6dc0ebcfdec9d16e17c7e7474f98163a221e2`)
-- `github.com/faustbrian/go-kafka/adapters/gotelemetry@v1.0.1` (source `b57ea490dd921ef06480793917bf54826560ac02`)
 - `github.com/faustbrian/go-kafka/adapters/mskiam@v1.1.0` (source `bbe6dc0ebcfdec9d16e17c7e7474f98163a221e2`)
 - `github.com/faustbrian/go-kafka/adapters/otel@v1.0.0` (source `bbe6dc0ebcfdec9d16e17c7e7474f98163a221e2`)
 - `github.com/faustbrian/go-kafka/adapters/service@v1.0.0` (source `bbe6dc0ebcfdec9d16e17c7e7474f98163a221e2`)
-- `github.com/faustbrian/go-kafka/kafkaservice@v1.0.1` (source `b57ea490dd921ef06480793917bf54826560ac02`)
 - `github.com/faustbrian/go-keyphrase@v1.0.0` (source `1224c16f900f857f4c8198874911d8bc9e55aae2`)
 - `github.com/faustbrian/go-knapsack@v1.0.0` (source `d1d45bc503e53db71920074fb307dfff0cbe3bbd`)
-- `github.com/faustbrian/go-knapsack/objective/gomoney@v1.1.0` (source `2dd63d1187e5880a8ace781d59e1efaaabde3b28`)
 - `github.com/faustbrian/go-knapsack/objective/money@v1.0.0` (source `a846f4e14f534df5df7b7b063370234e1ee691ee`)
 - `github.com/faustbrian/go-lease@v1.1.0` (source `b7076e1a3324740c691b8b586a2a93fbe2fccc18`)
-- `github.com/faustbrian/go-library-tools@v1.7.2` (source `47269f1aa78baa637a8c377b0af24c113b34c1c9`)
 - `github.com/faustbrian/go-localized@v1.1.0` (source `f694c7576c410ab9acc80d7c57308b0f58367bc8`)
 - `github.com/faustbrian/go-log@v1.0.0` (source `fc1898e72be8827f3c591f73d127c2642b96022e`)
 - `github.com/faustbrian/go-math@v1.1.0` (source `c57c880d1328821fbffab240846cb78b9f81cdd3`)
@@ -92,10 +87,10 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 - `github.com/faustbrian/go-password@v1.1.0` (source `36102e52c25f61a0aab36f128afec0979f71e434`)
 - `github.com/faustbrian/go-postgres@v1.1.0` (source `8e6dda1d75a27098bdce352c57188f5dc0f716f2`)
 - `github.com/faustbrian/go-prompts@v1.1.0` (source `2b9ce9f069da2b7b06511d2c6d51c736984d06e8`)
-- `github.com/faustbrian/go-queue@v1.1.0` (source `29797a97f747555d0cd00aa38dfe11f22e08f456`)
+- `github.com/faustbrian/go-queue@v1.1.1` (source `83b40a1d817c4ebb6d82d4b5df19e18d90b32d22`)
 - `github.com/faustbrian/go-queue-control-plane@v1.1.0` (source `6d6c3051ac8eb3f063cb7aa93e40a21551fbf8f2`)
 - `github.com/faustbrian/go-queue/adapters/rabbitmq@v1.0.0` (source `f6de4d3e143718fdc8d83272012e6a697168bba7`)
-- `github.com/faustbrian/go-queue/adapters/service@v1.0.0` (source `f6de4d3e143718fdc8d83272012e6a697168bba7`)
+- `github.com/faustbrian/go-queue/adapters/service@v1.0.1` (source `83b40a1d817c4ebb6d82d4b5df19e18d90b32d22`)
 - `github.com/faustbrian/go-rabbitmq-queues@v1.1.0` (source `5dc01b54e9a1a3b2e70d8647de1cfd1676f34241`)
 - `github.com/faustbrian/go-rabbitmq-streams@v1.1.1` (source `1af27a0db60628557be00013fa77cf5021bb228d`)
 - `github.com/faustbrian/go-rabbitmq-streams/adapters/otel@v1.0.0` (source `cb19d94b6e44bf08c46a0cdc45146205a2c58b04`)
@@ -137,41 +132,41 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 - `github.com/faustbrian/go-wsdl@v1.0.0` (source `00d52441fd0c138aa6cc0fafe1247a8a6ba5f279`)
 - `github.com/faustbrian/go-xsd@v1.0.0` (source `8f93e6ebd80508deeb73de7fc91adeb24d2c4b8c`)
 
-### Planned/unverified scenarios
+### Covered scenarios
 
 - compose authenticated service startup with caller-owned lifecycle and tenant propagation
 - exercise shutdown and cancellation ordering without a framework bootstrap
 - resolve modules from clean source identities without replace directives
 
-**Go:** `1.26.6` on darwin/arm64, linux/amd64, linux/arm64.
+**Go:** `1.27.0` on darwin/arm64, linux/amd64, linux/arm64.
 
 ### Caveats
 
-- Non-installable until each module is published at the listed version and clean external-consumer verification passes.
+- This set is an installable selection of independently released modules, not a dependency bundle.
 - No external service, database, or production deployment acceptance is implied.
-- The content fingerprint covers this set definition and must be recomputed before publication.
+- Current recipe receipts use the Go 1.27.0 toolchain selector; the local darwin/arm64 runner used the installed compatible Go 1.27.1 patch release, while hosted native matrix jobs verify Go 1.27.0 on darwin/arm64, linux/amd64, and linux/arm64.
 
 ### Roster
 
 - Selection: `active-public`
-- Modules: `128`
+- Modules: `123`
 
 ### Recipes
 
-- `01-minimal-http-service` (planned): `github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/reference-recipes`
-- `02-internal-json-rpc-service` (planned): `github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/reference-http`
-- `03-external-jsonapi-service` (planned): `github.com/faustbrian/go-http-middleware@4c80a09e7786771475821d2917d23b84a2a3cac8/integration/siblings/platform_test.go`
-- `04-authenticated-authorized-service` (planned): `github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/reference-http`
-- `05-queue-producer-worker` (planned): `github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/reference-durability`
-- `06-ingester-processor` (planned): `github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/reference-recipes`
-- `07-postgres-idempotency-outbox` (planned): `github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/reference-durability`
-- `08-scheduled-singleton` (planned): `github.com/faustbrian/go-scheduler@c09e8197260268000392f8d7532ecbd5f0b83905/examples/distributed-singleton`
-- `09-kafka-schema-cloudevents` (planned): `github.com/faustbrian/go-cloudevents@769570e67012ae631de48e8cb6e08dab6d35a1bf/adapters/golib`
-- `10-vendor-http-client-policy` (planned): `github.com/faustbrian/go-http-client@a60b15b20a770f0953a6081b8a7fd67d7b1c5c6c/examples/vendorcomposition`
-- `11-filesystem-tabular-ingestion` (planned): `github.com/faustbrian/go-filesystem@9e0b65c9e95312b2f6a808d8ff96b88d149b4cde/integration/tabular-ingestion`
-- `12-durable-workflow-compensation` (planned): `github.com/faustbrian/go-workflow@a7352f09e4b33848cee4637047b09115a5bed929`
-- `13-searchable-track-location` (planned): `github.com/faustbrian/go-search@bc396c41271a9cfad792b8beb834e61f34244521/adapters/opensearch`
-- `14-track-postal-location-roles` (planned): `github.com/faustbrian/go-service@1deb2fdd6f94c1e776ebf46d96be21d0d20e323a/integration/adoption`
+- `01-minimal-http-service` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-recipes`
+- `02-internal-json-rpc-service` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-http`
+- `03-external-jsonapi-service` (verified): [source](https://github.com/faustbrian/go-http-middleware/commit/93e41da128a0a7696e89769c2fd688a74f552678) / `integration/siblings/platform_test.go`
+- `04-authenticated-authorized-service` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-http`
+- `05-queue-producer-worker` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-durability`
+- `06-ingester-processor` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-recipes`
+- `07-postgres-idempotency-outbox` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/reference-durability`
+- `08-scheduled-singleton` (verified): [source](https://github.com/faustbrian/go-scheduler/commit/84492d44c8937f6a5dbe3c1d260f988c51799e14) / `examples/distributed-singleton`
+- `09-kafka-schema-cloudevents` (verified): [source](https://github.com/faustbrian/go-cloudevents/commit/644650726f142427df506c9be14a3f9c0576007d) / `integration/target-adapters`
+- `10-vendor-http-client-policy` (verified): [source](https://github.com/faustbrian/go-http-client/commit/f400c235e3c94e16d3e38a43932501bb045017e5) / `examples/vendorcomposition`
+- `11-filesystem-tabular-ingestion` (verified): [source](https://github.com/faustbrian/go-filesystem/commit/098f47cae3fd01b67355062a76aae7d6e29306cd) / `integration/tabular-ingestion`
+- `12-durable-workflow-compensation` (verified): [source](https://github.com/faustbrian/go-workflow/commit/7066c265edb25a30984de304859110a641812051)
+- `13-searchable-track-location` (verified): [source](https://github.com/faustbrian/go-search/commit/a93ac8817a9a172ffe552f3a4c1694bb74bd7e9b) / `adapters/opensearch`
+- `14-track-postal-location-roles` (verified): [source](https://github.com/faustbrian/go-service/commit/61535b800e87ae68451a7134810cedfe0cd985f6) / `integration/adoption`
 
 ### External versions
 
@@ -191,8 +186,21 @@ Generated from `compatibility-sets.json`; edit the JSON source only.
 - **production deployment:** the compatibility milestone proves public resolution and composition, not deployment acceptance
 - **live Kafka broker interoperability:** the CloudEvents recipe exercises bounded application-owned Kafka and schema seams
 - **live OpenSearch interoperability:** the search recipe exercises its bounded HTTP transport seam
+- **github.com/faustbrian/go-cloudevents/adapters/golib:** deprecated compatibility facade; use the target-specific CloudEvents adapter modules
+- **github.com/faustbrian/go-kafka/adapters/gotelemetry:** deprecated compatibility facade; use github.com/faustbrian/go-kafka/adapters/otel
+- **github.com/faustbrian/go-kafka/kafkaservice:** deprecated compatibility facade; use github.com/faustbrian/go-kafka/adapters/service
+- **github.com/faustbrian/go-knapsack/objective/gomoney:** deprecated compatibility facade; use github.com/faustbrian/go-knapsack/objective/money
+- **github.com/faustbrian/go-library-tools:** engineering-only catalog and policy tooling, not a runtime library selection
+
+### Sources
+
+- [docs/ecosystem/catalog-consumer.json](catalog-consumer.json)
+- [docs/ecosystem/catalog-engineering.json](catalog-engineering.json)
+- [docs/ecosystem/design-language.md](design-language.md)
+- [docs/release.md](../release.md)
+- [release/cohesion-residuals.json](../../release/cohesion-residuals.json)
 
 ### Evidence
 
-- Content fingerprint: `sha256:8f6709a55ad144757612de33916d472187663a23d5eded6c74ca63b8d144587b`
-- Observation: `Pending final composition and native clean-consumer receipts.`
+- Content fingerprint: `sha256:ae3aa8da794b6f5725505754da33c7b97de158dd37e7226eef8d764b67e06719`
+- Observation: `Refreshed for the Go 1.27 fleet and current go-queue v1.1.0 source at 83b40a1d817c4ebb6d82d4b5df19e18d90b32d22; all fourteen composition receipts and the native matrix remain valid under the published Go 1.27.0 selectors.`

@@ -1,6 +1,6 @@
 # Golib Engineering Catalog
 
-Design language `1.0` (`v1.7.2`); tooling `v1.7.2`.
+Design language `1.0` (`v1.8.4`); tooling `v1.8.4`.
 
 ## foundations
 
@@ -68,7 +68,7 @@ Design language `1.0` (`v1.7.2`); tooling `v1.7.2`.
 
 - `github.com/faustbrian/go-cloudevents/adapters/event-sourcing` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib event-sourcing messages.
 
-- `github.com/faustbrian/go-cloudevents/adapters/golib` (adapter): Bridge CloudEvents explicitly to selected Golib event, transport, workflow, metadata, audit, telemetry, and schema contracts.
+- `github.com/faustbrian/go-cloudevents/adapters/golib` (adapter): Preserve v1 compatibility for the former broad CloudEvents bridge while callers migrate to independently versioned target adapters.
 
 - `github.com/faustbrian/go-cloudevents/adapters/jsonschema` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib compiled JSON Schema validation.
 
@@ -222,7 +222,7 @@ Design language `1.0` (`v1.7.2`); tooling `v1.7.2`.
 
 - `github.com/faustbrian/go-kafka` (public library): Provide bounded first-party Apache Kafka producer, consumer, inspection, replay, and transaction policy over franz-go.
 
-- `github.com/faustbrian/go-kafka/adapters/gotelemetry` (adapter): Translate Kafka observation and propagation contracts into OpenTelemetry spans and metrics.
+- `github.com/faustbrian/go-kafka/adapters/gotelemetry` (adapter): Preserve the released OpenTelemetry adapter path and behavior while delegating to the canonical adapters/otel successor.
 
 - `github.com/faustbrian/go-kafka/adapters/mskiam` (adapter): Provide Kafka SASL/OAUTHBEARER authentication configuration through AWS MSK IAM credentials and signing.
 
@@ -230,7 +230,7 @@ Design language `1.0` (`v1.7.2`); tooling `v1.7.2`.
 
 - `github.com/faustbrian/go-kafka/adapters/service` (public library): Bridge go-kafka consumer and producer resources into the explicit go-service lifecycle.
 
-- `github.com/faustbrian/go-kafka/kafkaservice` (public library): Bridge go-kafka consumer and producer resources into the explicit go-service lifecycle.
+- `github.com/faustbrian/go-kafka/kafkaservice` (public library): Preserve the released service-integration path and behavior while delegating to the canonical adapters/service successor.
 
 - `github.com/faustbrian/go-rabbitmq-queues` (public library): Provide bounded RabbitMQ-native AMQP 0-9-1 classic and quorum queue publishing, consumption, settlement, recovery, topology verification, health, and observation policy.
 
@@ -268,7 +268,7 @@ Design language `1.0` (`v1.7.2`); tooling `v1.7.2`.
 
 - `github.com/faustbrian/go-knapsack` (public library): Provide deterministic, bounded offline orthogonal packing, exact objectives, extension constraints, canonical plans, and independent verification.
 
-- `github.com/faustbrian/go-knapsack/objective/gomoney` (adapter): Adapt exact go-money values into deterministic Knapsack container-cost objective evaluation.
+- `github.com/faustbrian/go-knapsack/objective/gomoney` (adapter): Preserve the released exact-money objective API while delegating behavior to the canonical target-oriented module.
 
 - `github.com/faustbrian/go-knapsack/objective/money` (adapter): Adapt exact go-money values into deterministic Knapsack container-cost objective evaluation through the canonical target-oriented path.
 
@@ -322,7 +322,7 @@ Design language `1.0` (`v1.7.2`); tooling `v1.7.2`.
 
 - `github.com/faustbrian/go-cli/benchmarks` (benchmark harness): See the module README and goal files.
 
-- `github.com/faustbrian/go-cloudevents/integration/target-adapters` (integration): Exercise the complete target-adapter compatibility and conversion contract without creating a releasable umbrella.
+- `github.com/faustbrian/go-cloudevents/integration/target-adapters` (integration): Exercise the complete target-adapter compatibility, conversion, and application-composition recipes without creating a releasable umbrella.
 
 - `github.com/faustbrian/go-concurrency-limit/benchmarks/comparison` (benchmark harness): This non-releasable module isolates comparison dependencies from the public `concurrency-limit` module. It compares bounded Gradient2 update and permit paths across pinned local and external implementations.
 
