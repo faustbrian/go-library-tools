@@ -25,20 +25,36 @@ const (
 // Check validates root documentation and local Markdown links without network
 // access or following symlinks.
 func Check(root string) error {
-	if !filepath.IsAbs(root) {
+	return CheckWithin(root, root)
+}
+
+// CheckWithin validates one documentation tree while allowing its local links
+// to target files elsewhere in the containing repository.
+func CheckWithin(repositoryRoot, documentationRoot string) error {
+	if !filepath.IsAbs(repositoryRoot) {
 		return errors.New("documentation root must be absolute")
 	}
-	canonicalRoot, err := filepath.EvalSymlinks(root)
+	canonicalRoot, err := filepath.EvalSymlinks(repositoryRoot)
 	if err != nil {
 		return fmt.Errorf("resolve documentation root: %w", err)
 	}
-	root = canonicalRoot
-	paths, err := documents(root)
+	if !filepath.IsAbs(documentationRoot) {
+		return errors.New("documentation tree must be absolute")
+	}
+	canonicalTree, err := filepath.EvalSymlinks(documentationRoot)
+	if err != nil {
+		return fmt.Errorf("resolve documentation tree: %w", err)
+	}
+	relative, err := filepath.Rel(canonicalRoot, canonicalTree)
+	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+		return errors.New("documentation tree must be inside repository")
+	}
+	paths, err := documents(canonicalTree)
 	if err != nil {
 		return err
 	}
 	for _, path := range paths {
-		if err := checkDocument(root, path); err != nil {
+		if err := checkDocument(canonicalRoot, path); err != nil {
 			return err
 		}
 	}
@@ -144,12 +160,22 @@ func checkLink(root, document, target string) error {
 	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
 		return fmt.Errorf("local link escapes repository: %q", target)
 	}
-	info, err := os.Lstat(resolved)
-	if err != nil {
-		return fmt.Errorf("broken local link %q: %w", target, err)
+	current := root
+	if relative == "." {
+		relative = ""
 	}
-	if info.Mode()&os.ModeSymlink != 0 {
-		return fmt.Errorf("local link targets symlink %q", target)
+	for component := range strings.SplitSeq(relative, string(filepath.Separator)) {
+		if component == "" {
+			continue
+		}
+		current = filepath.Join(current, component)
+		info, statErr := os.Lstat(current)
+		if statErr != nil {
+			return fmt.Errorf("broken local link %q: %w", target, statErr)
+		}
+		if info.Mode()&os.ModeSymlink != 0 {
+			return fmt.Errorf("local link targets symlink %q", target)
+		}
 	}
 	return nil
 }

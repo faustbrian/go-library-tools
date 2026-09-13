@@ -89,29 +89,6 @@ func TestValidateSourceLockOrderRejectsMultipleReleaseSources(t *testing.T) {
 	}
 }
 
-func TestReviewedSourceLockHasExpectedReleasePinDistribution(t *testing.T) {
-	lock, err := LoadSourceLock("../../release/cohesion-sources.json")
-	if err != nil {
-		t.Fatal(err)
-	}
-	counts := map[string]int{}
-	for _, repository := range lock.Repositories {
-		if repository.Source.Kind == "release-source" {
-			counts["release-source"]++
-			continue
-		}
-		if repository.Tooling == nil {
-			t.Fatalf("consumer %s has no tooling identity", repository.Repository)
-		}
-		counts[repository.Tooling.Version+"/"+repository.Tooling.ChecksumsSHA256]++
-	}
-	if counts["release-source"] != 1 ||
-		counts["v1.4.0/ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"] != 90 ||
-		counts["v1.5.0/fb648d7a23d6b845f8cc475d43769c74bbdcb6d9296f0b0e70fc1b7e381909fd"] != 1 {
-		t.Fatalf("reviewed source-lock distribution = %#v", counts)
-	}
-}
-
 func TestLoadSourceLockRejectsSemanticAmbiguity(t *testing.T) {
 	data, err := os.ReadFile("../../release/cohesion-sources.json")
 	if err != nil {

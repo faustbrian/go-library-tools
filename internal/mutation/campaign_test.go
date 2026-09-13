@@ -113,6 +113,7 @@ type campaignProcess struct {
 	fail            string
 	report          *string
 	skipReport      bool
+	mutationOutput  string
 	mutateSource    bool
 	afterMutation   func() error
 	requireTags     bool
@@ -197,6 +198,11 @@ func (process *campaignProcess) run(_ context.Context, name string, args []strin
 		}
 		if environment["GOLIB_GREMLINS_COVERAGE_PROFILE"] == "" || environment["GOCACHE"] == "" {
 			return errors.New("missing isolated mutation environment")
+		}
+		if process.mutationOutput != "" {
+			if _, err := io.WriteString(stdout, process.mutationOutput); err != nil {
+				return err
+			}
 		}
 		if !process.skipReport {
 			value := `{"files":[{"file_name":"source.go","mutations":[{"type":"A","status":"KILLED","line":3,"column":1}]}]}`

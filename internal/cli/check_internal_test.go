@@ -10,6 +10,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -669,6 +670,33 @@ func TestExecuteContextPropagatesCancellationToCommands(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	if code := executeContext(ctx, []string{"check"}, root, &stdout, &stderr, factory); code != 1 || !strings.Contains(stderr.String(), context.Canceled.Error()) {
 		t.Fatalf("executeContext() = %d, %q", code, stderr.String())
+	}
+}
+
+func TestExecuteRoutesSelectedLocalCheck(t *testing.T) {
+	root := internalFixture(t)
+	manifest := `{"schema_version":1,"repository":"example","go_version":"1.27.0","modules":[{"directory":".","module_path":"example","go_version":"1.27.0","kind":"public","releasable":true,"gates":{"race":true,"tests":true},"packages":[]}]}`
+	if err := os.WriteFile(filepath.Join(root, "modules.json"), []byte(manifest), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var commands []gates.Command
+	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return cliExecutorFunction(func(_ context.Context, command gates.Command) error {
+			commands = append(commands, command)
+			return nil
+		}), func() error { return nil }, nil
+	}
+	var stdout, stderr bytes.Buffer
+	if code := execute([]string{"check", "--local", "--module", "."}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 {
+		t.Fatalf("execute(check --local --module .) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "[.] test\n") {
+		t.Fatalf("local check output = %q", stdout.String())
+	}
+	for _, command := range commands {
+		if slices.Contains(command.Args, "-race") {
+			t.Fatalf("local check ran aggregate race gate: %#v", command)
+		}
 	}
 }
 

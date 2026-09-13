@@ -95,7 +95,7 @@ func legacyInputDigestV1(root string, policy InputPolicy, listing io.Reader, rev
 }
 
 func inputDigest(root string, policy InputPolicy, listing io.Reader, review *ZeroReview, filterOwned bool) (string, error) {
-	digests, err := calculateInputDigests(root, policy, listing, review, nil)
+	digests, err := calculateInputDigests(root, policy, listing, review, nil, LegacyVerifierDigest())
 	if err != nil {
 		return "", err
 	}
@@ -105,8 +105,8 @@ func inputDigest(root string, policy InputPolicy, listing io.Reader, review *Zer
 	return digests.legacy, nil
 }
 
-func inputDigests(root string, policy InputPolicy, listing io.Reader, review *ZeroReview, listedAliases ...string) (string, string, error) {
-	digests, err := calculateInputDigests(root, policy, listing, review, listedAliases)
+func inputDigestsForVerifier(root string, policy InputPolicy, listing io.Reader, review *ZeroReview, verifier string, listedAliases ...string) (string, string, error) {
+	digests, err := calculateInputDigests(root, policy, listing, review, listedAliases, verifier)
 	return digests.current, digests.legacy, err
 }
 
@@ -115,7 +115,7 @@ type calculatedInputDigests struct {
 	legacy  string
 }
 
-func calculateInputDigests(root string, policy InputPolicy, listing io.Reader, review *ZeroReview, listedAliases []string) (calculatedInputDigests, error) {
+func calculateInputDigests(root string, policy InputPolicy, listing io.Reader, review *ZeroReview, listedAliases []string, verifier string) (calculatedInputDigests, error) {
 	if !filepath.IsAbs(root) {
 		return calculatedInputDigests{}, fmt.Errorf("%w: repository root must be absolute", ErrInvalid)
 	}
@@ -144,7 +144,7 @@ func calculateInputDigests(root string, policy InputPolicy, listing io.Reader, r
 			return calculatedInputDigests{}, fmt.Errorf("%w: zero-mutant review does not match input policy", ErrInvalid)
 		}
 		actual := [4]string{review.ModuleDirectory, review.PackageDirectory, review.GremlinsVersion, review.GremlinsVerifierSHA256}
-		expected := [4]string{policy.ModuleDirectory, policy.PackageDirectory, GremlinsVersion, LegacyVerifierDigest()}
+		expected := [4]string{policy.ModuleDirectory, policy.PackageDirectory, GremlinsVersion, verifier}
 		if actual != expected {
 			return calculatedInputDigests{}, fmt.Errorf("%w: zero-mutant review does not match input policy", ErrInvalid)
 		}
@@ -240,18 +240,18 @@ func calculateInputDigests(root string, policy InputPolicy, listing io.Reader, r
 	currentPolicy := policy
 	currentPolicy.OwnedModules = observedOwned(currentPolicy.OwnedModules, observedOwnedModules)
 	return calculatedInputDigests{
-		current: digestInput(currentPolicy, moduleList, review, content, "v2"),
-		legacy:  digestInput(policy, moduleList, review, content, "v1"),
+		current: digestInput(currentPolicy, moduleList, review, content, "v2", verifier),
+		legacy:  digestInput(policy, moduleList, review, content, "v1", verifier),
 	}, nil
 }
 
-func digestInput(policy InputPolicy, modules []moduleIdentity, review *ZeroReview, content map[string][]byte, version string) string {
+func digestInput(policy InputPolicy, modules []moduleIdentity, review *ZeroReview, content map[string][]byte, version, verifier string) string {
 	semantic := struct {
 		Policy   InputPolicy      `json:"policy"`
 		Modules  []moduleIdentity `json:"modules"`
 		Verifier string           `json:"verifier"`
 		Review   *ZeroReview      `json:"zero_review,omitempty"`
-	}{policy, modules, LegacyVerifierDigest(), review}
+	}{policy, modules, verifier, review}
 	encoded, _ := json.Marshal(semantic)
 	return evidence.Digest("golib/mutation-input/"+version+"\n"+string(encoded), content)
 }

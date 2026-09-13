@@ -43,10 +43,78 @@ jobs:
       matrix: ${{ steps.modules.outputs.matrix }}
       deno: ${{ steps.modules.outputs.deno }}
       zsh: ${{ steps.modules.outputs.zsh }}
+      runtime: ${{ steps.scope.outputs.runtime }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           fetch-depth: 0
+      - id: scope
+        name: Select proportional assurance tier
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_DRY_RUN: ${{ inputs.release_dry_run }}
+        run: |
+          set -euo pipefail
+          reusable_pin_only() {
+            local path="$1"
+            local line payload direction
+            local old_uses='' new_uses='' old_input='' new_input=''
+            local old_uses_count=0 new_uses_count=0 old_input_count=0 new_input_count=0
+            local uses_pattern='^[[:space:]]*uses:[[:space:]]+faustbrian/go-library-tools/\.github/workflows/library-ci\.yml@([0-9a-f]{40})([[:space:]]+#[[:space:]]*v[0-9]+\.[0-9]+\.[0-9]+([[:space:]]+[^[:cntrl:]]*)?)?[[:space:]]*$'
+            local input_pattern='^[[:space:]]*tooling_sha:[[:space:]]+([0-9a-f]{40})[[:space:]]*$'
+            while IFS= read -r line; do
+              case "${line}" in
+                ---*|+++*|@@*) continue ;;
+                +*|-*)
+                  direction="${line:0:1}"
+                  payload="${line:1}"
+                  if [[ "${payload}" =~ ${uses_pattern} ]]; then
+                    if [[ "${direction}" == + ]]; then
+                      new_uses="${BASH_REMATCH[1]}"
+                      ((new_uses_count += 1))
+                    else
+                      old_uses="${BASH_REMATCH[1]}"
+                      ((old_uses_count += 1))
+                    fi
+                    continue
+                  fi
+                  if [[ "${payload}" =~ ${input_pattern} ]]; then
+                    if [[ "${direction}" == + ]]; then
+                      new_input="${BASH_REMATCH[1]}"
+                      ((new_input_count += 1))
+                    else
+                      old_input="${BASH_REMATCH[1]}"
+                      ((old_input_count += 1))
+                    fi
+                    continue
+                  fi
+                  return 1
+                  ;;
+              esac
+            done < <(git diff --no-ext-diff --unified=0 "${BASE_SHA}" HEAD -- "${path}")
+            [[ "${old_uses_count}" -eq 1 && "${new_uses_count}" -eq 1 &&
+              "${old_input_count}" -eq 1 && "${new_input_count}" -eq 1 &&
+              "${old_uses}" == "${old_input}" && "${new_uses}" == "${new_input}" ]]
+          }
+          runtime=true
+          if [[ "${EVENT_NAME}" == pull_request && "${RELEASE_DRY_RUN}" != true ]]; then
+            runtime=false
+            changed=false
+            while IFS= read -r path; do
+              [[ -n "${path}" ]] || continue
+              changed=true
+              case "${path}" in
+                *.md|LICENSE|LICENSE.*|NOTICE|NOTICE.*) ;;
+                .github/workflows/ci.yml)
+                  reusable_pin_only "${path}" || { runtime=true; break; }
+                  ;;
+                *) runtime=true; break ;;
+              esac
+            done < <(git diff --no-renames --name-only "${BASE_SHA}" HEAD)
+            [[ "${changed}" == true ]] || runtime=true
+          fi
+          echo "runtime=${runtime}" >>"${GITHUB_OUTPUT}"
       - uses: actions/setup-go@924ae3a1cded613372ab5595356fb5720e22ba16 # v6
         with:
           go-version-file: .go-version
@@ -73,6 +141,10 @@ jobs:
           set -euo pipefail
           inventory="$(golib inventory --json)"
           configuration="$(golib config show --json)"
+          release_module_capable=false
+          if golib --help | grep -Fq 'golib release dry-run [--all|--module <directory>]'; then
+            release_module_capable=true
+          fi
           if [[ -n "${RELEASE_MODULE}" && "${RELEASE_DRY_RUN}" != true ]]; then
             echo 'release_module requires release_dry_run: true' >&2
             exit 1
@@ -89,6 +161,9 @@ jobs:
           if [[ -n "${RELEASE_MODULE}" && "$(jq 'length' <<<"${matrix}")" -ne 1 ]]; then
             echo "release module is unknown or not releasable: ${RELEASE_MODULE}" >&2
             exit 1
+          fi
+          if [[ "${RELEASE_DRY_RUN}" == true && "${release_module_capable}" != true ]]; then
+            matrix='[{"directory":".","artifact":"legacy-all"}]'
           fi
           [[ "$(jq 'length' <<<"${matrix}")" -gt 0 ]]
           {
@@ -119,14 +194,17 @@ jobs:
       - run: golib repository check
       - run: golib workflows check
       - run: golib cohesion check
-      - run: golib specification check --online
+      - run: golib specification check
+      - name: Monitor upstream specification drift
+        if: github.event_name == 'schedule'
+        run: golib specification check --online
       - name: Validate release contract
         if: inputs.release_dry_run == true
         env:
           RELEASE_MODULE: ${{ inputs.release_module }}
         run: |
           set -euo pipefail
-          if [[ -n "${RELEASE_MODULE}" ]]; then
+          if [[ -n "${RELEASE_MODULE}" ]] && golib --help | grep -Fq 'golib release check [--all|--module <directory>]'; then
             golib release check --module "${RELEASE_MODULE}"
           else
             golib release check
@@ -135,6 +213,7 @@ jobs:
   quality:
     name: Quality / ${{ matrix.directory }}
     needs: prepare
+    if: needs.prepare.outputs.runtime == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 360
     strategy:
@@ -190,12 +269,24 @@ jobs:
           bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}
       - name: Run module contract
         if: inputs.release_dry_run != true
-        run: golib check --module '${{ matrix.directory }}'
+        env:
+          MODULE_DIRECTORY: ${{ matrix.directory }}
+        run: |
+          if golib --help | grep -Fq 'golib check [--local]'; then
+            golib check --local --module "${MODULE_DIRECTORY}"
+          else
+            golib check --module "${MODULE_DIRECTORY}"
+          fi
       - name: Run release rehearsal
         if: inputs.release_dry_run == true
         env:
           RELEASE_MODULE: ${{ matrix.directory }}
-        run: golib release dry-run --module "${RELEASE_MODULE}"
+        run: |
+          if golib --help | grep -Fq 'golib release dry-run [--all|--module <directory>]'; then
+            golib release dry-run --module "${RELEASE_MODULE}"
+          else
+            golib release dry-run
+          fi
       - name: Upload attributable evidence
         if: always() && hashFiles('.verification/**') != ''
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
@@ -208,6 +299,8 @@ jobs:
 
   codeql:
     name: CodeQL
+    needs: prepare
+    if: needs.prepare.outputs.runtime == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     permissions:
@@ -266,9 +359,16 @@ jobs:
           CONTRACT_RESULT: ${{ needs.repository-contract.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
           CODEQL_RESULT: ${{ needs.codeql.result }}
+          RUNTIME: ${{ needs.prepare.outputs.runtime }}
         run: |
           set -euo pipefail
-          for result in "${PREPARE_RESULT}" "${CONTRACT_RESULT}" "${QUALITY_RESULT}" "${CODEQL_RESULT}"; do
-            [[ "${result}" == success ]]
-          done
+          [[ "${PREPARE_RESULT}" == success ]]
+          [[ "${CONTRACT_RESULT}" == success ]]
+          if [[ "${RUNTIME}" == true ]]; then
+            [[ "${QUALITY_RESULT}" == success ]]
+            [[ "${CODEQL_RESULT}" == success ]]
+          else
+            [[ "${QUALITY_RESULT}" == skipped ]]
+            [[ "${CODEQL_RESULT}" == skipped ]]
+          fi
           [[ "${DEPENDENCY_REVIEW_RESULT}" == success || "${DEPENDENCY_REVIEW_RESULT}" == skipped ]]

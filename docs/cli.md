@@ -44,7 +44,8 @@ Core commands:
   monitored errata and release feeds against their reviewed digests.
 - `golib workflows check` validates GitHub Actions workflows with the centrally
   pinned Actionlint release.
-- `golib check --local` runs the bounded pull-request contract: formatting,
+- `golib check --local [--all|--module DIR]` runs the bounded pull-request contract with any
+  module-declared service fixtures: formatting,
   module tidiness, unsafe-import checks, tests, vet, configured lint/static
   analysis, local documentation links, and applicable API compatibility.
   `golib check [--all|--module DIR]` runs the complete enabled contract. Formatting is

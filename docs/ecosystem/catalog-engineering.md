@@ -1,6 +1,6 @@
 # Golib Engineering Catalog
 
-Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
+Design language `1.0` (`v1.8.4`); tooling `v1.8.4`.
 
 ## foundations
 
@@ -27,6 +27,8 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 - `github.com/faustbrian/go-api-query` (public library): Compile declared API query capabilities into immutable, bounded, storage-neutral plans and adapt reviewed plans to explicit transport, validation, and persistence boundaries.
 
 - `github.com/faustbrian/go-authentication` (public library): Turn Basic credentials, opaque bearer tokens, and API keys into immutable authenticated principals.
+
+- `github.com/faustbrian/go-authentication/adapters/otel` (adapter): Adapt bounded authentication observations to OpenTelemetry traces and metrics.
 
 - `github.com/faustbrian/go-authentication/authotel` (public library): Adapt bounded authentication observations to OpenTelemetry traces and metrics.
 
@@ -60,7 +62,31 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-cloudevents` (public library): Provide a transport-independent CloudEvents 1.0 envelope with bounded JSON, HTTP, and Kafka mappings.
 
-- `github.com/faustbrian/go-cloudevents/adapters/golib` (adapter): Bridge CloudEvents explicitly to selected Golib event, transport, workflow, metadata, audit, telemetry, and schema contracts.
+- `github.com/faustbrian/go-cloudevents/adapters/audit` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib audit metadata.
+
+- `github.com/faustbrian/go-cloudevents/adapters/correlation` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib correlation identifiers.
+
+- `github.com/faustbrian/go-cloudevents/adapters/event-sourcing` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib event-sourcing messages.
+
+- `github.com/faustbrian/go-cloudevents/adapters/golib` (adapter): Preserve v1 compatibility for the former broad CloudEvents bridge while callers migrate to independently versioned target adapters.
+
+- `github.com/faustbrian/go-cloudevents/adapters/jsonschema` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib compiled JSON Schema validation.
+
+- `github.com/faustbrian/go-cloudevents/adapters/kafka` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib Kafka records.
+
+- `github.com/faustbrian/go-cloudevents/adapters/outbox` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib transactional outbox envelopes.
+
+- `github.com/faustbrian/go-cloudevents/adapters/queue` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib queue jobs.
+
+- `github.com/faustbrian/go-cloudevents/adapters/rabbitstream` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib RabbitMQ Streams messages.
+
+- `github.com/faustbrian/go-cloudevents/adapters/schema-registry` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib schema-registry JSON Schema resolution.
+
+- `github.com/faustbrian/go-cloudevents/adapters/telemetry` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib telemetry trace context.
+
+- `github.com/faustbrian/go-cloudevents/adapters/tenancy` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib tenant routing identity.
+
+- `github.com/faustbrian/go-cloudevents/adapters/workflow` (adapter): Provide an explicit target-oriented CloudEvents boundary for Golib durable workflow history.
 
 - `github.com/faustbrian/go-http-signature` (public library): Provide bounded HTTP Message Signatures, digest fields, structured-field interpretation, explicit signing and verification policy, key resolution, replay consumption, and HTTP adapters.
 
@@ -104,6 +130,10 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-event-sourcing/adapters/gotelemetry` (adapter): Instrument event-sourcing dispatch, storage, serialization, snapshots, projections, process managers, and Kafka context propagation with caller-supplied OpenTelemetry components.
 
+- `github.com/faustbrian/go-event-sourcing/adapters/kafka` (adapter): Adapt event-sourcing deliveries to Kafka records, synchronous dispatch, consumer handling, explicit poison and retry disposition, and dead-letter publication.
+
+- `github.com/faustbrian/go-event-sourcing/adapters/otel` (adapter): Instrument event-sourcing dispatch, storage, serialization, snapshots, projections, process managers, and Kafka context propagation with caller-supplied OpenTelemetry components.
+
 - `github.com/faustbrian/go-event-sourcing/adapters/outbox` (adapter): Atomically stage event rows and transactional-outbox envelopes through a savepoint in an existing caller-owned PostgreSQL transaction.
 
 - `github.com/faustbrian/go-event-sourcing/adapters/queue` (adapter): Adapt complete event-sourcing deliveries to bounded queue envelopes, synchronous enqueue dispatch, and explicit live or replay task handling.
@@ -124,9 +154,13 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-queue-control-plane` (public library): Provide an authenticated administrative control plane for durable queue commands, desired state, audit history, fleet visibility, and optional Kubernetes workload scaling.
 
-- `github.com/faustbrian/go-queue/queueservice` (public library): Integrate caller-selected queue producers and workers with go-service startup, readiness, supervision, admission closure, drain, and shutdown while preserving backend-owned delivery semantics.
+- `github.com/faustbrian/go-queue/adapters/rabbitmq` (public library): Adapt the backend-neutral go-queue worker contract to RabbitMQ AMQP 0-9-1 publishing, consumption, recovery, settlement, retry, dead-letter, and shutdown policy owned by go-rabbitmq-queues.
 
-- `github.com/faustbrian/go-queue/rabbitmq` (public library): Adapt the backend-neutral go-queue worker contract to RabbitMQ AMQP 0-9-1 publishing, consumption, recovery, settlement, retry, dead-letter, and shutdown policy owned by go-rabbitmq-queues.
+- `github.com/faustbrian/go-queue/adapters/service` (public library): Integrate caller-selected queue producers and workers with go-service startup, readiness, supervision, admission closure, drain, and shutdown while preserving backend-owned delivery semantics.
+
+- `github.com/faustbrian/go-queue/queueservice` (public library): Preserve the released queueservice import path while delegating every public type and operation to adapters/service.
+
+- `github.com/faustbrian/go-queue/rabbitmq` (public library): Preserve the released RabbitMQ import path while delegating every public type and operation to adapters/rabbitmq.
 
 - `github.com/faustbrian/go-scheduler` (public library): Provide code-defined recurring schedules, immutable compilation, bounded execution, fenced multi-replica coordination, explicit dispatch, and observable lifecycle integration.
 
@@ -136,13 +170,17 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-transactional-outbox` (public library): Own PostgreSQL transactional outbox persistence, durable claims and state transitions, and caller-bounded at-least-once relay execution.
 
-- `github.com/faustbrian/go-transactional-outbox/adapters/gokafka` (adapter): Map one durable outbox envelope to one confirmed first-party Kafka record without acquiring or owning the producer.
+- `github.com/faustbrian/go-transactional-outbox/adapters/gokafka` (adapter): Preserve the released Kafka adapter contract while consumers migrate to the target-oriented adapters/kafka module.
 
-- `github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream` (adapter): Map one durable outbox envelope to one confirmed RabbitMQ Stream or Super Stream message without owning transport lifecycle.
+- `github.com/faustbrian/go-transactional-outbox/adapters/gorabbitstream` (adapter): Preserve the released RabbitMQ Streams adapter contract while consumers migrate to the target-oriented adapters/rabbitstream module.
+
+- `github.com/faustbrian/go-transactional-outbox/adapters/kafka` (adapter): Map one durable outbox envelope to one confirmed first-party Kafka record without acquiring or owning the producer.
 
 - `github.com/faustbrian/go-transactional-outbox/adapters/otel` (adapter): Add bounded outbox semantic spans, metrics, propagation, observations, and publisher instrumentation without owning telemetry infrastructure.
 
 - `github.com/faustbrian/go-transactional-outbox/adapters/queue` (adapter): Map one durable outbox envelope to one bounded deterministic first-party queue task while preserving acceptance ambiguity.
+
+- `github.com/faustbrian/go-transactional-outbox/adapters/rabbitstream` (adapter): Map one durable outbox envelope to one confirmed RabbitMQ Stream or Super Stream message without owning transport lifecycle.
 
 - `github.com/faustbrian/go-workflow` (public library): Provide immutable workflow definitions and history, deterministic orchestration decisions, bounded durable work processing, explicit recovery semantics, and a PostgreSQL persistence adapter.
 
@@ -184,19 +222,27 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-kafka` (public library): Provide bounded first-party Apache Kafka producer, consumer, inspection, replay, and transaction policy over franz-go.
 
-- `github.com/faustbrian/go-kafka/adapters/gotelemetry` (adapter): Translate Kafka observation and propagation contracts into OpenTelemetry spans and metrics.
+- `github.com/faustbrian/go-kafka/adapters/gotelemetry` (adapter): Preserve the released OpenTelemetry adapter path and behavior while delegating to the canonical adapters/otel successor.
 
 - `github.com/faustbrian/go-kafka/adapters/mskiam` (adapter): Provide Kafka SASL/OAUTHBEARER authentication configuration through AWS MSK IAM credentials and signing.
 
-- `github.com/faustbrian/go-kafka/kafkaservice` (public library): Bridge go-kafka consumer and producer resources into the explicit go-service lifecycle.
+- `github.com/faustbrian/go-kafka/adapters/otel` (adapter): Translate Kafka observation and propagation contracts into OpenTelemetry spans and metrics.
+
+- `github.com/faustbrian/go-kafka/adapters/service` (public library): Bridge go-kafka consumer and producer resources into the explicit go-service lifecycle.
+
+- `github.com/faustbrian/go-kafka/kafkaservice` (public library): Preserve the released service-integration path and behavior while delegating to the canonical adapters/service successor.
 
 - `github.com/faustbrian/go-rabbitmq-queues` (public library): Provide bounded RabbitMQ-native AMQP 0-9-1 classic and quorum queue publishing, consumption, settlement, recovery, topology verification, health, and observation policy.
 
 - `github.com/faustbrian/go-rabbitmq-streams` (public library): Provide vendor-neutral bounded policy for RabbitMQ Streams messages, publishing, consumption, replay, inspection, failures, lifecycle, and observations.
 
-- `github.com/faustbrian/go-rabbitmq-streams/otel` (public library): Translate bounded RabbitMQ Streams observations into caller-owned OpenTelemetry metrics and propagate W3C Trace Context through message headers.
+- `github.com/faustbrian/go-rabbitmq-streams/adapters/otel` (public library): Translate bounded RabbitMQ Streams observations into caller-owned OpenTelemetry metrics and propagate W3C Trace Context through message headers.
 
-- `github.com/faustbrian/go-rabbitmq-streams/rabbitmq` (public library): Adapt the RabbitMQ-supported Go Streams client to bounded rabbitstream policy while owning protocol connections, sessions, cursors, recovery, and wire conversion.
+- `github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq` (public library): Adapt the RabbitMQ-supported Go Streams client to bounded rabbitstream policy while owning protocol connections, sessions, cursors, recovery, and wire conversion.
+
+- `github.com/faustbrian/go-rabbitmq-streams/otel` (public library): Preserve the released OpenTelemetry adapter import path, public type identities, instrumentation scope, errors, and behavior while delegating to adapters/otel.
+
+- `github.com/faustbrian/go-rabbitmq-streams/rabbitmq` (public library): Preserve the released RabbitMQ Streams adapter import path, public type identities, errors, and behavior while delegating to adapters/rabbitmq.
 
 - `github.com/faustbrian/go-search` (public library): Provide backend-neutral contracts for bounded document indexing, typed querying, cursor pagination, schema migration, projections, and reconciliation while treating application data as authoritative.
 
@@ -222,7 +268,9 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-knapsack` (public library): Provide deterministic, bounded offline orthogonal packing, exact objectives, extension constraints, canonical plans, and independent verification.
 
-- `github.com/faustbrian/go-knapsack/objective/gomoney` (adapter): Adapt exact go-money values into deterministic Knapsack container-cost objective evaluation.
+- `github.com/faustbrian/go-knapsack/objective/gomoney` (adapter): Preserve the released exact-money objective API while delegating behavior to the canonical target-oriented module.
+
+- `github.com/faustbrian/go-knapsack/objective/money` (adapter): Adapt exact go-money values into deterministic Knapsack container-cost objective evaluation through the canonical target-oriented path.
 
 - `github.com/faustbrian/go-math` (public library): Provide immutable arbitrary-precision integer, rational, decimal, and binary-float values with explicit precision, rounding, limits, conditions, and deterministic encodings.
 
@@ -258,7 +306,7 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-library-tools` (public tool): Validate and execute the shared contract for independently released Golib repositories.
 
-- `github.com/faustbrian/go-prompts` (public library): Provide typed interactive prompts, deterministic non-interactive parsing, semantic rendering, caller-driven presentation, and an explicit terminal adapter.
+- `github.com/faustbrian/go-prompts` (public library): Provide typed interactive prompts, deterministic non-interactive parsing, semantic rendering, caller-driven presentation, and an explicit target-oriented terminal adapter.
 
 ## unclassified-internal
 
@@ -270,21 +318,25 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-bulkhead/integration/resilience` (interoperability harness): This non-releasable integration module proves the application-owned resilience ordering through the public bulkhead, retry, and circuit-breaker contracts. Local bulkhead admission failure remains a permanent retry outcome and occurs before circuit-breaker admission, so it neither amplifies attempts nor records a downstream failure.
 
-- `github.com/faustbrian/go-circuit-breaker/integration/consumers` (interoperability harness): See the module README and goal files.
+- `github.com/faustbrian/go-circuit-breaker/integration/consumers` (interoperability harness): Non-releasable interoperability harness proving circuit-breaker composition with database/sql and the Golib JSON-RPC client through public APIs. It owns engineering evidence only, not production APIs or protocol policy.
 
 - `github.com/faustbrian/go-cli/benchmarks` (benchmark harness): See the module README and goal files.
 
+- `github.com/faustbrian/go-cloudevents/integration/target-adapters` (integration): Exercise the complete target-adapter compatibility, conversion, and application-composition recipes without creating a releasable umbrella.
+
 - `github.com/faustbrian/go-concurrency-limit/benchmarks/comparison` (benchmark harness): This non-releasable module isolates comparison dependencies from the public `concurrency-limit` module. It compares bounded Gradient2 update and permit paths across pinned local and external implementations.
 
-- `github.com/faustbrian/go-concurrency-limit/integration/resilience` (interoperability harness): This non-releasable integration module proves application-owned composition through the public adaptive limiter, retry, and hedge contracts. Local admission rejection remains a permanent retry outcome, and every hedge attempt must acquire its own limiter permit before invoking downstream work.
+- `github.com/faustbrian/go-concurrency-limit/integration/resilience` (interoperability harness): This non-releasable integration module proves application-owned composition through the public adaptive limiter, strict retry, and hedge contracts. In-process attempts declare known outcomes, local admission rejection remains permanent, and every hedge attempt acquires its own limiter permit before invoking downstream work.
 
-- `github.com/faustbrian/go-correlation/integration/siblings` (interoperability harness): See the module README and goal files.
+- `github.com/faustbrian/go-correlation/integration/siblings` (interoperability harness): Internal, non-releasable interoperability harness for the public correlation, HTTP request-ID, logging, and telemetry contracts.
 
 - `github.com/faustbrian/go-event-sourcing/benchmarks/competitors` (benchmark harness): This non-releasable module isolates comparison dependencies from the event-sourcing core. It compares equivalent observable work and keeps correctness checks separate from timing.
 
 - `github.com/faustbrian/go-fault-injection/benchmarks/comparison` (benchmark harness): This non-releasable module isolates comparison dependencies from the core fault-injection module. All candidates return a caller-visible error. The fault-injection and goresilience cases prevent the wrapped operation from running; the direct double is the minimum equivalent test outcome.
 
-- `github.com/faustbrian/go-fault-injection/integration/resilience` (interoperability harness): This non-releasable module proves that `fault-injection` can drive deterministic campaigns through the public retry and circuit-breaker contracts. The resilience modules do not import fault-injection in production; the dependency direction exists only in this integration module.
+- `github.com/faustbrian/go-fault-injection/integration/resilience` (interoperability harness): This non-releasable module proves that `fault-injection` can drive deterministic campaigns through the public strict retry and circuit-breaker contracts. Its in-process retry operations report known outcomes. The resilience modules do not import fault-injection in production; the dependency direction exists only in this integration module.
+
+- `github.com/faustbrian/go-filesystem/integration/tabular-ingestion` (interoperability harness): This non-releasable integration module proves bounded, cancellation-aware streaming from a filesystem.Reader into tabular CSV parsing with explicit error and close ownership.
 
 - `github.com/faustbrian/go-http-middleware/integration/siblings` (interoperability harness): Non-releasable interoperability harness proving middleware composition with the broader HTTP service stack.
 
@@ -310,7 +362,7 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 
 - `github.com/faustbrian/go-prompts/benchmarks/comparison` (benchmark harness): See the module README and goal files.
 
-- `github.com/faustbrian/go-rule-engine/benchmarks/competitors` (benchmark harness): See the module README and goal files.
+- `github.com/faustbrian/go-rule-engine/benchmarks/competitors` (benchmark harness): Internal benchmark harness comparing one equivalent country-and-weight decision across go-rule-engine, Expr, and Grule while isolating competitor dependencies from public modules.
 
 - `github.com/faustbrian/go-secret-store` (planned boundary): Reserve an unclassified planning boundary without claiming an installable package, runtime contract, implementation, or release.
 
@@ -327,3 +379,5 @@ Design language `1.0` (`v1.5.3`); tooling `v1.5.3`.
 - `github.com/faustbrian/go-service/integration/reference-http` (interoperability harness): This non-production integration module proves that the recommended Golib HTTP stack composes through public APIs without a private framework layer. It is an executable assurance fixture, not a deployable product or a runtime dependency for application services.
 
 - `github.com/faustbrian/go-service/integration/reference-platform` (interoperability harness): This non-production module verifies the public `service` process model in disposable Linux containers. Its platform harness builds and runs both `linux/amd64` and `linux/arm64` images with `CGO_ENABLED=0`, a non-root user, a read-only root filesystem, a bounded writable temporary filesystem, dropped capabilities, process and descriptor limits, health probes, DNS, private TLS trust, and graceful `SIGTERM` handling.
+
+- `github.com/faustbrian/go-service/integration/reference-recipes` (interoperability harness): This non-production clean-consumer module proves minimal HTTP and ingester-to-processor lifecycles through released public Golib APIs, including request handling, readiness withdrawal, correlated handoff, acknowledgement, drain, and bounded shutdown.

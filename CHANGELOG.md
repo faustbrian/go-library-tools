@@ -4,6 +4,88 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 1.8.0 - 2026-09-10
+
+### Added
+
+- Added deterministic active-roster compatibility-set generation, central
+  reverse-dependency projection, and a public clean-consumer contract.
+- Added native Darwin and Linux compatibility-consumer verification for
+  ecosystem milestone publication.
+
+### Changed
+
+- Published consumer and engineering catalogs now expose compatibility-set
+  membership, lifecycle state, and navigable adoption routes.
+- Replaced the superseded ceremony-heavy cohesion contract with proportional
+  assurance, receipt reuse, and centralized residual tracking.
+
+## 1.7.2 - 2026-09-09
+
+### Fixed
+
+- Kept reusable release rehearsals compatible and proportional with supported
+  older tool manifests by running their whole-repository fallback only once.
+- Kept policy-only workflow-pin updates lightweight when an older canonical
+  pin comment includes a descriptive suffix.
+
+## 1.7.1 - 2026-09-09
+
+### Fixed
+
+- Kept the reusable module-quality workflow compatible with supported older
+  tool manifests by using the local-check mode only when the installed binary
+  advertises it.
+- Kept policy and documentation pull requests lightweight when their only
+  workflow change updates the canonical reusable-workflow pin, while retaining
+  runtime checks for substantive workflow changes.
+
+## 1.7.0 - 2026-09-09
+
+### Added
+
+- Added backward-compatible structured compatibility-set fields for recipes,
+  external versions, upgrade and rollback guidance, and exclusions.
+
+### Fixed
+
+- Resolved nested compatibility modules through their owning repositories and
+  tag prefixes, and enforced immutable draft and published-set identities.
+- Required published sets to remain installable and verified against exact
+  remote tags plus the public Go proxy without weakening drafts or depending
+  on unrelated sibling checkouts.
+- Kept risk-selected coverage, race, and mutation optional during release
+  validation instead of forcing every releasable module to enable them.
+- Kept documentation-only pull requests on structural validation without
+  launching module quality, release rehearsal, or CodeQL work.
+- Limited durable evidence binding to reused expensive results and Tier D
+  trust boundaries instead of imposing recursive evidence on routine work.
+- Limited aggregate catalog and source-lock publication wording to ecosystem
+  milestones rather than every tooling release.
+
+## 1.6.2 - 2026-09-09
+
+### Fixed
+
+- Restored task-owned service fixtures and their environment for modules that
+  declare required services when the bounded local or pull-request check runs.
+- Allowed nested-module documentation to link to files owned by its containing
+  repository while retaining repository-boundary enforcement.
+
+## 1.6.1 - 2026-09-09
+
+### Fixed
+
+- Decoupled routine tooling releases from catalog and source-lock publication,
+  which now runs only for an explicitly selected ecosystem milestone tag.
+- Kept lean release verification, attestation, and publication reachable after
+  the intentionally skipped catalog jobs while keeping milestone failures
+  closed.
+- Preserved imports from the published v1 mutation verifier after compatible
+  verifier timing changes, without requiring repository ledger rewrites.
+- Kept mutable upstream specification monitoring out of pull-request and
+  release feedback while retaining offline validation and scheduled monitoring.
+
 ## 1.6.0 - 2026-09-09
 
 ### Added
@@ -19,6 +101,8 @@ All notable changes to this project are documented in this file.
 
 - Gave mutation unit and integration phases independent 60-second budgets so
   cold integration compilation cannot consume the unit phase's deadline.
+- Normalized a successful mutation run with no viable mutants into a canonical
+  empty report without requiring a separate review record.
 - Added exact module selection to local and hosted release checks and rehearsals
   so independently versioned modules are not blocked by an already released
   sibling tag.

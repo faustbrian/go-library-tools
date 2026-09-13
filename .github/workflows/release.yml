@@ -112,6 +112,7 @@ jobs:
 
   prepare-catalog:
     name: Prepare catalog source matrix
+    if: vars.GOLIB_CATALOG_MILESTONE_TAG == github.ref_name
     needs: [verify, build]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -292,11 +293,16 @@ jobs:
           golib cohesion aggregate generate --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/first"
           golib cohesion aggregate check --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/first"
           golib cohesion aggregate generate --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/second"
+          python3 tools/compatibility/generate.py catalogs --directory "${task}/first" --write
+          python3 tools/compatibility/generate.py catalogs --directory "${task}/second" --write
           for catalog in catalog-consumer.json catalog-consumer.md catalog-engineering.json catalog-engineering.md; do
             cmp --silent "${task}/first/${catalog}" "${task}/second/${catalog}"
             cp "${task}/first/${catalog}" "dist/${catalog}"
           done
           cp release/cohesion-sources.json dist/cohesion-sources.json
+          cp release/cohesion-residuals.json dist/cohesion-residuals.json
+          cp docs/ecosystem/compatibility-sets.json dist/compatibility-sets.json
+          cp docs/ecosystem/compatibility-sets.md dist/compatibility-sets.md
           cp "${task}/bundle/cohesion-inputs.json" dist/cohesion-inputs.json
           (
             cd "${task}/bundle"
@@ -449,6 +455,7 @@ jobs:
           done
           golib cohesion aggregate generate --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/regenerated"
           golib cohesion aggregate check --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/regenerated"
+          python3 tools/compatibility/generate.py catalogs --directory "${task}/regenerated" --write
           for catalog in catalog-consumer.json catalog-consumer.md catalog-engineering.json catalog-engineering.md; do
             cmp --silent "assets/${catalog}" "${task}/regenerated/${catalog}"
           done
@@ -461,6 +468,10 @@ jobs:
 
   prepare-publication:
     name: Prepare publication assets
+    if: >-
+      always() && needs.build.result == 'success' &&
+      ((vars.GOLIB_CATALOG_MILESTONE_TAG != github.ref_name && needs.verify-catalog.result == 'skipped') ||
+      (vars.GOLIB_CATALOG_MILESTONE_TAG == github.ref_name && needs.verify-catalog.result == 'success'))
     needs: [build, verify-catalog]
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -473,10 +484,13 @@ jobs:
           path: dist
           merge-multiple: true
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7
+        if: needs.verify-catalog.result == 'success'
         with:
           name: cohesion-catalogs
           path: dist
       - name: Assemble immutable publication set
+        env:
+          PUBLISH_CATALOGS: ${{ vars.GOLIB_CATALOG_MILESTONE_TAG == github.ref_name }}
         run: |
           set -euo pipefail
           release="${GITHUB_REF_NAME#v}"
@@ -489,14 +503,21 @@ jobs:
             golib_linux_arm64.spdx.json
             golib_darwin_amd64.spdx.json
             golib_darwin_arm64.spdx.json
-            cohesion-sources.json
-            cohesion-inputs.json
-            cohesion-projections.tar.gz
-            catalog-consumer.json
-            catalog-consumer.md
-            catalog-engineering.json
-            catalog-engineering.md
           )
+          if [[ "${PUBLISH_CATALOGS}" == "true" ]]; then
+            expected+=(
+              cohesion-sources.json
+              cohesion-residuals.json
+              cohesion-inputs.json
+              cohesion-projections.tar.gz
+              compatibility-sets.json
+              compatibility-sets.md
+              catalog-consumer.json
+              catalog-consumer.md
+              catalog-engineering.json
+              catalog-engineering.md
+            )
+          fi
           test "$(find dist -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d ' ')" = "${#expected[@]}"
           test "$(find dist -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')" = "${#expected[@]}"
           assets="$({
@@ -526,6 +547,7 @@ jobs:
 
   verify-publication:
     name: Verify publication assets
+    if: always() && needs.prepare-publication.result == 'success'
     needs: prepare-publication
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -537,6 +559,8 @@ jobs:
           name: release-publication
           path: dist
       - name: Independently verify publication set
+        env:
+          PUBLISH_CATALOGS: ${{ vars.GOLIB_CATALOG_MILESTONE_TAG == github.ref_name }}
         run: |
           set -euo pipefail
           task="$(mktemp -d "${RUNNER_TEMP}/golib-publication-verify.XXXXXX")"
@@ -551,14 +575,21 @@ jobs:
             golib_linux_arm64.spdx.json
             golib_darwin_amd64.spdx.json
             golib_darwin_arm64.spdx.json
-            cohesion-sources.json
-            cohesion-inputs.json
-            cohesion-projections.tar.gz
-            catalog-consumer.json
-            catalog-consumer.md
-            catalog-engineering.json
-            catalog-engineering.md
           )
+          if [[ "${PUBLISH_CATALOGS}" == "true" ]]; then
+            payloads+=(
+              cohesion-sources.json
+              cohesion-residuals.json
+              cohesion-inputs.json
+              cohesion-projections.tar.gz
+              compatibility-sets.json
+              compatibility-sets.md
+              catalog-consumer.json
+              catalog-consumer.md
+              catalog-engineering.json
+              catalog-engineering.md
+            )
+          fi
           expected=("${payloads[@]}" release-manifest.json checksums.txt)
           test "$(find dist -mindepth 1 -maxdepth 1 -type f | wc -l | tr -d ' ')" = "${#expected[@]}"
           test "$(find dist -mindepth 1 -maxdepth 1 | wc -l | tr -d ' ')" = "${#expected[@]}"
@@ -568,14 +599,15 @@ jobs:
           printf '%s\n' "${payloads[@]}" | LC_ALL=C sort >"${task}/expected-payloads"
           jq -r '.assets[].name' dist/release-manifest.json | LC_ALL=C sort >"${task}/manifest-payloads"
           diff -u "${task}/expected-payloads" "${task}/manifest-payloads"
-          jq -e --arg version "${GITHUB_REF_NAME}" --arg source "${GITHUB_SHA}" '
+          jq -e --arg version "${GITHUB_REF_NAME}" --arg source "${GITHUB_SHA}" \
+            --argjson expected_count "${#payloads[@]}" '
             type == "object" and
             keys == ["assets", "provenance", "schema_version", "source_commit", "version"] and
             .schema_version == 1 and
             .version == $version and
             .source_commit == $source and
             .provenance == "github-artifact-attestation" and
-            (.assets | type == "array" and length == 15 and
+            (.assets | type == "array" and length == $expected_count and
               all(.[]; type == "object" and keys == ["name", "sha256"] and
                 (.name | type == "string" and length > 0) and
                 (.sha256 | type == "string" and test("^[0-9a-f]{64}$"))))
@@ -596,6 +628,7 @@ jobs:
 
   attest-publication:
     name: Attest publication assets
+    if: always() && needs.verify-publication.result == 'success'
     needs: verify-publication
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -614,6 +647,7 @@ jobs:
 
   publish:
     name: Publish release
+    if: always() && needs.attest-publication.result == 'success'
     needs: attest-publication
     runs-on: ubuntu-24.04
     timeout-minutes: 15
@@ -628,6 +662,7 @@ jobs:
       - name: Verify attestations for static publication set
         env:
           GH_TOKEN: ${{ github.token }}
+          PUBLISH_CATALOGS: ${{ vars.GOLIB_CATALOG_MILESTONE_TAG == github.ref_name }}
         run: |
           set -euo pipefail
           release="${GITHUB_REF_NAME#v}"
@@ -640,13 +675,22 @@ jobs:
             golib_linux_arm64.spdx.json
             golib_darwin_amd64.spdx.json
             golib_darwin_arm64.spdx.json
-            cohesion-sources.json
-            cohesion-inputs.json
-            cohesion-projections.tar.gz
-            catalog-consumer.json
-            catalog-consumer.md
-            catalog-engineering.json
-            catalog-engineering.md
+          )
+          if [[ "${PUBLISH_CATALOGS}" == "true" ]]; then
+            expected+=(
+              cohesion-sources.json
+              cohesion-residuals.json
+              cohesion-inputs.json
+              cohesion-projections.tar.gz
+              compatibility-sets.json
+              compatibility-sets.md
+              catalog-consumer.json
+              catalog-consumer.md
+              catalog-engineering.json
+              catalog-engineering.md
+            )
+          fi
+          expected+=(
             release-manifest.json
             checksums.txt
           )

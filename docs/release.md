@@ -21,31 +21,36 @@ a `CGO_ENABLED=0` binary for each supported platform, embeds the tag as the
 binary identity, packages the binary with the license, produces SPDX JSON
 SBOMs, and attests the artifacts.
 
-Catalog publication begins only after the release candidate exists. A closed
-[`release/cohesion-sources.json`](../release/cohesion-sources.json) lock binds
-each consumer to an exact commit and adopted tool/checksum identity; the one
-tooling entry resolves to the tagged source commit. Read-only jobs check out
-those revisions without persisted credentials, submodules, or LFS, execute no
-consumer builds or workflows, and run only the tagged candidate's typed source
-verifier and engineering projection command. Projection jobs run twice and
-compare bytes. A separate read-only job constructs the digest-bound input
-manifest, generates both catalog views twice, and creates a deterministic
-projection bundle. A second bounded read-only matrix independently regenerates
-every projection from the same locked commit and byte-compares it with the
-bundle.
-A final read-only job safely unpacks that bundle, binds its exact member set,
-repository order, paths, and digests back to the source lock, independently
-regenerates the four catalogs, and compares every byte.
-
-Only after binary and catalog verification succeeds does a read-only
-publication-preparation job create a source- and artifact-bound
-`release-manifest.json` and compute `checksums.txt` over every binary, SBOM,
-source lock, input manifest, projection bundle, catalog, and the release
-manifest. A separate read-only job rejects missing, extra, or mismatched
-publication assets before the complete set is attested. The write-capable
+Normal tooling releases publish eight payloads: four platform archives and four
+matching SBOMs. A read-only publication-preparation job creates the source- and
+artifact-bound `release-manifest.json` and computes `checksums.txt` over those
+payloads and the manifest. A separate read-only job rejects missing, extra, or
+mismatched assets before the complete set is attested. The write-capable
 publisher receives only that static set, verifies every attestation, and
 creates the immutable GitHub release. It never generates or modifies a release
 asset while holding publication authority.
+
+Catalog and source-lock publication is a separate ecosystem milestone. Before
+creating the selected tag, refresh and review
+[`release/cohesion-sources.json`](../release/cohesion-sources.json), then set
+the repository variable `GOLIB_CATALOG_MILESTONE_TAG` to that exact tag. The
+exact-tag comparison prevents a stale variable from expanding later tooling
+releases. A selected milestone adds ten payloads: the source lock, residual
+register, compatibility-set JSON and Markdown, input manifest, deterministic
+projection bundle, and both JSON and Markdown catalog views.
+
+For a selected milestone, read-only jobs check out every locked revision
+without persisted credentials, submodules, or LFS. They execute no consumer
+builds or workflows and run only the tagged candidate's typed source verifier
+and engineering projection command. Projection jobs run twice and compare
+bytes. A separate read-only job constructs the digest-bound input manifest,
+generates both catalog views twice, and creates the projection bundle. A second
+bounded read-only matrix independently regenerates every projection from the
+same locked commit and byte-compares it with the bundle. A final read-only job
+binds the bundle's member set, repository order, paths, and digests back to the
+source lock and independently regenerates all four catalogs. Only after those
+checks pass are the ten milestone payloads included in the same manifest,
+checksums, attestation, and immutable publication path as the tooling assets.
 
 Later releases follow semantic versioning. Never replace release artifacts or
 move tags; publish a new patch release for corrections.
