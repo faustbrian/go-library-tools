@@ -1,7 +1,7 @@
 {
   "format": "golib-cohesion-residuals-v1",
   "status": "current",
-  "compatibility_set": "golib-compat-v1-20260910.1",
+  "compatibility_set": "golib-compat-v1-20260912.2",
   "residuals": [
     {
       "id": "planned-identity-platform",

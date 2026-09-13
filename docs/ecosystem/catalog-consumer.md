@@ -1,6 +1,6 @@
 # Golib Consumer Catalog
 
-Design language `1.0` (`v1.8.0`); tooling `v1.8.0`.
+Design language `1.0` (`v1.8.4`); tooling `v1.8.4`.
 
 ## foundations
 
