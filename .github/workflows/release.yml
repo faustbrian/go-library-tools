@@ -293,11 +293,16 @@ jobs:
           golib cohesion aggregate generate --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/first"
           golib cohesion aggregate check --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/first"
           golib cohesion aggregate generate --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/second"
+          python3 tools/compatibility/generate.py catalogs --directory "${task}/first" --write
+          python3 tools/compatibility/generate.py catalogs --directory "${task}/second" --write
           for catalog in catalog-consumer.json catalog-consumer.md catalog-engineering.json catalog-engineering.md; do
             cmp --silent "${task}/first/${catalog}" "${task}/second/${catalog}"
             cp "${task}/first/${catalog}" "dist/${catalog}"
           done
           cp release/cohesion-sources.json dist/cohesion-sources.json
+          cp release/cohesion-residuals.json dist/cohesion-residuals.json
+          cp docs/ecosystem/compatibility-sets.json dist/compatibility-sets.json
+          cp docs/ecosystem/compatibility-sets.md dist/compatibility-sets.md
           cp "${task}/bundle/cohesion-inputs.json" dist/cohesion-inputs.json
           (
             cd "${task}/bundle"
@@ -450,6 +455,7 @@ jobs:
           done
           golib cohesion aggregate generate --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/regenerated"
           golib cohesion aggregate check --inputs "${task}/bundle/cohesion-inputs.json" --output "${task}/regenerated"
+          python3 tools/compatibility/generate.py catalogs --directory "${task}/regenerated" --write
           for catalog in catalog-consumer.json catalog-consumer.md catalog-engineering.json catalog-engineering.md; do
             cmp --silent "assets/${catalog}" "${task}/regenerated/${catalog}"
           done
@@ -501,8 +507,11 @@ jobs:
           if [[ "${PUBLISH_CATALOGS}" == "true" ]]; then
             expected+=(
               cohesion-sources.json
+              cohesion-residuals.json
               cohesion-inputs.json
               cohesion-projections.tar.gz
+              compatibility-sets.json
+              compatibility-sets.md
               catalog-consumer.json
               catalog-consumer.md
               catalog-engineering.json
@@ -570,8 +579,11 @@ jobs:
           if [[ "${PUBLISH_CATALOGS}" == "true" ]]; then
             payloads+=(
               cohesion-sources.json
+              cohesion-residuals.json
               cohesion-inputs.json
               cohesion-projections.tar.gz
+              compatibility-sets.json
+              compatibility-sets.md
               catalog-consumer.json
               catalog-consumer.md
               catalog-engineering.json
@@ -667,8 +679,11 @@ jobs:
           if [[ "${PUBLISH_CATALOGS}" == "true" ]]; then
             expected+=(
               cohesion-sources.json
+              cohesion-residuals.json
               cohesion-inputs.json
               cohesion-projections.tar.gz
+              compatibility-sets.json
+              compatibility-sets.md
               catalog-consumer.json
               catalog-consumer.md
               catalog-engineering.json

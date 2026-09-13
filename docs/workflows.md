@@ -127,9 +127,9 @@ This repository bootstraps its own CI from source so the first release does not
 depend on itself. Consumer repositories always use released binaries.
 
 Tooling tags publish only the four platform archives, their SBOMs, the release
-manifest, and checksums by default. Catalog and source-lock assets are added
-only at a defined ecosystem milestone: refresh and review the source lock, then
-set the repository variable `GOLIB_CATALOG_MILESTONE_TAG` to the exact new tag
-before pushing it. The exact-tag comparison prevents a stale variable from
-expanding later tooling releases. Previously published release assets remain
-immutable.
+manifest, and checksums by default. Catalog, compatibility-set, residual, and
+source-lock assets are added only at a defined ecosystem milestone: refresh
+and review the source lock, then set the repository variable
+`GOLIB_CATALOG_MILESTONE_TAG` to the exact new tag before pushing it. The
+exact-tag comparison prevents a stale variable from expanding later tooling
+releases. Previously published release assets remain immutable.
