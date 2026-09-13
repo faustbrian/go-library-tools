@@ -639,7 +639,7 @@
       "repository": "github.com/faustbrian/go-queue",
       "source": {
         "kind": "commit",
-        "commit": "4e40d0f295e7a6133a5f108be452d73bda8ed686"
+        "commit": "83b40a1d817c4ebb6d82d4b5df19e18d90b32d22"
       },
       "tooling": {
         "version": "v1.5.6",
