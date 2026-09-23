@@ -659,6 +659,28 @@ func TestExecuteReportsExecutorCreationAndCleanupFailures(t *testing.T) {
 	}
 }
 
+func TestExecuteReportsRunAndCleanupFailures(t *testing.T) {
+	root := internalFixture(t)
+	runFailure := errors.New("injected run failure")
+	cleanupFailure := errors.New("injected cleanup failure")
+	cleanupCalls := 0
+	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+		return cliExecutorFunction(func(context.Context, gates.Command) error {
+				return runFailure
+			}), func() error {
+				cleanupCalls++
+				return cleanupFailure
+			}, nil
+	}
+	var stdout, stderr bytes.Buffer
+	code := execute([]string{"check"}, root, &stdout, &stderr, factory)
+	if code != 1 || cleanupCalls != 1 ||
+		!strings.Contains(stderr.String(), runFailure.Error()) ||
+		!strings.Contains(stderr.String(), cleanupFailure.Error()) {
+		t.Fatalf("execute() code/cleanup/stderr = %d/%d/%q", code, cleanupCalls, stderr.String())
+	}
+}
+
 func TestExecuteContextPropagatesCancellationToCommands(t *testing.T) {
 	root := internalFixture(t)
 	ctx, cancel := context.WithCancel(context.Background())

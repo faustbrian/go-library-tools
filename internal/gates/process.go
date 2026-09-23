@@ -2,6 +2,7 @@ package gates
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -11,6 +12,7 @@ import (
 	"sort"
 	"strings"
 	"sync"
+	"sync/atomic"
 )
 
 type processExecutor struct {
@@ -157,9 +159,11 @@ func (executor *processExecutor) runBounded(ctx context.Context, command Command
 		return fmt.Errorf("run %s: %w", command.Name, err)
 	}
 	done := make(chan struct{})
+	var canceled atomic.Bool
 	go func() {
 		select {
 		case <-ctx.Done():
+			canceled.Store(true)
 			terminateProcessTree(process)
 		case <-stop:
 			terminateProcessTree(process)
@@ -168,6 +172,9 @@ func (executor *processExecutor) runBounded(ctx context.Context, command Command
 	}()
 	err := process.Wait()
 	close(done)
+	if contextError := ctx.Err(); canceled.Load() && contextError != nil {
+		err = errors.Join(contextError, err)
+	}
 	if err != nil {
 		return fmt.Errorf("run %s: %w", command.Name, err)
 	}

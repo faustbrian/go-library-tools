@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -168,6 +169,70 @@ func TestProcessExecutorStopsOverflowingProcessTree(t *testing.T) {
 	}
 }
 
+func TestBoundedProcessOutputUsesIndependentExactLimits(t *testing.T) {
+	stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+	stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+	if written, err := stdout.Write(make([]byte, maximumSecurityProcessOutput)); err != nil || written != maximumSecurityProcessOutput || stdout.didOverflow() {
+		t.Fatalf("exact-limit write = %d/%v, overflow = %v", written, err, stdout.didOverflow())
+	}
+	if stderr.didOverflow() {
+		t.Fatal("unused stderr inherited stdout overflow state")
+	}
+	if written, err := stdout.Write([]byte{'x'}); err != nil || written != 1 || !stdout.didOverflow() {
+		t.Fatalf("limit-plus-one write = %d/%v, overflow = %v", written, err, stdout.didOverflow())
+	}
+	if stderr.didOverflow() {
+		t.Fatal("stderr inherited stdout overflow state")
+	}
+}
+
+func TestProcessExecutorPreservesCancellationCause(t *testing.T) {
+	if os.Getenv("CI") != "true" {
+		t.Skip("native process-tree cancellation runs only in hosted CI")
+	}
+	created, cleanup, err := NewProcessExecutor(t.TempDir(), io.Discard, io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := cleanup(); err != nil {
+			t.Error(err)
+		}
+	})
+	heartbeat := filepath.Join(t.TempDir(), "heartbeat")
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		done <- created.Run(ctx, Command{
+			Name: os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
+			Env:    map[string]string{"GO_WANT_HELPER": "1", "HELPER_WAIT": "1", "HELPER_HEARTBEAT": heartbeat},
+			Stdout: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
+			Stderr: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
+		})
+	}()
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		if _, statErr := os.Stat(heartbeat); statErr == nil {
+			break
+		} else if !errors.Is(statErr, fs.ErrNotExist) {
+			t.Fatal(statErr)
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("helper did not start")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+	select {
+	case runErr := <-done:
+		if !errors.Is(runErr, context.Canceled) {
+			t.Fatalf("Run() error = %v, want context cancellation", runErr)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Run() did not return after cancellation")
+	}
+}
+
 func TestMergeEnvironmentIsSortedAndLastWriterWins(t *testing.T) {
 	got := mergeEnvironment([]string{"B=old", "INVALID", "A=one"}, map[string]string{"B": "new", "C": "three"})
 	want := []string{"A=one", "B=new", "C=three"}
@@ -251,6 +316,12 @@ func TestProcessHelper(t *testing.T) {
 		for {
 			_ = os.WriteFile(os.Getenv("HELPER_HEARTBEAT"), []byte("alive"), 0o600)
 			_, _ = os.Stdout.Write([]byte("sensitive-output"))
+			time.Sleep(10 * time.Millisecond)
+		}
+	}
+	if os.Getenv("HELPER_WAIT") == "1" {
+		for {
+			_ = os.WriteFile(os.Getenv("HELPER_HEARTBEAT"), []byte("alive"), 0o600)
 			time.Sleep(10 * time.Millisecond)
 		}
 	}

@@ -131,33 +131,18 @@ type Command struct {
 
 const maximumSecurityProcessOutput = 4 << 20
 
-const gitleaksIgnoreLogMarker = "found .gitleaksignore file"
-
 var errRepositoryGitleaksIgnore = errors.New("security-policy: repository-owned .gitleaksignore is not permitted for security-enabled checks")
 
 type boundedProcessOutput struct {
-	mutex          sync.Mutex
-	limit          int
-	written        int
-	overflow       bool
-	onLimit        func()
-	forbidden      []byte
-	forbiddenTail  []byte
-	forbiddenFound bool
+	mutex    sync.Mutex
+	limit    int
+	written  int
+	overflow bool
+	onLimit  func()
 }
 
 func (output *boundedProcessOutput) Write(value []byte) (int, error) {
 	output.mutex.Lock()
-	if len(output.forbidden) > 0 {
-		window := make([]byte, 0, len(output.forbiddenTail)+len(value))
-		window = append(window, output.forbiddenTail...)
-		window = append(window, value...)
-		if bytes.Contains(window, output.forbidden) {
-			output.forbiddenFound = true
-		}
-		keep := min(len(output.forbidden)-1, len(window))
-		output.forbiddenTail = append(output.forbiddenTail[:0], window[len(window)-keep:]...)
-	}
 	if len(value) > output.limit-output.written {
 		output.written = output.limit
 		first := !output.overflow
@@ -188,12 +173,6 @@ func (output *boundedProcessOutput) didOverflow() bool {
 	output.mutex.Lock()
 	defer output.mutex.Unlock()
 	return output.overflow
-}
-
-func (output *boundedProcessOutput) foundForbiddenOutput() bool {
-	output.mutex.Lock()
-	defer output.mutex.Unlock()
-	return output.forbiddenFound
 }
 
 // Executor runs one external command.
@@ -229,9 +208,10 @@ type Runner struct {
 	DocumentationSpelling func(context.Context, string) error
 	// DocumentationLinks is an isolated test boundary. Production callers
 	// leave it nil and use the checksum-pinned task-owned implementation.
-	DocumentationLinks   func(context.Context, string) error
-	documentationRelease func(string, string) (docscheck.LycheeRelease, error)
-	documentationExtract func(string, docscheck.LycheeRelease) ([]byte, error)
+	DocumentationLinks    func(context.Context, string) error
+	documentationRelease  func(string, string) (docscheck.LycheeRelease, error)
+	documentationExtract  func(string, docscheck.LycheeRelease) ([]byte, error)
+	gitleaksSourceCleanup func(string) error
 }
 
 type namedWriteCloser interface {
@@ -288,6 +268,10 @@ func (runner Runner) Check(ctx context.Context, selection []string) error {
 	if err := runner.preflightSecurityPolicies(output, modules); err != nil {
 		return err
 	}
+	return runner.checkModules(ctx, output, modules)
+}
+
+func (runner Runner) checkModules(ctx context.Context, output io.Writer, modules []inventory.Module) error {
 	for _, module := range modules {
 		if err := runner.withModuleServices(ctx, module, func(scoped Runner) error {
 			return scoped.checkModule(ctx, output, module)
@@ -670,21 +654,24 @@ func (runner Runner) runSecurity(ctx context.Context, output io.Writer, director
 	if err := rejectRepositoryGitleaksIgnore(runner.Root); err != nil {
 		return errors.Join(err, cleanupSecrets())
 	}
-	if err := runner.gitleaksTool(ctx, output, module.Directory, "secrets-history", runner.Root,
+	sources, cleanupSources, err := runner.createGitleaksSources(ctx)
+	if err != nil {
+		return errors.Join(err, cleanupSecrets())
+	}
+	if err := runner.securityTool(ctx, output, module.Directory, "secrets-history", sources.history,
 		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
-		"git", ".", "--config", configPath, "--log-opts=--all", "--ignore-gitleaks-allow", "--log-level", "debug", "--no-banner", "--redact"); err != nil {
-		return errors.Join(err, cleanupSecrets())
+		"git", ".", "--config", configPath, "--log-opts=--all", "--ignore-gitleaks-allow",
+		"--gitleaks-ignore-path", sources.ignoreRoot, "--no-banner", "--redact"); err != nil {
+		return errors.Join(err, cleanupSources(), cleanupSecrets())
 	}
-	if err := rejectRepositoryGitleaksIgnore(runner.Root); err != nil {
-		return errors.Join(err, cleanupSecrets())
-	}
-	if err := runner.gitleaksTool(ctx, output, module.Directory, "secrets-current-tree", runner.Root,
+	if err := runner.securityTool(ctx, output, module.Directory, "secrets-current-tree", sources.current,
 		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
-		"dir", ".", "--config", configPath, "--ignore-gitleaks-allow", "--log-level", "debug", "--no-banner", "--redact"); err != nil {
-		return errors.Join(err, cleanupSecrets())
+		"dir", ".", "--config", configPath, "--ignore-gitleaks-allow",
+		"--gitleaks-ignore-path", sources.ignoreRoot, "--no-banner", "--redact"); err != nil {
+		return errors.Join(err, cleanupSources(), cleanupSecrets())
 	}
-	if err := rejectRepositoryGitleaksIgnore(runner.Root); err != nil {
-		return errors.Join(err, cleanupSecrets())
+	if err := cleanupSources(); err != nil {
+		return errors.Join(fmt.Errorf("remove temporary gitleaks sources: %w", err), cleanupSecrets())
 	}
 	if err := cleanupSecrets(); err != nil {
 		return fmt.Errorf("remove temporary gitleaks config: %w", err)
@@ -895,26 +882,10 @@ func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate,
 }
 
 func (runner Runner) securityTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
-	return runner.securityToolWithForbiddenOutput(ctx, output, module, gate, directory, tool, nil, args...)
-}
-
-func (runner Runner) gitleaksTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
-	return runner.securityToolWithForbiddenOutput(
-		ctx, output, module, gate, directory, tool, []byte(gitleaksIgnoreLogMarker), args...,
-	)
-}
-
-func (runner Runner) securityToolWithForbiddenOutput(
-	ctx context.Context,
-	output io.Writer,
-	module, gate, directory, tool string,
-	forbidden []byte,
-	args ...string,
-) error {
 	arguments := append([]string{"run", tool}, args...)
 	return announce(output, module, gate, func() error {
-		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput, forbidden: forbidden}
-		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput, forbidden: forbidden}
+		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 		err := runner.Executor.Run(ctx, Command{
 			Name: "go", Args: arguments, Dir: directory, Env: map[string]string{"GOWORK": "off"},
 			Stdout: stdout, Stderr: stderr,
@@ -923,12 +894,8 @@ func (runner Runner) securityToolWithForbiddenOutput(
 		if stdout.didOverflow() || stderr.didOverflow() {
 			overflow = fmt.Errorf("security scanner output exceeded %d bytes", maximumSecurityProcessOutput)
 		}
-		var policyViolation error
-		if stdout.foundForbiddenOutput() || stderr.foundForbiddenOutput() {
-			policyViolation = errRepositoryGitleaksIgnore
-		}
-		if err != nil || overflow != nil || policyViolation != nil {
-			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(policyViolation, overflow, err))
+		if err != nil || overflow != nil {
+			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err))
 		}
 		return nil
 	})

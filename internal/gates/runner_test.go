@@ -85,8 +85,11 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
 		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
 		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --log-level debug --no-banner --redact",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --log-level debug --no-banner --redact",
+		"git -C <repository-root> bundle create <gitleaks-history-bundle> --all",
+		"git init --quiet -- <gitleaks-history>",
+		"git -C <gitleaks-history> fetch --quiet --force --no-recurse-submodules <gitleaks-history-bundle> +refs/*:refs/golib-source/*",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 	}
@@ -524,8 +527,11 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
 		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
 		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --log-level debug --no-banner --redact",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --log-level debug --no-banner --redact",
+		"git -C <repository-root> bundle create <gitleaks-history-bundle> --all",
+		"git init --quiet -- <gitleaks-history>",
+		"git -C <gitleaks-history> fetch --quiet --force --no-recurse-submodules <gitleaks-history-bundle> +refs/*:refs/golib-source/*",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/acme/example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 	}
@@ -878,8 +884,27 @@ func successfulLinks(context.Context, string) error    { return nil }
 
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
 	arguments := slices.Clone(command.Args)
+	if command.Name == "git" && len(arguments) == 6 && arguments[0] == "-C" && arguments[2] == "bundle" {
+		arguments[1] = "<repository-root>"
+		arguments[4] = "<gitleaks-history-bundle>"
+	}
+	if command.Name == "git" && len(arguments) == 4 && slices.Equal(arguments[:3], []string{"init", "--quiet", "--"}) {
+		arguments[3] = "<gitleaks-history>"
+	}
+	if command.Name == "git" && len(arguments) == 8 && arguments[0] == "-C" && arguments[2] == "fetch" {
+		arguments[1] = "<gitleaks-history>"
+		arguments[6] = "<gitleaks-history-bundle>"
+	}
 	if slices.Contains(arguments, "github.com/zricethezav/gitleaks/v8@v8.30.1") {
 		for index, argument := range arguments {
+			switch filepath.Base(argument) {
+			case "history":
+				arguments[index] = "<gitleaks-history>"
+			case "current":
+				arguments[index] = "<gitleaks-tree>"
+			case "ignore":
+				arguments[index] = "<gitleaks-ignore-root>"
+			}
 			if argument != "--config" || index+1 >= len(arguments) {
 				continue
 			}

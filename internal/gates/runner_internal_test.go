@@ -308,28 +308,34 @@ func TestRunSecurityPreservesGitleaksScannerAndCleanupFailures(t *testing.T) {
 	for _, stage := range []string{"git", "dir"} {
 		t.Run(stage, func(t *testing.T) {
 			scannerFailure := errors.New("injected scanner failure")
-			cleanupFailure := errors.New("injected cleanup failure")
-			files := &securityPolicyFiles{gitleaksRemoveErr: cleanupFailure}
+			configCleanupFailure := errors.New("injected config cleanup failure")
+			sourceCleanupFailure := errors.New("injected source cleanup failure")
+			files := &securityPolicyFiles{gitleaksRemoveErr: configCleanupFailure}
 			var commands []string
+			sourceCleanupCalls := 0
 			runner := Runner{
 				Root: t.TempDir(),
 				Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
 					joined := strings.Join(command.Args, " ")
 					commands = append(commands, joined)
 					if strings.Contains(joined, "gitleaks") && strings.Contains(joined, " "+stage+" ") {
-						_, _ = io.WriteString(command.Stderr, gitleaksIgnoreLogMarker)
 						return scannerFailure
 					}
 					return nil
 				}},
 				secretConfigFiles: files,
+				gitleaksSourceCleanup: func(string) error {
+					sourceCleanupCalls++
+					return sourceCleanupFailure
+				},
 			}
 			err := runner.runSecurity(context.Background(), io.Discard, runner.Root, inventory.Module{Directory: ".", ModulePath: "example"})
-			if !errors.Is(err, errRepositoryGitleaksIgnore) || !errors.Is(err, scannerFailure) || !errors.Is(err, cleanupFailure) {
+			if !errors.Is(err, scannerFailure) || !errors.Is(err, configCleanupFailure) ||
+				!errors.Is(err, sourceCleanupFailure) {
 				t.Fatalf("runSecurity() error = %v", err)
 			}
-			if files.gitleaksRemoved != 1 {
-				t.Fatalf("gitleaks cleanup calls = %d", files.gitleaksRemoved)
+			if files.gitleaksRemoved != 1 || sourceCleanupCalls != 1 {
+				t.Fatalf("gitleaks config/source cleanup calls = %d/%d", files.gitleaksRemoved, sourceCleanupCalls)
 			}
 			for _, command := range commands {
 				if strings.Contains(command, "go-licenses") || strings.Contains(command, "cyclonedx-gomod") {
@@ -340,26 +346,176 @@ func TestRunSecurityPreservesGitleaksScannerAndCleanupFailures(t *testing.T) {
 	}
 }
 
-func TestGitleaksToolPreservesPolicyAndExecutorFailures(t *testing.T) {
-	for _, cause := range []error{errors.New("scanner failure"), context.Canceled} {
-		t.Run(cause.Error(), func(t *testing.T) {
-			runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
-				marker := []byte(gitleaksIgnoreLogMarker)
-				_, _ = command.Stderr.Write(marker[:len(marker)/2])
-				_, _ = command.Stderr.Write(marker[len(marker)/2:])
-				return cause
-			})}
-			err := runner.gitleaksTool(
-				context.Background(), io.Discard, ".", "secrets-history", t.TempDir(),
-				"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion, "git", ".",
-			)
-			if !errors.Is(err, errRepositoryGitleaksIgnore) || !errors.Is(err, cause) {
-				t.Fatalf("gitleaksTool() error = %v", err)
+func TestCopyGitleaksCurrentTreeCapturesAllFilesystemClasses(t *testing.T) {
+	source := t.TempDir()
+	for path, content := range map[string]string{
+		".git/config":          "excluded repository metadata\n",
+		".gitignore":           "generated/\n",
+		".gitleaksignore":      "excluded consumer suppression\n",
+		"tracked-modified.go":  "package fixture\nconst state = \"modified\"\n",
+		"untracked.txt":        "untracked\n",
+		"generated/secret.txt": "gitignored generated output\n",
+	} {
+		target := filepath.Join(source, filepath.FromSlash(path))
+		if err := os.MkdirAll(filepath.Dir(target), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(target, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	destination := filepath.Join(t.TempDir(), "current")
+	if err := copyGitleaksCurrentTree(source, destination); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{".gitignore", "tracked-modified.go", "untracked.txt", "generated/secret.txt"} {
+		if _, err := os.Stat(filepath.Join(destination, filepath.FromSlash(path))); err != nil {
+			t.Fatalf("snapshot %s: %v", path, err)
+		}
+	}
+	for _, path := range []string{".git", ".gitleaksignore"} {
+		if _, err := os.Lstat(filepath.Join(destination, path)); !errors.Is(err, fs.ErrNotExist) {
+			t.Fatalf("excluded snapshot path %s exists: %v", path, err)
+		}
+	}
+}
+
+func TestCreateGitleaksSourcesCapturesAllRefsWithoutMutatingRepository(t *testing.T) {
+	source := t.TempDir()
+	runGit := func(arguments ...string) string {
+		t.Helper()
+		// #nosec G204 -- arguments are fixed and every path is test-owned.
+		command := exec.CommandContext(t.Context(), "git", arguments...)
+		command.Dir = source
+		output, err := command.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v: %v: %s", arguments, err, output)
+		}
+		return string(output)
+	}
+	runGit("init", "-q")
+	if err := os.WriteFile(filepath.Join(source, "main.txt"), []byte("main\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit("add", "main.txt")
+	runGit("-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "main")
+	mainBranch := strings.TrimSpace(runGit("branch", "--show-current"))
+	runGit("checkout", "-qb", "hidden-history")
+	if err := os.WriteFile(filepath.Join(source, "hidden.txt"), []byte("historical\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit("add", "hidden.txt")
+	runGit("-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "hidden-ref")
+	hiddenCommit := strings.TrimSpace(runGit("rev-parse", "HEAD"))
+	runGit("checkout", "-q", mainBranch)
+	runGit("config", "uploadpack.hideRefs", "refs/heads/hidden-history")
+	refsBefore := runGit("show-ref")
+	configBefore := runGit("config", "--local", "--list")
+
+	executor := workspaceExecutor{directory: t.TempDir(), run: func(ctx context.Context, command Command) error {
+		// #nosec G204 -- executable and arguments are produced by the production source snapshotter.
+		process := exec.CommandContext(ctx, command.Name, command.Args...)
+		process.Dir = command.Dir
+		process.Stdout = command.Stdout
+		process.Stderr = command.Stderr
+		return process.Run()
+	}}
+	runner := Runner{Root: source, Executor: executor}
+	sources, cleanup, err := runner.createGitleaksSources(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	// #nosec G204 -- the snapshot path and commit are test-owned.
+	reachable := exec.CommandContext(t.Context(), "git", "-C", sources.history, "merge-base", "--is-ancestor", hiddenCommit, "refs/golib-source/heads/hidden-history")
+	output, err := reachable.CombinedOutput()
+	if err != nil {
+		t.Fatalf("history snapshot omitted upload-pack-hidden ref %s: %v: %s", hiddenCommit, err, output)
+	}
+	if err := cleanup(); err != nil {
+		t.Fatal(err)
+	}
+	if refsAfter := runGit("show-ref"); refsAfter != refsBefore {
+		t.Fatalf("source refs changed: before=%q after=%q", refsBefore, refsAfter)
+	}
+	if configAfter := runGit("config", "--local", "--list"); configAfter != configBefore {
+		t.Fatalf("source config changed: before=%q after=%q", configBefore, configAfter)
+	}
+}
+
+func TestRunSecurityScansUploadPackHiddenHistory(t *testing.T) {
+	if os.Getenv("GOLIB_GITLEAKS_INTEGRATION") != "1" {
+		t.Skip("set GOLIB_GITLEAKS_INTEGRATION=1 to run the pinned scanner contract")
+	}
+	secret := strings.Join([]string{"gh", "p_", "A1b2C3d4E5f6", "G7h8I9j0K1l2", "M3n4O5p6Q7r8"}, "")
+	root, _ := gitleaksRepository(t, map[string]string{"README.md": "fixture\n"})
+	runGit := func(arguments ...string) string {
+		t.Helper()
+		// #nosec G204 -- arguments are fixed and every path is test-owned.
+		command := exec.CommandContext(t.Context(), "git", arguments...)
+		command.Dir = root
+		output, err := command.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v: %v: %s", arguments, err, output)
+		}
+		return string(output)
+	}
+	mainBranch := strings.TrimSpace(runGit("branch", "--show-current"))
+	runGit("checkout", "-qb", "hidden-history")
+	secretPath := filepath.Join(root, "security", "github.txt")
+	if err := os.MkdirAll(filepath.Dir(secretPath), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(secretPath, []byte(secret), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit("add", "security/github.txt")
+	runGit("-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "hidden-secret")
+	runGit("checkout", "-q", mainBranch)
+	runGit("config", "uploadpack.hideRefs", "refs/heads/hidden-history")
+
+	reportPath := filepath.Join(t.TempDir(), "hidden-history-report.json")
+	var commands []string
+	executor := workspaceExecutor{directory: t.TempDir(), run: func(ctx context.Context, command Command) error {
+		joined := strings.Join(command.Args, " ")
+		commands = append(commands, joined)
+		if command.Name == "git" || strings.Contains(joined, "gitleaks") {
+			if strings.Contains(joined, "gitleaks") && strings.Contains(joined, " git ") {
+				command.Args = append(command.Args, "--report-format", "json", "--report-path", reportPath)
 			}
-			if strings.Contains(err.Error(), gitleaksIgnoreLogMarker) {
-				t.Fatalf("gitleaksTool() disclosed scanner output: %v", err)
-			}
-		})
+			// #nosec G204 -- executable and arguments are fixed by the production gate under test.
+			process := exec.CommandContext(ctx, command.Name, command.Args...)
+			process.Dir = command.Dir
+			process.Env = mergeEnvironment(os.Environ(), command.Env)
+			process.Stdin = command.Stdin
+			process.Stdout = command.Stdout
+			process.Stderr = command.Stderr
+			return process.Run()
+		}
+		return nil
+	}}
+	err := (Runner{Root: root, Executor: executor}).runSecurity(
+		context.Background(), io.Discard, root, inventory.Module{Directory: ".", ModulePath: "example"},
+	)
+	if err == nil || strings.Contains(err.Error(), secret) {
+		t.Fatalf("runSecurity() error = %v", err)
+	}
+	report, readErr := os.ReadFile(reportPath)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	var findings []gitleaksFinding
+	if decodeErr := json.Unmarshal(report, &findings); decodeErr != nil {
+		t.Fatalf("decode hidden-history report: %v: %s", decodeErr, report)
+	}
+	if !slices.ContainsFunc(findings, func(finding gitleaksFinding) bool {
+		return finding.RuleID == "github-pat" && filepath.ToSlash(finding.File) == "security/github.txt"
+	}) {
+		t.Fatalf("hidden-history findings = %#v", findings)
+	}
+	for _, command := range commands {
+		if strings.Contains(command, "gitleaks") && strings.Contains(command, " dir ") {
+			t.Fatalf("current-tree scan ran after hidden-history finding: %q", command)
+		}
 	}
 }
 
@@ -586,6 +742,50 @@ func TestGeneratedGitleaksPolicyIntegration(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestRunSecurityPreservesCentralPathExceptionsInIsolatedSources(t *testing.T) {
+	if os.Getenv("GOLIB_GITLEAKS_INTEGRATION") != "1" {
+		t.Skip("set GOLIB_GITLEAKS_INTEGRATION=1 to run the pinned scanner contract")
+	}
+	fixtureKey := strings.Join([]string{
+		"01234567", "89abcdef", "01234567", "89abcdef",
+		"01234567", "89abcdef", "01234567", "89abcdef",
+	}, "")
+	confluentFixtures := []string{
+		strings.Join([]string{"67b4c198", "5e70a7ae", "a45d754e", "14be8468", "83a37ccd", "073d76e5", "99d71900", "4af0ea37"}, ""),
+		strings.Join([]string{"4c9ab0b7", "2db6bcd6", "a6f90cd8", "e638e7f2", "80708c95", "18128b59", "33a9a904", "ad072ff7"}, ""),
+		strings.Join([]string{"c92530ae", "87091474", "8c82e238", "b72ff1d3", "c60c2ec0", "360150b0", "1863750e", "6dad0ac1"}, ""),
+	}
+	root, _ := gitleaksRepository(t, map[string]string{
+		"differential/shared-corpus/corpus_test.go": `const differentialKey = "` + fixtureKey + `"`,
+		"providers/confluent/CHANGELOG.md": strings.Join([]string{
+			"CONFLUENT-DEC-001 sha256:" + confluentFixtures[0],
+			"CONFLUENT-DEC-002 sha256:" + confluentFixtures[1],
+			"CONFLUENT-DEC-003 sha256:" + confluentFixtures[2],
+		}, "\n"),
+	})
+	executor := workspaceExecutor{directory: t.TempDir(), run: func(ctx context.Context, command Command) error {
+		joined := strings.Join(command.Args, " ")
+		if command.Name == "git" || strings.Contains(joined, "gitleaks") {
+			// #nosec G204 -- the executable and arguments are fixed by the production gate under test.
+			process := exec.CommandContext(ctx, command.Name, command.Args...)
+			process.Dir = command.Dir
+			process.Env = mergeEnvironment(os.Environ(), command.Env)
+			process.Stdin = command.Stdin
+			process.Stdout = command.Stdout
+			process.Stderr = command.Stderr
+			return process.Run()
+		}
+		if strings.Contains(joined, "cyclonedx-gomod") && command.Stdout != nil {
+			_, _ = io.WriteString(command.Stdout, `{"bomFormat":"CycloneDX","specVersion":"1.6"}`)
+		}
+		return nil
+	}}
+	runner := Runner{Root: root, Executor: executor}
+	if err := runner.runSecurity(context.Background(), io.Discard, root, inventory.Module{Directory: ".", ModulePath: "example"}); err != nil {
+		t.Fatalf("runSecurity() error = %v", err)
 	}
 }
 
@@ -1176,7 +1376,7 @@ func TestCheckAndLocalIgnoreRepositoryGitleaksIgnoreForNonSecuritySelections(t *
 	}
 }
 
-func TestRunSecurityRejectsGitleaksIgnoreCreatedDuringScans(t *testing.T) {
+func TestRunSecurityIsolatesGitleaksIgnoreCreatedDuringScans(t *testing.T) {
 	for _, stage := range []string{"git", "dir"} {
 		t.Run(stage, func(t *testing.T) {
 			root := t.TempDir()
@@ -1187,19 +1387,28 @@ func TestRunSecurityRejectsGitleaksIgnoreCreatedDuringScans(t *testing.T) {
 					joined := strings.Join(command.Args, " ")
 					commands = append(commands, joined)
 					if strings.Contains(joined, "gitleaks") && strings.Contains(joined, " "+stage+" ") {
-						return os.WriteFile(filepath.Join(root, ".gitleaksignore"), []byte("late suppression\n"), 0o600)
+						if err := os.WriteFile(filepath.Join(root, ".gitleaksignore"), []byte("late suppression\n"), 0o600); err != nil {
+							return err
+						}
+					}
+					if strings.Contains(joined, "cyclonedx-gomod") && command.Stdout != nil {
+						_, _ = io.WriteString(command.Stdout, `{"bomFormat":"CycloneDX","specVersion":"1.6"}`)
 					}
 					return nil
 				}},
 			}
 			err := runner.runSecurity(context.Background(), io.Discard, root, inventory.Module{Directory: ".", ModulePath: "example"})
-			if err == nil || !strings.Contains(err.Error(), ".gitleaksignore") {
+			if err != nil {
 				t.Fatalf("runSecurity() error = %v", err)
 			}
+			seenLicenses := false
 			for _, command := range commands {
-				if strings.Contains(command, "go-licenses") || strings.Contains(command, "cyclonedx-gomod") {
-					t.Fatalf("later gate ran after late suppression: %q", command)
+				if strings.Contains(command, "go-licenses") {
+					seenLicenses = true
 				}
+			}
+			if !seenLicenses {
+				t.Fatalf("later gates did not run after isolated suppression: %#v", commands)
 			}
 		})
 	}
@@ -1243,16 +1452,27 @@ func TestRunSecurityRejectsTransientGitleaksIgnore(t *testing.T) {
 				t.Fatal(err)
 			}
 
+			reportPath := filepath.Join(t.TempDir(), "production-report.json")
 			var commands []string
 			executor := workspaceExecutor{directory: t.TempDir(), run: func(ctx context.Context, command Command) error {
 				joined := strings.Join(command.Args, " ")
 				commands = append(commands, joined)
+				if command.Name == "git" {
+					// #nosec G204 -- the executable and arguments are fixed by the production gate under test.
+					process := exec.CommandContext(ctx, command.Name, command.Args...)
+					process.Dir = command.Dir
+					process.Env = mergeEnvironment(os.Environ(), command.Env)
+					process.Stdout = command.Stdout
+					process.Stderr = command.Stderr
+					return process.Run()
+				}
 				if !strings.Contains(joined, "gitleaks") || !strings.Contains(joined, " "+stage+" ") {
 					return nil
 				}
 				if err := os.WriteFile(ignorePath, []byte(findings[0].Fingerprint+"\n"), 0o600); err != nil {
 					return err
 				}
+				command.Args = append(command.Args, "--report-format", "json", "--report-path", reportPath)
 				// #nosec G204 -- the executable and arguments are fixed by the production gate under test.
 				process := exec.CommandContext(ctx, command.Name, command.Args...)
 				process.Dir = command.Dir
@@ -1266,8 +1486,23 @@ func TestRunSecurityRejectsTransientGitleaksIgnore(t *testing.T) {
 			}}
 			runner := Runner{Root: root, Executor: executor}
 			err = runner.runSecurity(context.Background(), io.Discard, root, inventory.Module{Directory: ".", ModulePath: "example"})
-			if err == nil || !strings.Contains(err.Error(), "security-policy: repository-owned .gitleaksignore is not permitted for security-enabled checks") {
+			if err == nil || errors.Is(err, errRepositoryGitleaksIgnore) {
 				t.Fatalf("runSecurity() %s error = %v", stage, err)
+			}
+			report, readErr := os.ReadFile(reportPath)
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			var productionFindings []gitleaksFinding
+			if decodeErr := json.Unmarshal(report, &productionFindings); decodeErr != nil {
+				t.Fatalf("decode production report: %v: %s", decodeErr, report)
+			}
+			if !slices.ContainsFunc(productionFindings, func(finding gitleaksFinding) bool {
+				path := filepath.ToSlash(finding.File)
+				return finding.RuleID == "github-pat" &&
+					(path == "security/github.txt" || strings.HasSuffix(path, "/security/github.txt"))
+			}) {
+				t.Fatalf("production %s findings/error/output = %#v/%v/%q", stage, productionFindings, err, output)
 			}
 			if _, statErr := os.Lstat(ignorePath); !errors.Is(statErr, fs.ErrNotExist) {
 				t.Fatalf("transient ignore remains: %v", statErr)

@@ -674,11 +674,8 @@ func withExecutor(root string, stdout, stderr io.Writer, create executorFactory,
 	}
 	runError := run(executor)
 	cleanupError := cleanup()
-	if runError != nil {
-		return failure(stderr, runError)
-	}
-	if cleanupError != nil {
-		return failure(stderr, cleanupError)
+	if err := errors.Join(runError, cleanupError); err != nil {
+		return failure(stderr, err)
 	}
 	return 0
 }

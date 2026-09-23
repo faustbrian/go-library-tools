@@ -49,10 +49,17 @@ func (runner Runner) ReleaseDryRun(ctx context.Context, selection []string) erro
 	if err != nil {
 		return err
 	}
+	output := runner.Output
+	if output == nil {
+		output = io.Discard
+	}
+	if err := runner.preflightSecurityPolicies(output, modules); err != nil {
+		return err
+	}
 	if err := runner.releaseRehearsal(ctx, modules); err != nil {
 		return err
 	}
-	return runner.Check(ctx, selection)
+	return runner.checkModules(ctx, output, modules)
 }
 
 func (runner Runner) releaseRehearsal(ctx context.Context, modules []inventory.Module) error {

@@ -189,7 +189,54 @@ func TestReleaseDryRunRoutesRehearsalBeforeGates(t *testing.T) {
 	}
 }
 
-func TestReleaseDryRunRejectsInvalidCompactSuppressionAfterRehearsal(t *testing.T) {
+func TestReleaseDryRunRejectsRootGitleaksIgnoreBeforeEffects(t *testing.T) {
+	root := releaseFixture(t)
+	if err := os.WriteFile(filepath.Join(root, ".gitleaksignore"), []byte("consumer suppression\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	selected := releaseModule()
+	selected.Gates = map[string]bool{"security": true}
+	selected.RequiredServices = []string{"postgresql"}
+	workspace := t.TempDir()
+	initialEntries, err := os.ReadDir(workspace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	commands := 0
+	services := 0
+	files := &trackingReleaseFiles{}
+	archives := 0
+	runner := Runner{
+		Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{selected}},
+		Executor: workspaceExecutor{directory: workspace, run: func(context.Context, Command) error {
+			commands++
+			return nil
+		}},
+		releaseFiles: files,
+		releaseArchive: func(io.Writer, module.Version, string) error {
+			archives++
+			return nil
+		},
+		startServices: func(context.Context, []string) (serviceLease, error) {
+			services++
+			return &fakeServiceLease{}, nil
+		},
+	}
+	err = runner.ReleaseDryRun(context.Background(), []string{"."})
+	if !errors.Is(err, errRepositoryGitleaksIgnore) {
+		t.Fatalf("ReleaseDryRun() error = %v", err)
+	}
+	finalEntries, readErr := os.ReadDir(workspace)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if commands != 0 || services != 0 || files.calls != 0 || archives != 0 ||
+		len(initialEntries) != len(finalEntries) {
+		t.Fatalf("effects commands/services/files/archives/workspace = %d/%d/%d/%d/%d->%d", commands, services, files.calls, archives, len(initialEntries), len(finalEntries))
+	}
+}
+
+func TestReleaseDryRunRejectsInvalidCompactSuppressionBeforeRehearsal(t *testing.T) {
 	root := releaseFixture(t)
 	releaseWrite(t, filepath.Join(root, "library.go"), "package library\n/*#nosec*/\nfunc value() {}\n")
 	module := releaseModule()
@@ -206,21 +253,12 @@ func TestReleaseDryRunRejectsInvalidCompactSuppressionAfterRehearsal(t *testing.
 	if err == nil || !strings.Contains(err.Error(), "library.go:2:") || !strings.Contains(err.Error(), "exact rule IDs") {
 		t.Fatalf("ReleaseDryRun() error = %v", err)
 	}
-	if len(commands) < 2 || commands[0].Name != "git" || strings.Join(commands[0].Args, " ") != "tag --list v1.0.0" ||
-		commands[1].Name != "go" || strings.Join(commands[1].Args, " ") != "list -m example.com/library@v1.0.0" {
-		t.Fatalf("rehearsal command prefix = %#v", commands)
-	}
-	for _, command := range commands[2:] {
-		joined := strings.Join(command.Args, " ")
-		for _, tool := range []string{"govulncheck", "securego/gosec", "go-analysis", "gitleaks", "go-licenses", "cyclonedx-gomod"} {
-			if strings.Contains(joined, tool) {
-				t.Fatalf("security command ran after suppression failure: %#v", command)
-			}
-		}
+	if len(commands) != 0 {
+		t.Fatalf("commands ran before suppression failure: %#v", commands)
 	}
 }
 
-func TestReleaseDryRunCompletesRehearsalBeforeBatchSuppressionPreflight(t *testing.T) {
+func TestReleaseDryRunCompletesBatchSuppressionPreflightBeforeRehearsal(t *testing.T) {
 	root := t.TempDir()
 	for _, directory := range []string{"a-valid", "z-invalid"} {
 		if err := os.MkdirAll(filepath.Join(root, directory), 0o700); err != nil {
@@ -261,20 +299,8 @@ func TestReleaseDryRunCompletesRehearsalBeforeBatchSuppressionPreflight(t *testi
 	if err == nil || !strings.Contains(err.Error(), "invalid.go:2:") || !strings.Contains(err.Error(), "exact rule IDs") {
 		t.Fatalf("ReleaseDryRun() error = %v", err)
 	}
-	want := []string{
-		"git tag --list a/v1.0.0",
-		"git tag --list z/v1.0.0",
-		"go list -m example.com/library/a@v1.0.0",
-		"go list -m example.com/library/z@v1.0.0",
-	}
-	if len(commands) != len(want) {
-		t.Fatalf("release commands = %#v, want rehearsal only", commands)
-	}
-	for index, command := range commands {
-		got := command.Name + " " + strings.Join(command.Args, " ")
-		if got != want[index] {
-			t.Fatalf("release command %d = %q, want %q", index, got, want[index])
-		}
+	if len(commands) != 0 {
+		t.Fatalf("release commands = %#v, want none before batch preflight", commands)
 	}
 	if output.String() != "[a-valid] security-suppressions\n[z-invalid] security-suppressions\n" || starts != 0 {
 		t.Fatalf("release preflight output/starts = %q/%d", output.String(), starts)
@@ -385,6 +411,28 @@ func releaseModule() inventory.Module {
 type controlledReleaseFiles struct {
 	stage   string
 	failure error
+}
+
+type trackingReleaseFiles struct{ calls int }
+
+func (files *trackingReleaseFiles) MkdirTemp(string, string) (string, error) {
+	files.calls++
+	return "", errors.New("release filesystem must not be reached")
+}
+
+func (files *trackingReleaseFiles) MkdirAll(string, os.FileMode) error {
+	files.calls++
+	return errors.New("release filesystem must not be reached")
+}
+
+func (files *trackingReleaseFiles) WriteFile(string, []byte, os.FileMode) error {
+	files.calls++
+	return errors.New("release filesystem must not be reached")
+}
+
+func (files *trackingReleaseFiles) Create(string) (io.WriteCloser, error) {
+	files.calls++
+	return nil, errors.New("release filesystem must not be reached")
 }
 
 func (files controlledReleaseFiles) MkdirTemp(directory, pattern string) (string, error) {
