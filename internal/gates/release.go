@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/faustbrian/go-library-tools/internal/inventory"
-	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 	"golang.org/x/mod/module"
 	modzip "golang.org/x/mod/zip"
 )
@@ -38,6 +38,7 @@ func (operatingReleaseFiles) WriteFile(path string, data []byte, mode os.FileMod
 }
 
 func (operatingReleaseFiles) Create(path string) (io.WriteCloser, error) {
+	// #nosec G304 -- callers create a fixed evidence filename beneath the validated task-owned release root
 	return os.Create(path)
 }
 
@@ -48,10 +49,17 @@ func (runner Runner) ReleaseDryRun(ctx context.Context, selection []string) erro
 	if err != nil {
 		return err
 	}
+	output := runner.Output
+	if output == nil {
+		output = io.Discard
+	}
+	if err := runner.preflightSecurityPolicies(output, modules); err != nil {
+		return err
+	}
 	if err := runner.releaseRehearsal(ctx, modules); err != nil {
 		return err
 	}
-	return runner.Check(ctx, selection)
+	return runner.checkModules(ctx, output, modules)
 }
 
 func (runner Runner) releaseRehearsal(ctx context.Context, modules []inventory.Module) error {

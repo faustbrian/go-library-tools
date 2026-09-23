@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/faustbrian/go-library-tools/internal/evidence"
+	"github.com/faustbrian/go-library-tools/v2/internal/evidence"
 )
 
 // SemanticVerifierDigest is the content identity recorded for native evidence.

@@ -15,7 +15,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
 func TestCheckAcceptsCompleteResolvedDecision(t *testing.T) {

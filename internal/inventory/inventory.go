@@ -8,11 +8,16 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
+	"path"
 	"reflect"
+	"strings"
+	"unicode"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 	"github.com/santhosh-tekuri/jsonschema/v6"
+	"golang.org/x/mod/module"
 )
 
 const maximumManifestSize = 32 << 20
@@ -248,6 +253,9 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 	if err := json.Unmarshal(moduleManifest, &header); err != nil {
 		return Inventory{}, fmt.Errorf("load module manifest: %w", err)
 	}
+	if err := validateModuleIdentities(root, moduleManifest); err != nil {
+		return Inventory{}, err
+	}
 	if header.SchemaVersion == 3 {
 		document, err := jsonschema.UnmarshalJSON(bytes.NewReader(moduleManifest))
 		if err != nil {
@@ -280,6 +288,9 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 	}
 	if modules.Repository == "" || modules.Repository != packages.Repository {
 		return modules, errors.New("module and package manifest repository identities differ")
+	}
+	if err := validateDecodedModuleIdentities(modules); err != nil {
+		return Inventory{}, err
 	}
 	if len(modules.Modules) == 0 {
 		return modules, errors.New("module manifest contains no modules")
@@ -358,6 +369,89 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 		}
 	}
 	return modules, nil
+}
+
+func validateModuleIdentities(_ string, manifest []byte) error {
+	var document struct {
+		Repository string                       `json:"repository"`
+		Modules    []map[string]json.RawMessage `json:"modules"`
+	}
+	if err := json.Unmarshal(manifest, &document); err != nil {
+		return errors.New("invalid module manifest")
+	}
+	for _, candidate := range document.Modules {
+		directory, valid := identityString(candidate, "directory")
+		if !valid || !validModuleDirectory(directory) {
+			return errors.New("invalid module directory")
+		}
+		modulePath, valid := identityString(candidate, "module_path")
+		if !valid || module.CheckImportPath(modulePath) != nil || !validModulePathCharacters(modulePath) {
+			return errors.New("invalid module path")
+		}
+		if document.Repository != "" && directory == "." && !rootModulePathMatchesRepository(modulePath, document.Repository) {
+			return errors.New("invalid module path")
+		}
+	}
+	return nil
+}
+
+func identityString(candidate map[string]json.RawMessage, field string) (string, bool) {
+	raw, exists := candidate[field]
+	if !exists {
+		return "", false
+	}
+	var value string
+	if err := json.Unmarshal(raw, &value); err != nil || value == "" {
+		return "", false
+	}
+	for _, character := range value {
+		if unicode.IsControl(character) {
+			return "", false
+		}
+	}
+	return value, true
+}
+
+func validModuleDirectory(directory string) bool {
+	if directory == "." {
+		return true
+	}
+	if strings.Contains(directory, "\\") || path.IsAbs(directory) || path.Clean(directory) != directory || !fs.ValidPath(directory) {
+		return false
+	}
+	for _, character := range directory {
+		if unicode.IsSpace(character) || !strings.ContainsRune("abcdefghijklmnopqrstuvwxyz0123456789-./", character) {
+			return false
+		}
+	}
+	return true
+}
+
+func validModulePathCharacters(modulePath string) bool {
+	for _, character := range modulePath {
+		if !strings.ContainsRune("abcdefghijklmnopqrstuvwxyz0123456789-./", character) {
+			return false
+		}
+	}
+	return true
+}
+
+func rootModulePathMatchesRepository(modulePath, repository string) bool {
+	if modulePath == repository {
+		return true
+	}
+	prefix, version, found := module.SplitPathVersion(modulePath)
+	return found && prefix == repository && version != ""
+}
+
+func validateDecodedModuleIdentities(catalog Inventory) error {
+	for _, candidate := range catalog.Modules {
+		if strings.HasPrefix(candidate.Directory, "testdata/") || rootModulePathMatchesRepository(candidate.ModulePath, catalog.Repository) || strings.HasPrefix(candidate.ModulePath, catalog.Repository+"/") {
+			continue
+		}
+		return errors.New("invalid module path")
+	}
+	return nil
 }
 
 func validatePackages(modules []Module, canonical []Package) error {

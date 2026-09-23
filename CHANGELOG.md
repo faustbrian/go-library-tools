@@ -2,7 +2,92 @@
 
 All notable changes to this project are documented in this file.
 
-## Unreleased
+## 2.0.0 - 2026-09-23
+
+### Added
+
+- Added a versioned ecosystem threat model, vulnerability process, validated
+  risk register and per-module scanner/release-verdict contract.
+- Added bounded bootstrap archive validation and owned GitHub Actions security
+  analysis to the public CLI contract.
+- Added an independent Draft 2020-12 differential check for security-record
+  validation decisions.
+
+### Changed
+
+- Changed the Go module and command import path to
+  `github.com/faustbrian/go-library-tools/v2` for the breaking v2 release;
+  repository and reusable-workflow coordinates remain unchanged.
+- Made release validation reject a stable version whose semantic major does
+  not match the module path major.
+- Bound release tags to the unique root-manifest version and the exact current
+  `main` commit, and kept publication blocked until revision-specific security
+  evidence and the fleet risk disposition are present.
+- Made security-record validation enforce the published JSON schemas and reject
+  ambiguous duplicate object keys while accepting equivalent numeric schema
+  version representations.
+- Made security-enabled ordinary checks run pinned govulncheck, standalone
+  gosec, centrally governed go-analysis rules, full-history secret scanning,
+  license checks, and SBOM generation while keeping NilAway advisory.
+- Suppressed scanner-controlled output, enforced independent bounded streams,
+  terminated overflowing process trees, and replaced archive and SBOM payloads
+  with stable repository-owned diagnostic classes.
+- Made bounded scanner execution fail before process start on platforms where
+  complete process-tree termination is unavailable.
+- Dereferenced bounded YAML aliases before applying workflow permission,
+  action, checkout, and container-image security rules.
+- Required canonical lowercase module directories and import paths, with root
+  modules bound to the declared repository namespace, before manifests can
+  reach schema validation or downstream consumers.
+- Prevented repository-owned gitleaks configuration, ignore files, and inline
+  allowances from widening the shared secret-scanning policy.
+
+### Migration
+
+- Install v2 with
+  `go install github.com/faustbrian/go-library-tools/v2/cmd/golib@v2.0.0`.
+  Keep GitHub Actions checkout and reusable-workflow references on
+  `faustbrian/go-library-tools`; no version branch is used.
+- Remove repository `.gitleaksignore` files and inline `gitleaks:allow`
+  directives before enabling the v2 security gate. Intentionally public
+  fixtures require a centrally reviewed exception constrained by exact rule,
+  path, and value.
+
+## 1.8.5 - 2026-09-13
+
+### Fixed
+
+- Accepted the exact tidy-expanded clean-consumer module closure and preserved
+  module-scoped release checks.
+- Updated pinned dependencies and GitHub Actions without changing the v1
+  public contract.
+
+## 1.8.4 - 2026-09-12
+
+### Fixed
+
+- Published the Go 1.27 queue compatibility set and mirrored its catalog
+  assets.
+
+## 1.8.3 - 2026-09-12
+
+### Fixed
+
+- Bound the generated catalogs and publication assets to the v1.8.3 tooling
+  release.
+
+## 1.8.2 - 2026-09-12
+
+### Fixed
+
+- Regenerated Go 1.27 catalog metadata and refreshed the associated
+  compatibility receipts.
+
+## 1.8.1 - 2026-09-12
+
+### Fixed
+
+- Published refreshed Go 1.27 compatibility receipts.
 
 ## 1.8.0 - 2026-09-10
 

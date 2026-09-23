@@ -11,9 +11,9 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/faustbrian/go-library-tools/internal/inventory"
-	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
-	"github.com/faustbrian/go-library-tools/internal/services"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/v2/internal/services"
 )
 
 const (

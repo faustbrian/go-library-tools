@@ -12,9 +12,9 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
-	"github.com/faustbrian/go-library-tools/internal/mutation"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/mutation"
 )
 
 func TestWithModuleServicesScopesEnvironmentIdentityAndCleanup(t *testing.T) {

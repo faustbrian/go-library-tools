@@ -1,7 +1,9 @@
 package repository_test
 
 import (
+	"crypto/sha256"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -10,7 +12,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
 	"go.yaml.in/yaml/v3"
 )
 
@@ -275,7 +277,7 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 		if combined, err := command.CombinedOutput(); err != nil {
 			t.Fatalf("git add: %v\n%s", err, combined)
 		}
-		command = exec.CommandContext(t.Context(), "git", "commit", "-q", "-m", "baseline")
+		command = exec.CommandContext(t.Context(), "git", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "baseline")
 		command.Dir = repository
 		if combined, err := command.CombinedOutput(); err != nil {
 			t.Fatalf("git commit: %v\n%s", err, combined)
@@ -330,7 +332,7 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 		if combined, err := command.CombinedOutput(); err != nil {
 			t.Fatalf("git add: %v\n%s", err, combined)
 		}
-		command = exec.CommandContext(t.Context(), "git", "commit", "-q", "-m", "change")
+		command = exec.CommandContext(t.Context(), "git", "-c", "commit.gpgsign=false", "commit", "-q", "-m", "change")
 		command.Dir = repository
 		if combined, err := command.CombinedOutput(); err != nil {
 			t.Fatalf("git commit: %v\n%s", err, combined)
@@ -719,17 +721,122 @@ func TestReusableWorkflowConfiguresBootstrapProxyForEveryGoBuild(t *testing.T) {
 }
 
 func TestBootstrapProxyActionVerifiesArchiveBeforeExport(t *testing.T) {
-	content := readProjectFile(t, ".github/actions/setup-bootstrap-proxy/action.yml")
+	content := readProjectFile(t, ".github/actions/setup-bootstrap-proxy/setup.sh")
 	checksum := strings.Index(content, "sha256sum --check")
 	extraction := strings.Index(content, "tar --extract")
 	export := strings.Index(content, "GOPROXY=https://proxy.golang.org,file://")
 	if checksum < 0 || extraction < 0 || export < 0 || checksum > extraction || extraction > export {
 		t.Fatal("bootstrap proxy action must verify before extraction and export")
 	}
-	for _, required := range []string{"bootstrap_url:", "bootstrap_sha256:", "GONOSUMDB=github.com/faustbrian/go-*"} {
+	for _, required := range []string{"golib archive validate --file", "GONOSUMDB=github.com/faustbrian/go-*"} {
 		if !strings.Contains(content, required) {
 			t.Errorf("bootstrap proxy action lacks %q", required)
 		}
+	}
+}
+
+func TestBootstrapProxyActionStopsBeforeExtractionWhenArchiveValidationFails(t *testing.T) {
+	root := projectRoot(t)
+	task := t.TempDir()
+	bin := filepath.Join(task, "bin")
+	if err := os.Mkdir(bin, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	log := filepath.Join(task, "commands.log")
+	writeStub := func(name, body string) {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(bin, name), []byte("#!/usr/bin/env bash\nset -eu\n"+body), 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	writeStub("curl", `echo curl >>"${COMMAND_LOG}"
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == "--output" ]]; then shift; : >"$1"; fi
+  shift
+done
+`)
+	writeStub("sha256sum", `echo checksum >>"${COMMAND_LOG}"
+cat >/dev/null
+`)
+	writeStub("golib", `if [[ "${1:-}" == "--help" ]]; then
+  echo 'golib archive validate --file <path>'
+  exit 0
+fi
+echo golib >>"${COMMAND_LOG}"
+exit 42
+`)
+	writeStub("tar", `echo tar >>"${COMMAND_LOG}"
+`)
+	githubEnv := filepath.Join(task, "github-env")
+	if err := os.WriteFile(githubEnv, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	command := exec.CommandContext(t.Context(), "bash", filepath.Join(root, ".github", "actions", "setup-bootstrap-proxy", "setup.sh"))
+	environment := append(os.Environ(),
+		"PATH="+bin+":"+os.Getenv("PATH"),
+		"COMMAND_LOG="+log,
+		"RUNNER_TEMP="+task,
+		"GITHUB_ENV="+githubEnv,
+		"GITHUB_ACTION_PATH="+filepath.Join(root, ".github", "actions", "setup-bootstrap-proxy"),
+		"BOOTSTRAP_URL=https://example.invalid/proxy.tar.gz",
+		"BOOTSTRAP_SHA256="+strings.Repeat("a", 64),
+	)
+	command.Env = environment
+	legacyCommand := exec.CommandContext(t.Context(), "bash", filepath.Join(root, ".github", "actions", "setup-bootstrap-proxy", "setup.sh"))
+	legacyCommand.Env = environment
+	if err := legacyCommand.Run(); err == nil {
+		t.Fatal("bootstrap setup succeeded after archive validation failure")
+	}
+	commands, err := os.ReadFile(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(commands) != "curl\nchecksum\ngolib\n" || strings.Contains(string(commands), "tar") {
+		t.Fatalf("bootstrap command order = %q", commands)
+	}
+	exported, err := os.ReadFile(githubEnv)
+	if err != nil || len(exported) != 0 {
+		t.Fatalf("bootstrap exported environment after failure: %q, %v", exported, err)
+	}
+
+	writeStub("golib", `if [[ "${1:-}" == "--help" ]]; then
+  echo 'legacy golib help'
+  exit 0
+fi
+exit 99
+`)
+	writeStub("go", `[[ "${1:-}" == "-C" ]]
+[[ "${3:-}" == "run" ]]
+[[ "${4:-}" == "./cmd/golib" ]]
+echo go >>"${COMMAND_LOG}"
+exit 42
+`)
+	if err := os.WriteFile(log, nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := command.Run(); err == nil {
+		t.Fatal("legacy fallback succeeded after pinned-source validation failure")
+	}
+	commands, err = os.ReadFile(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(commands) != "curl\nchecksum\ngo\n" || strings.Contains(string(commands), "tar") {
+		t.Fatalf("legacy bootstrap command order = %q", commands)
+	}
+}
+
+func TestReusableWorkflowInstallsGolibBeforeEveryArchiveValidation(t *testing.T) {
+	content := readProjectFile(t, ".github/workflows/library-ci.yml")
+	codeQLStart := strings.Index(content, "\n  codeql:\n")
+	if codeQLStart < 0 {
+		t.Fatal("reusable workflow has no CodeQL job")
+	}
+	codeQL := content[codeQLStart:]
+	setup := strings.Index(codeQL, "uses: ./.golib-tooling/.github/actions/setup-golib")
+	bootstrap := strings.Index(codeQL, "uses: ./.golib-tooling/.github/actions/setup-bootstrap-proxy")
+	if setup < 0 || bootstrap < 0 || setup > bootstrap {
+		t.Fatal("CodeQL job must install golib before bootstrap archive validation")
 	}
 }
 
@@ -1063,12 +1170,185 @@ func TestReleaseWorkflowBuildsAndAttestsEverySupportedPlatform(t *testing.T) {
 			t.Errorf("release workflow lacks %q", required)
 		}
 	}
-	if strings.Contains(content, `[[ "${declared}" == "${GITHUB_REF_NAME}" ]]`) {
-		t.Fatal("release workflow requires the unpublished release to bootstrap itself")
+	if !strings.Contains(content, `declared="$(jq -er`) ||
+		!strings.Contains(content, `[[ "${declared}" != "${GITHUB_REF_NAME}" ]]`) {
+		t.Fatal("release workflow must bind the tag to the manifest version without bootstrapping an unpublished binary")
 	}
 	if strings.Contains(content, "go run ./cmd/golib check --all") {
 		t.Fatal("release workflow repeats the exact-commit repository contract")
 	}
+}
+
+func TestReleaseWorkflowVerifiesRealTagAgainstCurrentMainAndSecurityEvidence(t *testing.T) {
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/release.yml")), &workflow); err != nil {
+		t.Fatal(err)
+	}
+	var verifyScript string
+	for _, step := range workflow.Jobs["verify"].Steps {
+		if step.Name == "Validate release identity and contract" {
+			verifyScript = step.Run
+		}
+	}
+	if verifyScript == "" {
+		t.Fatal("release workflow lacks executable verification boundary")
+	}
+	for _, test := range []struct {
+		name        string
+		annotated   bool
+		ready       bool
+		advanceMain bool
+		wantSuccess bool
+		wantGoCalls int
+	}{
+		{name: "exact annotated evidence tag", annotated: true, ready: true, wantSuccess: true, wantGoCalls: 2},
+		{name: "exact lightweight evidence tag", ready: true, wantSuccess: true, wantGoCalls: 2},
+		{name: "tagged ancestor of main", annotated: true, ready: true, advanceMain: true},
+		{name: "current security interlock", annotated: true, wantGoCalls: 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			work := filepath.Join(t.TempDir(), "work")
+			origin := filepath.Join(t.TempDir(), "origin.git")
+			runGit(t, "", "init", "--bare", origin)
+			runGit(t, "", "init", "--initial-branch=main", work)
+			runGit(t, work, "config", "user.name", "Release Test")
+			runGit(t, work, "config", "user.email", "release@example.invalid")
+			runGit(t, work, "remote", "add", "origin", origin)
+
+			for _, directory := range []string{"docs/ecosystem/security", ".github/workflows"} {
+				if err := os.MkdirAll(filepath.Join(work, directory), 0o700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := os.WriteFile(filepath.Join(work, "modules.json"), []byte(`{"modules":[{"directory":".","module_path":"github.com/faustbrian/go-library-tools/v2","version":"2.0.0","tag_prefix":"v"}]}`), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			for name, data := range map[string]string{
+				"risk-register.json":   `{"schema_version":1,"risks":[]}`,
+				"security-matrix.json": `{"schema_version":1,"modules":[]}`,
+			} {
+				if err := os.WriteFile(filepath.Join(work, "docs", "ecosystem", "security", name), []byte(data), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := os.WriteFile(filepath.Join(work, ".github", "workflows", "release.yml"), []byte("name: fixture\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			runGit(t, work, "add", "modules.json", "docs", ".github")
+			runGit(t, work, "commit", "-m", "source")
+			sourceSHA := strings.TrimSpace(runGit(t, work, "rev-parse", "HEAD"))
+			if test.ready {
+				risks, matrix := releaseSecurityDocuments(t, sourceSHA)
+				if err := os.WriteFile(filepath.Join(work, "docs", "ecosystem", "security", "risk-register.json"), risks, 0o600); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(work, "docs", "ecosystem", "security", "security-matrix.json"), matrix, 0o600); err != nil {
+					t.Fatal(err)
+				}
+			} else {
+				for _, name := range []string{"risk-register.json", "security-matrix.json"} {
+					data, err := os.ReadFile(filepath.Join(projectRoot(t), "docs", "ecosystem", "security", name))
+					if err != nil {
+						t.Fatal(err)
+					}
+					if err := os.WriteFile(filepath.Join(work, "docs", "ecosystem", "security", name), data, 0o600); err != nil {
+						t.Fatal(err)
+					}
+				}
+			}
+			runGit(t, work, "add", "docs/ecosystem/security/risk-register.json", "docs/ecosystem/security/security-matrix.json")
+			runGit(t, work, "commit", "-m", "security evidence")
+			sha := strings.TrimSpace(runGit(t, work, "rev-parse", "HEAD"))
+			if test.annotated {
+				runGit(t, work, "tag", "-a", "v2.0.0", "-m", "release")
+			} else {
+				runGit(t, work, "tag", "v2.0.0")
+			}
+			runGit(t, work, "push", "origin", "main", "refs/tags/v2.0.0")
+			if test.advanceMain {
+				if err := os.WriteFile(filepath.Join(work, "later"), []byte("later\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+				runGit(t, work, "add", "later")
+				runGit(t, work, "commit", "-m", "advance main")
+				runGit(t, work, "push", "origin", "main")
+				remoteMain := strings.Fields(runGit(t, "", "ls-remote", origin, "refs/heads/main"))[0]
+				if remoteMain == sha {
+					t.Fatal("fixture did not advance remote main")
+				}
+			}
+			runGit(t, work, "checkout", "--detach", "v2.0.0")
+
+			bin := filepath.Join(t.TempDir(), "bin")
+			if err := os.Mkdir(bin, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			calls := filepath.Join(t.TempDir(), "go-calls")
+			releaseWriteExecutable(t, filepath.Join(bin, "gh"), "printf '{\"workflow_runs\":[{\"head_sha\":\"%s\",\"event\":\"push\",\"status\":\"completed\",\"conclusion\":\"success\"}]}' \"${GITHUB_SHA}\"\n")
+			releaseWriteExecutable(t, filepath.Join(bin, "go"), "printf '%s\\n' \"$*\" >>\"${GO_CALLS}\"\n")
+			command := exec.CommandContext(t.Context(), "bash", "-euo", "pipefail", "-c", verifyScript)
+			command.Dir = work
+			command.Env = append(os.Environ(), "PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"), "GITHUB_REF_NAME=v2.0.0", "GITHUB_SHA="+sha, "GITHUB_REPOSITORY=faustbrian/go-library-tools", "GITHUB_TOKEN=test", "RUNNER_TEMP="+t.TempDir(), "GO_CALLS="+calls)
+			output, err := command.CombinedOutput()
+			if (err == nil) != test.wantSuccess {
+				t.Fatalf("verify success = %t, want %t: %v, %s", err == nil, test.wantSuccess, err, output)
+			}
+			data, readErr := os.ReadFile(calls)
+			if readErr != nil && !os.IsNotExist(readErr) {
+				t.Fatal(readErr)
+			}
+			if got := strings.Count(strings.TrimSpace(string(data)), "\n") + boolInt(len(strings.TrimSpace(string(data))) > 0); got != test.wantGoCalls {
+				t.Fatalf("go calls = %d, want %d: %q; verify output: %s", got, test.wantGoCalls, data, output)
+			}
+		})
+	}
+}
+
+func releaseSecurityDocuments(t *testing.T, revision string) ([]byte, []byte) {
+	t.Helper()
+	names := []string{"codeql", "dependency-review", "go-vet", "gosec", "govulncheck", "license", "owned-analysis", "secret-current-tree", "secret-history", "staticcheck", "workflow-analysis"}
+	scanners := make([]map[string]any, 0, len(names))
+	for _, name := range names {
+		scanners = append(scanners, map[string]any{
+			"name": name, "tool_version": "test", "command": "test", "status": "passed",
+			"completed_at": "2099-09-01T00:00:00Z", "result": "passed", "result_sha256": strings.Repeat("a", 64),
+		})
+	}
+	matrix, err := json.Marshal(map[string]any{"schema_version": 1, "modules": []any{map[string]any{
+		"module": "github.com/faustbrian/go-library-tools/v2", "revision": revision, "scanners": scanners,
+		"release_verdict": map[string]any{"status": "pass", "owner": "maintainers", "decided_at": "2099-09-01T00:00:00Z", "rationale": "verified", "residual_risks": []string{"SEC-FLEET-001"}},
+	}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	digest := sha256.Sum256(matrix)
+	risks := []byte(fmt.Sprintf(`{"schema_version":1,"risks":[{"id":"SEC-FLEET-001","module":"github.com/faustbrian/go-library-tools/v2","severity":"medium","status":"accepted","owner":"maintainers","rationale":"bounded adoption","mitigation":"explicit rows","review_condition":"on release","evidence":"sha256:%x:security-matrix.json","expires_at":"2099-10-01T00:00:00Z"}]}`, digest))
+	return risks, matrix
+}
+
+func runGit(t *testing.T, directory string, args ...string) string {
+	t.Helper()
+	command := exec.CommandContext(t.Context(), "git", args...)
+	command.Dir = directory
+	output, err := command.CombinedOutput()
+	if err != nil {
+		t.Fatalf("git %v: %v: %s", args, err, output)
+	}
+	return string(output)
+}
+
+func releaseWriteExecutable(t *testing.T, path, body string) {
+	t.Helper()
+	if err := os.WriteFile(path, []byte("#!/usr/bin/env bash\nset -euo pipefail\n"+body), 0o700); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func boolInt(value bool) int {
+	if value {
+		return 1
+	}
+	return 0
 }
 
 func TestReleaseWorkflowPublishesCatalogsOnlyForExplicitMilestones(t *testing.T) {

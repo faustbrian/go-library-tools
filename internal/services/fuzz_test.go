@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/services"
+	"github.com/faustbrian/go-library-tools/v2/internal/services"
 )
 
 func FuzzServiceLock(f *testing.F) {

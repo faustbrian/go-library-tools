@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/cohesion"
-	"github.com/faustbrian/go-library-tools/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/cohesion"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
 )
 
 func TestCheckRequiresSchemaV2Adoption(t *testing.T) {

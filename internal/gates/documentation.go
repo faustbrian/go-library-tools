@@ -8,9 +8,9 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/faustbrian/go-library-tools/internal/docscheck"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
-	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/v2/internal/docscheck"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 )
 
 const maximumSpellingConfigSize = 1 << 20
@@ -139,6 +139,7 @@ func (runner Runner) runDocumentationLinks(ctx context.Context, directory string
 		return err
 	}
 	lychee := filepath.Join(toolRoot, "lychee")
+	// #nosec G306 -- the downloaded link checker must be owner-executable and lives in a task-owned directory
 	if err := os.WriteFile(lychee, binary, 0o700); err != nil {
 		return fmt.Errorf("write link checker: %w", err)
 	}

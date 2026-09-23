@@ -11,7 +11,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/docscheck"
+	"github.com/faustbrian/go-library-tools/v2/internal/docscheck"
 )
 
 func TestLycheeReleaseResolvesSupportedPlatforms(t *testing.T) {

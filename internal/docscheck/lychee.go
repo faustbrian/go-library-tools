@@ -74,6 +74,7 @@ func ExtractLychee(archive string, release LycheeRelease) ([]byte, error) {
 	if !withinMaximum(info.Size(), maximumLycheeArchiveSize) {
 		return nil, errors.New("lychee archive is too large")
 	}
+	// #nosec G304 -- archive is a fixed task-owned download checked for regularity, size, and pinned digest
 	compressed, err := os.ReadFile(archive)
 	if err != nil {
 		return nil, fmt.Errorf("read lychee archive: %w", err)

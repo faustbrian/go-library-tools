@@ -20,10 +20,13 @@ directories. Repository namespace checks apply to releasable modules; fixture
 modules that are not released may use external example identities, but their
 manifest and `go.mod` identities must still agree.
 
-Secret scanning combines the repository-owned `.gitleaks.toml` policy with one
-tool-owned exclusion for the root `.golib-tooling` checkout created by the
-reusable workflow. The merged configuration is task-owned and removed after
-the scan. Every other tracked and untracked repository path remains in scope.
+Secret scanning uses a centrally generated policy and does not load the
+repository-owned `.gitleaks.toml`. The generated configuration is task-owned
+and removed after the scan. Its narrow conjunction allowlists cover only
+centrally justified tool identities and exact synthetic security-test fixtures;
+all other tracked and untracked repository paths remain in scope.
+Security-enabled checks reject a repository-owned `.gitleaksignore`, and both
+scan modes ignore inline `gitleaks:allow` directives.
 
 The documentation gate requires a regular root README, bounds document count
 and size, rejects trailing whitespace and symlinks, and verifies local Markdown

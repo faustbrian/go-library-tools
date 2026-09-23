@@ -3,7 +3,7 @@ package consumers_test
 import (
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/consumers"
+	"github.com/faustbrian/go-library-tools/v2/internal/consumers"
 )
 
 func FuzzConsumerManifest(f *testing.F) {

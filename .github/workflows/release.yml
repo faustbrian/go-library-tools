@@ -18,6 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 0
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
@@ -33,7 +34,18 @@ jobs:
         run: |
           set -euo pipefail
           [[ "${GITHUB_REF_NAME}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-          [[ "$(git rev-parse HEAD)" == "$(git rev-list -n 1 "${GITHUB_REF_NAME}")" ]]
+          declared="$(jq -er '
+            [.modules[] | select(.directory == ".")] |
+            if length == 1 then .[0].tag_prefix + .[0].version
+            else error("release manifest requires exactly one root module") end
+          ' modules.json)"
+          if [[ "${declared}" != "${GITHUB_REF_NAME}" ]]; then exit 1; fi
+          tagged="$(git rev-list -n 1 "${GITHUB_REF_NAME}")"
+          remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk 'NR == 1 {print $1}')"
+          if [[ -z "${remote_main}" ]]; then exit 1; fi
+          if [[ "$(git rev-parse HEAD)" != "${tagged}" ]]; then exit 1; fi
+          if [[ "${GITHUB_SHA}" != "${tagged}" ]]; then exit 1; fi
+          if [[ "${remote_main}" != "${tagged}" ]]; then exit 1; fi
           ci_runs="$(
             GH_TOKEN="${GITHUB_TOKEN}" gh api \
               "/repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${GITHUB_SHA}&event=push&status=success&per_page=100"
@@ -44,6 +56,30 @@ jobs:
           task="$(mktemp -d "${RUNNER_TEMP}/golib-release-check.XXXXXX")"
           trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          matrix_sha256="$(sha256sum docs/ecosystem/security/security-matrix.json | awk '{print $1}')"
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            go run ./cmd/golib security validate --directory docs/ecosystem/security
+          module="$(jq -er '[.modules[] | select(.directory == ".")] | .[0].module_path' modules.json)"
+          source_revision="$(jq -er --arg module "${module}" '
+            [.modules[] | select(.module == $module and .release_verdict.status == "pass")] |
+            if length == 1 then .[0].revision
+            else error("release requires exactly one passing root-module security row") end
+          ' docs/ecosystem/security/security-matrix.json)"
+          git cat-file -e "${source_revision}^{commit}"
+          read -r release_commit release_parent extra_parent < <(git rev-list --parents -n 1 "${tagged}")
+          if [[ "${release_commit}" != "${tagged}" || "${release_parent:-}" != "${source_revision}" || -n "${extra_parent:-}" ]]; then exit 1; fi
+          unexpected="$(git diff --name-only "${source_revision}" "${tagged}" -- . \
+            ':(exclude)docs/ecosystem/security/risk-register.json' \
+            ':(exclude)docs/ecosystem/security/security-matrix.json')"
+          if [[ -n "${unexpected}" ]]; then exit 1; fi
+          jq -e --arg module "${module}" '
+            [.risks[] | select(
+              .id == "SEC-FLEET-001" and .module == $module and
+              (.status == "accepted" or .status == "mitigated" or .status == "closed") and
+              (.evidence | type == "string" and length > 0)
+            )] | length == 1
+          ' docs/ecosystem/security/risk-register.json >/dev/null
+          if [[ "$(sha256sum docs/ecosystem/security/security-matrix.json | awk '{print $1}')" != "${matrix_sha256}" ]]; then exit 1; fi
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
             go run ./cmd/golib release check
 
@@ -66,6 +102,8 @@ jobs:
           - {goos: darwin, goarch: arm64}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: .go-version
@@ -85,7 +123,7 @@ jobs:
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
             CGO_ENABLED=0 go build -trimpath -buildvcs=false \
-            -ldflags="-s -w -X github.com/faustbrian/go-library-tools/internal/buildinfo.Version=${VERSION} -X github.com/faustbrian/go-library-tools/internal/buildinfo.DesignLanguageSourceIdentity=${VERSION}" \
+            -ldflags="-s -w -X github.com/faustbrian/go-library-tools/v2/internal/buildinfo.Version=${VERSION} -X github.com/faustbrian/go-library-tools/v2/internal/buildinfo.DesignLanguageSourceIdentity=${VERSION}" \
             -o "${directory}/golib" ./cmd/golib
           cp LICENSE "${directory}/LICENSE"
           tar --sort=name --owner=0 --group=0 --numeric-owner \

@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/faustbrian/go-library-tools/internal/cli"
+	"github.com/faustbrian/go-library-tools/v2/internal/cli"
 )
 
 func TestExecuteShowsHelp(t *testing.T) {
@@ -22,7 +22,7 @@ func TestExecuteShowsHelp(t *testing.T) {
 	if code != 0 || stderr.Len() != 0 {
 		t.Fatalf("Execute() code = %d, stderr = %q", code, stderr.String())
 	}
-	for _, command := range []string{"check", "cohesion check [--json]", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "specification check [--online]", "workflows check", "services cycle", "release check [--all|--module <directory>]", "release dry-run [--all|--module <directory>]", "upgrade <plan|apply>"} {
+	for _, command := range []string{"archive validate --file <path>", "security validate --directory <path>", "check", "cohesion check [--json]", "config validate", "config show --json", "inventory", "consumers validate", "repository check", "specification check [--online]", "workflows check", "services cycle", "release check [--all|--module <directory>]", "release dry-run [--all|--module <directory>]", "upgrade <plan|apply>"} {
 		if !strings.Contains(stdout.String(), command) {
 			t.Errorf("help does not contain %q", command)
 		}
@@ -31,6 +31,116 @@ func TestExecuteShowsHelp(t *testing.T) {
 		if strings.Contains(stdout.String(), unsupported) {
 			t.Errorf("help advertises unsupported command %q", unsupported)
 		}
+	}
+}
+
+func TestExecuteValidatesSecurityRecords(t *testing.T) {
+	root := fixture(t)
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"security", "validate", "--directory", filepath.Join(root, "missing")}, root, &stdout, &stderr)
+	if code != 1 || !strings.Contains(stderr.String(), "open security document") {
+		t.Fatalf("Execute(security validate) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteSecurityValidationReportsOnlyValidRecordsAsSuccess(t *testing.T) {
+	root := fixture(t)
+	securityDir := t.TempDir()
+	risks := filepath.Join(securityDir, "risk-register.json")
+	matrix := filepath.Join(securityDir, "security-matrix.json")
+	if err := os.WriteFile(risks, []byte(`{"schema_version":1,"risks":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(matrix, []byte(`{"schema_version":1,"modules":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, test := range []struct {
+		name, replacement, matrixReplacement string
+		wantCode                             int
+		wantSuccess                          bool
+	}{
+		{"valid", `{"schema_version":1,"risks":[]}`, `{"schema_version":1,"modules":[]}`, 0, true},
+		{"invalid risk", `{"schema_version":1,"risks":null}`, `{"schema_version":1,"modules":[]}`, 1, false},
+		{"invalid matrix", `{"schema_version":1,"risks":[]}`, `{"schema_version":1,"modules":null}`, 1, false},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if err := os.WriteFile(risks, []byte(test.replacement), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(matrix, []byte(test.matrixReplacement), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			var stdout, stderr bytes.Buffer
+			code := cli.Execute([]string{"security", "validate", "--directory", securityDir}, root, &stdout, &stderr)
+			if code != test.wantCode || (stdout.String() == "ecosystem security records valid\n") != test.wantSuccess {
+				t.Fatalf("Execute() code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+			}
+			if test.wantSuccess && stderr.Len() != 0 {
+				t.Fatalf("valid records emitted stderr %q", stderr.String())
+			}
+			if !test.wantSuccess && (stderr.Len() == 0 || stdout.Len() != 0) {
+				t.Fatalf("invalid records emitted incorrect output: stdout=%q stderr=%q", stdout.String(), stderr.String())
+			}
+			stored, err := os.ReadFile(risks)
+			if err != nil || string(stored) != test.replacement {
+				t.Fatalf("risk register changed: %q, %v", stored, err)
+			}
+			stored, err = os.ReadFile(matrix)
+			if err != nil || string(stored) != test.matrixReplacement {
+				t.Fatalf("security matrix changed: %q, %v", stored, err)
+			}
+		})
+	}
+	var stdout, stderr bytes.Buffer
+	if code := cli.Execute([]string{"security", "validate"}, root, &stdout, &stderr); code != 2 || stdout.Len() != 0 || !strings.Contains(stderr.String(), "usage:") {
+		t.Fatalf("invalid security arguments: code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+}
+
+func TestExecuteSecurityValidationRedactsRecordIdentifiers(t *testing.T) {
+	root := fixture(t)
+	securityDir := t.TempDir()
+	sentinel := "sk_test_" + strings.Repeat("x", 24)
+	risks := []byte(`{"schema_version":1,"risks":[]}`)
+	row := fmt.Sprintf(`{"module":%q,"revision":"0123456789abcdef0123456789abcdef01234567","scanners":[],"release_verdict":{"status":"blocked","owner":"security@example.com","decided_at":"2026-09-13T00:00:00Z","rationale":"reviewed","residual_risks":[]}}`, sentinel)
+	matrix := []byte(`{"schema_version":1,"modules":[` + row + `,` + row + `]}`)
+	if !bytes.Contains(matrix, []byte(sentinel)) {
+		t.Fatal("test fixture omitted the synthetic credential sentinel")
+	}
+	for name, data := range map[string][]byte{"risk-register.json": risks, "security-matrix.json": matrix} {
+		if err := os.WriteFile(filepath.Join(securityDir, name), data, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"security", "validate", "--directory", securityDir}, root, &stdout, &stderr)
+	if code != 1 || stdout.Len() != 0 || stderr.Len() == 0 {
+		t.Fatalf("invalid record result: code=%d stdout_empty=%t stderr_nonempty=%t", code, stdout.Len() == 0, stderr.Len() != 0)
+	}
+	if !strings.Contains(stderr.String(), "duplicate module record") {
+		t.Fatal("CLI did not reach the duplicate-module semantic check")
+	}
+	if strings.Contains(stderr.String(), sentinel) {
+		t.Fatal("CLI leaked the synthetic credential sentinel")
+	}
+	for name, expected := range map[string][]byte{"risk-register.json": risks, "security-matrix.json": matrix} {
+		stored, err := os.ReadFile(filepath.Join(securityDir, name))
+		if err != nil || !bytes.Equal(stored, expected) {
+			t.Fatalf("%s changed during validation: %v", name, err)
+		}
+	}
+}
+
+func TestExecuteRejectsInvalidBootstrapArchive(t *testing.T) {
+	root := fixture(t)
+	archive := filepath.Join(root, "bootstrap.tgz")
+	if err := os.WriteFile(archive, []byte("not a gzip archive"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"archive", "validate", "--file", archive}, root, &stdout, &stderr)
+	if code != 1 || !strings.Contains(stderr.String(), "open gzip archive") {
+		t.Fatalf("Execute(archive validate) = %d, %q, %q", code, stdout.String(), stderr.String())
 	}
 }
 
@@ -49,6 +159,29 @@ func TestExecuteReportsCohesionAdoptionAsDeterministicJSON(t *testing.T) {
 	}
 	if err := json.Unmarshal(stdout.Bytes(), &report); err != nil || report.Valid || len(report.Diagnostics) != 1 || report.Diagnostics[0].Code != "adoption-required" {
 		t.Fatalf("cohesion report = %#v, error = %v", report, err)
+	}
+}
+
+func TestExecuteCohesionRedactsInvalidModuleIdentity(t *testing.T) {
+	root := fixture(t)
+	secret := "credentials-AKIA1234567890-secret"
+	write(t, filepath.Join(root, "modules.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","modules":[{"directory":"../`+secret+`","module_path":"github.com/faustbrian/example","packages":[]}]}`)
+
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"cohesion", "check"}, root, &stdout, &stderr)
+	if code != 1 || stdout.String() != "invalid-manifest: : cannot load canonical manifests\n" || stderr.Len() != 0 {
+		t.Fatalf("Execute(cohesion check) = %d, %q, %q", code, stdout.String(), stderr.String())
+	}
+	if strings.Contains(stdout.String(), secret) || strings.Contains(stderr.String(), secret) {
+		t.Fatal("cohesion diagnostics disclosed module identity")
+	}
+
+	stdout.Reset()
+	stderr.Reset()
+	code = cli.Execute([]string{"cohesion", "check", "--json"}, root, &stdout, &stderr)
+	if code != 1 || stderr.Len() != 0 || strings.Contains(stdout.String(), secret) ||
+		!strings.Contains(stdout.String(), `"code": "invalid-manifest"`) {
+		t.Fatalf("Execute(cohesion check --json) = %d, %q, %q", code, stdout.String(), stderr.String())
 	}
 }
 

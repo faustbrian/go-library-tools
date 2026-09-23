@@ -11,7 +11,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 	"golang.org/x/mod/module"
 )
 
@@ -70,6 +71,105 @@ func TestReleaseRehearsalBuildsAndConsumesLocalProxy(t *testing.T) {
 	}
 }
 
+func TestReleaseCandidateInstallsV2CommandFromLocalProxy(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	initialModuleFiles := make(map[string][]byte, 2)
+	for _, name := range []string{"go.mod", "go.sum"} {
+		initialModuleFiles[name], err = os.ReadFile(filepath.Join(root, name))
+		if err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Cleanup(func() {
+		for name, initial := range initialModuleFiles {
+			current, readErr := os.ReadFile(filepath.Join(root, name))
+			if readErr != nil || !bytes.Equal(current, initial) {
+				t.Errorf("release proxy test changed root %s: %v", name, readErr)
+			}
+		}
+	})
+	policy, err := config.Load(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	catalog, err := inventory.Load(root, policy)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(catalog.Modules) != 1 {
+		t.Fatalf("module count = %d, want 1", len(catalog.Modules))
+	}
+	candidate := catalog.Modules[0]
+	executor, cleanup, err := NewProcessExecutor(root, io.Discard, io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := cleanup(); err != nil {
+			t.Errorf("cleanup: %v", err)
+		}
+	})
+	workspaceOwner, ok := executor.(taskWorkspace)
+	if !ok {
+		t.Fatalf("executor type = %T, want task workspace", executor)
+	}
+	workspace := workspaceOwner.TemporaryDirectory()
+	seed := filepath.Join(workspace, "dependency-seed")
+	if err := os.Mkdir(seed, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"go.mod", "go.sum"} {
+		if writeErr := os.WriteFile(filepath.Join(seed, name), initialModuleFiles[name], 0o600); writeErr != nil {
+			t.Fatal(writeErr)
+		}
+	}
+	if err := executor.Run(t.Context(), Command{Name: "go", Args: []string{"mod", "download", "all"}, Dir: seed}); err != nil {
+		t.Fatalf("seed dependency proxy: %v", err)
+	}
+	proxy, err := (Runner{Root: root}).buildReleaseProxy(workspace, []inventory.Module{candidate})
+	if err != nil {
+		t.Fatalf("build release proxy: %v", err)
+	}
+
+	positiveBin := filepath.Join(workspace, "positive-bin")
+	if err := os.Mkdir(positiveBin, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	positive := Command{
+		Name: "go", Args: []string{"install", "github.com/faustbrian/go-library-tools/v2/cmd/golib@v2.0.0"},
+		Dir: workspace, Env: map[string]string{
+			"GOBIN": positiveBin, "GOPROXY": "file://" + proxy, "GOSUMDB": "off", "GOWORK": "off",
+		},
+	}
+	if err := executor.Run(t.Context(), positive); err != nil {
+		t.Fatalf("install v2 command: %v", err)
+	}
+	entries, err := os.ReadDir(positiveBin)
+	if err != nil || len(entries) != 1 || entries[0].Name() != "golib" {
+		t.Fatalf("installed commands = %#v, %v", entries, err)
+	}
+
+	negativeBin := filepath.Join(workspace, "negative-bin")
+	if err := os.Mkdir(negativeBin, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	negative := positive
+	negative.Args = []string{"install", "github.com/faustbrian/go-library-tools/cmd/golib@v2.0.0"}
+	negative.Env = map[string]string{
+		"GOBIN": negativeBin, "GOPROXY": "file://" + proxy, "GOSUMDB": "off", "GOWORK": "off",
+	}
+	if err := executor.Run(t.Context(), negative); err == nil {
+		t.Fatal("installing the unsuffixed v2 command succeeded")
+	}
+	entries, err = os.ReadDir(negativeBin)
+	if err != nil || len(entries) != 0 {
+		t.Fatalf("unsuffixed install produced commands = %#v, %v", entries, err)
+	}
+}
+
 func TestReleaseDryRunRoutesRehearsalBeforeGates(t *testing.T) {
 	root := releaseFixture(t)
 	module := releaseModule()
@@ -86,6 +186,124 @@ func TestReleaseDryRunRoutesRehearsalBeforeGates(t *testing.T) {
 	runner.Executor = executorFunction(func(context.Context, Command) error { return nil })
 	if err := runner.ReleaseDryRun(context.Background(), []string{"."}); err == nil {
 		t.Fatal("ReleaseDryRun(rehearsal failure) error = nil")
+	}
+}
+
+func TestReleaseDryRunRejectsRootGitleaksIgnoreBeforeEffects(t *testing.T) {
+	root := releaseFixture(t)
+	if err := os.WriteFile(filepath.Join(root, ".gitleaksignore"), []byte("consumer suppression\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	selected := releaseModule()
+	selected.Gates = map[string]bool{"security": true}
+	selected.RequiredServices = []string{"postgresql"}
+	workspace := t.TempDir()
+	initialEntries, err := os.ReadDir(workspace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	commands := 0
+	services := 0
+	files := &trackingReleaseFiles{}
+	archives := 0
+	runner := Runner{
+		Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{selected}},
+		Executor: workspaceExecutor{directory: workspace, run: func(context.Context, Command) error {
+			commands++
+			return nil
+		}},
+		releaseFiles: files,
+		releaseArchive: func(io.Writer, module.Version, string) error {
+			archives++
+			return nil
+		},
+		startServices: func(context.Context, []string) (serviceLease, error) {
+			services++
+			return &fakeServiceLease{}, nil
+		},
+	}
+	err = runner.ReleaseDryRun(context.Background(), []string{"."})
+	if !errors.Is(err, errRepositoryGitleaksIgnore) {
+		t.Fatalf("ReleaseDryRun() error = %v", err)
+	}
+	finalEntries, readErr := os.ReadDir(workspace)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	if commands != 0 || services != 0 || files.calls != 0 || archives != 0 ||
+		len(initialEntries) != len(finalEntries) {
+		t.Fatalf("effects commands/services/files/archives/workspace = %d/%d/%d/%d/%d->%d", commands, services, files.calls, archives, len(initialEntries), len(finalEntries))
+	}
+}
+
+func TestReleaseDryRunRejectsInvalidCompactSuppressionBeforeRehearsal(t *testing.T) {
+	root := releaseFixture(t)
+	releaseWrite(t, filepath.Join(root, "library.go"), "package library\n/*#nosec*/\nfunc value() {}\n")
+	module := releaseModule()
+	module.Gates = map[string]bool{"security": true}
+	commands := make([]Command, 0)
+	runner := Runner{
+		Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}},
+		Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+			commands = append(commands, command)
+			return nil
+		}},
+	}
+	err := runner.ReleaseDryRun(context.Background(), []string{"."})
+	if err == nil || !strings.Contains(err.Error(), "library.go:2:") || !strings.Contains(err.Error(), "exact rule IDs") {
+		t.Fatalf("ReleaseDryRun() error = %v", err)
+	}
+	if len(commands) != 0 {
+		t.Fatalf("commands ran before suppression failure: %#v", commands)
+	}
+}
+
+func TestReleaseDryRunCompletesBatchSuppressionPreflightBeforeRehearsal(t *testing.T) {
+	root := t.TempDir()
+	for _, directory := range []string{"a-valid", "z-invalid"} {
+		if err := os.MkdirAll(filepath.Join(root, directory), 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	releaseWrite(t, filepath.Join(root, "a-valid", "go.mod"), "module example.com/library/a\n\ngo 1.27.0\n")
+	releaseWrite(t, filepath.Join(root, "a-valid", "valid.go"), "package a\nfunc value() {}\n")
+	releaseWrite(t, filepath.Join(root, "z-invalid", "go.mod"), "module example.com/library/z\n\ngo 1.27.0\n")
+	releaseWrite(t, filepath.Join(root, "z-invalid", "invalid.go"), "package z\n//#nosec\nfunc value() {}\n")
+	rootModule := releaseModule()
+	rootModule.Directory = "a-valid"
+	rootModule.ModulePath = "example.com/library/a"
+	rootModule.TagPrefix = "a/v"
+	rootModule.Gates = map[string]bool{"security": true}
+	rootModule.RequiredServices = []string{"postgresql"}
+	nestedModule := releaseModule()
+	nestedModule.Directory = "z-invalid"
+	nestedModule.ModulePath = "example.com/library/z"
+	nestedModule.TagPrefix = "z/v"
+	nestedModule.Gates = map[string]bool{"security": true}
+	nestedModule.RequiredServices = []string{"valkey"}
+	var commands []Command
+	starts := 0
+	var output bytes.Buffer
+	runner := Runner{
+		Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{nestedModule, rootModule}}, Output: &output,
+		Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+			commands = append(commands, command)
+			return nil
+		}},
+		startServices: func(context.Context, []string) (serviceLease, error) {
+			starts++
+			return &fakeServiceLease{}, nil
+		},
+	}
+	err := runner.ReleaseDryRun(context.Background(), []string{"z-invalid", "a-valid", "z-invalid"})
+	if err == nil || !strings.Contains(err.Error(), "invalid.go:2:") || !strings.Contains(err.Error(), "exact rule IDs") {
+		t.Fatalf("ReleaseDryRun() error = %v", err)
+	}
+	if len(commands) != 0 {
+		t.Fatalf("release commands = %#v, want none before batch preflight", commands)
+	}
+	if output.String() != "[a-valid] security-suppressions\n[z-invalid] security-suppressions\n" || starts != 0 {
+		t.Fatalf("release preflight output/starts = %q/%d", output.String(), starts)
 	}
 }
 
@@ -193,6 +411,28 @@ func releaseModule() inventory.Module {
 type controlledReleaseFiles struct {
 	stage   string
 	failure error
+}
+
+type trackingReleaseFiles struct{ calls int }
+
+func (files *trackingReleaseFiles) MkdirTemp(string, string) (string, error) {
+	files.calls++
+	return "", errors.New("release filesystem must not be reached")
+}
+
+func (files *trackingReleaseFiles) MkdirAll(string, os.FileMode) error {
+	files.calls++
+	return errors.New("release filesystem must not be reached")
+}
+
+func (files *trackingReleaseFiles) WriteFile(string, []byte, os.FileMode) error {
+	files.calls++
+	return errors.New("release filesystem must not be reached")
+}
+
+func (files *trackingReleaseFiles) Create(string) (io.WriteCloser, error) {
+	files.calls++
+	return nil, errors.New("release filesystem must not be reached")
 }
 
 func (files controlledReleaseFiles) MkdirTemp(directory, pattern string) (string, error) {

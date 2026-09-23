@@ -10,9 +10,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
-	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 )
 
 const compatibilityToolVersion = "v0.0.0-20260718201538-764159d718ef"

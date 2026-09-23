@@ -41,6 +41,8 @@ jobs:
       matrix: ${{ steps.plan.outputs.matrix }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: .go-version
@@ -129,6 +131,7 @@ jobs:
           ref: ${{ matrix.default_branch }}
           path: consumer
           token: ${{ secrets.GOLIB_ROLLOUT_TOKEN || github.token }}
+          persist-credentials: false
       - name: Plan coordinated pin update
         working-directory: consumer
         env:
@@ -181,6 +184,7 @@ jobs:
         run: |
           set -euo pipefail
           [[ -n "${GH_TOKEN}" ]]
+          gh auth setup-git
           branch="chore/golib-${VERSION#v}"
           if git ls-remote --exit-code --heads origin "${branch}" >/dev/null 2>&1; then
             echo "remote branch already exists: ${branch}" >&2

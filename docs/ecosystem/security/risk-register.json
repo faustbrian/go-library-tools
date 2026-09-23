@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "risks": [
+    {
+      "id": "SEC-FLEET-001",
+      "module": "github.com/faustbrian/go-library-tools",
+      "severity": "medium",
+      "status": "open",
+      "owner": "go-library-tools maintainers",
+      "rationale": "The tooling contract supports per-module security records before every standalone repository has published a row.",
+      "mitigation": "Absent rows are not interpreted as passing verdicts; adoption remains explicit and risk-proportional.",
+      "review_condition": "Review when a repository adopts the security record contract or before the next ecosystem milestone."
+    }
+  ]
+}

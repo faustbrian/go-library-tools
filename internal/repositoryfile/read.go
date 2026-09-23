@@ -69,6 +69,7 @@ func (operatingSystem) Lstat(name string) (os.FileInfo, error) {
 }
 
 func (operatingSystem) Open(name string) (file, error) {
+	// #nosec G304 -- read validates containment, regularity, and same-file identity before consuming content
 	return os.Open(name)
 }
 

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
 func TestLoadRequiresTypedOperationsForEnabledCustomGates(t *testing.T) {
@@ -201,6 +201,101 @@ func TestLoadSnapshotRejectsUnreadableOrInvalidModuleManifest(t *testing.T) {
 			catalog, snapshot, err := inventory.LoadSnapshot(test.root(t), policy)
 			if err == nil || catalog.Repository != "" || snapshot != nil || !strings.Contains(err.Error(), "load module manifest") {
 				t.Fatalf("LoadSnapshot() = %#v, %q, %v", catalog, snapshot, err)
+			}
+		})
+	}
+}
+
+func TestLoadRejectsHostileModuleIdentitiesWithoutDisclosure(t *testing.T) {
+	policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}
+	tests := []struct {
+		name  string
+		field string
+		value string
+		want  string
+	}{
+		{"missing directory", "directory", "", "invalid module directory"},
+		{"null directory", "directory", `"directory":null,`, "invalid module directory"},
+		{"numeric directory", "directory", `"directory":0,`, "invalid module directory"},
+		{"boolean directory", "directory", `"directory":false,`, "invalid module directory"},
+		{"traversal directory", "directory", `"directory":"../credentials-AKIA1234567890-secret",`, "invalid module directory"},
+		{"absolute directory", "directory", `"directory":"/credentials-AKIA1234567890-secret",`, "invalid module directory"},
+		{"unclean directory", "directory", `"directory":"nested/../credentials-AKIA1234567890-secret",`, "invalid module directory"},
+		{"backslash directory", "directory", `"directory":"nested\\\\credentials-AKIA1234567890-secret",`, "invalid module directory"},
+		{"control directory", "directory", `"directory":"nested\ncredentials-AKIA1234567890-secret",`, "invalid module directory"},
+		{"credential directory", "directory", `"directory":"sk_test_0123456789abcdefghijklmnopqrstuv",`, "invalid module directory"},
+		{"source directory", "directory", `"directory":"SOURCE_SENTINEL_DO_NOT_RETAIN_7f3a9c21",`, "invalid module directory"},
+		{"missing module path", "module_path", "", "invalid module path"},
+		{"null module path", "module_path", `"module_path":null,`, "invalid module path"},
+		{"numeric module path", "module_path", `"module_path":0,`, "invalid module path"},
+		{"boolean module path", "module_path", `"module_path":false,`, "invalid module path"},
+		{"invalid module path", "module_path", `"module_path":"credentials-AKIA1234567890-secret value",`, "invalid module path"},
+		{"control module path", "module_path", `"module_path":"credentials-AKIA1234567890-secret\nvalue",`, "invalid module path"},
+		{"namespace module path", "module_path", `"module_path":"github.com/faustbrian/example-other",`, "invalid module path"},
+		{"credential module path", "module_path", `"module_path":"github.com/faustbrian/example/sk_test_0123456789abcdefghijklmnopqrstuv",`, "invalid module path"},
+		{"source module path", "module_path", `"module_path":"github.com/faustbrian/example/SOURCE_SENTINEL_DO_NOT_RETAIN_7f3a9c21",`, "invalid module path"},
+	}
+	for _, version := range []int{1, 2, 3} {
+		for _, test := range tests {
+			t.Run(fmt.Sprintf("v%d/%s", version, test.name), func(t *testing.T) {
+				root := fixture(t)
+				directory := `"directory":".",`
+				modulePath := `"module_path":"github.com/faustbrian/example",`
+				if test.field == "directory" {
+					directory = test.value
+				} else {
+					modulePath = test.value
+				}
+				manifest := fmt.Sprintf(`{"schema_version":%d,"repository":"github.com/faustbrian/example","modules":[{%s%s"packages":[]}]}`, version, directory, modulePath)
+				write(t, filepath.Join(root, "modules.json"), manifest)
+
+				catalog, snapshot, err := inventory.LoadSnapshot(root, policy)
+				if err == nil || err.Error() != test.want || catalog.Repository != "" || catalog.Modules != nil || snapshot != nil {
+					t.Fatalf("LoadSnapshot() = %#v, %q, %v; want zero, nil, %q", catalog, snapshot, err, test.want)
+				}
+				if strings.Contains(err.Error(), "credentials") || strings.Contains(err.Error(), "schema") || strings.Contains(err.Error(), "/modules/") {
+					t.Fatalf("LoadSnapshot() disclosed input structure: %v", err)
+				}
+				if loaded, loadErr := inventory.Load(root, policy); loadErr == nil || loadErr.Error() != test.want || loaded.Repository != "" || loaded.Modules != nil {
+					t.Fatalf("Load() = %#v, %v; want zero, %q", loaded, loadErr, test.want)
+				}
+			})
+		}
+	}
+}
+
+func TestLoadValidatesEveryModuleIdentityAndAcceptsCanonicalNestedModules(t *testing.T) {
+	policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}
+	for _, version := range []int{1, 2, 3} {
+		t.Run(fmt.Sprintf("v%d", version), func(t *testing.T) {
+			root := fixture(t)
+			if err := os.MkdirAll(filepath.Join(root, "nested", "module"), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			write(t, filepath.Join(root, "nested", "module", "go.mod"), "module github.com/faustbrian/example/nested\n\ngo 1.27.0\n")
+			baseline := identityManifest(version,
+				identityModule(version, ".", "github.com/faustbrian/example"),
+				identityModule(version, "nested/module", "github.com/faustbrian/example/nested"),
+			)
+			write(t, filepath.Join(root, "modules.json"), baseline)
+			if _, err := inventory.Load(root, policy); err != nil {
+				t.Fatalf("Load(valid nested identity) error = %v", err)
+			}
+
+			for _, test := range []struct {
+				name, old, replacement, want string
+			}{
+				{"second directory", `"directory":"nested/module"`, `"directory":"sk_test_0123456789abcdefghijklmnopqrstuv"`, "invalid module directory"},
+				{"second module path", `"module_path":"github.com/faustbrian/example/nested"`, `"module_path":"github.com/faustbrian/example/SOURCE_SENTINEL_DO_NOT_RETAIN_7f3a9c21"`, "invalid module path"},
+			} {
+				t.Run(test.name, func(t *testing.T) {
+					hostile := strings.Replace(baseline, test.old, test.replacement, 1)
+					write(t, filepath.Join(root, "modules.json"), hostile)
+					catalog, snapshot, err := inventory.LoadSnapshot(root, policy)
+					if err == nil || err.Error() != test.want || catalog.Repository != "" || catalog.Modules != nil || snapshot != nil {
+						t.Fatalf("LoadSnapshot() = %#v, %q, %v", catalog, snapshot, err)
+					}
+				})
 			}
 		})
 	}
@@ -657,6 +752,21 @@ func fixture(t *testing.T) string {
 }`)
 	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[]}`)
 	return root
+}
+
+func identityManifest(version int, modules ...string) string {
+	prefix := fmt.Sprintf(`{"schema_version":%d,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[`, version)
+	if version == 3 {
+		prefix = `{"schema_id":"urn:golib:cohesion:module-manifest:v3","schema_version":3,"repository":"github.com/faustbrian/example","go_version":"1.27.0","modules":[`
+	}
+	return prefix + strings.Join(modules, ",") + `]}`
+}
+
+func identityModule(version int, directory, modulePath string) string {
+	if version < 3 {
+		return fmt.Sprintf(`{"directory":%q,"module_path":%q,"go_version":"1.27.0","kind":"fixture","releasable":false,"gates":{},"packages":[]}`, directory, modulePath)
+	}
+	return fmt.Sprintf(`{"directory":%q,"module_path":%q,"go_version":"1.27.0","kind":"fixture","purpose":"","lifecycle":"internal","releasable":false,"version":"","tag_prefix":"","gates":{},"test_tags":[],"build_tags":[],"required_services":[],"external_runtime_dependencies":[],"interoperability_tools":[],"conformance_corpora":[],"specifications":[],"owned_dependencies":[],"reverse_owned_dependencies":[],"packages":[],"family":"","family_label":"","family_description":"","family_order":0}`, directory, modulePath)
 }
 
 func write(t *testing.T, path, content string) {

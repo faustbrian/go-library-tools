@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/upgrade"
+	"github.com/faustbrian/go-library-tools/v2/internal/upgrade"
 )
 
 const (

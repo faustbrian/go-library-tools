@@ -15,6 +15,8 @@ lockstep release train.
   module and package inventory for maintainers.
 - [Compatibility set and receipts](compatibility-sets.md): exact known-good
   public versions, covered compositions, exclusions, and receipt sources.
+- [Security contract](security/README.md): shared threat model, vulnerability
+  management, risk ownership, scanner records, and release verdicts.
 - [Residual register](../../release/cohesion-residuals.json): remaining
   material exceptions, migrations, and removal conditions.
 - [Release process](../release.md): milestone validation, native consumer

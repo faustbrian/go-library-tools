@@ -35,7 +35,9 @@ func (operatingReportFiles) Lstat(path string) (os.FileInfo, error) { return os.
 func (operatingReportFiles) CreateTemp(directory, pattern string) (durableReportFile, error) {
 	return os.CreateTemp(directory, pattern)
 }
-func (operatingReportFiles) Link(oldPath, newPath string) error   { return os.Link(oldPath, newPath) }
+func (operatingReportFiles) Link(oldPath, newPath string) error { return os.Link(oldPath, newPath) }
+
+// #nosec G304 -- callers construct report paths from validated roots and SHA-256 identifiers
 func (operatingReportFiles) ReadFile(path string) ([]byte, error) { return os.ReadFile(path) }
 func (operatingReportFiles) Remove(path string) error             { return os.Remove(path) }
 
@@ -118,6 +120,7 @@ func LoadReport(root, inputDigest string) ([]byte, ReportResult, error) {
 		return nil, ReportResult{}, fmt.Errorf("%w: report root or input digest is malformed", ErrInvalid)
 	}
 	path := filepath.Join(root, "reports", strings.TrimPrefix(inputDigest, "sha256:")+".json")
+	// #nosec G304 -- root is absolute and the only variable path component is a validated SHA-256 digest
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, ReportResult{}, fmt.Errorf("read mutation report: %w", err)

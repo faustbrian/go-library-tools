@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
 func FuzzModuleSelection(f *testing.F) {

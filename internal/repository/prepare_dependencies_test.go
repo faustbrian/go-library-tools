@@ -597,7 +597,7 @@ func commitRehearsalFixture(t *testing.T, root string) {
 	} else if !errors.Is(err, os.ErrNotExist) {
 		t.Fatal(err)
 	}
-	command := exec.CommandContext(t.Context(), "git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "--quiet", "-m", "fixture")
+	command := exec.CommandContext(t.Context(), "git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture")
 	command.Dir = root
 	if output, err := command.CombinedOutput(); err != nil {
 		t.Fatalf("commit fixture: %v\n%s", err, output)

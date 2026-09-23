@@ -5,7 +5,9 @@ import (
 	"context"
 	"errors"
 	"io"
+	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -93,6 +95,25 @@ func TestProcessExecutorHonorsCommandOutputOverrides(t *testing.T) {
 	}
 }
 
+func TestProcessExecutorRejectsBoundedCommandBeforeStartWithoutTreeTermination(t *testing.T) {
+	failure := errors.New("process-tree termination unsupported")
+	executor := &processExecutor{
+		stdout: io.Discard,
+		stderr: io.Discard,
+		prepareBoundedProcess: func(*exec.Cmd) error {
+			return failure
+		},
+	}
+	err := executor.Run(context.Background(), Command{
+		Name:   "command-that-must-not-start",
+		Stdout: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
+		Stderr: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
+	})
+	if err == nil || !errors.Is(err, failure) {
+		t.Fatalf("Run() = %v", err)
+	}
+}
+
 func TestProcessExecutorPassesCommandInput(t *testing.T) {
 	created, cleanup, err := NewProcessExecutor(t.TempDir(), io.Discard, io.Discard)
 	if err != nil {
@@ -111,6 +132,104 @@ func TestProcessExecutorPassesCommandInput(t *testing.T) {
 	})
 	if err != nil || stdout.String() != "expected" {
 		t.Fatalf("Run() = %v, %q", err, stdout.String())
+	}
+}
+
+func TestProcessExecutorStopsOverflowingProcessTree(t *testing.T) {
+	created, cleanup, err := NewProcessExecutor(t.TempDir(), io.Discard, io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := cleanup(); err != nil {
+			t.Error(err)
+		}
+	})
+	heartbeat := filepath.Join(t.TempDir(), "heartbeat")
+	stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	started := time.Now()
+	err = created.Run(ctx, Command{
+		Name: os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
+		Env:    map[string]string{"GO_WANT_HELPER": "1", "HELPER_SPAWN_DESCENDANT": "1", "HELPER_HEARTBEAT": heartbeat},
+		Stdout: stdout, Stderr: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
+	})
+	if err == nil || !stdout.didOverflow() || time.Since(started) > 5*time.Second {
+		t.Fatalf("Run() = %v, overflow %v, duration %v", err, stdout.didOverflow(), time.Since(started))
+	}
+	info, statErr := os.Stat(heartbeat)
+	if statErr != nil {
+		t.Fatalf("descendant heartbeat: %v", statErr)
+	}
+	time.Sleep(200 * time.Millisecond)
+	stable, statErr := os.Stat(heartbeat)
+	if statErr != nil || !stable.ModTime().Equal(info.ModTime()) {
+		t.Fatalf("descendant remained active: %v, %v", info.ModTime(), statErr)
+	}
+}
+
+func TestBoundedProcessOutputUsesIndependentExactLimits(t *testing.T) {
+	stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+	stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+	if written, err := stdout.Write(make([]byte, maximumSecurityProcessOutput)); err != nil || written != maximumSecurityProcessOutput || stdout.didOverflow() {
+		t.Fatalf("exact-limit write = %d/%v, overflow = %v", written, err, stdout.didOverflow())
+	}
+	if stderr.didOverflow() {
+		t.Fatal("unused stderr inherited stdout overflow state")
+	}
+	if written, err := stdout.Write([]byte{'x'}); err != nil || written != 1 || !stdout.didOverflow() {
+		t.Fatalf("limit-plus-one write = %d/%v, overflow = %v", written, err, stdout.didOverflow())
+	}
+	if stderr.didOverflow() {
+		t.Fatal("stderr inherited stdout overflow state")
+	}
+}
+
+func TestProcessExecutorPreservesCancellationCause(t *testing.T) {
+	if os.Getenv("CI") != "true" {
+		t.Skip("native process-tree cancellation runs only in hosted CI")
+	}
+	created, cleanup, err := NewProcessExecutor(t.TempDir(), io.Discard, io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := cleanup(); err != nil {
+			t.Error(err)
+		}
+	})
+	heartbeat := filepath.Join(t.TempDir(), "heartbeat")
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan error, 1)
+	go func() {
+		done <- created.Run(ctx, Command{
+			Name: os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
+			Env:    map[string]string{"GO_WANT_HELPER": "1", "HELPER_WAIT": "1", "HELPER_HEARTBEAT": heartbeat},
+			Stdout: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
+			Stderr: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
+		})
+	}()
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		if _, statErr := os.Stat(heartbeat); statErr == nil {
+			break
+		} else if !errors.Is(statErr, fs.ErrNotExist) {
+			t.Fatal(statErr)
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("helper did not start")
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	cancel()
+	select {
+	case runErr := <-done:
+		if !errors.Is(runErr, context.Canceled) {
+			t.Fatalf("Run() error = %v, want context cancellation", runErr)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("Run() did not return after cancellation")
 	}
 }
 
@@ -166,12 +285,45 @@ func TestProcessExecutorCleanupReportsWalkAndRemoveFailures(t *testing.T) {
 	}
 }
 
-func TestProcessHelper(_ *testing.T) {
+func TestProcessHelper(t *testing.T) {
 	if os.Getenv("GO_WANT_HELPER") != "1" {
 		return
 	}
 	if os.Getenv("HELPER_FAIL") == "1" {
 		os.Exit(23)
+	}
+	if os.Getenv("HELPER_SPAWN_DESCENDANT") == "1" {
+		process := exec.CommandContext(t.Context(), os.Args[0], "-test.run=TestProcessHelper", "--")
+		process.Env = make([]string, 0, len(os.Environ())+2)
+		for _, entry := range os.Environ() {
+			if strings.HasPrefix(entry, "GO_WANT_HELPER=") || strings.HasPrefix(entry, "HELPER_SPAWN_DESCENDANT=") || strings.HasPrefix(entry, "HELPER_STREAM=") {
+				continue
+			}
+			process.Env = append(process.Env, entry)
+		}
+		process.Env = append(process.Env, "GO_WANT_HELPER=1", "HELPER_STREAM=1")
+		process.Stdout = os.Stdout
+		process.Stderr = os.Stderr
+		if err := process.Run(); err != nil {
+			os.Exit(23)
+		}
+		os.Exit(0)
+	}
+	if os.Getenv("HELPER_STREAM") == "1" {
+		_ = os.WriteFile(os.Getenv("HELPER_HEARTBEAT"), []byte("alive"), 0o600)
+		payload := bytes.Repeat([]byte("sensitive-output"), (maximumSecurityProcessOutput/16)+1)
+		_, _ = os.Stdout.Write(payload[:maximumSecurityProcessOutput+1])
+		for {
+			_ = os.WriteFile(os.Getenv("HELPER_HEARTBEAT"), []byte("alive"), 0o600)
+			_, _ = os.Stdout.Write([]byte("sensitive-output"))
+			time.Sleep(10 * time.Millisecond)
+		}
+	}
+	if os.Getenv("HELPER_WAIT") == "1" {
+		for {
+			_ = os.WriteFile(os.Getenv("HELPER_HEARTBEAT"), []byte("alive"), 0o600)
+			time.Sleep(10 * time.Millisecond)
+		}
 	}
 	if os.Getenv("HELPER_READ_STDIN") == "1" {
 		_, _ = io.Copy(os.Stdout, os.Stdin)

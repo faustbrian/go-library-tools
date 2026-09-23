@@ -3,18 +3,24 @@ package gates
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"go/parser"
+	"go/token"
 	"io"
+	"io/fs"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/docscheck"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/docscheck"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
 func TestFormattingAndSafetyReportMalformedOrUnreadableTrees(t *testing.T) {
@@ -31,6 +37,35 @@ func TestFormattingAndSafetyReportMalformedOrUnreadableTrees(t *testing.T) {
 	}
 	if err := runner.checkFormatting(context.Background(), filepath.Join(root, "missing")); err == nil {
 		t.Fatal("checkFormatting() missing root error = nil")
+	}
+}
+
+func TestRunSecuritySuppressesAndBoundsScannerOutput(t *testing.T) {
+	secret := []byte("credentials-AKIA1234567890-secret")
+	failure := errors.New("scanner failed")
+	for _, stream := range []string{"stdout", "stderr"} {
+		t.Run(stream, func(t *testing.T) {
+			var announcements bytes.Buffer
+			runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
+				if command.Stdout == nil || command.Stderr == nil {
+					t.Fatal("security scanner streams are not owned")
+				}
+				writer := command.Stdout
+				if stream == "stderr" {
+					writer = command.Stderr
+				}
+				payload := bytes.Repeat(secret, (maximumSecurityProcessOutput/len(secret))+1)
+				_, _ = writer.Write(payload[:maximumSecurityProcessOutput+1])
+				return failure
+			})}
+			err := runner.runSecurity(context.Background(), &announcements, "/repo", inventory.Module{Directory: ".", ModulePath: "example"})
+			if err == nil || !strings.Contains(err.Error(), "output exceeded") || !errors.Is(err, failure) {
+				t.Fatalf("runSecurity() error = %v", err)
+			}
+			if bytes.Contains(announcements.Bytes(), secret) {
+				t.Fatalf("runSecurity() disclosed scanner output: %q", announcements.String())
+			}
+		})
 	}
 }
 
@@ -157,7 +192,7 @@ func TestCoverageRejectsModulesWithoutRequiredPackages(t *testing.T) {
 	}
 }
 
-func TestGitleaksConfigRequiresTaskWorkspaceAndRepositoryConfiguration(t *testing.T) {
+func TestGitleaksConfigRequiresTaskWorkspace(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, ".gitleaks.toml"), []byte("title = \"fixture\"\n"), 0o600); err != nil {
 		t.Fatal(err)
@@ -170,7 +205,6 @@ func TestGitleaksConfigRequiresTaskWorkspaceAndRepositoryConfiguration(t *testin
 	}{
 		{"no workspace", executorFunction(func(context.Context, Command) error { return nil }), root, "task-owned"},
 		{"relative workspace", workspaceExecutor{directory: "relative", run: func(context.Context, Command) error { return nil }}, root, "task-owned"},
-		{"missing configuration", workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }}, t.TempDir(), "read gitleaks config"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			_, _, err := (Runner{Root: test.root, Executor: test.executor}).createGitleaksConfig()
@@ -215,7 +249,36 @@ func TestGitleaksConfigReportsOwnedFileFailures(t *testing.T) {
 	}
 }
 
-func TestCheckReportsGitleaksConfigCleanupFailure(t *testing.T) {
+func TestAnalysisConfigReportsOwnedFileFailures(t *testing.T) {
+	failure := errors.New("injected failure")
+	for _, test := range []struct {
+		name  string
+		files *fakeSecretConfigFiles
+		want  string
+	}{
+		{"create", &fakeSecretConfigFiles{createErr: failure}, "create temporary analysis config"},
+		{"write", &fakeSecretConfigFiles{file: &fakeNamedFile{name: "config", writeErr: failure}}, "write temporary analysis config"},
+		{"close", &fakeSecretConfigFiles{file: &fakeNamedFile{name: "config", closeErr: failure}}, "close temporary analysis config"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			runner := Runner{
+				Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error {
+					return nil
+				}},
+				secretConfigFiles: test.files,
+			}
+			_, _, err := runner.createAnalysisConfig()
+			if err == nil || !strings.Contains(err.Error(), test.want) || strings.Contains(err.Error(), "gitleaks") {
+				t.Fatalf("createAnalysisConfig() error = %v", err)
+			}
+			if test.name != "create" && test.files.removed != "config" {
+				t.Fatalf("removed path = %q", test.files.removed)
+			}
+		})
+	}
+}
+
+func TestCheckReportsAnalysisConfigCleanupFailure(t *testing.T) {
 	failure := errors.New("injected cleanup failure")
 	root := t.TempDir()
 	for name, content := range map[string]string{
@@ -236,31 +299,1382 @@ func TestCheckReportsGitleaksConfigCleanupFailure(t *testing.T) {
 		}}},
 		Executor: executor, secretConfigFiles: files,
 	}
-	if err := runner.Check(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "remove temporary gitleaks config") {
+	if err := runner.Check(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "remove temporary analysis config") {
 		t.Fatalf("Check() error = %v", err)
 	}
 }
 
-func TestCheckReportsMissingGitleaksConfiguration(t *testing.T) {
-	root := t.TempDir()
-	for name, content := range map[string]string{
-		"go.mod":     "module example\n\ngo 1.27.0\n",
-		"example.go": "package example\n",
+func TestRunSecurityPreservesGitleaksScannerAndCleanupFailures(t *testing.T) {
+	for _, stage := range []string{"git", "dir"} {
+		t.Run(stage, func(t *testing.T) {
+			scannerFailure := errors.New("injected scanner failure")
+			configCleanupFailure := errors.New("injected config cleanup failure")
+			sourceCleanupFailure := errors.New("injected source cleanup failure")
+			files := &securityPolicyFiles{gitleaksRemoveErr: configCleanupFailure}
+			var commands []string
+			sourceCleanupCalls := 0
+			runner := Runner{
+				Root: t.TempDir(),
+				Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+					joined := strings.Join(command.Args, " ")
+					commands = append(commands, joined)
+					if strings.Contains(joined, "gitleaks") && strings.Contains(joined, " "+stage+" ") {
+						return scannerFailure
+					}
+					return nil
+				}},
+				secretConfigFiles: files,
+				gitleaksSourceCleanup: func(string) error {
+					sourceCleanupCalls++
+					return sourceCleanupFailure
+				},
+			}
+			err := runner.runSecurity(context.Background(), io.Discard, runner.Root, inventory.Module{Directory: ".", ModulePath: "example"})
+			if !errors.Is(err, scannerFailure) || !errors.Is(err, configCleanupFailure) ||
+				!errors.Is(err, sourceCleanupFailure) {
+				t.Fatalf("runSecurity() error = %v", err)
+			}
+			if files.gitleaksRemoved != 1 || sourceCleanupCalls != 1 {
+				t.Fatalf("gitleaks config/source cleanup calls = %d/%d", files.gitleaksRemoved, sourceCleanupCalls)
+			}
+			for _, command := range commands {
+				if strings.Contains(command, "go-licenses") || strings.Contains(command, "cyclonedx-gomod") {
+					t.Fatalf("later gate ran after scanner failure: %q", command)
+				}
+			}
+		})
+	}
+}
+
+func TestCopyGitleaksCurrentTreeCapturesAllFilesystemClasses(t *testing.T) {
+	source := t.TempDir()
+	for path, content := range map[string]string{
+		".git/config":          "excluded repository metadata\n",
+		".gitignore":           "generated/\n",
+		".gitleaksignore":      "excluded consumer suppression\n",
+		"tracked-modified.go":  "package fixture\nconst state = \"modified\"\n",
+		"untracked.txt":        "untracked\n",
+		"generated/secret.txt": "gitignored generated output\n",
 	} {
-		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+		target := filepath.Join(source, filepath.FromSlash(path))
+		if err := os.MkdirAll(filepath.Dir(target), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(target, []byte(content), 0o600); err != nil {
 			t.Fatal(err)
 		}
 	}
+	destination := filepath.Join(t.TempDir(), "current")
+	if err := copyGitleaksCurrentTree(source, destination); err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range []string{".gitignore", "tracked-modified.go", "untracked.txt", "generated/secret.txt"} {
+		if _, err := os.Stat(filepath.Join(destination, filepath.FromSlash(path))); err != nil {
+			t.Fatalf("snapshot %s: %v", path, err)
+		}
+	}
+	for _, path := range []string{".git", ".gitleaksignore"} {
+		if _, err := os.Lstat(filepath.Join(destination, path)); !errors.Is(err, fs.ErrNotExist) {
+			t.Fatalf("excluded snapshot path %s exists: %v", path, err)
+		}
+	}
+}
+
+func TestCreateGitleaksSourcesCapturesAllRefsWithoutMutatingRepository(t *testing.T) {
+	source := t.TempDir()
+	runGit := func(arguments ...string) string {
+		t.Helper()
+		// #nosec G204 -- arguments are fixed and every path is test-owned.
+		command := exec.CommandContext(t.Context(), "git", arguments...)
+		command.Dir = source
+		output, err := command.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v: %v: %s", arguments, err, output)
+		}
+		return string(output)
+	}
+	runGit("init", "-q")
+	if err := os.WriteFile(filepath.Join(source, "main.txt"), []byte("main\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit("add", "main.txt")
+	runGit("-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "main")
+	mainBranch := strings.TrimSpace(runGit("branch", "--show-current"))
+	runGit("checkout", "-qb", "hidden-history")
+	if err := os.WriteFile(filepath.Join(source, "hidden.txt"), []byte("historical\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit("add", "hidden.txt")
+	runGit("-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "hidden-ref")
+	hiddenCommit := strings.TrimSpace(runGit("rev-parse", "HEAD"))
+	runGit("checkout", "-q", mainBranch)
+	runGit("config", "uploadpack.hideRefs", "refs/heads/hidden-history")
+	refsBefore := runGit("show-ref")
+	configBefore := runGit("config", "--local", "--list")
+
+	executor := workspaceExecutor{directory: t.TempDir(), run: func(ctx context.Context, command Command) error {
+		// #nosec G204 -- executable and arguments are produced by the production source snapshotter.
+		process := exec.CommandContext(ctx, command.Name, command.Args...)
+		process.Dir = command.Dir
+		process.Stdout = command.Stdout
+		process.Stderr = command.Stderr
+		return process.Run()
+	}}
+	runner := Runner{Root: source, Executor: executor}
+	sources, cleanup, err := runner.createGitleaksSources(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	// #nosec G204 -- the snapshot path and commit are test-owned.
+	reachable := exec.CommandContext(t.Context(), "git", "-C", sources.history, "merge-base", "--is-ancestor", hiddenCommit, "refs/golib-source/heads/hidden-history")
+	output, err := reachable.CombinedOutput()
+	if err != nil {
+		t.Fatalf("history snapshot omitted upload-pack-hidden ref %s: %v: %s", hiddenCommit, err, output)
+	}
+	if err := cleanup(); err != nil {
+		t.Fatal(err)
+	}
+	if refsAfter := runGit("show-ref"); refsAfter != refsBefore {
+		t.Fatalf("source refs changed: before=%q after=%q", refsBefore, refsAfter)
+	}
+	if configAfter := runGit("config", "--local", "--list"); configAfter != configBefore {
+		t.Fatalf("source config changed: before=%q after=%q", configBefore, configAfter)
+	}
+}
+
+func TestRunSecurityScansUploadPackHiddenHistory(t *testing.T) {
+	if os.Getenv("GOLIB_GITLEAKS_INTEGRATION") != "1" {
+		t.Skip("set GOLIB_GITLEAKS_INTEGRATION=1 to run the pinned scanner contract")
+	}
+	secret := strings.Join([]string{"gh", "p_", "A1b2C3d4E5f6", "G7h8I9j0K1l2", "M3n4O5p6Q7r8"}, "")
+	root, _ := gitleaksRepository(t, map[string]string{"README.md": "fixture\n"})
+	runGit := func(arguments ...string) string {
+		t.Helper()
+		// #nosec G204 -- arguments are fixed and every path is test-owned.
+		command := exec.CommandContext(t.Context(), "git", arguments...)
+		command.Dir = root
+		output, err := command.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v: %v: %s", arguments, err, output)
+		}
+		return string(output)
+	}
+	mainBranch := strings.TrimSpace(runGit("branch", "--show-current"))
+	runGit("checkout", "-qb", "hidden-history")
+	secretPath := filepath.Join(root, "security", "github.txt")
+	if err := os.MkdirAll(filepath.Dir(secretPath), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(secretPath, []byte(secret), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	runGit("add", "security/github.txt")
+	runGit("-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "hidden-secret")
+	runGit("checkout", "-q", mainBranch)
+	runGit("config", "uploadpack.hideRefs", "refs/heads/hidden-history")
+
+	reportPath := filepath.Join(t.TempDir(), "hidden-history-report.json")
+	var commands []string
+	executor := workspaceExecutor{directory: t.TempDir(), run: func(ctx context.Context, command Command) error {
+		joined := strings.Join(command.Args, " ")
+		commands = append(commands, joined)
+		if command.Name == "git" || strings.Contains(joined, "gitleaks") {
+			if strings.Contains(joined, "gitleaks") && strings.Contains(joined, " git ") {
+				command.Args = append(command.Args, "--report-format", "json", "--report-path", reportPath)
+			}
+			// #nosec G204 -- executable and arguments are fixed by the production gate under test.
+			process := exec.CommandContext(ctx, command.Name, command.Args...)
+			process.Dir = command.Dir
+			process.Env = mergeEnvironment(os.Environ(), command.Env)
+			process.Stdin = command.Stdin
+			process.Stdout = command.Stdout
+			process.Stderr = command.Stderr
+			return process.Run()
+		}
+		return nil
+	}}
+	err := (Runner{Root: root, Executor: executor}).runSecurity(
+		context.Background(), io.Discard, root, inventory.Module{Directory: ".", ModulePath: "example"},
+	)
+	if err == nil || strings.Contains(err.Error(), secret) {
+		t.Fatalf("runSecurity() error = %v", err)
+	}
+	report, readErr := os.ReadFile(reportPath)
+	if readErr != nil {
+		t.Fatal(readErr)
+	}
+	var findings []gitleaksFinding
+	if decodeErr := json.Unmarshal(report, &findings); decodeErr != nil {
+		t.Fatalf("decode hidden-history report: %v: %s", decodeErr, report)
+	}
+	if !slices.ContainsFunc(findings, func(finding gitleaksFinding) bool {
+		return finding.RuleID == "github-pat" && filepath.ToSlash(finding.File) == "security/github.txt"
+	}) {
+		t.Fatalf("hidden-history findings = %#v", findings)
+	}
+	for _, command := range commands {
+		if strings.Contains(command, "gitleaks") && strings.Contains(command, " dir ") {
+			t.Fatalf("current-tree scan ran after hidden-history finding: %q", command)
+		}
+	}
+}
+
+func TestRunSecurityStopsAfterGitleaksCleanupFailure(t *testing.T) {
+	cleanupFailure := errors.New("injected cleanup failure")
+	files := &securityPolicyFiles{gitleaksRemoveErr: cleanupFailure}
+	var commands []string
 	runner := Runner{
-		Root: root,
-		Catalog: inventory.Inventory{Modules: []inventory.Module{{
-			Directory: ".", ModulePath: "example", Gates: map[string]bool{"security": true},
-		}}},
-		Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }},
+		Root: t.TempDir(),
+		Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+			commands = append(commands, strings.Join(command.Args, " "))
+			return nil
+		}},
+		secretConfigFiles: files,
 	}
-	if err := runner.Check(context.Background(), []string{"."}); err == nil || !strings.Contains(err.Error(), "read gitleaks config") {
-		t.Fatalf("Check() error = %v", err)
+	err := runner.runSecurity(context.Background(), io.Discard, runner.Root, inventory.Module{Directory: ".", ModulePath: "example"})
+	if !errors.Is(err, cleanupFailure) || !strings.Contains(err.Error(), "remove temporary gitleaks config") {
+		t.Fatalf("runSecurity() error = %v", err)
 	}
+	for _, command := range commands {
+		if strings.Contains(command, "go-licenses") || strings.Contains(command, "cyclonedx-gomod") {
+			t.Fatalf("later gate ran after cleanup failure: %q", command)
+		}
+	}
+}
+
+func TestRunSecurityCleansGitleaksConfigBeforeLaterGates(t *testing.T) {
+	stop := errors.New("stop at licenses")
+	files := &securityPolicyFiles{}
+	runner := Runner{
+		Root: t.TempDir(),
+		Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+			if strings.Contains(strings.Join(command.Args, " "), "go-licenses") {
+				if files.gitleaksRemoved != 1 {
+					t.Fatalf("gitleaks cleanup calls before licenses = %d", files.gitleaksRemoved)
+				}
+				return stop
+			}
+			return nil
+		}},
+		secretConfigFiles: files,
+	}
+	err := runner.runSecurity(context.Background(), io.Discard, runner.Root, inventory.Module{Directory: ".", ModulePath: "example"})
+	if !errors.Is(err, stop) {
+		t.Fatalf("runSecurity() error = %v", err)
+	}
+}
+
+func TestGeneratedGitleaksPolicyIntegration(t *testing.T) {
+	if os.Getenv("GOLIB_GITLEAKS_INTEGRATION") != "1" {
+		t.Skip("set GOLIB_GITLEAKS_INTEGRATION=1 to run the pinned scanner contract")
+	}
+	allowed := strings.Join([]string{"sk_", "test_", "0123456789abcdef", "ghijklmnopqrstuv"}, "")
+	alternateStripe := strings.Join([]string{"sk_", "test_", "0123456789abcdef", "ghijklmnopqrstuw"}, "")
+	githubPAT := strings.Join([]string{"gh", "p_", "A1b2C3d4E5f6", "G7h8I9j0K1l2", "M3n4O5p6Q7r8"}, "")
+	httpSignatureFixture := strings.Join([]string{
+		"01234567", "89abcdef", "01234567", "89abcdef",
+		"01234567", "89abcdef", "01234567", "89abcdef",
+	}, "")
+	confluentFixtures := []string{
+		strings.Join([]string{"67b4c198", "5e70a7ae", "a45d754e", "14be8468", "83a37ccd", "073d76e5", "99d71900", "4af0ea37"}, ""),
+		strings.Join([]string{"4c9ab0b7", "2db6bcd6", "a6f90cd8", "e638e7f2", "80708c95", "18128b59", "33a9a904", "ad072ff7"}, ""),
+		strings.Join([]string{"c92530ae", "87091474", "8c82e238", "b72ff1d3", "c60c2ec0", "360150b0", "1863750e", "6dad0ac1"}, ""),
+	}
+	alternateHTTPFixture := httpSignatureFixture[:len(httpSignatureFixture)-1] + "e"
+	alternateConfluentFixture := confluentFixtures[0][:len(confluentFixtures[0])-1] + "8"
+
+	t.Run("exact tuple in history and current tree", func(t *testing.T) {
+		root, configPath := gitleaksRepository(t, map[string]string{
+			"internal/inventory/inventory_test.go":      allowed,
+			".gitleaks.toml":                            "malformed = [",
+			"differential/shared-corpus/corpus_test.go": `const deterministicSigningKey = "` + httpSignatureFixture + `"`,
+			"providers/confluent/CHANGELOG.md": strings.Join([]string{
+				"CONFLUENT-DEC-001 sha256:" + confluentFixtures[0],
+				"CONFLUENT-DEC-002 sha256:" + confluentFixtures[1],
+				"CONFLUENT-DEC-003 sha256:" + confluentFixtures[2],
+			}, "\n"),
+		})
+		for _, mode := range []string{"git", "dir"} {
+			findings, output, err := runGitleaksIntegration(t, root, configPath, mode)
+			if err != nil || len(findings) != 0 {
+				t.Fatalf("gitleaks %s findings = %#v, error = %v, output = %q", mode, findings, err, output)
+			}
+		}
+	})
+
+	t.Run("inline allowances are ignored in history and current tree", func(t *testing.T) {
+		root, configPath := gitleaksRepository(t, map[string]string{
+			"security/github.txt": githubPAT + " //gitleaks:allow\n",
+		})
+		for _, mode := range []string{"git", "dir"} {
+			findings, output, err := runGitleaksIntegration(t, root, configPath, mode)
+			if err == nil || !slices.ContainsFunc(findings, func(finding gitleaksFinding) bool {
+				return finding.RuleID == "github-pat" && filepath.ToSlash(finding.File) == "security/github.txt"
+			}) {
+				t.Fatalf("gitleaks %s findings = %#v, error = %v, output = %q", mode, findings, err, output)
+			}
+			if strings.Contains(output, githubPAT) {
+				t.Fatalf("gitleaks %s output disclosed a synthetic secret: %q", mode, output)
+			}
+		}
+	})
+
+	t.Run("directory named gitleaksignore cannot suppress findings", func(t *testing.T) {
+		root, configPath := gitleaksRepository(t, map[string]string{
+			".gitleaksignore/entry": "suppression-shaped-text\n",
+			"security/github.txt":   githubPAT,
+		})
+		for _, mode := range []string{"git", "dir"} {
+			findings, output, err := runGitleaksIntegration(t, root, configPath, mode)
+			if err == nil || !slices.ContainsFunc(findings, func(finding gitleaksFinding) bool {
+				return finding.RuleID == "github-pat" && filepath.ToSlash(finding.File) == "security/github.txt"
+			}) {
+				t.Fatalf("gitleaks %s findings = %#v, error = %v, output = %q", mode, findings, err, output)
+			}
+			if strings.Contains(output, githubPAT) {
+				t.Fatalf("gitleaks %s output disclosed a synthetic secret: %q", mode, output)
+			}
+		}
+	})
+
+	for _, test := range []struct {
+		name              string
+		files             map[string]string
+		wantRules         []string
+		assertExactAbsent bool
+	}{
+		{
+			name: "value mismatch",
+			files: map[string]string{
+				"internal/inventory/inventory_test.go": alternateStripe,
+			},
+			wantRules: []string{"stripe-access-token"},
+		},
+		{
+			name: "path mismatch",
+			files: map[string]string{
+				"internal/inventory/other_test.go": allowed,
+			},
+			wantRules: []string{"stripe-access-token"},
+		},
+		{
+			name: "rule mismatch",
+			files: map[string]string{
+				"internal/inventory/inventory_test.go": githubPAT,
+			},
+			wantRules: []string{"github-pat"},
+		},
+		{
+			name: "mixed findings",
+			files: map[string]string{
+				"internal/inventory/inventory_test.go": allowed,
+				"internal/inventory/other_test.go":     allowed,
+				"security/github.txt":                  githubPAT,
+			},
+			wantRules:         []string{"stripe-access-token", "github-pat"},
+			assertExactAbsent: true,
+		},
+		{
+			name: "http signature fixture value mismatch",
+			files: map[string]string{
+				"differential/shared-corpus/corpus_test.go": `const deterministicSigningKey = "` + alternateHTTPFixture + `"`,
+			},
+			wantRules: []string{"generic-api-key"},
+		},
+		{
+			name: "http signature fixture path mismatch",
+			files: map[string]string{
+				"differential/shared-corpus/other_test.go": `const deterministicSigningKey = "` + httpSignatureFixture + `"`,
+			},
+			wantRules: []string{"generic-api-key"},
+		},
+		{
+			name: "http signature fixture rule mismatch",
+			files: map[string]string{
+				"differential/shared-corpus/corpus_test.go": githubPAT,
+			},
+			wantRules: []string{"github-pat"},
+		},
+		{
+			name: "confluent fixture value mismatch",
+			files: map[string]string{
+				"providers/confluent/CHANGELOG.md": "CONFLUENT-DEC-001 sha256:" + alternateConfluentFixture,
+			},
+			wantRules: []string{"confluent-secret-key"},
+		},
+		{
+			name: "confluent fixture path mismatch",
+			files: map[string]string{
+				"providers/confluent/OTHER.md": "CONFLUENT-DEC-001 sha256:" + confluentFixtures[0],
+			},
+			wantRules: []string{"confluent-secret-key"},
+		},
+		{
+			name: "confluent fixture rule mismatch",
+			files: map[string]string{
+				"providers/confluent/CHANGELOG.md": githubPAT,
+			},
+			wantRules: []string{"github-pat"},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root, configPath := gitleaksRepository(t, test.files)
+			for _, mode := range []string{"git", "dir"} {
+				findings, output, err := runGitleaksIntegration(t, root, configPath, mode)
+				if err == nil {
+					t.Fatalf("gitleaks %s error = nil", mode)
+				}
+				for _, secret := range []string{allowed, alternateStripe, githubPAT, httpSignatureFixture, alternateHTTPFixture, confluentFixtures[0], alternateConfluentFixture} {
+					if strings.Contains(output, secret) {
+						t.Fatalf("gitleaks %s output disclosed a synthetic secret: %q", mode, output)
+					}
+				}
+				for _, rule := range test.wantRules {
+					if !slices.ContainsFunc(findings, func(finding gitleaksFinding) bool { return finding.RuleID == rule }) {
+						t.Fatalf("gitleaks %s findings = %#v, missing rule %q", mode, findings, rule)
+					}
+				}
+				if test.assertExactAbsent && slices.ContainsFunc(findings, func(finding gitleaksFinding) bool {
+					return finding.RuleID == "stripe-access-token" &&
+						filepath.ToSlash(finding.File) == "internal/inventory/inventory_test.go"
+				}) {
+					t.Fatalf("exact allowlisted tuple was reported: %#v", findings)
+				}
+			}
+		})
+	}
+}
+
+func TestRunSecurityPreservesCentralPathExceptionsInIsolatedSources(t *testing.T) {
+	if os.Getenv("GOLIB_GITLEAKS_INTEGRATION") != "1" {
+		t.Skip("set GOLIB_GITLEAKS_INTEGRATION=1 to run the pinned scanner contract")
+	}
+	fixtureKey := strings.Join([]string{
+		"01234567", "89abcdef", "01234567", "89abcdef",
+		"01234567", "89abcdef", "01234567", "89abcdef",
+	}, "")
+	confluentFixtures := []string{
+		strings.Join([]string{"67b4c198", "5e70a7ae", "a45d754e", "14be8468", "83a37ccd", "073d76e5", "99d71900", "4af0ea37"}, ""),
+		strings.Join([]string{"4c9ab0b7", "2db6bcd6", "a6f90cd8", "e638e7f2", "80708c95", "18128b59", "33a9a904", "ad072ff7"}, ""),
+		strings.Join([]string{"c92530ae", "87091474", "8c82e238", "b72ff1d3", "c60c2ec0", "360150b0", "1863750e", "6dad0ac1"}, ""),
+	}
+	root, _ := gitleaksRepository(t, map[string]string{
+		"differential/shared-corpus/corpus_test.go": `const differentialKey = "` + fixtureKey + `"`,
+		"providers/confluent/CHANGELOG.md": strings.Join([]string{
+			"CONFLUENT-DEC-001 sha256:" + confluentFixtures[0],
+			"CONFLUENT-DEC-002 sha256:" + confluentFixtures[1],
+			"CONFLUENT-DEC-003 sha256:" + confluentFixtures[2],
+		}, "\n"),
+	})
+	executor := workspaceExecutor{directory: t.TempDir(), run: func(ctx context.Context, command Command) error {
+		joined := strings.Join(command.Args, " ")
+		if command.Name == "git" || strings.Contains(joined, "gitleaks") {
+			// #nosec G204 -- the executable and arguments are fixed by the production gate under test.
+			process := exec.CommandContext(ctx, command.Name, command.Args...)
+			process.Dir = command.Dir
+			process.Env = mergeEnvironment(os.Environ(), command.Env)
+			process.Stdin = command.Stdin
+			process.Stdout = command.Stdout
+			process.Stderr = command.Stderr
+			return process.Run()
+		}
+		if strings.Contains(joined, "cyclonedx-gomod") && command.Stdout != nil {
+			_, _ = io.WriteString(command.Stdout, `{"bomFormat":"CycloneDX","specVersion":"1.6"}`)
+		}
+		return nil
+	}}
+	runner := Runner{Root: root, Executor: executor}
+	if err := runner.runSecurity(context.Background(), io.Discard, root, inventory.Module{Directory: ".", ModulePath: "example"}); err != nil {
+		t.Fatalf("runSecurity() error = %v", err)
+	}
+}
+
+type gitleaksFinding struct {
+	RuleID      string `json:"RuleID"`
+	File        string `json:"File"`
+	Fingerprint string `json:"Fingerprint"`
+}
+
+func gitleaksRepository(t *testing.T, files map[string]string) (string, string) {
+	t.Helper()
+	root := t.TempDir()
+	for path, content := range files {
+		target := filepath.Join(root, filepath.FromSlash(path))
+		if err := os.MkdirAll(filepath.Dir(target), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(target, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	configPath := filepath.Join(root, "generated-gitleaks.toml")
+	if err := os.WriteFile(configPath, []byte(gitleaksPolicy), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, arguments := range [][]string{
+		{"init", "-q"},
+		{"add", "."},
+		{"-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "fixture"},
+	} {
+		// #nosec G204 -- the executable and arguments are fixed test-owned Git operations.
+		command := exec.CommandContext(t.Context(), "git", arguments...)
+		command.Dir = root
+		if output, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("git %v: %v: %s", arguments, err, output)
+		}
+	}
+	return root, configPath
+}
+
+func runGitleaksIntegration(t *testing.T, root, configPath, mode string) ([]gitleaksFinding, string, error) {
+	t.Helper()
+	reportPath := filepath.Join(t.TempDir(), "gitleaks.json")
+	arguments := []string{"run", "github.com/zricethezav/gitleaks/v8@v8.30.1", mode, ".", "--config", configPath, "--ignore-gitleaks-allow", "--log-level", "debug", "--no-banner", "--redact", "--report-format", "json", "--report-path", reportPath}
+	if mode == "git" {
+		arguments = append(arguments, "--log-opts=--all")
+	}
+	// #nosec G204 -- the executable and scanner arguments are fixed; paths are test-owned.
+	command := exec.CommandContext(t.Context(), "go", arguments...)
+	command.Dir = root
+	output, err := command.CombinedOutput()
+	report, readErr := os.ReadFile(reportPath)
+	if readErr != nil && !os.IsNotExist(readErr) {
+		t.Fatal(readErr)
+	}
+	var findings []gitleaksFinding
+	if len(report) > 0 {
+		if decodeErr := json.Unmarshal(report, &findings); decodeErr != nil {
+			t.Fatalf("decode gitleaks report: %v: %s", decodeErr, report)
+		}
+	}
+	return findings, string(output), err
+}
+
+func TestSecuritySuppressionsRequireNarrowRulesAndReasons(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "example.go")
+	for _, test := range []struct {
+		name    string
+		content string
+		want    string
+	}{
+		{"broad nosec", "package example\n// #nosec -- broad\nfunc value() {}\n", "exact rule IDs"},
+		{"unexplained nolint", "package example\nfunc value() int { return 1 } //nolint:gosec\n", "inline reason"},
+		{"documented", "package example\n// #nosec G304 -- fixed repository-owned path\nfunc value() int { return 1 } //nolint:gosec // bounded conversion\n", ""},
+		{"directive text in string", "package example\nconst guidance = \"#nosec requires exact rule IDs\"\n", ""},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if err := os.WriteFile(path, []byte(test.content), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			err := checkSecuritySuppressions(root)
+			if test.want == "" && err != nil {
+				t.Fatalf("checkSecuritySuppressions() error = %v", err)
+			}
+			if test.want != "" && (err == nil || !strings.Contains(err.Error(), test.want)) {
+				t.Fatalf("checkSecuritySuppressions() error = %v, want %q", err, test.want)
+			}
+		})
+	}
+}
+
+func TestSecuritySuppressionsValidateEveryDirectiveInACommentGroup(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "example.go")
+	content := "package example\n// #nosec G304 -- fixed repository-owned path\n// #nosec\nfunc value() {}\n"
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	err := checkSecuritySuppressions(root)
+	if err == nil || !strings.Contains(err.Error(), "example.go:3:") || !strings.Contains(err.Error(), "exact rule IDs") {
+		t.Fatalf("checkSecuritySuppressions() error = %v", err)
+	}
+}
+
+func TestSecuritySuppressionsAcceptEveryNativeSpelling(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "example.go")
+	for _, test := range []struct {
+		name    string
+		comment string
+	}{
+		{"spaced line", "// #nosec G304 -- fixed repository-owned path"},
+		{"compact line", "//#nosec G304 -- fixed repository-owned path"},
+		{"compact block", "/*#nosec G304 -- fixed repository-owned path*/"},
+		{"spaced block", "/* #nosec G304 -- fixed repository-owned path */"},
+		{"multiline block", "/*\n#nosec G304 -- fixed repository-owned path\n*/"},
+		{"gosec disable", "//gosec:disable G304 -- fixed repository-owned path"},
+		{"nosec continuation", "//#nosecG304 -- fixed repository-owned path"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			content := "package example\n" + test.comment + "\nfunc value() {}\n"
+			if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			if err := checkSecuritySuppressions(root); err != nil {
+				t.Fatalf("checkSecuritySuppressions() error = %v", err)
+			}
+		})
+	}
+}
+
+func TestNativeSecurityDirectiveMatchesGosecDisableTokenBoundary(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		line      string
+		wantFound bool
+		wantArgs  string
+	}{
+		{"exact token", "//gosec:disable", true, ""},
+		{"space delimiter", "//gosec:disable G304 -- bounded", true, "G304 -- bounded"},
+		{"tab delimiter", "//gosec:disable\tG304 -- bounded", false, ""},
+		{"identifier continuation", "//gosec:disablement", false, ""},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			arguments, found := nativeSecurityDirective(test.line, true)
+			if found != test.wantFound || arguments != test.wantArgs {
+				t.Fatalf("nativeSecurityDirective() = (%q, %t), want (%q, %t)", arguments, found, test.wantArgs, test.wantFound)
+			}
+		})
+	}
+}
+
+func TestNativeSecurityDirectiveMatchesGosecNosecPrefixBoundary(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		line      string
+		wantFound bool
+		wantArgs  string
+	}{
+		{"compact token", "//#nosec", true, ""},
+		{"continuation", "//#nosecG304 -- bounded", true, "G304 -- bounded"},
+		{"prose", "// guidance about #nosec", false, ""},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			arguments, found := nativeSecurityDirective(test.line, true)
+			if found != test.wantFound || arguments != test.wantArgs {
+				t.Fatalf("nativeSecurityDirective() = (%q, %t), want (%q, %t)", arguments, found, test.wantArgs, test.wantFound)
+			}
+		})
+	}
+}
+
+func TestNativeNosecGroupDirectiveIgnoresBlockInteriorLineMarker(t *testing.T) {
+	fileSet := token.NewFileSet()
+	parsed, err := parser.ParseFile(fileSet, "example.go", "package example\n/*\n//#nosec\n*/\nfunc value() {}\n", parser.ParseComments)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if arguments, line, found := nativeNosecGroupDirective(parsed.Comments[0], fileSet); found {
+		t.Fatalf("nativeNosecGroupDirective() = (%q, %d, true), want not found", arguments, line)
+	}
+}
+
+func TestNolintGosecDirectiveNormalizesProviderWhitespaceAndCase(t *testing.T) {
+	for _, test := range []struct {
+		comment    string
+		wantFound  bool
+		wantReason string
+	}{
+		{"//nolint:govet, gosec", true, ""},
+		{"//nolint: gosec // bounded", true, " bounded"},
+		{"//nolint: GOSEC", true, ""},
+		{"//nolint:govet, GoSeC", true, ""},
+		{"//nolint:govet", false, ""},
+	} {
+		t.Run(test.comment, func(t *testing.T) {
+			reason, found := nolintGosecDirective(test.comment)
+			if found != test.wantFound || reason != test.wantReason {
+				t.Fatalf("nolintGosecDirective() = (%q, %t), want (%q, %t)", reason, found, test.wantReason, test.wantFound)
+			}
+		})
+	}
+}
+
+func TestSecuritySuppressionsRejectBroadAndMalformedNativeDirectives(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "example.go")
+	for _, test := range []struct {
+		name    string
+		comment string
+		want    string
+	}{
+		{"spaced line without rules", "// #nosec -- broad", "exact rule IDs"},
+		{"compact line without rules", "//#nosec -- broad", "exact rule IDs"},
+		{"bare disable", "//gosec:disable", "exact rule IDs"},
+		{"disable without rules", "//gosec:disable -- broad", "exact rule IDs"},
+		{"compact block without rules", "/*#nosec*/", "exact rule IDs"},
+		{"compact block without reason", "/*#nosec G304*/", "reason after --"},
+		{"lowercase rule", "//#nosec g304 -- broad", "exact rule IDs"},
+		{"short rule", "//#nosec G30 -- broad", "exact rule IDs"},
+		{"long rule", "//#nosec G0304 -- broad", "exact rule IDs"},
+		{"nondigit rule", "//#nosec GABC -- broad", "exact rule IDs"},
+		{"wildcard rule", "//#nosec G304,all -- broad", "exact rule IDs"},
+		{"space separated rules", "//#nosec G304 G305 -- broad", "exact rule IDs"},
+		{"trailing comma", "//#nosec G304, -- broad", "exact rule IDs"},
+		{"missing delimiter", "//#nosec G304 reason", "reason after --"},
+		{"blank reason", "//#nosec G304 --   ", "reason after --"},
+		{"hyphen-only reason", "//#nosec G304 ---", "reason after --"},
+		{"block terminator is not reason", "/*#nosec G304 -- */", "reason after --"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			content := "package example\n" + test.comment + "\nfunc value() {}\n"
+			if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			err := checkSecuritySuppressions(root)
+			if err == nil || !strings.Contains(err.Error(), "example.go:2:") || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("checkSecuritySuppressions() error = %v, want line and %q", err, test.want)
+			}
+		})
+	}
+}
+
+func TestSecuritySuppressionsRecognizeMalformedSpacedAndMultilineBlocks(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "example.go")
+	for _, test := range []struct {
+		name    string
+		comment string
+		line    string
+		want    string
+	}{
+		{"spaced block without rules", "/* #nosec */", "example.go:2:", "exact rule IDs"},
+		{"spaced block without reason", "/* #nosec G304 */", "example.go:2:", "reason after --"},
+		{"multiline block without rules", "/*\n#nosec\n*/", "example.go:3:", "exact rule IDs"},
+		{"multiline block without reason", "/*\n#nosec G304\n*/", "example.go:3:", "reason after --"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			content := "package example\n" + test.comment + "\nfunc value() {}\n"
+			if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			err := checkSecuritySuppressions(root)
+			if err == nil || !strings.Contains(err.Error(), test.line) || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("checkSecuritySuppressions() error = %v, want line %q and %q", err, test.line, test.want)
+			}
+		})
+	}
+}
+
+func TestSecuritySuppressionsAcceptExactMultipleRules(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "example.go")
+	for _, comment := range []string{
+		"//#nosec G304,G305 -- both paths are bounded",
+		"//gosec:disable G304,G305 -- both paths are bounded",
+		"//#nosec G304, G305 -- both paths are bounded",
+		"//gosec:disable G304, G305 -- both paths are bounded",
+		"//#nosec G304,G304 -- repeated exact rule remains narrow",
+		"//gosec:disable G304,G304 -- repeated exact rule remains narrow",
+	} {
+		if err := os.WriteFile(path, []byte("package example\n"+comment+"\nfunc value() {}\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := checkSecuritySuppressions(root); err != nil {
+			t.Fatalf("checkSecuritySuppressions(%q) error = %v", comment, err)
+		}
+	}
+}
+
+func TestSecuritySuppressionsKeepNolintGosecLineScopedAndReasoned(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "example.go")
+	for _, test := range []struct {
+		name    string
+		comment string
+		wantErr bool
+	}{
+		{"dedicated", "//nolint:gosec // bounded conversion", false},
+		{"multiple linters", "//nolint:govet,gosec // bounded conversion", false},
+		{"spaced multiple linters", "//nolint:govet, gosec // bounded conversion", false},
+		{"spaced dedicated", "//nolint: gosec // bounded conversion", false},
+		{"uppercase dedicated", "//nolint: GOSEC // bounded conversion", false},
+		{"missing reason", "//nolint:gosec", true},
+		{"blank inline reason", "//nolint:gosec //   ", true},
+		{"multiple linters missing reason", "//nolint:govet,gosec", true},
+		{"spaced multiple linters missing reason", "//nolint:govet, gosec", true},
+		{"spaced dedicated missing reason", "//nolint: gosec", true},
+		{"uppercase missing reason", "//nolint: GOSEC", true},
+		{"mixed case missing reason", "//nolint:govet, GoSeC", true},
+		{"following line reason", "//nolint:gosec\n// bounded conversion", true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if err := os.WriteFile(path, []byte("package example\nfunc value() int { return 1 } "+test.comment+"\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			err := checkSecuritySuppressions(root)
+			if test.wantErr && (err == nil || !strings.Contains(err.Error(), "example.go:2:") || !strings.Contains(err.Error(), "inline reason")) {
+				t.Fatalf("checkSecuritySuppressions() error = %v", err)
+			}
+			if !test.wantErr && err != nil {
+				t.Fatalf("checkSecuritySuppressions() error = %v", err)
+			}
+		})
+	}
+}
+
+func TestSecuritySuppressionsIgnoreNonDirectiveTextAndRejectMixedBatches(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "example.go")
+	for _, content := range []string{
+		"package example\nconst guidance = \"//#nosec and //gosec:disable require reasons\"\n",
+		"package example\nconst guidance = `//#nosec and //gosec:disable require reasons`\n",
+		"package example\n// Guidance about #nosec and //gosec:disable syntax.\nfunc value() {}\n",
+		"package example\n// Guidance about //nolint:gosec syntax.\nfunc value() {}\n",
+		"package example\n// gosec:disable documents scanner behavior.\nfunc value() {}\n",
+		"package example\n/* gosec:disable documents scanner behavior. */\nfunc value() {}\n",
+		"package example\n/*\n//gosec:disable\n*/\nfunc value() {}\n",
+		"package example\n/*\n//#nosec\n*/\nfunc value() {}\n",
+		"package example\n/*\n * #nosec\n */\nfunc value() {}\n",
+		"package example\n//gosec:disable\tG304 -- bounded\nfunc value() {}\n",
+		"package example\n//gosec:disablement\nfunc value() {}\n",
+		"package example\n//#nosec G304 -- bounded\nfunc first() {}\n//gosec:disable G305 -- bounded\nfunc second() {}\n",
+	} {
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := checkSecuritySuppressions(root); err != nil {
+			t.Fatalf("checkSecuritySuppressions() error = %v", err)
+		}
+	}
+	mixed := "package example\n//#nosec G304 -- bounded\nfunc first() {}\n//gosec:disable\nfunc second() {}\n"
+	if err := os.WriteFile(path, []byte(mixed), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := checkSecuritySuppressions(root); err == nil || !strings.Contains(err.Error(), "example.go:4:") {
+		t.Fatalf("checkSecuritySuppressions() error = %v", err)
+	}
+}
+
+func TestSecuritySuppressionPreflightStopsScanners(t *testing.T) {
+	for _, test := range []struct {
+		comment string
+		want    string
+	}{
+		{"//#nosec", "exact rule IDs"},
+		{"//gosec:disable G304", "reason after --"},
+		{"//#nosecG304", "reason after --"},
+		{"//#nosec G304 ---", "reason after --"},
+		{"//nolint:govet, gosec", "inline reason"},
+		{"//nolint: gosec", "inline reason"},
+		{"//nolint: GOSEC", "inline reason"},
+	} {
+		t.Run(test.comment, func(t *testing.T) {
+			root := t.TempDir()
+			if err := os.WriteFile(filepath.Join(root, "example.go"), []byte("package example\n"+test.comment+"\nfunc value() {}\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			commands := 0
+			var output bytes.Buffer
+			runner := Runner{Executor: executorFunction(func(context.Context, Command) error {
+				commands++
+				return nil
+			})}
+			err := runner.checkSecurity(context.Background(), &output, root, inventory.Module{Directory: "."})
+			if err == nil || !strings.Contains(err.Error(), "example.go:2:") || !strings.Contains(err.Error(), test.want) {
+				t.Fatalf("checkSecurity() error = %v", err)
+			}
+			if commands != 0 {
+				t.Fatalf("security commands = %d, want 0", commands)
+			}
+			if got := output.String(); got != "[.] security-suppressions\n" {
+				t.Fatalf("security output = %q", got)
+			}
+		})
+	}
+}
+
+func TestCheckAndLocalPreflightAllSecurityModulesBeforeServicesAndCommands(t *testing.T) {
+	for _, caller := range []string{"check", "local"} {
+		for _, scenario := range []struct {
+			name    string
+			modules []inventory.Module
+			selects []string
+		}{
+			{
+				name:    "service-backed invalid singleton",
+				modules: []inventory.Module{{Directory: ".", ModulePath: "example", Gates: map[string]bool{"security": true}, RequiredServices: []string{"postgresql"}}},
+				selects: []string{"."},
+			},
+			{
+				name: "valid security module before invalid security module",
+				modules: []inventory.Module{
+					{Directory: "a-valid", ModulePath: "example/a", Gates: map[string]bool{"security": true}, RequiredServices: []string{"postgresql"}},
+					{Directory: "z-invalid", ModulePath: "example/z", Gates: map[string]bool{"security": true}},
+				},
+				selects: []string{"z-invalid", "a-valid", "z-invalid"},
+			},
+			{
+				name: "nonsecurity module before invalid security module",
+				modules: []inventory.Module{
+					{Directory: "a-plain", ModulePath: "example/a", RequiredServices: []string{"postgresql"}},
+					{Directory: "z-invalid", ModulePath: "example/z", Gates: map[string]bool{"security": true}},
+				},
+				selects: []string{"z-invalid", "a-plain", "z-invalid"},
+			},
+		} {
+			t.Run(caller+" "+scenario.name, func(t *testing.T) {
+				root := t.TempDir()
+				for _, module := range scenario.modules {
+					directory := filepath.Join(root, module.Directory)
+					if err := os.MkdirAll(directory, 0o700); err != nil {
+						t.Fatal(err)
+					}
+					source := "package example\nfunc value() {}\n"
+					if module.Directory == "." || module.Directory == "z-invalid" {
+						source = "package example\n//#nosec\nfunc value() {}\n"
+					}
+					if err := os.WriteFile(filepath.Join(directory, "example.go"), []byte(source), 0o600); err != nil {
+						t.Fatal(err)
+					}
+				}
+				starts := 0
+				commands := 0
+				var output bytes.Buffer
+				runner := Runner{
+					Root: root, Catalog: inventory.Inventory{Modules: scenario.modules}, Output: &output,
+					Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error {
+						commands++
+						return nil
+					}},
+					startServices: func(context.Context, []string) (serviceLease, error) {
+						starts++
+						return &fakeServiceLease{}, nil
+					},
+				}
+				var err error
+				if caller == "check" {
+					err = runner.Check(context.Background(), scenario.selects)
+				} else {
+					err = runner.Local(context.Background(), scenario.selects)
+				}
+				if err == nil || !strings.Contains(err.Error(), "exact rule IDs") {
+					t.Fatalf("%s error = %v", caller, err)
+				}
+				wantOutput := "[.] security-suppressions\n"
+				wantPath := "example.go:2:"
+				switch scenario.name {
+				case "valid security module before invalid security module":
+					wantOutput = "[a-valid] security-suppressions\n[z-invalid] security-suppressions\n"
+					wantPath = filepath.Join("z-invalid", "example.go") + ":2:"
+				case "nonsecurity module before invalid security module":
+					wantOutput = "[z-invalid] security-suppressions\n"
+					wantPath = filepath.Join("z-invalid", "example.go") + ":2:"
+				}
+				if !strings.Contains(err.Error(), wantPath) || output.String() != wantOutput {
+					t.Fatalf("%s error/output = %v/%q, want path %q and output %q", caller, err, output.String(), wantPath, wantOutput)
+				}
+				if starts != 0 || commands != 0 {
+					t.Fatalf("%s starts/commands = %d/%d, want 0/0", caller, starts, commands)
+				}
+			})
+		}
+	}
+}
+
+func TestCheckAndLocalRejectRepositoryGitleaksIgnoreBeforeServicesAndCommands(t *testing.T) {
+	for _, caller := range []string{"check", "local"} {
+		for _, kind := range []string{"file", "symlink"} {
+			t.Run(caller+" "+kind, func(t *testing.T) {
+				root := t.TempDir()
+				if err := os.WriteFile(filepath.Join(root, "example.go"), []byte("package example\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+				ignorePath := filepath.Join(root, ".gitleaksignore")
+				secretMarker := "must-not-appear"
+				if kind == "file" {
+					if err := os.WriteFile(ignorePath, []byte(secretMarker), 0o600); err != nil {
+						t.Fatal(err)
+					}
+				} else {
+					target := filepath.Join(t.TempDir(), secretMarker)
+					if err := os.WriteFile(target, []byte("ignored"), 0o600); err != nil {
+						t.Fatal(err)
+					}
+					if err := os.Symlink(target, ignorePath); err != nil {
+						t.Fatal(err)
+					}
+				}
+				starts := 0
+				commands := 0
+				runner := Runner{
+					Root: root,
+					Catalog: inventory.Inventory{Modules: []inventory.Module{{
+						Directory: ".", ModulePath: "example", Gates: map[string]bool{"security": true}, RequiredServices: []string{"postgresql"},
+					}}},
+					Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error {
+						commands++
+						return nil
+					}},
+					startServices: func(context.Context, []string) (serviceLease, error) {
+						starts++
+						return &fakeServiceLease{}, nil
+					},
+				}
+				var err error
+				if caller == "check" {
+					err = runner.Check(context.Background(), []string{"."})
+				} else {
+					err = runner.Local(context.Background(), []string{"."})
+				}
+				if err == nil || !strings.Contains(err.Error(), ".gitleaksignore") || strings.Contains(err.Error(), secretMarker) {
+					t.Fatalf("%s error = %v", caller, err)
+				}
+				if starts != 0 || commands != 0 {
+					t.Fatalf("%s starts/commands = %d/%d, want 0/0", caller, starts, commands)
+				}
+			})
+		}
+	}
+}
+
+func TestCheckAndLocalIgnoreRepositoryGitleaksIgnoreForNonSecuritySelections(t *testing.T) {
+	for _, caller := range []string{"check", "local"} {
+		t.Run(caller, func(t *testing.T) {
+			root := t.TempDir()
+			for name, content := range map[string]string{
+				"go.mod":          "module example\n\ngo 1.27.0\n",
+				"example.go":      "package example\n",
+				".gitleaksignore": "consumer-owned\n",
+			} {
+				if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			starts := 0
+			var commands []string
+			runner := Runner{
+				Root: root,
+				Catalog: inventory.Inventory{Modules: []inventory.Module{{
+					Directory: ".", ModulePath: "example", RequiredServices: []string{"postgresql"},
+				}}},
+				Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+					commands = append(commands, strings.Join(command.Args, " "))
+					return nil
+				}},
+				startServices: func(context.Context, []string) (serviceLease, error) {
+					starts++
+					return &fakeServiceLease{}, nil
+				},
+			}
+			var err error
+			if caller == "check" {
+				err = runner.Check(context.Background(), []string{"."})
+			} else {
+				err = runner.Local(context.Background(), []string{"."})
+			}
+			if err != nil || starts != 1 || len(commands) == 0 {
+				t.Fatalf("%s error/starts/commands = %v/%d/%#v", caller, err, starts, commands)
+			}
+			for _, command := range commands {
+				if strings.Contains(command, "gitleaks") {
+					t.Fatalf("%s security command = %q", caller, command)
+				}
+			}
+		})
+	}
+}
+
+func TestRunSecurityIsolatesGitleaksIgnoreCreatedDuringScans(t *testing.T) {
+	for _, stage := range []string{"git", "dir"} {
+		t.Run(stage, func(t *testing.T) {
+			root := t.TempDir()
+			var commands []string
+			runner := Runner{
+				Root: root,
+				Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+					joined := strings.Join(command.Args, " ")
+					commands = append(commands, joined)
+					if strings.Contains(joined, "gitleaks") && strings.Contains(joined, " "+stage+" ") {
+						if err := os.WriteFile(filepath.Join(root, ".gitleaksignore"), []byte("late suppression\n"), 0o600); err != nil {
+							return err
+						}
+					}
+					if strings.Contains(joined, "cyclonedx-gomod") && command.Stdout != nil {
+						_, _ = io.WriteString(command.Stdout, `{"bomFormat":"CycloneDX","specVersion":"1.6"}`)
+					}
+					return nil
+				}},
+			}
+			err := runner.runSecurity(context.Background(), io.Discard, root, inventory.Module{Directory: ".", ModulePath: "example"})
+			if err != nil {
+				t.Fatalf("runSecurity() error = %v", err)
+			}
+			seenLicenses := false
+			for _, command := range commands {
+				if strings.Contains(command, "go-licenses") {
+					seenLicenses = true
+				}
+			}
+			if !seenLicenses {
+				t.Fatalf("later gates did not run after isolated suppression: %#v", commands)
+			}
+		})
+	}
+}
+
+func TestRunSecurityRejectsTransientGitleaksIgnore(t *testing.T) {
+	if os.Getenv("GOLIB_GITLEAKS_INTEGRATION") != "1" {
+		t.Skip("set GOLIB_GITLEAKS_INTEGRATION=1 to run the pinned scanner contract")
+	}
+	synthetic := strings.Join([]string{"gh", "p_", "A1b2C3d4E5f6", "G7h8I9j0K1l2", "M3n4O5p6Q7r8"}, "")
+	for _, stage := range []string{"git", "dir"} {
+		t.Run(stage, func(t *testing.T) {
+			files := map[string]string{"README.md": "fixture\n"}
+			if stage == "git" {
+				files["security/github.txt"] = synthetic
+			}
+			root, configPath := gitleaksRepository(t, files)
+			if stage == "dir" {
+				target := filepath.Join(root, "security", "github.txt")
+				if err := os.MkdirAll(filepath.Dir(target), 0o700); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(target, []byte(synthetic), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			findings, output, err := runGitleaksIntegration(t, root, configPath, stage)
+			if err == nil || len(findings) != 1 || findings[0].Fingerprint == "" {
+				t.Fatalf("baseline %s findings/count/error = %#v/%d/%v, output = %q", stage, findings, len(findings), err, output)
+			}
+			ignorePath := filepath.Join(root, ".gitleaksignore")
+			if err := os.WriteFile(ignorePath, []byte(findings[0].Fingerprint+"\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			suppressed, suppressedOutput, suppressedErr := runGitleaksIntegration(t, root, configPath, stage)
+			if suppressedErr != nil || len(suppressed) != 0 || !strings.Contains(suppressedOutput, "found .gitleaksignore file") {
+				t.Fatalf("suppression control %s findings/error/output = %#v/%v/%q", stage, suppressed, suppressedErr, suppressedOutput)
+			}
+			if err := os.Remove(ignorePath); err != nil {
+				t.Fatal(err)
+			}
+
+			reportPath := filepath.Join(t.TempDir(), "production-report.json")
+			var commands []string
+			executor := workspaceExecutor{directory: t.TempDir(), run: func(ctx context.Context, command Command) error {
+				joined := strings.Join(command.Args, " ")
+				commands = append(commands, joined)
+				if command.Name == "git" {
+					// #nosec G204 -- the executable and arguments are fixed by the production gate under test.
+					process := exec.CommandContext(ctx, command.Name, command.Args...)
+					process.Dir = command.Dir
+					process.Env = mergeEnvironment(os.Environ(), command.Env)
+					process.Stdout = command.Stdout
+					process.Stderr = command.Stderr
+					return process.Run()
+				}
+				if !strings.Contains(joined, "gitleaks") || !strings.Contains(joined, " "+stage+" ") {
+					return nil
+				}
+				if err := os.WriteFile(ignorePath, []byte(findings[0].Fingerprint+"\n"), 0o600); err != nil {
+					return err
+				}
+				command.Args = append(command.Args, "--report-format", "json", "--report-path", reportPath)
+				// #nosec G204 -- the executable and arguments are fixed by the production gate under test.
+				process := exec.CommandContext(ctx, command.Name, command.Args...)
+				process.Dir = command.Dir
+				process.Env = mergeEnvironment(os.Environ(), command.Env)
+				process.Stdin = command.Stdin
+				process.Stdout = command.Stdout
+				process.Stderr = command.Stderr
+				runErr := process.Run()
+				removeErr := os.Remove(ignorePath)
+				return errors.Join(runErr, removeErr)
+			}}
+			runner := Runner{Root: root, Executor: executor}
+			err = runner.runSecurity(context.Background(), io.Discard, root, inventory.Module{Directory: ".", ModulePath: "example"})
+			if err == nil || errors.Is(err, errRepositoryGitleaksIgnore) {
+				t.Fatalf("runSecurity() %s error = %v", stage, err)
+			}
+			report, readErr := os.ReadFile(reportPath)
+			if readErr != nil {
+				t.Fatal(readErr)
+			}
+			var productionFindings []gitleaksFinding
+			if decodeErr := json.Unmarshal(report, &productionFindings); decodeErr != nil {
+				t.Fatalf("decode production report: %v: %s", decodeErr, report)
+			}
+			if !slices.ContainsFunc(productionFindings, func(finding gitleaksFinding) bool {
+				path := filepath.ToSlash(finding.File)
+				return finding.RuleID == "github-pat" &&
+					(path == "security/github.txt" || strings.HasSuffix(path, "/security/github.txt"))
+			}) {
+				t.Fatalf("production %s findings/error/output = %#v/%v/%q", stage, productionFindings, err, output)
+			}
+			if _, statErr := os.Lstat(ignorePath); !errors.Is(statErr, fs.ErrNotExist) {
+				t.Fatalf("transient ignore remains: %v", statErr)
+			}
+			for _, command := range commands {
+				if stage == "git" && strings.Contains(command, "gitleaks") && strings.Contains(command, " dir ") {
+					t.Fatalf("current-tree scan ran after transient history suppression: %q", command)
+				}
+				if strings.Contains(command, "go-licenses") || strings.Contains(command, "cyclonedx-gomod") {
+					t.Fatalf("later gate ran after transient suppression: %q", command)
+				}
+			}
+		})
+	}
+}
+
+func TestCheckAndLocalAllowGitleaksIgnoreDirectory(t *testing.T) {
+	for _, caller := range []string{"check", "local"} {
+		t.Run(caller, func(t *testing.T) {
+			root := t.TempDir()
+			if err := os.Mkdir(filepath.Join(root, ".gitleaksignore"), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(root, "example.go"), []byte("package example\n"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			stop := errors.New("scanner reached")
+			commands := 0
+			runner := Runner{
+				Root: root,
+				Catalog: inventory.Inventory{Modules: []inventory.Module{{
+					Directory: ".", ModulePath: "example", Gates: map[string]bool{"security": true},
+				}}},
+				Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error {
+					commands++
+					return stop
+				}},
+			}
+			var err error
+			if caller == "check" {
+				err = runner.Check(context.Background(), []string{"."})
+			} else {
+				err = runner.Local(context.Background(), []string{"."})
+			}
+			if !errors.Is(err, stop) || strings.Contains(err.Error(), ".gitleaksignore is not permitted") || commands != 1 {
+				t.Fatalf("%s error/commands = %v/%d", caller, err, commands)
+			}
+		})
+	}
+}
+
+func TestCheckAndLocalPreflightValidModulesExactlyOnceBeforeExecution(t *testing.T) {
+	for _, caller := range []string{"check", "local"} {
+		t.Run(caller, func(t *testing.T) {
+			root := t.TempDir()
+			modules := []inventory.Module{
+				{Directory: "a-valid", ModulePath: "example/a", Gates: map[string]bool{"security": true}, RequiredServices: []string{"postgresql"}},
+				{Directory: "z-valid", ModulePath: "example/z", Gates: map[string]bool{"security": true}, RequiredServices: []string{"valkey"}},
+			}
+			for _, module := range modules {
+				directory := filepath.Join(root, module.Directory)
+				if err := os.MkdirAll(directory, 0o700); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(directory, "example.go"), []byte("package example\nfunc value() {}\n"), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			var events []string
+			output := &securityPreflightEventWriter{events: &events}
+			var leases []*securityPreflightTestLease
+			commands := 0
+			moduleCommands := map[string]int{}
+			runner := Runner{
+				Root: root, Catalog: inventory.Inventory{Modules: modules}, Output: output,
+				Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+					commands++
+					module := filepath.Base(command.Dir)
+					moduleCommands[module]++
+					events = append(events, "exec:"+module)
+					if command.Stdout != nil && strings.Contains(strings.Join(command.Args, " "), "cyclonedx-gomod") {
+						_, _ = io.WriteString(command.Stdout, `{"bomFormat":"CycloneDX","specVersion":"1.6"}`)
+					}
+					return nil
+				}},
+				startServices: func(_ context.Context, names []string) (serviceLease, error) {
+					name := strings.Join(names, ",")
+					events = append(events, "start:"+name)
+					lease := &securityPreflightTestLease{name: name, events: &events}
+					leases = append(leases, lease)
+					return lease, nil
+				},
+			}
+			var err error
+			if caller == "check" {
+				err = runner.Check(context.Background(), []string{"z-valid", "a-valid", "z-valid", "a-valid"})
+			} else {
+				err = runner.Local(context.Background(), []string{"z-valid", "a-valid", "z-valid", "a-valid"})
+			}
+			if err != nil {
+				t.Fatalf("%s error = %v", caller, err)
+			}
+			if strings.Count(output.String(), "[a-valid] security-suppressions\n") != 1 || strings.Count(output.String(), "[z-valid] security-suppressions\n") != 1 {
+				t.Fatalf("%s suppression output = %q", caller, output.String())
+			}
+			if len(events) < 2 || events[0] != "output:[a-valid] security-suppressions\n" || events[1] != "output:[z-valid] security-suppressions\n" {
+				t.Fatalf("%s phase trace = %#v", caller, events)
+			}
+			if len(leases) != 2 || leases[0].name != "postgresql" || leases[1].name != "valkey" || leases[0].closes != 1 || leases[1].closes != 1 ||
+				commands == 0 || moduleCommands["a-valid"] == 0 || moduleCommands["z-valid"] == 0 {
+				t.Fatalf("%s leases/commands = %#v/%d", caller, leases, commands)
+			}
+			for _, event := range events[2:] {
+				if strings.Contains(event, "security-suppressions") {
+					t.Fatalf("%s late suppression event in %#v", caller, events)
+				}
+			}
+		})
+	}
+}
+
+type securityPreflightEventWriter struct {
+	bytes.Buffer
+	events *[]string
+}
+
+func (writer *securityPreflightEventWriter) Write(value []byte) (int, error) {
+	*writer.events = append(*writer.events, "output:"+string(value))
+	return writer.Buffer.Write(value)
+}
+
+type securityPreflightTestLease struct {
+	name   string
+	events *[]string
+	closes int
+}
+
+func (lease *securityPreflightTestLease) Environment() map[string]string { return nil }
+func (lease *securityPreflightTestLease) Identities() map[string]string  { return nil }
+func (lease *securityPreflightTestLease) Close(context.Context) error {
+	lease.closes++
+	*lease.events = append(*lease.events, "close:"+lease.name)
+	return nil
+}
+
+func FuzzSecuritySuppressionsNeverPanic(f *testing.F) {
+	for _, seed := range []string{
+		"// #nosec G304 -- bounded",
+		"//#nosec",
+		"/*#nosec G304*/",
+		"//gosec:disable G304 -- bounded",
+		"//nolint:gosec // bounded",
+		"/*\n//#nosec\n*/",
+		"//#nosecG304",
+		"//#nosec G304 ---",
+		"//nolint:govet, gosec",
+		"//nolint: gosec",
+		"//nolint: GOSEC",
+	} {
+		f.Add([]byte(seed))
+	}
+	f.Fuzz(func(t *testing.T, payload []byte) {
+		if len(payload) > 4096 {
+			t.Skip()
+		}
+		root := t.TempDir()
+		content := append([]byte("package example\n"), payload...)
+		if err := os.WriteFile(filepath.Join(root, "example.go"), content, 0o600); err != nil {
+			t.Fatal(err)
+		}
+		_ = checkSecuritySuppressions(root)
+	})
 }
 
 func TestStandaloneGatesContinuePastDisabledModules(t *testing.T) {
@@ -716,6 +2130,23 @@ type fakeSecretConfigFiles struct {
 	createdDirectory string
 	pattern          string
 	removed          string
+}
+
+type securityPolicyFiles struct {
+	gitleaksRemoveErr error
+	gitleaksRemoved   int
+}
+
+func (*securityPolicyFiles) CreateTemp(_ string, pattern string) (namedWriteCloser, error) {
+	return &fakeNamedFile{name: pattern}, nil
+}
+
+func (files *securityPolicyFiles) Remove(path string) error {
+	if strings.HasPrefix(path, "gitleaks-config-") {
+		files.gitleaksRemoved++
+		return files.gitleaksRemoveErr
+	}
+	return nil
 }
 
 func (files *fakeSecretConfigFiles) CreateTemp(directory, pattern string) (namedWriteCloser, error) {

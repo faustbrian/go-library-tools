@@ -1,0 +1,37 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/security-risk-register.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "risks"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "risks": {"type": "array", "items": {"$ref": "#/$defs/risk"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "pattern": "\\S"},
+    "risk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "module", "severity", "status", "owner", "rationale", "mitigation", "review_condition"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^SEC-[A-Z0-9-]+$"},
+        "module": {"$ref": "#/$defs/text"},
+        "severity": {"enum": ["critical", "high", "medium", "low"]},
+        "status": {"enum": ["open", "mitigated", "accepted", "closed"]},
+        "owner": {"$ref": "#/$defs/text"},
+        "rationale": {"$ref": "#/$defs/text"},
+        "mitigation": {"$ref": "#/$defs/text"},
+        "review_condition": {"$ref": "#/$defs/text"},
+        "evidence": {"$ref": "#/$defs/text"},
+        "expires_at": {"type": "string", "format": "date-time"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"status": {"const": "accepted"}}, "required": ["status"]},
+          "then": {"required": ["evidence", "expires_at"]}
+        }
+      ]
+    }
+  }
+}

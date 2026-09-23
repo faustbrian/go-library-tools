@@ -8,7 +8,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/faustbrian/go-library-tools/internal/cli"
+	"github.com/faustbrian/go-library-tools/v2/internal/cli"
 )
 
 var (

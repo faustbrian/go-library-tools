@@ -2,6 +2,7 @@ package gates
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -10,13 +11,16 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
+	"sync/atomic"
 )
 
 type processExecutor struct {
-	environment map[string]string
-	stdout      io.Writer
-	stderr      io.Writer
-	task        string
+	environment           map[string]string
+	stdout                io.Writer
+	stderr                io.Writer
+	task                  string
+	prepareBoundedProcess func(*exec.Cmd) error
 }
 
 type taskFileSystem interface {
@@ -93,6 +97,13 @@ func newProcessExecutor(repositoryRoot string, stdout, stderr io.Writer, files t
 func (executor *processExecutor) TemporaryDirectory() string { return executor.task }
 
 func (executor *processExecutor) Run(ctx context.Context, command Command) error {
+	if _, stdoutBounded := command.Stdout.(overflowAwareOutput); stdoutBounded {
+		return executor.runBounded(ctx, command)
+	}
+	if _, stderrBounded := command.Stderr.(overflowAwareOutput); stderrBounded {
+		return executor.runBounded(ctx, command)
+	}
+	// #nosec G204 -- repository policy intentionally supplies argument-array gate commands without a shell
 	process := exec.CommandContext(ctx, command.Name, command.Args...)
 	process.Dir = command.Dir
 	process.Env = mergeEnvironment(os.Environ(), executor.environment, command.Env)
@@ -106,6 +117,65 @@ func (executor *processExecutor) Run(ctx context.Context, command Command) error
 		process.Stderr = executor.stderr
 	}
 	if err := process.Run(); err != nil {
+		return fmt.Errorf("run %s: %w", command.Name, err)
+	}
+	return nil
+}
+
+type overflowAwareOutput interface {
+	io.Writer
+	setOverflowCallback(func())
+}
+
+func (executor *processExecutor) runBounded(ctx context.Context, command Command) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	// #nosec G204 -- repository policy intentionally supplies argument-array gate commands without a shell
+	//nolint:noctx // bounded execution owns context cancellation so it can terminate the complete process tree
+	process := exec.Command(command.Name, command.Args...)
+	process.Dir = command.Dir
+	process.Env = mergeEnvironment(os.Environ(), executor.environment, command.Env)
+	process.Stdin = command.Stdin
+	process.Stdout = command.Stdout
+	process.Stderr = command.Stderr
+	prepare := executor.prepareBoundedProcess
+	if prepare == nil {
+		prepare = configureProcessGroup
+	}
+	if err := prepare(process); err != nil {
+		return fmt.Errorf("prepare bounded process: %w", err)
+	}
+
+	stop := make(chan struct{})
+	var stopOnce sync.Once
+	signalStop := func() { stopOnce.Do(func() { close(stop) }) }
+	for _, stream := range []io.Writer{command.Stdout, command.Stderr} {
+		if bounded, ok := stream.(overflowAwareOutput); ok {
+			bounded.setOverflowCallback(signalStop)
+		}
+	}
+	if err := process.Start(); err != nil {
+		return fmt.Errorf("run %s: %w", command.Name, err)
+	}
+	done := make(chan struct{})
+	var canceled atomic.Bool
+	go func() {
+		select {
+		case <-ctx.Done():
+			canceled.Store(true)
+			terminateProcessTree(process)
+		case <-stop:
+			terminateProcessTree(process)
+		case <-done:
+		}
+	}()
+	err := process.Wait()
+	close(done)
+	if contextError := ctx.Err(); canceled.Load() && contextError != nil {
+		err = errors.Join(contextError, err)
+	}
+	if err != nil {
 		return fmt.Errorf("run %s: %w", command.Name, err)
 	}
 	return nil

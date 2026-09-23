@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/consumers"
+	"github.com/faustbrian/go-library-tools/v2/internal/consumers"
 )
 
 func TestParseAndSummarizeConsumerInventory(t *testing.T) {

@@ -426,6 +426,7 @@ type operatingAggregateInputFiles struct{}
 
 func (operatingAggregateInputFiles) Lstat(path string) (os.FileInfo, error) { return os.Lstat(path) }
 func (operatingAggregateInputFiles) Open(path string) (aggregateReadCloser, error) {
+	// #nosec G304 -- aggregate inputs are validated regular files contained beneath the declared input root
 	return os.Open(path)
 }
 func (operatingAggregateInputFiles) SameFile(left, right os.FileInfo) bool {

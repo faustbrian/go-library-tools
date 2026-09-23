@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 	"go.yaml.in/yaml/v3"
 )
 

@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/faustbrian/go-library-tools/internal/evidence"
+	"github.com/faustbrian/go-library-tools/v2/internal/evidence"
 )
 
 const (
@@ -319,6 +319,7 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 	if err := campaign.Process(ctx, state.tool.Path, arguments, directory, environment, combinedOutput, combinedOutput); err != nil {
 		return fmt.Errorf("mutation tool failed for %s %s: %w", campaign.Policy.ModuleDirectory, target, err)
 	}
+	// #nosec G304 -- reportPath is a fixed filename inside the task-owned mutation workspace
 	report, err := os.ReadFile(reportPath)
 	if errors.Is(err, os.ErrNotExist) && mutationOutput.confirmsNoResults() {
 		report = []byte("{\"files\":[]}\n")
