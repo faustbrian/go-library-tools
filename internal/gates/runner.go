@@ -75,6 +75,26 @@ targetRules = ["stripe-access-token"]
 regexTarget = "secret"
 regexes = ['''^sk_test_0123456789abcdefghijklmnopqrstuv$''']
 paths = ['''^internal/inventory/inventory_test\.go$''']
+
+[[allowlists]]
+description = "Exact public signing fixture in the shared HTTP-signature differential corpus."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "secret"
+regexes = ['''^01234567(?:)89abcdef(?:)01234567(?:)89abcdef(?:)01234567(?:)89abcdef(?:)01234567(?:)89abcdef$''']
+paths = ['''^differential/shared-corpus/corpus_test\.go$''']
+
+[[allowlists]]
+description = "Exact immutable Confluent decision digests recorded in the provider changelog."
+condition = "AND"
+targetRules = ["confluent-secret-key"]
+regexTarget = "secret"
+regexes = [
+  '''^67b4c198(?:)5e70a7ae(?:)a45d754e(?:)14be8468(?:)83a37ccd(?:)073d76e5(?:)99d71900(?:)4af0ea37$''',
+  '''^4c9ab0b7(?:)2db6bcd6(?:)a6f90cd8(?:)e638e7f2(?:)80708c95(?:)18128b59(?:)33a9a904(?:)ad072ff7$''',
+  '''^c92530ae(?:)87091474(?:)8c82e238(?:)b72ff1d3(?:)c60c2ec0(?:)360150b0(?:)1863750e(?:)6dad0ac1$''',
+]
+paths = ['''^providers/confluent/CHANGELOG\.md$''']
 `
 	analysisSecurityPolicy = `version: 1
 rules:
@@ -111,16 +131,33 @@ type Command struct {
 
 const maximumSecurityProcessOutput = 4 << 20
 
+const gitleaksIgnoreLogMarker = "found .gitleaksignore file"
+
+var errRepositoryGitleaksIgnore = errors.New("security-policy: repository-owned .gitleaksignore is not permitted for security-enabled checks")
+
 type boundedProcessOutput struct {
-	mutex    sync.Mutex
-	limit    int
-	written  int
-	overflow bool
-	onLimit  func()
+	mutex          sync.Mutex
+	limit          int
+	written        int
+	overflow       bool
+	onLimit        func()
+	forbidden      []byte
+	forbiddenTail  []byte
+	forbiddenFound bool
 }
 
 func (output *boundedProcessOutput) Write(value []byte) (int, error) {
 	output.mutex.Lock()
+	if len(output.forbidden) > 0 {
+		window := make([]byte, 0, len(output.forbiddenTail)+len(value))
+		window = append(window, output.forbiddenTail...)
+		window = append(window, value...)
+		if bytes.Contains(window, output.forbidden) {
+			output.forbiddenFound = true
+		}
+		keep := min(len(output.forbidden)-1, len(window))
+		output.forbiddenTail = append(output.forbiddenTail[:0], window[len(window)-keep:]...)
+	}
 	if len(value) > output.limit-output.written {
 		output.written = output.limit
 		first := !output.overflow
@@ -151,6 +188,12 @@ func (output *boundedProcessOutput) didOverflow() bool {
 	output.mutex.Lock()
 	defer output.mutex.Unlock()
 	return output.overflow
+}
+
+func (output *boundedProcessOutput) foundForbiddenOutput() bool {
+	output.mutex.Lock()
+	defer output.mutex.Unlock()
+	return output.forbiddenFound
 }
 
 // Executor runs one external command.
@@ -533,14 +576,14 @@ func (runner Runner) checkModuleLocal(ctx context.Context, output io.Writer, mod
 }
 
 func (runner Runner) createGitleaksConfig() (string, func() error, error) {
-	return runner.createOwnedPolicy("gitleaks-config-*.toml", gitleaksPolicy)
+	return runner.createOwnedPolicy("gitleaks", "gitleaks-config-*.toml", gitleaksPolicy)
 }
 
 func (runner Runner) createAnalysisConfig() (string, func() error, error) {
-	return runner.createOwnedPolicy("analysis-security-*.yaml", analysisSecurityPolicy)
+	return runner.createOwnedPolicy("analysis", "analysis-security-*.yaml", analysisSecurityPolicy)
 }
 
-func (runner Runner) createOwnedPolicy(pattern, policy string) (string, func() error, error) {
+func (runner Runner) createOwnedPolicy(name, pattern, policy string) (string, func() error, error) {
 	workspace, ok := runner.Executor.(taskWorkspace)
 	if !ok || !filepath.IsAbs(workspace.TemporaryDirectory()) {
 		return "", nil, errors.New("security policy requires an absolute task-owned temporary directory")
@@ -551,15 +594,15 @@ func (runner Runner) createOwnedPolicy(pattern, policy string) (string, func() e
 	}
 	temporary, err := files.CreateTemp(workspace.TemporaryDirectory(), pattern)
 	if err != nil {
-		return "", nil, fmt.Errorf("create temporary gitleaks config: %w", err)
+		return "", nil, fmt.Errorf("create temporary %s config: %w", name, err)
 	}
 	path := temporary.Name()
 	cleanup := func() error { return files.Remove(path) }
 	if _, err := io.WriteString(temporary, policy); err != nil {
-		return "", nil, errors.Join(fmt.Errorf("write temporary gitleaks config: %w", err), temporary.Close(), cleanup())
+		return "", nil, errors.Join(fmt.Errorf("write temporary %s config: %w", name, err), temporary.Close(), cleanup())
 	}
 	if err := temporary.Close(); err != nil {
-		return "", nil, errors.Join(fmt.Errorf("close temporary gitleaks config: %w", err), cleanup())
+		return "", nil, errors.Join(fmt.Errorf("close temporary %s config: %w", name, err), cleanup())
 	}
 	return path, cleanup, nil
 }
@@ -578,6 +621,14 @@ func (runner Runner) checkSecurityPolicy(output io.Writer, directory, module str
 }
 
 func (runner Runner) preflightSecurityPolicies(output io.Writer, modules []inventory.Module) error {
+	securityEnabled := slices.ContainsFunc(modules, func(module inventory.Module) bool {
+		return module.Gates["security"]
+	})
+	if securityEnabled {
+		if err := rejectRepositoryGitleaksIgnore(runner.Root); err != nil {
+			return err
+		}
+	}
 	for _, module := range modules {
 		if !module.Gates["security"] {
 			continue
@@ -616,14 +667,23 @@ func (runner Runner) runSecurity(ctx context.Context, output io.Writer, director
 	if err != nil {
 		return err
 	}
-	if err := runner.securityTool(ctx, output, module.Directory, "secrets-history", runner.Root,
-		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
-		"git", ".", "--config", configPath, "--log-opts=--all", "--no-banner", "--redact"); err != nil {
+	if err := rejectRepositoryGitleaksIgnore(runner.Root); err != nil {
 		return errors.Join(err, cleanupSecrets())
 	}
-	if err := runner.securityTool(ctx, output, module.Directory, "secrets-current-tree", runner.Root,
+	if err := runner.gitleaksTool(ctx, output, module.Directory, "secrets-history", runner.Root,
 		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
-		"dir", ".", "--config", configPath, "--no-banner", "--redact"); err != nil {
+		"git", ".", "--config", configPath, "--log-opts=--all", "--ignore-gitleaks-allow", "--log-level", "debug", "--no-banner", "--redact"); err != nil {
+		return errors.Join(err, cleanupSecrets())
+	}
+	if err := rejectRepositoryGitleaksIgnore(runner.Root); err != nil {
+		return errors.Join(err, cleanupSecrets())
+	}
+	if err := runner.gitleaksTool(ctx, output, module.Directory, "secrets-current-tree", runner.Root,
+		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
+		"dir", ".", "--config", configPath, "--ignore-gitleaks-allow", "--log-level", "debug", "--no-banner", "--redact"); err != nil {
+		return errors.Join(err, cleanupSecrets())
+	}
+	if err := rejectRepositoryGitleaksIgnore(runner.Root); err != nil {
 		return errors.Join(err, cleanupSecrets())
 	}
 	if err := cleanupSecrets(); err != nil {
@@ -640,6 +700,20 @@ func (runner Runner) runSecurity(ctx context.Context, output io.Writer, director
 		return err
 	}
 	return announce(output, module.Directory, "SBOM", func() error { return runner.runSBOM(ctx, directory) })
+}
+
+func rejectRepositoryGitleaksIgnore(root string) error {
+	info, err := os.Lstat(filepath.Join(root, ".gitleaksignore"))
+	if errors.Is(err, fs.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return errors.New("inspect repository-owned .gitleaksignore")
+	}
+	if info.IsDir() {
+		return nil
+	}
+	return errRepositoryGitleaksIgnore
 }
 
 func checkSecuritySuppressions(root string) error {
@@ -821,10 +895,26 @@ func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate,
 }
 
 func (runner Runner) securityTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
+	return runner.securityToolWithForbiddenOutput(ctx, output, module, gate, directory, tool, nil, args...)
+}
+
+func (runner Runner) gitleaksTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
+	return runner.securityToolWithForbiddenOutput(
+		ctx, output, module, gate, directory, tool, []byte(gitleaksIgnoreLogMarker), args...,
+	)
+}
+
+func (runner Runner) securityToolWithForbiddenOutput(
+	ctx context.Context,
+	output io.Writer,
+	module, gate, directory, tool string,
+	forbidden []byte,
+	args ...string,
+) error {
 	arguments := append([]string{"run", tool}, args...)
 	return announce(output, module, gate, func() error {
-		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
-		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput, forbidden: forbidden}
+		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput, forbidden: forbidden}
 		err := runner.Executor.Run(ctx, Command{
 			Name: "go", Args: arguments, Dir: directory, Env: map[string]string{"GOWORK": "off"},
 			Stdout: stdout, Stderr: stderr,
@@ -833,8 +923,12 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 		if stdout.didOverflow() || stderr.didOverflow() {
 			overflow = fmt.Errorf("security scanner output exceeded %d bytes", maximumSecurityProcessOutput)
 		}
-		if err != nil || overflow != nil {
-			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err))
+		var policyViolation error
+		if stdout.foundForbiddenOutput() || stderr.foundForbiddenOutput() {
+			policyViolation = errRepositoryGitleaksIgnore
+		}
+		if err != nil || overflow != nil || policyViolation != nil {
+			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(policyViolation, overflow, err))
 		}
 		return nil
 	})

@@ -85,8 +85,8 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
 		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
 		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --no-banner --redact",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --no-banner --redact",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --log-level debug --no-banner --redact",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --log-level debug --no-banner --redact",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 	}
@@ -524,8 +524,8 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
 		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
 		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --no-banner --redact",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --no-banner --redact",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --log-level debug --no-banner --redact",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --log-level debug --no-banner --redact",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/acme/example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 	}

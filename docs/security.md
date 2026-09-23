@@ -33,7 +33,8 @@ Security-enabled modules run pinned govulncheck, standalone gosec, a centrally
 owned go-analysis security policy, full-history gitleaks with a centrally owned
 configuration, a current-tree scan that includes generated artifacts, license
 checks, and SBOM generation during ordinary local/PR checks as well as the full
-gate. Repository-owned gitleaks suppressions are not loaded, and source-level
+gate. Repository-owned `.gitleaksignore` files are rejected before execution,
+and inline `gitleaks:allow` directives are ignored by both scans. Source-level
 native gosec suppressions must name exact rules and include a reason, while
 `nolint:gosec` explanations must appear on the same comment line. A consumer
 cannot silently widen the shared policy. NilAway remains advisory.

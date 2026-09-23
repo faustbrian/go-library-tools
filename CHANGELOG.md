@@ -39,8 +39,8 @@ All notable changes to this project are documented in this file.
 - Required canonical lowercase module directories and import paths, with root
   modules bound to the declared repository namespace, before manifests can
   reach schema validation or downstream consumers.
-- Prevented repository-owned gitleaks configuration from widening the shared
-  secret-scanning policy.
+- Prevented repository-owned gitleaks configuration, ignore files, and inline
+  allowances from widening the shared secret-scanning policy.
 
 ### Migration
 
@@ -48,6 +48,10 @@ All notable changes to this project are documented in this file.
   `go install github.com/faustbrian/go-library-tools/v2/cmd/golib@v2.0.0`.
   Keep GitHub Actions checkout and reusable-workflow references on
   `faustbrian/go-library-tools`; no version branch is used.
+- Remove repository `.gitleaksignore` files and inline `gitleaks:allow`
+  directives before enabling the v2 security gate. Intentionally public
+  fixtures require a centrally reviewed exception constrained by exact rule,
+  path, and value.
 
 ## 1.8.5 - 2026-09-13
 

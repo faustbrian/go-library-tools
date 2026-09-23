@@ -25,6 +25,8 @@ repository-owned `.gitleaks.toml`. The generated configuration is task-owned
 and removed after the scan. Its narrow conjunction allowlists cover only
 centrally justified tool identities and exact synthetic security-test fixtures;
 all other tracked and untracked repository paths remain in scope.
+Security-enabled checks reject a repository-owned `.gitleaksignore`, and both
+scan modes ignore inline `gitleaks:allow` directives.
 
 The documentation gate requires a regular root README, bounds document count
 and size, rejects trailing whitespace and symlinks, and verifies local Markdown
