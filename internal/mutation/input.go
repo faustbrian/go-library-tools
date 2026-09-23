@@ -13,8 +13,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/faustbrian/go-library-tools/internal/evidence"
-	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/v2/internal/evidence"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 )
 
 const (

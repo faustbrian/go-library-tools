@@ -4,8 +4,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
 func TestValidateReturnsStableReleasableModules(t *testing.T) {
@@ -101,12 +101,45 @@ func TestValidateRejectsInvalidReleaseContracts(t *testing.T) {
 	}
 }
 
+func TestValidateRequiresReleaseMajorToMatchModulePath(t *testing.T) {
+	tests := []struct {
+		name       string
+		modulePath string
+		version    string
+		wantError  bool
+	}{
+		{name: "legacy v1", modulePath: "example.com/library", version: "1.8.5"},
+		{name: "v2", modulePath: "example.com/library/v2", version: "2.0.0"},
+		{name: "unversioned v2", modulePath: "example.com/library", version: "2.0.0", wantError: true},
+		{name: "v2 path with v1 release", modulePath: "example.com/library/v2", version: "1.8.5", wantError: true},
+		{name: "v3 path with v2 release", modulePath: "example.com/library/v3", version: "2.0.0", wantError: true},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			candidate := module(".", "v")
+			candidate.ModulePath = test.modulePath
+			candidate.Version = test.version
+			_, err := Validate(inventory.Inventory{Modules: []inventory.Module{candidate}}, stablePolicy())
+			if test.wantError && (err == nil || !strings.Contains(err.Error(), "module path major")) {
+				t.Fatalf("Validate() error = %v, want module path major rejection", err)
+			}
+			if !test.wantError && err != nil {
+				t.Fatalf("Validate() error = %v", err)
+			}
+		})
+	}
+}
+
 func module(directory, prefix string) inventory.Module {
 	gates := make(map[string]bool, len(requiredGates))
 	for _, gate := range requiredGates {
 		gates[gate] = true
 	}
-	return inventory.Module{Directory: directory, Releasable: true, Version: "1.0.0", TagPrefix: prefix, Gates: gates}
+	modulePath := "example.com/library"
+	if directory != "." {
+		modulePath += "/" + directory
+	}
+	return inventory.Module{Directory: directory, ModulePath: modulePath, Releasable: true, Version: "1.0.0", TagPrefix: prefix, Gates: gates}
 }
 
 func stablePolicy() config.Config { return config.Config{ToolVersion: "v1.0.0"} }

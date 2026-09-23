@@ -5,10 +5,22 @@ libraries. It validates canonical manifests, runs proportional quality gates
 in task-owned environments, and owns generic service fixtures without copying
 automation into every repository.
 
-The prepared ecosystem-milestone release is `v1.8.0`; `v1.7.2` remains the
-current published release until the milestone tag is created. Consumer
+The prepared security-contract release is `v2.0.0`; `v1.8.5` remains the
+current published release until the major tag is created. Consumer
 repositories must use checksum-verified release binaries and immutable workflow
 references.
+
+The v2 command supports Darwin and Linux on amd64 and arm64. Its bounded
+security scanners require complete process-tree termination and fail before
+process start on other platforms.
+
+The v2 Go module and command path is
+`github.com/faustbrian/go-library-tools/v2`. After the `v2.0.0` tag is
+published, install the command with:
+
+```bash
+go install github.com/faustbrian/go-library-tools/v2/cmd/golib@v2.0.0
+```
 
 ## Quick Start
 

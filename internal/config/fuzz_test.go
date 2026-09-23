@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
 )
 
 func FuzzConfig(f *testing.F) {

@@ -109,6 +109,7 @@ func BuildVerifier(ctx context.Context, workspace string, process Process) (Tool
 	if err := process(ctx, "go", []string{"build", "-trimpath", "-buildvcs=false", "-o", binary, "./cmd/gremlins"}, source, environment, io.Discard, io.Discard); err != nil {
 		return Tool{}, fmt.Errorf("build Gremlins: %w", err)
 	}
+	// #nosec G304 -- binary is a fixed filename inside the task-owned absolute workspace
 	file, err := os.Open(binary)
 	if err != nil {
 		return Tool{}, fmt.Errorf("open Gremlins binary: %w", err)

@@ -27,6 +27,8 @@ func (operatingInspectFileSystem) WalkDir(root string, visit fs.WalkDirFunc) err
 func (operatingInspectFileSystem) Rel(base, target string) (string, error) {
 	return filepath.Rel(base, target)
 }
+
+// #nosec G304 -- inspection opens paths found beneath the validated evidence root and rechecks content identity
 func (operatingInspectFileSystem) Open(path string) (io.ReadCloser, error) { return os.Open(path) }
 
 // Inspect validates every content-addressed record under an evidence root.

@@ -12,6 +12,11 @@ operations:
     gate: fuzz
     steps:
       - type: go-test
+        packages: [./internal/archivecheck]
+        fuzz: FuzzValidateNeverPanics
+        budget: 100x
+        timeout: 2m
+      - type: go-test
         packages: [./internal/cli]
         fuzz: FuzzModuleSelection
         budget: 100x
@@ -42,6 +47,16 @@ operations:
         budget: 100x
         timeout: 2m
       - type: go-test
+        packages: [./internal/gates]
+        fuzz: FuzzInspectWorkflowNeverPanics
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/gates]
+        fuzz: FuzzSecuritySuppressionsNeverPanic
+        budget: 100x
+        timeout: 2m
+      - type: go-test
         packages: [./internal/inventory]
         fuzz: FuzzManifest
         budget: 100x
@@ -64,5 +79,10 @@ operations:
       - type: go-test
         packages: [./internal/services]
         fuzz: FuzzServiceLock
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/securitydocs]
+        fuzz: FuzzValidateNeverPanics
         budget: 100x
         timeout: 2m

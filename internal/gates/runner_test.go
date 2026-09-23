@@ -12,18 +12,18 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/gates"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/gates"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
 func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 	root := fixture(t)
 	write(t, filepath.Join(root, "README.md"), "# Example\n")
-	executor := &recordingExecutor{}
+	executor := &recordingExecutor{task: t.TempDir()}
 	var output bytes.Buffer
 	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{
-		Directory: ".",
+		Directory: ".", ModulePath: "example",
 		Gates: map[string]bool{
 			"lint": true, "tests": true, "race": true, "documentation": true,
 		},
@@ -41,7 +41,7 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 		"go test -race ./... -count=1 -timeout=20m",
 		"go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1 run --allow-parallel-runners --timeout=10m ./...",
 		"go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...",
-		"go run go.uber.org/nilaway/cmd/nilaway@v0.0.0-20260720194628-9fd1b8d7bac8 -include-pkgs= ./...",
+		"go run go.uber.org/nilaway/cmd/nilaway@v0.0.0-20260720194628-9fd1b8d7bac8 -include-pkgs=example ./...",
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
 		t.Fatalf("commands = %#v, want %#v", executor.commands, want)
@@ -61,10 +61,10 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 	root := fixture(t)
 	write(t, filepath.Join(root, "README.md"), "# Example\n")
-	executor := &recordingExecutor{}
+	executor := &recordingExecutor{task: t.TempDir()}
 	var output bytes.Buffer
 	runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{
-		Directory: ".",
+		Directory: ".", ModulePath: "example",
 		Gates: map[string]bool{
 			"api_compatibility": false, "coverage": true, "documentation": true,
 			"fuzz": true, "lint": true, "mutation": true, "race": true,
@@ -82,6 +82,13 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 		"go test ./... -count=1 -timeout=20m",
 		"go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1 run --allow-parallel-runners --timeout=10m ./...",
 		"go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...",
+		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
+		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
+		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --no-banner --redact",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --no-banner --redact",
+		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore example",
+		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
 		t.Fatalf("commands = %#v, want %#v", executor.commands, want)
@@ -91,7 +98,7 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 			t.Errorf("output does not include gate %q: %s", gate, output.String())
 		}
 	}
-	for _, gate := range []string{"coverage", "mutation", "race", "vulnerability", "fuzz"} {
+	for _, gate := range []string{"coverage", "mutation", "race", "fuzz"} {
 		if strings.Contains(output.String(), "[.] "+gate+"\n") {
 			t.Errorf("bounded local output includes risk-selected gate %q: %s", gate, output.String())
 		}
@@ -515,16 +522,32 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		"gofmt -l -- example.go",
 		"go mod tidy -diff",
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
+		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
+		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --no-banner --redact",
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --no-banner --redact",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/acme/example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
-		t.Fatalf("commands = %#v", executor.commands)
+		t.Fatalf("commands = %#v, want %#v", executor.commands, want)
 	}
-	if !strings.Contains(executor.secretConfig, `title = "fixture"`) ||
-		!strings.Contains(executor.secretConfig, `paths = ['''^\.golib-tooling(?:/|$)''']`) {
+	if strings.Contains(executor.secretConfig, `title = "fixture"`) ||
+		!strings.Contains(executor.secretConfig, `paths = ['''^\.golib-tooling(?:/|$)''']`) ||
+		!strings.Contains(executor.secretConfig, `targetRules = ["generic-api-key"]`) ||
+		!strings.Contains(executor.secretConfig, `regexes = ['''^v0\.0\.0-[0-9]{14}-[0-9a-f]{12}$''']`) ||
+		!strings.Contains(executor.secretConfig, `'''^internal/gates/api\.go$'''`) ||
+		!strings.Contains(executor.secretConfig, `paths = ['''^\.golib/versions\.env$''']`) ||
+		!strings.Contains(executor.secretConfig, `targetRules = ["stripe-access-token"]`) ||
+		!strings.Contains(executor.secretConfig, `regexTarget = "secret"`) ||
+		!strings.Contains(executor.secretConfig, `regexes = ['''^sk_test_0123456789abcdefghijklmnopqrstuv$''']`) ||
+		!strings.Contains(executor.secretConfig, `paths = ['''^internal/inventory/inventory_test\.go$''']`) {
 		t.Fatalf("gitleaks config = %q", executor.secretConfig)
+	}
+	if !strings.Contains(executor.analysisConfig, "security/no-unsafe") ||
+		!strings.Contains(executor.analysisConfig, "status: blocking") ||
+		!strings.Contains(executor.analysisConfig, "promotion:") {
+		t.Fatalf("analysis config = %q", executor.analysisConfig)
 	}
 	if executor.secretConfigPath == filepath.Join(root, ".gitleaks.toml") ||
 		!strings.HasPrefix(executor.secretConfigPath, task+string(filepath.Separator)) {
@@ -532,6 +555,48 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 	}
 	if _, err := os.Stat(executor.secretConfigPath); !os.IsNotExist(err) {
 		t.Fatalf("temporary gitleaks config remains: %v", err)
+	}
+}
+
+func TestCheckAndLocalRejectInvalidSecuritySuppressionsBeforeScanners(t *testing.T) {
+	for _, caller := range []string{"check", "local"} {
+		for _, test := range []struct {
+			comment string
+			want    string
+		}{
+			{"//#nosec", "exact rule IDs"},
+			{"//gosec:disable G304", "reason after --"},
+			{"//#nosecG304", "reason after --"},
+			{"//#nosec G304 ---", "reason after --"},
+			{"//nolint:govet, gosec", "inline reason"},
+			{"//nolint: gosec", "inline reason"},
+			{"//nolint: GOSEC", "inline reason"},
+		} {
+			t.Run(caller+" "+test.comment, func(t *testing.T) {
+				root := fixture(t)
+				write(t, filepath.Join(root, "example.go"), "package example\n"+test.comment+"\nfunc Value() int { return 1 }\n")
+				executor := &recordingExecutor{task: t.TempDir()}
+				var output bytes.Buffer
+				runner := gates.Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{{
+					Directory: ".", ModulePath: "example", Gates: map[string]bool{"lint": true, "security": true},
+				}}}, Executor: executor, Output: &output}
+				var err error
+				if caller == "check" {
+					err = runner.Check(context.Background(), []string{"."})
+				} else {
+					err = runner.Local(context.Background(), []string{"."})
+				}
+				if err == nil || !strings.Contains(err.Error(), "example.go:2:") || !strings.Contains(err.Error(), test.want) {
+					t.Fatalf("%s error = %v", caller, err)
+				}
+				if len(executor.commands) != 0 {
+					t.Fatalf("%s commands after suppression failure = %#v, want none", caller, executor.commands)
+				}
+				if got := output.String(); !strings.HasSuffix(got, "[.] security-suppressions\n") {
+					t.Fatalf("%s security output = %q", caller, got)
+				}
+			})
+		}
 	}
 }
 
@@ -604,9 +669,12 @@ func TestCheckStopsAtAnalyzerAndSecurityFailures(t *testing.T) {
 		{"lint", map[string]bool{"lint": true}, 3},
 		{"staticcheck", map[string]bool{"lint": true}, 4},
 		{"vulnerability", map[string]bool{"security": true}, 2},
-		{"secrets", map[string]bool{"security": true}, 3},
-		{"licenses", map[string]bool{"security": true}, 4},
-		{"SBOM", map[string]bool{"security": true}, 5},
+		{"gosec", map[string]bool{"security": true}, 3},
+		{"owned analysis", map[string]bool{"security": true}, 4},
+		{"secrets history", map[string]bool{"security": true}, 5},
+		{"secrets tree", map[string]bool{"security": true}, 6},
+		{"licenses", map[string]bool{"security": true}, 7},
+		{"SBOM", map[string]bool{"security": true}, 8},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -788,17 +856,19 @@ func TestCheckRejectsExcessiveFormatterOutput(t *testing.T) {
 }
 
 type recordingExecutor struct {
-	commands         []string
-	failureAt        int
-	failure          error
-	coverageProfile  string
-	coverageProfiles map[string]string
-	apiSnapshot      string
-	apiReport        string
-	formatOutput     string
-	secretConfig     string
-	secretConfigPath string
-	task             string
+	commands           []string
+	failureAt          int
+	failure            error
+	coverageProfile    string
+	coverageProfiles   map[string]string
+	apiSnapshot        string
+	apiReport          string
+	formatOutput       string
+	secretConfig       string
+	secretConfigPath   string
+	analysisConfig     string
+	analysisConfigPath string
+	task               string
 }
 
 const validCycloneDX = `{"bomFormat":"CycloneDX","specVersion":"1.6"}`
@@ -820,6 +890,20 @@ func (executor *recordingExecutor) Run(_ context.Context, command gates.Command)
 			}
 			executor.secretConfig = string(content)
 			arguments[index+1] = "<generated-gitleaks-config>"
+		}
+	}
+	if slices.Contains(arguments, "github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0") {
+		for index, argument := range arguments {
+			if argument != "-config" || index+1 >= len(arguments) {
+				continue
+			}
+			executor.analysisConfigPath = arguments[index+1]
+			content, err := os.ReadFile(executor.analysisConfigPath)
+			if err != nil {
+				return err
+			}
+			executor.analysisConfig = string(content)
+			arguments[index+1] = "<generated-analysis-config>"
 		}
 	}
 	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, arguments...), " "))

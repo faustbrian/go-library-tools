@@ -14,10 +14,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/buildinfo"
-	"github.com/faustbrian/go-library-tools/internal/cohesion"
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/gates"
+	"github.com/faustbrian/go-library-tools/v2/internal/buildinfo"
+	"github.com/faustbrian/go-library-tools/v2/internal/cohesion"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/gates"
 )
 
 func TestExecuteCohesionCoversOutputAndFailureContracts(t *testing.T) {
@@ -325,6 +325,7 @@ func TestExecuteSourceVerificationRejectsCurrentPolicyMismatch(t *testing.T) {
 			t.Fatal(err)
 		}
 		data = bytes.ReplaceAll(data, []byte(`"repository":"example"`), []byte(`"repository":"github.com/faustbrian/go-example"`))
+		data = bytes.ReplaceAll(data, []byte(`"module_path":"example"`), []byte(`"module_path":"github.com/faustbrian/go-example"`))
 		if err := os.WriteFile(path, data, 0o600); err != nil {
 			t.Fatal(err)
 		}

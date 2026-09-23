@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/buildinfo"
+	"github.com/faustbrian/go-library-tools/v2/internal/buildinfo"
 )
 
 func TestExecuteRejectsWrongReleasedVersion(t *testing.T) {

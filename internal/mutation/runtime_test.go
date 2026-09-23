@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/mutation"
+	"github.com/faustbrian/go-library-tools/v2/internal/mutation"
 )
 
 func TestParseRuntimeIdentityAcceptsExactGoEnvironment(t *testing.T) {

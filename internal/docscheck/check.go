@@ -103,6 +103,7 @@ func documents(root string) ([]string, error) {
 }
 
 func checkDocument(root, document string) error {
+	// #nosec G304 -- document paths come from a bounded walk beneath the repository root
 	data, err := os.ReadFile(document)
 	if err != nil {
 		return fmt.Errorf("read documentation %s: %w", document, err)

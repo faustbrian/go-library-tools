@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/faustbrian/go-library-tools/internal/evidence"
-	"github.com/faustbrian/go-library-tools/internal/mutation"
+	"github.com/faustbrian/go-library-tools/v2/internal/evidence"
+	"github.com/faustbrian/go-library-tools/v2/internal/mutation"
 )
 
 func TestReuseValidatesExactPackageEvidence(t *testing.T) {

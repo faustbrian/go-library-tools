@@ -8,7 +8,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/mutation"
+	"github.com/faustbrian/go-library-tools/v2/internal/mutation"
 )
 
 func TestStoreAndLoadReportByInputIdentity(t *testing.T) {

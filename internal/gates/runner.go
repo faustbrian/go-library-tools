@@ -6,35 +6,83 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"go/ast"
 	"go/parser"
 	"go/token"
 	"io"
 	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/coverage"
-	"github.com/faustbrian/go-library-tools/internal/docscheck"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
-	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
-	"github.com/faustbrian/go-library-tools/internal/services"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/coverage"
+	"github.com/faustbrian/go-library-tools/v2/internal/docscheck"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/v2/internal/services"
 	"golang.org/x/mod/module"
 )
 
 const maximumMakefileSize = 4 << 20
 
 const (
-	maximumGitleaksConfigSize = 4 << 20
-	gitleaksToolingAllowlist  = `
+	maximumSecuritySourceFiles = 100_000
+	maximumSecuritySourceSize  = 4 << 20
+)
+
+var (
+	securityRuleList = regexp.MustCompile(`^G[0-9]{3}(?:\s*,\s*G[0-9]{3})*$`)
+)
+
+const (
+	gitleaksPolicy = `title = "golib centrally owned secret scanning"
+[extend]
+useDefault = true
 
 [[allowlists]]
 description = "The immutable CI tooling checkout is verified separately."
 paths = ['''^\.golib-tooling(?:/|$)''']
+
+[[allowlists]]
+description = "Pinned apidiff versions in exact compatibility rehearsal Makefiles are tool identities."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "secret"
+regexes = ['''^v0\.0\.0-[0-9]{14}-[0-9a-f]{12}$''']
+paths = [
+  '''^internal/gates/api\.go$''',
+  '''^rehearsals/go-(?:authorization|openapi)/verification/package\.mk$''',
+]
+
+[[allowlists]]
+description = "Historical APIDIFF_VERSION pseudo-version in the retired legacy tool-version file."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "secret"
+regexes = ['''^v0\.0\.0-[0-9]{14}-[0-9a-f]{12}$''']
+paths = ['''^\.golib/versions\.env$''']
+
+[[allowlists]]
+description = "Exact synthetic Stripe token used by hostile inventory identity tests."
+condition = "AND"
+targetRules = ["stripe-access-token"]
+regexTarget = "secret"
+regexes = ['''^sk_test_0123456789abcdefghijklmnopqrstuv$''']
+paths = ['''^internal/inventory/inventory_test\.go$''']
+`
+	analysisSecurityPolicy = `version: 1
+rules:
+  security/no-unsafe:
+    status: blocking
+    promotion:
+      version: 1.0.0
+      evidence: ecosystem security policy prohibits unsafe, cgo, and go:linkname bypasses
 `
 )
 
@@ -43,6 +91,8 @@ const (
 	staticcheckVersion  = "v0.8.1"
 	nilAwayVersion      = "v0.0.0-20260720194628-9fd1b8d7bac8"
 	govulncheckVersion  = "v1.6.0"
+	gosecVersion        = "v2.29.0"
+	goAnalysisVersion   = "v1.0.0"
 	gitleaksVersion     = "v8.30.1"
 	goLicensesVersion   = "v2.0.1"
 	cycloneDXVersion    = "v1.10.0"
@@ -57,6 +107,50 @@ type Command struct {
 	Stdin  io.Reader
 	Stdout io.Writer
 	Stderr io.Writer
+}
+
+const maximumSecurityProcessOutput = 4 << 20
+
+type boundedProcessOutput struct {
+	mutex    sync.Mutex
+	limit    int
+	written  int
+	overflow bool
+	onLimit  func()
+}
+
+func (output *boundedProcessOutput) Write(value []byte) (int, error) {
+	output.mutex.Lock()
+	if len(value) > output.limit-output.written {
+		output.written = output.limit
+		first := !output.overflow
+		output.overflow = true
+		onLimit := output.onLimit
+		output.mutex.Unlock()
+		if first && onLimit != nil {
+			onLimit()
+		}
+		return len(value), nil
+	}
+	output.written += len(value)
+	output.mutex.Unlock()
+	return len(value), nil
+}
+
+func (output *boundedProcessOutput) setOverflowCallback(callback func()) {
+	output.mutex.Lock()
+	output.onLimit = callback
+	alreadyOverflowed := output.overflow
+	output.mutex.Unlock()
+	if alreadyOverflowed && callback != nil {
+		callback()
+	}
+}
+
+func (output *boundedProcessOutput) didOverflow() bool {
+	output.mutex.Lock()
+	defer output.mutex.Unlock()
+	return output.overflow
 }
 
 // Executor runs one external command.
@@ -115,6 +209,7 @@ func (operatingCoverageFiles) CreateTemp(directory string) (namedWriteCloser, er
 }
 
 func (operatingCoverageFiles) Open(path string) (io.ReadCloser, error) {
+	// #nosec G304 -- callers open the exact task-owned coverage profile path created by this gate
 	return os.Open(path)
 }
 
@@ -147,6 +242,9 @@ func (runner Runner) Check(ctx context.Context, selection []string) error {
 	if output == nil {
 		output = io.Discard
 	}
+	if err := runner.preflightSecurityPolicies(output, modules); err != nil {
+		return err
+	}
 	for _, module := range modules {
 		if err := runner.withModuleServices(ctx, module, func(scoped Runner) error {
 			return scoped.checkModule(ctx, output, module)
@@ -168,6 +266,9 @@ func (runner Runner) Local(ctx context.Context, selection []string) error {
 	output := runner.Output
 	if output == nil {
 		output = io.Discard
+	}
+	if err := runner.preflightSecurityPolicies(output, modules); err != nil {
+		return err
 	}
 	for _, module := range modules {
 		if err := runner.withModuleServices(ctx, module, func(scoped Runner) error {
@@ -317,35 +418,7 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 		}
 	}
 	if module.Gates["security"] {
-		if err := runner.goTool(ctx, output, module.Directory, "vulnerability", directory,
-			"golang.org/x/vuln/cmd/govulncheck@"+govulncheckVersion, "./..."); err != nil {
-			return err
-		}
-		configPath, cleanup, err := runner.createGitleaksConfig()
-		if err != nil {
-			return err
-		}
-		if err := runner.goTool(ctx, output, module.Directory, "secrets", directory,
-			"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
-			"dir", ".", "--config", configPath, "--no-banner", "--redact"); err != nil {
-			return errors.Join(err, cleanup())
-		}
-		if err := cleanup(); err != nil {
-			return fmt.Errorf("remove temporary gitleaks config: %w", err)
-		}
-		licenseOwner := module.ModulePath
-		if repository := strings.TrimSuffix(runner.Catalog.Repository, "/"); repository != "" &&
-			(module.ModulePath == repository || strings.HasPrefix(module.ModulePath, repository+"/")) {
-			licenseOwner = repository
-		}
-		if err := runner.goTool(ctx, output, module.Directory, "licenses", directory,
-			"github.com/google/go-licenses/v2@"+goLicensesVersion,
-			"check", "./...", "--ignore", licenseOwner); err != nil {
-			return err
-		}
-		if err := announce(output, module.Directory, "SBOM", func() error {
-			return runner.runSBOM(ctx, directory, module)
-		}); err != nil {
+		if err := runner.runSecurity(ctx, output, directory, module); err != nil {
 			return err
 		}
 	}
@@ -437,6 +510,11 @@ func (runner Runner) checkModuleLocal(ctx context.Context, output io.Writer, mod
 			return err
 		}
 	}
+	if module.Gates["security"] {
+		if err := runner.runSecurity(ctx, output, directory, module); err != nil {
+			return err
+		}
+	}
 	if module.Gates["documentation"] {
 		if err := announce(output, module.Directory, "docs-local", func() error {
 			return docscheck.CheckWithin(runner.Root, directory)
@@ -455,25 +533,29 @@ func (runner Runner) checkModuleLocal(ctx context.Context, output io.Writer, mod
 }
 
 func (runner Runner) createGitleaksConfig() (string, func() error, error) {
+	return runner.createOwnedPolicy("gitleaks-config-*.toml", gitleaksPolicy)
+}
+
+func (runner Runner) createAnalysisConfig() (string, func() error, error) {
+	return runner.createOwnedPolicy("analysis-security-*.yaml", analysisSecurityPolicy)
+}
+
+func (runner Runner) createOwnedPolicy(pattern, policy string) (string, func() error, error) {
 	workspace, ok := runner.Executor.(taskWorkspace)
 	if !ok || !filepath.IsAbs(workspace.TemporaryDirectory()) {
-		return "", nil, errors.New("gitleaks requires an absolute task-owned temporary directory")
-	}
-	configuration, err := repositoryfile.Read(runner.Root, ".gitleaks.toml", maximumGitleaksConfigSize)
-	if err != nil {
-		return "", nil, fmt.Errorf("read gitleaks config: %w", err)
+		return "", nil, errors.New("security policy requires an absolute task-owned temporary directory")
 	}
 	files := runner.secretConfigFiles
 	if files == nil {
 		files = operatingSecretConfigFiles{}
 	}
-	temporary, err := files.CreateTemp(workspace.TemporaryDirectory(), "gitleaks-config-*.toml")
+	temporary, err := files.CreateTemp(workspace.TemporaryDirectory(), pattern)
 	if err != nil {
 		return "", nil, fmt.Errorf("create temporary gitleaks config: %w", err)
 	}
 	path := temporary.Name()
 	cleanup := func() error { return files.Remove(path) }
-	if _, err := io.Copy(temporary, io.MultiReader(bytes.NewReader(configuration), strings.NewReader(gitleaksToolingAllowlist))); err != nil {
+	if _, err := io.WriteString(temporary, policy); err != nil {
 		return "", nil, errors.Join(fmt.Errorf("write temporary gitleaks config: %w", err), temporary.Close(), cleanup())
 	}
 	if err := temporary.Close(); err != nil {
@@ -482,9 +564,280 @@ func (runner Runner) createGitleaksConfig() (string, func() error, error) {
 	return path, cleanup, nil
 }
 
+func (runner Runner) checkSecurity(ctx context.Context, output io.Writer, directory string, module inventory.Module) error {
+	if err := runner.checkSecurityPolicy(output, directory, module.Directory); err != nil {
+		return err
+	}
+	return runner.runSecurity(ctx, output, directory, module)
+}
+
+func (runner Runner) checkSecurityPolicy(output io.Writer, directory, module string) error {
+	return announce(output, module, "security-suppressions", func() error {
+		return checkSecuritySuppressions(directory)
+	})
+}
+
+func (runner Runner) preflightSecurityPolicies(output io.Writer, modules []inventory.Module) error {
+	for _, module := range modules {
+		if !module.Gates["security"] {
+			continue
+		}
+		directory := filepath.Join(runner.Root, module.Directory)
+		if err := runner.checkSecurityPolicy(output, directory, module.Directory); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (runner Runner) runSecurity(ctx context.Context, output io.Writer, directory string, module inventory.Module) error {
+	if err := runner.securityTool(ctx, output, module.Directory, "vulnerability", directory,
+		"golang.org/x/vuln/cmd/govulncheck@"+govulncheckVersion, "./..."); err != nil {
+		return err
+	}
+	if err := runner.securityTool(ctx, output, module.Directory, "gosec", directory,
+		"github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion,
+		"-nosec-require-rules", "-nosec-require-justification", "./..."); err != nil {
+		return err
+	}
+	analysisPath, cleanupAnalysis, err := runner.createAnalysisConfig()
+	if err != nil {
+		return err
+	}
+	if err := runner.securityTool(ctx, output, module.Directory, "owned-security-analysis", directory,
+		"github.com/faustbrian/go-analysis/cmd/golib-analysis@"+goAnalysisVersion,
+		"check", "-config", analysisPath, "-root", directory, "./..."); err != nil {
+		return errors.Join(err, cleanupAnalysis())
+	}
+	if err := cleanupAnalysis(); err != nil {
+		return fmt.Errorf("remove temporary analysis config: %w", err)
+	}
+	configPath, cleanupSecrets, err := runner.createGitleaksConfig()
+	if err != nil {
+		return err
+	}
+	if err := runner.securityTool(ctx, output, module.Directory, "secrets-history", runner.Root,
+		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
+		"git", ".", "--config", configPath, "--log-opts=--all", "--no-banner", "--redact"); err != nil {
+		return errors.Join(err, cleanupSecrets())
+	}
+	if err := runner.securityTool(ctx, output, module.Directory, "secrets-current-tree", runner.Root,
+		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
+		"dir", ".", "--config", configPath, "--no-banner", "--redact"); err != nil {
+		return errors.Join(err, cleanupSecrets())
+	}
+	if err := cleanupSecrets(); err != nil {
+		return fmt.Errorf("remove temporary gitleaks config: %w", err)
+	}
+	licenseOwner := module.ModulePath
+	if repository := strings.TrimSuffix(runner.Catalog.Repository, "/"); repository != "" &&
+		(module.ModulePath == repository || strings.HasPrefix(module.ModulePath, repository+"/")) {
+		licenseOwner = repository
+	}
+	if err := runner.securityTool(ctx, output, module.Directory, "licenses", directory,
+		"github.com/google/go-licenses/v2@"+goLicensesVersion,
+		"check", "./...", "--ignore", licenseOwner); err != nil {
+		return err
+	}
+	return announce(output, module.Directory, "SBOM", func() error { return runner.runSBOM(ctx, directory) })
+}
+
+func checkSecuritySuppressions(root string) error {
+	sourceRoot, err := os.OpenRoot(root)
+	if err != nil {
+		return err
+	}
+	defer sourceRoot.Close()
+	files := 0
+	return filepath.WalkDir(root, func(filePath string, entry os.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			return walkErr
+		}
+		if entry.IsDir() {
+			if filePath != root && (entry.Name() == ".git" || entry.Name() == ".golib-tooling" || entry.Name() == "vendor") {
+				return filepath.SkipDir
+			}
+			return nil
+		}
+		if filepath.Ext(entry.Name()) != ".go" {
+			return nil
+		}
+		files++
+		if files > maximumSecuritySourceFiles {
+			return errors.New("security suppression source file limit exceeded")
+		}
+		info, err := entry.Info()
+		if err != nil {
+			return err
+		}
+		if info.Size() > maximumSecuritySourceSize {
+			return fmt.Errorf("security suppression source exceeds size limit: %s", entry.Name())
+		}
+		relative, err := filepath.Rel(root, filePath)
+		if err != nil {
+			return err
+		}
+		file, err := sourceRoot.Open(relative)
+		if err != nil {
+			return err
+		}
+		content, readErr := io.ReadAll(io.LimitReader(file, maximumSecuritySourceSize+1))
+		closeErr := file.Close()
+		if readErr != nil || closeErr != nil {
+			return errors.Join(readErr, closeErr)
+		}
+		if len(content) > maximumSecuritySourceSize {
+			return fmt.Errorf("security suppression source exceeds size limit: %s", entry.Name())
+		}
+		fileSet := token.NewFileSet()
+		parsed, err := parser.ParseFile(fileSet, filePath, content, parser.ParseComments)
+		if err != nil {
+			return err
+		}
+		for _, group := range parsed.Comments {
+			for _, suppression := range nativeNosecGroupDirectives(group, fileSet) {
+				directive, lineNumber := suppression.arguments, suppression.line
+				if err := validateNativeSecurityDirective(directive); err != nil {
+					return fmt.Errorf("%s:%d: %w", filepath.ToSlash(filePath), lineNumber, err)
+				}
+			}
+			for _, comment := range group.List {
+				lineNumber := fileSet.Position(comment.Slash).Line
+				if directive, found := gosecDisableDirective(comment.Text); found {
+					if err := validateNativeSecurityDirective(directive); err != nil {
+						return fmt.Errorf("%s:%d: %w", filepath.ToSlash(filePath), lineNumber, err)
+					}
+				}
+				if reason, found := nolintGosecDirective(comment.Text); found && strings.TrimSpace(reason) == "" {
+					return fmt.Errorf("%s:%d: nolint:gosec requires an inline reason", filepath.ToSlash(filePath), lineNumber)
+				}
+			}
+		}
+		return nil
+	})
+}
+
+func nativeSecurityDirective(line string, allowGosecDisable bool) (string, bool) {
+	body := strings.TrimSpace(line)
+	if allowGosecDisable {
+		if directive, found := gosecDisableDirective(body); found {
+			return directive, true
+		}
+	}
+	if trimmed, found := strings.CutPrefix(body, "//"); found {
+		body = strings.TrimSpace(trimmed)
+	}
+	const nosec = "#nosec"
+	if trimmed, found := strings.CutPrefix(body, nosec); found {
+		return strings.TrimSpace(trimmed), true
+	}
+	return "", false
+}
+
+type nativeSecuritySuppression struct {
+	arguments string
+	line      int
+}
+
+func nativeNosecGroupDirectives(group *ast.CommentGroup, fileSet *token.FileSet) []nativeSecuritySuppression {
+	var suppressions []nativeSecuritySuppression
+	for _, comment := range group.List {
+		body := comment.Text
+		baseLine := fileSet.Position(comment.Slash).Line
+		if strings.HasPrefix(body, "//") {
+			if directive, found := nativeSecurityDirective(body, false); found {
+				suppressions = append(suppressions, nativeSecuritySuppression{arguments: directive, line: baseLine})
+			}
+			continue
+		}
+		if !strings.HasPrefix(body, "/*") {
+			continue
+		}
+		body = strings.TrimPrefix(body, "/*")
+		body = strings.TrimSuffix(body, "*/")
+		for offset, line := range strings.Split(body, "\n") {
+			line = strings.TrimSpace(line)
+			if strings.HasPrefix(line, "//") {
+				continue
+			}
+			if directive, found := nativeSecurityDirective(line, false); found {
+				suppressions = append(suppressions, nativeSecuritySuppression{arguments: directive, line: baseLine + offset})
+			}
+		}
+	}
+	return suppressions
+}
+
+func nativeNosecGroupDirective(group *ast.CommentGroup, fileSet *token.FileSet) (string, int, bool) {
+	suppressions := nativeNosecGroupDirectives(group, fileSet)
+	if len(suppressions) == 0 {
+		return "", 0, false
+	}
+	return suppressions[0].arguments, suppressions[0].line, true
+}
+
+func gosecDisableDirective(comment string) (string, bool) {
+	body := strings.TrimSpace(comment)
+	const directive = "//gosec:disable"
+	if body == directive || strings.HasPrefix(body, directive+" ") {
+		return strings.TrimSpace(strings.TrimPrefix(body, directive)), true
+	}
+	return "", false
+}
+
+func nolintGosecDirective(comment string) (string, bool) {
+	body := strings.TrimLeft(comment, "/ ")
+	if !strings.HasPrefix(body, "nolint:") {
+		return "", false
+	}
+	directive, reason, _ := strings.Cut(body, "//")
+	for linter := range strings.SplitSeq(strings.TrimPrefix(directive, "nolint:"), ",") {
+		if strings.EqualFold(strings.TrimSpace(linter), "gosec") {
+			return reason, true
+		}
+	}
+	return "", false
+}
+
+func validateNativeSecurityDirective(arguments string) error {
+	rules, reason, found := strings.Cut(arguments, "--")
+	rules = strings.TrimSpace(rules)
+	if !securityRuleList.MatchString(rules) {
+		fields := strings.Fields(arguments)
+		if !found && len(fields) > 0 && securityRuleList.MatchString(fields[0]) {
+			return errors.New("security suppression requires a reason after --")
+		}
+		return errors.New("security suppression requires exact rule IDs")
+	}
+	if !found || strings.TrimSpace(strings.TrimLeft(reason, "-")) == "" {
+		return errors.New("security suppression requires a reason after --")
+	}
+	return nil
+}
+
 func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
 	arguments := append([]string{"run", tool}, args...)
 	return runner.command(ctx, output, module, gate, directory, arguments...)
+}
+
+func (runner Runner) securityTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
+	arguments := append([]string{"run", tool}, args...)
+	return announce(output, module, gate, func() error {
+		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+		err := runner.Executor.Run(ctx, Command{
+			Name: "go", Args: arguments, Dir: directory, Env: map[string]string{"GOWORK": "off"},
+			Stdout: stdout, Stderr: stderr,
+		})
+		var overflow error
+		if stdout.didOverflow() || stderr.didOverflow() {
+			overflow = fmt.Errorf("security scanner output exceeded %d bytes", maximumSecurityProcessOutput)
+		}
+		if err != nil || overflow != nil {
+			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err))
+		}
+		return nil
+	})
 }
 
 func (runner Runner) runCoverage(ctx context.Context, output io.Writer, directory string, module inventory.Module) error {

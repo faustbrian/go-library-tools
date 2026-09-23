@@ -80,7 +80,9 @@ func (operatingStoreFileSystem) MkdirAll(path string, mode os.FileMode) error {
 func (operatingStoreFileSystem) CreateTemp(directory, pattern string) (durableFile, error) {
 	return os.CreateTemp(directory, pattern)
 }
-func (operatingStoreFileSystem) Link(oldPath, newPath string) error   { return os.Link(oldPath, newPath) }
+func (operatingStoreFileSystem) Link(oldPath, newPath string) error { return os.Link(oldPath, newPath) }
+
+// #nosec G304 -- callers construct evidence paths from validated roots, gate names, and SHA-256 identifiers
 func (operatingStoreFileSystem) ReadFile(path string) ([]byte, error) { return os.ReadFile(path) }
 func (operatingStoreFileSystem) Remove(path string) error             { return os.Remove(path) }
 

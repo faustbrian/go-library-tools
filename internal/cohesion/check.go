@@ -8,8 +8,8 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
 // Report is the stable machine-readable cohesion-check result.

@@ -10,8 +10,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/faustbrian/go-library-tools/internal/inventory"
-	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 	"golang.org/x/mod/module"
 	modzip "golang.org/x/mod/zip"
 )
@@ -38,6 +38,7 @@ func (operatingReleaseFiles) WriteFile(path string, data []byte, mode os.FileMod
 }
 
 func (operatingReleaseFiles) Create(path string) (io.WriteCloser, error) {
+	// #nosec G304 -- callers create a fixed evidence filename beneath the validated task-owned release root
 	return os.Create(path)
 }
 

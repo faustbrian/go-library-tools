@@ -15,22 +15,4 @@ runs:
         BOOTSTRAP_URL: ${{ inputs.bootstrap_url }}
         BOOTSTRAP_SHA256: ${{ inputs.bootstrap_sha256 }}
       run: |
-        set -euo pipefail
-        if [[ -z "${BOOTSTRAP_URL}" ]]; then
-          [[ -z "${BOOTSTRAP_SHA256}" ]]
-          exit 0
-        fi
-        [[ "${BOOTSTRAP_URL}" == https://* ]]
-        [[ "${BOOTSTRAP_SHA256}" =~ ^[0-9a-f]{64}$ ]]
-        task="$(mktemp -d "${RUNNER_TEMP}/golib-bootstrap-proxy.XXXXXX")"
-        trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
-        archive="${task}/proxy.tar.gz"
-        proxy="${RUNNER_TEMP}/golib-bootstrap-proxy"
-        curl --fail --silent --show-error --location \
-          --retry 5 --retry-delay 2 --retry-all-errors \
-          "${BOOTSTRAP_URL}" --output "${archive}"
-        printf '%s  %s\n' "${BOOTSTRAP_SHA256}" "${archive}" | sha256sum --check
-        mkdir -p "${proxy}"
-        tar --extract --gzip --file "${archive}" --directory "${proxy}"
-        echo "GOPROXY=https://proxy.golang.org,file://${proxy},direct" >>"${GITHUB_ENV}"
-        echo 'GONOSUMDB=github.com/faustbrian/go-*' >>"${GITHUB_ENV}"
+        bash "${GITHUB_ACTION_PATH}/setup.sh"

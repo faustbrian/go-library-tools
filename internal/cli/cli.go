@@ -12,23 +12,27 @@ import (
 	"path/filepath"
 	"slices"
 
-	"github.com/faustbrian/go-library-tools/internal/buildinfo"
-	"github.com/faustbrian/go-library-tools/internal/cohesion"
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/consumers"
-	"github.com/faustbrian/go-library-tools/internal/evidence"
-	"github.com/faustbrian/go-library-tools/internal/gates"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
-	"github.com/faustbrian/go-library-tools/internal/releasecheck"
-	"github.com/faustbrian/go-library-tools/internal/repository"
-	"github.com/faustbrian/go-library-tools/internal/specification"
-	"github.com/faustbrian/go-library-tools/internal/upgrade"
+	"github.com/faustbrian/go-library-tools/v2/internal/archivecheck"
+	"github.com/faustbrian/go-library-tools/v2/internal/buildinfo"
+	"github.com/faustbrian/go-library-tools/v2/internal/cohesion"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/consumers"
+	"github.com/faustbrian/go-library-tools/v2/internal/evidence"
+	"github.com/faustbrian/go-library-tools/v2/internal/gates"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/releasecheck"
+	"github.com/faustbrian/go-library-tools/v2/internal/repository"
+	"github.com/faustbrian/go-library-tools/v2/internal/securitydocs"
+	"github.com/faustbrian/go-library-tools/v2/internal/specification"
+	"github.com/faustbrian/go-library-tools/v2/internal/upgrade"
 )
 
 const help = `golib validates and executes the Go library repository contract.
 
 Usage:
   golib --version
+  golib archive validate --file <path>
+  golib security validate --directory <path>
   golib check [--local] [--all|--module <directory>]
   golib cohesion check [--json]
   golib cohesion catalog <consumer|engineering> [--json]
@@ -110,6 +114,34 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 	}
 
 	switch args[0] {
+	case "security":
+		if len(args) != 4 || args[1] != "validate" || args[2] != "--directory" || args[3] == "" {
+			return usage(stderr, "usage: golib security validate --directory <path>")
+		}
+		if err := securitydocs.Validate(args[3]); err != nil {
+			return failure(stderr, err)
+		}
+		_, _ = io.WriteString(stdout, "ecosystem security records valid\n")
+		return 0
+	case "archive":
+		if len(args) != 4 || args[1] != "validate" || args[2] != "--file" || args[3] == "" {
+			return usage(stderr, "usage: golib archive validate --file <path>")
+		}
+		archive, openErr := os.Open(args[3])
+		if openErr != nil {
+			return failure(stderr, fmt.Errorf("open archive: %w", openErr))
+		}
+		validateErr := archivecheck.Validate(archive, archivecheck.Limits{
+			Entries:         100_000,
+			Bytes:           1 << 30,
+			CompressedBytes: 256 << 20,
+		})
+		closeErr := archive.Close()
+		if validateErr != nil || closeErr != nil {
+			return failure(stderr, errors.Join(validateErr, closeErr))
+		}
+		_, _ = io.WriteString(stdout, "bootstrap archive valid\n")
+		return 0
 	case "check":
 		local := len(args) > 1 && args[1] == "--local"
 		selectionArguments := args[1:]

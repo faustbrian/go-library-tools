@@ -1,5 +1,12 @@
 # CLI Reference
 
+## Security records and bootstrap archives
+
+`golib security validate --directory <path>` validates the v1 risk register,
+scanner results, residual-risk references, and per-module release verdicts.
+`golib archive validate --file <path>` validates a gzip tar archive with fixed
+compressed, entry, and expansion bounds before a caller extracts it.
+
 `golib --help` lists the stable command surface. Commands locate the repository
 by walking upward to `.golib.yaml`; failure to find it exits with status 1.
 Invalid command syntax exits with status 2. Failed validation or gates exit
@@ -47,7 +54,8 @@ Core commands:
 - `golib check --local [--all|--module DIR]` runs the bounded pull-request contract with any
   module-declared service fixtures: formatting,
   module tidiness, unsafe-import checks, tests, vet, configured lint/static
-  analysis, local documentation links, and applicable API compatibility.
+  analysis, the complete security scanner contract, local documentation links,
+  and applicable API compatibility.
   `golib check [--all|--module DIR]` runs the complete enabled contract. Formatting is
   checked by the active `gofmt` executable, keeping it aligned with the Go
   toolchain selected for the repository rather than the CLI build toolchain.
@@ -67,7 +75,8 @@ Core commands:
   fixtures, waits for readiness, and closes the exact task-owned lease. It does
   not expose detached service state.
 - `golib release check [--all|--module DIR]` validates stable versions, tag
-  prefixes, mandatory gates, and repository structure. Before a tag exists,
+  prefixes, module-path major versions, mandatory gates, and repository
+  structure. Before a tag exists,
   `golib release dry-run [--all|--module DIR]` also rejects tag collisions,
   builds task-owned module-proxy archives, proves clean module resolution, and
   executes the complete contract. Omitting the selector or using `--all`
@@ -93,3 +102,9 @@ executing release identity so one newer released generator can read consumers
 that remain correctly pinned to earlier compatible releases. The explicit
 `dev` identity is accepted only for deliberate source builds and prevents
 circular bootstrap while developing this repository.
+
+The v2 command is installed from
+`github.com/faustbrian/go-library-tools/v2/cmd/golib@v2.0.0`. The GitHub
+repository and reusable-workflow coordinates remain
+`github.com/faustbrian/go-library-tools`; `/v2` is the Go module major-version
+suffix, not a branch or repository rename.

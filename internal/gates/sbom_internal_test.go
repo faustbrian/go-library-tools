@@ -6,8 +6,6 @@ import (
 	"io"
 	"strings"
 	"testing"
-
-	"github.com/faustbrian/go-library-tools/internal/inventory"
 )
 
 func TestSBOMRejectsInvalidOutput(t *testing.T) {
@@ -28,11 +26,43 @@ func TestSBOMRejectsInvalidOutput(t *testing.T) {
 				_, _ = io.WriteString(command.Stdout, test.output)
 				return nil
 			})}
-			err := runner.runSBOM(context.Background(), "/repo", inventory.Module{Directory: ".", ModulePath: "example"})
+			err := runner.runSBOM(context.Background(), "/repo")
 			if err == nil || !strings.Contains(err.Error(), test.want) {
 				t.Fatalf("runSBOM() error = %v, want %q", err, test.want)
 			}
 		})
+	}
+}
+
+func TestSBOMDiagnosticsDoNotDiscloseToolControlledValues(t *testing.T) {
+	secret := "credentials-AKIA1234567890-secret"
+	tests := []string{
+		`{"bomFormat":"` + secret + `","specVersion":"1.6"}`,
+		`{"bomFormat":"CycloneDX","specVersion":"` + secret + `"}`,
+		`{"bomFormat":"CycloneDX","specVersion":"1.6","payload":"` + secret + `"`,
+	}
+	for _, output := range tests {
+		runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
+			_, _ = io.WriteString(command.Stdout, output)
+			_, _ = io.WriteString(command.Stderr, secret)
+			return nil
+		})}
+		err := runner.runSBOM(context.Background(), "/repo")
+		if err == nil || strings.Contains(err.Error(), secret) {
+			t.Fatalf("runSBOM() error disclosed tool output: %v", err)
+		}
+	}
+}
+
+func TestSBOMOverflowPreservesBothOverflowAndToolFailure(t *testing.T) {
+	failure := errors.New("tool failed")
+	runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
+		_, _ = command.Stderr.Write(make([]byte, maximumSBOMOutput+1))
+		return failure
+	})}
+	err := runner.runSBOM(context.Background(), "/repo")
+	if err == nil || !strings.Contains(err.Error(), "output exceeded") || !errors.Is(err, failure) {
+		t.Fatalf("runSBOM() error = %v", err)
 	}
 }
 
@@ -61,14 +91,14 @@ func TestSBOMRejectsExcessiveOutputAndPreservesToolFailure(t *testing.T) {
 		_, _ = command.Stdout.Write(make([]byte, maximumSBOMOutput+1))
 		return nil
 	})}
-	err := runner.runSBOM(context.Background(), "/repo", inventory.Module{Directory: ".", ModulePath: "example"})
+	err := runner.runSBOM(context.Background(), "/repo")
 	if err == nil || !strings.Contains(err.Error(), "exceeded") {
 		t.Fatalf("runSBOM() overflow error = %v", err)
 	}
 
 	failure := errors.New("failed")
 	runner.Executor = executorFunction(func(context.Context, Command) error { return failure })
-	if err := runner.runSBOM(context.Background(), "/repo", inventory.Module{Directory: ".", ModulePath: "example"}); !errors.Is(err, failure) {
+	if err := runner.runSBOM(context.Background(), "/repo"); !errors.Is(err, failure) {
 		t.Fatalf("runSBOM() tool error = %v", err)
 	}
 }

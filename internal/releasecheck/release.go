@@ -9,8 +9,9 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/faustbrian/go-library-tools/internal/config"
-	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
+	gomodule "golang.org/x/mod/module"
 	"golang.org/x/mod/semver"
 )
 
@@ -49,6 +50,10 @@ func Validate(catalog inventory.Inventory, policy config.Config, selected ...str
 		version := "v" + strings.TrimPrefix(module.Version, "v")
 		if !semver.IsValid(version) || semver.Major(version) == "v0" || module.Version != strings.TrimPrefix(version, "v") {
 			return nil, fmt.Errorf("module %s must declare a stable version without v prefix", module.Directory)
+		}
+		_, pathMajor, validPath := gomodule.SplitPathVersion(module.ModulePath)
+		if !validPath || gomodule.CheckPathMajor(version, pathMajor) != nil {
+			return nil, fmt.Errorf("module %s release version does not match module path major", module.Directory)
 		}
 		expectedPrefix := "v"
 		if module.Directory != "." {

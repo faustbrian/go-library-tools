@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/docscheck"
+	"github.com/faustbrian/go-library-tools/v2/internal/docscheck"
 )
 
 func FuzzLycheeArchive(f *testing.F) {

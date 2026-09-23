@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/evidence"
+	"github.com/faustbrian/go-library-tools/v2/internal/evidence"
 )
 
 func FuzzEvidence(f *testing.F) {

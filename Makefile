@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: build check check-packages ci cohesion compatibility compatibility-candidate compatibility-rebase config consumers inventory local-check local-ci milestone-check repository-check workflows
+.PHONY: build check check-packages ci cohesion compatibility compatibility-candidate compatibility-rebase config consumers inventory local-check local-ci milestone-check repository-check security-differential workflows
 
 PACKAGES ?=
 COMPATIBILITY_SET_ID ?=
@@ -55,10 +55,20 @@ check-packages:
 	$(call run_go,test $(PACKAGES))
 	$(call run_go,vet $(PACKAGES))
 
+security-differential:
+	@set -euo pipefail; \
+	task="$$(mktemp -d "$${TMPDIR:-/tmp}/go-library-tools-security-differential.XXXXXX")"; \
+	trap 'chmod -R u+w "$$task" 2>/dev/null || true; find "$$task" -depth -delete' EXIT; \
+	mkdir -p "$$task/cache" "$$task/mod" "$$task/tmp" "$$task/uv"; \
+	GOCACHE="$$task/cache" GOMODCACHE="$$task/mod" GOTMPDIR="$$task/tmp" GOWORK=off go build -o "$$task/golib" ./cmd/golib; \
+	UV_CACHE_DIR="$$task/uv" UV_NO_PROGRESS=1 UV_PYTHON_PREFERENCE=only-system TMPDIR="$$task/tmp" \
+		uv run --no-project --with jsonschema==4.17.3 python tools/securitydocs/differential.py "$(CURDIR)" "$$task/golib"
+
 local-check: config repository-check cohesion workflows
 
 local-ci:
 	$(call run_go,run ./cmd/golib check --local)
+	$(call run_go,run ./cmd/golib security validate --directory docs/ecosystem/security)
 	$(MAKE) local-check
 
 milestone-check: consumers compatibility

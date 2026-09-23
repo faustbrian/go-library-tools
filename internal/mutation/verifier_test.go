@@ -3,7 +3,7 @@ package mutation_test
 import (
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/mutation"
+	"github.com/faustbrian/go-library-tools/v2/internal/mutation"
 )
 
 func TestLegacyVerifierIdentityIsReproducible(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/faustbrian/go-library-tools/internal/inventory"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
 // Identity binds catalog output to the design language and generator.

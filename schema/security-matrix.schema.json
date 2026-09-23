@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/faustbrian/go-library-tools/schema/security-matrix.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "modules"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "modules": {"type": "array", "items": {"$ref": "#/$defs/module"}}
+  },
+  "$defs": {
+    "text": {"type": "string", "pattern": "\\S"},
+    "scanner": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "tool_version", "command", "status", "completed_at", "result", "result_sha256"],
+      "properties": {
+        "name": {"enum": ["codeql", "dependency-review", "go-vet", "gosec", "govulncheck", "license", "owned-analysis", "secret-current-tree", "secret-history", "staticcheck", "workflow-analysis"]},
+        "tool_version": {"$ref": "#/$defs/text"},
+        "command": {"$ref": "#/$defs/text"},
+        "status": {"enum": ["passed", "failed", "not-applicable"]},
+        "completed_at": {"type": "string", "format": "date-time"},
+        "result": {"$ref": "#/$defs/text"},
+        "result_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "verdict": {
+      "type": "object", "additionalProperties": false,
+      "required": ["status", "owner", "decided_at", "rationale", "residual_risks"],
+      "properties": {
+        "status": {"enum": ["pass", "fail", "blocked"]},
+        "owner": {"$ref": "#/$defs/text"},
+        "decided_at": {"type": "string", "format": "date-time"},
+        "rationale": {"$ref": "#/$defs/text"},
+        "residual_risks": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^SEC-[A-Z0-9-]+$"}}
+      }
+    },
+    "module": {
+      "type": "object", "additionalProperties": false,
+      "required": ["module", "revision", "scanners", "release_verdict"],
+      "properties": {
+        "module": {"$ref": "#/$defs/text"},
+        "revision": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "scanners": {"type": "array", "maxItems": 11, "items": {"$ref": "#/$defs/scanner"}},
+        "release_verdict": {"$ref": "#/$defs/verdict"}
+      },
+      "allOf": [
+        {
+          "if": {"properties": {"release_verdict": {"properties": {"status": {"const": "pass"}}}}},
+          "then": {"properties": {"scanners": {"minItems": 11, "items": {"allOf": [{"$ref": "#/$defs/scanner"}, {"properties": {"status": {"const": "passed"}}}]}}}}
+        }
+      ]
+    }
+  }
+}

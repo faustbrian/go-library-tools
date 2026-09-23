@@ -21,7 +21,9 @@ type operatingSourceFiles struct{}
 
 func (operatingSourceFiles) Lstat(path string) (os.FileInfo, error)     { return os.Lstat(path) }
 func (operatingSourceFiles) ReadDir(path string) ([]os.DirEntry, error) { return os.ReadDir(path) }
-func (operatingSourceFiles) ReadFile(path string) ([]byte, error)       { return os.ReadFile(path) }
+
+// #nosec G304 -- callers derive paths beneath a validated absolute task-owned mutation source root
+func (operatingSourceFiles) ReadFile(path string) ([]byte, error) { return os.ReadFile(path) }
 func (operatingSourceFiles) Rel(base, target string) (string, error) {
 	return filepath.Rel(base, target)
 }

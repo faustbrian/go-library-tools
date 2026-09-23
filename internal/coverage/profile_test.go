@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/coverage"
+	"github.com/faustbrian/go-library-tools/v2/internal/coverage"
 )
 
 func TestVerifyRequiresExactCoverageForEveryExpectedPackage(t *testing.T) {

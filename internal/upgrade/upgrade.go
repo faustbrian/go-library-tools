@@ -11,7 +11,7 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/faustbrian/go-library-tools/internal/repositoryfile"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 )
 
 const maximumUpgradeFileSize = 1 << 20

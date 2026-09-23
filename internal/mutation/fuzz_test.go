@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"testing"
 
-	"github.com/faustbrian/go-library-tools/internal/mutation"
+	"github.com/faustbrian/go-library-tools/v2/internal/mutation"
 )
 
 func FuzzMutationRecords(f *testing.F) {

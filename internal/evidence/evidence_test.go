@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/faustbrian/go-library-tools/internal/evidence"
+	"github.com/faustbrian/go-library-tools/v2/internal/evidence"
 )
 
 type failingReader struct{}
