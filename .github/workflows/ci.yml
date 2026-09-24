@@ -203,7 +203,7 @@ jobs:
           trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" go build ./...
-      - uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4
+      - uses: github/codeql-action/analyze@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4
 
   release-rehearsal:
     name: Release rehearsal
