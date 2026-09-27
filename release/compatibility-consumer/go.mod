@@ -46,9 +46,9 @@ require (
 	github.com/faustbrian/go-event-sourcing/adapters/queue v1.0.0
 	github.com/faustbrian/go-event-sourcing/postgres v1.0.0
 	github.com/faustbrian/go-external-sort v1.0.0
-	github.com/faustbrian/go-fault-injection v1.0.0
+	github.com/faustbrian/go-fault-injection/v2 v2.0.0
 	github.com/faustbrian/go-feature-flags/v2 v2.0.0
-	github.com/faustbrian/go-filesystem v1.1.0
+	github.com/faustbrian/go-filesystem/v2 v2.0.0
 	github.com/faustbrian/go-geo v1.1.0
 	github.com/faustbrian/go-hedge v1.0.0
 	github.com/faustbrian/go-http-client v1.1.0
@@ -71,7 +71,7 @@ require (
 	github.com/faustbrian/go-localized v1.1.0
 	github.com/faustbrian/go-log v1.0.0
 	github.com/faustbrian/go-math v1.1.0
-	github.com/faustbrian/go-measurement v1.1.0
+	github.com/faustbrian/go-measurement/v2 v2.0.0
 	github.com/faustbrian/go-merkle-patricia-trie v1.0.0
 	github.com/faustbrian/go-merkle-tree v1.0.0
 	github.com/faustbrian/go-migrations v1.1.0
@@ -158,6 +158,7 @@ require (
 	github.com/dlclark/regexp2/v2 v2.5.1 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/ericlevine/zxinggo v0.1.0 // indirect
+	github.com/faustbrian/go-measurement v1.1.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

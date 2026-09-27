@@ -64,8 +64,9 @@ verified cohort; its hosted consumer checks establish only its own composition.
 Without this optional selection, older fixtures retain the existing candidate or
 published-set selection behavior. Remove the selection explicitly before
 generating a new cohort candidate; candidate writes must not silently overwrite
-a maintained current-release consumer. Middleware and feature-flags now select
-their published `/v2` modules; measurement remains at the base set's v1.1.0.
+a maintained current-release consumer. Middleware, feature-flags, measurement,
+filesystem and fault-injection select their published `/v2` modules. These
+overrides do not rewrite the base set's v1 versions or historical evidence.
 Matching module entries in the generated catalogs list the published set under
 `known_good_compatibility_sets`; unreleased drafts are never projected there.
 Candidate fingerprints withdrawn before the first publication are not public

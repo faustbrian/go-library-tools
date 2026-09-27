@@ -3,6 +3,13 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-fault-injection",
+      "module_path": "github.com/faustbrian/go-fault-injection/v2",
+      "version": "v2.0.0",
+      "source_revision": "82b20f3a1febd988b122b4643574527a868366cc",
+      "primary_entry_packages": ["github.com/faustbrian/go-fault-injection/v2"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-feature-flags",
       "module_path": "github.com/faustbrian/go-feature-flags/v2",
       "version": "v2.0.0",
@@ -10,11 +17,25 @@
       "primary_entry_packages": ["github.com/faustbrian/go-feature-flags/v2"]
     },
     {
+      "from_module_path": "github.com/faustbrian/go-filesystem",
+      "module_path": "github.com/faustbrian/go-filesystem/v2",
+      "version": "v2.0.0",
+      "source_revision": "89f5eda61a73c07445cec127e0687afa7a09418e",
+      "primary_entry_packages": ["github.com/faustbrian/go-filesystem/v2"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-http-middleware",
       "module_path": "github.com/faustbrian/go-http-middleware/v2",
       "version": "v2.0.0",
       "source_revision": "7c7a00242434b8d0bb96c497460faecb0d919a99",
       "primary_entry_packages": ["github.com/faustbrian/go-http-middleware/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-measurement",
+      "module_path": "github.com/faustbrian/go-measurement/v2",
+      "version": "v2.0.0",
+      "source_revision": "cb4442414598f8cc0cf1b1099f2f939b31105f4d",
+      "primary_entry_packages": ["github.com/faustbrian/go-measurement/v2"]
     }
   ]
 }

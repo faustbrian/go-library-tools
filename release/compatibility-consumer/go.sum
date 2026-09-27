@@ -205,12 +205,12 @@ github.com/faustbrian/go-event-sourcing/postgres v1.0.0 h1:/vz1yAr13/Q/c+tB5diQ5
 github.com/faustbrian/go-event-sourcing/postgres v1.0.0/go.mod h1:uYYop9kQuPZV1LiTG+3o3ocl24c5U+key+5fkCy1LTE=
 github.com/faustbrian/go-external-sort v1.0.0 h1:IweawCdGfBBsFjhR9FObG2WxiMx9IpcvEwHpmKkcg+U=
 github.com/faustbrian/go-external-sort v1.0.0/go.mod h1:u1N263MxZo9Fm1FObuUs+dpbIRIQnfIhUUSJ3hfTeRg=
-github.com/faustbrian/go-fault-injection v1.0.0 h1:12wS8vL3qpITbTMMblv6n6eov53w7WtRsTrRiYITC6M=
-github.com/faustbrian/go-fault-injection v1.0.0/go.mod h1:R28hxf8fsgFIObn7W7O9pznu8EOWCVvCdhphKFvRptU=
+github.com/faustbrian/go-fault-injection/v2 v2.0.0 h1:wu2UfZ4YOmtlMEf2kfJeA02bApiO/YXpNqGl51VLF5M=
+github.com/faustbrian/go-fault-injection/v2 v2.0.0/go.mod h1:Dj4dPSPCBr6/9QxLrGc54oZZHm10UpoeWYulsNAj72g=
 github.com/faustbrian/go-feature-flags/v2 v2.0.0 h1:OqMn9CW2xMjaJkHxJJc6Q7UBW5ZUSk/in475S32qrFY=
 github.com/faustbrian/go-feature-flags/v2 v2.0.0/go.mod h1:yhX3N/GEX1lwz9XMVvblQevVuacjQdpNwB1jXETjIo8=
-github.com/faustbrian/go-filesystem v1.1.0 h1:wq6yby56Wy8n0iZnGcu+OVZVMkZf71QMjVtf2cRa46I=
-github.com/faustbrian/go-filesystem v1.1.0/go.mod h1:Nzuwr0gPEfTYcoYB6bZDJev3u5Ys2zyT8wFwC9gSMW0=
+github.com/faustbrian/go-filesystem/v2 v2.0.0 h1:Sih3x2czSgo9bXZzQRB4/XQKLfqHP9OQzL40XuPq5pk=
+github.com/faustbrian/go-filesystem/v2 v2.0.0/go.mod h1:DmVh5LonozzE6tKUpk6f5EET6Da1jqhn7NRl4PzKYDA=
 github.com/faustbrian/go-geo v1.1.0 h1:5ORXYTm/I5qjY6BAnVoBkUQWSgLKvV8AOxQIKLFua0I=
 github.com/faustbrian/go-geo v1.1.0/go.mod h1:DtVeZLOtVsGSBoN3mph3qpxb364/Nve8cvZXz+1ud98=
 github.com/faustbrian/go-hedge v1.0.0 h1:/HjlsrN8J+13BVU3XxTsdOyWfhFFM+B9iCPzS6+OiLY=
@@ -257,6 +257,8 @@ github.com/faustbrian/go-math v1.1.0 h1:j4eaCuP1oYG3Gh69rbrFOEjg1OxgYa1xoXmbYycg
 github.com/faustbrian/go-math v1.1.0/go.mod h1:ng3bXTchmlJz/xcXY87ZHFDdd3WUrDhPUaFEytofbBg=
 github.com/faustbrian/go-measurement v1.1.0 h1:YzZJP1JcF5mx4CU4MApTr+QSd3w2xB16wdfcQtC7MMw=
 github.com/faustbrian/go-measurement v1.1.0/go.mod h1:DweCz271xKDpZjD9gBMFfjKl0AYEEpSguiM9uXCdbAE=
+github.com/faustbrian/go-measurement/v2 v2.0.0 h1:EMCcWBSz2DEJ5bYDYCQc7QjA4V1OzvogDWx5PqoXB10=
+github.com/faustbrian/go-measurement/v2 v2.0.0/go.mod h1:93uslDTMPha2s6nH0dTAc3OKqnfRUQjPyyfL+2Txw6U=
 github.com/faustbrian/go-merkle-patricia-trie v1.0.0 h1:ZofhkLLD1xsHX3cTdx95XaX5QsFNAk+72A0G/FVTJrw=
 github.com/faustbrian/go-merkle-patricia-trie v1.0.0/go.mod h1:slOBbuEXP+9x3v7JgwWBUL22hb/lWkHoyKYxvBrek6Q=
 github.com/faustbrian/go-merkle-tree v1.0.0 h1:lkjqyeQ2AAAfVA2prkSH/60TSVOJ1NexuZ5derPhfvQ=
