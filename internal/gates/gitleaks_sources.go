@@ -202,7 +202,9 @@ func (file *boundedSourceFile) Write(value []byte) (int, error) {
 				return n, err
 			}
 		}
-		file.boundedProcessOutput.Write(make([]byte, 1))
+		// This embedded writer only records overflow; the stable bundle error
+		// below is authoritative rather than its deliberately ignored result.
+		_, _ = file.boundedProcessOutput.Write(make([]byte, 1))
 		return len(value), errors.New("history bundle byte limit exceeded")
 	}
 	n, err := file.file.Write(value)
