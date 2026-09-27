@@ -54,6 +54,18 @@ module to its owning repository's exact remote release tag and public Go proxy
 version. Set records can also carry structured recipe,
 external-version, upgrade, rollback, and exclusion details. Published
 identifiers are immutable; a later recommendation receives a new identifier.
+The maintained `release/compatibility-consumer` may separately declare
+`selection.json`: a published base set and explicit released-module replacements
+with their exact tag source revisions and primary imports. The generator checks
+those public release bindings and the resulting consumer files without modifying
+the base set or projecting new `known_good_compatibility_sets` membership. This
+current consumer is not evidence that the changed versions belong to the frozen
+verified cohort; its hosted consumer checks establish only its own composition.
+Without this optional selection, older fixtures retain the existing candidate or
+published-set selection behavior. Remove the selection explicitly before
+generating a new cohort candidate; candidate writes must not silently overwrite
+a maintained current-release consumer. Middleware and feature-flags now select
+their published `/v2` modules; measurement remains at the base set's v1.1.0.
 Matching module entries in the generated catalogs list the published set under
 `known_good_compatibility_sets`; unreleased drafts are never projected there.
 Candidate fingerprints withdrawn before the first publication are not public

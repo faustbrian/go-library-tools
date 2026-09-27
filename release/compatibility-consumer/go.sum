@@ -207,8 +207,8 @@ github.com/faustbrian/go-external-sort v1.0.0 h1:IweawCdGfBBsFjhR9FObG2WxiMx9Ipc
 github.com/faustbrian/go-external-sort v1.0.0/go.mod h1:u1N263MxZo9Fm1FObuUs+dpbIRIQnfIhUUSJ3hfTeRg=
 github.com/faustbrian/go-fault-injection v1.0.0 h1:12wS8vL3qpITbTMMblv6n6eov53w7WtRsTrRiYITC6M=
 github.com/faustbrian/go-fault-injection v1.0.0/go.mod h1:R28hxf8fsgFIObn7W7O9pznu8EOWCVvCdhphKFvRptU=
-github.com/faustbrian/go-feature-flags v1.0.0 h1:U+5C1os6msiOnK0DBplm7ev6PzFDQft2Hb4e1iXXpXk=
-github.com/faustbrian/go-feature-flags v1.0.0/go.mod h1:QkuOWfQ50kYTP0vAj90dhttLXTMGqyhTmPsQ1fb+syk=
+github.com/faustbrian/go-feature-flags/v2 v2.0.0 h1:OqMn9CW2xMjaJkHxJJc6Q7UBW5ZUSk/in475S32qrFY=
+github.com/faustbrian/go-feature-flags/v2 v2.0.0/go.mod h1:yhX3N/GEX1lwz9XMVvblQevVuacjQdpNwB1jXETjIo8=
 github.com/faustbrian/go-filesystem v1.1.0 h1:wq6yby56Wy8n0iZnGcu+OVZVMkZf71QMjVtf2cRa46I=
 github.com/faustbrian/go-filesystem v1.1.0/go.mod h1:Nzuwr0gPEfTYcoYB6bZDJev3u5Ys2zyT8wFwC9gSMW0=
 github.com/faustbrian/go-geo v1.1.0 h1:5ORXYTm/I5qjY6BAnVoBkUQWSgLKvV8AOxQIKLFua0I=

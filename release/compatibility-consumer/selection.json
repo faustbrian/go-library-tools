@@ -1,0 +1,20 @@
+{
+  "format": "golib-current-consumer-v1",
+  "base_set_id": "golib-compat-v1-20260912.2",
+  "replacements": [
+    {
+      "from_module_path": "github.com/faustbrian/go-feature-flags",
+      "module_path": "github.com/faustbrian/go-feature-flags/v2",
+      "version": "v2.0.0",
+      "source_revision": "5a1a5e27e11c1dcd449ca86119ef6fc4345e131d",
+      "primary_entry_packages": ["github.com/faustbrian/go-feature-flags/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-http-middleware",
+      "module_path": "github.com/faustbrian/go-http-middleware/v2",
+      "version": "v2.0.0",
+      "source_revision": "7c7a00242434b8d0bb96c497460faecb0d919a99",
+      "primary_entry_packages": ["github.com/faustbrian/go-http-middleware/v2"]
+    }
+  ]
+}

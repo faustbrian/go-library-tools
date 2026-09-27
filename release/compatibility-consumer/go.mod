@@ -47,7 +47,7 @@ require (
 	github.com/faustbrian/go-event-sourcing/postgres v1.0.0
 	github.com/faustbrian/go-external-sort v1.0.0
 	github.com/faustbrian/go-fault-injection v1.0.0
-	github.com/faustbrian/go-feature-flags v1.0.0
+	github.com/faustbrian/go-feature-flags/v2 v2.0.0
 	github.com/faustbrian/go-filesystem v1.1.0
 	github.com/faustbrian/go-geo v1.1.0
 	github.com/faustbrian/go-hedge v1.0.0

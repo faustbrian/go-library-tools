@@ -787,6 +787,89 @@ class CompatibilitySetTest(unittest.TestCase):
 
         self.assertIs(selected, candidate)
 
+    def test_current_consumer_migration_preserves_published_cohort(self):
+        historical = self.base_set("a" * 40)
+        historical["roster"] = {"selection": "active-public", "module_count": 1}
+        module = self.catalog_module()
+        module["cohesion"] = {"primary_entry_packages": [module["module_path"]]}
+        module["packages"] = [{"import_path": module["module_path"], "name": "foo"}]
+        value = {"sets": [historical]}
+        original = copy.deepcopy((value, module))
+        selection = {
+            "format": "golib-current-consumer-v1",
+            "base_set_id": historical["set_id"],
+            "replacements": [{
+                "from_module_path": module["module_path"],
+                "module_path": module["module_path"] + "/v2",
+                "version": "v2.0.0",
+                "source_revision": "b" * 40,
+                "primary_entry_packages": [module["module_path"] + "/v2"],
+            }],
+        }
+        current, catalogs = generate.current_consumer_inputs(
+            value, [module], selection,
+            remote_tag_lookup=lambda repository, tag: "b" * 40
+                if repository == module["repository"] and tag == "adapters/foo/v2.0.0" else None,
+            public_version_lookup=lambda path, version: path.endswith("/v2") and version == "v2.0.0",
+        )
+        go_mod, source = generate.render_clean_consumer(current, catalogs)
+        self.assertIn(module["module_path"] + "/v2 v2.0.0", go_mod)
+        self.assertIn('"' + module["module_path"] + '/v2"', source)
+        self.assertEqual((value, module), original)
+        generate.CONSUMER_DIRECTORY.mkdir(parents=True)
+        (generate.CONSUMER_DIRECTORY / "go.mod").write_text(go_mod)
+        (generate.CONSUMER_DIRECTORY / "consumer_test.go").write_text(source)
+        generate.check_clean_consumer(current, catalogs)
+        with self.assertRaisesRegex(ValueError, "consumer is stale"):
+            generate.check_clean_consumer(historical, [module])
+
+        for change, message in (
+            ({"from_module_path": "example.com/unknown"}, "origin"),
+            ({"module_path": "example.com/other/v2"}, "module family"),
+            ({"version": "v3.0.0"}, "major mismatch"),
+            ({"source_revision": "c" * 40}, "matching remote tag"),
+            ({"primary_entry_packages": ["example.com/outside"]}, "unique imports"),
+            ({"primary_entry_packages": [module["module_path"] + '/v2/invalid"']}, "unique imports"),
+            ({"primary_entry_packages": [module["module_path"] + "/v2"] * 2}, "unique imports"),
+        ):
+            with self.subTest(change=change):
+                invalid = copy.deepcopy(selection)
+                invalid["replacements"][0].update(change)
+                with self.assertRaisesRegex(ValueError, message):
+                    generate.current_consumer_inputs(
+                        value, [module], invalid,
+                        remote_tag_lookup=lambda *_: "b" * 40,
+                        public_version_lookup=lambda *_: True,
+                    )
+        with self.assertRaisesRegex(ValueError, "unavailable from the public proxy"):
+            generate.current_consumer_inputs(
+                value, [module], selection,
+                remote_tag_lookup=lambda *_: "b" * 40,
+                public_version_lookup=lambda *_: False,
+            )
+        unchanged, unchanged_catalog = generate.current_consumer_inputs(value, [module])
+        self.assertIs(unchanged, historical)
+        self.assertEqual(unchanged_catalog, [module])
+        self.assertNotIn("set_id", current)
+        self.assertNotIn("evidence", current)
+        invalid_base = copy.deepcopy(value)
+        invalid_base["sets"][0]["publication_status"] = "unreleased"
+        with self.assertRaisesRegex(ValueError, "published roster"):
+            generate.current_consumer_inputs(invalid_base, [module], selection)
+        duplicate = copy.deepcopy(selection)
+        duplicate["replacements"] *= 2
+        with self.assertRaisesRegex(ValueError, "bounded non-empty"):
+            generate.current_consumer_inputs(value, [module], duplicate)
+
+    def test_candidate_cannot_overwrite_current_consumer_selection(self):
+        generate.CONSUMER_DIRECTORY.mkdir(parents=True)
+        (generate.CONSUMER_DIRECTORY / "selection.json").write_text("{}")
+        with self.assertRaisesRegex(ValueError, "remove current consumer selection"):
+            generate.write_candidate_artifacts({"sets": []}, self.base_set("a" * 40), [])
+        self.assertFalse(generate.SOURCE.exists())
+        self.assertFalse((generate.CONSUMER_DIRECTORY / "go.mod").exists())
+
+
     def test_catalog_membership_projects_exact_published_module_versions(self):
         item = self.base_set("a" * 40)
         catalog = {

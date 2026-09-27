@@ -371,6 +371,90 @@ def select_clean_consumer_set(value: dict) -> dict | None:
     return published[-1] if published else None
 
 
+def current_consumer_inputs(
+    value: dict, catalog_modules: list[dict], selection: dict | None = None,
+    *, remote_tag_lookup=None, public_version_lookup=None,
+) -> tuple[dict | None, list[dict]]:
+    """Project a maintained consumer without changing published cohort evidence."""
+    if selection is None:
+        return select_clean_consumer_set(value), catalog_modules
+    if not isinstance(selection, dict) or set(selection) != {
+        "format", "base_set_id", "replacements"
+    } or selection["format"] != "golib-current-consumer-v1":
+        raise ValueError("current consumer selection fields mismatch")
+    base = select_set(value, selection["base_set_id"])
+    if base.get("publication_status") != "published" or not base.get("roster"):
+        raise ValueError("current consumer base must be a published roster")
+    replacements = selection["replacements"]
+    if not isinstance(replacements, list) or not replacements or len(replacements) > len(base["modules"]):
+        raise ValueError("current consumer replacements must be a bounded non-empty array")
+    remote_tag_lookup = remote_tag_lookup or remote_tag_revision
+    public_version_lookup = public_version_lookup or public_module_version
+    # Do not inherit set IDs, publication state or historical verification evidence.
+    item = {key: copy.deepcopy(base[key]) for key in ("go", "modules", "roster")}
+    catalogs = copy.deepcopy(catalog_modules)
+    by_path = {module["module_path"]: module for module in catalogs}
+    selected = {module["module_path"]: module for module in item["modules"]}
+    seen = set()
+    for replacement in replacements:
+        if not isinstance(replacement, dict) or set(replacement) != {
+            "from_module_path", "module_path", "version", "source_revision",
+            "primary_entry_packages",
+        }:
+            raise ValueError("current consumer replacement fields mismatch")
+        old, new = replacement["from_module_path"], replacement["module_path"]
+        validate_string(old, "replacement origin")
+        validate_string(new, "replacement module")
+        if old not in selected or old not in by_path or old in seen:
+            raise ValueError("current consumer replacement origin is absent or duplicated")
+        seen.add(old)
+        # A release migration stays in the existing owning module family.
+        stem = re.sub(r"/v(?:[2-9]|[1-9][0-9]+)$", "", old)
+        if not re.fullmatch(re.escape(stem) + r"(?:/v(?:[2-9]|[1-9][0-9]+))?", new):
+            raise ValueError("current consumer replacement changes module family")
+        version = replacement["version"]
+        revision = replacement["source_revision"]
+        if not isinstance(version, str) or not SEMVER.fullmatch(version):
+            raise ValueError("current consumer version must be semantic")
+        major = int(version.split(".")[0][1:])
+        suffix = re.search(r"/v([2-9]|[1-9][0-9]+)$", new)
+        if (suffix and major != int(suffix.group(1))) or (not suffix and major >= 2):
+            raise ValueError("current consumer version and module major mismatch")
+        if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+            raise ValueError("current consumer source revision must be a full Git identity")
+        entries = replacement["primary_entry_packages"]
+        validate_string_list(entries, "current consumer primary entries")
+        if len(entries) != len(set(entries)) or any(
+            not re.fullmatch(r"[A-Za-z0-9._~/-]+", entry)
+            or (entry != new and not entry.startswith(new + "/")) for entry in entries
+        ):
+            raise ValueError("current consumer entries must be unique imports within the module")
+        catalog = by_path[old]
+        repository = repository_identity(catalog)
+        if remote_tag_lookup(repository, expected_tag(catalog, version)) != revision:
+            raise ValueError("current consumer revision lacks matching remote tag")
+        if not public_version_lookup(new, version):
+            raise ValueError("current consumer version is unavailable from the public proxy")
+        selected[old].update({key: replacement[key] for key in (
+            "module_path", "version", "source_revision"
+        )})
+        catalog["module_path"] = new
+        catalog["cohesion"] = {"primary_entry_packages": entries}
+        catalog["packages"] = [{"import_path": entry, "name": "consumer"} for entry in entries]
+    if len({module["module_path"] for module in item["modules"]}) != len(item["modules"]):
+        raise ValueError("current consumer replacement duplicates a selected module")
+    return item, catalogs
+
+
+def load_current_consumer_selection() -> dict | None:
+    path = ROOT / "release/compatibility-consumer/selection.json"
+    if not path.exists():
+        return None
+    if path.stat().st_size > 65536:
+        raise ValueError("current consumer selection exceeds 64 KiB")
+    return json.loads(path.read_text())
+
+
 def render_source_reference(reference: str, *, label: str | None = None) -> str:
     github = re.fullmatch(
         r"(github\.com/[^/@]+/[^/@]+)@([0-9a-f]{7,40})(?:/(.+))?", reference
@@ -387,6 +471,8 @@ def render_source_reference(reference: str, *, label: str | None = None) -> str:
 
 
 def write_candidate_artifacts(value: dict, item: dict, catalog_modules: list[dict]) -> None:
+    if load_current_consumer_selection() is not None:
+        raise ValueError("remove current consumer selection explicitly before writing a cohort candidate")
     candidate_value = copy.deepcopy(value)
     matching = [
         index
@@ -896,7 +982,9 @@ def main(arguments: list[str] | None = None) -> int:
     if RESIDUALS.exists():
         validate_residuals(json.loads(RESIDUALS.read_text()), data)
     catalogs = load_catalog_modules()
-    consumer_set = select_clean_consumer_set(data)
+    consumer_set, catalogs = current_consumer_inputs(
+        data, catalogs, load_current_consumer_selection()
+    )
     if consumer_set is not None:
         check_clean_consumer(consumer_set, catalogs)
     print(f"validated {len(data['sets'])} compatibility set(s)")

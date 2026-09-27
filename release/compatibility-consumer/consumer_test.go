@@ -83,7 +83,7 @@ import (
 	_ "github.com/faustbrian/go-event-sourcing/postgres"
 	_ "github.com/faustbrian/go-external-sort"
 	_ "github.com/faustbrian/go-fault-injection"
-	_ "github.com/faustbrian/go-feature-flags"
+	_ "github.com/faustbrian/go-feature-flags/v2"
 	_ "github.com/faustbrian/go-filesystem"
 	_ "github.com/faustbrian/go-geo"
 	_ "github.com/faustbrian/go-hedge"

@@ -111,7 +111,9 @@ jobs:
             ! git diff --quiet "${BASE_SHA}" HEAD -- \
               release/compatibility-consumer/go.mod \
               release/compatibility-consumer/go.sum \
-              release/compatibility-consumer/consumer_test.go; then
+              release/compatibility-consumer/consumer_test.go \
+              release/compatibility-consumer/selection.json \
+              tools/compatibility/generate.py; then
             echo 'required=true' >>"${GITHUB_OUTPUT}"
           else
             echo 'required=false' >>"${GITHUB_OUTPUT}"

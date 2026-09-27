@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- Separate the maintained current-release compatibility consumer selection from
+  immutable published compatibility cohorts, including explicit middleware and
+  feature-flags v2 migrations and consumer CI selection for generator inputs.
+
 ## 2.0.0 - 2026-09-23
 
 ### Added
