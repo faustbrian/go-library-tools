@@ -61,14 +61,14 @@ func (runner Runner) preflightGitleaksHistory(ctx context.Context, limits securi
 		if objects {
 			args = []string{"-C", runner.Root, "cat-file", "--batch-all-objects", "--batch-check=%(objectsize)"}
 		}
-		stdout := &sourceInventoryOutput{boundedProcessOutput: boundedProcessOutput{limit: maximumSecurityProcessOutput}}
+		stdout := &sourceInventoryOutput{limit: maximumSecurityProcessOutput}
 		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 		if err := runner.Executor.Run(ctx, Command{Name: "git", Args: args, Dir: runner.Root, Stdout: stdout, Stderr: stderr, boundedScanner: true}); err != nil || stdout.didOverflow() || stderr.didOverflow() {
 			return errors.Join(sourceCommandError{class: "gitleaks history inventory failed or exceeded output limit", cause: err}, ctx.Err())
 		}
 		count := 0
 		var total int64
-		for _, line := range strings.Split(strings.TrimSuffix(stdout.String(), "\n"), "\n") {
+		for line := range strings.SplitSeq(strings.TrimSuffix(stdout.String(), "\n"), "\n") {
 			if err := ctx.Err(); err != nil {
 				return err
 			}

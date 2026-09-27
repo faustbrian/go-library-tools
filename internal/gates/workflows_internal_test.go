@@ -251,8 +251,8 @@ func TestWorkflowLocalActionsPinnedChainsAndGraphBudgets(t *testing.T) {
 	t.Run("descriptor count", func(t *testing.T) {
 		root := t.TempDir()
 		var steps strings.Builder
-		for i := 0; i < maximumWorkflowFiles; i++ {
-			steps.WriteString(fmt.Sprintf("      - uses: ./a%d\n", i))
+		for i := range maximumWorkflowFiles {
+			fmt.Fprintf(&steps, "      - uses: ./a%d\n", i)
 			write(t, root, fmt.Sprintf("a%d/action.yml", i), "runs: {using: composite, steps: []}")
 		}
 		write(t, root, ".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n"+steps.String())
@@ -263,8 +263,8 @@ func TestWorkflowLocalActionsPinnedChainsAndGraphBudgets(t *testing.T) {
 	t.Run("descriptor bytes", func(t *testing.T) {
 		root := t.TempDir()
 		var steps strings.Builder
-		for i := 0; i < 9; i++ {
-			steps.WriteString(fmt.Sprintf("      - uses: ./a%d\n", i))
+		for i := range 9 {
+			fmt.Fprintf(&steps, "      - uses: ./a%d\n", i)
 			write(t, root, fmt.Sprintf("a%d/action.yml", i), "runs: {using: composite, steps: []}\n#"+strings.Repeat("a", maximumWorkflowOutput-100))
 		}
 		write(t, root, ".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n"+steps.String())

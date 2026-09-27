@@ -3,13 +3,14 @@ package gates
 import (
 	"context"
 	"errors"
-	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
 func TestRepositoryCommandsDoNotClaimScannerProcessContainment(t *testing.T) {
@@ -214,7 +215,7 @@ func TestBoundedSourceFileDoesNotWriteBeyondLimit(t *testing.T) {
 }
 
 func TestHistoryInventoryCannotBypassOutputBoundWithReaderFrom(t *testing.T) {
-	output := &sourceInventoryOutput{boundedProcessOutput: boundedProcessOutput{limit: 3}}
+	output := &sourceInventoryOutput{limit: 3}
 	_, err := io.Copy(output, strings.NewReader("1234"))
 	if err != nil || !output.didOverflow() || output.Len() > 3 {
 		t.Fatalf("inventory output exceeded bound: %d, %v", output.Len(), err)

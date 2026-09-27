@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
@@ -70,7 +71,7 @@ func (inspection *localActionInspection) inspect(content []byte, depth int, acti
 				}
 				if action && key.Value == "image" && len(path) == 1 && path[0] == "runs" {
 					if resolved.Kind != yaml.ScalarNode || !immutableContainerImage.MatchString(resolved.Value) {
-						return errors.New("Docker action images require immutable digest references")
+						return errors.New("docker action images require immutable digest references")
 					}
 				}
 				child := appendPath(path, key.Value)
@@ -101,10 +102,8 @@ func (inspection *localActionInspection) local(reference string, depth int) erro
 	if name == "" || !filepath.IsLocal(name) || filepath.ToSlash(filepath.Clean(name)) != name || strings.Contains(name, "\\") {
 		return errors.New("local action path is not repository-contained and canonical")
 	}
-	for _, part := range strings.Split(name, "/") {
-		if part == ".." {
-			return errors.New("local action traversal is forbidden")
-		}
+	if slices.Contains(strings.Split(name, "/"), "..") {
+		return errors.New("local action traversal is forbidden")
 	}
 	if depth > maximumLocalActionDepth {
 		return errors.New("local action depth limit exceeded")
@@ -116,7 +115,7 @@ func (inspection *localActionInspection) local(reference string, depth int) erro
 		return nil
 	}
 	current := inspection.root
-	for _, part := range strings.Split(name, "/") {
+	for part := range strings.SplitSeq(name, "/") {
 		current = filepath.Join(current, part)
 		info, err := os.Lstat(current)
 		if err != nil || info.Mode()&os.ModeSymlink != 0 {
