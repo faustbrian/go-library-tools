@@ -8,10 +8,10 @@ import (
 )
 
 func configureProcessGroup(*exec.Cmd) error {
-	return errors.New("bounded process-tree termination is unsupported on this platform")
+	return errors.New("bounded scanner process-group termination is unsupported on this platform")
 }
 
-func terminateProcessTree(process *exec.Cmd) {
+func terminateProcessGroup(process *exec.Cmd) {
 	if process.Process != nil {
 		_ = process.Process.Kill()
 	}

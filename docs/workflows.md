@@ -1,9 +1,10 @@
 # Reusable Workflows
 
 Consumer CI calls `library-ci.yml` at an immutable commit SHA. The same SHA is
-passed as `tooling_sha`, allowing the workflow to check out its setup action
-without a mutable reference. A nearby comment records the corresponding
-tooling release.
+passed as `tooling_sha` for the isolated tooling checkout. Setup and bootstrap
+actions are separately pinned to the unchanged action-source commit
+`37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa`; `tooling_sha` does not select
+those executable actions. A nearby comment records the corresponding tooling release.
 
 ```yaml
 name: CI
@@ -53,7 +54,7 @@ Linux or macOS amd64/arm64 archive, downloads it with GitHub CLI, verifies its
 SHA-256 checksum and GitHub artifact attestation, and only then extracts the
 binary. It never evaluates a downloaded installer.
 The workflow detects whether that installed version supports the bounded local
-check mode and otherwise uses the older module-check form, so updating an
+check mode and otherwise uses the older all-module check form, so updating an
 immutable workflow pin does not force a simultaneous tool-manifest migration.
 Release rehearsals similarly omit module selectors when the installed tool
 predates module-scoped release commands.
@@ -73,14 +74,16 @@ that a version is unavailable, so bootstrap archives cannot shadow a published
 module with different bytes.
 
 The reusable workflow keeps consumer policy in repository manifests. It builds
-a module matrix from `golib inventory --json`, runs one isolated module
-contract per matrix entry, uploads repository-owned `.verification` evidence,
-and runs CodeQL. The caller's final `required` job converts the reusable-call
+a bounded module inventory from `golib inventory --json`, runs one all-module
+quality invocation with module-specific gate attribution, uploads one aggregate
+`evidence-selected-modules` artifact containing repository-owned `.verification`
+evidence, and runs CodeQL. Repository secrets run once; all selected module
+security scans finish before repository tests execute. The caller's final `required` job converts the reusable-call
 result into the stable `Required` check used by branch protection.
 Set `release_dry_run: true` only for an explicit release rehearsal; this first
 validates the stable release contract and then runs the complete release
 dry-run for every releasable module. Set `release_module` to an exact module
-directory to limit the release matrix and module-scoped release checks to that
+directory to limit module-scoped release checks to that
 independently versioned module when the installed tool supports release
 selectors. Older tools safely widen that request to one whole-repository
 release check and dry-run rather than repeating the full rehearsal per module.
@@ -94,7 +97,7 @@ dispatch an exact-module hosted rehearsal; a tooling-pin upgrade alone does not
 wire the caller input.
 
 Consumer workflows retain least-privileged permissions, explicit concurrency,
-module matrices, attributable evidence artifacts, scheduled checks, CodeQL,
+bounded module selection, attributable aggregate evidence, scheduled checks, CodeQL,
 release dry-runs, and one stable final required job.
 
 Pull requests that change only Markdown, `LICENSE`, or `NOTICE` run repository

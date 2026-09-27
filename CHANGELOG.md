@@ -11,6 +11,15 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Inspect bounded repository-local action chains and reject mutable Docker action
+  images, traversal, symlinks, cycles, and excessive descriptor graphs.
+- Bound Git history and every filesystem entry before source snapshots, cap
+  bundle writes, and scan repository secrets once before module execution.
+- Keep module security and release selection attributable in one reusable CI
+  invocation, with a backward-compatible 64-module cardinality bound.
+- Limit scanner termination claims to the original Darwin/Linux process group;
+  explicitly require external isolation for arbitrary untrusted repository code.
+
 - Separate the maintained current-release compatibility consumer selection from
   immutable published compatibility cohorts, including explicit middleware and
   feature-flags v2 migrations and consumer CI selection for generator inputs.
@@ -43,10 +52,11 @@ All notable changes to this project are documented in this file.
   gosec, centrally governed go-analysis rules, full-history secret scanning,
   license checks, and SBOM generation while keeping NilAway advisory.
 - Suppressed scanner-controlled output, enforced independent bounded streams,
-  terminated overflowing process trees, and replaced archive and SBOM payloads
-  with stable repository-owned diagnostic classes.
+  terminated overflowing scanners' original process groups, and replaced
+  archive and SBOM payloads with stable repository-owned diagnostic classes.
 - Made bounded scanner execution fail before process start on platforms where
-  complete process-tree termination is unavailable.
+  original-process-group termination is unavailable. Detached processes remain
+  outside that boundary; scanner controls are not hostile-executable isolation.
 - Dereferenced bounded YAML aliases before applying workflow permission,
   action, checkout, and container-image security rules.
 - Required canonical lowercase module directories and import paths, with root

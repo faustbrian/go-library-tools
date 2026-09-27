@@ -53,7 +53,10 @@ func (runner Runner) ReleaseDryRun(ctx context.Context, selection []string) erro
 	if output == nil {
 		output = io.Discard
 	}
-	if err := runner.preflightSecurityPolicies(output, modules); err != nil {
+	if err := runner.preflightSecurityPolicies(ctx, output, modules); err != nil {
+		return err
+	}
+	if err := runner.scanSelectedSecurity(ctx, output, modules); err != nil {
 		return err
 	}
 	if err := runner.releaseRehearsal(ctx, modules); err != nil {

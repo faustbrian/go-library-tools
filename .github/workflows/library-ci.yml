@@ -139,7 +139,7 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: ./.golib-tooling/.github/actions/setup-golib
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
       - id: modules
         name: Build module matrix
         env:
@@ -200,7 +200,7 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: ./.golib-tooling/.github/actions/setup-golib
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
       - run: golib repository check
       - run: golib workflows check
       - run: golib cohesion check
@@ -222,16 +222,11 @@ jobs:
           fi
 
   quality:
-    name: Quality / ${{ matrix.directory }}
+    name: Quality / selected modules
     needs: prepare
     if: needs.prepare.outputs.runtime == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 360
-    strategy:
-      fail-fast: false
-      max-parallel: 8
-      matrix:
-        include: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -274,28 +269,30 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: ./.golib-tooling/.github/actions/setup-golib
-      - uses: ./.golib-tooling/.github/actions/setup-bootstrap-proxy
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
+      - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
           bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}
-      - name: Run module contract
+      - name: Run repository module contracts
         if: inputs.release_dry_run != true
-        env:
-          MODULE_DIRECTORY: ${{ matrix.directory }}
         run: |
           if golib --help | grep -Fq 'golib check [--local]'; then
-            golib check --local --module "${MODULE_DIRECTORY}"
+            golib check --local --all
           else
-            golib check --module "${MODULE_DIRECTORY}"
+            golib check --all
           fi
       - name: Run release rehearsal
         if: inputs.release_dry_run == true
         env:
-          RELEASE_MODULE: ${{ matrix.directory }}
+          RELEASE_MODULE: ${{ inputs.release_module }}
         run: |
           if golib --help | grep -Fq 'golib release dry-run [--all|--module <directory>]'; then
-            golib release dry-run --module "${RELEASE_MODULE}"
+            if [[ -n "${RELEASE_MODULE}" ]]; then
+              golib release dry-run --module "${RELEASE_MODULE}"
+            else
+              golib release dry-run --all
+            fi
           else
             golib release dry-run
           fi
@@ -303,7 +300,7 @@ jobs:
         if: always() && hashFiles('.verification/**') != ''
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
         with:
-          name: evidence-${{ matrix.artifact }}
+          name: evidence-selected-modules
           path: .verification
           include-hidden-files: true
           if-no-files-found: error
@@ -333,8 +330,8 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: ./.golib-tooling/.github/actions/setup-golib
-      - uses: ./.golib-tooling/.github/actions/setup-bootstrap-proxy
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
+      - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
           bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}

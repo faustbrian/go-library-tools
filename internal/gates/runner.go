@@ -120,13 +120,16 @@ const (
 
 // Command is one external process invocation without shell interpretation.
 type Command struct {
-	Name   string
-	Args   []string
-	Dir    string
-	Env    map[string]string
-	Stdin  io.Reader
-	Stdout io.Writer
-	Stderr io.Writer
+	// boundedScanner is only set by owned pinned-scanner/source-acquisition
+	// callers. It does not claim containment of arbitrary repository code.
+	boundedScanner bool
+	Name           string
+	Args           []string
+	Dir            string
+	Env            map[string]string
+	Stdin          io.Reader
+	Stdout         io.Writer
+	Stderr         io.Writer
 }
 
 const maximumSecurityProcessOutput = 4 << 20
@@ -208,10 +211,13 @@ type Runner struct {
 	DocumentationSpelling func(context.Context, string) error
 	// DocumentationLinks is an isolated test boundary. Production callers
 	// leave it nil and use the checksum-pinned task-owned implementation.
-	DocumentationLinks    func(context.Context, string) error
-	documentationRelease  func(string, string) (docscheck.LycheeRelease, error)
-	documentationExtract  func(string, docscheck.LycheeRelease) ([]byte, error)
-	gitleaksSourceCleanup func(string) error
+	DocumentationLinks       func(context.Context, string) error
+	documentationRelease     func(string, string) (docscheck.LycheeRelease, error)
+	documentationExtract     func(string, docscheck.LycheeRelease) ([]byte, error)
+	gitleaksSourceCleanup    func(string) error
+	securitySourceLimits     *securitySourceLimits
+	repositorySecretsScanned bool
+	moduleSecurityScanned    bool
 }
 
 type namedWriteCloser interface {
@@ -265,7 +271,10 @@ func (runner Runner) Check(ctx context.Context, selection []string) error {
 	if output == nil {
 		output = io.Discard
 	}
-	if err := runner.preflightSecurityPolicies(output, modules); err != nil {
+	if err := runner.preflightSecurityPolicies(ctx, output, modules); err != nil {
+		return err
+	}
+	if err := runner.scanSelectedSecurity(ctx, output, modules); err != nil {
 		return err
 	}
 	return runner.checkModules(ctx, output, modules)
@@ -294,7 +303,10 @@ func (runner Runner) Local(ctx context.Context, selection []string) error {
 	if output == nil {
 		output = io.Discard
 	}
-	if err := runner.preflightSecurityPolicies(output, modules); err != nil {
+	if err := runner.preflightSecurityPolicies(ctx, output, modules); err != nil {
+		return err
+	}
+	if err := runner.scanSelectedSecurity(ctx, output, modules); err != nil {
 		return err
 	}
 	for _, module := range modules {
@@ -361,6 +373,9 @@ func (runner Runner) Docs(ctx context.Context, selection []string) error {
 }
 
 func (runner Runner) selectModules(selection []string) ([]inventory.Module, error) {
+	if len(runner.Catalog.Modules) > inventory.MaximumModules {
+		return nil, errors.New("module cardinality limit exceeded")
+	}
 	available := make(map[string]inventory.Module, len(runner.Catalog.Modules))
 	for _, module := range runner.Catalog.Modules {
 		available[module.Directory] = module
@@ -444,7 +459,7 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			return err
 		}
 	}
-	if module.Gates["security"] {
+	if module.Gates["security"] && !runner.moduleSecurityScanned {
 		if err := runner.runSecurity(ctx, output, directory, module); err != nil {
 			return err
 		}
@@ -537,7 +552,7 @@ func (runner Runner) checkModuleLocal(ctx context.Context, output io.Writer, mod
 			return err
 		}
 	}
-	if module.Gates["security"] {
+	if module.Gates["security"] && !runner.moduleSecurityScanned {
 		if err := runner.runSecurity(ctx, output, directory, module); err != nil {
 			return err
 		}
@@ -592,19 +607,19 @@ func (runner Runner) createOwnedPolicy(name, pattern, policy string) (string, fu
 }
 
 func (runner Runner) checkSecurity(ctx context.Context, output io.Writer, directory string, module inventory.Module) error {
-	if err := runner.checkSecurityPolicy(output, directory, module.Directory); err != nil {
+	if err := runner.checkSecurityPolicy(ctx, output, directory, module.Directory); err != nil {
 		return err
 	}
 	return runner.runSecurity(ctx, output, directory, module)
 }
 
-func (runner Runner) checkSecurityPolicy(output io.Writer, directory, module string) error {
+func (runner Runner) checkSecurityPolicy(ctx context.Context, output io.Writer, directory, module string) error {
 	return announce(output, module, "security-suppressions", func() error {
-		return checkSecuritySuppressions(directory)
+		return checkSecuritySuppressionsBounded(ctx, directory, runner.sourceLimits().entries)
 	})
 }
 
-func (runner Runner) preflightSecurityPolicies(output io.Writer, modules []inventory.Module) error {
+func (runner Runner) preflightSecurityPolicies(ctx context.Context, output io.Writer, modules []inventory.Module) error {
 	securityEnabled := slices.ContainsFunc(modules, func(module inventory.Module) bool {
 		return module.Gates["security"]
 	})
@@ -618,7 +633,7 @@ func (runner Runner) preflightSecurityPolicies(output io.Writer, modules []inven
 			continue
 		}
 		directory := filepath.Join(runner.Root, module.Directory)
-		if err := runner.checkSecurityPolicy(output, directory, module.Directory); err != nil {
+		if err := runner.checkSecurityPolicy(ctx, output, directory, module.Directory); err != nil {
 			return err
 		}
 	}
@@ -647,34 +662,10 @@ func (runner Runner) runSecurity(ctx context.Context, output io.Writer, director
 	if err := cleanupAnalysis(); err != nil {
 		return fmt.Errorf("remove temporary analysis config: %w", err)
 	}
-	configPath, cleanupSecrets, err := runner.createGitleaksConfig()
-	if err != nil {
-		return err
-	}
-	if err := rejectRepositoryGitleaksIgnore(runner.Root); err != nil {
-		return errors.Join(err, cleanupSecrets())
-	}
-	sources, cleanupSources, err := runner.createGitleaksSources(ctx)
-	if err != nil {
-		return errors.Join(err, cleanupSecrets())
-	}
-	if err := runner.securityTool(ctx, output, module.Directory, "secrets-history", sources.history,
-		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
-		"git", ".", "--config", configPath, "--log-opts=--all", "--ignore-gitleaks-allow",
-		"--gitleaks-ignore-path", sources.ignoreRoot, "--no-banner", "--redact"); err != nil {
-		return errors.Join(err, cleanupSources(), cleanupSecrets())
-	}
-	if err := runner.securityTool(ctx, output, module.Directory, "secrets-current-tree", sources.current,
-		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
-		"dir", ".", "--config", configPath, "--ignore-gitleaks-allow",
-		"--gitleaks-ignore-path", sources.ignoreRoot, "--no-banner", "--redact"); err != nil {
-		return errors.Join(err, cleanupSources(), cleanupSecrets())
-	}
-	if err := cleanupSources(); err != nil {
-		return errors.Join(fmt.Errorf("remove temporary gitleaks sources: %w", err), cleanupSecrets())
-	}
-	if err := cleanupSecrets(); err != nil {
-		return fmt.Errorf("remove temporary gitleaks config: %w", err)
+	if !runner.repositorySecretsScanned {
+		if err := runner.runRepositorySecrets(ctx, output, module.Directory); err != nil {
+			return err
+		}
 	}
 	licenseOwner := module.ModulePath
 	if repository := strings.TrimSuffix(runner.Catalog.Repository, "/"); repository != "" &&
@@ -687,6 +678,63 @@ func (runner Runner) runSecurity(ctx context.Context, output io.Writer, director
 		return err
 	}
 	return announce(output, module.Directory, "SBOM", func() error { return runner.runSBOM(ctx, directory) })
+}
+
+func (runner *Runner) scanSelectedSecurity(ctx context.Context, output io.Writer, modules []inventory.Module) error {
+	// Finish every selected source/graph scan before any repository-controlled
+	// test can mutate inputs for another module. Runtime service scopes remain
+	// owned by the later per-module execution pass.
+	for _, module := range modules {
+		if module.Gates["security"] {
+			if err := runner.runRepositorySecrets(ctx, output, module.Directory); err != nil {
+				return err
+			}
+			runner.repositorySecretsScanned = true
+			break
+		}
+	}
+	for _, module := range modules {
+		if module.Gates["security"] {
+			if err := runner.runSecurity(ctx, output, filepath.Join(runner.Root, module.Directory), module); err != nil {
+				return err
+			}
+		}
+	}
+	runner.moduleSecurityScanned = true
+	return nil
+}
+
+func (runner Runner) runRepositorySecrets(ctx context.Context, output io.Writer, attribution string) error {
+	configPath, cleanupSecrets, err := runner.createGitleaksConfig()
+	if err != nil {
+		return err
+	}
+	if err := rejectRepositoryGitleaksIgnore(runner.Root); err != nil {
+		return errors.Join(err, cleanupSecrets())
+	}
+	sources, cleanupSources, err := runner.createGitleaksSources(ctx)
+	if err != nil {
+		return errors.Join(err, cleanupSecrets())
+	}
+	if err := runner.securityTool(ctx, output, attribution, "secrets-history", sources.history,
+		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
+		"git", ".", "--config", configPath, "--log-opts=--all", "--ignore-gitleaks-allow",
+		"--gitleaks-ignore-path", sources.ignoreRoot, "--no-banner", "--redact"); err != nil {
+		return errors.Join(err, cleanupSources(), cleanupSecrets())
+	}
+	if err := runner.securityTool(ctx, output, attribution, "secrets-current-tree", sources.current,
+		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
+		"dir", ".", "--config", configPath, "--ignore-gitleaks-allow",
+		"--gitleaks-ignore-path", sources.ignoreRoot, "--no-banner", "--redact"); err != nil {
+		return errors.Join(err, cleanupSources(), cleanupSecrets())
+	}
+	if err := cleanupSources(); err != nil {
+		return errors.Join(fmt.Errorf("remove temporary gitleaks sources: %w", err), cleanupSecrets())
+	}
+	if err := cleanupSecrets(); err != nil {
+		return fmt.Errorf("remove temporary gitleaks config: %w", err)
+	}
+	return nil
 }
 
 func rejectRepositoryGitleaksIgnore(root string) error {
@@ -704,18 +752,19 @@ func rejectRepositoryGitleaksIgnore(root string) error {
 }
 
 func checkSecuritySuppressions(root string) error {
+	return checkSecuritySuppressionsBounded(context.Background(), root, maximumSecuritySourceFiles)
+}
+
+func checkSecuritySuppressionsBounded(ctx context.Context, root string, entryLimit int) error {
 	sourceRoot, err := os.OpenRoot(root)
 	if err != nil {
 		return err
 	}
 	defer sourceRoot.Close()
-	files := 0
-	return filepath.WalkDir(root, func(filePath string, entry os.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
+	return walkSecuritySource(ctx, root, entryLimit, func(relative string, entry os.DirEntry) error {
+		filePath := filepath.Join(root, relative)
 		if entry.IsDir() {
-			if filePath != root && (entry.Name() == ".git" || entry.Name() == ".golib-tooling" || entry.Name() == "vendor") {
+			if entry.Name() == ".git" || entry.Name() == ".golib-tooling" || entry.Name() == "vendor" {
 				return filepath.SkipDir
 			}
 			return nil
@@ -723,20 +772,12 @@ func checkSecuritySuppressions(root string) error {
 		if filepath.Ext(entry.Name()) != ".go" {
 			return nil
 		}
-		files++
-		if files > maximumSecuritySourceFiles {
-			return errors.New("security suppression source file limit exceeded")
-		}
 		info, err := entry.Info()
 		if err != nil {
 			return err
 		}
 		if info.Size() > maximumSecuritySourceSize {
 			return fmt.Errorf("security suppression source exceeds size limit: %s", entry.Name())
-		}
-		relative, err := filepath.Rel(root, filePath)
-		if err != nil {
-			return err
 		}
 		file, err := sourceRoot.Open(relative)
 		if err != nil {
@@ -887,7 +928,7 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 		err := runner.Executor.Run(ctx, Command{
-			Name: "go", Args: arguments, Dir: directory, Env: map[string]string{"GOWORK": "off"},
+			Name: "go", Args: arguments, Dir: directory, Env: map[string]string{"GOWORK": "off"}, boundedScanner: true,
 			Stdout: stdout, Stderr: stderr,
 		})
 		var overflow error

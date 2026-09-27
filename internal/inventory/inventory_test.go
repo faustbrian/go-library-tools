@@ -301,6 +301,40 @@ func TestLoadValidatesEveryModuleIdentityAndAcceptsCanonicalNestedModules(t *tes
 	}
 }
 
+func TestLoadBoundsModuleCardinalityAcrossSupportedSchemas(t *testing.T) {
+	policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}
+	for _, version := range []int{1, 2, 3} {
+		root := fixture(t)
+		modules := []string{identityModule(version, ".", "github.com/faustbrian/example")}
+		for i := 0; i < 14; i++ {
+			directory := fmt.Sprintf("m%d", i)
+			modulePath := "github.com/faustbrian/example/" + directory
+			if err := os.Mkdir(filepath.Join(root, directory), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			write(t, filepath.Join(root, directory, "go.mod"), "module "+modulePath+"\n\ngo 1.27.0\n")
+			modules = append(modules, identityModule(version, directory, modulePath))
+		}
+		write(t, filepath.Join(root, "modules.json"), identityManifest(version, modules...))
+		if _, err := inventory.Load(root, policy); err != nil {
+			t.Fatalf("schema%d 15-module family: %v", version, err)
+		}
+		for len(modules) <= inventory.MaximumModules {
+			directory := fmt.Sprintf("m%d", len(modules)-1)
+			modulePath := "github.com/faustbrian/example/" + directory
+			if err := os.Mkdir(filepath.Join(root, directory), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			write(t, filepath.Join(root, directory, "go.mod"), "module "+modulePath+"\n\ngo 1.27.0\n")
+			modules = append(modules, identityModule(version, directory, modulePath))
+		}
+		write(t, filepath.Join(root, "modules.json"), identityManifest(version, modules...))
+		if _, err := inventory.Load(root, policy); err == nil || !strings.Contains(err.Error(), "cardinality") {
+			t.Fatalf("schema%d excessive modules: %v", version, err)
+		}
+	}
+}
+
 func TestLoadAcceptsAndPreservesSchemaV2CohesionMetadata(t *testing.T) {
 	root := fixture(t)
 	write(t, filepath.Join(root, "modules.json"), `{

@@ -1068,8 +1068,18 @@ type cliWorkspaceExecutor struct {
 	directory string
 }
 
-func (cliWorkspaceExecutor) Run(context.Context, gates.Command) error { return nil }
-func (executor cliWorkspaceExecutor) TemporaryDirectory() string      { return executor.directory }
+func (cliWorkspaceExecutor) Run(_ context.Context, command gates.Command) error {
+	if command.Name == "git" && len(command.Args) >= 3 {
+		if command.Args[2] == "for-each-ref" {
+			_, _ = io.WriteString(command.Stdout, "refs/heads/main\n")
+		}
+		if command.Args[2] == "cat-file" {
+			_, _ = io.WriteString(command.Stdout, "1\n")
+		}
+	}
+	return nil
+}
+func (executor cliWorkspaceExecutor) TemporaryDirectory() string { return executor.directory }
 
 type releaseSelectionExecutor struct {
 	directory       string
@@ -1080,6 +1090,24 @@ type releaseSelectionExecutor struct {
 }
 
 func (executor releaseSelectionExecutor) Run(_ context.Context, command gates.Command) error {
+	if command.Name == "git" && len(command.Args) >= 3 && command.Args[0] == "-C" {
+		if command.Args[2] == "for-each-ref" {
+			_, _ = io.WriteString(command.Stdout, "refs/heads/main\n")
+		}
+		if command.Args[2] == "cat-file" {
+			_, _ = io.WriteString(command.Stdout, "1\n")
+		}
+		return nil
+	}
+	if command.Name == "git" && len(command.Args) > 0 && command.Args[0] == "init" {
+		return nil
+	}
+	if command.Name == "go" && len(command.Args) > 1 && command.Args[0] == "run" {
+		if strings.Contains(command.Args[1], "cyclonedx-gomod") {
+			_, _ = io.WriteString(command.Stdout, `{"bomFormat":"CycloneDX","specVersion":"1.6"}`)
+		}
+		return nil
+	}
 	if command.Name == "git" && len(command.Args) == 3 && command.Args[0] == "tag" && command.Args[1] == "--list" {
 		*executor.tagQueries = append(*executor.tagQueries, command.Args[2])
 		if executor.existingTag != "" && command.Args[2] == executor.existingTag {

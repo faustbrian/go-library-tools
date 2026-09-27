@@ -16,9 +16,11 @@ import (
 )
 
 const (
-	actionlintVersion     = "v1.7.12"
-	maximumWorkflowOutput = 4 << 20
-	maximumWorkflowFiles  = 512
+	actionlintVersion       = "v1.7.12"
+	maximumWorkflowOutput   = 4 << 20
+	maximumWorkflowFiles    = 512
+	maximumLocalActionDepth = 32
+	maximumWorkflowBytes    = 32 << 20
 )
 
 var immutableWorkflowRef = regexp.MustCompile(`^[0-9a-f]{40}$`)
@@ -43,6 +45,9 @@ func (buffer *boundedWorkflowBuffer) Write(value []byte) (int, error) {
 // Workflows validates every GitHub Actions workflow with the centrally pinned
 // Actionlint release.
 func (runner Runner) Workflows(ctx context.Context) error {
+	if err := checkWorkflowSecurityContext(ctx, runner.Root); err != nil {
+		return err
+	}
 	output := runner.Output
 	if output == nil {
 		output = io.Discard
@@ -67,15 +72,26 @@ func (runner Runner) Workflows(ctx context.Context) error {
 		}
 		return fmt.Errorf("actionlint failed: %w", err)
 	}
-	if err := checkWorkflowSecurity(runner.Root); err != nil {
-		return err
-	}
 	_, _ = io.WriteString(output, "workflow contract passed\n")
 	return nil
 }
 
 func checkWorkflowSecurity(root string) error {
+	return checkWorkflowSecurityContext(context.Background(), root)
+}
+
+func checkWorkflowSecurityContext(ctx context.Context, root string) error {
+	actions := localActionInspection{ctx: ctx, root: root, active: map[string]bool{}, complete: map[string]bool{}}
 	directory := filepath.Join(root, ".github", "workflows")
+	for _, name := range []string{filepath.Join(root, ".github"), directory} {
+		info, err := os.Lstat(name)
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
+		if err != nil || !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+			return errors.New("workflow security policy: workflow directory missing or symbolic")
+		}
+	}
 	workflowRoot, err := os.OpenRoot(directory)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
@@ -85,34 +101,29 @@ func checkWorkflowSecurity(root string) error {
 	}
 	defer workflowRoot.Close()
 	var findings []string
-	files := 0
-	err = filepath.WalkDir(directory, func(path string, entry os.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
+	err = walkSecuritySource(ctx, directory, maximumSecuritySourceFiles, func(relative string, entry os.DirEntry) error {
 		if entry.IsDir() {
 			return nil
 		}
 		if entry.Type()&os.ModeSymlink != 0 {
-			return fmt.Errorf("workflow security policy: symbolic link %s", filepath.Base(path))
+			return fmt.Errorf("workflow security policy: symbolic link %s", entry.Name())
 		}
 		if extension := filepath.Ext(entry.Name()); extension != ".yml" && extension != ".yaml" {
 			return nil
 		}
-		files++
-		if files > maximumWorkflowFiles {
+		actions.files++
+		if actions.files > maximumWorkflowFiles {
 			return errors.New("workflow security policy: workflow file limit exceeded")
 		}
 		info, err := entry.Info()
 		if err != nil {
 			return err
 		}
+		if !info.Mode().IsRegular() {
+			return errors.New("workflow security policy: unsupported descriptor file type")
+		}
 		if info.Size() > maximumWorkflowOutput {
 			return fmt.Errorf("workflow security policy: %s exceeds size limit", entry.Name())
-		}
-		relative, err := filepath.Rel(directory, path)
-		if err != nil {
-			return err
 		}
 		file, err := workflowRoot.Open(relative)
 		if err != nil {
@@ -126,12 +137,19 @@ func checkWorkflowSecurity(root string) error {
 		if len(content) > maximumWorkflowOutput {
 			return fmt.Errorf("workflow security policy: %s exceeds size limit", entry.Name())
 		}
+		actions.bytes += len(content)
+		if actions.bytes > maximumWorkflowBytes {
+			return errors.New("workflow security policy: total descriptor byte limit exceeded")
+		}
 		workflowFindings, err := inspectWorkflow(content)
 		if err != nil {
 			return fmt.Errorf("%s: %w", entry.Name(), err)
 		}
 		for _, finding := range workflowFindings {
 			findings = append(findings, entry.Name()+": "+finding)
+		}
+		if err := actions.inspect(content, 0, false); err != nil {
+			return err
 		}
 		return nil
 	})
@@ -286,7 +304,7 @@ func workflowPermissionsPath(path []string) bool {
 
 func workflowUsesPath(path []string) bool {
 	return len(path) == 2 && path[0] == "jobs" ||
-		len(path) == 4 && path[0] == "jobs" && path[2] == "steps" && path[3] == "[]"
+		workflowStepPath(path)
 }
 
 func workflowJobPath(path []string) bool {
@@ -299,7 +317,8 @@ func workflowContainerImagePath(path []string) bool {
 }
 
 func workflowStepPath(path []string) bool {
-	return len(path) == 4 && path[0] == "jobs" && path[2] == "steps" && path[3] == "[]"
+	return len(path) == 4 && path[0] == "jobs" && path[2] == "steps" && path[3] == "[]" ||
+		len(path) == 3 && path[0] == "runs" && path[1] == "steps" && path[2] == "[]"
 }
 
 func checkoutCredentialsPersist(step *yaml.Node) (bool, error) {

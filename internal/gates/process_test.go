@@ -95,8 +95,8 @@ func TestProcessExecutorHonorsCommandOutputOverrides(t *testing.T) {
 	}
 }
 
-func TestProcessExecutorRejectsBoundedCommandBeforeStartWithoutTreeTermination(t *testing.T) {
-	failure := errors.New("process-tree termination unsupported")
+func TestProcessExecutorRejectsBoundedCommandBeforeStartWithoutGroupTermination(t *testing.T) {
+	failure := errors.New("process-group termination unsupported")
 	executor := &processExecutor{
 		stdout: io.Discard,
 		stderr: io.Discard,
@@ -105,9 +105,10 @@ func TestProcessExecutorRejectsBoundedCommandBeforeStartWithoutTreeTermination(t
 		},
 	}
 	err := executor.Run(context.Background(), Command{
-		Name:   "command-that-must-not-start",
-		Stdout: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
-		Stderr: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
+		boundedScanner: true,
+		Name:           "command-that-must-not-start",
+		Stdout:         &boundedProcessOutput{limit: maximumSecurityProcessOutput},
+		Stderr:         &boundedProcessOutput{limit: maximumSecurityProcessOutput},
 	})
 	if err == nil || !errors.Is(err, failure) {
 		t.Fatalf("Run() = %v", err)
@@ -135,7 +136,10 @@ func TestProcessExecutorPassesCommandInput(t *testing.T) {
 	}
 }
 
-func TestProcessExecutorStopsOverflowingProcessTree(t *testing.T) {
+func TestProcessExecutorStopsOverflowingOriginalProcessGroup(t *testing.T) {
+	if os.Getenv("CI") != "true" {
+		t.Skip("original process-group termination runs only in hosted CI")
+	}
 	created, cleanup, err := NewProcessExecutor(t.TempDir(), io.Discard, io.Discard)
 	if err != nil {
 		t.Fatal(err)
@@ -151,7 +155,8 @@ func TestProcessExecutorStopsOverflowingProcessTree(t *testing.T) {
 	defer cancel()
 	started := time.Now()
 	err = created.Run(ctx, Command{
-		Name: os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
+		boundedScanner: true,
+		Name:           os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
 		Env:    map[string]string{"GO_WANT_HELPER": "1", "HELPER_SPAWN_DESCENDANT": "1", "HELPER_HEARTBEAT": heartbeat},
 		Stdout: stdout, Stderr: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
 	})
@@ -188,7 +193,7 @@ func TestBoundedProcessOutputUsesIndependentExactLimits(t *testing.T) {
 
 func TestProcessExecutorPreservesCancellationCause(t *testing.T) {
 	if os.Getenv("CI") != "true" {
-		t.Skip("native process-tree cancellation runs only in hosted CI")
+		t.Skip("original process-group cancellation runs only in hosted CI")
 	}
 	created, cleanup, err := NewProcessExecutor(t.TempDir(), io.Discard, io.Discard)
 	if err != nil {
@@ -204,7 +209,8 @@ func TestProcessExecutorPreservesCancellationCause(t *testing.T) {
 	done := make(chan error, 1)
 	go func() {
 		done <- created.Run(ctx, Command{
-			Name: os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
+			boundedScanner: true,
+			Name:           os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
 			Env:    map[string]string{"GO_WANT_HELPER": "1", "HELPER_WAIT": "1", "HELPER_HEARTBEAT": heartbeat},
 			Stdout: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
 			Stderr: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
