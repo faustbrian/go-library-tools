@@ -3,7 +3,7 @@
   "risks": [
     {
       "id": "SEC-FLEET-001",
-      "module": "github.com/faustbrian/go-library-tools",
+      "module": "github.com/faustbrian/go-library-tools/v2",
       "severity": "medium",
       "status": "open",
       "owner": "go-library-tools maintainers",
