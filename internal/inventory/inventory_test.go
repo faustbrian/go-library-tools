@@ -306,7 +306,7 @@ func TestLoadBoundsModuleCardinalityAcrossSupportedSchemas(t *testing.T) {
 	for _, version := range []int{1, 2, 3} {
 		root := fixture(t)
 		modules := []string{identityModule(version, ".", "github.com/faustbrian/example")}
-		for i := 0; i < 14; i++ {
+		for i := range 14 {
 			directory := fmt.Sprintf("m%d", i)
 			modulePath := "github.com/faustbrian/example/" + directory
 			if err := os.Mkdir(filepath.Join(root, directory), 0o700); err != nil {
