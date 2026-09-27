@@ -75,24 +75,26 @@ jobs:
 
   compatibility-consumer-scope:
     name: Compatibility consumer scope
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       required: ${{ steps.scope.outputs.required }}
+      publication_required: ${{ steps.scope.outputs.publication_required }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
           fetch-depth: 0
-      - name: Detect compatibility-set publication changes
+      - name: Detect compatibility-set publication and consumer changes
         id: scope
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           set -euo pipefail
           task="$(mktemp -d "${RUNNER_TEMP}/golib-compatibility-scope.XXXXXX")"
           trap 'find "${task}" -depth -delete' EXIT
+          publication_required=false
           git show "${BASE_SHA}:docs/ecosystem/compatibility-sets.json" >"${task}/base.json"
           if jq -e --slurpfile base "${task}/base.json" '
             any(.sets[];
@@ -102,6 +104,14 @@ jobs:
                   map(select(.set_id == $id)) |
                   (.[0].publication_status // "absent")) != "published"))
           ' docs/ecosystem/compatibility-sets.json >/dev/null; then
+            publication_required=true
+          fi
+          echo "publication_required=${publication_required}" >>"${GITHUB_OUTPUT}"
+          if [[ "${publication_required}" == true ]] ||
+            ! git diff --quiet "${BASE_SHA}" HEAD -- \
+              release/compatibility-consumer/go.mod \
+              release/compatibility-consumer/go.sum \
+              release/compatibility-consumer/consumer_test.go; then
             echo 'required=true' >>"${GITHUB_OUTPUT}"
           else
             echo 'required=false' >>"${GITHUB_OUTPUT}"
@@ -162,7 +172,7 @@ jobs:
     if: >-
       always() && needs.quality.result == 'success' &&
       (github.event_name != 'pull_request' ||
-      needs.compatibility-consumer-scope.outputs.required == 'true')
+      needs.compatibility-consumer-scope.outputs.publication_required == 'true')
     needs: [quality, compatibility-consumer-scope]
     runs-on: ubuntu-24.04
     timeout-minutes: 60

@@ -862,7 +862,7 @@ func TestToolingWorkflowSeparatesFastPullRequestAndAggregateMilestoneChecks(t *t
 	}
 	for _, required := range []string{
 		"always() && needs.quality.result == 'success'",
-		"needs.compatibility-consumer-scope.outputs.required == 'true'",
+		"needs.compatibility-consumer-scope.outputs.publication_required == 'true'",
 		"needs: [quality, compatibility-consumer-scope]",
 		"make milestone-check",
 	} {

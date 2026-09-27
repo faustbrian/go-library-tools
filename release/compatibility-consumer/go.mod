@@ -52,7 +52,7 @@ require (
 	github.com/faustbrian/go-geo v1.1.0
 	github.com/faustbrian/go-hedge v1.0.0
 	github.com/faustbrian/go-http-client v1.1.0
-	github.com/faustbrian/go-http-middleware v1.0.0
+	github.com/faustbrian/go-http-middleware/v2 v2.0.0
 	github.com/faustbrian/go-http-signature v1.0.0
 	github.com/faustbrian/go-idempotency v1.1.0
 	github.com/faustbrian/go-identifier v1.0.0

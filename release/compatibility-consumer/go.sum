@@ -217,8 +217,8 @@ github.com/faustbrian/go-hedge v1.0.0 h1:/HjlsrN8J+13BVU3XxTsdOyWfhFFM+B9iCPzS6+
 github.com/faustbrian/go-hedge v1.0.0/go.mod h1:7I+UEHeFPd8WEEn56nj0B0LJf6UbVkdf96OzNHk4sJ8=
 github.com/faustbrian/go-http-client v1.1.0 h1:Kz6vfOkrjdvhI+ANn0o4CeZME9AXKnCCdECOoz+u/kI=
 github.com/faustbrian/go-http-client v1.1.0/go.mod h1:6TTp/UfA5TmhXRbFQwLKltShi7F+wF2nBwyubwKIoTw=
-github.com/faustbrian/go-http-middleware v1.0.0 h1:0eRjJA11oiuKPfGosGAiH1idOx2pWKqdpQmXUScv/Z8=
-github.com/faustbrian/go-http-middleware v1.0.0/go.mod h1:0pbY13Tp7yL9i5LKkZ4Y6sOTgmSSLyRTINj0flLtWyk=
+github.com/faustbrian/go-http-middleware/v2 v2.0.0 h1:Z+iAXAbV2/lfPybHFHGfK+//aUmnLFuDRG2kGswWIjg=
+github.com/faustbrian/go-http-middleware/v2 v2.0.0/go.mod h1:3nutDUpOvxPVCir43Ctq7d2rqtdUSiSmoGHIOObMJdc=
 github.com/faustbrian/go-http-signature v1.0.0 h1:27GKLhQNgIbEXi7ZcGcdXD8VT5kwqRXHYzvPWBqt9BU=
 github.com/faustbrian/go-http-signature v1.0.0/go.mod h1:ELsxxW9hSqsCDBI6EIDN24u3FUzo/OF48vxfwFSV/o0=
 github.com/faustbrian/go-idempotency v1.1.0 h1:UDKUdk1wA/AkCC0M9asuKhzyueXWXJdpKeWQgyKO0Jw=

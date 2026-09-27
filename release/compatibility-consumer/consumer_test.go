@@ -88,7 +88,7 @@ import (
 	_ "github.com/faustbrian/go-geo"
 	_ "github.com/faustbrian/go-hedge"
 	_ "github.com/faustbrian/go-http-client"
-	_ "github.com/faustbrian/go-http-middleware"
+	_ "github.com/faustbrian/go-http-middleware/v2"
 	_ "github.com/faustbrian/go-http-signature"
 	_ "github.com/faustbrian/go-idempotency"
 	_ "github.com/faustbrian/go-identifier"
