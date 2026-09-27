@@ -144,7 +144,7 @@ import (
 	_ "github.com/faustbrian/go-semaphore/v2"
 	_ "github.com/faustbrian/go-sequencer"
 	_ "github.com/faustbrian/go-service"
-	_ "github.com/faustbrian/go-settings"
+	_ "github.com/faustbrian/go-settings/v2"
 	_ "github.com/faustbrian/go-state-machine"
 	_ "github.com/faustbrian/go-tabular"
 	_ "github.com/faustbrian/go-telemetry"
