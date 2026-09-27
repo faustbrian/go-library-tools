@@ -65,8 +65,8 @@ require (
 	github.com/faustbrian/go-kafka/adapters/otel v1.0.0
 	github.com/faustbrian/go-kafka/adapters/service v1.0.0
 	github.com/faustbrian/go-keyphrase v1.0.0
-	github.com/faustbrian/go-knapsack v1.0.0
-	github.com/faustbrian/go-knapsack/objective/money v1.0.0
+	github.com/faustbrian/go-knapsack/objective/money/v2 v2.0.0
+	github.com/faustbrian/go-knapsack/v2 v2.0.0
 	github.com/faustbrian/go-lease v1.1.0
 	github.com/faustbrian/go-localized v1.1.0
 	github.com/faustbrian/go-log v1.0.0
@@ -79,7 +79,7 @@ require (
 	github.com/faustbrian/go-openapi v1.0.0
 	github.com/faustbrian/go-opening-hours v1.1.0
 	github.com/faustbrian/go-openrpc v1.0.0
-	github.com/faustbrian/go-password v1.1.0
+	github.com/faustbrian/go-password/v2 v2.0.0
 	github.com/faustbrian/go-postgres v1.1.0
 	github.com/faustbrian/go-prompts v1.1.0
 	github.com/faustbrian/go-queue v1.1.1
@@ -93,10 +93,10 @@ require (
 	github.com/faustbrian/go-rate-limit v1.1.0
 	github.com/faustbrian/go-resilience v1.0.0
 	github.com/faustbrian/go-retry v1.1.0
-	github.com/faustbrian/go-router v1.0.0
+	github.com/faustbrian/go-router/v2 v2.0.0
 	github.com/faustbrian/go-rule-engine v1.0.0
 	github.com/faustbrian/go-rule-engine/adapters/math v1.0.0
-	github.com/faustbrian/go-rule-engine/adapters/measurement v1.0.0
+	github.com/faustbrian/go-rule-engine/adapters/measurement/v2 v2.0.0
 	github.com/faustbrian/go-rule-engine/adapters/temporal v1.0.0
 	github.com/faustbrian/go-scheduler v1.1.0
 	github.com/faustbrian/go-schema-registry v1.0.0
@@ -105,7 +105,7 @@ require (
 	github.com/faustbrian/go-search v1.0.0
 	github.com/faustbrian/go-search/adapters/opensearch v1.0.0
 	github.com/faustbrian/go-secret-envelope v1.0.0
-	github.com/faustbrian/go-semaphore v1.0.0
+	github.com/faustbrian/go-semaphore/v2 v2.0.0
 	github.com/faustbrian/go-sequencer v1.1.0
 	github.com/faustbrian/go-service v1.1.0
 	github.com/faustbrian/go-settings v1.1.0
@@ -158,7 +158,6 @@ require (
 	github.com/dlclark/regexp2/v2 v2.5.1 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/ericlevine/zxinggo v0.1.0 // indirect
-	github.com/faustbrian/go-measurement v1.1.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -217,13 +216,13 @@ require (
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/crypto v0.56.0 // indirect
+	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
-	golang.org/x/tools v0.48.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/text v0.42.0 // indirect
+	golang.org/x/tools v0.49.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa // indirect

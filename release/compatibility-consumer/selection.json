@@ -36,6 +36,48 @@
       "version": "v2.0.0",
       "source_revision": "cb4442414598f8cc0cf1b1099f2f939b31105f4d",
       "primary_entry_packages": ["github.com/faustbrian/go-measurement/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-knapsack",
+      "module_path": "github.com/faustbrian/go-knapsack/v2",
+      "version": "v2.0.0",
+      "source_revision": "4a8e42df6500687bf978a7fb20cc0be2562def6a",
+      "primary_entry_packages": ["github.com/faustbrian/go-knapsack/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-knapsack/objective/money",
+      "module_path": "github.com/faustbrian/go-knapsack/objective/money/v2",
+      "version": "v2.0.0",
+      "source_revision": "3f43c721c4e2bffc6c0b48c7a2ced675533493fb",
+      "primary_entry_packages": ["github.com/faustbrian/go-knapsack/objective/money/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-password",
+      "module_path": "github.com/faustbrian/go-password/v2",
+      "version": "v2.0.0",
+      "source_revision": "481f9392d0abeed878e7379cb0732b8a4521ceae",
+      "primary_entry_packages": ["github.com/faustbrian/go-password/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-router",
+      "module_path": "github.com/faustbrian/go-router/v2",
+      "version": "v2.0.0",
+      "source_revision": "32ba405aa3626d71a5bf09648712b5a60b06df14",
+      "primary_entry_packages": ["github.com/faustbrian/go-router/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-rule-engine/adapters/measurement",
+      "module_path": "github.com/faustbrian/go-rule-engine/adapters/measurement/v2",
+      "version": "v2.0.0",
+      "source_revision": "3beb9b8b55df64f3147a5853e3ed2b08a395f2dd",
+      "primary_entry_packages": ["github.com/faustbrian/go-rule-engine/adapters/measurement/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-semaphore",
+      "module_path": "github.com/faustbrian/go-semaphore/v2",
+      "version": "v2.0.0",
+      "source_revision": "69871cbfcfd87bc5687482993a379f4118347f67",
+      "primary_entry_packages": ["github.com/faustbrian/go-semaphore/v2"]
     }
   ]
 }
