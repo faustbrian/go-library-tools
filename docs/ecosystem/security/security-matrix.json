@@ -1,4 +1,117 @@
 {
   "schema_version": 1,
-  "modules": []
+  "modules": [
+    {
+      "module": "github.com/faustbrian/go-library-tools/v2",
+      "revision": "48e87a6f4ddedf41902c5fb2bd3906d12cb4d882",
+      "scanners": [
+        {
+          "name": "go-vet",
+          "tool_version": "Go 1.27.0",
+          "command": "go vet ./...",
+          "status": "passed",
+          "completed_at": "2026-09-27T12:01:04Z",
+          "result": "Exact-main Quality job passed vet: https://github.com/faustbrian/go-library-tools/actions/runs/36317353121/job/108614472745",
+          "result_sha256": "be807331e4f433fc169f11808c7d4f071d55d9602a289b05d69190127c56901b"
+        },
+        {
+          "name": "staticcheck",
+          "tool_version": "v0.8.1",
+          "command": "go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...",
+          "status": "passed",
+          "completed_at": "2026-09-27T12:01:04Z",
+          "result": "Exact-main Quality job passed Staticcheck: https://github.com/faustbrian/go-library-tools/actions/runs/36317353121/job/108614472745",
+          "result_sha256": "be807331e4f433fc169f11808c7d4f071d55d9602a289b05d69190127c56901b"
+        },
+        {
+          "name": "govulncheck",
+          "tool_version": "v1.6.0",
+          "command": "go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
+          "status": "passed",
+          "completed_at": "2026-09-27T12:01:04Z",
+          "result": "Exact-main Quality job passed vulnerability scan: https://github.com/faustbrian/go-library-tools/actions/runs/36317353121/job/108614472745",
+          "result_sha256": "be807331e4f433fc169f11808c7d4f071d55d9602a289b05d69190127c56901b"
+        },
+        {
+          "name": "gosec",
+          "tool_version": "v2.29.0",
+          "command": "go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
+          "status": "passed",
+          "completed_at": "2026-09-27T12:01:04Z",
+          "result": "Exact-main Quality job passed standalone gosec: https://github.com/faustbrian/go-library-tools/actions/runs/36317353121/job/108614472745",
+          "result_sha256": "be807331e4f433fc169f11808c7d4f071d55d9602a289b05d69190127c56901b"
+        },
+        {
+          "name": "owned-analysis",
+          "tool_version": "v1.0.0",
+          "command": "go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <task-owned central security policy> -root <module root> ./...",
+          "status": "passed",
+          "completed_at": "2026-09-27T12:01:04Z",
+          "result": "Exact-main Quality job passed centrally owned security/no-unsafe policy: https://github.com/faustbrian/go-library-tools/actions/runs/36317353121/job/108614472745",
+          "result_sha256": "be807331e4f433fc169f11808c7d4f071d55d9602a289b05d69190127c56901b"
+        },
+        {
+          "name": "secret-history",
+          "tool_version": "v8.30.1",
+          "command": "go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <task-owned central policy> --log-opts=--all --ignore-gitleaks-allow --gitleaks-ignore-path <empty task-owned ignore root> --no-banner --redact",
+          "status": "passed",
+          "completed_at": "2026-09-27T12:01:04Z",
+          "result": "Exact-main Quality job passed centrally governed full-history secret scan: https://github.com/faustbrian/go-library-tools/actions/runs/36317353121/job/108614472745",
+          "result_sha256": "be807331e4f433fc169f11808c7d4f071d55d9602a289b05d69190127c56901b"
+        },
+        {
+          "name": "secret-current-tree",
+          "tool_version": "v8.30.1",
+          "command": "go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <task-owned central policy> --ignore-gitleaks-allow --gitleaks-ignore-path <empty task-owned ignore root> --no-banner --redact",
+          "status": "passed",
+          "completed_at": "2026-09-27T12:01:04Z",
+          "result": "Exact-main Quality job passed centrally governed current-tree secret scan: https://github.com/faustbrian/go-library-tools/actions/runs/36317353121/job/108614472745",
+          "result_sha256": "be807331e4f433fc169f11808c7d4f071d55d9602a289b05d69190127c56901b"
+        },
+        {
+          "name": "license",
+          "tool_version": "v2.0.1",
+          "command": "go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/faustbrian/go-library-tools",
+          "status": "passed",
+          "completed_at": "2026-09-27T12:01:04Z",
+          "result": "Exact-main Quality job passed license validation: https://github.com/faustbrian/go-library-tools/actions/runs/36317353121/job/108614472745",
+          "result_sha256": "be807331e4f433fc169f11808c7d4f071d55d9602a289b05d69190127c56901b"
+        },
+        {
+          "name": "workflow-analysis",
+          "tool_version": "go-library-tools source 48e87a6f4ddedf41902c5fb2bd3906d12cb4d882",
+          "command": "go run ./cmd/golib workflows check",
+          "status": "passed",
+          "completed_at": "2026-09-27T12:01:04Z",
+          "result": "Exact-main Quality job passed owned workflow validation: https://github.com/faustbrian/go-library-tools/actions/runs/36317353121/job/108614472745",
+          "result_sha256": "be807331e4f433fc169f11808c7d4f071d55d9602a289b05d69190127c56901b"
+        },
+        {
+          "name": "codeql",
+          "tool_version": "github/codeql-action@b96794f015dfd88f77b49b1c93e0fa7110f94c63",
+          "command": "GitHub CodeQL init/analyze for Go",
+          "status": "passed",
+          "completed_at": "2026-09-27T11:58:09Z",
+          "result": "Exact-main CodeQL job passed: https://github.com/faustbrian/go-library-tools/actions/runs/36317353121/job/108614472664",
+          "result_sha256": "0d19a7f0c18f4c7d89d907069cd8b800d05de88403b831d8be744b6b49cf36bf"
+        },
+        {
+          "name": "dependency-review",
+          "tool_version": "actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294",
+          "command": "GitHub dependency review with low-severity and license failures blocking",
+          "status": "passed",
+          "completed_at": "2026-09-27T11:45:12Z",
+          "result": "PR #101 dependency review passed; root go.mod/go.sum unchanged through reviewed main: https://github.com/faustbrian/go-library-tools/actions/runs/36316734543/job/108612743335",
+          "result_sha256": "c4076d2e3e7485b20645a0ad1abd7c2cc814c483bdc9a2d6e4f25410a4a3287d"
+        }
+      ],
+      "release_verdict": {
+        "status": "blocked",
+        "owner": "go-library-tools maintainers",
+        "decided_at": "2026-09-27T12:27:44Z",
+        "rationale": "Scanner execution is verified, but a complete final security source/publication review, release artifacts and explicit fleet-risk disposition remain pending. This row does not establish an ecosystem milestone or pass absent module rows.",
+        "residual_risks": []
+      }
+    }
+  ]
 }

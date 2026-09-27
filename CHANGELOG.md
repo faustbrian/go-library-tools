@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Recorded verified root-module scanner results with a blocked release verdict
+  and retained the open fleet-enforcement risk under the v2 module identity.
+
 ### Fixed
 
 - Separate the maintained current-release compatibility consumer selection from
