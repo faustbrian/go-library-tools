@@ -11,8 +11,8 @@ repositories must use checksum-verified release binaries and immutable workflow
 references.
 
 The v2 command supports Darwin and Linux on amd64 and arm64. Its bounded
-security scanners require complete process-tree termination and fail before
-process start on other platforms.
+security scanners terminate their original process group and fail before
+process start on other platforms. This is not a hostile executable sandbox.
 
 The v2 Go module and command path is
 `github.com/faustbrian/go-library-tools/v2`. After the `v2.0.0` tag is

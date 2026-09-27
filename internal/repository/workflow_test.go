@@ -56,7 +56,7 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 		"golib workflows check",
 		"golib specification check",
 		"golib specification check --online",
-		"golib check --local --module",
+		"golib check --local --all",
 		"github/codeql-action/init@",
 		"github/codeql-action/analyze@",
 		"name: Required",
@@ -403,7 +403,7 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 		return ""
 	}
 	releaseCheckScript := assertReleaseStep("repository-contract", "Validate release contract", "inputs.release_dry_run == true", "${{ inputs.release_module }}", `golib release check`)
-	qualityRehearsalScript := assertReleaseStep("quality", "Run release rehearsal", "inputs.release_dry_run == true", "${{ matrix.directory }}", `golib release dry-run`)
+	qualityRehearsalScript := assertReleaseStep("quality", "Run release rehearsal", "inputs.release_dry_run == true", "${{ inputs.release_module }}", `golib release dry-run`)
 	rehearsalOwners := make([]string, 0, 1)
 	for job, definition := range reusable.Jobs {
 		for _, step := range definition.Steps {
@@ -417,16 +417,13 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 	}
 	ordinaryContract := false
 	for _, step := range reusable.Jobs["quality"].Steps {
-		if step.Name == "Run module contract" {
+		if step.Name == "Run repository module contracts" {
 			ordinaryContract = true
 			if step.If != "inputs.release_dry_run != true" {
 				t.Fatalf("ordinary module contract guard = %q", step.If)
 			}
-			if step.Env["MODULE_DIRECTORY"] != "${{ matrix.directory }}" {
-				t.Fatalf("ordinary module contract environment = %#v", step.Env)
-			}
-			if !strings.Contains(step.Run, `golib check --local --module "${MODULE_DIRECTORY}"`) ||
-				!strings.Contains(step.Run, `golib check --module "${MODULE_DIRECTORY}"`) {
+			if !strings.Contains(step.Run, `golib check --local --all`) ||
+				!strings.Contains(step.Run, `golib check --all`) {
 				t.Fatalf("ordinary module contract lacks mixed-version routing: %q", step.Run)
 			}
 		}
@@ -614,16 +611,13 @@ func TestReusableWorkflowAdaptsModuleCheckToInstalledToolCapability(t *testing.T
 
 	var contract workflowStep
 	for _, step := range reusable.Jobs["quality"].Steps {
-		if step.Name == "Run module contract" {
+		if step.Name == "Run repository module contracts" {
 			contract = step
 			break
 		}
 	}
 	if contract.Run == "" {
 		t.Fatal("quality job has no module contract step")
-	}
-	if contract.Env["MODULE_DIRECTORY"] != "${{ matrix.directory }}" {
-		t.Fatalf("module contract environment = %#v", contract.Env)
 	}
 
 	golibBin := t.TempDir()
@@ -648,9 +642,9 @@ printf '%s\n' "$*" >>"$INVOCATIONS"
 		legacy string
 		want   string
 	}{
-		{name: "v1.4 tool", legacy: "true", want: "check --module nested"},
-		{name: "v1.5 tool", legacy: "true", want: "check --module nested"},
-		{name: "local capable tool", legacy: "false", want: "check --local --module nested"},
+		{name: "v1.4 tool", legacy: "true", want: "check --all"},
+		{name: "v1.5 tool", legacy: "true", want: "check --all"},
+		{name: "local capable tool", legacy: "false", want: "check --local --all"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if err := os.WriteFile(invocations, nil, 0o600); err != nil {
@@ -710,7 +704,7 @@ type workflowStep struct {
 func TestReusableWorkflowConfiguresBootstrapProxyForEveryGoBuild(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/library-ci.yml")
 	for _, required := range []string{
-		"uses: ./.golib-tooling/.github/actions/setup-bootstrap-proxy",
+		"uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa",
 		"bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}",
 		"bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}",
 	} {
@@ -833,8 +827,8 @@ func TestReusableWorkflowInstallsGolibBeforeEveryArchiveValidation(t *testing.T)
 		t.Fatal("reusable workflow has no CodeQL job")
 	}
 	codeQL := content[codeQLStart:]
-	setup := strings.Index(codeQL, "uses: ./.golib-tooling/.github/actions/setup-golib")
-	bootstrap := strings.Index(codeQL, "uses: ./.golib-tooling/.github/actions/setup-bootstrap-proxy")
+	setup := strings.Index(codeQL, "uses: faustbrian/go-library-tools/.github/actions/setup-golib@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa")
+	bootstrap := strings.Index(codeQL, "uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa")
 	if setup < 0 || bootstrap < 0 || setup > bootstrap {
 		t.Fatal("CodeQL job must install golib before bootstrap archive validation")
 	}

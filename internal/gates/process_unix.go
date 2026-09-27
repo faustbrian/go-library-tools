@@ -12,7 +12,9 @@ func configureProcessGroup(process *exec.Cmd) error {
 	return nil
 }
 
-func terminateProcessTree(process *exec.Cmd) {
+// terminateProcessGroup terminates the original group. A collaborator which
+// deliberately detaches is outside this mechanism's scope.
+func terminateProcessGroup(process *exec.Cmd) {
 	if process.Process == nil {
 		return
 	}

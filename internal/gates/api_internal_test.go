@@ -312,11 +312,23 @@ func (info apiFileInfo) IsDir() bool   { return info.directory }
 func (apiFileInfo) Sys() any           { return nil }
 
 type workspaceExecutor struct {
-	directory string
-	run       func(context.Context, Command) error
+	directory            string
+	run                  func(context.Context, Command) error
+	emptySourceInventory bool
 }
 
 func (executor workspaceExecutor) Run(ctx context.Context, command Command) error {
-	return executor.run(ctx, command)
+	err := executor.run(ctx, command)
+	// Most gate tests deliberately double the Git/scanner command boundary.
+	// Supply the small valid inventory only when that double did not provide
+	// real or explicitly malformed output; real Git fixtures remain real.
+	if inventory, ok := command.Stdout.(*sourceInventoryOutput); ok && !executor.emptySourceInventory && err == nil && inventory.Len() == 0 {
+		value := "refs/heads/main\n"
+		if strings.Contains(strings.Join(command.Args, " "), "--batch-all-objects") {
+			value = "1\n"
+		}
+		_, err = io.WriteString(inventory, value)
+	}
+	return err
 }
 func (executor workspaceExecutor) TemporaryDirectory() string { return executor.directory }

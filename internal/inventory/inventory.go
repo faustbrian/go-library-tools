@@ -21,6 +21,10 @@ import (
 )
 
 const maximumManifestSize = 32 << 20
+
+// MaximumModules bounds repository-wide orchestration while allowing the
+// current multi-module families and backward-compatible manifest schemas.
+const MaximumModules = 64
 const modulesSchemaIdentity = "https://github.com/faustbrian/go-library-tools/schema/modules.schema.json"
 const modulesV3SchemaIdentity = "https://github.com/faustbrian/go-library-tools/schema/modules-v3.schema.json"
 
@@ -378,6 +382,9 @@ func validateModuleIdentities(_ string, manifest []byte) error {
 	}
 	if err := json.Unmarshal(manifest, &document); err != nil {
 		return errors.New("invalid module manifest")
+	}
+	if len(document.Modules) > MaximumModules {
+		return errors.New("module cardinality limit exceeded")
 	}
 	for _, candidate := range document.Modules {
 		directory, valid := identityString(candidate, "directory")

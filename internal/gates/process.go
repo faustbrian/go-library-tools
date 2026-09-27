@@ -97,10 +97,7 @@ func newProcessExecutor(repositoryRoot string, stdout, stderr io.Writer, files t
 func (executor *processExecutor) TemporaryDirectory() string { return executor.task }
 
 func (executor *processExecutor) Run(ctx context.Context, command Command) error {
-	if _, stdoutBounded := command.Stdout.(overflowAwareOutput); stdoutBounded {
-		return executor.runBounded(ctx, command)
-	}
-	if _, stderrBounded := command.Stderr.(overflowAwareOutput); stderrBounded {
+	if command.boundedScanner {
 		return executor.runBounded(ctx, command)
 	}
 	// #nosec G204 -- repository policy intentionally supplies argument-array gate commands without a shell
@@ -132,7 +129,7 @@ func (executor *processExecutor) runBounded(ctx context.Context, command Command
 		return err
 	}
 	// #nosec G204 -- repository policy intentionally supplies argument-array gate commands without a shell
-	//nolint:noctx // bounded execution owns context cancellation so it can terminate the complete process tree
+	//nolint:noctx // pinned scanners use owned cancellation of their original process group, not a sandbox
 	process := exec.Command(command.Name, command.Args...)
 	process.Dir = command.Dir
 	process.Env = mergeEnvironment(os.Environ(), executor.environment, command.Env)
@@ -164,9 +161,9 @@ func (executor *processExecutor) runBounded(ctx context.Context, command Command
 		select {
 		case <-ctx.Done():
 			canceled.Store(true)
-			terminateProcessTree(process)
+			terminateProcessGroup(process)
 		case <-stop:
-			terminateProcessTree(process)
+			terminateProcessGroup(process)
 		case <-done:
 		}
 	}()

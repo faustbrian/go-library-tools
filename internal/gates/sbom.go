@@ -62,7 +62,8 @@ type cycloneDXDocument struct {
 func (runner Runner) runSBOM(ctx context.Context, directory string) error {
 	var document, diagnostics boundedSBOMBuffer
 	err := runner.Executor.Run(ctx, Command{
-		Name: "go", Dir: directory, Env: map[string]string{"GOWORK": "off"},
+		boundedScanner: true,
+		Name:           "go", Dir: directory, Env: map[string]string{"GOWORK": "off"},
 		Args: []string{
 			"run", "github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@" + cycloneDXVersion,
 			"mod", "-json", "-licenses", "-type", "library", "-noserial", "-notimestamp", "-output", "-", ".",

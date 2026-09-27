@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -159,4 +160,116 @@ func TestBoundedWorkflowBufferEnforcesCumulativeLimit(t *testing.T) {
 	if written, err := buffer.Write([]byte("bc")); err != nil || written != 2 || !buffer.overflow || buffer.data.Len() != maximumWorkflowOutput {
 		t.Fatalf("overflow Write() = %d, %v, overflow %v, length %d", written, err, buffer.overflow, buffer.data.Len())
 	}
+}
+
+func TestWorkflowSecurityTraversesLocalActions(t *testing.T) {
+	for _, reference := range []string{"owner/action@main", "./../outside", "./a", "docker://alpine:latest"} {
+		t.Run(reference, func(t *testing.T) {
+			root := t.TempDir()
+			for name, content := range map[string]string{
+				".github/workflows/ci.yml": "jobs: {test: {steps: [{uses: ./a}]}}",
+				"a/action.yml":             "runs: {using: composite, steps: [{uses: ./b}]}",
+				"b/action.yml":             "runs: {using: composite, steps: [{uses: '" + reference + "'}]}",
+			} {
+				path := filepath.Join(root, name)
+				if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := checkWorkflowSecurity(root); err == nil {
+				t.Fatal("unsafe local action chain accepted")
+			}
+		})
+	}
+}
+
+func TestCurrentRepositoryWorkflowsPassOwnedDescriptorPolicy(t *testing.T) {
+	root, err := filepath.Abs(filepath.Join("..", ".."))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := checkWorkflowSecurity(root); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestWorkflowLocalActionsPinnedChainsAndGraphBudgets(t *testing.T) {
+	write := func(t *testing.T, root, name, content string) {
+		t.Helper()
+		path := filepath.Join(root, name)
+		if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	t.Run("safe nested descriptors", func(t *testing.T) {
+		root := t.TempDir()
+		write(t, root, ".github/workflows/ci.yml", "jobs: {test: {steps: [{uses: ./a}]}}")
+		write(t, root, "a/action.yml", "runs: {using: composite, steps: [{uses: ./b}]}")
+		write(t, root, "b/action.yaml", "runs: {using: composite, steps: [{uses: 'owner/action@0123456789012345678901234567890123456789'}]}")
+		if err := checkWorkflowSecurity(root); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("docker descriptor mutable image", func(t *testing.T) {
+		root := t.TempDir()
+		write(t, root, ".github/workflows/ci.yml", "jobs: {test: {steps: [{uses: ./a}]}}")
+		write(t, root, "a/action.yml", "runs: {using: docker, image: alpine:latest}")
+		if err := checkWorkflowSecurity(root); err == nil {
+			t.Fatal("mutable Docker descriptor accepted")
+		}
+		write(t, root, "a/action.yml", "runs: {using: docker, image: 'alpine@sha256:"+strings.Repeat("a", 64)+"'}")
+		if err := checkWorkflowSecurity(root); err != nil {
+			t.Fatal(err)
+		}
+	})
+	t.Run("symlink ancestor", func(t *testing.T) {
+		root := t.TempDir()
+		write(t, root, ".github/workflows/ci.yml", "jobs: {test: {steps: [{uses: ./a}]}}")
+		if err := os.Symlink(t.TempDir(), filepath.Join(root, "a")); err != nil {
+			t.Fatal(err)
+		}
+		if err := checkWorkflowSecurity(root); err == nil {
+			t.Fatal("symbolic local action accepted")
+		}
+	})
+	t.Run("depth", func(t *testing.T) {
+		root := t.TempDir()
+		write(t, root, ".github/workflows/ci.yml", "jobs: {test: {steps: [{uses: ./a0}]}}")
+		for i := 0; i <= maximumLocalActionDepth; i++ {
+			write(t, root, fmt.Sprintf("a%d/action.yml", i), fmt.Sprintf("runs: {using: composite, steps: [{uses: ./a%d}]}", i+1))
+		}
+		if err := checkWorkflowSecurity(root); err == nil || !strings.Contains(err.Error(), "depth") {
+			t.Fatalf("depth bound: %v", err)
+		}
+	})
+	t.Run("descriptor count", func(t *testing.T) {
+		root := t.TempDir()
+		var steps strings.Builder
+		for i := range maximumWorkflowFiles {
+			fmt.Fprintf(&steps, "      - uses: ./a%d\n", i)
+			write(t, root, fmt.Sprintf("a%d/action.yml", i), "runs: {using: composite, steps: []}")
+		}
+		write(t, root, ".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n"+steps.String())
+		if err := checkWorkflowSecurity(root); err == nil || !strings.Contains(err.Error(), "count") {
+			t.Fatalf("descriptor count: %v", err)
+		}
+	})
+	t.Run("descriptor bytes", func(t *testing.T) {
+		root := t.TempDir()
+		var steps strings.Builder
+		for i := range 9 {
+			fmt.Fprintf(&steps, "      - uses: ./a%d\n", i)
+			write(t, root, fmt.Sprintf("a%d/action.yml", i), "runs: {using: composite, steps: []}\n#"+strings.Repeat("a", maximumWorkflowOutput-100))
+		}
+		write(t, root, ".github/workflows/ci.yml", "jobs:\n  test:\n    steps:\n"+steps.String())
+		if err := checkWorkflowSecurity(root); err == nil || !strings.Contains(err.Error(), "byte") {
+			t.Fatalf("descriptor bytes: %v", err)
+		}
+	})
 }

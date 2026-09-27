@@ -31,7 +31,7 @@ source, dependency, manifest, or workflow content changed in between.
 
 Security-enabled modules run pinned govulncheck, standalone gosec, a centrally
 owned go-analysis security policy, full-history gitleaks with a centrally owned
-configuration, a current-tree scan that includes generated artifacts, license
+configuration, a current-tree scan that includes existing generated artifacts, license
 checks, and SBOM generation during ordinary local/PR checks as well as the full
 gate. Repository-owned `.gitleaksignore` files are rejected before execution,
 and inline `gitleaks:allow` directives are ignored by both scans. Source-level
@@ -39,11 +39,34 @@ native gosec suppressions must name exact rules and include a reason, while
 `nolint:gosec` explanations must appear on the same comment line. A consumer
 cannot silently widen the shared policy. NilAway remains advisory.
 Scanner-controlled stdout and stderr are suppressed and independently limited
-to 4 MiB. Exceeding either limit terminates the complete scanner process tree
+to 4 MiB. Exceeding either limit terminates the scanner's original process group
 and returns only an owned overflow class while preserving the process failure.
-Complete-tree bounded execution is supported on Darwin and Linux. On other
+Original-process-group bounded execution is supported on Darwin and Linux. On other
 platforms, bounded scanner commands fail before process start; ordinary
 unbounded command execution remains portable.
+
+Pinned scanners and Git are trusted executable collaborators processing hostile
+data. A process which detaches from its original group is outside that group's
+termination boundary. Repository tests do not use the scanner group mechanism.
+Golib is not a sandbox for hostile executables: arbitrary untrusted PR code
+requires disposable OS, VM, container, or ephemeral hosted-runner isolation,
+without secrets or write-capable credentials.
+
+History and current-source snapshots are acquired and scanned once per check
+invocation, before any repository tests or release consumer builds execute.
+The reusable workflow uses one invocation across selected modules, retaining
+module-attributed analyzers, licenses, and SBOMs. Standalone `--module` checks
+still perform both repository scans. Missing or failed source scans fail closed.
+All selected modules' vulnerability, gosec, owned-analysis, license, and SBOM
+scans also finish before repository execution; runtime service scopes remain
+module-owned and start afterward. Repository manifests are capped at 64 modules.
+Before creating a snapshot, history is bounded to 10,000 refs, 100,000 objects
+(including unreachable objects),
+and 4 GiB of total uncompressed object bytes. Bundle output has an independent
+4 GiB hard write cap. Current-tree preflight and copying count all entries,
+including directories and links, up to 100,000 entries and 4 GiB; symlinks are
+not followed or copied. Directory enumeration is incremental and traversal depth
+is capped at 128. Cancellation is checked during traversal and copying.
 
 Module manifests reject identity fields before schema diagnostics can expose
 their values. Directories must be canonical relative paths using lowercase
@@ -54,7 +77,12 @@ or cohesion output.
 
 GitHub Actions workflows are checked with a pinned Actionlint release plus
 owned checks for privileged triggers, broad permissions, persisted checkout
-credentials, mutable remote action references, and non-digest container images, and
+credentials, mutable remote action references, and non-digest container images.
+Repository-contained local actions are recursively inspected, including nested
+composites and Docker action image references, with cycle, depth (32), descriptor
+count (512), per-file (4 MiB), and combined-byte (32 MiB) limits. Traversal and
+symlink paths fail closed. Docker action images must be immutable digests;
+local Dockerfile builds are not accepted by this immutability gate. In addition,
 pull requests run GitHub's dependency review action from an immutable commit.
 The final required job accepts dependency review as skipped only for events
 that are not pull requests.

@@ -291,7 +291,7 @@ func TestCheckReportsAnalysisConfigCleanupFailure(t *testing.T) {
 		}
 	}
 	executor := workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error { return nil }}
-	files := &fakeSecretConfigFiles{file: &fakeNamedFile{name: "config"}, removeErr: failure}
+	files := &securityPolicyFiles{analysisRemoveErr: failure}
 	runner := Runner{
 		Root: root,
 		Catalog: inventory.Inventory{Modules: []inventory.Module{{
@@ -439,6 +439,110 @@ func TestCreateGitleaksSourcesCapturesAllRefsWithoutMutatingRepository(t *testin
 	}
 	if configAfter := runGit("config", "--local", "--list"); configAfter != configBefore {
 		t.Fatalf("source config changed: before=%q after=%q", configBefore, configAfter)
+	}
+}
+
+func TestCreateGitleaksSourcesHonorsCancellationBeforeCopy(t *testing.T) {
+	root, workspace := t.TempDir(), t.TempDir()
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	runner := Runner{Root: root, Executor: workspaceExecutor{directory: workspace, run: func(context.Context, Command) error { return nil }}}
+	if _, cleanup, err := runner.createGitleaksSources(ctx); err == nil {
+		if cleanup != nil {
+			_ = cleanup()
+		}
+		t.Fatal("cancelled snapshot was created")
+	}
+	entries, err := os.ReadDir(workspace)
+	if err != nil || len(entries) != 0 {
+		t.Fatalf("snapshot cleanup: %v, %d entries", err, len(entries))
+	}
+}
+
+func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
+	for _, caller := range []string{"check", "local"} {
+		t.Run(caller, func(t *testing.T) {
+			root := t.TempDir()
+			var history, current, vulnerabilities, tests int
+			scans := map[string]int{}
+			scannedModules := map[string]map[string]int{}
+			runner := Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{
+				{Directory: ".", ModulePath: "example", Gates: map[string]bool{"security": true, "tests": true}},
+				{Directory: "nested", ModulePath: "example/nested", Gates: map[string]bool{"security": true, "tests": true}},
+			}}, Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+				joined := strings.Join(command.Args, " ")
+				if strings.Contains(joined, "gitleaks") {
+					if strings.Contains(joined, " git ") {
+						history++
+					}
+					if strings.Contains(joined, " dir ") {
+						current++
+					}
+				}
+				if strings.Contains(joined, "govulncheck") {
+					vulnerabilities++
+				}
+				for _, tool := range []string{"govulncheck", "gosec/v2", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
+					if strings.Contains(joined, tool) {
+						scans[tool]++
+						if scannedModules[command.Dir] == nil {
+							scannedModules[command.Dir] = map[string]int{}
+						}
+						scannedModules[command.Dir][tool]++
+						content, err := os.ReadFile(filepath.Join(root, "revision.txt"))
+						if err != nil || string(content) != "original" {
+							return errors.New("static scanner inputs changed before scan")
+						}
+					}
+				}
+				if len(command.Args) > 0 && command.Args[0] == "test" {
+					tests++
+					if history != 1 || current != 1 {
+						return errors.New("repository code ran before exact-source scans")
+					}
+					for _, tool := range []string{"govulncheck", "gosec/v2", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
+						if scans[tool] != 2 {
+							return errors.New("repository code ran before all selected modules' static security scans")
+						}
+						for _, directory := range []string{root, filepath.Join(root, "nested")} {
+							if scannedModules[directory][tool] != 1 {
+								return errors.New("module-specific scan attribution was lost")
+							}
+						}
+					}
+					if err := os.WriteFile(filepath.Join(root, "revision.txt"), []byte("mutated by repository test"), 0o600); err != nil {
+						return err
+					}
+				}
+				if strings.Contains(joined, "cyclonedx") {
+					_, _ = io.WriteString(command.Stdout, `{"bomFormat":"CycloneDX","specVersion":"1.6","version":1}`)
+				}
+				return nil
+			}}}
+			if err := os.Mkdir(filepath.Join(root, "nested"), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(root, "revision.txt"), []byte("original"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			var err error
+			if caller == "check" {
+				err = runner.Check(t.Context(), []string{".", "nested"})
+			} else {
+				err = runner.Local(t.Context(), []string{".", "nested"})
+			}
+			if err != nil {
+				t.Fatal(err)
+			}
+			if history != 1 || current != 1 || vulnerabilities != 2 || tests != 2 {
+				t.Fatalf("scans history/current/module/tests = %d/%d/%d/%d", history, current, vulnerabilities, tests)
+			}
+			for tool, count := range scans {
+				if count != 2 {
+					t.Fatalf("%s scans = %d", tool, count)
+				}
+			}
+		})
 	}
 }
 
@@ -2135,6 +2239,7 @@ type fakeSecretConfigFiles struct {
 type securityPolicyFiles struct {
 	gitleaksRemoveErr error
 	gitleaksRemoved   int
+	analysisRemoveErr error
 }
 
 func (*securityPolicyFiles) CreateTemp(_ string, pattern string) (namedWriteCloser, error) {
@@ -2142,6 +2247,9 @@ func (*securityPolicyFiles) CreateTemp(_ string, pattern string) (namedWriteClos
 }
 
 func (files *securityPolicyFiles) Remove(path string) error {
+	if strings.HasPrefix(path, "analysis-security-") {
+		return files.analysisRemoveErr
+	}
 	if strings.HasPrefix(path, "gitleaks-config-") {
 		files.gitleaksRemoved++
 		return files.gitleaksRemoveErr

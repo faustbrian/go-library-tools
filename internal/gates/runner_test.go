@@ -75,23 +75,27 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 	if err := runner.Local(context.Background(), []string{"."}); err != nil {
 		t.Fatalf("Local() error = %v", err)
 	}
+	// Security preflight snapshots and scans the selected source before any
+	// repository-controlled test or formatter can change that evidence.
 	want := []string{
+		"git -C <repository-root> for-each-ref --format=%(refname)",
+		"git -C <repository-root> cat-file --batch-all-objects --batch-check=%(objectsize)",
+		"git -C <repository-root> bundle create - --all",
+		"git init --quiet -- <gitleaks-history>",
+		"git -C <gitleaks-history> fetch --quiet --force --no-recurse-submodules <gitleaks-history-bundle> +refs/*:refs/golib-source/*",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact",
+		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact",
+		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
+		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
+		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
+		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore example",
+		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 		"gofmt -l -- example.go",
 		"go mod tidy -diff",
 		"go vet ./...",
 		"go test ./... -count=1 -timeout=20m",
 		"go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1 run --allow-parallel-runners --timeout=10m ./...",
 		"go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...",
-		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
-		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
-		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
-		"git -C <repository-root> bundle create <gitleaks-history-bundle> --all",
-		"git init --quiet -- <gitleaks-history>",
-		"git -C <gitleaks-history> fetch --quiet --force --no-recurse-submodules <gitleaks-history-bundle> +refs/*:refs/golib-source/*",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact",
-		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact",
-		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore example",
-		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
 		t.Fatalf("commands = %#v, want %#v", executor.commands, want)
@@ -522,18 +526,20 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		t.Fatalf("Check() error = %v", err)
 	}
 	want := []string{
-		"gofmt -l -- example.go",
-		"go mod tidy -diff",
-		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
-		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
-		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
-		"git -C <repository-root> bundle create <gitleaks-history-bundle> --all",
+		"git -C <repository-root> for-each-ref --format=%(refname)",
+		"git -C <repository-root> cat-file --batch-all-objects --batch-check=%(objectsize)",
+		"git -C <repository-root> bundle create - --all",
 		"git init --quiet -- <gitleaks-history>",
 		"git -C <gitleaks-history> fetch --quiet --force --no-recurse-submodules <gitleaks-history-bundle> +refs/*:refs/golib-source/*",
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact",
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact",
+		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
+		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
+		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/acme/example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
+		"gofmt -l -- example.go",
+		"go mod tidy -diff",
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
 		t.Fatalf("commands = %#v, want %#v", executor.commands, want)
@@ -674,13 +680,13 @@ func TestCheckStopsAtAnalyzerAndSecurityFailures(t *testing.T) {
 	}{
 		{"lint", map[string]bool{"lint": true}, 3},
 		{"staticcheck", map[string]bool{"lint": true}, 4},
-		{"vulnerability", map[string]bool{"security": true}, 2},
-		{"gosec", map[string]bool{"security": true}, 3},
-		{"owned analysis", map[string]bool{"security": true}, 4},
+		{"vulnerability", map[string]bool{"security": true}, 7},
+		{"gosec", map[string]bool{"security": true}, 8},
+		{"owned analysis", map[string]bool{"security": true}, 9},
 		{"secrets history", map[string]bool{"security": true}, 5},
 		{"secrets tree", map[string]bool{"security": true}, 6},
-		{"licenses", map[string]bool{"security": true}, 7},
-		{"SBOM", map[string]bool{"security": true}, 8},
+		{"licenses", map[string]bool{"security": true}, 10},
+		{"SBOM", map[string]bool{"security": true}, 11},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -884,9 +890,16 @@ func successfulLinks(context.Context, string) error    { return nil }
 
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
 	arguments := slices.Clone(command.Args)
+	if command.Name == "git" && len(arguments) >= 3 && (arguments[2] == "for-each-ref" || arguments[2] == "cat-file") {
+		arguments[1] = "<repository-root>"
+		value := "refs/heads/main\n"
+		if arguments[2] == "cat-file" {
+			value = "1\n"
+		}
+		_, _ = io.WriteString(command.Stdout, value)
+	}
 	if command.Name == "git" && len(arguments) == 6 && arguments[0] == "-C" && arguments[2] == "bundle" {
 		arguments[1] = "<repository-root>"
-		arguments[4] = "<gitleaks-history-bundle>"
 	}
 	if command.Name == "git" && len(arguments) == 4 && slices.Equal(arguments[:3], []string{"init", "--quiet", "--"}) {
 		arguments[3] = "<gitleaks-history>"
