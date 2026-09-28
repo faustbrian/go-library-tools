@@ -861,6 +861,45 @@ class CompatibilitySetTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "bounded non-empty"):
             generate.current_consumer_inputs(value, [module], duplicate)
 
+    def test_current_consumer_addition_preserves_v1_and_checks_v2_release(self):
+        historical = self.base_set("a" * 40)
+        historical["roster"] = {"selection": "active-public", "module_count": 1}
+        module = self.catalog_module()
+        module["cohesion"] = {"primary_entry_packages": [module["module_path"]]}
+        module["packages"] = [{"import_path": module["module_path"], "name": "foo"}]
+        value = {"sets": [historical]}
+        selection = {
+            "format": "golib-current-consumer-v1",
+            "base_set_id": historical["set_id"],
+            "replacements": [],
+            "additions": [{
+                "alongside_module_path": module["module_path"],
+                "module_path": module["module_path"] + "/v2",
+                "version": "v2.0.0",
+                "source_revision": "b" * 40,
+                "primary_entry_packages": [module["module_path"] + "/v2"],
+            }],
+        }
+        current, catalogs = generate.current_consumer_inputs(
+            value, [module], selection,
+            remote_tag_lookup=lambda repository, tag: "b" * 40
+                if repository == module["repository"] and tag == "adapters/foo/v2.0.0" else None,
+            public_version_lookup=lambda path, version: path.endswith("/v2") and version == "v2.0.0",
+        )
+        go_mod, source = generate.render_clean_consumer(current, catalogs)
+        self.assertIn(module["module_path"] + " v1.2.3", go_mod)
+        self.assertIn(module["module_path"] + "/v2 v2.0.0", go_mod)
+        self.assertIn('"' + module["module_path"] + '"', source)
+        self.assertIn('"' + module["module_path"] + '/v2"', source)
+        self.assertEqual(current["roster"]["module_count"], 2)
+        self.assertEqual(len(value["sets"][0]["modules"]), 1)
+        with self.assertRaisesRegex(ValueError, "matching remote tag"):
+            generate.current_consumer_inputs(
+                value, [module], selection,
+                remote_tag_lookup=lambda *_: None,
+                public_version_lookup=lambda *_: True,
+            )
+
     def test_candidate_cannot_overwrite_current_consumer_selection(self):
         generate.CONSUMER_DIRECTORY.mkdir(parents=True)
         (generate.CONSUMER_DIRECTORY / "selection.json").write_text("{}")

@@ -55,10 +55,13 @@ version. Set records can also carry structured recipe,
 external-version, upgrade, rollback, and exclusion details. Published
 identifiers are immutable; a later recommendation receives a new identifier.
 The maintained `release/compatibility-consumer` may separately declare
-`selection.json`: a published base set and explicit released-module replacements
-with their exact tag source revisions and primary imports. The generator checks
-those public release bindings and the resulting consumer files without modifying
-the base set or projecting new `known_good_compatibility_sets` membership. This
+`selection.json`: a published base set and explicit released-module
+`replacements` or `additions`, each with its exact tag source revision and
+primary imports. Replacements substitute a selected module path or version;
+additions import a distinct major path alongside the base module, preserving
+its v1 coverage. The generator checks each remote tag and public Go proxy
+version and the resulting consumer files without modifying the published base
+set or projecting new `known_good_compatibility_sets` membership. This
 current consumer is not evidence that the changed versions belong to the frozen
 verified cohort; its hosted consumer checks establish only its own composition.
 Without this optional selection, older fixtures retain the existing candidate or
@@ -67,8 +70,9 @@ generating a new cohort candidate; candidate writes must not silently overwrite
 a maintained current-release consumer. Middleware, feature-flags, measurement,
 filesystem, fault-injection, router, password, semaphore and Knapsack select
 their published `/v2` modules, along with the canonical money objective and
-optional measurement rule adapter. These overrides do not rewrite the base
-set's v1 versions or historical evidence.
+optional measurement rule adapter. Sequencer adds its released `/v2` module
+while retaining the v1 import. Neither form rewrites the base set's v1 versions
+or historical evidence.
 Matching module entries in the generated catalogs list the published set under
 `known_good_compatibility_sets`; unreleased drafts are never projected there.
 Candidate fingerprints withdrawn before the first publication are not public
