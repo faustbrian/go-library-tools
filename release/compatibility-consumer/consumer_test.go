@@ -143,6 +143,7 @@ import (
 	_ "github.com/faustbrian/go-secret-envelope"
 	_ "github.com/faustbrian/go-semaphore/v2"
 	_ "github.com/faustbrian/go-sequencer"
+	_ "github.com/faustbrian/go-sequencer/v2"
 	_ "github.com/faustbrian/go-service"
 	_ "github.com/faustbrian/go-settings/v2"
 	_ "github.com/faustbrian/go-state-machine"

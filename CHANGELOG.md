@@ -23,6 +23,8 @@ All notable changes to this project are documented in this file.
 - Separate the maintained current-release compatibility consumer selection from
   immutable published compatibility cohorts, including explicit middleware and
   feature-flags v2 migrations and consumer CI selection for generator inputs.
+- Allow the maintained compatibility consumer to import a released v2 module
+  alongside its v1 predecessor without changing published v1 coverage.
 
 ## 2.0.0 - 2026-09-23
 

@@ -378,16 +378,23 @@ def current_consumer_inputs(
     """Project a maintained consumer without changing published cohort evidence."""
     if selection is None:
         return select_clean_consumer_set(value), catalog_modules
-    if not isinstance(selection, dict) or set(selection) != {
+    if not isinstance(selection, dict) or not {
         "format", "base_set_id", "replacements"
+    } <= set(selection) or set(selection) - {
+        "format", "base_set_id", "replacements", "additions"
     } or selection["format"] != "golib-current-consumer-v1":
         raise ValueError("current consumer selection fields mismatch")
     base = select_set(value, selection["base_set_id"])
     if base.get("publication_status") != "published" or not base.get("roster"):
         raise ValueError("current consumer base must be a published roster")
     replacements = selection["replacements"]
-    if not isinstance(replacements, list) or not replacements or len(replacements) > len(base["modules"]):
+    additions = selection.get("additions", [])
+    if not isinstance(replacements, list) or len(replacements) > len(base["modules"]):
         raise ValueError("current consumer replacements must be a bounded non-empty array")
+    if not isinstance(additions, list) or len(additions) > len(base["modules"]):
+        raise ValueError("current consumer additions must be a bounded array")
+    if not replacements and not additions:
+        raise ValueError("current consumer requires a replacement or addition")
     remote_tag_lookup = remote_tag_lookup or remote_tag_revision
     public_version_lookup = public_version_lookup or public_module_version
     # Do not inherit set IDs, publication state or historical verification evidence.
@@ -443,6 +450,56 @@ def current_consumer_inputs(
         catalog["packages"] = [{"import_path": entry, "name": "consumer"} for entry in entries]
     if len({module["module_path"] for module in item["modules"]}) != len(item["modules"]):
         raise ValueError("current consumer replacement duplicates a selected module")
+    for addition in additions:
+        if not isinstance(addition, dict) or set(addition) != {
+            "alongside_module_path", "module_path", "version", "source_revision",
+            "primary_entry_packages",
+        }:
+            raise ValueError("current consumer addition fields mismatch")
+        old, new = addition["alongside_module_path"], addition["module_path"]
+        validate_string(old, "addition origin")
+        validate_string(new, "addition module")
+        if old not in selected or old not in by_path or old in seen:
+            raise ValueError("current consumer addition origin is absent or replaced")
+        stem = re.sub(r"/v(?:[2-9]|[1-9][0-9]+)$", "", old)
+        if new == old or not re.fullmatch(
+            re.escape(stem) + r"/v(?:[2-9]|[1-9][0-9]+)", new
+        ):
+            raise ValueError("current consumer addition must retain its module family")
+        if new in {module["module_path"] for module in item["modules"]}:
+            raise ValueError("current consumer addition duplicates a selected module")
+        version = addition["version"]
+        revision = addition["source_revision"]
+        if not isinstance(version, str) or not SEMVER.fullmatch(version):
+            raise ValueError("current consumer version must be semantic")
+        major = int(version.split(".")[0][1:])
+        if major != int(new.rsplit("/v", 1)[1]):
+            raise ValueError("current consumer version and module major mismatch")
+        if not isinstance(revision, str) or not re.fullmatch(r"[0-9a-f]{40}", revision):
+            raise ValueError("current consumer source revision must be a full Git identity")
+        entries = addition["primary_entry_packages"]
+        validate_string_list(entries, "current consumer primary entries")
+        if len(entries) != len(set(entries)) or any(
+            not re.fullmatch(r"[A-Za-z0-9._~/-]+", entry)
+            or (entry != new and not entry.startswith(new + "/")) for entry in entries
+        ):
+            raise ValueError("current consumer entries must be unique imports within the module")
+        catalog = by_path[old]
+        repository = repository_identity(catalog)
+        if remote_tag_lookup(repository, expected_tag(catalog, version)) != revision:
+            raise ValueError("current consumer revision lacks matching remote tag")
+        if not public_version_lookup(new, version):
+            raise ValueError("current consumer version is unavailable from the public proxy")
+        item["modules"].append({key: addition[key] for key in (
+            "module_path", "version", "source_revision"
+        )})
+        added_catalog = copy.deepcopy(catalog)
+        added_catalog["module_path"] = new
+        added_catalog["cohesion"] = {"primary_entry_packages": entries}
+        added_catalog["packages"] = [{"import_path": entry, "name": "consumer"} for entry in entries]
+        catalogs.append(added_catalog)
+    item["modules"].sort(key=lambda module: module["module_path"])
+    item["roster"]["module_count"] = len(item["modules"])
     return item, catalogs
 
 

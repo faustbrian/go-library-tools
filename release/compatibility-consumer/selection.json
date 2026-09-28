@@ -86,5 +86,14 @@
       "source_revision": "b343cc0869ed46e708b363e0f42f763d528df1fd",
       "primary_entry_packages": ["github.com/faustbrian/go-settings/v2"]
     }
+  ],
+  "additions": [
+    {
+      "alongside_module_path": "github.com/faustbrian/go-sequencer",
+      "module_path": "github.com/faustbrian/go-sequencer/v2",
+      "version": "v2.0.0",
+      "source_revision": "a5dfa40d4e122cc20cc5d7dc8c0f17ea2c76ff24",
+      "primary_entry_packages": ["github.com/faustbrian/go-sequencer/v2"]
+    }
   ]
 }
