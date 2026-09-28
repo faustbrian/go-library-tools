@@ -89,6 +89,13 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-idempotency",
+      "module_path": "github.com/faustbrian/go-idempotency/v2",
+      "version": "v2.0.0",
+      "source_revision": "de2e96117eb2460210c735bedea7dafc1e5ce708",
+      "primary_entry_packages": ["github.com/faustbrian/go-idempotency/v2"]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-sequencer",
       "module_path": "github.com/faustbrian/go-sequencer/v2",
       "version": "v2.0.0",
