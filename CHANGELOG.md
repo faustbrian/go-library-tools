@@ -25,6 +25,8 @@ All notable changes to this project are documented in this file.
   feature-flags v2 migrations and consumer CI selection for generator inputs.
 - Allow the maintained compatibility consumer to import a released v2 module
   alongside its v1 predecessor without changing published v1 coverage.
+- Add published Idempotency v2 to that consumer alongside its supported v1
+  import, bound to the immutable release source.
 
 ## 2.0.0 - 2026-09-23
 

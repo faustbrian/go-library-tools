@@ -223,6 +223,8 @@ github.com/faustbrian/go-http-signature v1.0.0 h1:27GKLhQNgIbEXi7ZcGcdXD8VT5kwqR
 github.com/faustbrian/go-http-signature v1.0.0/go.mod h1:ELsxxW9hSqsCDBI6EIDN24u3FUzo/OF48vxfwFSV/o0=
 github.com/faustbrian/go-idempotency v1.1.0 h1:UDKUdk1wA/AkCC0M9asuKhzyueXWXJdpKeWQgyKO0Jw=
 github.com/faustbrian/go-idempotency v1.1.0/go.mod h1:TxUH3bK6caqafSjkvJkBzJ07jp29nhl6YRViA/4UJyM=
+github.com/faustbrian/go-idempotency/v2 v2.0.0 h1:mgaDJryJYHyDZIU/xAm6ePgcFhlKo9Q176oQ13BVXWw=
+github.com/faustbrian/go-idempotency/v2 v2.0.0/go.mod h1:TJiJaFMUghO7Ee9jaOvZg8yJcSzUN8Ps2jGf6iHRS9Q=
 github.com/faustbrian/go-identifier v1.0.0 h1:5lXZbS2wK4NelWv4ekRocwOwjkWt1ch/nh7TScxsFO4=
 github.com/faustbrian/go-identifier v1.0.0/go.mod h1:Q2yS7Hk4N4i9Wd3OmPQGh657SHtA1IjvtT4PllphNlY=
 github.com/faustbrian/go-international v1.1.0 h1:YYBQTSdQOwS7/8GLDo/vf+xbr1uNLhIEEQfWzc6C+o0=
