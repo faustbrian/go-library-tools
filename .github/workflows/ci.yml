@@ -166,7 +166,8 @@ jobs:
           export GOWORK='off'
           test "$(go env GOVERSION)" = 'go1.27.0'
           test "$(go env GOOS)/$(go env GOARCH)" = '${{ matrix.goos }}/${{ matrix.goarch }}'
-          go mod tidy
+          # Keep TLS and SumDB verification while avoiding failed HTTP/2 streams.
+          GODEBUG=http2client=0 go mod tidy
           go test -mod=readonly -count=1 ./...
 
   milestone:
