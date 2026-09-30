@@ -35,6 +35,8 @@ All notable changes to this project are documented in this file.
   without changing the frozen published compatibility set.
 - Select published Geo v1.1.2 in the maintained compatibility consumer while
   preserving the frozen published compatibility set.
+- Select published Hedge v1.0.2 and its immutable release source in the
+  maintained compatibility consumer, preserving the frozen v1.0.0 cohort.
 
 ## 2.0.0 - 2026-09-23
 

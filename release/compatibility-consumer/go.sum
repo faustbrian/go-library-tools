@@ -117,8 +117,8 @@ github.com/ebitengine/purego v0.10.1 h1:dewVBCBT2GaMu1SrNTYxQhgQBethzfhiwvZiLGP/
 github.com/ebitengine/purego v0.10.1/go.mod h1:iIjxzd6CiRiOG0UyXP+V1+jWqUXVjPKLAI0mRfJZTmQ=
 github.com/ericlevine/zxinggo v0.1.0 h1:yv2tPrqgVX81xcMY8vtt9Bk0n1mSn9mCPp4RfaCNCYw=
 github.com/ericlevine/zxinggo v0.1.0/go.mod h1:QLetWsn1LtT6uja5NsXVTRErtczmwQ343zFHp4GiY+E=
-github.com/failsafe-go/failsafe-go v0.9.6 h1:vPSH2cry0Ee5cnR9wc9qshCDO6jdrMA9elBJNwyo4Uk=
-github.com/failsafe-go/failsafe-go v0.9.6/go.mod h1:IeRpglkcwzKagjDMh90ZhN2l4Ovt3+jemQBUbThag54=
+github.com/failsafe-go/failsafe-go v0.9.7 h1:5P94eoJrikyTTayHTS4fNyc17ejdlPBh5DXAK4ai6KY=
+github.com/failsafe-go/failsafe-go v0.9.7/go.mod h1:IeRpglkcwzKagjDMh90ZhN2l4Ovt3+jemQBUbThag54=
 github.com/faustbrian/go-adaptive-throttle v1.0.0 h1:oYxKuoU2V6pKrCsjAI1t8HhASQYkqH2Yg8rhh/JFpHI=
 github.com/faustbrian/go-adaptive-throttle v1.0.0/go.mod h1:mF6egE0jEUBuhByft4VIsnGvr8mRkIZIPH4OxZ2Y8A8=
 github.com/faustbrian/go-analysis v1.1.0 h1:JJGRySsGEkoSrJChz4H+fGAuq237BnF7UACPFLhy7oo=
@@ -215,8 +215,8 @@ github.com/faustbrian/go-filesystem/v2 v2.0.0 h1:Sih3x2czSgo9bXZzQRB4/XQKLfqHP9O
 github.com/faustbrian/go-filesystem/v2 v2.0.0/go.mod h1:DmVh5LonozzE6tKUpk6f5EET6Da1jqhn7NRl4PzKYDA=
 github.com/faustbrian/go-geo v1.1.2 h1:n/mY0gw1kJ+dUnR+j1Nu3wd8WU1AoQZ+fix3dWLWo4Y=
 github.com/faustbrian/go-geo v1.1.2/go.mod h1:uwGyaqxiKcnb2J25vPZF/+E0FyWAE4DAjl8uUli53Xw=
-github.com/faustbrian/go-hedge v1.0.0 h1:/HjlsrN8J+13BVU3XxTsdOyWfhFFM+B9iCPzS6+OiLY=
-github.com/faustbrian/go-hedge v1.0.0/go.mod h1:7I+UEHeFPd8WEEn56nj0B0LJf6UbVkdf96OzNHk4sJ8=
+github.com/faustbrian/go-hedge v1.0.2 h1:Tkt8jnigyviHOa8NKVqcmEWzoL/UJpnKkPr50JXViII=
+github.com/faustbrian/go-hedge v1.0.2/go.mod h1:2/FjE3hCRjewRU+70AXIQ5BJAWmYmZgMy4NDtHJ6m28=
 github.com/faustbrian/go-http-client v1.1.0 h1:Kz6vfOkrjdvhI+ANn0o4CeZME9AXKnCCdECOoz+u/kI=
 github.com/faustbrian/go-http-client v1.1.0/go.mod h1:6TTp/UfA5TmhXRbFQwLKltShi7F+wF2nBwyubwKIoTw=
 github.com/faustbrian/go-http-middleware/v2 v2.0.0 h1:Z+iAXAbV2/lfPybHFHGfK+//aUmnLFuDRG2kGswWIjg=
