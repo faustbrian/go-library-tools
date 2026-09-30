@@ -31,6 +31,10 @@ All notable changes to this project are documented in this file.
   its historical v1 import without changing the published compatibility set.
 - Add published Barcode v2 to the maintained compatibility consumer alongside
   its historical v1 import without changing the published compatibility set.
+- Select published Localized v1.1.2 in the maintained compatibility consumer
+  without changing the frozen published compatibility set.
+- Select published Geo v1.1.2 in the maintained compatibility consumer while
+  preserving the frozen published compatibility set.
 
 ## 2.0.0 - 2026-09-23
 

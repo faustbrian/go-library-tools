@@ -52,6 +52,20 @@
       "primary_entry_packages": ["github.com/faustbrian/go-knapsack/objective/money/v2"]
     },
     {
+      "from_module_path": "github.com/faustbrian/go-geo",
+      "module_path": "github.com/faustbrian/go-geo",
+      "version": "v1.1.2",
+      "source_revision": "0df5a4ecc55f01e6d3088d93fbe6cc6c633e52dd",
+      "primary_entry_packages": ["github.com/faustbrian/go-geo"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-localized",
+      "module_path": "github.com/faustbrian/go-localized",
+      "version": "v1.1.2",
+      "source_revision": "496742b011d3de601f60342c17fcc6a4012125ac",
+      "primary_entry_packages": ["github.com/faustbrian/go-localized"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-password",
       "module_path": "github.com/faustbrian/go-password/v2",
       "version": "v2.0.0",
