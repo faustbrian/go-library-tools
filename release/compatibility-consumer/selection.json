@@ -89,6 +89,30 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-barcode",
+      "module_path": "github.com/faustbrian/go-barcode/v2",
+      "version": "v2.0.0",
+      "source_revision": "73ff59106d3f10dd58884dd8f9982ca1bb3df27a",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-barcode/v2/aztec",
+        "github.com/faustbrian/go-barcode/v2/barcode",
+        "github.com/faustbrian/go-barcode/v2/codabar",
+        "github.com/faustbrian/go-barcode/v2/code128",
+        "github.com/faustbrian/go-barcode/v2/code39",
+        "github.com/faustbrian/go-barcode/v2/code93",
+        "github.com/faustbrian/go-barcode/v2/datamatrix",
+        "github.com/faustbrian/go-barcode/v2/ean",
+        "github.com/faustbrian/go-barcode/v2/gs1",
+        "github.com/faustbrian/go-barcode/v2/imagedecode",
+        "github.com/faustbrian/go-barcode/v2/itf",
+        "github.com/faustbrian/go-barcode/v2/pdf417",
+        "github.com/faustbrian/go-barcode/v2/qr",
+        "github.com/faustbrian/go-barcode/v2/render",
+        "github.com/faustbrian/go-barcode/v2/specification",
+        "github.com/faustbrian/go-barcode/v2/upc"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-idempotency",
       "module_path": "github.com/faustbrian/go-idempotency/v2",
       "version": "v2.0.0",
