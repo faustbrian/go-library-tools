@@ -16,6 +16,9 @@ All notable changes to this project are documented in this file.
   immutable release sources and the frozen published compatibility cohort.
 - Select published Correlation v1.1.1 in that consumer while preserving the
   frozen historical compatibility cohort.
+- Select published Service v1.1.1 in the maintained consumer so default
+  correlation construction uses the redacted Identifier v2 chain, without
+  changing the frozen historical compatibility cohort.
 - Inspect bounded repository-local action chains and reject mutable Docker action
   images, traversal, symlinks, cycles, and excessive descriptor graphs.
 - Bound Git history and every filesystem entry before source snapshots, cap

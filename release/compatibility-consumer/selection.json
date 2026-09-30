@@ -113,6 +113,13 @@
       "version": "v2.0.0",
       "source_revision": "b343cc0869ed46e708b363e0f42f763d528df1fd",
       "primary_entry_packages": ["github.com/faustbrian/go-settings/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-service",
+      "module_path": "github.com/faustbrian/go-service",
+      "version": "v1.1.1",
+      "source_revision": "2cf60912019198d5d9aa067648099a98a8ae7791",
+      "primary_entry_packages": ["github.com/faustbrian/go-service"]
     }
   ],
   "additions": [
