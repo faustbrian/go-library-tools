@@ -10,6 +10,38 @@
       "primary_entry_packages": ["github.com/faustbrian/go-adaptive-throttle"]
     },
     {
+      "from_module_path": "github.com/faustbrian/go-analysis",
+      "module_path": "github.com/faustbrian/go-analysis",
+      "version": "v1.2.0",
+      "source_revision": "3bfc234fb561ae1f1c9d45a72a9fe1f2c1849930",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-analysis/analysis",
+        "github.com/faustbrian/go-analysis/analyzers/backenderror",
+        "github.com/faustbrian/go-analysis/analyzers/blockingcontext",
+        "github.com/faustbrian/go-analysis/analyzers/cleanupownership",
+        "github.com/faustbrian/go-analysis/analyzers/constructorgoroutine",
+        "github.com/faustbrian/go-analysis/analyzers/forbiddenapi",
+        "github.com/faustbrian/go-analysis/analyzers/globalgoroutine",
+        "github.com/faustbrian/go-analysis/analyzers/goroutinefanout",
+        "github.com/faustbrian/go-analysis/analyzers/httpclienttimeout",
+        "github.com/faustbrian/go-analysis/analyzers/importboundary",
+        "github.com/faustbrian/go-analysis/analyzers/interfacenaming",
+        "github.com/faustbrian/go-analysis/analyzers/interfaceplacement",
+        "github.com/faustbrian/go-analysis/analyzers/lockacrosscall",
+        "github.com/faustbrian/go-analysis/analyzers/metriccardinality",
+        "github.com/faustbrian/go-analysis/analyzers/mutableglobal",
+        "github.com/faustbrian/go-analysis/analyzers/nobackground",
+        "github.com/faustbrian/go-analysis/analyzers/nodefaulthttp",
+        "github.com/faustbrian/go-analysis/analyzers/noinit",
+        "github.com/faustbrian/go-analysis/analyzers/noprocesscontrol",
+        "github.com/faustbrian/go-analysis/analyzers/nostoredcontext",
+        "github.com/faustbrian/go-analysis/analyzers/nounsafe",
+        "github.com/faustbrian/go-analysis/analyzers/sensitivesink",
+        "github.com/faustbrian/go-analysis/analyzers/transactionrollback",
+        "github.com/faustbrian/go-analysis/policy"
+      ]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-correlation",
       "module_path": "github.com/faustbrian/go-correlation",
       "version": "v1.1.1",

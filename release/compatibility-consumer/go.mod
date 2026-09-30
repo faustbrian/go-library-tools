@@ -4,7 +4,7 @@ go 1.27.0
 
 require (
 	github.com/faustbrian/go-adaptive-throttle v1.0.1
-	github.com/faustbrian/go-analysis v1.1.0
+	github.com/faustbrian/go-analysis v1.2.0
 	github.com/faustbrian/go-api-query v1.1.0
 	github.com/faustbrian/go-audit v1.0.0
 	github.com/faustbrian/go-audit/postgres v1.0.0

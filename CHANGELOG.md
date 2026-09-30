@@ -23,6 +23,8 @@ All notable changes to this project are documented in this file.
   preserving the frozen v1.0.0 compatibility cohort.
 - Add published Authorization v3.0.0 public packages to the maintained consumer
   beside the historical v1 core import without changing the frozen cohort.
+- Select published Analysis v1.2.0 in the maintained compatibility consumer
+  without changing the frozen cohort or the separately pinned scanner command.
 - Inspect bounded repository-local action chains and reject mutable Docker action
   images, traversal, symlinks, cycles, and excessive descriptor graphs.
 - Bound Git history and every filesystem entry before source snapshots, cap
