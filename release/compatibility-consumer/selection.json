@@ -3,6 +3,13 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-correlation",
+      "module_path": "github.com/faustbrian/go-correlation",
+      "version": "v1.1.1",
+      "source_revision": "93a599b297be142659152b7204efd6842e3e3a73",
+      "primary_entry_packages": ["github.com/faustbrian/go-correlation"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-fault-injection",
       "module_path": "github.com/faustbrian/go-fault-injection/v2",
       "version": "v2.0.0",
@@ -110,6 +117,16 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-audit",
+      "module_path": "github.com/faustbrian/go-audit/v2",
+      "version": "v2.0.0",
+      "source_revision": "465a14218b5ad3056fff43b2a63f34968dfbacc7",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-audit/v2",
+        "github.com/faustbrian/go-audit/v2/memory"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-barcode",
       "module_path": "github.com/faustbrian/go-barcode/v2",
       "version": "v2.0.0",
@@ -134,11 +151,49 @@
       ]
     },
     {
+      "alongside_module_path": "github.com/faustbrian/go-cache",
+      "module_path": "github.com/faustbrian/go-cache/v2",
+      "version": "v2.0.0",
+      "source_revision": "b96b1e9b51748104bd3b1532c49587ba166fabd6",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-cache/v2",
+        "github.com/faustbrian/go-cache/v2/adapters/memory",
+        "github.com/faustbrian/go-cache/v2/adapters/otel",
+        "github.com/faustbrian/go-cache/v2/adapters/redis",
+        "github.com/faustbrian/go-cache/v2/adapters/service",
+        "github.com/faustbrian/go-cache/v2/adapters/slog",
+        "github.com/faustbrian/go-cache/v2/adapters/valkey",
+        "github.com/faustbrian/go-cache/v2/backend/memory",
+        "github.com/faustbrian/go-cache/v2/backend/redis",
+        "github.com/faustbrian/go-cache/v2/backend/valkey",
+        "github.com/faustbrian/go-cache/v2/cacheservice",
+        "github.com/faustbrian/go-cache/v2/cachetest",
+        "github.com/faustbrian/go-cache/v2/observability/otel",
+        "github.com/faustbrian/go-cache/v2/observability/slog"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-idempotency",
       "module_path": "github.com/faustbrian/go-idempotency/v2",
       "version": "v2.0.0",
       "source_revision": "de2e96117eb2460210c735bedea7dafc1e5ce708",
       "primary_entry_packages": ["github.com/faustbrian/go-idempotency/v2"]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-identifier",
+      "module_path": "github.com/faustbrian/go-identifier/v2",
+      "version": "v2.0.0",
+      "source_revision": "7a9378f92b19d652b5a50cbc8be51eb1decfd604",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-identifier/v2",
+        "github.com/faustbrian/go-identifier/v2/idtest",
+        "github.com/faustbrian/go-identifier/v2/ksuid",
+        "github.com/faustbrian/go-identifier/v2/nanoid",
+        "github.com/faustbrian/go-identifier/v2/slug",
+        "github.com/faustbrian/go-identifier/v2/typeid",
+        "github.com/faustbrian/go-identifier/v2/ulid",
+        "github.com/faustbrian/go-identifier/v2/uuid"
+      ]
     },
     {
       "alongside_module_path": "github.com/faustbrian/go-rate-limit",

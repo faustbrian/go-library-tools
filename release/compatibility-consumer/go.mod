@@ -8,6 +8,7 @@ require (
 	github.com/faustbrian/go-api-query v1.1.0
 	github.com/faustbrian/go-audit v1.0.0
 	github.com/faustbrian/go-audit/postgres v1.0.0
+	github.com/faustbrian/go-audit/v2 v2.0.0
 	github.com/faustbrian/go-authentication v1.2.0
 	github.com/faustbrian/go-authentication/adapters/otel v1.0.0
 	github.com/faustbrian/go-authentication/jwt v1.1.0
@@ -17,6 +18,7 @@ require (
 	github.com/faustbrian/go-barcode/v2 v2.0.0
 	github.com/faustbrian/go-bulkhead v1.0.0
 	github.com/faustbrian/go-cache v1.0.0
+	github.com/faustbrian/go-cache/v2 v2.0.0
 	github.com/faustbrian/go-calendar v1.1.0
 	github.com/faustbrian/go-capability v1.1.0
 	github.com/faustbrian/go-circuit-breaker v1.0.0
@@ -38,7 +40,7 @@ require (
 	github.com/faustbrian/go-concurrency-limit v1.0.0
 	github.com/faustbrian/go-config v1.1.0
 	github.com/faustbrian/go-config/adapters/awssecretsmanager v1.0.0
-	github.com/faustbrian/go-correlation v1.1.0
+	github.com/faustbrian/go-correlation v1.1.1
 	github.com/faustbrian/go-ecma-regexp v1.0.0
 	github.com/faustbrian/go-event-sourcing v1.0.0
 	github.com/faustbrian/go-event-sourcing/adapters/kafka v1.0.2
@@ -58,6 +60,7 @@ require (
 	github.com/faustbrian/go-idempotency v1.1.0
 	github.com/faustbrian/go-idempotency/v2 v2.0.0
 	github.com/faustbrian/go-identifier v1.0.0
+	github.com/faustbrian/go-identifier/v2 v2.0.0
 	github.com/faustbrian/go-international v1.1.0
 	github.com/faustbrian/go-json-schema v1.0.0
 	github.com/faustbrian/go-jsonapi v1.0.0
@@ -191,18 +194,21 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/rabbitmq/amqp091-go v1.14.0 // indirect
 	github.com/rabbitmq/rabbitmq-stream-go-client v1.8.3 // indirect
+	github.com/redis/go-redis/v9 v9.21.0 // indirect
 	github.com/richardlehane/mscfb v1.0.7 // indirect
 	github.com/richardlehane/msoleps v1.0.6 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/robfig/cron/v3 v3.0.1 // indirect
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
+	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/twmb/franz-go v1.21.5 // indirect
 	github.com/twmb/franz-go/pkg/kadm v1.18.0 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.13.1 // indirect
 	github.com/unixdj/qr v0.8.2 // indirect
+	github.com/valkey-io/valkey-go v1.0.76 // indirect
 	github.com/valyala/fastjson v1.6.10 // indirect
 	github.com/xuri/efp v0.0.1 // indirect
 	github.com/xuri/excelize/v2 v2.11.0 // indirect
@@ -219,6 +225,7 @@ require (
 	go.opentelemetry.io/otel/sdk/metric v1.44.0 // indirect
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
+	go.uber.org/atomic v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/net v0.58.0 // indirect

@@ -11,6 +11,11 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Add published Audit, Cache and Identifier v2 modules to the maintained
+  compatibility consumer alongside their historical v1 imports, retaining
+  immutable release sources and the frozen published compatibility cohort.
+- Select published Correlation v1.1.1 in that consumer while preserving the
+  frozen historical compatibility cohort.
 - Inspect bounded repository-local action chains and reject mutable Docker action
   images, traversal, symlinks, cycles, and excessive descriptor graphs.
 - Bound Git history and every filesystem entry before source snapshots, cap
