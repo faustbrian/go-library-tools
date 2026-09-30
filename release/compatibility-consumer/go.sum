@@ -125,8 +125,8 @@ github.com/failsafe-go/failsafe-go v0.9.7 h1:5P94eoJrikyTTayHTS4fNyc17ejdlPBh5DX
 github.com/failsafe-go/failsafe-go v0.9.7/go.mod h1:IeRpglkcwzKagjDMh90ZhN2l4Ovt3+jemQBUbThag54=
 github.com/faustbrian/go-adaptive-throttle v1.0.1 h1:Pyr0GK+bF/+0RdYd8rfOa+0tDFD5NTlUX4P4tILG1u4=
 github.com/faustbrian/go-adaptive-throttle v1.0.1/go.mod h1:zSIhmblphQqub+s3fYQZf1S9dUKVlRNh2WMvrKqlUk8=
-github.com/faustbrian/go-analysis v1.1.0 h1:JJGRySsGEkoSrJChz4H+fGAuq237BnF7UACPFLhy7oo=
-github.com/faustbrian/go-analysis v1.1.0/go.mod h1:VesZPxWahpkLoEf4z9dRooT0Ln/Bo36FQ+HSpaEauv0=
+github.com/faustbrian/go-analysis v1.2.0 h1:w8pfSqS4fo9an+8AIQ1iG/4tvBZICj5eqLux3WL8n0o=
+github.com/faustbrian/go-analysis v1.2.0/go.mod h1:1GqiB4IDxxJZKBd4qpxuJfJxXG/pjxKqhumBM2tPRMU=
 github.com/faustbrian/go-api-query v1.1.0 h1:fq7OLmsl4hjTuXiOLZDSLpY9ipUWaMaTbLLKCO4BBJ8=
 github.com/faustbrian/go-api-query v1.1.0/go.mod h1:Tb9fPaZOvKu3vJ+Ewv2IHVHss5IGJ6bvQy1wnaBpchc=
 github.com/faustbrian/go-audit v1.0.0 h1:wVUkuXXBZIBj/6ORTZEgbbBPw2ymIaXnnTDrhBVn/N4=
