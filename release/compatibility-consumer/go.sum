@@ -345,8 +345,8 @@ github.com/faustbrian/go-sequencer v1.1.0 h1:gndMcKGiOfVQoEZD1l4o5osKyyfih93lwrm
 github.com/faustbrian/go-sequencer v1.1.0/go.mod h1:Quye6DGhTDGlb/h0FtO99JFayaSe+rCVZn9vkNty27s=
 github.com/faustbrian/go-sequencer/v2 v2.0.0 h1:yxRxZQ4xSn7pvqvjBAhwrkUFUxAG931/2Q3fPWQphMU=
 github.com/faustbrian/go-sequencer/v2 v2.0.0/go.mod h1:zV8OJmh9O5BH5tvYwFlWqS6zWCo45Sk6yV0cNdLr+u8=
-github.com/faustbrian/go-service v1.1.0 h1:6Rh/r0CaAG8Bf1NSYLLhfAf414llIYGCXkI587RaDqQ=
-github.com/faustbrian/go-service v1.1.0/go.mod h1:G+pEp0J0ABeQnWvi7xgp34nLZBliDuN/hY+VvXSYZRc=
+github.com/faustbrian/go-service v1.1.1 h1:MltDluJqsGkubYI0JIeUjCUIBkIsjUbUhvi4apO1cC8=
+github.com/faustbrian/go-service v1.1.1/go.mod h1:ivGR4lBgV5wiUS/06bI806R+LUZkoknk53VPn5Tn6pw=
 github.com/faustbrian/go-settings/v2 v2.0.0 h1:ajtYH8WG4Dn5cq6dVrR9H5IZJ7cZzQJLbi88vGN5+yk=
 github.com/faustbrian/go-settings/v2 v2.0.0/go.mod h1:v9/iM/WIkv26PbkNS1XcY4crvElWIFqmNfuAc/Vl3SU=
 github.com/faustbrian/go-state-machine v1.0.0 h1:4wX293ijoWF5HcBAMyAZL+7zilfhe8XAYOeGRr8bLvU=
