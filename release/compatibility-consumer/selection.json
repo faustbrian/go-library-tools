@@ -96,6 +96,13 @@
       "primary_entry_packages": ["github.com/faustbrian/go-idempotency/v2"]
     },
     {
+      "alongside_module_path": "github.com/faustbrian/go-rate-limit",
+      "module_path": "github.com/faustbrian/go-rate-limit/v2",
+      "version": "v2.0.0",
+      "source_revision": "f5fa8a5cc42e7cdc5dc2399e367b18f00e72457e",
+      "primary_entry_packages": ["github.com/faustbrian/go-rate-limit/v2"]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-sequencer",
       "module_path": "github.com/faustbrian/go-sequencer/v2",
       "version": "v2.0.0",

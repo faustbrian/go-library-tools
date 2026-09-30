@@ -92,6 +92,7 @@ require (
 	github.com/faustbrian/go-rabbitmq-streams/adapters/otel v1.0.0
 	github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq v1.0.1
 	github.com/faustbrian/go-rate-limit v1.1.0
+	github.com/faustbrian/go-rate-limit/v2 v2.0.0
 	github.com/faustbrian/go-resilience v1.0.0
 	github.com/faustbrian/go-retry v1.1.0
 	github.com/faustbrian/go-router/v2 v2.0.0

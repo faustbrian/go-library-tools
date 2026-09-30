@@ -128,6 +128,7 @@ import (
 	_ "github.com/faustbrian/go-rabbitmq-streams/adapters/otel"
 	_ "github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq"
 	_ "github.com/faustbrian/go-rate-limit"
+	_ "github.com/faustbrian/go-rate-limit/v2"
 	_ "github.com/faustbrian/go-resilience"
 	_ "github.com/faustbrian/go-retry"
 	_ "github.com/faustbrian/go-router/v2"
