@@ -141,6 +141,8 @@ github.com/faustbrian/go-authorization v1.1.0 h1:IGtr30rj4F6CgLwvbsCzWeVD6TG35/p
 github.com/faustbrian/go-authorization v1.1.0/go.mod h1:sbqcFYCCChWSkaO3hTYDv9eLWFQlgmyqYAMfOhBPafE=
 github.com/faustbrian/go-barcode v1.0.0 h1:mnun3aptqdz7q1H6gyCE/XVLn0IcQs2NIm5OdfpIwPQ=
 github.com/faustbrian/go-barcode v1.0.0/go.mod h1:4jSklRG+gD1Qa+SjZUProFS2e10wjIlI1T3DC9+vj7U=
+github.com/faustbrian/go-barcode/v2 v2.0.0 h1:lNNjrdnBm5xtTLpG7hg9OGQwIAFuyPpRZx2S24sTlSo=
+github.com/faustbrian/go-barcode/v2 v2.0.0/go.mod h1:+Z4nu8M2yzkgh7OcufcAK6NdG7/vH89PQZYE9b/6YrE=
 github.com/faustbrian/go-bulkhead v1.0.0 h1:7gAwz3eAvUb5qTIxzKMJ7HszvP/gW+Ev5852Gw43VzY=
 github.com/faustbrian/go-bulkhead v1.0.0/go.mod h1:5IThwoOMeB8BH0shbjDAk7Wlaw6y3UE0WyWpvo5Av+o=
 github.com/faustbrian/go-cache v1.0.0 h1:/B3O6vnO7nNKaHo7OyneRzKt0v4usW2cDfjK/nsPvaA=
@@ -211,8 +213,8 @@ github.com/faustbrian/go-feature-flags/v2 v2.0.0 h1:OqMn9CW2xMjaJkHxJJc6Q7UBW5ZU
 github.com/faustbrian/go-feature-flags/v2 v2.0.0/go.mod h1:yhX3N/GEX1lwz9XMVvblQevVuacjQdpNwB1jXETjIo8=
 github.com/faustbrian/go-filesystem/v2 v2.0.0 h1:Sih3x2czSgo9bXZzQRB4/XQKLfqHP9OQzL40XuPq5pk=
 github.com/faustbrian/go-filesystem/v2 v2.0.0/go.mod h1:DmVh5LonozzE6tKUpk6f5EET6Da1jqhn7NRl4PzKYDA=
-github.com/faustbrian/go-geo v1.1.0 h1:5ORXYTm/I5qjY6BAnVoBkUQWSgLKvV8AOxQIKLFua0I=
-github.com/faustbrian/go-geo v1.1.0/go.mod h1:DtVeZLOtVsGSBoN3mph3qpxb364/Nve8cvZXz+1ud98=
+github.com/faustbrian/go-geo v1.1.2 h1:n/mY0gw1kJ+dUnR+j1Nu3wd8WU1AoQZ+fix3dWLWo4Y=
+github.com/faustbrian/go-geo v1.1.2/go.mod h1:uwGyaqxiKcnb2J25vPZF/+E0FyWAE4DAjl8uUli53Xw=
 github.com/faustbrian/go-hedge v1.0.0 h1:/HjlsrN8J+13BVU3XxTsdOyWfhFFM+B9iCPzS6+OiLY=
 github.com/faustbrian/go-hedge v1.0.0/go.mod h1:7I+UEHeFPd8WEEn56nj0B0LJf6UbVkdf96OzNHk4sJ8=
 github.com/faustbrian/go-http-client v1.1.0 h1:Kz6vfOkrjdvhI+ANn0o4CeZME9AXKnCCdECOoz+u/kI=
@@ -251,8 +253,8 @@ github.com/faustbrian/go-knapsack/v2 v2.0.0 h1:6/tqyHhCv4RmgRT0BXB0D9O79HOhEhGXJ
 github.com/faustbrian/go-knapsack/v2 v2.0.0/go.mod h1:fh0Eo1Vlu+4eICz6AXQ1J9w1/cbSqYEqNUyDHZJUqKk=
 github.com/faustbrian/go-lease v1.1.0 h1:6OgqqFOPBkFiTCafT0Jna+sVcmkZn1Rqnj3R1IjU0l8=
 github.com/faustbrian/go-lease v1.1.0/go.mod h1:59tKskK5RiwzQbMIvylPLW5bJZ/zzThMNXTfJLlky0M=
-github.com/faustbrian/go-localized v1.1.0 h1:tiGhWePsCTk+zXX1tkXm2D6AXcP37ag08DRjBN79MbQ=
-github.com/faustbrian/go-localized v1.1.0/go.mod h1:0HcuHameLTUYwPWKTmfUGT6AW/PHdnxpEhqxvdzMRD0=
+github.com/faustbrian/go-localized v1.1.2 h1:8k9bWpiDqP7dVcdocTtGuwHf7NjQnT/uULMTkJnQekw=
+github.com/faustbrian/go-localized v1.1.2/go.mod h1:W4Tw08yGlIo9ec33Rp1RKNNwEdcp9tgDyypAdgeb6tE=
 github.com/faustbrian/go-log v1.0.0 h1:OFH4CgQyIB+WGlKxXlWuJgK178sAmVUKVQBl3FwJgSY=
 github.com/faustbrian/go-log v1.0.0/go.mod h1:hwFD9uvNXWat2MF855ncxF4opNWHjhsErO/mE6SUN6E=
 github.com/faustbrian/go-math v1.1.0 h1:j4eaCuP1oYG3Gh69rbrFOEjg1OxgYa1xoXmbYycgwH0=
@@ -297,6 +299,8 @@ github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq v1.0.1 h1:7N0ARmbBoA
 github.com/faustbrian/go-rabbitmq-streams/adapters/rabbitmq v1.0.1/go.mod h1:Wyfw1/GliFr0Poj9n6v/cEy2DDbEc8OXvD0HM6hjJnw=
 github.com/faustbrian/go-rate-limit v1.1.0 h1:jVgU9C+g9RUm13BQE4HoAcs+F5ob2lKeyRZugzDRr60=
 github.com/faustbrian/go-rate-limit v1.1.0/go.mod h1:m2fMYLVyBtQp7huvO03ipyC7bBc3NqpHluPP2nZTCXE=
+github.com/faustbrian/go-rate-limit/v2 v2.0.0 h1:73vvNtrSs10Em91xLNm3t5jQsOpeSy9MgaXg7xLa0FE=
+github.com/faustbrian/go-rate-limit/v2 v2.0.0/go.mod h1:fMnVIJdVunnKXLP4OzSIjquXhbPLWaT733nvmEc+/9o=
 github.com/faustbrian/go-resilience v1.0.0 h1:QLeIh9xvcc5XJ3ANGjk8P7BCbuNFNOWoXkHJdIZJOWM=
 github.com/faustbrian/go-resilience v1.0.0/go.mod h1:Mae7tmxMXqaSjuOyhIK8Jjq36oBE64+KOvIaLYh2dp8=
 github.com/faustbrian/go-retry v1.1.0 h1:Ntx3l2eQBdiFr4uiWIDDD7mGASCaOs8+LW+eFtT20tY=
@@ -422,8 +426,8 @@ github.com/jackc/pgpassfile v1.0.0 h1:/6Hmqy13Ss2zCq62VdNG8tM1wchn8zjSGOBJ6icpsI
 github.com/jackc/pgpassfile v1.0.0/go.mod h1:CEx0iS5ambNFdcRtxPj5JhEz+xB6uRky5eyVu/W2HEg=
 github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 h1:iCEnooe7UlwOQYpKFhBabPMi4aNAfoODPEFNiAnClxo=
 github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761/go.mod h1:5TJZWKEWniPve33vlWYSoGYefn3gLQRzjfDlhSJ9ZKM=
-github.com/jackc/pgx/v5 v5.10.0 h1:VhSvgU2jSli8o3AqIEOTJr7rZwAEUVo4E4XhR94Zfr0=
-github.com/jackc/pgx/v5 v5.10.0/go.mod h1:mal1tBGAFfLHvZzaYh77YS/eC6IX9OWbRV1QIIM0Jn4=
+github.com/jackc/pgx/v5 v5.11.0 h1:IzBBtyK9AHqf98cctWFifYSci2hgQR/cd56wB4p+ogg=
+github.com/jackc/pgx/v5 v5.11.0/go.mod h1:mal1tBGAFfLHvZzaYh77YS/eC6IX9OWbRV1QIIM0Jn4=
 github.com/jackc/puddle/v2 v2.2.2 h1:PR8nw+E/1w0GLuRFSmiioY6UooMp6KJv0/61nB7icHo=
 github.com/jackc/puddle/v2 v2.2.2/go.mod h1:vriiEXHvEE654aYKXXjOvZM39qJ0q+azkZFrfEOc3H4=
 github.com/jcmturner/aescts/v2 v2.0.0 h1:9YKLH6ey7H4eDBXW8khjYslgyqG2xZikXP0EQFKrle8=

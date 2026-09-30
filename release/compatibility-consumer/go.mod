@@ -50,7 +50,7 @@ require (
 	github.com/faustbrian/go-fault-injection/v2 v2.0.0
 	github.com/faustbrian/go-feature-flags/v2 v2.0.0
 	github.com/faustbrian/go-filesystem/v2 v2.0.0
-	github.com/faustbrian/go-geo v1.1.0
+	github.com/faustbrian/go-geo v1.1.2
 	github.com/faustbrian/go-hedge v1.0.0
 	github.com/faustbrian/go-http-client v1.1.0
 	github.com/faustbrian/go-http-middleware/v2 v2.0.0
@@ -70,7 +70,7 @@ require (
 	github.com/faustbrian/go-knapsack/objective/money/v2 v2.0.0
 	github.com/faustbrian/go-knapsack/v2 v2.0.0
 	github.com/faustbrian/go-lease v1.1.0
-	github.com/faustbrian/go-localized v1.1.0
+	github.com/faustbrian/go-localized v1.1.2
 	github.com/faustbrian/go-log v1.0.0
 	github.com/faustbrian/go-math v1.1.0
 	github.com/faustbrian/go-measurement/v2 v2.0.0
@@ -171,7 +171,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.29.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/pgx/v5 v5.10.0 // indirect
+	github.com/jackc/pgx/v5 v5.11.0 // indirect
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/klauspost/compress v1.19.1 // indirect
