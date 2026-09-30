@@ -270,6 +270,19 @@
       ]
     },
     {
+      "alongside_module_path": "github.com/faustbrian/go-migrations",
+      "module_path": "github.com/faustbrian/go-migrations/v2",
+      "version": "v2.0.0",
+      "source_revision": "22f5679f3c6f19d940c0c15f3f2c791aad141d72",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-migrations/v2",
+        "github.com/faustbrian/go-migrations/v2/adapters/service",
+        "github.com/faustbrian/go-migrations/v2/conformance",
+        "github.com/faustbrian/go-migrations/v2/migrationsservice",
+        "github.com/faustbrian/go-migrations/v2/postgres"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-rate-limit",
       "module_path": "github.com/faustbrian/go-rate-limit/v2",
       "version": "v2.0.0",
