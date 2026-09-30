@@ -59,6 +59,13 @@
       "primary_entry_packages": ["github.com/faustbrian/go-geo"]
     },
     {
+      "from_module_path": "github.com/faustbrian/go-hedge",
+      "module_path": "github.com/faustbrian/go-hedge",
+      "version": "v1.0.2",
+      "source_revision": "b3da674ed24b0b9ee6d1f027d6bd7a7c8671a10f",
+      "primary_entry_packages": ["github.com/faustbrian/go-hedge"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-localized",
       "module_path": "github.com/faustbrian/go-localized",
       "version": "v1.1.2",

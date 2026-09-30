@@ -51,7 +51,7 @@ require (
 	github.com/faustbrian/go-feature-flags/v2 v2.0.0
 	github.com/faustbrian/go-filesystem/v2 v2.0.0
 	github.com/faustbrian/go-geo v1.1.2
-	github.com/faustbrian/go-hedge v1.0.0
+	github.com/faustbrian/go-hedge v1.0.2
 	github.com/faustbrian/go-http-client v1.1.0
 	github.com/faustbrian/go-http-middleware/v2 v2.0.0
 	github.com/faustbrian/go-http-signature v1.0.0
