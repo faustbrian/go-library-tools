@@ -3,6 +3,13 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-adaptive-throttle",
+      "module_path": "github.com/faustbrian/go-adaptive-throttle",
+      "version": "v1.0.1",
+      "source_revision": "40f465b568923a29f4bb2109fbd9f448bbc1dd07",
+      "primary_entry_packages": ["github.com/faustbrian/go-adaptive-throttle"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-correlation",
       "module_path": "github.com/faustbrian/go-correlation",
       "version": "v1.1.1",
