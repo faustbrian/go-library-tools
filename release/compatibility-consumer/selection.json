@@ -141,6 +141,34 @@
       ]
     },
     {
+      "alongside_module_path": "github.com/faustbrian/go-authorization",
+      "module_path": "github.com/faustbrian/go-authorization/v3",
+      "version": "v3.0.0",
+      "source_revision": "d67a6358f5ac7d259c12b4161d831626b0416695",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-authorization/v3",
+        "github.com/faustbrian/go-authorization/v3/abac",
+        "github.com/faustbrian/go-authorization/v3/acl",
+        "github.com/faustbrian/go-authorization/v3/adapters/cache",
+        "github.com/faustbrian/go-authorization/v3/adapters/http",
+        "github.com/faustbrian/go-authorization/v3/adapters/jsonrpc",
+        "github.com/faustbrian/go-authorization/v3/adapters/otel",
+        "github.com/faustbrian/go-authorization/v3/adapters/slog",
+        "github.com/faustbrian/go-authorization/v3/authcache",
+        "github.com/faustbrian/go-authorization/v3/authhttp",
+        "github.com/faustbrian/go-authorization/v3/authlog",
+        "github.com/faustbrian/go-authorization/v3/authn",
+        "github.com/faustbrian/go-authorization/v3/authorizationtest",
+        "github.com/faustbrian/go-authorization/v3/authotel",
+        "github.com/faustbrian/go-authorization/v3/authrpc",
+        "github.com/faustbrian/go-authorization/v3/httpauth",
+        "github.com/faustbrian/go-authorization/v3/policy",
+        "github.com/faustbrian/go-authorization/v3/postgres",
+        "github.com/faustbrian/go-authorization/v3/rbac",
+        "github.com/faustbrian/go-authorization/v3/valkey"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-barcode",
       "module_path": "github.com/faustbrian/go-barcode/v2",
       "version": "v2.0.0",

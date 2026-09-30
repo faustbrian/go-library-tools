@@ -21,6 +21,8 @@ All notable changes to this project are documented in this file.
   changing the frozen historical compatibility cohort.
 - Select published Adaptive Throttle v1.0.1 in the maintained consumer while
   preserving the frozen v1.0.0 compatibility cohort.
+- Add published Authorization v3.0.0 public packages to the maintained consumer
+  beside the historical v1 core import without changing the frozen cohort.
 - Inspect bounded repository-local action chains and reject mutable Docker action
   images, traversal, symlinks, cycles, and excessive descriptor graphs.
 - Bound Git history and every filesystem entry before source snapshots, cap
