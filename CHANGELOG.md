@@ -27,6 +27,8 @@ All notable changes to this project are documented in this file.
   alongside its v1 predecessor without changing published v1 coverage.
 - Add published Idempotency v2 to that consumer alongside its supported v1
   import, bound to the immutable release source.
+- Add published Rate Limit v2 to the maintained compatibility consumer alongside
+  its historical v1 import without changing the published compatibility set.
 
 ## 2.0.0 - 2026-09-23
 
