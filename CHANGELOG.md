@@ -29,6 +29,8 @@ All notable changes to this project are documented in this file.
   import, bound to the immutable release source.
 - Add published Rate Limit v2 to the maintained compatibility consumer alongside
   its historical v1 import without changing the published compatibility set.
+- Add published Barcode v2 to the maintained compatibility consumer alongside
+  its historical v1 import without changing the published compatibility set.
 
 ## 2.0.0 - 2026-09-23
 

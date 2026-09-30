@@ -14,6 +14,7 @@ require (
 	github.com/faustbrian/go-authentication/oidc v1.0.0
 	github.com/faustbrian/go-authorization v1.1.0
 	github.com/faustbrian/go-barcode v1.0.0
+	github.com/faustbrian/go-barcode/v2 v2.0.0
 	github.com/faustbrian/go-bulkhead v1.0.0
 	github.com/faustbrian/go-cache v1.0.0
 	github.com/faustbrian/go-calendar v1.1.0
