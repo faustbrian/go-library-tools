@@ -14,6 +14,7 @@ require (
 	github.com/faustbrian/go-authentication/jwt v1.1.0
 	github.com/faustbrian/go-authentication/oidc v1.0.0
 	github.com/faustbrian/go-authorization v1.1.0
+	github.com/faustbrian/go-authorization/v3 v3.0.0
 	github.com/faustbrian/go-barcode v1.0.0
 	github.com/faustbrian/go-barcode/v2 v2.0.0
 	github.com/faustbrian/go-bulkhead v1.0.0
@@ -165,6 +166,7 @@ require (
 	github.com/dlclark/regexp2/v2 v2.5.1 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/ericlevine/zxinggo v0.1.0 // indirect
+	github.com/faustbrian/go-migrations/v2 v2.0.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect

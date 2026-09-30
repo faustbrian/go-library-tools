@@ -145,6 +145,8 @@ github.com/faustbrian/go-authentication/oidc v1.0.0 h1:2OVpqJAv1WvAdkocyAuDhYMgU
 github.com/faustbrian/go-authentication/oidc v1.0.0/go.mod h1:Apr0v10iFj2LQBUrUuCRYP+xMpreINIln7N7oTHDmQ0=
 github.com/faustbrian/go-authorization v1.1.0 h1:IGtr30rj4F6CgLwvbsCzWeVD6TG35/pBTiGG4+Z9tBw=
 github.com/faustbrian/go-authorization v1.1.0/go.mod h1:sbqcFYCCChWSkaO3hTYDv9eLWFQlgmyqYAMfOhBPafE=
+github.com/faustbrian/go-authorization/v3 v3.0.0 h1:ZQTncRP579/0M3wF7CDWBU+RsCQVvW7/csPAcYMBdwc=
+github.com/faustbrian/go-authorization/v3 v3.0.0/go.mod h1:cnjJNsOsc/7LoIBtLYZV0kooJtzVyzKfFiOnkuz5cHU=
 github.com/faustbrian/go-barcode v1.0.0 h1:mnun3aptqdz7q1H6gyCE/XVLn0IcQs2NIm5OdfpIwPQ=
 github.com/faustbrian/go-barcode v1.0.0/go.mod h1:4jSklRG+gD1Qa+SjZUProFS2e10wjIlI1T3DC9+vj7U=
 github.com/faustbrian/go-barcode/v2 v2.0.0 h1:lNNjrdnBm5xtTLpG7hg9OGQwIAFuyPpRZx2S24sTlSo=
@@ -277,6 +279,8 @@ github.com/faustbrian/go-merkle-tree v1.0.0 h1:lkjqyeQ2AAAfVA2prkSH/60TSVOJ1Nexu
 github.com/faustbrian/go-merkle-tree v1.0.0/go.mod h1:KWd8swP7MeeQiDckxvYWcGh7hIkWBPEsgvyNxHsdMY4=
 github.com/faustbrian/go-migrations v1.1.0 h1:RD1gCmEL8OSBzBP8MeIdadhDBiiX+zM6GQxDxn53qPk=
 github.com/faustbrian/go-migrations v1.1.0/go.mod h1:9+6xpROUsEAOd6vP2hx0yDw3JdIujDh192d6Mp9TAtw=
+github.com/faustbrian/go-migrations/v2 v2.0.0 h1:ipOKc3CA0p8vL5GPVh6xISQUfLiPCBfD6nT8stuWfUo=
+github.com/faustbrian/go-migrations/v2 v2.0.0/go.mod h1:bMXoptsGWGmURbKwwCoZxrNqHBgdmzXPxXlipGyWMsM=
 github.com/faustbrian/go-money v1.0.0 h1:HrT/a/ZAqmEKme9H3FcBTcL7uM1OA2rzqKM1KSdtwHk=
 github.com/faustbrian/go-money v1.0.0/go.mod h1:8IhDm0f6IYjtITpyOgXYMmKVeQTlplZaiVySM5VEY2o=
 github.com/faustbrian/go-openapi v1.0.0 h1:I78okn/4twfERabfwrMwSwQCt66mPz0FZF+2qz0tUGQ=
