@@ -25,6 +25,8 @@ All notable changes to this project are documented in this file.
   beside the historical v1 core import without changing the frozen cohort.
 - Select published Analysis v1.2.0 in the maintained compatibility consumer
   without changing the frozen cohort or the separately pinned scanner command.
+- Add published Migrations v2.0.0 public packages to the maintained consumer
+  alongside the historical v1 import without changing the frozen cohort.
 - Inspect bounded repository-local action chains and reject mutable Docker action
   images, traversal, symlinks, cycles, and excessive descriptor graphs.
 - Bound Git history and every filesystem entry before source snapshots, cap
