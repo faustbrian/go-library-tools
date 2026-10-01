@@ -4,13 +4,51 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.0.0 - 2026-10-01
+
 ### Added
 
+- Added a versioned ecosystem threat model, vulnerability process, validated
+  risk register and per-module scanner/release-verdict contract.
+- Added bounded bootstrap archive validation and owned GitHub Actions security
+  analysis to the public CLI contract.
+- Added an independent Draft 2020-12 differential check for security-record
+  validation decisions.
 - Allow exact source- and verifier-bound equivalent-mutant reviews in native
   mutation campaigns while retaining raw `LIVED` reports, strict default kills,
   and separate bounded failure diagnostics.
 - Recorded verified root-module scanner results with a blocked release verdict
   and retained the open fleet-enforcement risk under the v2 module identity.
+
+### Changed
+
+- Changed the Go module and command import path to
+  `github.com/faustbrian/go-library-tools/v2` for the breaking v2 release;
+  repository and reusable-workflow coordinates remain unchanged.
+- Made release validation reject a stable version whose semantic major does
+  not match the module path major.
+- Bound release tags to the unique root-manifest version and the exact current
+  `main` commit, and kept publication blocked until revision-specific security
+  evidence and the fleet risk disposition are present.
+- Made security-record validation enforce the published JSON schemas and reject
+  ambiguous duplicate object keys while accepting equivalent numeric schema
+  version representations.
+- Made security-enabled ordinary checks run pinned govulncheck, standalone
+  gosec, centrally governed go-analysis rules, full-history secret scanning,
+  license checks, and SBOM generation while keeping NilAway advisory.
+- Suppressed scanner-controlled output, enforced independent bounded streams,
+  terminated overflowing scanners' original process groups, and replaced
+  archive and SBOM payloads with stable repository-owned diagnostic classes.
+- Made bounded scanner execution fail before process start on platforms where
+  original-process-group termination is unavailable. Detached processes remain
+  outside that boundary; scanner controls are not hostile-executable isolation.
+- Dereferenced bounded YAML aliases before applying workflow permission,
+  action, checkout, and container-image security rules.
+- Required canonical lowercase module directories and import paths, with root
+  modules bound to the declared repository namespace, before manifests can
+  reach schema validation or downstream consumers.
+- Prevented repository-owned gitleaks configuration, ignore files, and inline
+  allowances from widening the shared secret-scanning policy.
 
 ### Fixed
 
@@ -69,47 +107,6 @@ All notable changes to this project are documented in this file.
   preserving the frozen published compatibility set.
 - Select published Hedge v1.0.2 and its immutable release source in the
   maintained compatibility consumer, preserving the frozen v1.0.0 cohort.
-
-## 2.0.0 - 2026-09-23
-
-### Added
-
-- Added a versioned ecosystem threat model, vulnerability process, validated
-  risk register and per-module scanner/release-verdict contract.
-- Added bounded bootstrap archive validation and owned GitHub Actions security
-  analysis to the public CLI contract.
-- Added an independent Draft 2020-12 differential check for security-record
-  validation decisions.
-
-### Changed
-
-- Changed the Go module and command import path to
-  `github.com/faustbrian/go-library-tools/v2` for the breaking v2 release;
-  repository and reusable-workflow coordinates remain unchanged.
-- Made release validation reject a stable version whose semantic major does
-  not match the module path major.
-- Bound release tags to the unique root-manifest version and the exact current
-  `main` commit, and kept publication blocked until revision-specific security
-  evidence and the fleet risk disposition are present.
-- Made security-record validation enforce the published JSON schemas and reject
-  ambiguous duplicate object keys while accepting equivalent numeric schema
-  version representations.
-- Made security-enabled ordinary checks run pinned govulncheck, standalone
-  gosec, centrally governed go-analysis rules, full-history secret scanning,
-  license checks, and SBOM generation while keeping NilAway advisory.
-- Suppressed scanner-controlled output, enforced independent bounded streams,
-  terminated overflowing scanners' original process groups, and replaced
-  archive and SBOM payloads with stable repository-owned diagnostic classes.
-- Made bounded scanner execution fail before process start on platforms where
-  original-process-group termination is unavailable. Detached processes remain
-  outside that boundary; scanner controls are not hostile-executable isolation.
-- Dereferenced bounded YAML aliases before applying workflow permission,
-  action, checkout, and container-image security rules.
-- Required canonical lowercase module directories and import paths, with root
-  modules bound to the declared repository namespace, before manifests can
-  reach schema validation or downstream consumers.
-- Prevented repository-owned gitleaks configuration, ignore files, and inline
-  allowances from widening the shared secret-scanning policy.
 
 ### Migration
 
