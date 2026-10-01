@@ -63,7 +63,7 @@ func TestSecuritySourceWalkCancellationBetweenEntries(t *testing.T) {
 		cancel()
 		return nil
 	})
-	if !errors.Is(err, context.Canceled) || !reflect.DeepEqual(err, context.Canceled) || visits != 1 {
+	if !errors.Is(err, context.Canceled) || reflect.TypeOf(err) != reflect.TypeOf(context.Canceled) || visits != 1 {
 		t.Fatalf("walk = %v, visits=%d; want original cancellation and one visit", err, visits)
 	}
 }
