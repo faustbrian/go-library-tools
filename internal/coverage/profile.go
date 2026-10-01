@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"path"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -24,8 +25,9 @@ type block struct {
 	covered     bool
 }
 
-// Verify returns a deterministic package report only when every expected
-// package has executable statements and exact statement coverage.
+// Verify returns a deterministic package report when every expected package
+// has executable statements and exact statement coverage. On incomplete coverage,
+// it returns bounded source-block diagnostics alongside the unchanged error.
 func Verify(profile io.Reader, expected []string) (string, error) {
 	if len(expected) == 0 {
 		return "", errors.New("coverage expected packages are empty")
@@ -100,8 +102,51 @@ func Verify(profile io.Reader, expected []string) (string, error) {
 		}
 		_, _ = fmt.Fprintf(&report, "%s %d/%d statements\n", packagePath, value.covered, value.total)
 		if value.covered != value.total {
-			return "", fmt.Errorf("%s is below exact 100%% coverage", packagePath)
+			return uncoveredReport(blocks, packagePath), fmt.Errorf("%s is below exact 100%% coverage", packagePath)
 		}
 	}
 	return report.String(), nil
+}
+
+// Limit failure output without changing which blocks determine exact coverage.
+const diagnosticBlockLimit = 20
+const diagnosticLocationByteLimit = 160
+
+var sourceCoordinates = regexp.MustCompile(`^[0-9]+\.[0-9]+,[0-9]+\.[0-9]+$`)
+
+func uncoveredReport(blocks map[string]block, packagePath string) string {
+	locations := make([]string, 0)
+	uncovered := 0
+	for identity, value := range blocks {
+		if value.packagePath != packagePath || value.statements == 0 || value.covered {
+			continue
+		}
+		uncovered++
+		separator := strings.LastIndexByte(identity, ':')
+		filename, coordinates := identity[:separator], identity[separator+1:]
+		if path.IsAbs(filename) || strings.ContainsAny(filename, `\:`) ||
+			filename != packagePath+"/"+path.Base(filename) || !strings.HasSuffix(filename, ".go") ||
+			!sourceCoordinates.MatchString(coordinates) {
+			continue
+		}
+		location := strconv.QuoteToASCII(path.Base(filename) + ":" + coordinates)
+		location = location[1 : len(location)-1]
+		if len(location) > diagnosticLocationByteLimit {
+			continue
+		}
+		locations = append(locations, location)
+	}
+	sort.Strings(locations)
+	if len(locations) > diagnosticBlockLimit {
+		locations = locations[:diagnosticBlockLimit]
+	}
+	var report strings.Builder
+	report.WriteString("uncovered production blocks:\n")
+	for _, location := range locations {
+		fmt.Fprintf(&report, "  %s\n", location)
+	}
+	if omitted := uncovered - len(locations); omitted > 0 {
+		fmt.Fprintf(&report, "  (%d additional blocks omitted)\n", omitted)
+	}
+	return report.String()
 }

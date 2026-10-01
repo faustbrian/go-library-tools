@@ -812,12 +812,27 @@ func TestExecuteRoutesStandaloneCoverage(t *testing.T) {
 	if err := os.WriteFile(filepath.Join(root, "packages.json"), []byte(packages), 0o600); err != nil {
 		t.Fatal(err)
 	}
+	profile := "mode: atomic\nexample/file.go:1.1,2.1 1 1\n"
+	var profiles []string
 	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
-		return coverageExecutor{}, func() error { return nil }, nil
+		return coverageExecutor{profile: profile, paths: &profiles}, func() error { return nil }, nil
 	}
 	var stdout, stderr bytes.Buffer
 	if code := execute([]string{"coverage", "--module", "."}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 {
 		t.Fatalf("execute() = %d, %q", code, stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	profile = "mode: atomic\nexample/file.go:1.1,2.1 1 0\n"
+	if code := execute([]string{"coverage", "--module", "."}, root, &stdout, &stderr, factory); code != 1 ||
+		!strings.Contains(stderr.String(), "example is below exact 100% coverage") ||
+		!strings.Contains(stdout.String(), "file.go:1.1,2.1") || strings.Contains(stdout.String(), "all production packages have exact") {
+		t.Fatalf("uncovered execute() = %d, stdout %q, stderr %q", code, stdout.String(), stderr.String())
+	}
+	for _, filename := range profiles {
+		if _, err := os.Stat(filename); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("coverage profile retained: %v", err)
+		}
 	}
 	if code := execute([]string{"coverage", "--bad"}, root, &stdout, &stderr, factory); code != 2 {
 		t.Fatalf("execute() invalid coverage = %d", code)
@@ -1136,12 +1151,22 @@ func (apiExecutor) Run(_ context.Context, command gates.Command) error {
 	return nil
 }
 
-type coverageExecutor struct{}
+type coverageExecutor struct {
+	profile string
+	paths   *[]string
+}
 
-func (coverageExecutor) Run(_ context.Context, command gates.Command) error {
+func (executor coverageExecutor) Run(_ context.Context, command gates.Command) error {
 	for _, argument := range command.Args {
 		if profile, found := strings.CutPrefix(argument, "-coverprofile="); found {
-			return os.WriteFile(profile, []byte("mode: atomic\nexample/file.go:1.1,2.1 1 1\n"), 0o600)
+			if executor.paths != nil {
+				*executor.paths = append(*executor.paths, profile)
+			}
+			contents := executor.profile
+			if contents == "" {
+				contents = "mode: atomic\nexample/file.go:1.1,2.1 1 1\n"
+			}
+			return os.WriteFile(profile, []byte(contents), 0o600)
 		}
 	}
 	return nil

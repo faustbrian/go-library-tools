@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Show bounded uncovered source blocks when exact coverage fails, preserving
+  the failing-package error, coverage thresholds, and task-profile cleanup.
 - Adopted Queue v1.1.2 and Queue Control Plane v2.0.1 in the maintained
   compatibility consumer while preserving published compatibility cohorts
   and retained legacy adapter selections.

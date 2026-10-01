@@ -2,6 +2,8 @@ package coverage_test
 
 import (
 	"errors"
+	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -129,4 +131,78 @@ func (reader *failingReader) Read(target []byte) (int, error) {
 		return len("mode: atomic\n"), nil
 	}
 	return 0, errors.New("injected failure")
+}
+
+func TestVerifyReportsUncoveredProductionBlocks(t *testing.T) {
+	profile := `mode: atomic
+github.com/acme/example/one/z.go:10.1,12.1 2 0
+github.com/acme/example/other/unrelated.go:1.1,2.1 1 0
+github.com/acme/example/one/covered.go:1.1,2.1 1 1
+github.com/acme/example/one/a.go:3.1,4.1 1 0
+`
+	report, err := coverage.Verify(strings.NewReader(profile), []string{"github.com/acme/example/one"})
+	if err == nil || err.Error() != "github.com/acme/example/one is below exact 100% coverage" {
+		t.Fatalf("Verify() error = %v", err)
+	}
+	want := "uncovered production blocks:\n  a.go:3.1,4.1\n  z.go:10.1,12.1\n"
+	if report != want {
+		t.Fatalf("Verify() report = %q, want %q", report, want)
+	}
+}
+
+func TestVerifyDiagnosticsRespectMergedCountsAndPackageOrder(t *testing.T) {
+	profile := `mode: atomic
+example/z/other.go:1.1,2.1 1 0
+example/a/covered.go:1.1,2.1 1 0
+example/a/missing.go:3.1,4.1 2 0
+example/a/missing.go:3.1,4.1 2 0
+example/a/covered.go:1.1,2.1 1 1
+example/a/empty.go:5.1,6.1 0 0
+`
+	want := "uncovered production blocks:\n  missing.go:3.1,4.1\n"
+	lines := strings.Split(strings.TrimSuffix(profile, "\n"), "\n")
+	slices.Reverse(lines[1:])
+	reversed := strings.Join(lines, "\n") + "\n"
+	for _, input := range []string{profile, reversed} {
+		report, err := coverage.Verify(strings.NewReader(input), []string{"example/z", "example/a"})
+		if err == nil || err.Error() != "example/a is below exact 100% coverage" || report != want {
+			t.Fatalf("Verify() = %q, %v", report, err)
+		}
+	}
+}
+
+func TestVerifyBoundsUncoveredBlockDiagnostics(t *testing.T) {
+	var profile strings.Builder
+	profile.WriteString("mode: atomic\n")
+	for index := 49; index >= 0; index-- {
+		fmt.Fprintf(&profile, "example/file-%02d.go:1.1,2.1 1 0\n", index)
+	}
+	fmt.Fprintf(&profile, "example/%s.go:1.1,2.1 1 0\n", strings.Repeat("long", 100))
+	report, err := coverage.Verify(strings.NewReader(profile.String()), []string{"example"})
+	if err == nil || strings.Count(report, "file-") != 20 || len(report) > 3500 ||
+		!strings.Contains(report, "file-00.go:1.1,2.1") || !strings.Contains(report, "file-19.go:1.1,2.1") ||
+		strings.Contains(report, "file-20.go") || strings.Contains(report, "longlong") ||
+		!strings.Contains(report, "(31 additional blocks omitted)") {
+		t.Fatalf("bounded diagnostics = %q, %v", report, err)
+	}
+}
+
+func TestVerifyDoesNotDiscloseUnsafeProfileLocations(t *testing.T) {
+	profile := "mode: atomic\n" +
+		"PRIVATE_SENTINEL/../example/a/hidden.go:1.1,2.1 1 0\n" +
+		"/private/ABSOLUTE_SENTINEL/hidden.go:1.1,2.1 1 0\n" +
+		"example/a/SECRET_SENTINEL:1.1,2.1 1 0\n" +
+		"example/a/bad.go:SECRET_COORDINATE 1 0\n" +
+		"example/a/control\x1b.go:1.1,2.1 1 0\n"
+	report, err := coverage.Verify(strings.NewReader(profile), []string{"example/a"})
+	if err == nil || err.Error() != "example/a is below exact 100% coverage" ||
+		strings.Contains(report, "SENTINEL") || strings.Contains(report, "SECRET_COORDINATE") ||
+		strings.Contains(report, "\x1b") || !strings.Contains(report, `control\x1b.go:1.1,2.1`) ||
+		!strings.Contains(report, "(3 additional blocks omitted)") {
+		t.Fatalf("safe diagnostics = %q, %v", report, err)
+	}
+	report, err = coverage.Verify(strings.NewReader("mode: atomic\nSECRET_SENTINEL invalid raw profile\n"), []string{"example/a"})
+	if err == nil || err.Error() != "invalid coverage profile line 2" || report != "" {
+		t.Fatalf("malformed diagnostics = %q, %v", report, err)
+	}
 }
