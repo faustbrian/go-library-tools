@@ -507,11 +507,14 @@ func TestValidateRejectsMalformedAndTrailingDocuments(t *testing.T) {
 		if name == "security-matrix.json" {
 			base = `{"schema_version":1,"modules":[]}`
 		}
-		for _, test := range []struct{ name, value string }{
-			{"null root", `null`},
-			{"truncated", base[:len(base)-1]},
-			{"second value", base + " " + base},
-			{"trailing junk", base + " unexpected"},
+		const privateMarker = "application-private marker"
+		for _, test := range []struct{ name, value, category string }{
+			{"null root", `null`, ""},
+			{"truncated", base[:len(base)-1], ""},
+			{"second value", base + " " + base, ""},
+			{"trailing junk", base + " unexpected", ""},
+			{"missing nested member value", strings.Replace(base, "[]", `[{"ordinary":"`+privateMarker+`","incomplete":}]`, 1), "security document has invalid or ambiguous JSON"},
+			{"malformed nested array closure", strings.Replace(base, "[]", `[{"ordinary":["`+privateMarker+`"}}]`, 1), "security document has invalid or ambiguous JSON"},
 		} {
 			t.Run(name+"/"+test.name, func(t *testing.T) {
 				root := t.TempDir()
@@ -524,8 +527,18 @@ func TestValidateRejectsMalformedAndTrailingDocuments(t *testing.T) {
 				}
 				write(t, filepath.Join(root, "risk-register.json"), risks)
 				write(t, filepath.Join(root, "security-matrix.json"), matrix)
-				if err := securitydocs.Validate(root); err == nil {
+				err := securitydocs.Validate(root)
+				if err == nil {
 					t.Fatal("Validate accepted a malformed or trailing security document")
+				}
+				if test.category != "" && (err.Error() != test.category || strings.Contains(err.Error(), privateMarker)) {
+					t.Fatalf("Validate() error = %v, want safe category %q", err, test.category)
+				}
+				for path, want := range map[string]string{"risk-register.json": risks, "security-matrix.json": matrix} {
+					stored, readErr := os.ReadFile(filepath.Join(root, path))
+					if readErr != nil || string(stored) != want {
+						t.Fatalf("Validate modified %s: %v", path, readErr)
+					}
 				}
 			})
 		}
