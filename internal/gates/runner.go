@@ -217,7 +217,6 @@ type Runner struct {
 	gitleaksSourceCleanup    func(string) error
 	securitySourceLimits     *securitySourceLimits
 	repositorySecretsScanned bool
-	moduleSecurityScanned    bool
 }
 
 type namedWriteCloser interface {
@@ -459,11 +458,6 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			return err
 		}
 	}
-	if module.Gates["security"] && !runner.moduleSecurityScanned {
-		if err := runner.runSecurity(ctx, output, directory, module); err != nil {
-			return err
-		}
-	}
 	if operation, exists := runner.operation(module.Directory, "fuzz"); exists {
 		if err := announce(output, module.Directory, "fuzz", func() error {
 			return runner.runOperation(ctx, directory, module, operation)
@@ -549,11 +543,6 @@ func (runner Runner) checkModuleLocal(ctx context.Context, output io.Writer, mod
 		}
 		if err := runner.goTool(ctx, output, module.Directory, "staticcheck", directory,
 			"honnef.co/go/tools/cmd/staticcheck@"+staticcheckVersion, "./..."); err != nil {
-			return err
-		}
-	}
-	if module.Gates["security"] && !runner.moduleSecurityScanned {
-		if err := runner.runSecurity(ctx, output, directory, module); err != nil {
 			return err
 		}
 	}
@@ -700,7 +689,6 @@ func (runner *Runner) scanSelectedSecurity(ctx context.Context, output io.Writer
 			}
 		}
 	}
-	runner.moduleSecurityScanned = true
 	return nil
 }
 
