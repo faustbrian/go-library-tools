@@ -55,8 +55,14 @@ complete module test set. This keeps denominators production-specific while
 allowing integration and external-package tests to contribute only when they
 actually exercise a package.
 When selected for an aggregate milestone or release, mutation reports must
-account for every viable mutant and kill 100%; equivalent or unreachable cases
-require narrow reviewed records.
+account for every viable mutant: each must be killed or covered by a narrow
+reviewed equivalence classification. The optional equivalent inventory accepts only
+the exact source-, verifier-, and coordinate-bound `LIVED` classifications it
+names. Native statuses and counters are retained, not rewritten into kills;
+survivors lacking review, uncovered, timed-out, not-viable, missing, or stale
+results still fail. A reviewed equivalence may be limited to a stated public
+contract domain rather than byte-for-byte internal behavior. Failed campaigns
+emit bounded coordinate diagnostics without publishing passing evidence.
 
 Evidence is keyed by complete behavior-affecting content and verifier identity,
 not Git history. It is persisted atomically when available. Code, tests,

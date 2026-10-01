@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Allow exact source- and verifier-bound equivalent-mutant reviews in native
+  mutation campaigns while retaining raw `LIVED` reports, strict default kills,
+  and separate bounded failure diagnostics.
 - Recorded verified root-module scanner results with a blocked release verdict
   and retained the open fleet-enforcement risk under the v2 module identity.
 
