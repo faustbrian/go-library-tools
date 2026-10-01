@@ -52,6 +52,9 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Point the deprecated Outbox Kafka adapter's adoption guidance to its immutable
+  migration guide and describe the catalogued Migrations v1 ledger accurately,
+  without changing historical release assets or compatibility cohorts.
 - Add published Queue Control Plane v2 public packages to the maintained
   compatibility consumer alongside its historical v1 import, retaining the
   frozen published cohort.

@@ -914,7 +914,7 @@
       "repository": "github.com/faustbrian/go-transactional-outbox",
       "source": {
         "kind": "commit",
-        "commit": "e18e67dbdacb678a9b1c29bc973a30ceb344f5b9"
+        "commit": "dc62c4436961281e197e550ae551dc5768d757c0"
       },
       "tooling": {
         "version": "v1.4.0",
