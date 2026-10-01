@@ -44,15 +44,25 @@ func (operatingReportFiles) Remove(path string) error             { return os.Re
 // StoreReport validates and atomically publishes one immutable report by input.
 // The bool reports whether semantically identical report content already existed.
 func StoreReport(root, inputDigest string, report []byte) (string, bool, ReportResult, error) {
-	path, reused, result, _, err := storeReport(operatingReportFiles{}, root, inputDigest, report)
+	return StoreReportWithReview(root, inputDigest, report, nil)
+}
+
+// StoreReportWithReview validates a raw report against the current exact
+// classification before publication; the report itself is never rewritten.
+func StoreReportWithReview(root, inputDigest string, report []byte, review *EquivalentReview) (string, bool, ReportResult, error) {
+	path, reused, result, _, err := storeReportWithReview(operatingReportFiles{}, root, inputDigest, report, review)
 	return path, reused, result, err
 }
 
 func storeReport(files reportFileSystem, root, inputDigest string, report []byte) (string, bool, ReportResult, []byte, error) {
+	return storeReportWithReview(files, root, inputDigest, report, nil)
+}
+
+func storeReportWithReview(files reportFileSystem, root, inputDigest string, report []byte, review *EquivalentReview) (string, bool, ReportResult, []byte, error) {
 	if !filepath.IsAbs(root) || !strings.HasPrefix(inputDigest, "sha256:") || !digestRE.MatchString(strings.TrimPrefix(inputDigest, "sha256:")) {
 		return "", false, ReportResult{}, nil, fmt.Errorf("%w: report root or input digest is malformed", ErrInvalid)
 	}
-	result, err := ValidateReport(bytes.NewReader(report))
+	result, err := ValidateReportWithReview(bytes.NewReader(report), review)
 	if err != nil {
 		return "", false, ReportResult{}, nil, err
 	}
@@ -88,7 +98,7 @@ func storeReport(files reportFileSystem, root, inputDigest string, report []byte
 	if err != nil {
 		return "", false, ReportResult{}, nil, fmt.Errorf("read existing mutation report: %w", err)
 	}
-	existingResult, err := ValidateReport(bytes.NewReader(existing))
+	existingResult, err := ValidateReportWithReview(bytes.NewReader(existing), review)
 	if err != nil || existingResult.Digest != result.Digest {
 		return "", false, ReportResult{}, nil, fmt.Errorf("%w: mutation report already exists with different content", ErrInvalid)
 	}
@@ -116,6 +126,12 @@ func prepareReportDirectories(files reportFileSystem, root, destination string) 
 
 // LoadReport returns and validates the immutable report for one input digest.
 func LoadReport(root, inputDigest string) ([]byte, ReportResult, error) {
+	return LoadReportWithReview(root, inputDigest, nil)
+}
+
+// LoadReportWithReview reapplies the current classification to immutable raw
+// evidence, so withdrawing a review cannot leave a reusable passing result.
+func LoadReportWithReview(root, inputDigest string, review *EquivalentReview) ([]byte, ReportResult, error) {
 	if !filepath.IsAbs(root) || !strings.HasPrefix(inputDigest, "sha256:") || !digestRE.MatchString(strings.TrimPrefix(inputDigest, "sha256:")) {
 		return nil, ReportResult{}, fmt.Errorf("%w: report root or input digest is malformed", ErrInvalid)
 	}
@@ -125,7 +141,7 @@ func LoadReport(root, inputDigest string) ([]byte, ReportResult, error) {
 	if err != nil {
 		return nil, ReportResult{}, fmt.Errorf("read mutation report: %w", err)
 	}
-	result, err := ValidateReport(bytes.NewReader(data))
+	result, err := ValidateReportWithReview(bytes.NewReader(data), review)
 	if err != nil {
 		return nil, ReportResult{}, err
 	}

@@ -77,6 +77,19 @@ verifier approval fails closed. A checkpoint whose package input genuinely
 changed is skipped, while approved packages are imported and normal mutation
 verification runs only for packages without current evidence.
 
+An optional `.verification/mutation/equivalent-inventory.json` classifies
+specific native `LIVED` mutants only when an independent review has established
+equivalence under a named observable contract. Each package entry binds its
+module and package directories, `source_digest`, `gremlins_version`, and
+`gremlins_verifier_sha256`; each mutation names its exact `file_name`, `type`,
+`line`, `column`, `contract_domain`, and detailed `reason`. Use schema version
+`1` with a `packages` array. The file is absent in repositories with no such
+review. A selected package with stale source or verifier identity fails closed.
+Changing explanatory prose does not change native campaign identity; every
+reused raw report is checked against the exact selection captured at campaign
+start. Inventory edits and withdrawals apply on the next invocation, not to
+a campaign already running.
+
 Typed operations may invoke bounded `go test` runs or one named target from a
 repository-owned Makefile. A `test` operation runs after the module's standard
 test command and preserves package-specific stress, leak, or lifecycle checks.

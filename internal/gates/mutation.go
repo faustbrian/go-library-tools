@@ -178,6 +178,10 @@ func (runner Runner) prepareMutationCampaign(ctx context.Context, output io.Writ
 	if err != nil {
 		return mutation.Campaign{}, err
 	}
+	equivalents, err := loadEquivalentInventory(runner.Root, filepath.Join(runner.Policy.Mutation.Root, "equivalent-inventory.json"))
+	if err != nil {
+		return mutation.Campaign{}, err
+	}
 	runtimeIdentity, err := runner.runtimeIdentity(ctx, module.Directory)
 	if err != nil {
 		return mutation.Campaign{}, err
@@ -219,7 +223,7 @@ func (runner Runner) prepareMutationCampaign(ctx context.Context, output io.Writ
 			RequiredServices:  append([]string(nil), module.RequiredServices...),
 			ServiceIdentities: cloneServiceMap(runner.serviceIdentities), OwnedModules: owned, Workers: workers,
 		},
-		ZeroReviews: reviews, Environment: environment, RuntimeIdentity: runtimeIdentity,
+		ZeroReviews: reviews, EquivalentReviews: equivalents, Environment: environment, RuntimeIdentity: runtimeIdentity,
 		Process: runner.mutationProcess(), Output: output,
 	}, nil
 }
@@ -234,6 +238,21 @@ func loadZeroInventory(root, path string) (mutation.ZeroInventory, error) {
 		return mutation.ZeroInventory{}, fmt.Errorf("parse zero-mutant inventory: %w", err)
 	}
 	return reviews, nil
+}
+
+func loadEquivalentInventory(root, path string) (mutation.EquivalentInventory, error) {
+	data, err := repositoryfile.Read(root, path, maximumModuleFileSize)
+	if errors.Is(err, os.ErrNotExist) {
+		return mutation.EquivalentInventory{}, nil
+	}
+	if err != nil {
+		return mutation.EquivalentInventory{}, fmt.Errorf("read equivalent-mutant inventory: %w", err)
+	}
+	parsed, err := mutation.ParseEquivalentInventory(bytes.NewReader(data))
+	if err != nil {
+		return mutation.EquivalentInventory{}, fmt.Errorf("parse equivalent-mutant inventory: %w", err)
+	}
+	return parsed, nil
 }
 
 func (runner Runner) runtimeIdentity(ctx context.Context, module string) (mutation.RuntimeIdentity, error) {

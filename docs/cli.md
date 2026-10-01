@@ -63,6 +63,9 @@ Core commands:
   using the same fail-closed behavior as `golib mutation`.
 - `golib coverage [--module DIR]` verifies exact package coverage.
 - `golib mutation [--module DIR]` verifies or executes mutation evidence.
+  Native `LIVED` statuses remain visible when an exact repository-owned
+  equivalence review applies; diagnostics report killed and reviewed-equivalent
+  counts separately. Survivors lacking review and other incomplete statuses fail.
 - `golib mutation import --module DIR --archive PATH --ledger PATH` validates
   an approved legacy checkpoint archive and persists current content-addressed
   evidence without retaining Git identity.
