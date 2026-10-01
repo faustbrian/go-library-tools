@@ -1,10 +1,11 @@
 # Reusable Workflows
 
 Consumer CI calls `library-ci.yml` at an immutable commit SHA. The same SHA is
-passed as `tooling_sha` for the isolated tooling checkout. Setup and bootstrap
-actions are separately pinned to the unchanged action-source commit
-`37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa`; `tooling_sha` does not select
-those executable actions. A nearby comment records the corresponding tooling release.
+passed as `tooling_sha` for the isolated tooling checkout. The setup action
+is pinned to `562f083a6d7eb499eed8d464e5f3e1a1b58902d0`; the bootstrap
+action remains pinned to `37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa`.
+`tooling_sha` does not select those executable actions. A nearby comment
+records the corresponding tooling release.
 
 ```yaml
 name: CI

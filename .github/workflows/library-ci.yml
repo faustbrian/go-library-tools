@@ -139,7 +139,7 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
       - id: modules
         name: Build module matrix
         env:
@@ -200,7 +200,7 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
       - run: golib repository check
       - run: golib workflows check
       - run: golib cohesion check
@@ -269,7 +269,7 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
       - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
@@ -330,7 +330,7 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
       - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
