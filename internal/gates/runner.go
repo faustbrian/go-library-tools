@@ -973,10 +973,10 @@ func (runner Runner) runCoverage(ctx context.Context, output io.Writer, director
 	}
 	defer opened.Close()
 	report, err := coverage.Verify(opened, targets)
+	_, _ = io.WriteString(output, report)
 	if err != nil {
 		return err
 	}
-	_, _ = io.WriteString(output, report)
 	_, _ = io.WriteString(output, "all production packages have exact 100% statement coverage\n")
 	return nil
 }

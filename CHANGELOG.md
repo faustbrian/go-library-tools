@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Show bounded uncovered source blocks when exact coverage fails, preserving
+  the failing-package error, coverage thresholds, and task-profile cleanup.
 - Added Opening Hours v2.0.1 and all fifteen public packages to the maintained
   compatibility consumer alongside v1.1.0, preserving published cohorts.
 - Adopted Queue v1.1.2 and Queue Control Plane v2.0.1 in the maintained

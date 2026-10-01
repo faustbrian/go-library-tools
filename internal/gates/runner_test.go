@@ -230,11 +230,20 @@ func TestCheckRequiresExactProductionCoverage(t *testing.T) {
 		t.Fatalf("coverage output = %q", output.String())
 	}
 
+	output.Reset()
 	executor.coverageProfiles["github.com/acme/example,github.com/acme/example/memory"] = "mode: atomic\n" +
 		"github.com/acme/example/file.go:1.1,2.1 1 0\n" +
 		"github.com/acme/example/memory/file.go:1.1,2.1 1 1\n"
 	if err := runner.Check(context.Background(), []string{"."}); err == nil {
 		t.Fatal("Check() uncovered error = nil")
+	}
+	if !strings.Contains(output.String(), "file.go:1.1,2.1") || strings.Contains(output.String(), "all production packages have exact") {
+		t.Fatalf("failure diagnostics = %q", output.String())
+	}
+	for _, profile := range executor.coveragePaths {
+		if _, err := os.Stat(profile); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("coverage profile remains after success/failure: %v", err)
+		}
 	}
 }
 
@@ -873,6 +882,7 @@ type recordingExecutor struct {
 	failure            error
 	coverageProfile    string
 	coverageProfiles   map[string]string
+	coveragePaths      []string
 	apiSnapshot        string
 	apiReport          string
 	formatOutput       string
@@ -961,6 +971,7 @@ func (executor *recordingExecutor) Run(_ context.Context, command gates.Command)
 	}
 	for _, argument := range command.Args {
 		if profile, found := strings.CutPrefix(argument, "-coverprofile="); found {
+			executor.coveragePaths = append(executor.coveragePaths, profile)
 			if err := os.WriteFile(profile, []byte(coverageProfile), 0o600); err != nil {
 				return err
 			}
