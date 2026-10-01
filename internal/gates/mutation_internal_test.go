@@ -47,6 +47,30 @@ func TestMutationImportLoadsApprovedRepositoryArtifacts(t *testing.T) {
 	}
 }
 
+func TestLoadOptionalEquivalentInventoryFailsClosed(t *testing.T) {
+	root := t.TempDir()
+	path := ".verification/mutation/equivalent-inventory.json"
+	missing, err := loadEquivalentInventory(root, path)
+	if err != nil || len(missing.Packages) != 0 {
+		t.Fatalf("missing optional inventory = %#v, %v", missing, err)
+	}
+	if err := os.MkdirAll(filepath.Join(root, ".verification", "mutation"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, path), []byte(`{"schema_version":1,"packages":[]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loadEquivalentInventory(root, path); err != nil {
+		t.Fatalf("valid optional inventory error = %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, path), []byte(`{"schema_version":1,"packages":[{}]}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := loadEquivalentInventory(root, path); err == nil {
+		t.Fatal("malformed optional inventory passed")
+	}
+}
+
 func TestMutationMaterializesConfiguredCheckpointBeforeVerification(t *testing.T) {
 	root := t.TempDir()
 	writeValidMutationSetup(t, root)

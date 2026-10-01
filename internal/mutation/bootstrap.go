@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path"
 	"regexp"
@@ -104,13 +105,21 @@ type mutation struct {
 
 // ReportResult summarizes a strictly validated Gremlins report.
 type ReportResult struct {
-	Digest  string
-	Mutants int
+	Digest     string
+	Mutants    int
+	Killed     int
+	Equivalent int
 }
 
 // ValidateReport requires every viable mutant to be killed and validates any
 // aggregate counters against the individual mutation records.
 func ValidateReport(reader io.Reader) (ReportResult, error) {
+	return ValidateReportWithReview(reader, nil)
+}
+
+// ValidateReportWithReview retains native statuses while allowing only exact
+// reviewed LIVED coordinates; nil retains the original all-KILLED policy.
+func ValidateReportWithReview(reader io.Reader, review *EquivalentReview) (ReportResult, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, maximumCheckpointSize+1))
 	if err != nil {
 		return ReportResult{}, fmt.Errorf("%w: read mutation report: %s", ErrInvalid, err.Error())
@@ -118,7 +127,7 @@ func ValidateReport(reader io.Reader) (ReportResult, error) {
 	if len(data) > maximumCheckpointSize {
 		return ReportResult{}, fmt.Errorf("%w: mutation report exceeds %d bytes", ErrInvalid, maximumCheckpointSize)
 	}
-	return validateReportData(data)
+	return validateReportDataWithReview(data, review)
 }
 
 // ReadBootstrap strictly reads one bounded legacy checkpoint archive.
@@ -258,6 +267,10 @@ func validateCheckpoint(value legacyCheckpoint) (Checkpoint, error) {
 }
 
 func validateReportData(data []byte) (ReportResult, error) {
+	return validateReportDataWithReview(data, nil)
+}
+
+func validateReportDataWithReview(data []byte, review *EquivalentReview) (ReportResult, error) {
 	var parsed report
 	if err := decodeStrict(data, &parsed); err != nil {
 		return ReportResult{}, fmt.Errorf("report: %w", err)
@@ -266,6 +279,17 @@ func validateReportData(data []byte) (ReportResult, error) {
 		return ReportResult{}, fmt.Errorf("%w: mutation report files must be an array", ErrInvalid)
 	}
 	mutants := 0
+	killed := 0
+	equivalent := 0
+	reviewed := make(map[string]struct{})
+	if review != nil {
+		if err := review.validate(); err != nil {
+			return ReportResult{}, fmt.Errorf("%w: invalid equivalent-mutant review: %s", ErrInvalid, err.Error())
+		}
+		for _, candidate := range review.Mutations {
+			reviewed[mutationIdentity(candidate.FileName, candidate.Type, candidate.Line, candidate.Column)] = struct{}{}
+		}
+	}
 	files := make(map[string]struct{}, len(parsed.Files))
 	identities := make(map[string]struct{})
 	for _, file := range parsed.Files {
@@ -280,16 +304,28 @@ func validateReportData(data []byte) (ReportResult, error) {
 			if candidate.Type == "" || candidate.Line <= 0 || candidate.Column <= 0 {
 				return ReportResult{}, fmt.Errorf("%w: mutation location is malformed", ErrInvalid)
 			}
-			if candidate.Status != "KILLED" {
-				return ReportResult{}, fmt.Errorf("%w: non-killed mutant in %s", ErrInvalid, file.FileName)
-			}
-			identity := fmt.Sprintf("%s\x00%s\x00%d\x00%d", file.FileName, candidate.Type, candidate.Line, candidate.Column)
+			identity := mutationIdentity(file.FileName, candidate.Type, candidate.Line, candidate.Column)
 			if _, exists := identities[identity]; exists {
 				return ReportResult{}, fmt.Errorf("%w: duplicate mutation identity in %s", ErrInvalid, file.FileName)
 			}
 			identities[identity] = struct{}{}
+			switch candidate.Status {
+			case "KILLED":
+				killed++
+			case "LIVED":
+				if _, exists := reviewed[identity]; !exists {
+					return ReportResult{}, fmt.Errorf("%w: non-killed mutant in %s lacks an exact equivalent review", ErrInvalid, file.FileName)
+				}
+				delete(reviewed, identity)
+				equivalent++
+			default:
+				return ReportResult{}, fmt.Errorf("%w: non-killed mutant in %s", ErrInvalid, file.FileName)
+			}
 			mutants++
 		}
+	}
+	if len(reviewed) != 0 {
+		return ReportResult{}, fmt.Errorf("%w: reviewed equivalent mutant is absent or no longer lived", ErrInvalid)
 	}
 	metrics := []bool{
 		parsed.MutantsKilled != nil, parsed.MutantsLived != nil,
@@ -303,17 +339,23 @@ func validateReportData(data []byte) (ReportResult, error) {
 			metricCount++
 		}
 	}
-	if metricCount != 0 && metricCount != len(metrics) {
+	if metricCount != 0 && metricCount != len(metrics) || equivalent > 0 && metricCount == 0 {
 		return ReportResult{}, fmt.Errorf("%w: incomplete aggregate counters", ErrInvalid)
 	}
 	if metricCount > 0 {
 		actual := [7]float64{float64(*parsed.MutantsKilled), float64(*parsed.MutantsLived), float64(*parsed.MutantsNotCovered), float64(*parsed.MutantsNotViable), float64(*parsed.MutantsTotal), *parsed.MutationCoverage, *parsed.TestEfficacy}
-		expected := [7]float64{float64(mutants), 0, 0, 0, float64(mutants), 100, 100}
-		if actual != expected {
-			return ReportResult{}, fmt.Errorf("%w: aggregate counters do not prove a complete kill", ErrInvalid)
+		efficacy := float64(100)
+		if mutants > 0 {
+			efficacy = float64(killed) * 100 / float64(mutants)
+		}
+		expected := [7]float64{float64(killed), float64(equivalent), 0, 0, float64(mutants), 100, efficacy}
+		for index := range actual {
+			if math.IsNaN(actual[index]) || math.Abs(actual[index]-expected[index]) > 1e-9 {
+				return ReportResult{}, fmt.Errorf("%w: aggregate counters do not prove complete mutant accounting", ErrInvalid)
+			}
 		}
 	}
-	return ReportResult{Digest: canonicalReportDigest(data), Mutants: mutants}, nil
+	return ReportResult{Digest: canonicalReportDigest(data), Mutants: mutants, Killed: killed, Equivalent: equivalent}, nil
 }
 
 func canonicalReportDigest(data []byte) string {

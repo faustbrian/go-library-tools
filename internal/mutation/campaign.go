@@ -91,18 +91,19 @@ type RuntimeIdentity struct {
 
 // Campaign executes or reuses package-granular mutation evidence.
 type Campaign struct {
-	Root            string
-	EvidenceRoot    string
-	MutationRoot    string
-	Workspace       string
-	Policy          CampaignPolicy
-	ZeroReviews     ZeroInventory
-	Environment     map[string]string
-	RuntimeIdentity RuntimeIdentity
-	Process         Process
-	Output          io.Writer
-	Now             func() time.Time
-	directoryFiles  campaignDirectoryFileSystem
+	Root              string
+	EvidenceRoot      string
+	MutationRoot      string
+	Workspace         string
+	Policy            CampaignPolicy
+	ZeroReviews       ZeroInventory
+	EquivalentReviews EquivalentInventory
+	Environment       map[string]string
+	RuntimeIdentity   RuntimeIdentity
+	Process           Process
+	Output            io.Writer
+	Now               func() time.Time
+	directoryFiles    campaignDirectoryFileSystem
 }
 
 type campaignDirectoryFileSystem interface {
@@ -282,17 +283,25 @@ type campaignState struct {
 }
 
 func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packageDirectory string, state *campaignState) error {
-	_, input, err := campaign.packageInput(ctx, packageDirectory)
+	_, input, source, err := campaign.packageInputAndSource(ctx, packageDirectory)
 	if err != nil {
 		return err
 	}
-	reused, result, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, campaign.Policy.Repository, campaign.Policy.ModuleDirectory, packageDirectory, input)
+	review, err := campaign.equivalentReview(packageDirectory, source)
+	if err != nil {
+		return err
+	}
+	reused, result, err := ReuseWithReview(campaign.EvidenceRoot, campaign.MutationRoot, campaign.Policy.Repository, campaign.Policy.ModuleDirectory, packageDirectory, input, review)
 	if err != nil {
 		return err
 	}
 	target := packageTarget(packageDirectory)
 	if reused {
-		_, _ = fmt.Fprintf(output, "[%s] %s reused content-identical mutation evidence (%d mutants)\n", campaign.Policy.ModuleDirectory, target, result.Mutants)
+		if result.Equivalent > 0 {
+			_, _ = fmt.Fprintf(output, "[%s] %s reused content-identical mutation evidence (%d killed, %d reviewed equivalent)\n", campaign.Policy.ModuleDirectory, target, result.Killed, result.Equivalent)
+		} else {
+			_, _ = fmt.Fprintf(output, "[%s] %s reused content-identical mutation evidence (%d mutants)\n", campaign.Policy.ModuleDirectory, target, result.Mutants)
+		}
 		return nil
 	}
 	if err := campaign.prepareExecution(ctx, state); err != nil {
@@ -316,8 +325,13 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 	directory := filepath.Join(campaign.Root, filepath.FromSlash(campaign.Policy.ModuleDirectory))
 	mutationOutput := &boundedMutationOutput{}
 	combinedOutput := io.MultiWriter(output, mutationOutput)
-	if err := campaign.Process(ctx, state.tool.Path, arguments, directory, environment, combinedOutput, combinedOutput); err != nil {
-		return fmt.Errorf("mutation tool failed for %s %s: %w", campaign.Policy.ModuleDirectory, target, err)
+	processErr := campaign.Process(ctx, state.tool.Path, arguments, directory, environment, combinedOutput, combinedOutput)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if processErr != nil && (review == nil || !isEfficacyThresholdExit(processErr)) {
+		reportFailedMutationCoordinates(output, reportPath)
+		return fmt.Errorf("mutation tool failed for %s %s: %w", campaign.Policy.ModuleDirectory, target, processErr)
 	}
 	// #nosec G304 -- reportPath is a fixed filename inside the task-owned mutation workspace
 	report, err := os.ReadFile(reportPath)
@@ -328,17 +342,26 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 	if err != nil {
 		return fmt.Errorf("read mutation report for %s: %w", target, err)
 	}
-	if _, err := ValidateReport(bytes.NewReader(report)); err != nil {
+	validated, err := ValidateReportWithReview(bytes.NewReader(report), review)
+	if err != nil {
+		reportFailedMutationCoordinates(output, reportPath)
 		return err
 	}
-	_, currentInput, err := campaign.packageInput(ctx, packageDirectory)
+	if processErr != nil && validated.Equivalent == 0 {
+		return fmt.Errorf("%w: efficacy exit without a reviewed lived mutant", ErrInvalid)
+	}
+	_, currentInput, currentSource, err := campaign.packageInputAndSource(ctx, packageDirectory)
 	if err != nil {
 		return err
+	}
+	currentReview, err := campaign.equivalentReview(packageDirectory, currentSource)
+	if err != nil || !equivalentSelectionEqual(review, currentReview) {
+		return fmt.Errorf("%w: equivalent-mutant selection changed while running %s", ErrInvalid, target)
 	}
 	if currentInput != input {
 		return fmt.Errorf("%w: mutation inputs changed while running %s", ErrInvalid, target)
 	}
-	_, _, stored, err := StoreReport(campaign.MutationRoot, input, report)
+	_, _, stored, err := StoreReportWithReview(campaign.MutationRoot, input, report, review)
 	if err != nil {
 		return err
 	}
@@ -362,31 +385,51 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 	if _, _, err := evidence.Store(campaign.EvidenceRoot, record); err != nil {
 		return err
 	}
-	if stored.Mutants == 0 {
+	switch {
+	case stored.Mutants == 0:
 		_, _ = fmt.Fprintf(output, "[%s] %s has zero viable mutants\n", campaign.Policy.ModuleDirectory, target)
-	} else {
+	case stored.Equivalent > 0:
+		_, _ = fmt.Fprintf(output, "[%s] %s: %d killed, %d reviewed equivalent of %d viable mutants\n", campaign.Policy.ModuleDirectory, target, stored.Killed, stored.Equivalent, stored.Mutants)
+	default:
 		_, _ = fmt.Fprintf(output, "[%s] %s killed %d/%d viable mutants\n", campaign.Policy.ModuleDirectory, target, stored.Mutants, stored.Mutants)
 	}
 	return nil
 }
 
+func (campaign Campaign) equivalentReview(packageDirectory, source string) (*EquivalentReview, error) {
+	if len(campaign.EquivalentReviews.Packages) == 0 {
+		return nil, nil
+	}
+	return campaign.EquivalentReviews.Review(campaign.Policy.ModuleDirectory, packageDirectory, source, GremlinsVersion, LegacyVerifierDigest())
+}
+
 func (campaign Campaign) packageInput(ctx context.Context, packageDirectory string) (*ZeroReview, string, error) {
-	review, current, _, err := campaign.packageInputs(ctx, packageDirectory)
+	review, current, _, err := campaign.packageInputAndSource(ctx, packageDirectory)
 	return review, current, err
 }
 
-func (campaign Campaign) packageInputs(ctx context.Context, packageDirectory string) (*ZeroReview, string, string, error) {
+func (campaign Campaign) packageInputAndSource(ctx context.Context, packageDirectory string) (*ZeroReview, string, string, error) {
 	inputs, err := campaign.packageInputsForVerifiers(ctx, packageDirectory, LegacyVerifierDigest())
 	if err != nil {
 		return nil, "", "", err
 	}
 	current := inputs[LegacyVerifierDigest()]
-	return current.review, current.current, current.legacy, nil
+	return current.review, current.current, current.source, nil
+}
+
+func (campaign Campaign) packageInputs(ctx context.Context) (string, string, error) {
+	inputs, err := campaign.packageInputsForVerifiers(ctx, ".", LegacyVerifierDigest())
+	if err != nil {
+		return "", "", err
+	}
+	current := inputs[LegacyVerifierDigest()]
+	return current.current, current.legacy, nil
 }
 
 type verifierPackageInputs struct {
 	review          *ZeroReview
 	current, legacy string
+	source          string
 }
 
 func (campaign Campaign) packageInputsForVerifiers(ctx context.Context, packageDirectory string, verifiers ...string) (map[string]verifierPackageInputs, error) {
@@ -424,7 +467,17 @@ func (campaign Campaign) packageInputsForVerifiers(ctx context.Context, packageD
 		if inputErr != nil {
 			return nil, inputErr
 		}
-		result[verifier] = verifierPackageInputs{review: review, current: current, legacy: legacy}
+		result[verifier] = verifierPackageInputs{review: review, current: current, legacy: legacy, source: source}
+	}
+	// The inventory's source binding and the input digest must observe the same
+	// source. A go-list hook or concurrent edit cannot turn a pre-list review
+	// into permission to reuse evidence hashed from later source bytes.
+	currentSource, err := SourceDigest(root, campaign.Policy.ModuleDirectory, packageDirectory)
+	if err != nil {
+		return nil, err
+	}
+	if currentSource != source {
+		return nil, fmt.Errorf("%w: mutation source changed while hashing package inputs", ErrInvalid)
 	}
 	return result, nil
 }
