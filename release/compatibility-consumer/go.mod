@@ -76,8 +76,8 @@ require (
 	github.com/faustbrian/go-lease v1.1.0
 	github.com/faustbrian/go-localized v1.1.2
 	github.com/faustbrian/go-log v1.0.0
-	github.com/faustbrian/go-math v1.1.0
-	github.com/faustbrian/go-measurement/v2 v2.0.0
+	github.com/faustbrian/go-math v1.1.2
+	github.com/faustbrian/go-measurement/v2 v2.0.1
 	github.com/faustbrian/go-merkle-patricia-trie v1.0.0
 	github.com/faustbrian/go-merkle-tree v1.0.0
 	github.com/faustbrian/go-migrations v1.1.0
@@ -188,12 +188,14 @@ require (
 	github.com/lestrrat-go/jwx/v3 v3.1.1 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
 	github.com/makiuchi-d/gozxing v0.1.1 // indirect
+	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/oklog/ulid/v2 v2.1.1 // indirect
 	github.com/opensearch-project/opensearch-go/v4 v4.7.3 // indirect
 	github.com/peterstace/simplefeatures v0.59.0 // indirect
 	github.com/pierrec/lz4 v2.6.1+incompatible // indirect
 	github.com/pierrec/lz4/v4 v4.1.26 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
+	github.com/pressly/goose/v3 v3.27.1 // indirect
 	github.com/rabbitmq/amqp091-go v1.14.0 // indirect
 	github.com/rabbitmq/rabbitmq-stream-go-client v1.8.3 // indirect
 	github.com/redis/go-redis/v9 v9.21.0 // indirect
@@ -204,6 +206,7 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.2 // indirect
 	github.com/segmentio/asm v1.2.1 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
+	github.com/sethvargo/go-retry v0.3.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/tiendc/go-deepcopy v1.7.2 // indirect
 	github.com/twmb/franz-go v1.21.5 // indirect
@@ -228,6 +231,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.44.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.10.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
+	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
