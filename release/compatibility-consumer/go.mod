@@ -85,6 +85,7 @@ require (
 	github.com/faustbrian/go-money v1.0.0
 	github.com/faustbrian/go-openapi v1.0.0
 	github.com/faustbrian/go-opening-hours v1.1.0
+	github.com/faustbrian/go-opening-hours/v2 v2.0.1
 	github.com/faustbrian/go-openrpc v1.0.0
 	github.com/faustbrian/go-password/v2 v2.0.0
 	github.com/faustbrian/go-postgres v1.1.0
