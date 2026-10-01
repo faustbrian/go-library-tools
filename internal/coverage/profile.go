@@ -109,7 +109,7 @@ func Verify(profile io.Reader, expected []string) (string, error) {
 }
 
 // Limit failure output without changing which blocks determine exact coverage.
-const diagnosticBlockLimit = 20
+const diagnosticBlockLimit = 512
 const diagnosticLocationByteLimit = 160
 
 var sourceCoordinates = regexp.MustCompile(`^[0-9]+\.[0-9]+,[0-9]+\.[0-9]+$`)

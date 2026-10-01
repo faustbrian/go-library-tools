@@ -171,18 +171,32 @@ example/a/empty.go:5.1,6.1 0 0
 	}
 }
 
+func TestVerifyReportsCurrentReleaseCoverageGaps(t *testing.T) {
+	var profile strings.Builder
+	profile.WriteString("mode: atomic\n")
+	for index := 107; index >= 0; index-- {
+		fmt.Fprintf(&profile, "example/file-%03d.go:1.1,2.1 1 0\n", index)
+	}
+	report, err := coverage.Verify(strings.NewReader(profile.String()), []string{"example"})
+	if err == nil || err.Error() != "example is below exact 100% coverage" ||
+		strings.Count(report, "file-") != 108 || strings.Contains(report, "omitted") ||
+		!strings.Contains(report, "file-000.go:1.1,2.1") || !strings.Contains(report, "file-107.go:1.1,2.1") {
+		t.Fatalf("complete bounded release diagnostics = %q, %v", report, err)
+	}
+}
+
 func TestVerifyBoundsUncoveredBlockDiagnostics(t *testing.T) {
 	var profile strings.Builder
 	profile.WriteString("mode: atomic\n")
-	for index := 49; index >= 0; index-- {
-		fmt.Fprintf(&profile, "example/file-%02d.go:1.1,2.1 1 0\n", index)
+	for index := 512; index >= 0; index-- {
+		fmt.Fprintf(&profile, "example/file-%03d.go:1.1,2.1 1 0\n", index)
 	}
 	fmt.Fprintf(&profile, "example/%s.go:1.1,2.1 1 0\n", strings.Repeat("long", 100))
 	report, err := coverage.Verify(strings.NewReader(profile.String()), []string{"example"})
-	if err == nil || strings.Count(report, "file-") != 20 || len(report) > 3500 ||
-		!strings.Contains(report, "file-00.go:1.1,2.1") || !strings.Contains(report, "file-19.go:1.1,2.1") ||
-		strings.Contains(report, "file-20.go") || strings.Contains(report, "longlong") ||
-		!strings.Contains(report, "(31 additional blocks omitted)") {
+	if err == nil || strings.Count(report, "file-") != 512 || len(report) > 85000 ||
+		!strings.Contains(report, "file-000.go:1.1,2.1") || !strings.Contains(report, "file-511.go:1.1,2.1") ||
+		strings.Contains(report, "file-512.go") || strings.Contains(report, "longlong") ||
+		!strings.Contains(report, "(2 additional blocks omitted)") {
 		t.Fatalf("bounded diagnostics = %q, %v", report, err)
 	}
 }

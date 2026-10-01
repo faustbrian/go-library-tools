@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Expand exact-coverage failure diagnostics to at most 512 sanitized source
+  coordinates so ordinary release gaps remain visible without publishing raw
+  profiles or changing coverage thresholds.
 - Show bounded uncovered source blocks when exact coverage fails, preserving
   the failing-package error, coverage thresholds, and task-profile cleanup.
 - Added Opening Hours v2.0.1 and all fifteen public packages to the maintained
