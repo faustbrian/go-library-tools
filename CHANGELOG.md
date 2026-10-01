@@ -17,6 +17,12 @@ All notable changes to this project are documented in this file.
 - Add published Queue Control Plane v2 public packages to the maintained
   compatibility consumer alongside its historical v1 import, retaining the
   frozen published cohort.
+- Keep CodeQL initialization and analysis on the same immutable action release
+  so both owned and shared CI can load the generated analysis configuration.
+- Refresh release SBOM generation to SBOM Action v0.24.2 and Syft v1.51.1,
+  retaining SPDX JSON assets and pinning installer retrieval to the scanner tag.
+- Update CI and release artifact uploads to v7.0.1 while preserving zipped
+  archives, artifact names, and explicit hidden-file evidence inclusion.
 - Select published Math v1.1.2 and Measurement v2.0.1 in the maintained
   compatibility consumer without changing the frozen published cohort.
 - Add published Audit, Cache and Identifier v2 modules to the maintained

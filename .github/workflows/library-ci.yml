@@ -298,7 +298,7 @@ jobs:
           fi
       - name: Upload attributable evidence
         if: always() && hashFiles('.verification/**') != ''
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: evidence-selected-modules
           path: .verification
@@ -335,7 +335,7 @@ jobs:
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
           bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}
-      - uses: github/codeql-action/init@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4
+      - uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
         with:
           languages: go
           queries: security-extended,security-and-quality
@@ -354,7 +354,7 @@ jobs:
               (cd "${module}" && go build ./...)
             fi
           done
-      - uses: github/codeql-action/analyze@b96794f015dfd88f77b49b1c93e0fa7110f94c63 # v4
+      - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
 
   required:
     name: Required
