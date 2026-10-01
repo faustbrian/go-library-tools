@@ -15062,7 +15062,7 @@
       "module_path": "github.com/faustbrian/go-migrations",
       "go_version": "1.27.0",
       "kind": "public library",
-      "purpose": "`migrations` is an engine-neutral database migration runtime with a PostgreSQL backend. It owns migration identity, planning, status, locking, checksums, baselines, recovery, and the `public.go_schema_migrations` ledger. Goose is an internal, pinned SQL execution detail and never appears in the public API.",
+      "purpose": "`migrations` is an engine-neutral database migration runtime with a PostgreSQL backend. It owns migration identity, planning, status, locking, checksums, baselines, recovery, and the `public.migrations` ledger. Goose is an internal, pinned SQL execution detail and never appears in the public API.",
       "lifecycle": "stable",
       "releasable": true,
       "version": "1.1.0",
