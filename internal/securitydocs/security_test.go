@@ -71,6 +71,28 @@ func TestValidateRequiresOwnedRisksAndConsistentReleaseVerdicts(t *testing.T) {
 	}
 }
 
+func TestValidateRejectsRiskAdmissionBeforeOpeningMatrix(t *testing.T) {
+	valid := `{"id":"SEC-1","module":"github.com/acme/example","severity":"low","status":"open","owner":"maintainers","rationale":"risk","mitigation":"bounded","review_condition":"on change"}`
+	for _, test := range []struct{ name, records, category string }{
+		{"duplicate", valid + "," + valid, "duplicate risk id"},
+		{"expired", strings.Replace(strings.Replace(valid, `"status":"open"`, `"status":"accepted"`, 1), `"review_condition":"on change"`, `"review_condition":"on change","evidence":"review","expires_at":"2020-01-01T00:00:00Z"`, 1), "accepted risk has expired"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := t.TempDir()
+			path := filepath.Join(root, "risk-register.json")
+			document := `{"schema_version":1,"risks":[` + test.records + `]}`
+			write(t, path, document)
+			if err := securitydocs.Validate(root); err == nil || err.Error() != test.category {
+				t.Fatalf("Validate() = %v, want %q before missing matrix", err, test.category)
+			}
+			actual, err := os.ReadFile(path)
+			if err != nil || string(actual) != document {
+				t.Fatalf("Validate changed risk register: %v", err)
+			}
+		})
+	}
+}
+
 func TestValidateRejectsNullRiskArray(t *testing.T) {
 	root := t.TempDir()
 	write(t, filepath.Join(root, "risk-register.json"), `{"schema_version":1,"risks":null}`)
