@@ -77,10 +77,25 @@
       "primary_entry_packages": ["github.com/faustbrian/go-http-middleware/v2"]
     },
     {
+      "from_module_path": "github.com/faustbrian/go-math",
+      "module_path": "github.com/faustbrian/go-math",
+      "version": "v1.1.2",
+      "source_revision": "ee38fcae45ce7492036ba458fbcf1ba5933b7618",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-math",
+        "github.com/faustbrian/go-math/bigfloat",
+        "github.com/faustbrian/go-math/decimal",
+        "github.com/faustbrian/go-math/encoding",
+        "github.com/faustbrian/go-math/integer",
+        "github.com/faustbrian/go-math/mathtest",
+        "github.com/faustbrian/go-math/rational"
+      ]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-measurement",
       "module_path": "github.com/faustbrian/go-measurement/v2",
-      "version": "v2.0.0",
-      "source_revision": "cb4442414598f8cc0cf1b1099f2f939b31105f4d",
+      "version": "v2.0.1",
+      "source_revision": "2603d3ca9aad2f6e8bcb05f2bf2fb76c847a5813",
       "primary_entry_packages": ["github.com/faustbrian/go-measurement/v2"]
     },
     {
