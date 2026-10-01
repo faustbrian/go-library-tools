@@ -86,6 +86,144 @@ func TestCampaignExecutesPersistsAndReusesPackageEvidence(t *testing.T) {
 	}
 }
 
+func TestCampaignAcceptsOnlyExactReviewedEfficacyExit(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "source.go"), []byte("package example\n\nfunc Value() int { return 1 }\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	verifier := t.TempDir()
+	if err := os.WriteFile(filepath.Join(verifier, "go.mod"), []byte("module verifier\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	sourceDigest, err := SourceDigest(root, ".", ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	selected := `{"schema_version":1,"packages":[{"module_directory":".","package_directory":".","source_digest":"` + sourceDigest + `","gremlins_version":"v0.6.0","gremlins_verifier_sha256":"` + LegacyVerifierDigest() + `","mutations":[{"file_name":"source.go","type":"A","line":3,"column":1,"contract_domain":"Observable integer result for admitted nonnegative values","reason":"Both boundary forms return the same maximum integer at equality."}]}]}`
+	inventory, err := ParseEquivalentInventory(strings.NewReader(selected))
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := `{"files":[{"file_name":"source.go","mutations":[{"type":"A","status":"LIVED","line":3,"column":1}]}],"mutants_killed":0,"mutants_lived":1,"mutants_not_covered":0,"mutants_not_viable":0,"mutants_total":1,"mutations_coverage":100,"test_efficacy":0}`
+	process := &campaignProcess{root: root, verifierSource: verifier, report: &report, fail: "efficacy"}
+	var output bytes.Buffer
+	campaign := Campaign{
+		Root: root, EvidenceRoot: filepath.Join(root, ".verification"),
+		MutationRoot: filepath.Join(root, ".verification", "mutation"), Workspace: filepath.Join(root, ".task"),
+		Policy:            CampaignPolicy{Repository: "example", ModuleDirectory: ".", ModulePath: "example", GoVersion: "1.27.0", Packages: []string{"."}, ServiceIdentities: map[string]string{}, Workers: 1},
+		EquivalentReviews: inventory,
+		Environment:       map[string]string{}, RuntimeIdentity: RuntimeIdentity{GoVersion: "go1.27.0", GOOS: "linux", GOARCH: "amd64", CGOEnabled: "0"},
+		Process: process.run, Output: &output,
+	}
+	if err := campaign.Run(context.Background()); err != nil {
+		t.Fatalf("Run(reviewed) error = %v", err)
+	}
+	if !strings.Contains(output.String(), "0 killed, 1 reviewed equivalent") {
+		t.Fatalf("Run(reviewed) output = %q", output.String())
+	}
+	_, input, err := campaign.packageInput(context.Background(), ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	parsedReview, err := inventory.Review(".", ".", sourceDigest, GremlinsVersion, LegacyVerifierDigest())
+	if err != nil {
+		t.Fatal(err)
+	}
+	stored, result, err := LoadReportWithReview(campaign.MutationRoot, input, parsedReview)
+	if err != nil || string(stored) != report || result.Killed != 0 || result.Equivalent != 1 {
+		t.Fatalf("stored native report = %q, %#v, %v", stored, result, err)
+	}
+	if _, _, err := LoadReport(campaign.MutationRoot, input); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("unreviewed report lookup error = %v", err)
+	}
+	output.Reset()
+	if err := campaign.Run(context.Background()); err != nil || process.mutations != 1 || !strings.Contains(output.String(), "reused content-identical") {
+		t.Fatalf("Run(reuse) = %v, mutations = %d, output = %q", err, process.mutations, output.String())
+	}
+	updated, err := ParseEquivalentInventory(strings.NewReader(strings.Replace(selected, "Both boundary forms", "The two boundary forms", 1)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	campaign.EquivalentReviews = updated
+	if err := campaign.Run(context.Background()); err != nil || process.mutations != 1 {
+		t.Fatalf("Run(reason edit) = %v, mutations = %d", err, process.mutations)
+	}
+	campaign.EquivalentReviews = EquivalentInventory{}
+	if err := campaign.Run(context.Background()); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("Run(withdrawn review) error = %v", err)
+	}
+	campaign.EquivalentReviews = inventory
+	campaign.EvidenceRoot = filepath.Join(root, ".other-evidence")
+	campaign.MutationRoot = filepath.Join(root, ".other-mutation")
+	campaign.Workspace = filepath.Join(root, ".other-task")
+	process.fail = "other-exit"
+	output.Reset()
+	if err := campaign.Run(context.Background()); err == nil || !strings.Contains(err.Error(), "mutation tool failed") {
+		t.Fatalf("Run(non-efficacy exit) error = %v", err)
+	}
+	if !strings.Contains(output.String(), `"LIVED" "source.go" "A" 3:1`) {
+		t.Fatalf("Run(non-efficacy exit) diagnostic = %q", output.String())
+	}
+	if _, err := os.Stat(filepath.Join(campaign.MutationRoot, "reports")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("failed native report was published: %v", err)
+	}
+}
+
+func TestCampaignRejectsSourceChangeBeforeEvidenceReuse(t *testing.T) {
+	root := t.TempDir()
+	sourcePath := filepath.Join(root, "source.go")
+	sourceA := []byte("package example\n\nfunc Value() int { return 1 }\n")
+	sourceB := []byte("package example\n\nfunc Value() int { return 2 }\n")
+	if err := os.WriteFile(sourcePath, sourceB, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	verifier := t.TempDir()
+	if err := os.WriteFile(filepath.Join(verifier, "go.mod"), []byte("module verifier\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	makeReview := func() EquivalentInventory {
+		t.Helper()
+		digest, err := SourceDigest(root, ".", ".")
+		if err != nil {
+			t.Fatal(err)
+		}
+		return EquivalentInventory{SchemaVersion: 1, Packages: []EquivalentReview{{
+			ModuleDirectory: ".", PackageDirectory: ".", SourceDigest: digest,
+			GremlinsVersion: GremlinsVersion, GremlinsVerifierSHA256: LegacyVerifierDigest(),
+			Mutations: []EquivalentMutation{{FileName: "source.go", Type: "A", Line: 3, Column: 1,
+				ContractDomain: "Observable integer result for admitted nonnegative values",
+				Reason:         "Both boundary forms return the same maximum integer at equality."}},
+		}}}
+	}
+	report := `{"files":[{"file_name":"source.go","mutations":[{"type":"A","status":"LIVED","line":3,"column":1}]}],"mutants_killed":0,"mutants_lived":1,"mutants_not_covered":0,"mutants_not_viable":0,"mutants_total":1,"mutations_coverage":100,"test_efficacy":0}`
+	process := &campaignProcess{root: root, verifierSource: verifier, report: &report, fail: "efficacy"}
+	var output bytes.Buffer
+	campaign := Campaign{
+		Root: root, EvidenceRoot: filepath.Join(root, ".verification"),
+		MutationRoot: filepath.Join(root, ".verification", "mutation"), Workspace: filepath.Join(root, ".task"),
+		Policy: CampaignPolicy{Repository: "example", ModuleDirectory: ".", ModulePath: "example",
+			GoVersion: "1.27.0", Packages: []string{"."}, ServiceIdentities: map[string]string{}, Workers: 1},
+		EquivalentReviews: makeReview(), Environment: map[string]string{},
+		RuntimeIdentity: RuntimeIdentity{GoVersion: "go1.27.0", GOOS: "linux", GOARCH: "amd64", CGOEnabled: "0"},
+		Process:         process.run, Output: &output,
+	}
+	if err := campaign.Run(context.Background()); err != nil {
+		t.Fatalf("Run(source B) error = %v", err)
+	}
+	if err := os.WriteFile(sourcePath, sourceA, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	campaign.EquivalentReviews = makeReview()
+	process.afterList = func() error { return os.WriteFile(sourcePath, sourceB, 0o600) }
+	output.Reset()
+	if err := campaign.Run(context.Background()); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("Run(source A to B during go list) error = %v, output = %q", err, output.String())
+	}
+	if process.mutations != 1 || strings.Contains(output.String(), "reused content-identical") {
+		t.Fatalf("stale review reused prior B report: mutations = %d, output = %q", process.mutations, output.String())
+	}
+}
+
 func TestMutationPhaseTimeoutIncludesMeasuredColdCompileAndMinimum(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -116,10 +254,16 @@ type campaignProcess struct {
 	mutationOutput  string
 	mutateSource    bool
 	afterMutation   func() error
+	afterList       func() error
 	requireTags     bool
 	requireSerial   bool
 	coverageElapsed []string
 }
+
+type mutationExitCode int
+
+func (code mutationExitCode) Error() string { return "mutation efficacy threshold" }
+func (code mutationExitCode) ExitCode() int { return int(code) }
 
 func (process *campaignProcess) run(_ context.Context, name string, args []string, _ string, environment map[string]string, stdout, _ io.Writer) error {
 	packageCommand := name == "go" && len(args) > 0 && (args[0] == "list" || args[0] == "test") || strings.HasSuffix(name, "golib-gremlins")
@@ -161,7 +305,13 @@ func (process *campaignProcess) run(_ context.Context, name string, args []strin
 			Dir: directory, ImportPath: importPath, GoFiles: goFiles,
 			Module: &listedModule{Path: "example", Main: true, GoVersion: "1.27.0"},
 		}
-		return json.NewEncoder(stdout).Encode(listing)
+		if err := json.NewEncoder(stdout).Encode(listing); err != nil {
+			return err
+		}
+		if process.afterList != nil {
+			return process.afterList()
+		}
+		return nil
 	case name == "go" && len(args) > 1 && args[0] == "mod":
 		if process.fail == "download" {
 			return errors.New("download failed")
@@ -223,8 +373,17 @@ func (process *campaignProcess) run(_ context.Context, name string, args []strin
 			}
 		}
 		if process.afterMutation != nil {
-			return process.afterMutation()
+			if err := process.afterMutation(); err != nil {
+				return err
+			}
 		}
+		if process.fail == "efficacy" {
+			return mutationExitCode(10)
+		}
+		if process.fail == "other-exit" {
+			return mutationExitCode(11)
+		}
+		return nil
 	}
 	return nil
 }

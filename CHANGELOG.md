@@ -6,11 +6,16 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Allow exact source- and verifier-bound equivalent-mutant reviews in native
+  mutation campaigns while retaining raw `LIVED` reports, strict default kills,
+  and separate bounded failure diagnostics.
 - Recorded verified root-module scanner results with a blocked release verdict
   and retained the open fleet-enforcement risk under the v2 module identity.
 
 ### Fixed
 
+- Select published Math v1.1.2 and Measurement v2.0.1 in the maintained
+  compatibility consumer without changing the frozen published cohort.
 - Add published Audit, Cache and Identifier v2 modules to the maintained
   compatibility consumer alongside their historical v1 imports, retaining
   immutable release sources and the frozen published compatibility cohort.
