@@ -3,6 +3,7 @@ package gates
 import (
 	"bytes"
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -78,6 +79,60 @@ func TestWorkflowRefusalPreservesPinnedMergeControls(t *testing.T) {
 				t.Fatalf("executor/output = %d/%q", calls, output.String())
 			}
 		})
+	}
+}
+
+func TestWorkflowLocalDescriptorRefusalBeforeExecutor(t *testing.T) {
+	const marker = "application-private-detail"
+	for _, test := range []struct{ name, descriptor, want string }{
+		{"malformed", "runs: [\n# " + marker, "workflow security policy: invalid local action descriptor"},
+		{"unsafe action", "name: " + marker + "\nruns: {using: composite, steps: [{uses: owner/action@main}]}", "workflow security policy: local action security policy failed"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := t.TempDir()
+			workflowRefusalWrite(t, root, ".github/workflows/ci.yml", "jobs: {test: {steps: [{uses: ./ordinary}]}}")
+			workflowRefusalWrite(t, root, "ordinary/action.yml", test.descriptor)
+			var output bytes.Buffer
+			calls := 0
+			runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(context.Context, Command) error { calls++; return nil })}
+			err := runner.Workflows(t.Context())
+			if err == nil || err.Error() != test.want || strings.Contains(err.Error(), marker) {
+				t.Fatalf("local descriptor refusal = %v, want fixed category %q", err, test.want)
+			}
+			if calls != 0 || output.Len() != 0 {
+				t.Fatalf("local descriptor refusal allowed effects: calls=%d output=%q", calls, output.String())
+			}
+		})
+	}
+}
+
+func TestWorkflowLocalYAMLFallbackPreservesValidatorEffects(t *testing.T) {
+	root := t.TempDir()
+	workflowRefusalWrite(t, root, ".github/workflows/ci.yml", "jobs: {test: {steps: [{uses: ./ordinary}]}}")
+	workflowRefusalWrite(t, root, "ordinary/action.yaml", "runs: {using: composite, steps: [{uses: owner/action@0123456789012345678901234567890123456789}]}")
+	var output bytes.Buffer
+	calls := 0
+	runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(_ context.Context, command Command) error {
+		calls++
+		if command.Name != "go" || !strings.Contains(strings.Join(command.Args, " "), "actionlint@"+actionlintVersion) {
+			t.Fatalf("unexpected validator command: %#v", command)
+		}
+		return nil
+	})}
+	if err := runner.Workflows(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 || output.String() != "workflow contract passed\n" {
+		t.Fatalf("fallback validator effects = %d/%q", calls, output.String())
+	}
+}
+
+func TestLocalDescriptorInspectionPreservesCancellationBeforeDecode(t *testing.T) {
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	inspection := localActionInspection{ctx: ctx}
+	if err := inspection.inspect([]byte("runs: ["), 1, true); !errors.Is(err, context.Canceled) {
+		t.Fatalf("canceled descriptor inspection = %v, want context cancellation", err)
 	}
 }
 
