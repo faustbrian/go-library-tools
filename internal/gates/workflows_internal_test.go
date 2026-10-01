@@ -32,6 +32,89 @@ func TestWorkflowsRunsPinnedActionlintWithBoundedDiagnostics(t *testing.T) {
 	}
 }
 
+func TestWorkflowsWithoutWorkflowTreeStillRunsActionlint(t *testing.T) {
+	for _, githubDirectory := range []bool{false, true} {
+		t.Run(fmt.Sprintf("github-directory-%v", githubDirectory), func(t *testing.T) {
+			root := t.TempDir()
+			if githubDirectory {
+				if err := os.Mkdir(filepath.Join(root, ".github"), 0o700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			calls := 0
+			var output bytes.Buffer
+			runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(_ context.Context, command Command) error {
+				calls++
+				want := "run github.com/rhysd/actionlint/cmd/actionlint@" + actionlintVersion + " -no-color -oneline -shellcheck= -pyflakes="
+				if command.Name != "go" || command.Dir != root || command.Env["GOWORK"] != "off" || strings.Join(command.Args, " ") != want {
+					t.Fatalf("workflow command = %#v", command)
+				}
+				return nil
+			})}
+			if err := runner.Workflows(t.Context()); err != nil {
+				t.Fatalf("Workflows() error = %v", err)
+			}
+			if calls != 1 || output.String() != "workflow contract passed\n" {
+				t.Fatalf("calls/output = %d/%q", calls, output.String())
+			}
+		})
+	}
+}
+
+func TestWorkflowsRejectsNonDirectoryTreeBeforeActionlint(t *testing.T) {
+	for _, name := range []string{".github", filepath.Join(".github", "workflows")} {
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			path := filepath.Join(root, name)
+			if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(path, []byte("ordinary fixture"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			calls := 0
+			var output bytes.Buffer
+			runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(context.Context, Command) error {
+				calls++
+				return nil
+			})}
+			err := runner.Workflows(t.Context())
+			if err == nil || err.Error() != "workflow security policy: workflow directory missing or symbolic" {
+				t.Fatalf("Workflows() error = %v", err)
+			}
+			if calls != 0 || output.Len() != 0 {
+				t.Fatalf("calls/output = %d/%q", calls, output.String())
+			}
+		})
+	}
+}
+
+func TestWorkflowsPreservesPreflightCancellationBeforeActionlint(t *testing.T) {
+	root := t.TempDir()
+	directory := filepath.Join(root, ".github", "workflows")
+	if err := os.MkdirAll(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	workflow := "name: ordinary\non: push\npermissions: {contents: read}\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - run: echo ordinary\n"
+	if err := os.WriteFile(filepath.Join(directory, "ci.yml"), []byte(workflow), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(t.Context())
+	cancel()
+	calls := 0
+	var output bytes.Buffer
+	runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(context.Context, Command) error {
+		calls++
+		return nil
+	})}
+	if err := runner.Workflows(ctx); !errors.Is(err, context.Canceled) {
+		t.Fatalf("Workflows() error = %v, want context cancellation", err)
+	}
+	if calls != 0 || output.Len() != 0 {
+		t.Fatalf("calls/output = %d/%q", calls, output.String())
+	}
+}
+
 func TestWorkflowsRejectsSecurityPolicyViolationsThatActionlintAccepts(t *testing.T) {
 	root := t.TempDir()
 	workflowDirectory := filepath.Join(root, ".github", "workflows")
