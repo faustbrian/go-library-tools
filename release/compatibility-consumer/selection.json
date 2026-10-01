@@ -298,6 +298,29 @@
       ]
     },
     {
+      "alongside_module_path": "github.com/faustbrian/go-queue-control-plane",
+      "module_path": "github.com/faustbrian/go-queue-control-plane/v2",
+      "version": "v2.0.0",
+      "source_revision": "427281b33e3c1a25f256707c3d109caf370c5b55",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-queue-control-plane/v2",
+        "github.com/faustbrian/go-queue-control-plane/v2/adapters/kubernetes",
+        "github.com/faustbrian/go-queue-control-plane/v2/alerts",
+        "github.com/faustbrian/go-queue-control-plane/v2/apihttp",
+        "github.com/faustbrian/go-queue-control-plane/v2/authz",
+        "github.com/faustbrian/go-queue-control-plane/v2/cli",
+        "github.com/faustbrian/go-queue-control-plane/v2/client",
+        "github.com/faustbrian/go-queue-control-plane/v2/control",
+        "github.com/faustbrian/go-queue-control-plane/v2/dataplane",
+        "github.com/faustbrian/go-queue-control-plane/v2/fleet",
+        "github.com/faustbrian/go-queue-control-plane/v2/history",
+        "github.com/faustbrian/go-queue-control-plane/v2/kubernetes",
+        "github.com/faustbrian/go-queue-control-plane/v2/postgres",
+        "github.com/faustbrian/go-queue-control-plane/v2/server",
+        "github.com/faustbrian/go-queue-control-plane/v2/ui"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-rate-limit",
       "module_path": "github.com/faustbrian/go-rate-limit/v2",
       "version": "v2.0.0",

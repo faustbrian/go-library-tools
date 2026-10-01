@@ -14,6 +14,9 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Add published Queue Control Plane v2 public packages to the maintained
+  compatibility consumer alongside its historical v1 import, retaining the
+  frozen published cohort.
 - Select published Math v1.1.2 and Measurement v2.0.1 in the maintained
   compatibility consumer without changing the frozen published cohort.
 - Add published Audit, Cache and Identifier v2 modules to the maintained
