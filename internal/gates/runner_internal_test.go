@@ -348,14 +348,15 @@ func TestRunSecurityPreservesGitleaksScannerAndCleanupFailures(t *testing.T) {
 
 func TestCopyGitleaksCurrentTreeCapturesAllFilesystemClasses(t *testing.T) {
 	source := t.TempDir()
-	for path, content := range map[string]string{
+	contents := map[string]string{
 		".git/config":          "excluded repository metadata\n",
 		".gitignore":           "generated/\n",
 		".gitleaksignore":      "excluded consumer suppression\n",
 		"tracked-modified.go":  "package fixture\nconst state = \"modified\"\n",
 		"untracked.txt":        "untracked\n",
 		"generated/secret.txt": "gitignored generated output\n",
-	} {
+	}
+	for path, content := range contents {
 		target := filepath.Join(source, filepath.FromSlash(path))
 		if err := os.MkdirAll(filepath.Dir(target), 0o700); err != nil {
 			t.Fatal(err)
@@ -364,19 +365,32 @@ func TestCopyGitleaksCurrentTreeCapturesAllFilesystemClasses(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
+	outside := filepath.Join(t.TempDir(), "outside")
+	if err := os.WriteFile(outside, []byte("outside snapshot boundary"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for name, target := range map[string]string{"linked-file": outside, "linked-directory": filepath.Dir(outside), "dangling": filepath.Join(source, "absent")} {
+		if err := os.Symlink(target, filepath.Join(source, name)); err != nil {
+			t.Fatal(err)
+		}
+	}
 	destination := filepath.Join(t.TempDir(), "current")
 	if err := copyGitleaksCurrentTree(source, destination); err != nil {
 		t.Fatal(err)
 	}
 	for _, path := range []string{".gitignore", "tracked-modified.go", "untracked.txt", "generated/secret.txt"} {
-		if _, err := os.Stat(filepath.Join(destination, filepath.FromSlash(path))); err != nil {
-			t.Fatalf("snapshot %s: %v", path, err)
+		data, err := os.ReadFile(filepath.Join(destination, filepath.FromSlash(path)))
+		if err != nil || string(data) != contents[path] {
+			t.Fatalf("snapshot %s does not preserve contents: %v", path, err)
 		}
 	}
-	for _, path := range []string{".git", ".gitleaksignore"} {
+	for _, path := range []string{".git", ".gitleaksignore", "linked-file", "linked-directory", "dangling"} {
 		if _, err := os.Lstat(filepath.Join(destination, path)); !errors.Is(err, fs.ErrNotExist) {
 			t.Fatalf("excluded snapshot path %s exists: %v", path, err)
 		}
+	}
+	if data, err := os.ReadFile(outside); err != nil || string(data) != "outside snapshot boundary" {
+		t.Fatalf("outside sentinel changed: %v", err)
 	}
 }
 
