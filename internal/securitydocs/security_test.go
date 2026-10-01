@@ -826,6 +826,51 @@ func FuzzValidateNeverPanics(f *testing.F) {
 	})
 }
 
+func TestValidateRejectsUnicodeBlankOwnershipWithoutChangingDocuments(t *testing.T) {
+	validRisk := `{"schema_version":1,"risks":[{"id":"SEC-1","module":"github.com/acme/example","severity":"low","status":"open","owner":"security@example.com","rationale":"risk","mitigation":"planned","review_condition":"on release"}]}`
+	emptyRisks := `{"schema_version":1,"risks":[]}`
+	validMatrix := matrix(scanners("passed"), "[]")
+	for _, test := range []struct{ name, risks, matrix, category string }{
+		{
+			"risk owner", strings.Replace(validRisk, `"owner":"security@example.com"`, `"owner":"\u00a0"`, 1), validMatrix,
+			"risk record requires owner",
+		},
+		{
+			"accepted evidence", strings.Replace(strings.Replace(validRisk, `"status":"open"`, `"status":"accepted"`, 1), `"review_condition":"on release"`, `"review_condition":"on release","evidence":"\u00a0","expires_at":"2099-10-01T00:00:00Z"`, 1), validMatrix,
+			"accepted risk requires evidence and expires_at",
+		},
+		{
+			"module identity", emptyRisks, strings.Replace(validMatrix, `"module":"github.com/acme/example"`, `"module":"\u00a0"`, 1),
+			"module record requires module and immutable revision",
+		},
+		{
+			"scanner version", emptyRisks, strings.Replace(validMatrix, `"tool_version":"v1.0.0"`, `"tool_version":"\u00a0"`, 1),
+			"module record has invalid scanner result",
+		},
+		{
+			"verdict owner", emptyRisks, strings.Replace(validMatrix, `"owner":"security@example.com"`, `"owner":"\u00a0"`, 1),
+			"module record has invalid release verdict",
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := t.TempDir()
+			documents := map[string]string{"risk-register.json": test.risks, "security-matrix.json": test.matrix}
+			for name, value := range documents {
+				write(t, filepath.Join(root, name), value)
+			}
+			if err := securitydocs.Validate(root); err == nil || err.Error() != test.category {
+				t.Fatalf("Validate() = %v, want safe category %q", err, test.category)
+			}
+			for name, expected := range documents {
+				actual, err := os.ReadFile(filepath.Join(root, name))
+				if err != nil || string(actual) != expected {
+					t.Fatalf("Validate changed %s: %v", name, err)
+				}
+			}
+		})
+	}
+}
+
 func scanners(status string) string {
 	names := []string{"codeql", "dependency-review", "go-vet", "gosec", "govulncheck", "license", "owned-analysis", "secret-current-tree", "secret-history", "staticcheck", "workflow-analysis"}
 	values := make([]string, 0, len(names))
