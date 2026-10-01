@@ -77,12 +77,40 @@ func TestBoundedSBOMBufferAcceptsItsExactLimit(t *testing.T) {
 
 func TestBoundedSBOMBufferLimitsCumulativeWrites(t *testing.T) {
 	var buffer boundedSBOMBuffer
+	buffer.setOverflowCallback(nil)
+	notifications := 0
+	callback := func() {
+		notifications++
+		if !buffer.mutex.TryLock() {
+			t.Error("overflow callback ran under the buffer lock")
+			return
+		}
+		buffer.mutex.Unlock()
+		if !buffer.didOverflow() {
+			t.Error("overflow callback could not observe the overflow")
+		}
+	}
+	buffer.setOverflowCallback(callback)
 	first := make([]byte, maximumSBOMOutput-1)
 	if written, err := buffer.Write(first); err != nil || written != len(first) || buffer.overflow {
 		t.Fatalf("first Write() = %d, %v, overflow %v", written, err, buffer.overflow)
 	}
 	if written, err := buffer.Write([]byte("ab")); err != nil || written != 2 || !buffer.overflow || buffer.data.Len() != maximumSBOMOutput {
 		t.Fatalf("second Write() = %d, %v, overflow %v, length %d", written, err, buffer.overflow, buffer.data.Len())
+	}
+	if notifications != 1 {
+		t.Fatalf("first overflow notifications = %d, want 1", notifications)
+	}
+	if written, err := buffer.Write([]byte("c")); err != nil || written != 1 || notifications != 1 || buffer.data.Len() != maximumSBOMOutput {
+		t.Fatalf("repeated overflow = %d/%v, notifications %d, length %d", written, err, notifications, buffer.data.Len())
+	}
+	buffer.setOverflowCallback(nil)
+	if notifications != 1 || !buffer.didOverflow() {
+		t.Fatal("nil callback changed notification or overflow state")
+	}
+	buffer.setOverflowCallback(callback)
+	if notifications != 2 {
+		t.Fatalf("late overflow registration notifications = %d, want 2", notifications)
 	}
 }
 

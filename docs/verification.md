@@ -54,7 +54,7 @@ runner instruments the exact production-package set once while executing the
 complete module test set. This keeps denominators production-specific while
 allowing integration and external-package tests to contribute only when they
 actually exercise a package.
-Coverage failures retain the failing-package error and print up to 20 uncovered
+Coverage failures retain the failing-package error and print up to 512 uncovered
 source-block filenames and ranges to gate output. Each location is limited to
 160 escaped ASCII bytes; unsafe, oversized, and excess locations are counted as
 omitted. Profiles remain task-owned and are removed on success and failure.
