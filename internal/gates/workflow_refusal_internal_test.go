@@ -136,6 +136,78 @@ func TestLocalDescriptorInspectionPreservesCancellationBeforeDecode(t *testing.T
 	}
 }
 
+func TestWorkflowSymbolicDescriptorRefusedBeforeExecutor(t *testing.T) {
+	root := t.TempDir()
+	workflowRefusalWrite(t, root, "ordinary.yml", "jobs: {}\n")
+	directory := filepath.Join(root, ".github", "workflows")
+	if err := os.MkdirAll(directory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(root, "ordinary.yml"), filepath.Join(directory, "ci.yml")); err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	calls := 0
+	runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(context.Context, Command) error { calls++; return nil })}
+	err := runner.Workflows(t.Context())
+	const want = "workflow security policy: workflow security policy: symbolic link ci.yml"
+	if err == nil || err.Error() != want || calls != 0 || output.Len() != 0 {
+		t.Fatalf("symbolic descriptor = %v, executor calls=%d, output=%q; want %q without effects", err, calls, output.String(), want)
+	}
+}
+
+func TestWorkflowMissingOrDirectoryDescriptorRefusedBeforeExecutor(t *testing.T) {
+	for _, descriptorDirectory := range []bool{false, true} {
+		name := "empty action directory"
+		if descriptorDirectory {
+			name = "descriptor is a directory"
+		}
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			workflowRefusalWrite(t, root, ".github/workflows/ci.yml", "jobs: {test: {steps: [{uses: ./ordinary}]}}")
+			directory := filepath.Join(root, "ordinary")
+			if descriptorDirectory {
+				directory = filepath.Join(directory, "action.yml")
+			}
+			if err := os.MkdirAll(directory, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			var output bytes.Buffer
+			calls := 0
+			runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(context.Context, Command) error { calls++; return nil })}
+			err := runner.Workflows(t.Context())
+			const want = "workflow security policy: local action descriptor missing, symbolic, or oversized"
+			if err == nil || err.Error() != want || calls != 0 || output.Len() != 0 {
+				t.Fatalf("invalid descriptor = %v, executor calls=%d, output=%q; want %q without effects", err, calls, output.String(), want)
+			}
+		})
+	}
+}
+
+func TestWorkflowRepeatedLocalDescriptorChargesOnce(t *testing.T) {
+	root := t.TempDir()
+	const workflow = "jobs: {test: {steps: [{uses: ./ordinary}, {uses: ./ordinary}]}}"
+	const descriptor = "runs: {using: composite, steps: []}"
+	workflowRefusalWrite(t, root, ".github/workflows/ci.yml", workflow)
+	workflowRefusalWrite(t, root, "ordinary/action.yml", descriptor)
+	inspection := localActionInspection{ctx: t.Context(), root: root, active: map[string]bool{}, complete: map[string]bool{}}
+	if err := inspection.inspect([]byte(workflow), 0, false); err != nil {
+		t.Fatal(err)
+	}
+	if inspection.files != 1 || inspection.bytes != len(descriptor) || len(inspection.active) != 0 || !inspection.complete["ordinary"] {
+		t.Fatalf("repeated descriptor admission: files=%d, bytes=%d, active=%v, complete=%v", inspection.files, inspection.bytes, inspection.active, inspection.complete)
+	}
+	var output bytes.Buffer
+	calls := 0
+	runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(context.Context, Command) error { calls++; return nil })}
+	if err := runner.Workflows(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 1 || output.String() != "workflow contract passed\n" {
+		t.Fatalf("repeated descriptor public control: executor calls=%d, output=%q", calls, output.String())
+	}
+}
+
 func workflowRefusalWrite(t *testing.T, root, name, content string) {
 	t.Helper()
 	path := filepath.Join(root, name)
