@@ -108,9 +108,9 @@ func (inventory EquivalentInventory) Review(module, pkg, source, version, verifi
 		if review.SourceDigest != source || review.GremlinsVersion != version || review.GremlinsVerifierSHA256 != verifier {
 			return nil, fmt.Errorf("%w: equivalent-mutant source or verifier identity changed", ErrInvalid)
 		}
-		copy := review
-		copy.Mutations = append([]EquivalentMutation(nil), review.Mutations...)
-		return &copy, nil
+		selected := review
+		selected.Mutations = append([]EquivalentMutation(nil), review.Mutations...)
+		return &selected, nil
 	}
 	return nil, nil
 }

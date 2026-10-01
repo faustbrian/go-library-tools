@@ -385,11 +385,12 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 	if _, _, err := evidence.Store(campaign.EvidenceRoot, record); err != nil {
 		return err
 	}
-	if stored.Mutants == 0 {
+	switch {
+	case stored.Mutants == 0:
 		_, _ = fmt.Fprintf(output, "[%s] %s has zero viable mutants\n", campaign.Policy.ModuleDirectory, target)
-	} else if stored.Equivalent > 0 {
+	case stored.Equivalent > 0:
 		_, _ = fmt.Fprintf(output, "[%s] %s: %d killed, %d reviewed equivalent of %d viable mutants\n", campaign.Policy.ModuleDirectory, target, stored.Killed, stored.Equivalent, stored.Mutants)
-	} else {
+	default:
 		_, _ = fmt.Fprintf(output, "[%s] %s killed %d/%d viable mutants\n", campaign.Policy.ModuleDirectory, target, stored.Mutants, stored.Mutants)
 	}
 	return nil
@@ -416,13 +417,13 @@ func (campaign Campaign) packageInputAndSource(ctx context.Context, packageDirec
 	return current.review, current.current, current.source, nil
 }
 
-func (campaign Campaign) packageInputs(ctx context.Context, packageDirectory string) (*ZeroReview, string, string, error) {
-	inputs, err := campaign.packageInputsForVerifiers(ctx, packageDirectory, LegacyVerifierDigest())
+func (campaign Campaign) packageInputs(ctx context.Context) (string, string, error) {
+	inputs, err := campaign.packageInputsForVerifiers(ctx, ".", LegacyVerifierDigest())
 	if err != nil {
-		return nil, "", "", err
+		return "", "", err
 	}
 	current := inputs[LegacyVerifierDigest()]
-	return current.review, current.current, current.legacy, nil
+	return current.current, current.legacy, nil
 }
 
 type verifierPackageInputs struct {

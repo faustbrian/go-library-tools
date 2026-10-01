@@ -276,7 +276,7 @@ func TestCampaignImportsCheckpointAcrossBuiltInInputIdentityTransition(t *testin
 	campaign.Policy.OwnedModules = []OwnedModule{{
 		ModulePath: "example/unobserved", Directory: "unobserved",
 	}}
-	_, currentInput, legacyInput, err := campaign.packageInputs(context.Background(), ".")
+	currentInput, legacyInput, err := campaign.packageInputs(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -305,7 +305,7 @@ func TestCampaignImportsCheckpointWithIgnoredNestedFixtureSymlink(t *testing.T) 
 	if err := os.Symlink(t.TempDir(), filepath.Join(fixture, "latest")); err != nil {
 		t.Fatal(err)
 	}
-	_, currentInput, legacyInput, err := campaign.packageInputs(context.Background(), ".")
+	currentInput, legacyInput, err := campaign.packageInputs(context.Background())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -367,7 +367,7 @@ func TestCampaignPackageInputsRejectsMalformedCurrentIdentity(t *testing.T) {
 		}
 		return nil
 	}
-	if _, _, _, err := campaign.packageInputs(context.Background(), "."); err == nil {
+	if _, _, err := campaign.packageInputs(context.Background()); err == nil {
 		t.Fatal("packageInputs() error = nil")
 	}
 }
@@ -766,7 +766,7 @@ func TestPackageInputsPinsRepositoryRootBeforeListing(t *testing.T) {
 		}
 		return os.Symlink(replacement, alias)
 	}
-	_, current, legacy, err := campaign.packageInputs(context.Background(), ".")
+	current, legacy, err := campaign.packageInputs(context.Background())
 	if err != nil {
 		t.Fatalf("packageInputs() error = %v", err)
 	}
@@ -778,7 +778,7 @@ func TestPackageInputsPinsRepositoryRootBeforeListing(t *testing.T) {
 func TestPackageInputsRejectsUnresolvableRepositoryRoot(t *testing.T) {
 	campaign, _ := campaignFixture(t)
 	campaign.Root = filepath.Join(t.TempDir(), "missing")
-	if _, _, _, err := campaign.packageInputs(context.Background(), "."); !errors.Is(err, ErrInvalid) {
+	if _, _, err := campaign.packageInputs(context.Background()); !errors.Is(err, ErrInvalid) {
 		t.Fatalf("packageInputs() error = %v, want ErrInvalid", err)
 	}
 }
