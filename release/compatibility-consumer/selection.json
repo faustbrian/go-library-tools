@@ -182,9 +182,15 @@
     {
       "from_module_path": "github.com/faustbrian/go-service",
       "module_path": "github.com/faustbrian/go-service",
-      "version": "v1.1.1",
-      "source_revision": "2cf60912019198d5d9aa067648099a98a8ae7791",
-      "primary_entry_packages": ["github.com/faustbrian/go-service"]
+      "version": "v1.1.2",
+      "source_revision": "da862c7b72f590189703c78ea101b2a89c24559c",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-service",
+        "github.com/faustbrian/go-service/healthhttp",
+        "github.com/faustbrian/go-service/integration",
+        "github.com/faustbrian/go-service/serverhttp",
+        "github.com/faustbrian/go-service/servicetest"
+      ]
     }
   ],
   "additions": [
