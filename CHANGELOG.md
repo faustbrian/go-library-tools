@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Refresh the setup action's immutable source pin while preserving the
+  manifest-selected CLI and setup-before-bootstrap validation order.
 - Expand exact-coverage failure diagnostics to at most 512 sanitized source
   coordinates so ordinary release gaps remain visible without publishing raw
   profiles or changing coverage thresholds.

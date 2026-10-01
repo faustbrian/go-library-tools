@@ -827,7 +827,7 @@ func TestReusableWorkflowInstallsGolibBeforeEveryArchiveValidation(t *testing.T)
 		t.Fatal("reusable workflow has no CodeQL job")
 	}
 	codeQL := content[codeQLStart:]
-	setup := strings.Index(codeQL, "uses: faustbrian/go-library-tools/.github/actions/setup-golib@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa")
+	setup := strings.Index(codeQL, "uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0")
 	bootstrap := strings.Index(codeQL, "uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa")
 	if setup < 0 || bootstrap < 0 || setup > bootstrap {
 		t.Fatal("CodeQL job must install golib before bootstrap archive validation")
