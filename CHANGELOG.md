@@ -14,6 +14,9 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Add published Queue Control Plane v2 public packages to the maintained
+  compatibility consumer alongside its historical v1 import, retaining the
+  frozen published cohort.
 - Keep CodeQL initialization and analysis on the same immutable action release
   so both owned and shared CI can load the generated analysis configuration.
 - Refresh release SBOM generation to SBOM Action v0.24.2 and Syft v1.51.1,
