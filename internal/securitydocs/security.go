@@ -123,34 +123,9 @@ func validateAtWithReader(directory string, now time.Time, read securityDocument
 	if err := decodeDocument(riskData, riskRegisterSchema, &risks); err != nil {
 		return err
 	}
-	seenRisks := map[string]struct{}{}
-	risksByID := map[string]risk{}
-	for _, risk := range risks.Risks {
-		for name, value := range map[string]string{"id": risk.ID, "module": risk.Module, "owner": risk.Owner, "rationale": risk.Rationale, "mitigation": risk.Mitigation, "review_condition": risk.ReviewCondition} {
-			if strings.TrimSpace(value) == "" {
-				return fmt.Errorf("risk record requires %s", name)
-			}
-		}
-		if _, exists := seenRisks[risk.ID]; exists {
-			return errors.New("duplicate risk id")
-		}
-		seenRisks[risk.ID] = struct{}{}
-		risksByID[risk.ID] = risk
-		if !member(risk.Severity, "critical", "high", "medium", "low") || !member(risk.Status, "open", "mitigated", "accepted", "closed") {
-			return errors.New("risk record has invalid severity or status")
-		}
-		if risk.Status == "accepted" {
-			if strings.TrimSpace(risk.Evidence) == "" || strings.TrimSpace(risk.ExpiresAt) == "" {
-				return errors.New("accepted risk requires evidence and expires_at")
-			}
-			expiresAt, err := time.Parse(time.RFC3339, risk.ExpiresAt)
-			if err != nil {
-				return errors.New("accepted risk has invalid expires_at")
-			}
-			if !expiresAt.After(now) {
-				return errors.New("accepted risk has expired")
-			}
-		}
+	risksByID, err := admitRisks(risks.Risks, now)
+	if err != nil {
+		return err
 	}
 	matrixData, err := read(root, "security-matrix.json")
 	if err != nil {
@@ -162,9 +137,46 @@ func validateAtWithReader(directory string, now time.Time, read securityDocument
 	if err := decodeDocument(matrixData, securityMatrixSchema, &modules); err != nil {
 		return err
 	}
+	return admitModules(modules.Modules, risksByID, matrixDigest)
+}
+
+func admitRisks(records []risk, now time.Time) (map[string]risk, error) {
+	seenRisks := map[string]struct{}{}
+	risksByID := map[string]risk{}
+	for _, risk := range records {
+		for name, value := range map[string]string{"id": risk.ID, "module": risk.Module, "owner": risk.Owner, "rationale": risk.Rationale, "mitigation": risk.Mitigation, "review_condition": risk.ReviewCondition} {
+			if strings.TrimSpace(value) == "" {
+				return nil, fmt.Errorf("risk record requires %s", name)
+			}
+		}
+		if _, exists := seenRisks[risk.ID]; exists {
+			return nil, errors.New("duplicate risk id")
+		}
+		seenRisks[risk.ID] = struct{}{}
+		risksByID[risk.ID] = risk
+		if !member(risk.Severity, "critical", "high", "medium", "low") || !member(risk.Status, "open", "mitigated", "accepted", "closed") {
+			return nil, errors.New("risk record has invalid severity or status")
+		}
+		if risk.Status == "accepted" {
+			if strings.TrimSpace(risk.Evidence) == "" || strings.TrimSpace(risk.ExpiresAt) == "" {
+				return nil, errors.New("accepted risk requires evidence and expires_at")
+			}
+			expiresAt, err := time.Parse(time.RFC3339, risk.ExpiresAt)
+			if err != nil {
+				return nil, errors.New("accepted risk has invalid expires_at")
+			}
+			if !expiresAt.After(now) {
+				return nil, errors.New("accepted risk has expired")
+			}
+		}
+	}
+	return risksByID, nil
+}
+
+func admitModules(records []moduleRecord, risksByID map[string]risk, matrixDigest string) error {
 	seenModules := map[string]struct{}{}
 	passingModules := map[string]struct{}{}
-	for _, module := range modules.Modules {
+	for _, module := range records {
 		if strings.TrimSpace(module.Module) == "" || !revisionPattern.MatchString(module.Revision) {
 			return errors.New("module record requires module and immutable revision")
 		}
