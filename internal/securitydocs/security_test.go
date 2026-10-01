@@ -15,6 +15,36 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
+func TestValidateRiskDecodeFailuresRemainSafeAndLeaveDocumentsUnchanged(t *testing.T) {
+	const marker = "private application marker"
+	base := `{"schema_version":1,"risks":[{"id":"SEC-1","module":"github.com/acme/example","severity":"low","status":"open","owner":"maintainers","rationale":"private application marker","mitigation":"bounded","review_condition":"on change"}]}`
+	for _, test := range []struct{ name, document string }{
+		{"wrong known type", strings.Replace(base, `"owner":"maintainers"`, `"owner":["`+marker+`"]`, 1)},
+		{"unknown field", strings.Replace(base, `"review_condition":"on change"`, `"review_condition":"on change","ordinary_unknown":"`+marker+`"`, 1)},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := t.TempDir()
+			documents := map[string]string{
+				"risk-register.json":   test.document,
+				"security-matrix.json": `{"schema_version":1,"modules":[]}`,
+			}
+			for name, value := range documents {
+				write(t, filepath.Join(root, name), value)
+			}
+			err := securitydocs.Validate(root)
+			if err == nil || err.Error() != "security document violates published schema" || strings.Contains(err.Error(), marker) {
+				t.Fatalf("Validate() = %v, want safe schema rejection", err)
+			}
+			for name, want := range documents {
+				stored, readErr := os.ReadFile(filepath.Join(root, name))
+				if readErr != nil || string(stored) != want {
+					t.Fatalf("Validate changed %s: %v", name, readErr)
+				}
+			}
+		})
+	}
+}
+
 func TestValidateBindsResolvedRiskEvidenceToExactMatrixBytes(t *testing.T) {
 	now := "2099-10-01T00:00:00Z"
 	matrixDocument := matrix(scanners("passed"), `["SEC-1"]`)
