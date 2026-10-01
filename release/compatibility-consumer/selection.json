@@ -335,6 +335,29 @@
       ]
     },
     {
+      "alongside_module_path": "github.com/faustbrian/go-opening-hours",
+      "module_path": "github.com/faustbrian/go-opening-hours/v2",
+      "version": "v2.0.1",
+      "source_revision": "6ecdac5c7e268abac3ccc609c74711c9a316a2b0",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-opening-hours/v2",
+        "github.com/faustbrian/go-opening-hours/v2/adapters/calendar",
+        "github.com/faustbrian/go-opening-hours/v2/adapters/config",
+        "github.com/faustbrian/go-opening-hours/v2/adapters/temporal",
+        "github.com/faustbrian/go-opening-hours/v2/adapters/validation",
+        "github.com/faustbrian/go-opening-hours/v2/adapters/wire",
+        "github.com/faustbrian/go-opening-hours/v2/compile",
+        "github.com/faustbrian/go-opening-hours/v2/encoding",
+        "github.com/faustbrian/go-opening-hours/v2/openinghourscalendar",
+        "github.com/faustbrian/go-opening-hours/v2/openinghoursconfig",
+        "github.com/faustbrian/go-opening-hours/v2/openinghourstemporal",
+        "github.com/faustbrian/go-opening-hours/v2/openinghourstest",
+        "github.com/faustbrian/go-opening-hours/v2/openinghoursvalidation",
+        "github.com/faustbrian/go-opening-hours/v2/openinghourswire",
+        "github.com/faustbrian/go-opening-hours/v2/postgres"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-queue-control-plane",
       "module_path": "github.com/faustbrian/go-queue-control-plane/v2",
       "version": "v2.0.1",

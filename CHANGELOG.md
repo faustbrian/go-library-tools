@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Added Opening Hours v2.0.1 and all fifteen public packages to the maintained
+  compatibility consumer alongside v1.1.0, preserving published cohorts.
 - Adopted Queue v1.1.2 and Queue Control Plane v2.0.1 in the maintained
   compatibility consumer while preserving published compatibility cohorts
   and retained legacy adapter selections.
