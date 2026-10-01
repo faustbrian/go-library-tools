@@ -152,6 +152,26 @@
       ]
     },
     {
+      "from_module_path": "github.com/faustbrian/go-queue",
+      "module_path": "github.com/faustbrian/go-queue",
+      "version": "v1.1.2",
+      "source_revision": "2173052b630557f345d02ec6961594218d47a316",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-queue",
+        "github.com/faustbrian/go-queue/adapters/redisstream",
+        "github.com/faustbrian/go-queue/core",
+        "github.com/faustbrian/go-queue/job",
+        "github.com/faustbrian/go-queue/management",
+        "github.com/faustbrian/go-queue/managementhttp",
+        "github.com/faustbrian/go-queue/mocks",
+        "github.com/faustbrian/go-queue/nats",
+        "github.com/faustbrian/go-queue/nsq",
+        "github.com/faustbrian/go-queue/redisdb",
+        "github.com/faustbrian/go-queue/redisstream",
+        "github.com/faustbrian/go-queue/valkeystream"
+      ]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-router",
       "module_path": "github.com/faustbrian/go-router/v2",
       "version": "v2.0.0",
@@ -317,8 +337,8 @@
     {
       "alongside_module_path": "github.com/faustbrian/go-queue-control-plane",
       "module_path": "github.com/faustbrian/go-queue-control-plane/v2",
-      "version": "v2.0.0",
-      "source_revision": "427281b33e3c1a25f256707c3d109caf370c5b55",
+      "version": "v2.0.1",
+      "source_revision": "6da9d0a2c5db8b3b131a7199eb984b78a5b7079e",
       "primary_entry_packages": [
         "github.com/faustbrian/go-queue-control-plane/v2",
         "github.com/faustbrian/go-queue-control-plane/v2/adapters/kubernetes",

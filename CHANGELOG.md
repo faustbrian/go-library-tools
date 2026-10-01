@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Adopted Queue v1.1.2 and Queue Control Plane v2.0.1 in the maintained
+  compatibility consumer while preserving published compatibility cohorts
+  and retained legacy adapter selections.
 - Adopted Service v1.1.2 and all five public packages in the maintained
   compatibility consumer while preserving published compatibility cohorts.
 - Adopted Prompts v1.1.2 and both supported terminal imports in the maintained
