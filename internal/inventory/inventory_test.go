@@ -141,6 +141,49 @@ func TestLoadValidatesCanonicalManifests(t *testing.T) {
 	}
 }
 
+func TestLoadDistinguishesOwnedNestedModulesFromIntentionalTestFixtures(t *testing.T) {
+	for _, test := range []struct {
+		name, directory string
+		valid           bool
+	}{
+		{"foreign nested module", "nested/module", false},
+		{"intentional test fixture", "testdata/fixture", true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := fixture(t)
+			if err := os.MkdirAll(filepath.Join(root, test.directory), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			foreignPath := "github.com/ordinary/fixture"
+			write(t, filepath.Join(root, test.directory, "go.mod"), "module "+foreignPath+"\n\ngo 1.27.0\n")
+			manifest := identityManifest(1,
+				identityModule(1, ".", "github.com/faustbrian/example"),
+				identityModule(1, test.directory, foreignPath),
+			)
+			write(t, filepath.Join(root, "modules.json"), manifest)
+			policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}
+			loaded, loadErr := inventory.Load(root, policy)
+			catalog, snapshot, snapshotErr := inventory.LoadSnapshot(root, policy)
+			if test.valid {
+				if loadErr != nil || snapshotErr != nil || len(loaded.Modules) != 2 || len(catalog.Modules) != 2 ||
+					catalog.Modules[1].ModulePath != foreignPath || string(snapshot) != manifest {
+					t.Fatalf("intentional fixture rejected: Load=%#v, %v; LoadSnapshot=%#v, %v", loaded, loadErr, catalog, snapshotErr)
+				}
+				return
+			}
+			for _, err := range []error{loadErr, snapshotErr} {
+				if err == nil || err.Error() != "invalid module path" || strings.Contains(err.Error(), foreignPath) {
+					t.Fatalf("foreign nested module error = %v, want safe invalid module path", err)
+				}
+			}
+			if loaded.Repository != "" || loaded.SchemaVersion != 0 || loaded.Modules != nil ||
+				catalog.Repository != "" || catalog.SchemaVersion != 0 || catalog.Modules != nil || snapshot != nil {
+				t.Fatalf("rejected nested module retained accepted inventory: Load=%#v; LoadSnapshot=%#v, %q", loaded, catalog, snapshot)
+			}
+		})
+	}
+}
+
 func TestLoadSnapshotReturnsTheExactValidatedModuleManifest(t *testing.T) {
 	root := fixture(t)
 	policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}

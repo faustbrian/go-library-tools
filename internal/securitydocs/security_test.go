@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -552,6 +553,34 @@ func TestValidateRejectsMissingAndUnreadableDocuments(t *testing.T) {
 				}
 			})
 		}
+	}
+}
+
+func TestValidateRejectsUnavailableDocumentRootsWithFilesystemClassification(t *testing.T) {
+	root := t.TempDir()
+	file := filepath.Join(root, "ordinary-file")
+	write(t, file, "ordinary contents")
+	for _, test := range []struct {
+		name, path string
+		want       error
+	}{
+		{"missing root", filepath.Join(root, "missing"), os.ErrNotExist},
+		{"file instead of root", file, nil},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			err := securitydocs.Validate(test.path)
+			var filesystemError *os.PathError
+			if !errors.As(err, &filesystemError) || filesystemError.Path != test.path ||
+				filesystemError.Op != "open" || filesystemError.Err == nil ||
+				(test.want != nil && !errors.Is(err, test.want)) ||
+				!strings.Contains(err.Error(), "open security document root") {
+				t.Fatalf("Validate(%s) = %v, want retained filesystem classification", test.name, err)
+			}
+		})
+	}
+	stored, err := os.ReadFile(file)
+	if err != nil || string(stored) != "ordinary contents" {
+		t.Fatalf("Validate modified root file: %q, %v", stored, err)
 	}
 }
 
