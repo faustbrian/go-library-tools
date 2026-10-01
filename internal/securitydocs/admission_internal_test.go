@@ -7,6 +7,34 @@ import (
 	"time"
 )
 
+func TestRiskJSONDecodeReplacesOnlyAfterSuccessfulAdmission(t *testing.T) {
+	full := `{"id":"SEC-1","module":"github.com/acme/example","severity":"low","status":"open","owner":"maintainers","rationale":"ordinary rationale","mitigation":"bounded","review_condition":"on change","evidence":"artifact://review","expires_at":"2099-10-01T00:00:00Z"}`
+	want := risk{ID: "SEC-1", Module: "github.com/acme/example", Severity: "low", Status: "open", Owner: "maintainers", Rationale: "ordinary rationale", Mitigation: "bounded", ReviewCondition: "on change", Evidence: "artifact://review", ExpiresAt: "2099-10-01T00:00:00Z"}
+	var value risk
+	if err := json.Unmarshal([]byte(full), &value); err != nil || value != want {
+		t.Fatalf("full record = %#v, %v", value, err)
+	}
+	for _, test := range []struct{ name, document string }{
+		{"wrong known type", strings.Replace(strings.Replace(full, `"id":"SEC-1"`, `"id":"SEC-2"`, 1), `"expires_at":"2099-10-01T00:00:00Z"`, `"expires_at":7`, 1)},
+		{"unknown field", strings.Replace(strings.TrimSuffix(full, "}"), `"id":"SEC-1"`, `"id":"SEC-2"`, 1) + `,"ordinary_unknown":"private application marker"}`},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			decoded := want
+			if err := json.Unmarshal([]byte(test.document), &decoded); err == nil {
+				t.Fatal("invalid typed record was accepted")
+			}
+			if decoded != want {
+				t.Fatal("failed decode changed the previously admitted record")
+			}
+		})
+	}
+	replacement := `{"id":"SEC-2","module":"github.com/acme/other","severity":"medium","status":"mitigated","owner":"other maintainers","rationale":"replacement","mitigation":"reviewed","review_condition":"on release"}`
+	wantReplacement := risk{ID: "SEC-2", Module: "github.com/acme/other", Severity: "medium", Status: "mitigated", Owner: "other maintainers", Rationale: "replacement", Mitigation: "reviewed", ReviewCondition: "on release"}
+	if err := json.Unmarshal([]byte(replacement), &value); err != nil || value != wantReplacement {
+		t.Fatalf("replacement = %#v, %v", value, err)
+	}
+}
+
 func TestAdmitRisksRejectsInvalidPolicyWithoutPartialRegistry(t *testing.T) {
 	now := time.Date(2026, 10, 1, 12, 0, 0, 0, time.UTC)
 	valid := risk{ID: "SEC-1", Module: "github.com/acme/example", Severity: "low", Status: "open", Owner: "maintainers", Rationale: "risk", Mitigation: "bounded", ReviewCondition: "on change"}
