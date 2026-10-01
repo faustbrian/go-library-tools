@@ -94,6 +94,8 @@ github.com/cpuguy83/dockercfg v0.3.2 h1:DlJTyZGBDlXqUZ2Dk2Q3xHs/FtnooJJVaad2S9GK
 github.com/cpuguy83/dockercfg v0.3.2/go.mod h1:sugsbF4//dDlL/i+S+rtpIWp+5h0BHJHfjj5/jFyUJc=
 github.com/crate-crypto/go-ipa v0.0.0-20240223125850-b1e8a79f509c h1:uQYC5Z1mdLRPrZhHjHxufI8+2UG/i25QG92j0Er9p6I=
 github.com/crate-crypto/go-ipa v0.0.0-20240223125850-b1e8a79f509c/go.mod h1:geZJZH3SzKCqnz5VT0q/DyIG/tvu/dZk+VIfXicupJs=
+github.com/creack/pty v1.1.24 h1:bJrF4RRfyJnbTJqzRLHzcGaZK1NeM5kTC9jGgovnR1s=
+github.com/creack/pty v1.1.24/go.mod h1:08sCNb52WyoAwi2QDyzUCTgcvVFhUzewun7wtTfvcwE=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc h1:U9qPSI2PIWSS1VwoXQT9A3Wy9MM3WgvqSxFWenqJduM=
@@ -300,8 +302,8 @@ github.com/faustbrian/go-password/v2 v2.0.0 h1:xEquWDSC9CIeDVDwcZJDQKdhbtEcVIxKE
 github.com/faustbrian/go-password/v2 v2.0.0/go.mod h1:Tqc83xc8RVAsi6JAW3dkKM1OFVos7cfayeNHBbWstsA=
 github.com/faustbrian/go-postgres v1.1.0 h1:pmwcyg8FI7RipoN20/SPayi+S52kP1Li0I6G9xx2UoU=
 github.com/faustbrian/go-postgres v1.1.0/go.mod h1:JqvxgJpOHAktIHUzt+h3mLJ7J43Bbb22FsspPulLcjs=
-github.com/faustbrian/go-prompts v1.1.0 h1:2ecmVGScOCu/Bvr3mZWQ9tFPEraG8AuxBXAYb1DLbJc=
-github.com/faustbrian/go-prompts v1.1.0/go.mod h1:7bzPXAZhvxi96WOXuYzq2YGJUqac0UD1xE1TBcu4ZIk=
+github.com/faustbrian/go-prompts v1.1.2 h1:nX2dM0mGDfqJFGXa6DdI2YS3jS9ueyHSTR/2RlRFUcw=
+github.com/faustbrian/go-prompts v1.1.2/go.mod h1:hSGsd0tOhE2kYUj53p0V9NUaW1R9SPdBEBlo5e0wj2A=
 github.com/faustbrian/go-queue v1.1.1 h1:McwWoZ8kA5ZH3q/NVZxOqk/TLL/4mIsCtQqX+xujBWE=
 github.com/faustbrian/go-queue v1.1.1/go.mod h1:R2E+40RM/8AznMOdVnhA++yrCJ0CyLdULZNGgvIn9Ok=
 github.com/faustbrian/go-queue-control-plane v1.1.0 h1:eaLOjrATZgbvDkhpp506KtzWQwsDjJ8tjTffKTqZ/Uk=

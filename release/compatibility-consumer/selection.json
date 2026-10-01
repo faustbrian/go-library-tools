@@ -141,6 +141,17 @@
       "primary_entry_packages": ["github.com/faustbrian/go-password/v2"]
     },
     {
+      "from_module_path": "github.com/faustbrian/go-prompts",
+      "module_path": "github.com/faustbrian/go-prompts",
+      "version": "v1.1.2",
+      "source_revision": "13c208d67a35dd939d501bd0025ea80313eb0a8b",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-prompts",
+        "github.com/faustbrian/go-prompts/adapters/terminal",
+        "github.com/faustbrian/go-prompts/terminal"
+      ]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-router",
       "module_path": "github.com/faustbrian/go-router/v2",
       "version": "v2.0.0",

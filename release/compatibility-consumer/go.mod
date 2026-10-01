@@ -88,7 +88,7 @@ require (
 	github.com/faustbrian/go-openrpc v1.0.0
 	github.com/faustbrian/go-password/v2 v2.0.0
 	github.com/faustbrian/go-postgres v1.1.0
-	github.com/faustbrian/go-prompts v1.1.0
+	github.com/faustbrian/go-prompts v1.1.2
 	github.com/faustbrian/go-queue v1.1.1
 	github.com/faustbrian/go-queue-control-plane v1.1.0
 	github.com/faustbrian/go-queue-control-plane/v2 v2.0.0
@@ -247,6 +247,7 @@ require (
 	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/sys v0.48.0 // indirect
+	golang.org/x/term v0.46.0 // indirect
 	golang.org/x/text v0.42.0 // indirect
 	golang.org/x/tools v0.49.0 // indirect
 	golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1 // indirect
