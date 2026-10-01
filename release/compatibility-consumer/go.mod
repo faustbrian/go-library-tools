@@ -89,9 +89,9 @@ require (
 	github.com/faustbrian/go-password/v2 v2.0.0
 	github.com/faustbrian/go-postgres v1.1.0
 	github.com/faustbrian/go-prompts v1.1.2
-	github.com/faustbrian/go-queue v1.1.1
+	github.com/faustbrian/go-queue v1.1.2
 	github.com/faustbrian/go-queue-control-plane v1.1.0
-	github.com/faustbrian/go-queue-control-plane/v2 v2.0.0
+	github.com/faustbrian/go-queue-control-plane/v2 v2.0.1
 	github.com/faustbrian/go-queue/adapters/rabbitmq v1.0.0
 	github.com/faustbrian/go-queue/adapters/service v1.0.1
 	github.com/faustbrian/go-rabbitmq-queues v1.1.0
@@ -139,6 +139,7 @@ require (
 )
 
 require (
+	github.com/appleboy/com v1.2.0 // indirect
 	github.com/aws/aws-msk-iam-sasl-signer-go v1.0.4 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.43.4 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.32.35 // indirect
@@ -196,6 +197,10 @@ require (
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
+	github.com/nats-io/nats.go v1.52.0 // indirect
+	github.com/nats-io/nkeys v0.4.15 // indirect
+	github.com/nats-io/nuid v1.0.1 // indirect
+	github.com/nsqio/go-nsq v1.1.0 // indirect
 	github.com/oklog/ulid/v2 v2.1.1 // indirect
 	github.com/opensearch-project/opensearch-go/v4 v4.7.3 // indirect
 	github.com/peterstace/simplefeatures v0.59.0 // indirect
@@ -239,6 +244,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.46.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.11.0 // indirect
 	go.uber.org/atomic v1.11.0 // indirect
+	go.uber.org/mock v0.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
