@@ -704,7 +704,7 @@ type workflowStep struct {
 func TestReusableWorkflowConfiguresBootstrapProxyForEveryGoBuild(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/library-ci.yml")
 	for _, required := range []string{
-		"uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa",
+		"uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@7e4cd2983099490e7f350724044b86835cc5d342",
 		"bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}",
 		"bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}",
 	} {
@@ -828,7 +828,7 @@ func TestReusableWorkflowInstallsGolibBeforeEveryArchiveValidation(t *testing.T)
 	}
 	codeQL := content[codeQLStart:]
 	setup := strings.Index(codeQL, "uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0")
-	bootstrap := strings.Index(codeQL, "uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@37d4eea85570a6dea1ecdce2f9ec12d1aa02fbfa")
+	bootstrap := strings.Index(codeQL, "uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@7e4cd2983099490e7f350724044b86835cc5d342")
 	if setup < 0 || bootstrap < 0 || setup > bootstrap {
 		t.Fatal("CodeQL job must install golib before bootstrap archive validation")
 	}
