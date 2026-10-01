@@ -190,6 +190,8 @@ import (
 	_ "github.com/faustbrian/go-password/v2"
 	_ "github.com/faustbrian/go-postgres"
 	_ "github.com/faustbrian/go-prompts"
+	_ "github.com/faustbrian/go-prompts/adapters/terminal"
+	_ "github.com/faustbrian/go-prompts/terminal"
 	_ "github.com/faustbrian/go-queue"
 	_ "github.com/faustbrian/go-queue-control-plane"
 	_ "github.com/faustbrian/go-queue-control-plane/v2"

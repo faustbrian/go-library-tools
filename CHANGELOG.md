@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Adopted Prompts v1.1.2 and both supported terminal imports in the maintained
+  compatibility consumer without changing published compatibility cohorts.
+
 ## 2.0.0 - 2026-10-01
 
 ### Added
