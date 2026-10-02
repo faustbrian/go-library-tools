@@ -59,11 +59,12 @@ func TestAPIModuleUsesTaskWorkspaceAndReportsDiagnostics(t *testing.T) {
 	}
 }
 
-func TestAPIModulePinsDeclaredGoToolchain(t *testing.T) {
+func TestAPIModulePinsRepositoryGoToolchain(t *testing.T) {
 	files := &fakeAPIFiles{file: &fakeNamedFile{name: "snapshot"}}
 	var commands []Command
 	runner := Runner{
-		Root: "/repo",
+		Root:    "/repo",
+		Catalog: inventory.Inventory{GoVersion: "1.27.0"},
 		Executor: workspaceExecutor{directory: "/task", run: func(_ context.Context, command Command) error {
 			commands = append(commands, command)
 			return nil
@@ -78,8 +79,11 @@ func TestAPIModulePinsDeclaredGoToolchain(t *testing.T) {
 		t.Fatalf("API command count = %d, want 2", len(commands))
 	}
 	for index, command := range commands {
-		if got := command.Env["GOTOOLCHAIN"]; got != "go1.26.6" {
-			t.Errorf("command %d GOTOOLCHAIN = %q, want go1.26.6", index, got)
+		if got := command.Env["GOTOOLCHAIN"]; got != "go1.27.0" {
+			t.Errorf("command %d GOTOOLCHAIN = %q, want repository target go1.27.0", index, got)
+		}
+		if got := command.Env["GOWORK"]; got != "off" {
+			t.Errorf("command %d GOWORK = %q, want off", index, got)
 		}
 	}
 }
@@ -206,11 +210,14 @@ func TestGoDocAPISnapshotReportsGenerationFailures(t *testing.T) {
 	}
 }
 
-func TestGoDocAPISnapshotPinsDeclaredGoToolchain(t *testing.T) {
+func TestGoDocAPISnapshotPinsRepositoryGoToolchain(t *testing.T) {
 	file := &fakeNamedFile{name: "snapshot"}
-	runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
-		if got := command.Env["GOTOOLCHAIN"]; got != "go1.26.6" {
-			t.Fatalf("GOTOOLCHAIN = %q, want go1.26.6", got)
+	runner := Runner{Catalog: inventory.Inventory{GoVersion: "1.27.0"}, Executor: executorFunction(func(_ context.Context, command Command) error {
+		if got := command.Env["GOTOOLCHAIN"]; got != "go1.27.0" {
+			t.Fatalf("GOTOOLCHAIN = %q, want repository target go1.27.0", got)
+		}
+		if got := command.Env["GOWORK"]; got != "off" {
+			t.Fatalf("GOWORK = %q, want off", got)
 		}
 		_, _ = io.WriteString(command.Stdout, "API")
 		return nil
