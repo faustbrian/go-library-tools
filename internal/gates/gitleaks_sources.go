@@ -308,13 +308,7 @@ func copyGitleaksCurrentTreeWithFiles(ctx context.Context, source, destination s
 			// entries. Omitting them preserves the scanner's no-follow behavior.
 			return nil
 		}
-		if !entry.Type().IsRegular() {
-			return errors.New("gitleaks current-tree source contains unsupported file type")
-		}
 		remaining := limits.bytes - copied
-		if remaining < 0 {
-			return fmt.Errorf("gitleaks current-tree snapshot exceeds %d bytes", maximumGitleaksSnapshotBytes)
-		}
 		input, openErr := files.open(root, relative)
 		if openErr != nil {
 			return errors.New("gitleaks current-tree source open failed")
@@ -329,9 +323,6 @@ func copyGitleaksCurrentTreeWithFiles(ctx context.Context, source, destination s
 		closeErr := errors.Join(files.close(input), files.close(output))
 		if copyErr != nil || closeErr != nil {
 			return errors.Join(errors.New("gitleaks current-tree copy failed"), ctx.Err())
-		}
-		if written > remaining {
-			return fmt.Errorf("gitleaks current-tree snapshot exceeds %d bytes", maximumGitleaksSnapshotBytes)
 		}
 		copied += written
 		return nil
