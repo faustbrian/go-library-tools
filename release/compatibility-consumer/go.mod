@@ -111,7 +111,10 @@ require (
 	github.com/faustbrian/go-scheduler v1.1.0
 	github.com/faustbrian/go-schema-registry v1.0.0
 	github.com/faustbrian/go-schema-registry/providers/confluent v1.0.0
+	github.com/faustbrian/go-schema-registry/providers/confluent/v2 v2.0.0
 	github.com/faustbrian/go-schema-registry/providers/glue v1.0.0
+	github.com/faustbrian/go-schema-registry/providers/glue/v2 v2.0.0
+	github.com/faustbrian/go-schema-registry/v2 v2.0.0
 	github.com/faustbrian/go-search v1.0.0
 	github.com/faustbrian/go-search/adapters/opensearch v1.0.0
 	github.com/faustbrian/go-secret-envelope v1.0.0
@@ -159,6 +162,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.45.4 // indirect
 	github.com/aws/smithy-go v1.27.7 // indirect
 	github.com/bits-and-blooms/bitset v1.24.4 // indirect
+	github.com/bufbuild/protocompile v0.14.1 // indirect
 	github.com/cenkalti/backoff/v5 v5.0.3 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/consensys/gnark-crypto v0.20.1 // indirect
@@ -194,6 +198,7 @@ require (
 	github.com/lestrrat-go/httprc/v3 v3.0.5 // indirect
 	github.com/lestrrat-go/jwx/v3 v3.1.1 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
+	github.com/linkedin/goavro/v2 v2.15.0 // indirect
 	github.com/makiuchi-d/gozxing v0.1.1 // indirect
 	github.com/mfridman/interpolate v0.0.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect

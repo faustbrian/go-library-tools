@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Add Schema Registry v2.0.0 and both provider v2.0.0 modules to the
+  maintained compatibility consumer alongside their v1 selections,
+  preserving published compatibility cohorts.
 - Resolve mutation package import paths from module-relative source directories,
   including adapters whose declared package names differ from their directories.
   The corrected verifier has a new identity; historical evidence remains bound

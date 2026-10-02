@@ -388,6 +388,36 @@
       "primary_entry_packages": ["github.com/faustbrian/go-rate-limit/v2"]
     },
     {
+      "alongside_module_path": "github.com/faustbrian/go-schema-registry",
+      "module_path": "github.com/faustbrian/go-schema-registry/v2",
+      "version": "v2.0.0",
+      "source_revision": "a74b29143ba3a45a82844bd252ffe3cde0e12030",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-schema-registry/v2",
+        "github.com/faustbrian/go-schema-registry/v2/formats/avro",
+        "github.com/faustbrian/go-schema-registry/v2/formats/jsonschema",
+        "github.com/faustbrian/go-schema-registry/v2/formats/protobuf"
+      ]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-schema-registry/providers/confluent",
+      "module_path": "github.com/faustbrian/go-schema-registry/providers/confluent/v2",
+      "version": "v2.0.0",
+      "source_revision": "2ed78cbc0c0ee4b7a0d5ada80c54c0e7313e39a3",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-schema-registry/providers/confluent/v2"
+      ]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-schema-registry/providers/glue",
+      "module_path": "github.com/faustbrian/go-schema-registry/providers/glue/v2",
+      "version": "v2.0.0",
+      "source_revision": "2ed78cbc0c0ee4b7a0d5ada80c54c0e7313e39a3",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-schema-registry/providers/glue/v2"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-sequencer",
       "module_path": "github.com/faustbrian/go-sequencer/v2",
       "version": "v2.0.0",
