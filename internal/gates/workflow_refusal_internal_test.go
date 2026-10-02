@@ -82,6 +82,39 @@ func TestWorkflowRefusalPreservesPinnedMergeControls(t *testing.T) {
 	}
 }
 
+func TestWorkflowCheckoutAliasesPreserveAdmissionAndRefusal(t *testing.T) {
+	for _, test := range []struct{ name, setting, reason string }{
+		{"literal false alias", "false", ""},
+		{"literal true alias", "true", "persist-credentials"},
+		{"sequence alias", "[false]", "persist-credentials"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := t.TempDir()
+			const path = ".github/workflows/ci.yml"
+			content := "checkout: &checkout actions/checkout@0123456789012345678901234567890123456789\nsetting: &setting " + test.setting + "\nsteps: &steps [{uses: *checkout, with: {persist-credentials: *setting}}]\njobs: {test: {steps: *steps}}\n"
+			workflowRefusalWrite(t, root, path, content)
+			var output bytes.Buffer
+			calls := 0
+			runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(context.Context, Command) error {
+				calls++
+				return nil
+			})}
+			err := runner.Workflows(t.Context())
+			if test.reason != "" {
+				if err == nil || !strings.Contains(err.Error(), test.reason) || calls != 0 || output.Len() != 0 {
+					t.Fatalf("aliased checkout refusal: error=%v calls=%d output=%q", err, calls, output.String())
+				}
+			} else if err != nil || calls != 1 || output.String() != "workflow contract passed\n" {
+				t.Fatalf("aliased checkout admission: error=%v calls=%d output=%q", err, calls, output.String())
+			}
+			data, err := os.ReadFile(filepath.Join(root, path))
+			if err != nil || string(data) != content {
+				t.Fatal("workflow inspection changed source bytes")
+			}
+		})
+	}
+}
+
 func TestWorkflowLocalDescriptorRefusalBeforeExecutor(t *testing.T) {
 	const marker = "application-private-detail"
 	for _, test := range []struct{ name, descriptor, want string }{
