@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Keep gitleaks ignore-directory creation failures categorical by default,
+  preserving original filesystem causes for explicit inspection without printing
+  private paths. Existing bundle-open cause discard and joined cleanup errors
+  remain unchanged; custom cleanup diagnostics remain caller-owned.
 - Refuse symbolic and other nonregular Go sources during security suppression
   preflight before opening them, retaining bounded reads for regular sources.
 - Run API snapshot and compatibility commands with the repository's target

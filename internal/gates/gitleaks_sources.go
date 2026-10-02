@@ -100,6 +100,19 @@ type gitleaksSources struct {
 }
 
 func (runner Runner) createGitleaksSources(ctx context.Context) (gitleaksSources, func() error, error) {
+	return runner.createGitleaksSourcesWithFiles(ctx, gitleaksCreationFiles{
+		mkdir: os.Mkdir, openFile: os.OpenFile,
+	})
+}
+
+// Source construction owns these two creation operations and the existing
+// fresh workspace/cleanup lifecycle. Production always creates real files.
+type gitleaksCreationFiles struct {
+	mkdir    func(string, os.FileMode) error
+	openFile func(string, int, os.FileMode) (*os.File, error)
+}
+
+func (runner Runner) createGitleaksSourcesWithFiles(ctx context.Context, files gitleaksCreationFiles) (gitleaksSources, func() error, error) {
 	if err := ctx.Err(); err != nil {
 		return gitleaksSources{}, nil, err
 	}
@@ -130,11 +143,11 @@ func (runner Runner) createGitleaksSources(ctx context.Context) (gitleaksSources
 		current: filepath.Join(root, "current"), ignoreRoot: filepath.Join(root, "ignore"),
 	}
 	historyBundle := filepath.Join(root, "history.bundle")
-	if err := os.Mkdir(sources.ignoreRoot, 0o700); err != nil {
-		return gitleaksSources{}, nil, errors.Join(fmt.Errorf("create gitleaks ignore root: %w", err), cleanup())
+	if err := files.mkdir(sources.ignoreRoot, 0o700); err != nil {
+		return gitleaksSources{}, nil, errors.Join(sourceCommandError{class: "create gitleaks ignore root", cause: err}, cleanup())
 	}
 	// #nosec G304 -- this exact bundle path is beneath the freshly created task-owned source root
-	bundle, err := os.OpenFile(historyBundle, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+	bundle, err := files.openFile(historyBundle, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 	if err != nil {
 		return gitleaksSources{}, nil, errors.Join(errors.New("create bounded history bundle"), cleanup())
 	}
