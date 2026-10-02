@@ -215,6 +215,13 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			}
 			return fmt.Errorf("approve checkpoint %s %s: %w", checkpoint.Module, checkpoint.Package, err)
 		}
+		if verifierDigest != LegacyVerifierDigest() {
+			if err := legacyPackagePathsUnchanged(campaign.Root, campaign.Policy.ModuleDirectory, checkpoint.Package, campaign.Policy.ModulePath, currentInputs.source); err != nil {
+				changedInputs = errors.Join(changedInputs, fmt.Errorf("%s %s: %w", checkpoint.Module, checkpoint.Package, err))
+				_, _ = fmt.Fprintf(output, "[%s] %s requires current mutation execution after package-path repair\n", campaign.Policy.ModuleDirectory, packageTarget(checkpoint.Package))
+				continue
+			}
+		}
 		_, _, stored, storedReport, err := storeReport(operatingReportFiles{}, campaign.MutationRoot, currentInputs.current, checkpoint.Report)
 		if err != nil {
 			return err
@@ -229,9 +236,12 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 		record := evidence.Record{
 			SchemaVersion: evidence.SchemaVersion, Repository: campaign.Policy.Repository,
 			Module: campaign.Policy.ModuleDirectory, Package: checkpoint.Package, Gate: "mutation",
-			InputDigest: currentInputs.current, VerifierDigest: SemanticVerifierDigest(), Result: "passed",
+			InputDigest: currentInputs.current, VerifierDigest: "sha256:" + verifierDigest, Result: "passed",
 			ReportDigest: stored.Digest, CompletedAt: now().UTC(),
 			Environment: importedEnvironment(checkpoint.Environment),
+		}
+		if verifierDigest != LegacyVerifierDigest() {
+			record.Environment[legacyPackagePathCompatibility] = currentInputs.current
 		}
 		existing, loadErr := evidence.Load(campaign.EvidenceRoot, "mutation", currentInputs.current)
 		if loadErr == nil && existing.ReportDigest == legacyCanonicalReportDigest(storedReport) {

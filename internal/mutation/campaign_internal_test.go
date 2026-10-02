@@ -171,8 +171,8 @@ func TestCampaignImportsPublishedLegacyVerifierEvidence(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if record.VerifierDigest != SemanticVerifierDigest() {
-				t.Fatalf("stored verifier = %s, want current %s", record.VerifierDigest, SemanticVerifierDigest())
+			if record.VerifierDigest != "sha256:"+publishedVerifier {
+				t.Fatalf("stored verifier = %s, want historical %s", record.VerifierDigest, publishedVerifier)
 			}
 		})
 	}

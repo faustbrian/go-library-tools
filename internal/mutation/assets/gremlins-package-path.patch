@@ -1,0 +1,78 @@
+diff --git a/internal/engine/engine.go b/internal/engine/engine.go
+--- a/internal/engine/engine.go
++++ b/internal/engine/engine.go
+@@ -160,21 +160,8 @@
+-func (mu *Engine) pkgName(fileName, fPkg string) string {
+-	var pkg string
+-	fn := fmt.Sprintf("%s/%s", mu.module.CallingDir, fileName)
+-	p := filepath.Dir(fn)
+-	for {
+-		if strings.HasSuffix(p, fPkg) {
+-			pkg = fmt.Sprintf("%s/%s", mu.module.Name, p)
+-
+-			break
+-		}
+-		d := filepath.Dir(p)
+-		if d == p {
+-			pkg = mu.module.Name
+-
+-			break
+-		}
+-		p = d
+-	}
+-
+-	return normalisePkgPath(pkg)
+-}
++func (mu *Engine) pkgName(fileName, _ string) string {
++	directory := filepath.Dir(filepath.Join(mu.module.CallingDir, fileName))
++	if directory == "." {
++		return mu.module.Name
++	}
++
++	return mu.module.Name + "/" + filepath.ToSlash(directory)
++}
+diff --git a/internal/engine/engine_test.go b/internal/engine/engine_test.go
+--- a/internal/engine/engine_test.go
++++ b/internal/engine/engine_test.go
+@@ -684 +684 @@
+-			wantPath: "example.com/testdata/main",
++			wantPath: "example.com/testdata/main/fixture",
+diff --git a/internal/engine/package_path_internal_test.go b/internal/engine/package_path_internal_test.go
+new file mode 100644
+--- /dev/null
++++ b/internal/engine/package_path_internal_test.go
+@@ -0,0 +1,34 @@
++package engine
++
++import (
++	"go/parser"
++	"go/token"
++	"testing"
++
++	"github.com/go-gremlins/gremlins/internal/gomodule"
++)
++
++func TestPackagePathUsesSourceDirectory(t *testing.T) {
++	for _, test := range []struct {
++		name, module, callingDir, file, declaration, want string
++	}{
++		{"root alias", "example.com/temporal/v2", ".", "wire.go", "temporal", "example.com/temporal/v2"},
++		{"wire alias", "example.com/temporal/v2", ".", "adapters/wire/wire.go", "temporalwire", "example.com/temporal/v2/adapters/wire"},
++		{"adapter invocation", "example.com/temporal/v2", "adapters/wire", "wire.go", "temporalwire", "example.com/temporal/v2/adapters/wire"},
++		{"ancestor name", "example.com/temporal/v2", ".", "adapters/wire/wire.go", "adapters", "example.com/temporal/v2/adapters/wire"},
++		{"directory suffix", "example.com/temporal/v2", ".", "adapters/temporalwire/nested/wire.go", "wire", "example.com/temporal/v2/adapters/temporalwire/nested"},
++		{"nested module root", "example.com/temporal/adapter/v3", ".", "wire.go", "temporalwire", "example.com/temporal/adapter/v3"},
++		{"nested module package", "example.com/temporal/adapter/v3", "internal", "wire/wire.go", "temporalwire", "example.com/temporal/adapter/v3/internal/wire"},
++	} {
++		t.Run(test.name, func(t *testing.T) {
++			file, err := parser.ParseFile(token.NewFileSet(), test.file, "package "+test.declaration, parser.PackageClauseOnly)
++			if err != nil {
++				t.Fatal(err)
++			}
++			engine := Engine{module: gomodule.GoModule{Name: test.module, CallingDir: test.callingDir}}
++			if got := engine.pkgName(test.file, file.Name.Name); got != test.want {
++				t.Fatalf("package import path = %q, want %q", got, test.want)
++			}
++		})
++	}
++}

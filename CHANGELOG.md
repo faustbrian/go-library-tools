@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Resolve mutation package import paths from module-relative source directories,
+  including adapters whose declared package names differ from their directories.
+  The corrected verifier has a new identity; historical evidence remains bound
+  to its original verifier rather than being relabeled as corrected execution.
+  Approved historical imports remain reusable only when all selected production
+  declarations prove identical package resolution against the exact source.
 - Refresh the bootstrap action's immutable source pin while preserving
   validation before extraction and the independently pinned setup action.
 - Refresh the setup action's immutable source pin while preserving the

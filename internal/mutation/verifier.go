@@ -15,6 +15,9 @@ const (
 	// This verifier identity was published by v1.0.0 through v1.5.6. Its
 	// mutation semantics remain compatible with the per-phase timeout fix.
 	publishedVerifierDigestV1 = "9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108"
+	// Historical verifier before directory-based package resolution. Import
+	// must prove package-path applicability before reusing either legacy version.
+	publishedVerifierDigestV2 = "5eba124f842305aecef71fc439aea0f1056429b253fad3b2ed47468f614595a3"
 )
 
 //go:embed assets/*
@@ -29,6 +32,7 @@ var verifierAssetNames = []struct {
 	{"scripts/patches/gremlins-run-all-mutants.patch", "assets/gremlins-run-all-mutants.patch"},
 	{"scripts/patches/gremlins-shared-coverage.patch", "assets/gremlins-shared-coverage.patch"},
 	{"scripts/patches/gremlins-module-relative-diff.patch", "assets/gremlins-module-relative-diff.patch"},
+	{"scripts/patches/gremlins-package-path.patch", "assets/gremlins-package-path.patch"},
 }
 
 // VerifierAssets returns independent copies of the exact legacy verifier
@@ -57,5 +61,9 @@ func LegacyVerifierDigest() string {
 }
 
 func supportedLegacyVerifierDigest(digest string) bool {
-	return digest == LegacyVerifierDigest() || digest == publishedVerifierDigestV1
+	return digest == LegacyVerifierDigest() || historicalVerifierDigest(digest)
+}
+
+func historicalVerifierDigest(digest string) bool {
+	return digest == publishedVerifierDigestV1 || digest == publishedVerifierDigestV2
 }
