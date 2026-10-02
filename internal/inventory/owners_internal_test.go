@@ -31,13 +31,11 @@ func TestCompileModuleSchemasFailsClosed(t *testing.T) {
 						t.Fatalf("schema syntax cause = %v", err)
 					}
 				case "resource":
-					var cause *jsonschema.ParseURLError
-					if !errors.As(err, &cause) {
+					if _, ok := errors.AsType[*jsonschema.ParseURLError](err); !ok {
 						t.Fatalf("schema resource cause = %v", err)
 					}
 				case "compile":
-					var cause *jsonschema.SchemaValidationError
-					if !errors.As(err, &cause) {
+					if _, ok := errors.AsType[*jsonschema.SchemaValidationError](err); !ok {
 						t.Fatalf("schema compilation cause = %v", err)
 					}
 				}
