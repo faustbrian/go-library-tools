@@ -272,23 +272,28 @@ func copyGitleaksCurrentTreeBounded(ctx context.Context, source, destination str
 // These operations stay local to a single copy, retaining real confined roots
 // and file handles while allowing deterministic lifecycle failure checks.
 type gitleaksCopyFiles struct {
+	openRoot     func(string) (*os.Root, error)
 	open, create func(*os.Root, string) (*os.File, error)
 	close        func(*os.File) error
 }
 
 func copyGitleaksCurrentTreeWithFiles(ctx context.Context, source, destination string, limits securitySourceLimits, files gitleaksCopyFiles) error {
+	openRoot := files.openRoot
+	if openRoot == nil {
+		openRoot = os.OpenRoot
+	}
 	if err := inspectGitleaksCurrentTree(ctx, source, limits, nil); err != nil {
 		return err
 	}
 	if err := os.Mkdir(destination, 0o700); err != nil {
 		return errors.New("create gitleaks current-tree snapshot failed")
 	}
-	root, err := os.OpenRoot(source)
+	root, err := openRoot(source)
 	if err != nil {
 		return errors.New("open gitleaks current-tree source failed")
 	}
 	defer root.Close()
-	targetRoot, err := os.OpenRoot(destination)
+	targetRoot, err := openRoot(destination)
 	if err != nil {
 		return errors.New("open gitleaks current-tree snapshot failed")
 	}
