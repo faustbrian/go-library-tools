@@ -95,6 +95,14 @@ regexes = [
   '''^c92530ae(?:)87091474(?:)8c82e238(?:)b72ff1d3(?:)c60c2ec0(?:)360150b0(?:)1863750e(?:)6dad0ac1$''',
 ]
 paths = ['''^providers/confluent/CHANGELOG\.md$''']
+
+[[allowlists]]
+description = "Exact external-sort threat-model resource-policy prose is not a credential."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^docs/threat-model\.md$''']
+regexes = ['''^\n?parent directory, AES-256 key, record/(?:)chunk/(?:)population limits, context, and$''']
 `
 	analysisSecurityPolicy = `version: 1
 rules:

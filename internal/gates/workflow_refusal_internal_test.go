@@ -208,6 +208,52 @@ func TestWorkflowRepeatedLocalDescriptorChargesOnce(t *testing.T) {
 	}
 }
 
+// Shared parser-owned ASTs must preserve scalar aliases across both workflow
+// selection and recursive local descriptors, without bypassing child policy.
+func TestWorkflowLocalAliasesPreserveAdmissionAndRefusal(t *testing.T) {
+	for _, mutable := range []bool{false, true} {
+		name := "pinned child"
+		if mutable {
+			name = "mutable child"
+		}
+		t.Run(name, func(t *testing.T) {
+			root := t.TempDir()
+			ref := "owner/action@0123456789012345678901234567890123456789"
+			if mutable {
+				ref = "owner/action@main"
+			}
+			contents := map[string]string{
+				".github/workflows/ci.yml": "local: &local ./ordinary\njobs: {test: {steps: [{uses: *local}]}}\n",
+				"ordinary/action.yml":      "child: &child ./nested\nruns: {using: composite, steps: [{uses: *child}]}\n",
+				"nested/action.yml":        "runs: {using: composite, steps: [{uses: " + ref + "}]}\n",
+			}
+			for path, value := range contents {
+				workflowRefusalWrite(t, root, path, value)
+			}
+			var output bytes.Buffer
+			calls := 0
+			runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(context.Context, Command) error {
+				calls++
+				return nil
+			})}
+			err := runner.Workflows(t.Context())
+			if mutable {
+				if err == nil || err.Error() != "workflow security policy: local action security policy failed" || calls != 0 || output.Len() != 0 {
+					t.Fatalf("aliased unsafe child: error=%v calls=%d output=%q", err, calls, output.String())
+				}
+			} else if err != nil || calls != 1 || output.String() != "workflow contract passed\n" {
+				t.Fatalf("aliased pinned child: error=%v calls=%d output=%q", err, calls, output.String())
+			}
+			for path, want := range contents {
+				data, err := os.ReadFile(filepath.Join(root, path))
+				if err != nil || string(data) != want {
+					t.Fatal("workflow inspection changed descriptor bytes")
+				}
+			}
+		})
+	}
+}
+
 func workflowRefusalWrite(t *testing.T, root, name, content string) {
 	t.Helper()
 	path := filepath.Join(root, name)

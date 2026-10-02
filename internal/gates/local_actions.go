@@ -1,13 +1,11 @@
 package gates
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"io"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"go.yaml.in/yaml/v3"
@@ -27,42 +25,39 @@ func (inspection *localActionInspection) inspect(content []byte, depth int, acti
 			return err
 		}
 	}
-	if depth > maximumLocalActionDepth {
-		return errors.New("local action depth limit exceeded")
+	document, findings, err := inspectWorkflowDocument(content)
+	if err != nil {
+		return errors.New("invalid local action descriptor")
 	}
-	if action {
-		findings, err := inspectWorkflow(content)
-		if err != nil {
-			return errors.New("invalid local action descriptor")
-		}
-		if len(findings) != 0 {
-			return errors.New("local action security policy failed")
+	if action && len(findings) != 0 {
+		return errors.New("local action security policy failed")
+	}
+	return inspection.walkDocument(document, depth, action)
+}
+
+func (inspection *localActionInspection) inspectValidated(document *yaml.Node, depth int, action bool) error {
+	if inspection.ctx != nil {
+		if err := inspection.ctx.Err(); err != nil {
+			return err
 		}
 	}
-	var document yaml.Node
-	if err := yaml.NewDecoder(bytes.NewReader(content)).Decode(&document); err != nil {
-		return errors.New("invalid action YAML")
-	}
-	visited := 0
-	var walk func(*yaml.Node, []string, int) error
-	walk = func(node *yaml.Node, path []string, nesting int) error {
-		visited++
-		if visited > 100_000 || nesting > 100 {
-			return errors.New("action YAML structure limit exceeded")
-		}
+	return inspection.walkDocument(document, depth, action)
+}
+
+// The shared workflow owner has validated this parser-owned graph. Its aliases
+// target non-alias nodes, and its full traversal already enforces YAML bounds.
+func (inspection *localActionInspection) walkDocument(document *yaml.Node, depth int, action bool) error {
+	var walk func(*yaml.Node, []string) error
+	walk = func(node *yaml.Node, path []string) error {
 		if node.Kind == yaml.AliasNode {
-			resolved, err := resolveWorkflowAlias(node)
-			if err != nil {
-				return err
-			}
-			return walk(resolved, path, nesting+1)
+			return walk(node.Alias, path)
 		}
 		if node.Kind == yaml.MappingNode {
 			for i := 0; i+1 < len(node.Content); i += 2 {
 				key, value := node.Content[i], node.Content[i+1]
-				resolved, err := resolveWorkflowAlias(value)
-				if err != nil {
-					return err
+				resolved := value
+				if resolved.Kind == yaml.AliasNode {
+					resolved = resolved.Alias
 				}
 				if key.Value == "uses" && workflowUsesPath(path) && strings.HasPrefix(resolved.Value, "./") {
 					if err := inspection.local(resolved.Value, depth+1); err != nil {
@@ -78,7 +73,7 @@ func (inspection *localActionInspection) inspect(content []byte, depth int, acti
 				if key.Value == "<<" {
 					child = path
 				}
-				if err := walk(value, child, nesting+1); err != nil {
+				if err := walk(value, child); err != nil {
 					return err
 				}
 			}
@@ -87,23 +82,20 @@ func (inspection *localActionInspection) inspect(content []byte, depth int, acti
 				path = appendPath(path, "[]")
 			}
 			for _, child := range node.Content {
-				if err := walk(child, path, nesting+1); err != nil {
+				if err := walk(child, path); err != nil {
 					return err
 				}
 			}
 		}
 		return nil
 	}
-	return walk(&document, nil, 0)
+	return walk(document, nil)
 }
 
 func (inspection *localActionInspection) local(reference string, depth int) error {
 	name := strings.TrimPrefix(reference, "./")
 	if name == "" || !filepath.IsLocal(name) || filepath.ToSlash(filepath.Clean(name)) != name || strings.Contains(name, "\\") {
 		return errors.New("local action path is not repository-contained and canonical")
-	}
-	if slices.Contains(strings.Split(name, "/"), "..") {
-		return errors.New("local action traversal is forbidden")
 	}
 	if depth > maximumLocalActionDepth {
 		return errors.New("local action depth limit exceeded")
