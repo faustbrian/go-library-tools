@@ -236,10 +236,10 @@ func inspectGitleaksCurrentTree(ctx context.Context, source string, limits secur
 func inspectGitleaksCurrentTreeWithMetadata(ctx context.Context, source string, limits securitySourceLimits, visit func(string, fs.DirEntry) error, metadata func(string, fs.DirEntry) (fs.FileInfo, error)) error {
 	entries := 0
 	var total int64
+	// The walker owns cancellation admission before each entry. Once admitted,
+	// metadata and visit callbacks are not universally preemptible; copied reads
+	// retain their own cancellation checks.
 	return walkSecuritySource(ctx, source, limits.entries+2, func(relative string, entry fs.DirEntry) error {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
 		if relative == ".git" {
 			if entry.IsDir() {
 				return filepath.SkipDir
