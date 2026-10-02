@@ -83,7 +83,7 @@ func TestSecuritySourceWalkDepthAdmissionBoundary(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			root := t.TempDir()
 			relative := ""
-			var expected []string
+			expected := make([]string, 0, test.depth+1)
 			for range test.depth {
 				relative = filepath.Join(relative, "d")
 				if err := os.Mkdir(filepath.Join(root, relative), 0o700); err != nil {
