@@ -81,6 +81,32 @@ func checkWorkflowSecurity(root string) error {
 }
 
 func checkWorkflowSecurityContext(ctx context.Context, root string) error {
+	return checkWorkflowSecurityWithFiles(ctx, root, workflowDescriptorLimits{
+		descriptorBytes: maximumWorkflowOutput,
+		totalBytes:      maximumWorkflowBytes,
+	}, workflowDescriptorFiles{
+		openRoot: os.OpenRoot,
+		info:     os.DirEntry.Info,
+		open:     (*os.Root).Open,
+		close:    (*os.File).Close,
+	})
+}
+
+// These operations and byte limits belong to one workflow inspection. The
+// production wrapper retains fixed quotas and real confined root/file handles.
+type workflowDescriptorFiles struct {
+	openRoot func(string) (*os.Root, error)
+	info     func(os.DirEntry) (os.FileInfo, error)
+	open     func(*os.Root, string) (*os.File, error)
+	close    func(*os.File) error
+}
+
+type workflowDescriptorLimits struct {
+	descriptorBytes int64
+	totalBytes      int
+}
+
+func checkWorkflowSecurityWithFiles(ctx context.Context, root string, limits workflowDescriptorLimits, files workflowDescriptorFiles) error {
 	actions := localActionInspection{ctx: ctx, root: root, active: map[string]bool{}, complete: map[string]bool{}}
 	directory := filepath.Join(root, ".github", "workflows")
 	for _, name := range []string{filepath.Join(root, ".github"), directory} {
@@ -92,7 +118,7 @@ func checkWorkflowSecurityContext(ctx context.Context, root string) error {
 			return errors.New("workflow security policy: workflow directory missing or symbolic")
 		}
 	}
-	workflowRoot, err := os.OpenRoot(directory)
+	workflowRoot, err := files.openRoot(directory)
 	if errors.Is(err, os.ErrNotExist) {
 		return nil
 	}
@@ -115,30 +141,12 @@ func checkWorkflowSecurityContext(ctx context.Context, root string) error {
 		if actions.files > maximumWorkflowFiles {
 			return errors.New("workflow security policy: workflow file limit exceeded")
 		}
-		info, err := entry.Info()
+		content, err := readWorkflowDescriptor(workflowRoot, relative, entry, limits.descriptorBytes, files)
 		if err != nil {
 			return err
-		}
-		if !info.Mode().IsRegular() {
-			return errors.New("workflow security policy: unsupported descriptor file type")
-		}
-		if info.Size() > maximumWorkflowOutput {
-			return fmt.Errorf("workflow security policy: %s exceeds size limit", entry.Name())
-		}
-		file, err := workflowRoot.Open(relative)
-		if err != nil {
-			return err
-		}
-		content, readErr := io.ReadAll(io.LimitReader(file, maximumWorkflowOutput+1))
-		closeErr := file.Close()
-		if readErr != nil || closeErr != nil {
-			return errors.Join(readErr, closeErr)
-		}
-		if len(content) > maximumWorkflowOutput {
-			return fmt.Errorf("workflow security policy: %s exceeds size limit", entry.Name())
 		}
 		actions.bytes += len(content)
-		if actions.bytes > maximumWorkflowBytes {
+		if actions.bytes > limits.totalBytes {
 			return errors.New("workflow security policy: total descriptor byte limit exceeded")
 		}
 		document, workflowFindings, err := inspectWorkflowDocument(content)
@@ -161,6 +169,32 @@ func checkWorkflowSecurityContext(ctx context.Context, root string) error {
 		return fmt.Errorf("workflow security policy failed: %s", strings.Join(findings, "; "))
 	}
 	return nil
+}
+
+func readWorkflowDescriptor(root *os.Root, relative string, entry os.DirEntry, limit int64, files workflowDescriptorFiles) ([]byte, error) {
+	info, err := files.info(entry)
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, errors.New("workflow security policy: unsupported descriptor file type")
+	}
+	if info.Size() > limit {
+		return nil, fmt.Errorf("workflow security policy: %s exceeds size limit", entry.Name())
+	}
+	file, err := files.open(root, relative)
+	if err != nil {
+		return nil, err
+	}
+	content, readErr := io.ReadAll(io.LimitReader(file, limit+1))
+	closeErr := files.close(file)
+	if readErr != nil || closeErr != nil {
+		return nil, errors.Join(readErr, closeErr)
+	}
+	if int64(len(content)) > limit {
+		return nil, fmt.Errorf("workflow security policy: %s exceeds size limit", entry.Name())
+	}
+	return content, nil
 }
 
 func inspectWorkflow(content []byte) ([]string, error) {

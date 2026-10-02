@@ -768,24 +768,13 @@ func checkSecuritySuppressionsBounded(ctx context.Context, root string, entryLim
 		if filepath.Ext(entry.Name()) != ".go" {
 			return nil
 		}
-		info, err := entry.Info()
+		content, err := readSecuritySuppressionSource(sourceRoot, relative, entry, maximumSecuritySourceSize, securitySuppressionSourceFiles{
+			info:  os.DirEntry.Info,
+			open:  (*os.Root).Open,
+			close: (*os.File).Close,
+		})
 		if err != nil {
 			return err
-		}
-		if info.Size() > maximumSecuritySourceSize {
-			return fmt.Errorf("security suppression source exceeds size limit: %s", entry.Name())
-		}
-		file, err := sourceRoot.Open(relative)
-		if err != nil {
-			return err
-		}
-		content, readErr := io.ReadAll(io.LimitReader(file, maximumSecuritySourceSize+1))
-		closeErr := file.Close()
-		if readErr != nil || closeErr != nil {
-			return errors.Join(readErr, closeErr)
-		}
-		if len(content) > maximumSecuritySourceSize {
-			return fmt.Errorf("security suppression source exceeds size limit: %s", entry.Name())
 		}
 		fileSet := token.NewFileSet()
 		parsed, err := parser.ParseFile(fileSet, filePath, content, parser.ParseComments)
@@ -813,6 +802,40 @@ func checkSecuritySuppressionsBounded(ctx context.Context, root string, entryLim
 		}
 		return nil
 	})
+}
+
+// Collaborators belong to one source read and retain real confined roots and
+// file handles. The production caller supplies the fixed source-size limit.
+type securitySuppressionSourceFiles struct {
+	info  func(os.DirEntry) (os.FileInfo, error)
+	open  func(*os.Root, string) (*os.File, error)
+	close func(*os.File) error
+}
+
+func readSecuritySuppressionSource(root *os.Root, relative string, entry os.DirEntry, limit int64, files securitySuppressionSourceFiles) ([]byte, error) {
+	info, err := files.info(entry)
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() {
+		return nil, fmt.Errorf("security suppression source is not a regular file: %s", entry.Name())
+	}
+	if info.Size() > limit {
+		return nil, fmt.Errorf("security suppression source exceeds size limit: %s", entry.Name())
+	}
+	file, err := files.open(root, relative)
+	if err != nil {
+		return nil, err
+	}
+	content, readErr := io.ReadAll(io.LimitReader(file, limit+1))
+	closeErr := files.close(file)
+	if readErr != nil || closeErr != nil {
+		return nil, errors.Join(readErr, closeErr)
+	}
+	if int64(len(content)) > limit {
+		return nil, fmt.Errorf("security suppression source exceeds size limit: %s", entry.Name())
+	}
+	return content, nil
 }
 
 func nativeSecurityDirective(line string, allowGosecDisable bool) (string, bool) {
