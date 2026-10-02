@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Adopt API Query, International, Validation, and Localized v2.0.0 in the
+  maintained compatibility consumer through their official `/v2` entrypoints,
+  preserving published compatibility cohorts and unrelated selections.
 - Keep gitleaks ignore-directory creation failures categorical by default,
   preserving original filesystem causes for explicit inspection without printing
   private paths. Existing bundle-open cause discard and joined cleanup errors

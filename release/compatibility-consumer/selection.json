@@ -128,10 +128,31 @@
     },
     {
       "from_module_path": "github.com/faustbrian/go-localized",
-      "module_path": "github.com/faustbrian/go-localized",
-      "version": "v1.1.2",
-      "source_revision": "496742b011d3de601f60342c17fcc6a4012125ac",
-      "primary_entry_packages": ["github.com/faustbrian/go-localized"]
+      "module_path": "github.com/faustbrian/go-localized/v2",
+      "version": "v2.0.0",
+      "source_revision": "24a54939ccc3af3166dd4f7ab781555db98d08a9",
+      "primary_entry_packages": ["github.com/faustbrian/go-localized/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-api-query",
+      "module_path": "github.com/faustbrian/go-api-query/v2",
+      "version": "v2.0.0",
+      "source_revision": "dc7ea5c8fe824cae37faf64eeacd5de32e2b0f00",
+      "primary_entry_packages": ["github.com/faustbrian/go-api-query/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-international",
+      "module_path": "github.com/faustbrian/go-international/v2",
+      "version": "v2.0.0",
+      "source_revision": "46569a62d243bbc59b62e768f588bfeaf85feec0",
+      "primary_entry_packages": ["github.com/faustbrian/go-international/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-validation",
+      "module_path": "github.com/faustbrian/go-validation/v2",
+      "version": "v2.0.0",
+      "source_revision": "fe03834181c73e5e7dd5f5451d1abf31e4100378",
+      "primary_entry_packages": ["github.com/faustbrian/go-validation/v2"]
     },
     {
       "from_module_path": "github.com/faustbrian/go-password",
