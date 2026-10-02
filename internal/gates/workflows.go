@@ -141,14 +141,14 @@ func checkWorkflowSecurityContext(ctx context.Context, root string) error {
 		if actions.bytes > maximumWorkflowBytes {
 			return errors.New("workflow security policy: total descriptor byte limit exceeded")
 		}
-		workflowFindings, err := inspectWorkflow(content)
+		document, workflowFindings, err := inspectWorkflowDocument(content)
 		if err != nil {
 			return fmt.Errorf("%s: %w", entry.Name(), err)
 		}
 		for _, finding := range workflowFindings {
 			findings = append(findings, entry.Name()+": "+finding)
 		}
-		if err := actions.inspect(content, 0, false); err != nil {
+		if err := actions.inspectValidated(document, 0, false); err != nil {
 			return err
 		}
 		return nil
@@ -164,23 +164,30 @@ func checkWorkflowSecurityContext(ctx context.Context, root string) error {
 }
 
 func inspectWorkflow(content []byte) ([]string, error) {
+	_, findings, err := inspectWorkflowDocument(content)
+	return findings, err
+}
+
+// Parsing and structural validation have one owner. Local-action traversal can
+// reuse this parser-owned graph without decoding or validating the bytes again.
+func inspectWorkflowDocument(content []byte) (*yaml.Node, []string, error) {
 	decoder := yaml.NewDecoder(bytes.NewReader(content))
 	var document yaml.Node
 	if err := decoder.Decode(&document); err != nil {
-		return nil, fmt.Errorf("decode workflow: %w", err)
+		return nil, nil, fmt.Errorf("decode workflow: %w", err)
 	}
 	var trailing yaml.Node
 	if err := decoder.Decode(&trailing); !errors.Is(err, io.EOF) {
 		if err == nil {
-			return nil, errors.New("workflow must contain exactly one YAML document")
+			return nil, nil, errors.New("workflow must contain exactly one YAML document")
 		}
-		return nil, fmt.Errorf("decode workflow: %w", err)
+		return nil, nil, fmt.Errorf("decode workflow: %w", err)
 	}
 	var findings []string
 	if err := inspectWorkflowNode(&document, &findings); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return findings, nil
+	return &document, findings, nil
 }
 
 func inspectWorkflowNode(document *yaml.Node, findings *[]string) error {
