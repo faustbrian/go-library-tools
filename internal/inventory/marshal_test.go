@@ -51,3 +51,18 @@ func TestMarshalInventoryRetainsInvalidProvenanceClassification(t *testing.T) {
 		}
 	}
 }
+
+func TestMarshalInventoryPreservesVersionedEmptyOutput(t *testing.T) {
+	for _, test := range []struct {
+		version int
+		want    string
+	}{
+		{2, `{"schema_version":2,"repository":"","go_version":"","modules":[]}`},
+		{3, `{"go_version":"","modules":[],"repository":"","schema_version":3}`},
+	} {
+		encoded, err := json.Marshal(inventory.Inventory{SchemaVersion: test.version, Modules: []inventory.Module{}})
+		if err != nil || string(encoded) != test.want {
+			t.Fatalf("schema %d output = %s, %v", test.version, encoded, err)
+		}
+	}
+}

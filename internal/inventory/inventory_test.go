@@ -809,6 +809,25 @@ func TestLoadAcceptsEnabledInteroperabilityOperation(t *testing.T) {
 	}
 }
 
+func TestLoadPreservesHeaderIdentitySchemaAdmissionOrder(t *testing.T) {
+	for _, test := range []struct {
+		name, manifest, want string
+	}{
+		{"header", `{"schema_version":"private-marker","modules":[{}]}`, "load module manifest: json: cannot unmarshal string into Go struct field .schema_version of type int"},
+		{"identity", `{"schema_version":3,"modules":[{}]}`, "invalid module directory"},
+		{"schema", `{"schema_version":3,"modules":[]}`, "load module manifest: schema v3:"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := fixture(t)
+			write(t, filepath.Join(root, "modules.json"), test.manifest)
+			got, err := inventory.Load(root, config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}})
+			if err == nil || !strings.HasPrefix(err.Error(), test.want) || got.SchemaVersion != 0 || got.Modules != nil {
+				t.Fatalf("admission = %#v, %v", got, err)
+			}
+		})
+	}
+}
+
 func fixture(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
