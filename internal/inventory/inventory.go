@@ -30,12 +30,15 @@ const modulesV3SchemaIdentity = "https://github.com/faustbrian/go-library-tools/
 
 //go:generate go run schema_generate_main.go
 
-var compiledModulesV3Schema = func() *jsonschema.Schema {
+var compiledModulesV3Schema = compileModuleSchemas(map[string]string{
+	modulesSchemaIdentity:   modulesSchemaJSON,
+	modulesV3SchemaIdentity: modulesV3SchemaJSON,
+}, modulesV3SchemaIdentity)
+
+// compileModuleSchemas owns fail-closed compilation of source-controlled schemas.
+func compileModuleSchemas(resources map[string]string, target string) *jsonschema.Schema {
 	compiler := jsonschema.NewCompiler()
-	for identity, source := range map[string]string{
-		modulesSchemaIdentity:   modulesSchemaJSON,
-		modulesV3SchemaIdentity: modulesV3SchemaJSON,
-	} {
+	for identity, source := range resources {
 		document, err := jsonschema.UnmarshalJSON(bytes.NewReader([]byte(source)))
 		if err != nil {
 			panic(err)
@@ -44,12 +47,12 @@ var compiledModulesV3Schema = func() *jsonschema.Schema {
 			panic(err)
 		}
 	}
-	compiled, err := compiler.Compile(modulesV3SchemaIdentity)
+	compiled, err := compiler.Compile(target)
 	if err != nil {
 		panic(err)
 	}
 	return compiled
-}()
+}
 
 // Inventory is the validated repository catalog.
 type Inventory struct {
@@ -68,6 +71,12 @@ func (inventory Inventory) MarshalJSON() ([]byte, error) {
 	if err != nil || inventory.SchemaVersion != 3 {
 		return encoded, err
 	}
+	return projectSchemaV3Inventory(encoded)
+}
+
+// projectSchemaV3Inventory filters only after the complete typed value has been
+// marshaled, preserving RawMessage validation and JSON map output ordering.
+func projectSchemaV3Inventory(encoded []byte) ([]byte, error) {
 	var document map[string]any
 	if err := json.Unmarshal(encoded, &document); err != nil {
 		return nil, err
@@ -261,12 +270,8 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 		return Inventory{}, err
 	}
 	if header.SchemaVersion == 3 {
-		document, err := jsonschema.UnmarshalJSON(bytes.NewReader(moduleManifest))
-		if err != nil {
-			return Inventory{}, fmt.Errorf("load module manifest: %w", err)
-		}
-		if err := compiledModulesV3Schema.Validate(document); err != nil {
-			return Inventory{}, fmt.Errorf("load module manifest: schema v3: %w", err)
+		if err := validateSchemaV3Manifest(moduleManifest); err != nil {
+			return Inventory{}, err
 		}
 	}
 	var modules Inventory
@@ -373,6 +378,19 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 		}
 	}
 	return modules, nil
+}
+
+// validateSchemaV3Manifest owns parsing and schema admission. Public loading
+// still admits the header and module identities before reaching this owner.
+func validateSchemaV3Manifest(manifest []byte) error {
+	document, err := jsonschema.UnmarshalJSON(bytes.NewReader(manifest))
+	if err != nil {
+		return fmt.Errorf("load module manifest: %w", err)
+	}
+	if err := compiledModulesV3Schema.Validate(document); err != nil {
+		return fmt.Errorf("load module manifest: schema v3: %w", err)
+	}
+	return nil
 }
 
 func validateModuleIdentities(_ string, manifest []byte) error {
