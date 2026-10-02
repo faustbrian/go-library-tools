@@ -260,6 +260,23 @@ func inspectGitleaksCurrentTreeWithMetadata(ctx context.Context, source string, 
 }
 
 func copyGitleaksCurrentTreeBounded(ctx context.Context, source, destination string, limits securitySourceLimits) error {
+	return copyGitleaksCurrentTreeWithFiles(ctx, source, destination, limits, gitleaksCopyFiles{
+		open: (*os.Root).Open,
+		create: func(root *os.Root, relative string) (*os.File, error) {
+			return root.OpenFile(relative, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+		},
+		close: (*os.File).Close,
+	})
+}
+
+// These operations stay local to a single copy, retaining real confined roots
+// and file handles while allowing deterministic lifecycle failure checks.
+type gitleaksCopyFiles struct {
+	open, create func(*os.Root, string) (*os.File, error)
+	close        func(*os.File) error
+}
+
+func copyGitleaksCurrentTreeWithFiles(ctx context.Context, source, destination string, limits securitySourceLimits, files gitleaksCopyFiles) error {
 	if err := inspectGitleaksCurrentTree(ctx, source, limits, nil); err != nil {
 		return err
 	}
@@ -293,18 +310,18 @@ func copyGitleaksCurrentTreeBounded(ctx context.Context, source, destination str
 		if remaining < 0 {
 			return fmt.Errorf("gitleaks current-tree snapshot exceeds %d bytes", maximumGitleaksSnapshotBytes)
 		}
-		input, openErr := root.Open(relative)
+		input, openErr := files.open(root, relative)
 		if openErr != nil {
 			return errors.New("gitleaks current-tree source open failed")
 		}
-		output, createErr := targetRoot.OpenFile(relative, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
+		output, createErr := files.create(targetRoot, relative)
 		if createErr != nil {
-			_ = input.Close()
+			_ = files.close(input)
 			return errors.New("gitleaks current-tree destination open failed")
 		}
 		bounded := &boundedSourceFile{file: output, limit: remaining}
 		written, copyErr := io.Copy(bounded, io.LimitReader(contextSourceReader{ctx: ctx, reader: input}, remaining+1))
-		closeErr := errors.Join(input.Close(), output.Close())
+		closeErr := errors.Join(files.close(input), files.close(output))
 		if copyErr != nil || closeErr != nil {
 			return errors.Join(errors.New("gitleaks current-tree copy failed"), ctx.Err())
 		}
