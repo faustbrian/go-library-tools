@@ -350,8 +350,14 @@ github.com/faustbrian/go-schema-registry v1.0.0 h1:x/qlOAokGGjPMcE0z/Ri0JAaEIKgN
 github.com/faustbrian/go-schema-registry v1.0.0/go.mod h1:lj1jdEWEDxxWW5e5mTGol8KEkwLP3KLMN+0+vvLJusc=
 github.com/faustbrian/go-schema-registry/providers/confluent v1.0.0 h1:xmEBvOB9RIVzuYSntKna4yWUeb9oRrDePHm5lAr7qjo=
 github.com/faustbrian/go-schema-registry/providers/confluent v1.0.0/go.mod h1:ZLj3TTGyfjGdPi06hKJddize7VuEW21yHCKu517g8Y0=
+github.com/faustbrian/go-schema-registry/providers/confluent/v2 v2.0.0 h1:XflKeT4YutRv6stpVteXtGXDM+RGqGGQQkAp0Q/ssYM=
+github.com/faustbrian/go-schema-registry/providers/confluent/v2 v2.0.0/go.mod h1:Bq/f1HPzRfC8xu0cezkAM0HViR0gAXRnsODaKkDBDXI=
 github.com/faustbrian/go-schema-registry/providers/glue v1.0.0 h1:hZbDzqSY0lmt87n9zoqtfkDvDKVhnosQRwczfjHWBLU=
 github.com/faustbrian/go-schema-registry/providers/glue v1.0.0/go.mod h1:eorhPNmCIhzOppOir2mdegkk8rC5LQRS2p8+CUyL5Ow=
+github.com/faustbrian/go-schema-registry/providers/glue/v2 v2.0.0 h1:FREaKyignfBlsfzZK2t4LjiJbbyVi+giudQluqWvOco=
+github.com/faustbrian/go-schema-registry/providers/glue/v2 v2.0.0/go.mod h1:WhhfdN2PwySd+ySC9BcK7RApIyg5A5NsuUTvuyGp8jI=
+github.com/faustbrian/go-schema-registry/v2 v2.0.0 h1:OJtzMygiLcxK1jOV26P++9LOYA436rcbHSKxRQbCvg4=
+github.com/faustbrian/go-schema-registry/v2 v2.0.0/go.mod h1:XxbE5Z5KZaOP1PSppSZiI5dvhFyUOh9yshsVAxHzx3w=
 github.com/faustbrian/go-search v1.0.0 h1:cSLM12UDc5I2mYE4TSJSvee2YfqMcArJzBdYRPONPwM=
 github.com/faustbrian/go-search v1.0.0/go.mod h1:7cJAoRD/SOhulx8YmDkFPqoz6FB3Myuw+A7HKg2U4lA=
 github.com/faustbrian/go-search/adapters/opensearch v1.0.0 h1:zCvsApdxxD0VD/P9kBH8Dr6jsHuKzYasZxPMrtjiduo=
@@ -632,9 +638,11 @@ github.com/speedata/barcode v1.1.1/go.mod h1:BNwJ2io3ZgecUqunSUFAlfnnI8YTh3SLSHZ
 github.com/spf13/pflag v1.0.10 h1:4EBh2KAYBwaONj6b2Ye1GiHfwjqyROoF4RwYO+vPwFk=
 github.com/spf13/pflag v1.0.10/go.mod h1:McXfInJRrz4CZXVZOBLb0bTZqETkiAhM9Iw0y3An2Bg=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
+github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/testify v1.3.0/go.mod h1:M5WIy9Dh21IEIfnGCwXGc5bZfKNJtfHm1UVUgZn+9EI=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.7.5/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.12.1 h1:EuwCh5fleGS7H32xRwO3wRGT7DxrDhLAT6FF8MpWDWE=
 github.com/stretchr/testify v1.12.1/go.mod h1:MDEgiDPPsNp5cuIrHPPCyornHKgEVbtFUmoNlxoYthg=
 github.com/testcontainers/testcontainers-go v0.44.0 h1:/Fwh6HY1mIikhnm9e7HwoxGycx0lzRAE0f5VQpjFxzI=
@@ -789,6 +797,7 @@ gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c/go.mod h1:JHkPIbrfpd72SG/EV
 gopkg.in/inf.v0 v0.9.1 h1:73M5CoZyi3ZLMOyDlQh031Cx6N9NDJ2Vvfl76EDAgDc=
 gopkg.in/inf.v0 v0.9.1/go.mod h1:cWUDdTG/fYaXco+Dcufb5Vnc6Gp2YChqWtbxRZE0mXw=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
+gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 k8s.io/api v0.36.2 h1:TF6YDLIzKfccK7cq9YpTcGX8TJmEkHVRv78DM51fRYY=
 k8s.io/api v0.36.2/go.mod h1:F4LbMO4brjZYh7yFkXWhynSvtB7YauxV4c+HHkNRGNg=
 k8s.io/apimachinery v0.36.2 h1:0PE/W/WNy1UX61NLbXY5TMbJ6UwLL6E6lAPkYrKFxbQ=
