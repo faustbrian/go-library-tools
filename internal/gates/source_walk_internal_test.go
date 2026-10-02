@@ -67,3 +67,64 @@ func TestSecuritySourceWalkCancellationBetweenEntries(t *testing.T) {
 		t.Fatalf("walk = %v, visits=%d; want original cancellation and one visit", err, visits)
 	}
 }
+
+// Depth counts directory traversal from root=0, not relative-path components.
+// The blocked directory can be visited, but its contents must remain unvisited.
+func TestSecuritySourceWalkDepthAdmissionBoundary(t *testing.T) {
+	for _, test := range []struct {
+		name                     string
+		depth, limit, wantVisits int
+		wantError                string
+	}{
+		{"depth128-admitted", 128, 129, 129, ""},
+		{"depth129-refused", 129, 130, 129, "source traversal depth limit exceeded"},
+		{"entry-budget-refused-first", 129, 128, 128, "source traversal entry limit exceeded"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := t.TempDir()
+			relative := ""
+			var expected []string
+			for range test.depth {
+				relative = filepath.Join(relative, "d")
+				if err := os.Mkdir(filepath.Join(root, relative), 0o700); err != nil {
+					t.Fatal(err)
+				}
+				expected = append(expected, relative)
+			}
+			leaf := filepath.Join(relative, "private-source")
+			path := filepath.Join(root, leaf)
+			if err := os.WriteFile(path, []byte("keep"), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			expected = append(expected, leaf)
+			var visited []string
+			leafVisited := false
+			err := walkSecuritySource(t.Context(), root, test.limit, func(relative string, entry fs.DirEntry) error {
+				visited = append(visited, relative)
+				if relative == leaf {
+					leafVisited = true
+					if !entry.Type().IsRegular() {
+						t.Fatal("admitted leaf was not an ordinary file")
+					}
+				} else if !entry.IsDir() {
+					t.Fatal("walk visited an unexpected non-directory")
+				}
+				return nil
+			})
+			if test.wantError == "" {
+				if err != nil || !leafVisited {
+					t.Fatalf("depth128 admission: error=%v leaf visited=%v", err, leafVisited)
+				}
+			} else if err == nil || err.Error() != test.wantError || leafVisited {
+				t.Fatalf("bounded refusal: error=%v leaf visited=%v", err, leafVisited)
+			}
+			if !reflect.DeepEqual(visited, expected[:test.wantVisits]) {
+				t.Fatalf("walk did not stop at the expected visit boundary: visits=%d want=%d", len(visited), test.wantVisits)
+			}
+			data, err := os.ReadFile(path)
+			if err != nil || string(data) != "keep" {
+				t.Fatal("bounded traversal changed source bytes")
+			}
+		})
+	}
+}
