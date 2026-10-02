@@ -213,6 +213,14 @@ func (file *boundedSourceFile) Write(value []byte) (int, error) {
 }
 
 func inspectGitleaksCurrentTree(ctx context.Context, source string, limits securitySourceLimits, visit func(string, fs.DirEntry) error) error {
+	return inspectGitleaksCurrentTreeWithMetadata(ctx, source, limits, visit, func(_ string, entry fs.DirEntry) (fs.FileInfo, error) {
+		return entry.Info()
+	})
+}
+
+// Keep metadata failure injection local to this operation: some filesystems
+// cache DirEntry.Info during ReadDir, even if the source subsequently disappears.
+func inspectGitleaksCurrentTreeWithMetadata(ctx context.Context, source string, limits securitySourceLimits, visit func(string, fs.DirEntry) error, metadata func(string, fs.DirEntry) (fs.FileInfo, error)) error {
 	entries := 0
 	var total int64
 	return walkSecuritySource(ctx, source, limits.entries+2, func(relative string, entry fs.DirEntry) error {
@@ -233,7 +241,7 @@ func inspectGitleaksCurrentTree(ctx context.Context, source string, limits secur
 			return errors.New("gitleaks current-tree entry limit exceeded")
 		}
 		if entry.Type().IsRegular() {
-			info, err := entry.Info()
+			info, err := metadata(relative, entry)
 			if err != nil {
 				return errors.New("gitleaks current-tree metadata failed")
 			}
