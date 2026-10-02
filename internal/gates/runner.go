@@ -840,9 +840,8 @@ func nativeNosecGroupDirectives(group *ast.CommentGroup, fileSet *token.FileSet)
 			}
 			continue
 		}
-		if !strings.HasPrefix(body, "/*") {
-			continue
-		}
+		// The caller supplies comments from parser.ParseFile: after line
+		// comments above, every remaining scanner token is a block comment.
 		body = strings.TrimPrefix(body, "/*")
 		body = strings.TrimSuffix(body, "*/")
 		for offset, line := range strings.Split(body, "\n") {
@@ -856,14 +855,6 @@ func nativeNosecGroupDirectives(group *ast.CommentGroup, fileSet *token.FileSet)
 		}
 	}
 	return suppressions
-}
-
-func nativeNosecGroupDirective(group *ast.CommentGroup, fileSet *token.FileSet) (string, int, bool) {
-	suppressions := nativeNosecGroupDirectives(group, fileSet)
-	if len(suppressions) == 0 {
-		return "", 0, false
-	}
-	return suppressions[0].arguments, suppressions[0].line, true
 }
 
 func gosecDisableDirective(comment string) (string, bool) {

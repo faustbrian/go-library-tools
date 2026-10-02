@@ -69,6 +69,155 @@ func TestRunSecuritySuppressesAndBoundsScannerOutput(t *testing.T) {
 	}
 }
 
+func TestSecurityOrchestrationAdmitsValidatedSuppression(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "example.go"), []byte("package example\n//#nosec G304 -- confined repository file\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stop := errors.New("inert vulnerability boundary")
+	var output bytes.Buffer
+	var commands []Command
+	runner := Runner{Root: root, Executor: executorFunction(func(_ context.Context, command Command) error {
+		commands = append(commands, command)
+		return stop
+	})}
+	err := runner.checkSecurity(t.Context(), &output, root, inventory.Module{Directory: ".", ModulePath: "example"})
+	if !errors.Is(err, stop) || len(commands) != 1 || commands[0].Dir != root ||
+		!slices.Contains(commands[0].Args, "golang.org/x/vuln/cmd/govulncheck@"+govulncheckVersion) {
+		t.Fatalf("admitted security orchestration = %v, commands=%#v", err, commands)
+	}
+	if output.String() != "[.] security-suppressions\n[.] vulnerability\n" {
+		t.Fatalf("admitted security output = %q", output.String())
+	}
+}
+
+func TestSecurityOrchestrationConfigFailureStopsLaterEffects(t *testing.T) {
+	failure := errors.New("analysis configuration unavailable")
+	var commands []string
+	files := &fakeSecretConfigFiles{createErr: failure}
+	runner := Runner{Root: t.TempDir(), secretConfigFiles: files,
+		Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+			commands = append(commands, strings.Join(command.Args, " "))
+			return nil
+		}},
+	}
+	err := runner.runSecurity(t.Context(), io.Discard, runner.Root, inventory.Module{Directory: ".", ModulePath: "example"})
+	if !errors.Is(err, failure) || !strings.Contains(err.Error(), "create temporary analysis config") {
+		t.Fatalf("analysis configuration failure = %v", err)
+	}
+	if len(commands) != 2 || !strings.Contains(commands[0], "govulncheck@") || !strings.Contains(commands[1], "gosec@") || files.removed != "" {
+		t.Fatalf("configuration failure allowed later effects: commands=%v, removed=%q", commands, files.removed)
+	}
+}
+
+func TestSecurityOrchestrationForbiddenIgnorePreservesCleanup(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, ".gitleaksignore"), []byte("inert\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	cleanupFailure := errors.New("configuration cleanup failure")
+	files := &fakeSecretConfigFiles{file: &fakeNamedFile{name: "owned-config"}, removeErr: cleanupFailure}
+	commands := 0
+	runner := Runner{Root: root, secretConfigFiles: files,
+		Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error {
+			commands++
+			return nil
+		}},
+	}
+	err := runner.runRepositorySecrets(t.Context(), io.Discard, ".")
+	if !errors.Is(err, errRepositoryGitleaksIgnore) || !errors.Is(err, cleanupFailure) || commands != 0 || files.removed != "owned-config" {
+		t.Fatalf("ignore refusal = %v, commands=%d, removed=%q", err, commands, files.removed)
+	}
+}
+
+func TestSecurityOrchestrationSourceCleanupFailureStillCleansConfig(t *testing.T) {
+	root, workspace := t.TempDir(), t.TempDir()
+	sourceFailure, configFailure := errors.New("source cleanup failure"), errors.New("config cleanup failure")
+	files := &securityPolicyFiles{gitleaksRemoveErr: configFailure}
+	var commands []string
+	var removed string
+	runner := Runner{Root: root, secretConfigFiles: files,
+		Executor: workspaceExecutor{directory: workspace, run: func(_ context.Context, command Command) error {
+			commands = append(commands, strings.Join(command.Args, " "))
+			return nil
+		}},
+		gitleaksSourceCleanup: func(path string) error {
+			if filepath.Dir(path) != workspace || !strings.HasPrefix(filepath.Base(path), "gitleaks-sources-") {
+				t.Fatalf("cleanup target is not the owned source snapshot: %s", path)
+			}
+			removed = path
+			return errors.Join(os.RemoveAll(path), sourceFailure)
+		},
+	}
+	err := runner.runSecurity(t.Context(), io.Discard, root, inventory.Module{Directory: ".", ModulePath: "example"})
+	if !errors.Is(err, sourceFailure) || !errors.Is(err, configFailure) || files.gitleaksRemoved != 1 || removed == "" {
+		t.Fatalf("post-scan cleanup = %v, config removals=%d, source removed=%q", err, files.gitleaksRemoved, removed)
+	}
+	if _, err := os.Stat(removed); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("owned snapshot remained after simulated cleanup failure: %v", err)
+	}
+	for _, command := range commands {
+		if strings.Contains(command, "go-licenses") || strings.Contains(command, "cyclonedx-gomod") {
+			t.Fatalf("later gate ran after cleanup failure: %s", command)
+		}
+	}
+	if !slices.ContainsFunc(commands, func(command string) bool {
+		return strings.Contains(command, "gitleaks") && strings.Contains(command, " git ")
+	}) ||
+		!slices.ContainsFunc(commands, func(command string) bool {
+			return strings.Contains(command, "gitleaks") && strings.Contains(command, " dir ")
+		}) {
+		t.Fatal("cleanup failure scenario did not reach both inert secret-scan boundaries")
+	}
+}
+
+func TestSecurityOrchestrationSourceAdmissionPrecedesExecution(t *testing.T) {
+	for _, scenario := range []string{"missing root", "excluded directories", "malformed source"} {
+		t.Run(scenario, func(t *testing.T) {
+			root := t.TempDir()
+			if scenario == "missing root" {
+				root = filepath.Join(root, "missing")
+			} else if scenario == "excluded directories" {
+				for _, directory := range []string{".git", ".golib-tooling", "vendor"} {
+					path := filepath.Join(root, directory)
+					if err := os.Mkdir(path, 0o700); err != nil {
+						t.Fatal(err)
+					}
+					if err := os.WriteFile(filepath.Join(path, "invalid.go"), []byte("package ["), 0o600); err != nil {
+						t.Fatal(err)
+					}
+				}
+			} else if err := os.WriteFile(filepath.Join(root, "invalid.go"), []byte("package ["), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			stop := errors.New("inert scanner reached")
+			commands := 0
+			runner := Runner{Root: root, Executor: executorFunction(func(context.Context, Command) error {
+				commands++
+				return stop
+			})}
+			err := runner.checkSecurity(t.Context(), io.Discard, root, inventory.Module{Directory: ".", ModulePath: "example"})
+			if scenario == "excluded directories" {
+				if !errors.Is(err, stop) || commands != 1 {
+					t.Fatalf("excluded source reached parser instead of inert scanner: %v, commands=%d", err, commands)
+				}
+			} else if err == nil || errors.Is(err, stop) || commands != 0 {
+				t.Fatalf("invalid source reached scanner: %v, commands=%d", err, commands)
+			}
+		})
+	}
+}
+
+func TestSecurityOrchestrationIgnoreInspectionFailureIsCategorical(t *testing.T) {
+	root := filepath.Join(t.TempDir(), "not-a-directory")
+	if err := os.WriteFile(root, []byte("inert"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := rejectRepositoryGitleaksIgnore(root); err == nil || err.Error() != "inspect repository-owned .gitleaksignore" {
+		t.Fatalf("ignore inspection failure = %v", err)
+	}
+}
+
 func TestCheckModuleLocalPropagatesEachCommandFailure(t *testing.T) {
 	root := t.TempDir()
 	for name, content := range map[string]string{
@@ -1077,14 +1226,14 @@ func TestNativeSecurityDirectiveMatchesGosecNosecPrefixBoundary(t *testing.T) {
 	}
 }
 
-func TestNativeNosecGroupDirectiveIgnoresBlockInteriorLineMarker(t *testing.T) {
+func TestNativeNosecGroupDirectivesIgnoresBlockInteriorLineMarker(t *testing.T) {
 	fileSet := token.NewFileSet()
 	parsed, err := parser.ParseFile(fileSet, "example.go", "package example\n/*\n//#nosec\n*/\nfunc value() {}\n", parser.ParseComments)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if arguments, line, found := nativeNosecGroupDirective(parsed.Comments[0], fileSet); found {
-		t.Fatalf("nativeNosecGroupDirective() = (%q, %d, true), want not found", arguments, line)
+	if got := nativeNosecGroupDirectives(parsed.Comments[0], fileSet); len(got) != 0 {
+		t.Fatalf("nativeNosecGroupDirectives() = %#v, want no directives", got)
 	}
 }
 
