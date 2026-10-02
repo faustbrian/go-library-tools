@@ -141,10 +141,11 @@ func TestSuppressionSourceLifecycleFailures(t *testing.T) {
 			wantOpens, wantCloses := 1, 1
 			switch stage {
 			case "metadata", "open":
-				if _, ok := operationErr.(*os.PathError); !ok {
+				if reflect.TypeOf(operationErr) != reflect.TypeFor[*os.PathError]() {
 					t.Fatal("fixture did not produce a pointer-backed filesystem error")
 				}
-				if reflect.ValueOf(err) != reflect.ValueOf(operationErr) {
+				if reflect.TypeOf(err) != reflect.TypeOf(operationErr) ||
+					reflect.ValueOf(err).Pointer() != reflect.ValueOf(operationErr).Pointer() {
 					t.Fatal("source operation error identity changed")
 				}
 				wantCloses = 0
@@ -168,10 +169,11 @@ func TestSuppressionSourceLifecycleFailures(t *testing.T) {
 					t.Fatal("source read error identity changed")
 				}
 				if stage == "read-close" {
-					if _, ok := closeErr.(*os.PathError); !ok {
+					if reflect.TypeOf(closeErr) != reflect.TypeFor[*os.PathError]() {
 						t.Fatal("fixture did not produce a pointer-backed close error")
 					}
-					if len(joined.Unwrap()) != 2 || reflect.ValueOf(joined.Unwrap()[1]) != reflect.ValueOf(closeErr) {
+					if len(joined.Unwrap()) != 2 || reflect.TypeOf(joined.Unwrap()[1]) != reflect.TypeOf(closeErr) ||
+						reflect.ValueOf(joined.Unwrap()[1]).Pointer() != reflect.ValueOf(closeErr).Pointer() {
 						t.Fatal("simultaneous read and close errors were not retained in order")
 					}
 				}

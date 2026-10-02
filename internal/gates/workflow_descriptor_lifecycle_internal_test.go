@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -17,7 +18,7 @@ import (
 // charged count. Refusal must precede any external validator effects.
 func TestWorkflowDescriptorFileCountBeforeExecutor(t *testing.T) {
 	for _, count := range []int{512, 513} {
-		t.Run(fmt.Sprint(count), func(t *testing.T) {
+		t.Run(strconv.Itoa(count), func(t *testing.T) {
 			root := t.TempDir()
 			directory := filepath.Join(root, ".github", "workflows")
 			if err := os.MkdirAll(directory, 0o700); err != nil {
@@ -108,9 +109,10 @@ func TestWorkflowDescriptorReadLifecycle(t *testing.T) {
 			opens, closes := 0, 0
 			var offset int64
 			limit := int64(len(source))
-			if stage == "metadata-size" {
+			switch stage {
+			case "metadata-size":
 				limit--
-			} else if stage == "below" {
+			case "below":
 				limit++
 			}
 			files := workflowDescriptorRealFiles()
@@ -173,7 +175,9 @@ func TestWorkflowDescriptorReadLifecycle(t *testing.T) {
 			wantOpens, wantCloses := 1, 1
 			switch stage {
 			case "metadata", "open":
-				if _, ok := operationErr.(*os.PathError); !ok || reflect.ValueOf(err) != reflect.ValueOf(operationErr) {
+				if reflect.TypeOf(operationErr) != reflect.TypeFor[*os.PathError]() ||
+					reflect.TypeOf(err) != reflect.TypeOf(operationErr) ||
+					reflect.ValueOf(err).Pointer() != reflect.ValueOf(operationErr).Pointer() {
 					t.Fatal("descriptor operation error identity changed")
 				}
 				wantCloses = 0
@@ -202,7 +206,9 @@ func TestWorkflowDescriptorReadLifecycle(t *testing.T) {
 					t.Fatal("descriptor read failure lost its original cause")
 				}
 				if stage == "read-close" {
-					if _, ok := closeErr.(*os.PathError); !ok || len(joined.Unwrap()) != 2 || reflect.ValueOf(joined.Unwrap()[1]) != reflect.ValueOf(closeErr) {
+					if reflect.TypeOf(closeErr) != reflect.TypeFor[*os.PathError]() || len(joined.Unwrap()) != 2 ||
+						reflect.TypeOf(joined.Unwrap()[1]) != reflect.TypeOf(closeErr) ||
+						reflect.ValueOf(joined.Unwrap()[1]).Pointer() != reflect.ValueOf(closeErr).Pointer() {
 						t.Fatal("descriptor read/close causes were not retained in order")
 					}
 				}
@@ -244,7 +250,7 @@ func TestWorkflowDescriptorReadLifecycle(t *testing.T) {
 
 func TestWorkflowDescriptorRootOpeningPreservesAbsenceAndErrors(t *testing.T) {
 	for _, missing := range []bool{false, true} {
-		t.Run(fmt.Sprint(missing), func(t *testing.T) {
+		t.Run(strconv.FormatBool(missing), func(t *testing.T) {
 			root := t.TempDir()
 			workflowRefusalWrite(t, root, ".github/workflows/ci.yml", "jobs: {}\n")
 			invalidRoot := filepath.Join(root, ".github", "workflows", "ci.yml")
