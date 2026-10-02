@@ -84,12 +84,17 @@ func checkWorkflowSecurityContext(ctx context.Context, root string) error {
 	return checkWorkflowSecurityWithFiles(ctx, root, workflowDescriptorLimits{
 		descriptorBytes: maximumWorkflowOutput,
 		totalBytes:      maximumWorkflowBytes,
-	}, workflowDescriptorFiles{
+	}, operatingWorkflowDescriptorFiles())
+}
+
+func operatingWorkflowDescriptorFiles() workflowDescriptorFiles {
+	return workflowDescriptorFiles{
 		openRoot: os.OpenRoot,
 		info:     os.DirEntry.Info,
 		open:     (*os.Root).Open,
 		close:    (*os.File).Close,
-	})
+		stat:     os.Stat,
+	}
 }
 
 // These operations and byte limits belong to one workflow inspection. The
@@ -99,6 +104,7 @@ type workflowDescriptorFiles struct {
 	info     func(os.DirEntry) (os.FileInfo, error)
 	open     func(*os.Root, string) (*os.File, error)
 	close    func(*os.File) error
+	stat     func(string) (os.FileInfo, error)
 }
 
 type workflowDescriptorLimits struct {
@@ -107,7 +113,7 @@ type workflowDescriptorLimits struct {
 }
 
 func checkWorkflowSecurityWithFiles(ctx context.Context, root string, limits workflowDescriptorLimits, files workflowDescriptorFiles) error {
-	actions := localActionInspection{ctx: ctx, root: root, active: map[string]bool{}, complete: map[string]bool{}}
+	actions := localActionInspection{ctx: ctx, root: root, active: map[string]bool{}, complete: map[string]bool{}, fileOperations: &files}
 	directory := filepath.Join(root, ".github", "workflows")
 	for _, name := range []string{filepath.Join(root, ".github"), directory} {
 		info, err := os.Lstat(name)

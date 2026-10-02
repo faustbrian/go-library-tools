@@ -17,6 +17,7 @@ type localActionInspection struct {
 	root             string
 	active, complete map[string]bool
 	files, bytes     int
+	fileOperations   *workflowDescriptorFiles
 }
 
 func (inspection *localActionInspection) inspect(content []byte, depth int, action bool) error {
@@ -114,7 +115,15 @@ func (inspection *localActionInspection) local(reference string, depth int) erro
 			return errors.New("local action path missing or symbolic")
 		}
 	}
-	info, err := os.Stat(current)
+	files := operatingWorkflowDescriptorFiles()
+	if inspection.fileOperations != nil {
+		files = *inspection.fileOperations
+		// Existing scoped workflow readers need no stat override.
+		if files.stat == nil {
+			files.stat = os.Stat
+		}
+	}
+	info, err := files.stat(current)
 	if err != nil {
 		return errors.New("local action path unavailable")
 	}
@@ -132,17 +141,17 @@ func (inspection *localActionInspection) local(reference string, depth int) erro
 	if inspection.files > maximumWorkflowFiles {
 		return errors.New("local action descriptor count limit exceeded")
 	}
-	root, err := os.OpenRoot(inspection.root)
+	root, err := files.openRoot(inspection.root)
 	if err != nil {
 		return errors.New("local action root unavailable")
 	}
 	defer root.Close()
-	file, err := root.Open(name)
+	file, err := files.open(root, name)
 	if err != nil {
 		return errors.New("local action descriptor unavailable")
 	}
 	content, readErr := io.ReadAll(io.LimitReader(file, maximumWorkflowOutput+1))
-	closeErr := file.Close()
+	closeErr := files.close(file)
 	if readErr != nil || closeErr != nil || len(content) > maximumWorkflowOutput {
 		return errors.New("local action descriptor read failed or oversized")
 	}
