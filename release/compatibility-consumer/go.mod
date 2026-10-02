@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/faustbrian/go-adaptive-throttle v1.0.1
 	github.com/faustbrian/go-analysis v1.2.0
-	github.com/faustbrian/go-api-query v1.1.0
+	github.com/faustbrian/go-api-query/v2 v2.0.0
 	github.com/faustbrian/go-audit v1.0.0
 	github.com/faustbrian/go-audit/postgres v1.0.0
 	github.com/faustbrian/go-audit/v2 v2.0.0
@@ -62,7 +62,7 @@ require (
 	github.com/faustbrian/go-idempotency/v2 v2.0.0
 	github.com/faustbrian/go-identifier v1.0.0
 	github.com/faustbrian/go-identifier/v2 v2.0.0
-	github.com/faustbrian/go-international v1.1.0
+	github.com/faustbrian/go-international/v2 v2.0.0
 	github.com/faustbrian/go-json-schema v1.0.0
 	github.com/faustbrian/go-jsonapi v1.0.0
 	github.com/faustbrian/go-jsonrpc v1.0.0
@@ -74,7 +74,7 @@ require (
 	github.com/faustbrian/go-knapsack/objective/money/v2 v2.0.0
 	github.com/faustbrian/go-knapsack/v2 v2.0.0
 	github.com/faustbrian/go-lease v1.1.0
-	github.com/faustbrian/go-localized v1.1.2
+	github.com/faustbrian/go-localized/v2 v2.0.0
 	github.com/faustbrian/go-log v1.0.0
 	github.com/faustbrian/go-math v1.1.2
 	github.com/faustbrian/go-measurement/v2 v2.0.1
@@ -133,7 +133,7 @@ require (
 	github.com/faustbrian/go-transactional-outbox/adapters/otel v1.0.0
 	github.com/faustbrian/go-transactional-outbox/adapters/queue v1.0.0
 	github.com/faustbrian/go-transactional-outbox/adapters/rabbitstream v1.0.1
-	github.com/faustbrian/go-validation v1.1.0
+	github.com/faustbrian/go-validation/v2 v2.0.0
 	github.com/faustbrian/go-verkle-tree v1.0.0
 	github.com/faustbrian/go-webhook v1.0.0
 	github.com/faustbrian/go-wire v1.0.0
@@ -174,7 +174,9 @@ require (
 	github.com/dlclark/regexp2/v2 v2.5.1 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/ericlevine/zxinggo v0.1.0 // indirect
+	github.com/faustbrian/go-international v1.1.0 // indirect
 	github.com/faustbrian/go-telemetry/v2 v2.0.0 // indirect
+	github.com/faustbrian/go-validation v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.2 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
