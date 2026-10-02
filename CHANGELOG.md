@@ -6,6 +6,8 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Refuse symbolic and other nonregular Go sources during security suppression
+  preflight before opening them, retaining bounded reads for regular sources.
 - Run API snapshot and compatibility commands with the repository's target
   Go toolchain rather than each module's declared compatibility minimum.
   Modules retain their independent minimum-version declarations.
