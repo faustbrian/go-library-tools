@@ -206,9 +206,6 @@ func inspectWorkflowNode(document *yaml.Node, findings *[]string) error {
 			return errors.New("workflow YAML structure limit exceeded")
 		}
 		if current.node.Kind == yaml.AliasNode {
-			if current.node.Alias == nil {
-				return errors.New("workflow contains an unresolved YAML alias")
-			}
 			stack = append(stack, item{node: current.node.Alias, path: current.path, depth: current.depth + 1})
 			continue
 		}
@@ -226,11 +223,7 @@ func inspectWorkflowNode(document *yaml.Node, findings *[]string) error {
 			continue
 		}
 		if workflowStepPath(current.path) {
-			persists, err := checkoutCredentialsPersist(current.node)
-			if err != nil {
-				return err
-			}
-			if persists {
+			if checkoutCredentialsPersist(current.node) {
 				*findings = append(*findings, "actions/checkout requires literal persist-credentials: false")
 			}
 		}
@@ -241,10 +234,7 @@ func inspectWorkflowNode(document *yaml.Node, findings *[]string) error {
 				return fmt.Errorf("workflow contains duplicate key %q", key.Value)
 			}
 			keys[key.Value] = struct{}{}
-			resolved, err := resolveWorkflowAlias(value)
-			if err != nil {
-				return err
-			}
+			resolved := resolveWorkflowAlias(value)
 			switch key.Value {
 			case "on":
 				if len(current.path) == 0 && workflowEventPresent(resolved, "pull_request_target") {
@@ -277,25 +267,15 @@ func inspectWorkflowNode(document *yaml.Node, findings *[]string) error {
 	return nil
 }
 
-func resolveWorkflowAlias(node *yaml.Node) (*yaml.Node, error) {
-	seen := map[*yaml.Node]struct{}{}
-	for depth := 0; node != nil && node.Kind == yaml.AliasNode; depth++ {
-		if depth >= 100 {
-			return nil, errors.New("workflow YAML alias limit exceeded")
-		}
-		if _, exists := seen[node]; exists {
-			return nil, errors.New("workflow YAML alias cycle detected")
-		}
-		seen[node] = struct{}{}
-		if node.Alias == nil {
-			return nil, errors.New("workflow contains an unresolved YAML alias")
-		}
-		node = node.Alias
+// Only decoded parser-owned nodes reach this helper. The YAML parser rejects
+// unknown anchors and anchors only scalar, sequence, and mapping nodes, so an
+// alias has exactly one non-alias target. Recursive collections remain bounded
+// by inspectWorkflowNode's full traversal, not by an alias-pointer chain.
+func resolveWorkflowAlias(node *yaml.Node) *yaml.Node {
+	if node.Kind == yaml.AliasNode {
+		return node.Alias
 	}
-	if node == nil {
-		return nil, errors.New("workflow contains an unresolved YAML alias")
-	}
-	return node, nil
+	return node
 }
 
 func appendPath(path []string, value string) []string {
@@ -328,32 +308,26 @@ func workflowStepPath(path []string) bool {
 		len(path) == 3 && path[0] == "runs" && path[1] == "steps" && path[2] == "[]"
 }
 
-func checkoutCredentialsPersist(step *yaml.Node) (bool, error) {
+func checkoutCredentialsPersist(step *yaml.Node) bool {
 	uses := workflowMappingValue(step, "uses", 0)
 	if uses == nil {
-		return false, nil
+		return false
 	}
-	resolvedUses, err := resolveWorkflowAlias(uses)
-	if err != nil {
-		return false, err
-	}
+	resolvedUses := resolveWorkflowAlias(uses)
 	if resolvedUses.Kind != yaml.ScalarNode {
-		return false, nil
+		return false
 	}
 	ownerAction, _, _ := strings.Cut(resolvedUses.Value, "@")
 	if !strings.EqualFold(ownerAction, "actions/checkout") {
-		return false, nil
+		return false
 	}
 	with := workflowMappingValue(step, "with", 0)
 	persist := workflowMappingValue(with, "persist-credentials", 0)
 	if persist == nil {
-		return true, nil
+		return true
 	}
-	resolvedPersist, err := resolveWorkflowAlias(persist)
-	if err != nil {
-		return false, err
-	}
-	return resolvedPersist.Kind != yaml.ScalarNode || resolvedPersist.Value != "false", nil
+	resolvedPersist := resolveWorkflowAlias(persist)
+	return resolvedPersist.Kind != yaml.ScalarNode || resolvedPersist.Value != "false"
 }
 
 func workflowMappingValue(node *yaml.Node, key string, depth int) *yaml.Node {
