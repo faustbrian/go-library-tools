@@ -78,11 +78,12 @@ func TestGitleaksCopyLifecycleFailures(t *testing.T) {
 				},
 				close: func(file *os.File) error {
 					isInput := file == input
-					if isInput {
+					switch {
+					case isInput:
 						inputCloses++
-					} else if file == output {
+					case file == output:
 						outputCloses++
-					} else {
+					default:
 						t.Fatal("closed an unrelated file")
 					}
 					err := file.Close()
@@ -127,9 +128,10 @@ func TestGitleaksCopyLifecycleFailures(t *testing.T) {
 				}
 			}
 			wantBytes := ""
-			if stage == "destination-create" {
+			switch stage {
+			case "destination-create":
 				wantBytes = "keep destination"
-			} else if stage == "input-close" || stage == "output-close" || stage == "both-close" {
+			case "input-close", "output-close", "both-close":
 				wantBytes = "ab"
 			}
 			if stage != "source-open" {
