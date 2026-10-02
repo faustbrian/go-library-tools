@@ -43,12 +43,12 @@ require (
 	github.com/faustbrian/go-config/adapters/awssecretsmanager v1.0.0
 	github.com/faustbrian/go-correlation v1.1.1
 	github.com/faustbrian/go-ecma-regexp v1.0.0
-	github.com/faustbrian/go-event-sourcing v1.0.0
-	github.com/faustbrian/go-event-sourcing/adapters/kafka v1.0.2
-	github.com/faustbrian/go-event-sourcing/adapters/otel v1.0.2
-	github.com/faustbrian/go-event-sourcing/adapters/outbox v1.0.0
-	github.com/faustbrian/go-event-sourcing/adapters/queue v1.0.0
-	github.com/faustbrian/go-event-sourcing/postgres v1.0.0
+	github.com/faustbrian/go-event-sourcing/adapters/kafka/v2 v2.0.0
+	github.com/faustbrian/go-event-sourcing/adapters/otel/v2 v2.0.0
+	github.com/faustbrian/go-event-sourcing/adapters/outbox/v2 v2.0.0
+	github.com/faustbrian/go-event-sourcing/adapters/queue/v2 v2.0.0
+	github.com/faustbrian/go-event-sourcing/postgres/v2 v2.0.0
+	github.com/faustbrian/go-event-sourcing/v2 v2.0.0
 	github.com/faustbrian/go-external-sort v1.0.0
 	github.com/faustbrian/go-fault-injection/v2 v2.0.0
 	github.com/faustbrian/go-feature-flags/v2 v2.0.0
@@ -174,6 +174,7 @@ require (
 	github.com/dlclark/regexp2/v2 v2.5.1 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/ericlevine/zxinggo v0.1.0 // indirect
+	github.com/faustbrian/go-event-sourcing v1.0.0 // indirect
 	github.com/faustbrian/go-international v1.1.0 // indirect
 	github.com/faustbrian/go-telemetry/v2 v2.0.0 // indirect
 	github.com/faustbrian/go-validation v1.1.0 // indirect

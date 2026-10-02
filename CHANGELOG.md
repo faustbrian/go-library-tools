@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Adopt Event Sourcing, Postgres, and the Outbox, Kafka, OTel, and Queue
+  adapters at v2.0.0 in the maintained compatibility consumer through their
+  official `/v2` entrypoints, preserving published cohorts and unrelated pins.
 - Adopt API Query, International, Validation, and Localized v2.0.0 in the
   maintained compatibility consumer through their official `/v2` entrypoints,
   preserving published compatibility cohorts and unrelated selections.

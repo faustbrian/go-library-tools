@@ -3,6 +3,48 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-event-sourcing",
+      "module_path": "github.com/faustbrian/go-event-sourcing/v2",
+      "version": "v2.0.0",
+      "source_revision": "4853d11063350471163b148ca25d7e823b60fe1a",
+      "primary_entry_packages": ["github.com/faustbrian/go-event-sourcing/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-event-sourcing/postgres",
+      "module_path": "github.com/faustbrian/go-event-sourcing/postgres/v2",
+      "version": "v2.0.0",
+      "source_revision": "1393073547d6c8d0be85eec42e6cef5a0ee1e898",
+      "primary_entry_packages": ["github.com/faustbrian/go-event-sourcing/postgres/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-event-sourcing/adapters/outbox",
+      "module_path": "github.com/faustbrian/go-event-sourcing/adapters/outbox/v2",
+      "version": "v2.0.0",
+      "source_revision": "c8ee1a6a34b26265ff01a46be1f9adf2e45c7332",
+      "primary_entry_packages": ["github.com/faustbrian/go-event-sourcing/adapters/outbox/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-event-sourcing/adapters/kafka",
+      "module_path": "github.com/faustbrian/go-event-sourcing/adapters/kafka/v2",
+      "version": "v2.0.0",
+      "source_revision": "fddce3c537cd4ab132a448cba6acc3cb68a9c250",
+      "primary_entry_packages": ["github.com/faustbrian/go-event-sourcing/adapters/kafka/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-event-sourcing/adapters/otel",
+      "module_path": "github.com/faustbrian/go-event-sourcing/adapters/otel/v2",
+      "version": "v2.0.0",
+      "source_revision": "fddce3c537cd4ab132a448cba6acc3cb68a9c250",
+      "primary_entry_packages": ["github.com/faustbrian/go-event-sourcing/adapters/otel/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-event-sourcing/adapters/queue",
+      "module_path": "github.com/faustbrian/go-event-sourcing/adapters/queue/v2",
+      "version": "v2.0.0",
+      "source_revision": "fddce3c537cd4ab132a448cba6acc3cb68a9c250",
+      "primary_entry_packages": ["github.com/faustbrian/go-event-sourcing/adapters/queue/v2"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-adaptive-throttle",
       "module_path": "github.com/faustbrian/go-adaptive-throttle",
       "version": "v1.0.1",
