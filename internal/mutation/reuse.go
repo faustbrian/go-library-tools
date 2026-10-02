@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/faustbrian/go-library-tools/v2/internal/evidence"
 )
@@ -28,7 +29,7 @@ func ReuseWithReview(evidenceRoot, mutationRoot, repository, module, pkg, inputD
 		return false, ReportResult{}, err
 	}
 	if record.Repository != repository || record.Module != module || record.Package != pkg ||
-		record.Result != "passed" || record.VerifierDigest != SemanticVerifierDigest() {
+		record.Result != "passed" || !applicableVerifierRecord(record) {
 		return false, ReportResult{}, fmt.Errorf("%w: mutation evidence identity does not match requested package", ErrInvalid)
 	}
 	data, report, err := LoadReportWithReview(mutationRoot, inputDigest, review)
@@ -39,4 +40,16 @@ func ReuseWithReview(evidenceRoot, mutationRoot, repository, module, pkg, inputD
 		return false, ReportResult{}, fmt.Errorf("%w: mutation evidence report digest does not match", ErrInvalid)
 	}
 	return true, report, nil
+}
+
+func applicableVerifierRecord(record evidence.Record) bool {
+	if record.VerifierDigest == SemanticVerifierDigest() {
+		return true
+	}
+	// This is applicable historical execution, never corrected-verifier
+	// execution. Import proves source-directory equivalence before persisting
+	// the existing exact-input record; the digest alone grants no reuse.
+	return historicalVerifierDigest(strings.TrimPrefix(record.VerifierDigest, "sha256:")) &&
+		record.Environment["evidence_origin"] == "approved_legacy_checkpoint" &&
+		record.Environment[legacyPackagePathCompatibility] == record.InputDigest
 }

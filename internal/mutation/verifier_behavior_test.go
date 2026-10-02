@@ -14,6 +14,40 @@ import (
 	"time"
 )
 
+func TestPatchedVerifierResolvesPackageDirectories(t *testing.T) {
+	workspace := t.TempDir()
+	t.Cleanup(func() {
+		_ = filepath.WalkDir(workspace, func(path string, entry os.DirEntry, err error) error {
+			if err == nil {
+				if info, err := entry.Info(); err == nil {
+					_ = os.Chmod(path, info.Mode().Perm()|0o200)
+				}
+			}
+			return nil
+		})
+	})
+	// Compile and test the checksum-pinned, fully patched backend without
+	// starting a campaign or executing any mutant.
+	process := func(ctx context.Context, name string, args []string, directory string, environment map[string]string, stdout, stderr io.Writer) error {
+		if name == "go" {
+			environment["GOMAXPROCS"] = "2"
+			environment["GOFLAGS"] = "-p=1"
+			environment["GOTOOLCHAIN"] = "local"
+		}
+		return integrationProcess(ctx, name, args, directory, environment, stdout, stderr)
+	}
+	if _, err := BuildVerifier(context.Background(), workspace, process); err != nil {
+		t.Fatalf("BuildVerifier() error = %v", err)
+	}
+	environment, err := toolEnvironment(workspace)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := process(context.Background(), "go", []string{"test", "./internal/engine", "-run", "^TestPackagePathUsesSourceDirectory$", "-count=1", "-timeout=60s"}, filepath.Join(workspace, "gremlins-source"), environment, os.Stdout, os.Stderr); err != nil {
+		t.Fatalf("package directory regression: %v", err)
+	}
+}
+
 func TestPatchedVerifierRenewsTimeoutForEachIntegrationPhase(t *testing.T) {
 	workspace := t.TempDir()
 	t.Cleanup(func() {
