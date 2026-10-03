@@ -122,11 +122,7 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		if err := securitydocs.ValidateContext(ctx, args[3]); err != nil {
 			return failure(stderr, err)
 		}
-		if err := ctx.Err(); err != nil {
-			return failure(stderr, err)
-		}
-		_, _ = io.WriteString(stdout, "ecosystem security records valid\n")
-		return 0
+		return publishValidationSuccess(ctx, stdout, stderr, "ecosystem security records valid\n")
 	case "archive":
 		if len(args) != 4 || args[1] != "validate" || args[2] != "--file" || args[3] == "" {
 			return usage(stderr, "usage: golib archive validate --file <path>")
@@ -144,11 +140,7 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		if validateErr != nil || closeErr != nil {
 			return failure(stderr, errors.Join(validateErr, closeErr))
 		}
-		if err := ctx.Err(); err != nil {
-			return failure(stderr, err)
-		}
-		_, _ = io.WriteString(stdout, "bootstrap archive valid\n")
-		return 0
+		return publishValidationSuccess(ctx, stdout, stderr, "bootstrap archive valid\n")
 	case "check":
 		local := len(args) > 1 && args[1] == "--local"
 		selectionArguments := args[1:]
@@ -730,6 +722,16 @@ func findRoot(start string) (string, error) {
 		}
 		current = parent
 	}
+}
+
+// publishValidationSuccess owns the terminal context observation after validation
+// and resource cleanup, before either validation command announces success.
+func publishValidationSuccess(ctx context.Context, stdout, stderr io.Writer, message string) int {
+	if err := ctx.Err(); err != nil {
+		return failure(stderr, err)
+	}
+	_, _ = io.WriteString(stdout, message)
+	return 0
 }
 
 func usage(stderr io.Writer, message string) int {
