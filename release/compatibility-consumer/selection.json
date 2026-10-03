@@ -515,6 +515,16 @@
       "version": "v2.0.0",
       "source_revision": "a5dfa40d4e122cc20cc5d7dc8c0f17ea2c76ff24",
       "primary_entry_packages": ["github.com/faustbrian/go-sequencer/v2"]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-workflow",
+      "module_path": "github.com/faustbrian/go-workflow/v2",
+      "version": "v2.0.0",
+      "source_revision": "f6f80f113a84c9a674aace8b2e2ebe2def616820",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-workflow/v2",
+        "github.com/faustbrian/go-workflow/v2/postgres"
+      ]
     }
   ]
 }

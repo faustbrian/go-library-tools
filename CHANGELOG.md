@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Adopt published Workflow v2.0.0 root and PostgreSQL entrypoints in the
+  maintained compatibility consumer alongside Workflow v1, preserving frozen
+  cohorts and unrelated selections. Exercise a finite definition, registry,
+  and synchronous activity composition with copied input and outcome ownership;
+  no database, runtime service, or full security qualification is implied.
+
 - Reject bare-parent mutation paths through shared relative-path validation,
   preventing source digests and relative command targets from selecting parent
   directories. Dot and ordinary nested paths remain admitted. This lexical

@@ -138,6 +138,7 @@ require (
 	github.com/faustbrian/go-webhook v1.0.0
 	github.com/faustbrian/go-wire v1.0.0
 	github.com/faustbrian/go-workflow v1.0.0
+	github.com/faustbrian/go-workflow/v2 v2.0.0
 	github.com/faustbrian/go-wsdl v1.0.0
 	github.com/faustbrian/go-xsd v1.0.0
 )
