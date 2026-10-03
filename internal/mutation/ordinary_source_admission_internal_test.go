@@ -26,6 +26,35 @@ func TestOrdinarySourceDirectoryAdmission(t *testing.T) {
 	}
 }
 
+func TestOrdinarySourceDirectoryEnumerationIOErrors(t *testing.T) {
+	t.Run("missing directory", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "missing")
+		entries, err := readSourceEntries(path, 1)
+		if entries != nil || !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("missing directory enumeration = %#v, %v; want nil entries and os.ErrNotExist", entries, err)
+		}
+		var pathErr *os.PathError
+		if !errors.As(err, &pathErr) || pathErr.Op != "open" || pathErr.Path != path {
+			t.Fatalf("missing directory error = %v; want open error attributed to %q", err, path)
+		}
+	})
+
+	t.Run("regular file", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "file")
+		if err := os.WriteFile(path, []byte("file"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		entries, err := readSourceEntries(path, 1)
+		if entries != nil || err == nil {
+			t.Fatalf("regular file enumeration = %#v, %v; want nil entries and an error", entries, err)
+		}
+		var pathErr *os.PathError
+		if !errors.As(err, &pathErr) || pathErr.Op == "" || pathErr.Op == "open" || pathErr.Path != path {
+			t.Fatalf("regular file error = %v; want directory-read error attributed to %q", err, path)
+		}
+	})
+}
+
 func TestOrdinarySourceReadAdmitsBeforeBytes(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "source.go"), []byte("ab"), 0o600); err != nil {
