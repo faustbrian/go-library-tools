@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 )
 
@@ -47,7 +48,11 @@ func TestOwnedReadClassifiesWrappedEOFWithoutReplacingTerminalFailure(t *testing
 				if n != 0 || !errors.Is(err, context.Canceled) {
 					t.Fatalf("canceled wrapped EOF published %d bytes, %v", n, err)
 				}
-			} else if n != 3 || string(buffer[:n]) != "abc" || err != terminal {
+				continue
+			}
+			// Classification alone would also accept a replacement wrapper.
+			// These pointer-valued fixtures must retain the original error.
+			if n != 3 || string(buffer[:n]) != "abc" || !errors.Is(err, terminal) || !reflect.ValueOf(err).Equal(reflect.ValueOf(terminal)) {
 				t.Fatalf("ordinary bytes/terminal cause changed: n%d, %v", n, err)
 			}
 		}
