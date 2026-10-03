@@ -31,11 +31,12 @@ func TestOrdinaryFixtureHTTPDeadline(t *testing.T) {
 			before := time.Now()
 			client.Transport = ordinaryHTTPRoundTrip(func(request *http.Request) (*http.Response, error) {
 				deadline, ok := request.Context().Deadline()
-				if !ok {
+				switch {
+				case !ok:
 					t.Error("operational request has no deadline")
-				} else if earlier && !deadline.Equal(expected) {
+				case earlier && !deadline.Equal(expected):
 					t.Error("earlier caller deadline changed")
-				} else if !earlier && (deadline.Before(before.Add(5*time.Second)) || deadline.After(time.Now().Add(5*time.Second))) {
+				case !earlier && (deadline.Before(before.Add(5*time.Second)) || deadline.After(time.Now().Add(5*time.Second))):
 					t.Error("operational deadline is not five seconds from request admission")
 				}
 				return &http.Response{StatusCode: http.StatusNoContent, Body: io.NopCloser(strings.NewReader("")), Header: make(http.Header)}, nil
