@@ -333,7 +333,7 @@ func TestCanonicalReportDigestOrdersEveryMutationIdentityField(t *testing.T) {
 }
 
 func TestValidRelative(t *testing.T) {
-	for value, want := range map[string]bool{".": true, "nested/package": true, "": false, "/absolute": false, "../outside": false, "a/../b": false, `a\b`: false, "a\x00b": false} {
+	for value, want := range map[string]bool{".": true, "nested/package": true, "": false, "..": false, "/absolute": false, "../outside": false, "a/../b": false, `a\b`: false, "a\x00b": false} {
 		if got := validRelative(value); got != want {
 			t.Errorf("validRelative(%q) = %t, want %t", value, got, want)
 		}

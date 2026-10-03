@@ -496,5 +496,5 @@ func validRelative(value string) bool {
 	if value == "." {
 		return true
 	}
-	return value != "" && !strings.ContainsAny(value, "\\\x00") && path.Clean(value) == value && !strings.HasPrefix(value, "/") && !strings.HasPrefix(value, "../")
+	return value != "" && value != ".." && !strings.ContainsAny(value, "\\\x00") && path.Clean(value) == value && !strings.HasPrefix(value, "/") && !strings.HasPrefix(value, "../")
 }

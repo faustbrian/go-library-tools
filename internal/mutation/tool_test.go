@@ -2,6 +2,7 @@ package mutation_test
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"path/filepath"
@@ -12,6 +13,20 @@ import (
 
 	"github.com/faustbrian/go-library-tools/v2/internal/mutation"
 )
+
+func TestArgumentsRejectBareParentTarget(t *testing.T) {
+	output := filepath.Join(t.TempDir(), "report.json")
+	arguments, err := mutation.Arguments("./..", output, "", false, 1)
+	if arguments != nil || !errors.Is(err, mutation.ErrInvalid) {
+		t.Fatalf("Arguments(parent) = %v, %v; want nil and ErrInvalid", arguments, err)
+	}
+	for _, target := range []string{".", "./nested/package"} {
+		arguments, err := mutation.Arguments(target, output, "", false, 1)
+		if err != nil || len(arguments) < 2 || arguments[1] != target {
+			t.Fatalf("Arguments(%q) = %v, %v; want unchanged target", target, arguments, err)
+		}
+	}
+}
 
 func TestArgumentsMatchPinnedCampaignContract(t *testing.T) {
 	got, err := mutation.Arguments("./adapter", "/tmp/report.json", "integration,postgres", false, 4)

@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
@@ -107,6 +108,83 @@ func TestOrdinarySourceReadAdmitsBeforeBytes(t *testing.T) {
 	data, err = readSourceFile(root, "empty.go", 2, 0)
 	if err != nil || len(data) != 0 {
 		t.Fatalf("empty file at zero remaining = %q, %v", data, err)
+	}
+}
+
+func TestOrdinarySourceReadZeroAllowances(t *testing.T) {
+	root := t.TempDir()
+	for name, content := range map[string][]byte{"empty.go": nil, "one.go": []byte("a")} {
+		if err := os.WriteFile(filepath.Join(root, name), content, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	for _, test := range []struct {
+		name               string
+		perFile, remaining int64
+		cause              error
+	}{
+		{"per-file zero", 0, 1, repositoryfile.ErrTooLarge},
+		{"aggregate zero", 1, 0, errSourceTotalLimit},
+		{"both zero", 0, 0, repositoryfile.ErrTooLarge},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			data, err := readSourceFile(root, "empty.go", test.perFile, test.remaining)
+			if err != nil || len(data) != 0 {
+				t.Fatalf("empty zero-allowance source = %q, %v; want empty success", data, err)
+			}
+			data, err = readSourceFile(root, "one.go", test.perFile, test.remaining)
+			if data != nil || !errors.Is(err, test.cause) {
+				t.Fatalf("one-byte zero-allowance source = %q, %v; want nil and %v", data, err, test.cause)
+			}
+		})
+	}
+}
+
+func TestOrdinarySourceReadErrorNormalization(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "source.go"), []byte("ab"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	data, zeroErr := repositoryfile.Read(root, "source.go", 0)
+	if data != nil || !errors.Is(zeroErr, repositoryfile.ErrTooLarge) {
+		t.Fatalf("real zero-bound refusal = %q, %v", data, zeroErr)
+	}
+	for _, test := range []struct {
+		perFile, remaining int64
+		want               error
+	}{
+		{0, 1, zeroErr},
+		{0, 0, zeroErr},
+		{1, 0, errSourceTotalLimit},
+	} {
+		if got := sourceReadError(zeroErr, test.perFile, test.remaining); !errors.Is(got, test.want) || reflect.ValueOf(got).Kind() != reflect.Pointer || reflect.ValueOf(got).Pointer() != reflect.ValueOf(test.want).Pointer() {
+			t.Fatalf("zero-bound refusal with (%d, %d) = %v; want %v", test.perFile, test.remaining, got, test.want)
+		}
+	}
+	data, positiveErr := repositoryfile.Read(root, "source.go", 1)
+	if data != nil || !errors.Is(positiveErr, repositoryfile.ErrTooLarge) {
+		t.Fatalf("real positive-bound refusal = %q, %v", data, positiveErr)
+	}
+	for _, limits := range [][2]int64{{1, 2}, {2, 1}, {1, 1}} {
+		if got := sourceReadError(positiveErr, limits[0], limits[1]); !errors.Is(got, positiveErr) || reflect.ValueOf(got).Kind() != reflect.Pointer || reflect.ValueOf(got).Pointer() != reflect.ValueOf(positiveErr).Pointer() {
+			t.Fatalf("positive-bound error changed with %v: %v", limits, got)
+		}
+	}
+	for _, test := range []struct {
+		path  string
+		cause error
+	}{
+		{"missing.go", os.ErrNotExist},
+		{".", repositoryfile.ErrNotRegular},
+		{"../source.go", repositoryfile.ErrUnsafePath},
+	} {
+		data, original := repositoryfile.Read(root, test.path, 0)
+		if data != nil || !errors.Is(original, test.cause) {
+			t.Fatalf("real zero-bound path refusal for %q = %q, %v", test.path, data, original)
+		}
+		if got := sourceReadError(original, 1, 0); !errors.Is(got, test.cause) || reflect.ValueOf(got).Kind() != reflect.Pointer || reflect.ValueOf(got).Pointer() != reflect.ValueOf(original).Pointer() {
+			t.Fatalf("non-size error changed for %q: %v", test.path, got)
+		}
 	}
 }
 

@@ -23,8 +23,10 @@ var (
 
 // Read returns at most maximum bytes from a regular file below root. Every
 // existing path component must be a real directory or file, never a symlink.
-// maximum must be positive and leave room for a one-byte look-ahead in int64;
-// unsupported limits return ErrTooLarge before filesystem acquisition.
+// maximum must be nonnegative and leave room for a one-byte look-ahead in int64.
+// Zero admits only empty regular files; path validation and opened-file checks
+// still apply. Negative and unsupported limits return ErrTooLarge before
+// filesystem acquisition.
 func Read(root, relative string, maximum int64) ([]byte, error) {
 	return read(root, relative, maximum, operatingSystem{})
 }
@@ -86,7 +88,7 @@ func (operatingSystem) Open(name string) (file, error) {
 }
 
 func read(root, relative string, maximum int64, files fileSystem) ([]byte, error) {
-	if maximum <= 0 || maximum == math.MaxInt64 {
+	if maximum < 0 || maximum == math.MaxInt64 {
 		return nil, ErrTooLarge
 	}
 	current, expected, err := inspectPath(root, relative, files)

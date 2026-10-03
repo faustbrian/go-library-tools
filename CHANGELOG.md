@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Reject bare-parent mutation paths through shared relative-path validation,
+  preventing source digests and relative command targets from selecting parent
+  directories. Dot and ordinary nested paths remain admitted. This lexical
+  correction does not add ancestor-component validation or atomic traversal.
 - Admit mutation source-directory entries incrementally and bound source bytes
   before reading for current digests and historical package-path proofs, using
   the existing entry, per-file and aggregate limits. Admitted digest identities,
@@ -38,6 +42,12 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Admit empty regular files at a zero bounded-read allowance, retaining path,
+  identity and one-byte look-ahead checks. Mutation source reads now delegate
+  zero-byte enforcement to that owner: zero per-file refusals remain size
+  errors, while zero aggregate refusals with a positive per-file allowance are
+  consistently aggregate errors, replacing growth-timing-dependent diagnostics.
+  Positive-limit errors and positive-only streaming-open contracts are unchanged.
 - Adopt published Idempotency v2.0.1 in the maintained compatibility consumer
   and exercise a finite in-memory acquire, complete, and replay composition,
   preserving its v1 selection, frozen cohorts, and unrelated versions.
