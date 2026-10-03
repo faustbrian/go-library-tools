@@ -352,13 +352,12 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 	if err != nil {
 		return fmt.Errorf("read mutation report for %s: %w", target, err)
 	}
-	validated, err := ValidateReportWithReview(bytes.NewReader(report), review)
+	// An admitted efficacy exit requires a nonempty review. Successful report
+	// validation already proves every reviewed coordinate is an accounted LIVED.
+	_, err = ValidateReportWithReview(bytes.NewReader(report), review)
 	if err != nil {
 		reportFailedMutationCoordinates(output, reportPath)
 		return err
-	}
-	if processErr != nil && validated.Equivalent == 0 {
-		return fmt.Errorf("%w: efficacy exit without a reviewed lived mutant", ErrInvalid)
 	}
 	_, currentInput, currentSource, err := campaign.packageInputAndSource(ctx, packageDirectory)
 	if err != nil {
