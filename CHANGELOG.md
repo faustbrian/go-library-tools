@@ -6,6 +6,20 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Keep evidence read, decode and trailing-data failure diagnostics categorical
+  instead of rendering reader or parser text, and omit record module values
+  from unknown-module inventory failures. Invalid evidence remains rejected
+  with the same classification, bounded strict parsing and zero failure result.
+- Keep rejected mutation bootstrap/report payloads and reader/parser causes out
+  of default diagnostics, including archive names, duplicate identities and
+  report filenames. Strict rejection and complete accepted accounting remain
+  unchanged; admitted mutation-coordinate diagnostics remain available.
+- Validate every evidence-root path component before treating a missing root
+  as empty, rejecting symlink and non-directory components categorically.
+  Bound OpenSearch readiness requests to five seconds through the shared
+  fixture HTTP client, retaining earlier caller deadlines and RabbitMQ's
+  existing timeout.
+
 - Admit archive and security-document inputs as size-bounded regular files before
   opening, then recheck opened descriptors and preserve existing confinement and
   allowed symlink behavior. Security validation now carries caller cancellation

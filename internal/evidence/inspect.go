@@ -9,6 +9,8 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 )
 
 type inspectFileSystem interface {
@@ -33,6 +35,12 @@ func (operatingInspectFileSystem) Open(path string) (io.ReadCloser, error) { ret
 
 // Inspect validates every content-addressed record under an evidence root.
 func Inspect(root, evidenceRoot, repository string, modules []string) ([]Record, error) {
+	if err := repositoryfile.ValidateDirectory(root, evidenceRoot); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return []Record{}, nil
+		}
+		return nil, fmt.Errorf("%w: evidence root is not a real directory", ErrInvalid)
+	}
 	return inspect(operatingInspectFileSystem{}, root, evidenceRoot, repository, modules)
 }
 
@@ -96,7 +104,7 @@ func inspect(files inspectFileSystem, root, evidenceRoot, repository string, mod
 			return fmt.Errorf("%w: evidence repository mismatch: %s", ErrInvalid, relative)
 		}
 		if _, exists := knownModules[record.Module]; !exists {
-			return fmt.Errorf("%w: evidence references unknown module %q", ErrInvalid, record.Module)
+			return fmt.Errorf("%w: evidence references unknown module", ErrInvalid)
 		}
 		identity := record.Module + "\x00" + record.Package + "\x00" + record.Gate + "\x00" + record.InputDigest
 		if previous, exists := identities[identity]; exists {

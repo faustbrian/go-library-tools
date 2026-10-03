@@ -35,10 +35,11 @@ var (
 	ErrUnapproved = errors.New("unapproved mutation evidence migration")
 	// ErrInputChanged identifies an otherwise valid checkpoint whose observed
 	// package input no longer matches an approved identity.
-	ErrInputChanged = errors.New("mutation checkpoint input changed")
-	digestRE        = regexp.MustCompile(`^[0-9a-f]{64}$`)
-	revisionRE      = regexp.MustCompile(`^[0-9a-f]{40}$`)
-	versionRE       = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
+	ErrInputChanged       = errors.New("mutation checkpoint input changed")
+	digestRE              = regexp.MustCompile(`^[0-9a-f]{64}$`)
+	revisionRE            = regexp.MustCompile(`^[0-9a-f]{40}$`)
+	versionRE             = regexp.MustCompile(`^v[0-9]+\.[0-9]+\.[0-9]+$`)
+	errDuplicateObjectKey = errors.New("duplicate object key")
 )
 
 // Checkpoint is validated legacy evidence suitable for content-identity
@@ -122,7 +123,7 @@ func ValidateReport(reader io.Reader) (ReportResult, error) {
 func ValidateReportWithReview(reader io.Reader, review *EquivalentReview) (ReportResult, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, maximumCheckpointSize+1))
 	if err != nil {
-		return ReportResult{}, fmt.Errorf("%w: read mutation report: %s", ErrInvalid, err.Error())
+		return ReportResult{}, fmt.Errorf("%w: read mutation report", ErrInvalid)
 	}
 	if len(data) > maximumCheckpointSize {
 		return ReportResult{}, fmt.Errorf("%w: mutation report exceeds %d bytes", ErrInvalid, maximumCheckpointSize)
@@ -137,7 +138,7 @@ func ReadBootstrap(reader io.ReaderAt, size int64) ([]Checkpoint, error) {
 	}
 	archive, err := zip.NewReader(reader, size)
 	if err != nil {
-		return nil, fmt.Errorf("%w: open archive: %s", ErrInvalid, err.Error())
+		return nil, fmt.Errorf("%w: open archive", ErrInvalid)
 	}
 	if len(archive.File) == 0 || len(archive.File) > maximumCheckpointCount {
 		return nil, fmt.Errorf("%w: archive contains an invalid entry count", ErrInvalid)
@@ -159,16 +160,16 @@ func ReadBootstrap(reader io.ReaderAt, size int64) ([]Checkpoint, error) {
 			return nil, err
 		}
 		if _, exists := seenNames[file.Name]; exists {
-			return nil, fmt.Errorf("%w: duplicate archive entry %q", ErrInvalid, file.Name)
+			return nil, fmt.Errorf("%w: duplicate archive entry", ErrInvalid)
 		}
 		seenNames[file.Name] = struct{}{}
 		checkpoint, err := readCheckpoint(file.UncompressedSize64, file.Open)
 		if err != nil {
-			return nil, fmt.Errorf("%s: %w", file.Name, err)
+			return nil, fmt.Errorf("checkpoint: %w", err)
 		}
 		identity := checkpoint.Module + "\x00" + checkpoint.Package
 		if _, exists := seenIdentities[identity]; exists {
-			return nil, fmt.Errorf("%w: duplicate checkpoint identity %s %s", ErrInvalid, checkpoint.Module, checkpoint.Package)
+			return nil, fmt.Errorf("%w: duplicate checkpoint identity", ErrInvalid)
 		}
 		seenIdentities[identity] = struct{}{}
 		checkpoints = append(checkpoints, checkpoint)
@@ -186,20 +187,20 @@ func addExpanded(current, size uint64) (uint64, error) {
 func validateArchiveEntry(file *zip.File) error {
 	clean := path.Clean(file.Name)
 	if clean != file.Name || strings.HasPrefix(clean, "/") || clean == "." || strings.HasPrefix(clean, "../") {
-		return fmt.Errorf("%w: unsafe archive path %q", ErrInvalid, file.Name)
+		return fmt.Errorf("%w: unsafe archive path", ErrInvalid)
 	}
 	if file.FileInfo().Mode()&os.ModeType != 0 || file.FileInfo().IsDir() {
-		return fmt.Errorf("%w: archive entry is not a regular file: %q", ErrInvalid, file.Name)
+		return fmt.Errorf("%w: archive entry is not a regular file", ErrInvalid)
 	}
 	if !strings.HasPrefix(clean, "mutation-checkpoints/") || path.Dir(clean) != "mutation-checkpoints" || path.Ext(clean) != ".json" {
-		return fmt.Errorf("%w: unexpected archive entry %q", ErrInvalid, file.Name)
+		return fmt.Errorf("%w: unexpected archive entry", ErrInvalid)
 	}
 	if file.UncompressedSize64 == 0 || file.UncompressedSize64 > maximumCheckpointSize {
-		return fmt.Errorf("%w: checkpoint size is invalid: %q", ErrInvalid, file.Name)
+		return fmt.Errorf("%w: checkpoint size is invalid", ErrInvalid)
 	}
 	compressed := file.CompressedSize64
 	if compressed == 0 || file.UncompressedSize64 > compressed*maximumCompressionRatio {
-		return fmt.Errorf("%w: checkpoint compression ratio is excessive: %q", ErrInvalid, file.Name)
+		return fmt.Errorf("%w: checkpoint compression ratio is excessive", ErrInvalid)
 	}
 	return nil
 }
@@ -207,12 +208,12 @@ func validateArchiveEntry(file *zip.File) error {
 func readCheckpoint(declaredSize uint64, open func() (io.ReadCloser, error)) (Checkpoint, error) {
 	opened, err := open()
 	if err != nil {
-		return Checkpoint{}, fmt.Errorf("%w: open checkpoint: %s", ErrInvalid, err.Error())
+		return Checkpoint{}, fmt.Errorf("%w: open checkpoint", ErrInvalid)
 	}
 	data, readErr := io.ReadAll(io.LimitReader(opened, maximumCheckpointSize+1))
 	_ = opened.Close()
 	if readErr != nil {
-		return Checkpoint{}, fmt.Errorf("%w: read checkpoint: %s", ErrInvalid, readErr.Error())
+		return Checkpoint{}, fmt.Errorf("%w: read checkpoint", ErrInvalid)
 	}
 	if len(data) > maximumCheckpointSize || uint64(len(data)) != declaredSize {
 		return Checkpoint{}, fmt.Errorf("%w: checkpoint size mismatch", ErrInvalid)
@@ -284,7 +285,7 @@ func validateReportDataWithReview(data []byte, review *EquivalentReview) (Report
 	reviewed := make(map[string]struct{})
 	if review != nil {
 		if err := review.validate(); err != nil {
-			return ReportResult{}, fmt.Errorf("%w: invalid equivalent-mutant review: %s", ErrInvalid, err.Error())
+			return ReportResult{}, fmt.Errorf("%w: invalid equivalent-mutant review", ErrInvalid)
 		}
 		for _, candidate := range review.Mutations {
 			reviewed[mutationIdentity(candidate.FileName, candidate.Type, candidate.Line, candidate.Column)] = struct{}{}
@@ -297,7 +298,7 @@ func validateReportDataWithReview(data []byte, review *EquivalentReview) (Report
 			return ReportResult{}, fmt.Errorf("%w: mutation file name is required", ErrInvalid)
 		}
 		if _, exists := files[file.FileName]; exists {
-			return ReportResult{}, fmt.Errorf("%w: duplicate mutation file %s", ErrInvalid, file.FileName)
+			return ReportResult{}, fmt.Errorf("%w: duplicate mutation file", ErrInvalid)
 		}
 		files[file.FileName] = struct{}{}
 		for _, candidate := range file.Mutations {
@@ -306,7 +307,7 @@ func validateReportDataWithReview(data []byte, review *EquivalentReview) (Report
 			}
 			identity := mutationIdentity(file.FileName, candidate.Type, candidate.Line, candidate.Column)
 			if _, exists := identities[identity]; exists {
-				return ReportResult{}, fmt.Errorf("%w: duplicate mutation identity in %s", ErrInvalid, file.FileName)
+				return ReportResult{}, fmt.Errorf("%w: duplicate mutation identity", ErrInvalid)
 			}
 			identities[identity] = struct{}{}
 			switch candidate.Status {
@@ -314,12 +315,12 @@ func validateReportDataWithReview(data []byte, review *EquivalentReview) (Report
 				killed++
 			case "LIVED":
 				if _, exists := reviewed[identity]; !exists {
-					return ReportResult{}, fmt.Errorf("%w: non-killed mutant in %s lacks an exact equivalent review", ErrInvalid, file.FileName)
+					return ReportResult{}, fmt.Errorf("%w: non-killed mutant lacks an exact equivalent review", ErrInvalid)
 				}
 				delete(reviewed, identity)
 				equivalent++
 			default:
-				return ReportResult{}, fmt.Errorf("%w: non-killed mutant in %s", ErrInvalid, file.FileName)
+				return ReportResult{}, fmt.Errorf("%w: non-killed mutant", ErrInvalid)
 			}
 			mutants++
 		}
@@ -420,14 +421,18 @@ func decodeStrict(data []byte, destination any) error {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(destination); err != nil {
-		return fmt.Errorf("%w: decode: %s", ErrInvalid, err.Error())
+		// Keep the static unknown-field category without its JSON field name.
+		if strings.HasPrefix(err.Error(), "json: unknown field ") {
+			return fmt.Errorf("%w: decode: unknown field", ErrInvalid)
+		}
+		return fmt.Errorf("%w: decode failure", ErrInvalid)
 	}
 	var extra any
 	if err := decoder.Decode(&extra); !errors.Is(err, io.EOF) {
 		if err == nil {
 			return fmt.Errorf("%w: multiple JSON values", ErrInvalid)
 		}
-		return fmt.Errorf("%w: trailing data: %s", ErrInvalid, err.Error())
+		return fmt.Errorf("%w: trailing data", ErrInvalid)
 	}
 	return nil
 }
@@ -435,7 +440,10 @@ func decodeStrict(data []byte, destination any) error {
 func rejectDuplicateKeys(data []byte) error {
 	decoder := json.NewDecoder(bytes.NewReader(data))
 	if err := scanJSONValue(decoder); err != nil {
-		return fmt.Errorf("%w: decode: %s", ErrInvalid, err.Error())
+		if errors.Is(err, errDuplicateObjectKey) {
+			return fmt.Errorf("%w: decode: duplicate object key", ErrInvalid)
+		}
+		return fmt.Errorf("%w: decode failure", ErrInvalid)
 	}
 	return nil
 }
@@ -458,7 +466,7 @@ func scanJSONValue(decoder *json.Decoder) error {
 			}
 			key := objectKey(keyToken)
 			if _, exists := seen[key]; exists {
-				return fmt.Errorf("duplicate object key %q", key)
+				return errDuplicateObjectKey
 			}
 			seen[key] = struct{}{}
 			if err := scanJSONValue(decoder); err != nil {

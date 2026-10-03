@@ -243,11 +243,7 @@ func httpRequestWithFactory(ctx context.Context, method, url string, body []byte
 	for name, value := range headers {
 		request.Header.Set(name, value)
 	}
-	client := &http.Client{
-		Transport:     &http.Transport{DisableKeepAlives: true},
-		Timeout:       httpRequestTimeout,
-		CheckRedirect: func(*http.Request, []*http.Request) error { return errors.New("redirects are not allowed") },
-	}
+	client := fixtureHTTPClient()
 	response, err := client.Do(request)
 	//nolint:gocritic // A switch keeps nil-response handling mutation-safe without changing the request lifecycle.
 	switch response {

@@ -149,11 +149,12 @@ func writePart(writer io.Writer, value []byte) {
 	_, _ = writer.Write(value)
 }
 
-// Parse strictly decodes and validates one bounded evidence record.
+// Parse strictly decodes and validates one bounded evidence record. Read and
+// decoder failures expose categories, not collaborator or evidence value text.
 func Parse(reader io.Reader) (Record, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, MaximumSize+1))
 	if err != nil {
-		return Record{}, fmt.Errorf("%w: read: %s", ErrInvalid, err.Error())
+		return Record{}, fmt.Errorf("%w: read failure", ErrInvalid)
 	}
 	if len(data) > MaximumSize {
 		return Record{}, fmt.Errorf("%w: record exceeds %d bytes", ErrInvalid, MaximumSize)
@@ -162,7 +163,12 @@ func Parse(reader io.Reader) (Record, error) {
 	decoder.DisallowUnknownFields()
 	var record Record
 	if err := decoder.Decode(&record); err != nil {
-		return Record{}, fmt.Errorf("%w: decode: %s", ErrInvalid, err.Error())
+		// encoding/json has no typed unknown-field error. Preserve the existing
+		// static classification without including its input-controlled field name.
+		if strings.HasPrefix(err.Error(), "json: unknown field ") {
+			return Record{}, fmt.Errorf("%w: decode: unknown field", ErrInvalid)
+		}
+		return Record{}, fmt.Errorf("%w: decode failure", ErrInvalid)
 	}
 	if err := requireEOF(decoder); err != nil {
 		return Record{}, err
@@ -179,7 +185,7 @@ func requireEOF(decoder *json.Decoder) error {
 		if err == nil {
 			return fmt.Errorf("%w: multiple JSON values", ErrInvalid)
 		}
-		return fmt.Errorf("%w: trailing data: %s", ErrInvalid, err.Error())
+		return fmt.Errorf("%w: trailing data", ErrInvalid)
 	}
 	return nil
 }
