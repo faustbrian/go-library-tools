@@ -2,6 +2,7 @@ package compatibilityconsumer_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log/slog"
 	"testing"
@@ -11,7 +12,49 @@ import (
 	log "github.com/faustbrian/go-log/v2"
 	"github.com/faustbrian/go-money/v2"
 	"github.com/faustbrian/go-money/v2/moneytest"
+	openrpc "github.com/faustbrian/go-openrpc/v2"
+	"github.com/faustbrian/go-openrpc/v2/builder"
+	"github.com/faustbrian/go-openrpc/v2/validate"
 )
+
+func TestOpenRPCV2BuilderValidationAndCanonicalComposition(t *testing.T) {
+	version, err := openrpc.ParseVersion("1.4.1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := openrpc.NewInfo(openrpc.InfoInput{Title: "Calculator", Version: "1.0.0"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	method, err := openrpc.NewMethod(openrpc.MethodInput{Name: "add", Params: []openrpc.ContentDescriptorOrReference{}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	documentBuilder, err := builder.NewDocument(version, info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	documentBuilder, err = documentBuilder.WithMethod(method)
+	if err != nil {
+		t.Fatal(err)
+	}
+	document, err := documentBuilder.Build()
+	if err != nil {
+		t.Fatal(err)
+	}
+	report := validate.Document(context.Background(), document, validate.Options{MaxMethods: 1, MaxDiagnostics: 1})
+	if !report.Valid() || report.Truncated() || len(report.Diagnostics()) != 0 {
+		t.Fatalf("ordinary document validation = %#v", report)
+	}
+	encoded, err := openrpc.MarshalCanonical(document)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const expected = `{"info":{"title":"Calculator","version":"1.0.0"},"methods":[{"name":"add","params":[]}],"openrpc":"1.4.1"}`
+	if string(encoded) != expected {
+		t.Fatalf("canonical output = %s, want %s", encoded, expected)
+	}
+}
 
 func TestLogV2DefaultAndTrustedComposition(t *testing.T) {
 	for _, test := range []struct {

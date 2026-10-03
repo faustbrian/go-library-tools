@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Adopt published OpenRPC v2.0.0 in the maintained compatibility consumer,
+  with a finite builder, bounded semantic-validation, and exact canonical
+  output assertion, preserving frozen cohorts and unrelated selections.
 - Adopt published Log v2.0.0 in the maintained compatibility consumer and
   exercise ordinary default message replacement, attribute omission, and
   explicit trusted event composition, without changing frozen cohorts or
