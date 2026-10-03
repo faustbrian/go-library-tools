@@ -291,6 +291,8 @@ import (
 	_ "github.com/faustbrian/go-webhook"
 	_ "github.com/faustbrian/go-wire"
 	_ "github.com/faustbrian/go-workflow"
+	_ "github.com/faustbrian/go-workflow/v2"
+	_ "github.com/faustbrian/go-workflow/v2/postgres"
 	_ "github.com/faustbrian/go-wsdl"
 	_ "github.com/faustbrian/go-xsd"
 )

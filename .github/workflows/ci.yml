@@ -113,6 +113,7 @@ jobs:
               release/compatibility-consumer/go.sum \
               release/compatibility-consumer/consumer_test.go \
               release/compatibility-consumer/composition_test.go \
+              release/compatibility-consumer/workflow_composition_test.go \
               release/compatibility-consumer/selection.json \
               tools/compatibility/generate.py; then
             echo 'required=true' >>"${GITHUB_OUTPUT}"
@@ -158,7 +159,8 @@ jobs:
           mkdir -p "${task}/cache" "${task}/consumer" "${task}/mod" "${task}/tmp"
           cp release/compatibility-consumer/go.mod \
             release/compatibility-consumer/consumer_test.go \
-            release/compatibility-consumer/composition_test.go "${task}/consumer/"
+            release/compatibility-consumer/composition_test.go \
+            release/compatibility-consumer/workflow_composition_test.go "${task}/consumer/"
           cd "${task}/consumer"
           export GOCACHE="${task}/cache"
           export GOMODCACHE="${task}/mod"
