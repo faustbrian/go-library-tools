@@ -59,7 +59,7 @@ require (
 	github.com/faustbrian/go-http-middleware/v2 v2.0.0
 	github.com/faustbrian/go-http-signature v1.0.0
 	github.com/faustbrian/go-idempotency v1.1.0
-	github.com/faustbrian/go-idempotency/v2 v2.0.0
+	github.com/faustbrian/go-idempotency/v2 v2.0.1
 	github.com/faustbrian/go-identifier v1.0.0
 	github.com/faustbrian/go-identifier/v2 v2.0.0
 	github.com/faustbrian/go-international/v3 v3.0.0

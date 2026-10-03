@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Adopt published Idempotency v2.0.1 in the maintained compatibility consumer
+  and exercise a finite in-memory acquire, complete, and replay composition,
+  preserving its v1 selection, frozen cohorts, and unrelated versions.
 - Adopt published OpenRPC v2.0.0 in the maintained compatibility consumer,
   with a finite builder, bounded semantic-validation, and exact canonical
   output assertion, preserving frozen cohorts and unrelated selections.

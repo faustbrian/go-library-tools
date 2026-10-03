@@ -6,7 +6,10 @@ import (
 	"encoding/json"
 	"log/slog"
 	"testing"
+	"time"
 
+	idempotency "github.com/faustbrian/go-idempotency/v2"
+	idempotencymemory "github.com/faustbrian/go-idempotency/v2/memory"
 	moneyobjective "github.com/faustbrian/go-knapsack/objective/money/v3"
 	"github.com/faustbrian/go-knapsack/v2"
 	log "github.com/faustbrian/go-log/v2"
@@ -16,6 +19,50 @@ import (
 	"github.com/faustbrian/go-openrpc/v2/builder"
 	"github.com/faustbrian/go-openrpc/v2/validate"
 )
+
+type idempotencyCompositionClock struct{}
+
+func (idempotencyCompositionClock) Now() time.Time {
+	return time.Date(2026, time.October, 3, 0, 0, 0, 0, time.UTC)
+}
+
+func TestIdempotencyV2PatchAcquireCompleteReplayComposition(t *testing.T) {
+	store, err := idempotencymemory.New(idempotencymemory.Options{
+		Clock:       idempotencyCompositionClock{},
+		OwnerTokens: func() (string, error) { return "00112233445566778899aabbccddeeff", nil },
+		MaxRecords:  1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	service, err := idempotency.NewService(store)
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, err := idempotency.NewKey("orders", "tenant-one", "create", "application", "request-one")
+	if err != nil {
+		t.Fatal(err)
+	}
+	fingerprint, err := idempotency.NewFingerprint("order-v1", []byte("order-one"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	request := idempotency.BeginRequest{Acquire: idempotency.AcquireRequest{Key: key, Fingerprint: fingerprint, Lease: time.Minute}}
+	first, err := service.Begin(ctx, request)
+	if err != nil || !first.Execute || first.Outcome != idempotency.OutcomeAcquired {
+		t.Fatalf("Begin() = %#v, %v", first, err)
+	}
+	want := []byte("created-order-one")
+	completed, err := service.Complete(ctx, idempotency.CompleteRequest{Ownership: first.Record.Ownership(), Result: want})
+	if err != nil || completed.State != idempotency.StateCompleted || !bytes.Equal(completed.Result, want) {
+		t.Fatalf("Complete() = %#v, %v", completed, err)
+	}
+	replay, err := service.Begin(ctx, request)
+	if err != nil || replay.Execute || replay.Outcome != idempotency.OutcomeReplayed || !bytes.Equal(replay.Record.Result, want) {
+		t.Fatalf("Begin() replay = %#v, %v", replay, err)
+	}
+}
 
 func TestOpenRPCV2BuilderValidationAndCanonicalComposition(t *testing.T) {
 	version, err := openrpc.ParseVersion("1.4.1")

@@ -390,9 +390,12 @@
     {
       "alongside_module_path": "github.com/faustbrian/go-idempotency",
       "module_path": "github.com/faustbrian/go-idempotency/v2",
-      "version": "v2.0.0",
-      "source_revision": "de2e96117eb2460210c735bedea7dafc1e5ce708",
-      "primary_entry_packages": ["github.com/faustbrian/go-idempotency/v2"]
+      "version": "v2.0.1",
+      "source_revision": "51509a1f23cd822c8c03daf9ea7776f4b075b62e",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-idempotency/v2",
+        "github.com/faustbrian/go-idempotency/v2/memory"
+      ]
     },
     {
       "alongside_module_path": "github.com/faustbrian/go-identifier",
