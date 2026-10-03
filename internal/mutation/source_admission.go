@@ -66,18 +66,21 @@ func readSourceFile(root, relative string, perFile, remaining int64) ([]byte, er
 	if info.Size() > remaining {
 		return nil, errSourceTotalLimit
 	}
-	// Read also rechecks confinement, regularity and opened-file identity. Its
-	// positive limit permits an empty file when the remaining allowance is zero;
-	// any bytes observed in that case are still rejected below.
-	data, err := repositoryfile.Read(root, relative, max(1, min(perFile, remaining)))
+	// Read owns the actual byte bound, including empty-only zero allowances, and
+	// independently rechecks confinement, regularity and opened-file identity.
+	data, err := repositoryfile.Read(root, relative, min(perFile, remaining))
 	if err != nil {
-		return nil, err
-	}
-	if int64(len(data)) > perFile {
-		return nil, fmt.Errorf("%w: %s", repositoryfile.ErrTooLarge, relative)
-	}
-	if int64(len(data)) > remaining {
-		return nil, errSourceTotalLimit
+		return nil, sourceReadError(err, perFile, remaining)
 	}
 	return data, nil
+}
+
+// sourceReadError gives zero aggregate refusals a consistent classification
+// when the per-file allowance is positive. Zero per-file refusals take priority;
+// positive-limit failures and non-size causes retain Read's actual error.
+func sourceReadError(err error, perFile, remaining int64) error {
+	if perFile > 0 && remaining == 0 && errors.Is(err, repositoryfile.ErrTooLarge) {
+		return errSourceTotalLimit
+	}
+	return err
 }

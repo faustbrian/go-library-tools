@@ -20,14 +20,39 @@ func TestReadReturnsBoundedRegularFile(t *testing.T) {
 	}
 }
 
-func TestReadRejectsNonPositiveLimitForEmptyFile(t *testing.T) {
+func TestReadZeroLimitAdmitsOnlyEmptyRegularFiles(t *testing.T) {
 	root := t.TempDir()
 	if err := os.WriteFile(filepath.Join(root, "empty"), nil, 0o600); err != nil {
 		t.Fatal(err)
 	}
-	for _, limit := range []int64{0, -1} {
-		if _, err := repositoryfile.Read(root, "empty", limit); !errors.Is(err, repositoryfile.ErrTooLarge) {
-			t.Fatalf("Read(%d) = %v", limit, err)
+	got, err := repositoryfile.Read(root, "empty", 0)
+	if err != nil || len(got) != 0 {
+		t.Fatalf("Read(empty, zero) = %q, %v; want empty success", got, err)
+	}
+	write(t, filepath.Join(root, "one"), "a")
+	for _, test := range []struct {
+		path  string
+		cause error
+	}{
+		{"one", repositoryfile.ErrTooLarge},
+		{"missing", os.ErrNotExist},
+		{".", repositoryfile.ErrNotRegular},
+	} {
+		t.Run(test.path, func(t *testing.T) {
+			got, err := repositoryfile.Read(root, test.path, 0)
+			if got != nil || !errors.Is(err, test.cause) {
+				t.Fatalf("Read(%q, zero) = %q, %v; want nil and %v", test.path, got, err, test.cause)
+			}
+		})
+	}
+}
+
+func TestReadRejectsUnsupportedLimitsBeforeAcquisition(t *testing.T) {
+	root := t.TempDir()
+	for _, limit := range []int64{-1, math.MaxInt64} {
+		got, err := repositoryfile.Read(root, "missing", limit)
+		if got != nil || !errors.Is(err, repositoryfile.ErrTooLarge) || errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("Read(missing, %d) = %q, %v; want pre-acquisition refusal", limit, got, err)
 		}
 	}
 }
