@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Reject bare-parent mutation paths through shared relative-path validation,
+  preventing source digests and relative command targets from selecting parent
+  directories. Dot and ordinary nested paths remain admitted. This lexical
+  correction does not add ancestor-component validation or atomic traversal.
 - Admit mutation source-directory entries incrementally and bound source bytes
   before reading for current digests and historical package-path proofs, using
   the existing entry, per-file and aggregate limits. Admitted digest identities,
