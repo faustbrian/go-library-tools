@@ -1,13 +1,52 @@
 package compatibilityconsumer_test
 
 import (
+	"bytes"
+	"encoding/json"
+	"log/slog"
 	"testing"
 
 	moneyobjective "github.com/faustbrian/go-knapsack/objective/money/v3"
 	"github.com/faustbrian/go-knapsack/v2"
+	log "github.com/faustbrian/go-log/v2"
 	"github.com/faustbrian/go-money/v2"
 	"github.com/faustbrian/go-money/v2/moneytest"
 )
+
+func TestLogV2DefaultAndTrustedComposition(t *testing.T) {
+	for _, test := range []struct {
+		name    string
+		trusted bool
+		message string
+	}{
+		{name: "default", message: "[REDACTED]"},
+		{name: "trusted", trusted: true, message: "application.ready"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			var output bytes.Buffer
+			construct := log.New
+			if test.trusted {
+				construct = log.TrustedNew
+			}
+			logger, err := construct(slog.NewJSONHandler(&output, nil))
+			if err != nil {
+				t.Fatal(err)
+			}
+			logger.Info("application.ready", slog.String("component", "worker"))
+			var record map[string]any
+			if err := json.Unmarshal(output.Bytes(), &record); err != nil {
+				t.Fatal(err)
+			}
+			if record["msg"] != test.message || record["level"] != "INFO" {
+				t.Fatalf("record message/level = %v/%v, want %s/INFO", record["msg"], record["level"], test.message)
+			}
+			component, present := record["component"]
+			if present != test.trusted || (present && component != "worker") {
+				t.Fatalf("component = %v (present=%t), trusted=%t", component, present, test.trusted)
+			}
+		})
+	}
+}
 
 func TestMoneyV2CanonicalObjectiveV3Composition(t *testing.T) {
 	fixture := moneytest.CurrencyFixtures()[0]

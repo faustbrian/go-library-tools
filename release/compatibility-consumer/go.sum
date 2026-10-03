@@ -282,8 +282,8 @@ github.com/faustbrian/go-lease v1.1.0 h1:6OgqqFOPBkFiTCafT0Jna+sVcmkZn1Rqnj3R1Ij
 github.com/faustbrian/go-lease v1.1.0/go.mod h1:59tKskK5RiwzQbMIvylPLW5bJZ/zzThMNXTfJLlky0M=
 github.com/faustbrian/go-localized/v3 v3.0.0 h1:nphviUA7uZssvrvBjAXvCW8gKkN/qdyRmpJoyXk32EU=
 github.com/faustbrian/go-localized/v3 v3.0.0/go.mod h1:M6tAwPOcihEN3fGP+xykyEQlHvKqdrs+87JgJ68Pa8Q=
-github.com/faustbrian/go-log v1.0.0 h1:OFH4CgQyIB+WGlKxXlWuJgK178sAmVUKVQBl3FwJgSY=
-github.com/faustbrian/go-log v1.0.0/go.mod h1:hwFD9uvNXWat2MF855ncxF4opNWHjhsErO/mE6SUN6E=
+github.com/faustbrian/go-log/v2 v2.0.0 h1:VQIEvZfXXEYXoTeavlEeMT1YtinFV1KDFAMyNhixQ7o=
+github.com/faustbrian/go-log/v2 v2.0.0/go.mod h1:FJ34JaICS4Lda+67LUgNp4e4S3y2GBl0l3UsvIqrVFY=
 github.com/faustbrian/go-math v1.1.2 h1:cH0VSYu/u6Xwc/NGDwbEUQEKpvIjNFOH/suiFIBLHbI=
 github.com/faustbrian/go-math v1.1.2/go.mod h1:e7fzSBNkWWq+1EsCSjpvjIAc//nJAS/iRU4Qc87TfTU=
 github.com/faustbrian/go-measurement/v2 v2.0.1 h1:E1EiJKXtOIITw+E9ppq49BPNJehCV4lK8rBTfQwqZLQ=
