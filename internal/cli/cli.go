@@ -22,6 +22,7 @@ import (
 	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 	"github.com/faustbrian/go-library-tools/v2/internal/releasecheck"
 	"github.com/faustbrian/go-library-tools/v2/internal/repository"
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 	"github.com/faustbrian/go-library-tools/v2/internal/securitydocs"
 	"github.com/faustbrian/go-library-tools/v2/internal/specification"
 	"github.com/faustbrian/go-library-tools/v2/internal/upgrade"
@@ -118,7 +119,10 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		if len(args) != 4 || args[1] != "validate" || args[2] != "--directory" || args[3] == "" {
 			return usage(stderr, "usage: golib security validate --directory <path>")
 		}
-		if err := securitydocs.Validate(args[3]); err != nil {
+		if err := securitydocs.ValidateContext(ctx, args[3]); err != nil {
+			return failure(stderr, err)
+		}
+		if err := ctx.Err(); err != nil {
 			return failure(stderr, err)
 		}
 		_, _ = io.WriteString(stdout, "ecosystem security records valid\n")
@@ -127,7 +131,7 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		if len(args) != 4 || args[1] != "validate" || args[2] != "--file" || args[3] == "" {
 			return usage(stderr, "usage: golib archive validate --file <path>")
 		}
-		archive, openErr := os.Open(args[3])
+		archive, openErr := repositoryfile.OpenContext(ctx, args[3], 256<<20)
 		if openErr != nil {
 			return failure(stderr, fmt.Errorf("open archive: %w", openErr))
 		}
@@ -139,6 +143,9 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		closeErr := archive.Close()
 		if validateErr != nil || closeErr != nil {
 			return failure(stderr, errors.Join(validateErr, closeErr))
+		}
+		if err := ctx.Err(); err != nil {
+			return failure(stderr, err)
 		}
 		_, _ = io.WriteString(stdout, "bootstrap archive valid\n")
 		return 0

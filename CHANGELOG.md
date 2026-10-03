@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Admit archive and security-document inputs as size-bounded regular files before
+  opening, then recheck opened descriptors and preserve existing confinement and
+  allowed symlink behavior. Security validation now carries caller cancellation
+  through owned reads and phase checkpoints; canceled CLI calls do not publish
+  success. These checks require a trusted, stable caller filesystem: stat/open is
+  not atomic, and in-flight filesystem operations are not forcibly interrupted.
+
 ### Changed
 
 - Adopt published Idempotency v2.0.1 in the maintained compatibility consumer

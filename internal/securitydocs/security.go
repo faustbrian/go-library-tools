@@ -5,6 +5,7 @@ package securitydocs
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -17,6 +18,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
@@ -100,7 +102,13 @@ type verdict struct {
 
 // Validate checks the risk register and per-module scanner/release matrix.
 func Validate(directory string) error {
-	return validateAt(directory, time.Now())
+	return ValidateContext(context.Background(), directory)
+}
+
+// ValidateContext checks caller cancellation at owned IO and validation phase
+// boundaries. Filesystem operations and bounded JSON/schema work are not preempted.
+func ValidateContext(ctx context.Context, directory string) error {
+	return validateAtContext(ctx, directory, time.Now(), func(root *os.Root, path string) ([]byte, error) { return readSecurityDocumentContext(ctx, root, path) })
 }
 
 func validateAt(directory string, now time.Time) error {
@@ -110,25 +118,47 @@ func validateAt(directory string, now time.Time) error {
 type securityDocumentReader func(*os.Root, string) ([]byte, error)
 
 func validateAtWithReader(directory string, now time.Time, read securityDocumentReader) error {
+	return validateAtContext(context.Background(), directory, now, read)
+}
+
+func validateAtContext(ctx context.Context, directory string, now time.Time, read securityDocumentReader) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	root, err := os.OpenRoot(directory)
 	if err != nil {
 		return fmt.Errorf("open security document root: %w", err)
 	}
 	defer root.Close()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	riskData, err := read(root, "risk-register.json")
 	if err != nil {
+		return err
+	}
+	if err := ctx.Err(); err != nil {
 		return err
 	}
 	var risks riskRegister
 	if err := decodeDocument(riskData, riskRegisterSchema, &risks); err != nil {
 		return err
 	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	risksByID, err := admitRisks(risks.Risks, now)
 	if err != nil {
 		return err
 	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	matrixData, err := read(root, "security-matrix.json")
 	if err != nil {
+		return err
+	}
+	if err := ctx.Err(); err != nil {
 		return err
 	}
 	matrixSum := sha256.Sum256(matrixData)
@@ -137,7 +167,13 @@ func validateAtWithReader(directory string, now time.Time, read securityDocument
 	if err := decodeDocument(matrixData, securityMatrixSchema, &modules); err != nil {
 		return err
 	}
-	return admitModules(modules.Modules, risksByID, matrixDigest)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if err := admitModules(modules.Modules, risksByID, matrixDigest); err != nil {
+		return err
+	}
+	return ctx.Err()
 }
 
 func admitRisks(records []risk, now time.Time) (map[string]risk, error) {
@@ -269,7 +305,11 @@ func admitModules(records []moduleRecord, risksByID map[string]risk, matrixDiges
 }
 
 func readSecurityDocument(root *os.Root, path string) ([]byte, error) {
-	file, err := root.Open(path)
+	return readSecurityDocumentContext(context.Background(), root, path)
+}
+
+func readSecurityDocumentContext(ctx context.Context, root *os.Root, path string) ([]byte, error) {
+	file, err := repositoryfile.OpenRootContext(ctx, root, path, maximumSecurityDocument)
 	if err != nil {
 		return nil, fmt.Errorf("open security document: %w", err)
 	}
@@ -280,6 +320,9 @@ func readSecurityDocument(root *os.Root, path string) ([]byte, error) {
 	}
 	if len(data) > maximumSecurityDocument {
 		return nil, fmt.Errorf("security document exceeds %d bytes", maximumSecurityDocument)
+	}
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	return data, nil
 }

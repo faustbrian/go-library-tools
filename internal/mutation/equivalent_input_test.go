@@ -26,6 +26,7 @@ func TestEquivalentInventoryRejectsOrdinaryInputFailuresWithoutPartialPolicy(t *
 		input io.Reader
 	}{
 		{"reader failure", equivalentFailedReader{}},
+		{"valid bytes followed by reader failure", io.MultiReader(strings.NewReader(reviewedEquivalent), equivalentFailedReader{})},
 		{"malformed JSON", strings.NewReader(`{"schema_version":}`)},
 		{"wrong schema", strings.NewReader(`{"schema_version":2,"packages":[]}`)},
 		{"missing packages", strings.NewReader(`{"schema_version":1}`)},
