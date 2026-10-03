@@ -120,12 +120,7 @@ func httpProbe(ctx context.Context, url string) error {
 	if err != nil {
 		return err
 	}
-	client := &http.Client{
-		Transport: &http.Transport{DisableKeepAlives: true},
-		CheckRedirect: func(*http.Request, []*http.Request) error {
-			return errors.New("redirects are not allowed")
-		},
-	}
+	client := fixtureHTTPClient()
 	response, err := client.Do(request)
 	if err != nil {
 		return err

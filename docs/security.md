@@ -95,3 +95,35 @@ Bootstrap proxy archives are size-bounded during download and validated for
 entry count, expanded bytes, path confinement, entry type, and unsafe modes
 after digest verification and before extraction. Rejections expose only stable
 error classes and never include archive-controlled entry names.
+
+Evidence `Parse` read, decode and trailing-data failures expose only static
+categories, never reader causes, field names or parser-controlled value text.
+`ErrInvalid`, strict unknown-field/trailing validation and zero failure records
+are retained. `Load` and `evidence inspect` propagate these categorical parse
+errors; unknown-module failures omit the rejected record's module value.
+Successful explicit inventories still contain record fields and must be handled
+according to their data sensitivity. This control does not
+claim all filesystem path diagnostics or explicitly inspected records are
+automatically redacted.
+
+The mutation bootstrap/report strict parser and archive-admission owners also
+return static rejection categories without reader/parser causes, JSON keys,
+archive entry names, rejected report filenames or semantic identities. This
+includes strict JSON consumers for zero/equivalent inventories. These changes
+retain rejection, sentinel classification and accepted complete accounting;
+they do not mask the separate admitted mutation-coordinate diagnostics or
+successful checkpoint/report fields. Caller filesystem paths and other parser
+owners outside this scope are not covered by this default-text guarantee.
+
+Public evidence inspection validates every existing component below the caller's
+repository root before walking or returning an empty missing-root result.
+Symlink and non-directory components are rejected with a categorical
+`ErrInvalid`; a genuinely missing directory still produces an empty inventory.
+This assumes a trusted, stable repository root and filesystem: component
+validation and subsequent walking are not atomic or race-resistant traversal.
+
+The shared OpenSearch readiness and RabbitMQ fixture-control HTTP client imposes
+a five-second request deadline, preserving earlier caller deadlines and caller
+cancellation. Its isolated transport disables keep-alive reuse and rejects
+redirects. This bounds cooperative HTTP operations, not arbitrary injected
+transports or process/container lifecycle work.
