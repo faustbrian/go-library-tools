@@ -3,6 +3,13 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-openrpc",
+      "module_path": "github.com/faustbrian/go-openrpc/v2",
+      "version": "v2.0.0",
+      "source_revision": "d5327b6fe2e3e6a9b8cca2f6249f63715b3069f9",
+      "primary_entry_packages": ["github.com/faustbrian/go-openrpc/v2"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-log",
       "module_path": "github.com/faustbrian/go-log/v2",
       "version": "v2.0.0",

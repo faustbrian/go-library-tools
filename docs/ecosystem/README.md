@@ -76,6 +76,10 @@ Log selects published `/v2` v2.0.0. Its ordinary composition assertion checks
 default message replacement and attribute omission, then explicit `TrustedNew`
 preservation of a fixed application event and field; it is not a broader
 security certification.
+OpenRPC selects published `/v2` v2.0.0. Its ordinary composition assertion
+builds a single method, validates it with explicit method and diagnostic
+bounds, and checks exact canonical output; it does not certify all protocol
+or security boundaries.
 Other selections and the frozen cohort's release identities remain unchanged.
 Without this optional selection, older fixtures retain the existing candidate or
 published-set selection behavior. Remove the selection explicitly before

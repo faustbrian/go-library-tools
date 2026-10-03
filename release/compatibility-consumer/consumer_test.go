@@ -204,7 +204,7 @@ import (
 	_ "github.com/faustbrian/go-opening-hours/v2/openinghoursvalidation"
 	_ "github.com/faustbrian/go-opening-hours/v2/openinghourswire"
 	_ "github.com/faustbrian/go-opening-hours/v2/postgres"
-	_ "github.com/faustbrian/go-openrpc"
+	_ "github.com/faustbrian/go-openrpc/v2"
 	_ "github.com/faustbrian/go-password/v2"
 	_ "github.com/faustbrian/go-postgres"
 	_ "github.com/faustbrian/go-prompts"
