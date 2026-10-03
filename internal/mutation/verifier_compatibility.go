@@ -3,10 +3,10 @@ package mutation
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"go/parser"
 	"go/token"
-	"os"
 	"path/filepath"
 	"strings"
 
@@ -20,36 +20,41 @@ const legacyPackagePathCompatibility = "legacy_package_path_compatibility"
 // Root packages are unchanged even when their declaration differs from the
 // module name; subpackages must not fall back to an ancestor or module root.
 func legacyPackagePathsUnchanged(root, moduleDirectory, packageDirectory, modulePath, expectedSource string) error {
+	return legacyPackagePathsUnchangedWithLimits(root, moduleDirectory, packageDirectory, modulePath, expectedSource, mutationSourceLimits())
+}
+
+func legacyPackagePathsUnchangedWithLimits(root, moduleDirectory, packageDirectory, modulePath, expectedSource string, limits sourceReadLimits) error {
 	relativeDirectory := filepath.Join(moduleDirectory, packageDirectory)
 	if err := repositoryfile.ValidateDirectory(root, relativeDirectory); err != nil {
 		return fmt.Errorf("%w: inspect historical package directory: %w", ErrInputChanged, err)
 	}
-	entries, err := os.ReadDir(filepath.Join(root, relativeDirectory))
+	entries, err := readSourceEntries(filepath.Join(root, relativeDirectory), limits.entries)
 	if err != nil {
+		if errors.Is(err, errSourceEntryLimit) {
+			return fmt.Errorf("%w: historical package source exceeds file bound", ErrInputChanged)
+		}
 		return fmt.Errorf("%w: inspect historical package source: %w", ErrInputChanged, err)
-	}
-	if len(entries) > maximumInputFiles {
-		return fmt.Errorf("%w: historical package source exceeds file bound", ErrInputChanged)
 	}
 	target := modulePath
 	if packageDirectory != "." {
 		target += "/" + filepath.ToSlash(packageDirectory)
 	}
-	files, total := 0, 0
+	files := 0
+	remaining := limits.total
 	manifest := sha256.New()
 	for _, entry := range entries {
 		name := entry.Name()
 		if filepath.Ext(name) != ".go" || strings.HasSuffix(name, "_test.go") {
 			continue
 		}
-		data, err := repositoryfile.Read(root, filepath.Join(relativeDirectory, name), maximumInputFile)
+		data, err := readSourceFile(root, filepath.Join(relativeDirectory, name), limits.file, remaining)
 		if err != nil {
+			if errors.Is(err, errSourceTotalLimit) {
+				return fmt.Errorf("%w: historical package source exceeds byte bound", ErrInputChanged)
+			}
 			return fmt.Errorf("%w: read historical package declaration: %w", ErrInputChanged, err)
 		}
-		total += len(data)
-		if total > maximumInputTotal {
-			return fmt.Errorf("%w: historical package source exceeds byte bound", ErrInputChanged)
-		}
+		remaining -= int64(len(data))
 		// Use the very bytes parsed below to reproduce SourceDigest. A
 		// second file read cannot bind the declaration proof against an ABA
 		// source change between input collection and compatibility checking.

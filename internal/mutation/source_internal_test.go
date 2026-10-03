@@ -22,21 +22,21 @@ func (files faultySourceFiles) Lstat(path string) (os.FileInfo, error) {
 	return files.base.Lstat(path)
 }
 
-func (files faultySourceFiles) ReadDir(path string) ([]os.DirEntry, error) {
+func (files faultySourceFiles) ReadDir(path string, maximum int) ([]os.DirEntry, error) {
 	if files.operation == "read-dir" {
 		return nil, errors.New("read directory failed")
 	}
 	if files.operation == "nil-dir-entry" {
 		return []os.DirEntry{nil}, nil
 	}
-	return files.base.ReadDir(path)
+	return files.base.ReadDir(path, maximum)
 }
 
-func (files faultySourceFiles) ReadFile(path string) ([]byte, error) {
+func (files faultySourceFiles) ReadFile(path string, perFile, remaining int64) ([]byte, error) {
 	if files.operation == "read-file" {
 		return nil, errors.New("read file failed")
 	}
-	return files.base.ReadFile(path)
+	return files.base.ReadFile(path, perFile, remaining)
 }
 
 func (files faultySourceFiles) Rel(base, target string) (string, error) {

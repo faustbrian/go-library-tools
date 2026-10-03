@@ -3,27 +3,34 @@ package mutation
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 )
 
 type sourceFileSystem interface {
 	Lstat(string) (os.FileInfo, error)
-	ReadDir(string) ([]os.DirEntry, error)
-	ReadFile(string) ([]byte, error)
+	ReadDir(string, int) ([]os.DirEntry, error)
+	ReadFile(string, int64, int64) ([]byte, error)
 	Rel(string, string) (string, error)
 }
 
 type operatingSourceFiles struct{}
 
-func (operatingSourceFiles) Lstat(path string) (os.FileInfo, error)     { return os.Lstat(path) }
-func (operatingSourceFiles) ReadDir(path string) ([]os.DirEntry, error) { return os.ReadDir(path) }
+func (operatingSourceFiles) Lstat(path string) (os.FileInfo, error) { return os.Lstat(path) }
+func (operatingSourceFiles) ReadDir(path string, maximum int) ([]os.DirEntry, error) {
+	return readSourceEntries(path, maximum)
+}
 
 // #nosec G304 -- callers derive paths beneath a validated absolute task-owned mutation source root
-func (operatingSourceFiles) ReadFile(path string) ([]byte, error) { return os.ReadFile(path) }
+func (operatingSourceFiles) ReadFile(path string, perFile, remaining int64) ([]byte, error) {
+	return readSourceFile(filepath.Dir(path), filepath.Base(path), perFile, remaining)
+}
 func (operatingSourceFiles) Rel(base, target string) (string, error) {
 	return filepath.Rel(base, target)
 }
@@ -35,6 +42,10 @@ func SourceDigest(root, moduleDirectory, packageDirectory string) (string, error
 }
 
 func sourceDigest(files sourceFileSystem, root, moduleDirectory, packageDirectory string) (string, error) {
+	return sourceDigestWithLimits(files, root, moduleDirectory, packageDirectory, mutationSourceLimits())
+}
+
+func sourceDigestWithLimits(files sourceFileSystem, root, moduleDirectory, packageDirectory string, limits sourceReadLimits) (string, error) {
 	if !filepath.IsAbs(root) || !validRelative(moduleDirectory) || !validRelative(packageDirectory) {
 		return "", fmt.Errorf("%w: source digest paths are malformed", ErrInvalid)
 	}
@@ -49,8 +60,11 @@ func sourceDigest(files sourceFileSystem, root, moduleDirectory, packageDirector
 	if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
 		return "", fmt.Errorf("%w: mutation source path is not a real directory", ErrInvalid)
 	}
-	entries, err := files.ReadDir(directory)
+	entries, err := files.ReadDir(directory, limits.entries)
 	if err != nil {
+		if errors.Is(err, errSourceEntryLimit) {
+			return "", fmt.Errorf("%w: %w", ErrInvalid, err)
+		}
 		return "", fmt.Errorf("read mutation source directory: %w", err)
 	}
 	names := make([]string, 0, len(entries))
@@ -72,12 +86,17 @@ func sourceDigest(files sourceFileSystem, root, moduleDirectory, packageDirector
 	}
 	sort.Strings(names)
 	manifest := sha256.New()
+	remaining := limits.total
 	for _, name := range names {
 		absolute := filepath.Join(directory, name)
-		data, err := files.ReadFile(absolute)
+		data, err := files.ReadFile(absolute, limits.file, remaining)
 		if err != nil {
+			if errors.Is(err, repositoryfile.ErrTooLarge) || errors.Is(err, errSourceTotalLimit) {
+				return "", fmt.Errorf("%w: %w", ErrInvalid, err)
+			}
 			return "", fmt.Errorf("read mutation source %s: %w", name, err)
 		}
+		remaining -= int64(len(data))
 		digest := sha256.Sum256(data)
 		relative, err := files.Rel(root, absolute)
 		if err != nil {
