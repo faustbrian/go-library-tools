@@ -63,7 +63,10 @@ its v1 coverage. The generator checks each remote tag and public Go proxy
 version and the resulting consumer files without modifying the published base
 set or projecting new `known_good_compatibility_sets` membership. This
 current consumer is not evidence that the changed versions belong to the frozen
-verified cohort; its hosted consumer checks establish only its own composition.
+verified cohort; its blank imports establish composition-only compilation, not
+runtime security certification. Query, International and Localized select
+their published v3.0.0 identities together, while Validation retains v2.0.0.
+Other selections and the frozen cohort's release identities remain unchanged.
 Without this optional selection, older fixtures retain the existing candidate or
 published-set selection behavior. Remove the selection explicitly before
 generating a new cohort candidate; candidate writes must not silently overwrite
