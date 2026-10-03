@@ -41,7 +41,7 @@ type EquivalentMutation struct {
 func ParseEquivalentInventory(reader io.Reader) (EquivalentInventory, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, maximumEquivalentInventorySize+1))
 	if err != nil {
-		return EquivalentInventory{}, fmt.Errorf("%w: read equivalent-mutant inventory: %s", ErrInvalid, err.Error())
+		return EquivalentInventory{}, fmt.Errorf("%w: read equivalent-mutant inventory", ErrInvalid)
 	}
 	if len(data) > maximumEquivalentInventorySize {
 		return EquivalentInventory{}, fmt.Errorf("%w: equivalent-mutant inventory exceeds %d bytes", ErrInvalid, maximumEquivalentInventorySize)

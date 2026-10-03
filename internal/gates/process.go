@@ -12,7 +12,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"sync/atomic"
 )
 
 type processExecutor struct {
@@ -156,11 +155,11 @@ func (executor *processExecutor) runBounded(ctx context.Context, command Command
 		return fmt.Errorf("run %s: %w", command.Name, err)
 	}
 	done := make(chan struct{})
-	var canceled atomic.Bool
+	monitorDone := make(chan struct{})
 	go func() {
+		defer close(monitorDone)
 		select {
 		case <-ctx.Done():
-			canceled.Store(true)
 			terminateProcessGroup(process)
 		case <-stop:
 			terminateProcessGroup(process)
@@ -169,11 +168,16 @@ func (executor *processExecutor) runBounded(ctx context.Context, command Command
 	}()
 	err := process.Wait()
 	close(done)
-	if contextError := ctx.Err(); canceled.Load() && contextError != nil {
+	<-monitorDone
+	return boundedProcessResult(ctx, command.Name, err)
+}
+
+func boundedProcessResult(ctx context.Context, name string, err error) error {
+	if contextError := ctx.Err(); contextError != nil {
 		err = errors.Join(contextError, err)
 	}
 	if err != nil {
-		return fmt.Errorf("run %s: %w", command.Name, err)
+		return fmt.Errorf("run %s: %w", name, err)
 	}
 	return nil
 }

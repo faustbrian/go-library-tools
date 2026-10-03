@@ -30,7 +30,7 @@ type ZeroReview struct {
 func ParseZeroInventory(reader io.Reader) (ZeroInventory, error) {
 	data, err := io.ReadAll(io.LimitReader(reader, maximumZeroInventorySize+1))
 	if err != nil {
-		return ZeroInventory{}, fmt.Errorf("%w: read zero-mutant inventory: %s", ErrInvalid, err.Error())
+		return ZeroInventory{}, fmt.Errorf("%w: read zero-mutant inventory", ErrInvalid)
 	}
 	if len(data) > maximumZeroInventorySize {
 		return ZeroInventory{}, fmt.Errorf("%w: zero-mutant inventory exceeds %d bytes", ErrInvalid, maximumZeroInventorySize)
