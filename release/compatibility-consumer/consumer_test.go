@@ -166,7 +166,7 @@ import (
 	_ "github.com/faustbrian/go-knapsack/v2"
 	_ "github.com/faustbrian/go-lease"
 	_ "github.com/faustbrian/go-localized/v3"
-	_ "github.com/faustbrian/go-log"
+	_ "github.com/faustbrian/go-log/v2"
 	_ "github.com/faustbrian/go-math"
 	_ "github.com/faustbrian/go-math/bigfloat"
 	_ "github.com/faustbrian/go-math/decimal"

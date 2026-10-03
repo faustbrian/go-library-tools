@@ -75,7 +75,7 @@ require (
 	github.com/faustbrian/go-knapsack/v2 v2.0.0
 	github.com/faustbrian/go-lease v1.1.0
 	github.com/faustbrian/go-localized/v3 v3.0.0
-	github.com/faustbrian/go-log v1.0.0
+	github.com/faustbrian/go-log/v2 v2.0.0
 	github.com/faustbrian/go-math v1.1.2
 	github.com/faustbrian/go-measurement/v2 v2.0.1
 	github.com/faustbrian/go-merkle-patricia-trie v1.0.0

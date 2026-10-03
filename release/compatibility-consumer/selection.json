@@ -3,6 +3,13 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-log",
+      "module_path": "github.com/faustbrian/go-log/v2",
+      "version": "v2.0.0",
+      "source_revision": "da364e686358bccf61fa44b5615e39fc8bf1d8a0",
+      "primary_entry_packages": ["github.com/faustbrian/go-log/v2"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-event-sourcing",
       "module_path": "github.com/faustbrian/go-event-sourcing/v2",
       "version": "v2.0.0",

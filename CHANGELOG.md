@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Adopt published Log v2.0.0 in the maintained compatibility consumer and
+  exercise ordinary default message replacement, attribute omission, and
+  explicit trusted event composition, without changing frozen cohorts or
+  unrelated selections.
 - Adopt Money v2.0.0 and canonical Knapsack money objective v3.0.0 in the
   maintained compatibility consumer, preserving frozen cohorts and unrelated
   selections. Its existing hosted consumer job also runs a finite exact-total

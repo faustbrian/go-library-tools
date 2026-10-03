@@ -72,6 +72,10 @@ The separate ordinary composition test checks exact Money v2 totals and copied
 cost-map ownership through canonical objective v3, not runtime security
 certification. Deprecated facade selections and frozen cohort records are
 unchanged.
+Log selects published `/v2` v2.0.0. Its ordinary composition assertion checks
+default message replacement and attribute omission, then explicit `TrustedNew`
+preservation of a fixed application event and field; it is not a broader
+security certification.
 Other selections and the frozen cohort's release identities remain unchanged.
 Without this optional selection, older fixtures retain the existing candidate or
 published-set selection behavior. Remove the selection explicitly before
