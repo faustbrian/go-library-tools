@@ -457,3 +457,16 @@ func assertInvalidContains(t *testing.T, err error, want string) {
 type failingReader struct{}
 
 func (failingReader) Read([]byte) (int, error) { return 0, errors.New("read failed") }
+
+func TestValidateReportWithReviewRejectsInvalidConfigurationWithoutPartialResult(t *testing.T) {
+	const emptyReport = `{"files":[]}`
+	valid, err := ValidateReportWithReview(strings.NewReader(emptyReport), nil)
+	if err != nil || valid.Digest == "" || valid.Mutants != 0 || valid.Killed != 0 || valid.Equivalent != 0 {
+		t.Fatalf("ordinary empty report = %#v, %v", valid, err)
+	}
+	invalidReview := EquivalentReview{}
+	got, err := ValidateReportWithReview(strings.NewReader(emptyReport), &invalidReview)
+	if !errors.Is(err, ErrInvalid) || got != (ReportResult{}) {
+		t.Fatalf("invalid review configuration = %#v, %v", got, err)
+	}
+}
