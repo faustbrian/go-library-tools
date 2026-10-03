@@ -5,6 +5,7 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"reflect"
 	"testing"
 
 	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
@@ -156,7 +157,7 @@ func TestOrdinarySourceReadErrorNormalization(t *testing.T) {
 		{0, 0, zeroErr},
 		{1, 0, errSourceTotalLimit},
 	} {
-		if got := sourceReadError(zeroErr, test.perFile, test.remaining); got != test.want {
+		if got := sourceReadError(zeroErr, test.perFile, test.remaining); !errors.Is(got, test.want) || reflect.ValueOf(got).Kind() != reflect.Pointer || reflect.ValueOf(got) != reflect.ValueOf(test.want) {
 			t.Fatalf("zero-bound refusal with (%d, %d) = %v; want %v", test.perFile, test.remaining, got, test.want)
 		}
 	}
@@ -165,7 +166,7 @@ func TestOrdinarySourceReadErrorNormalization(t *testing.T) {
 		t.Fatalf("real positive-bound refusal = %q, %v", data, positiveErr)
 	}
 	for _, limits := range [][2]int64{{1, 2}, {2, 1}, {1, 1}} {
-		if got := sourceReadError(positiveErr, limits[0], limits[1]); got != positiveErr {
+		if got := sourceReadError(positiveErr, limits[0], limits[1]); !errors.Is(got, positiveErr) || reflect.ValueOf(got).Kind() != reflect.Pointer || reflect.ValueOf(got) != reflect.ValueOf(positiveErr) {
 			t.Fatalf("positive-bound error changed with %v: %v", limits, got)
 		}
 	}
@@ -181,7 +182,7 @@ func TestOrdinarySourceReadErrorNormalization(t *testing.T) {
 		if data != nil || !errors.Is(original, test.cause) {
 			t.Fatalf("real zero-bound path refusal for %q = %q, %v", test.path, data, original)
 		}
-		if got := sourceReadError(original, 1, 0); got != original {
+		if got := sourceReadError(original, 1, 0); !errors.Is(got, test.cause) || reflect.ValueOf(got).Kind() != reflect.Pointer || reflect.ValueOf(got) != reflect.ValueOf(original) {
 			t.Fatalf("non-size error changed for %q: %v", test.path, got)
 		}
 	}
