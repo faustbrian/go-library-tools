@@ -3,6 +3,7 @@ package repositoryfile
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -16,14 +17,41 @@ type countedOpenFiles struct {
 
 type cooperativeFile struct {
 	file
-	cancel context.CancelFunc
-	closed bool
+	cancel   context.CancelFunc
+	closed   bool
+	terminal error
 }
 
 func (f *cooperativeFile) Read(buffer []byte) (int, error) {
 	n := copy(buffer, "abc")
 	f.cancel()
+	if f.terminal != nil {
+		return n, f.terminal
+	}
 	return n, io.EOF
+}
+
+func TestOwnedReadClassifiesWrappedEOFWithoutReplacingTerminalFailure(t *testing.T) {
+	for _, terminal := range []error{fmt.Errorf("ordinary completion: %w", io.EOF), errors.New("ordinary read failure")} {
+		for _, canceled := range []bool{false, true} {
+			ctx, cancel := context.WithCancel(context.Background())
+			readerCancel := func() {}
+			if canceled {
+				readerCancel = cancel
+			}
+			reader := &contextFile{ctx: ctx, file: &cooperativeFile{cancel: readerCancel, terminal: terminal}}
+			buffer := make([]byte, 3)
+			n, err := reader.Read(buffer)
+			cancel()
+			if canceled && errors.Is(terminal, io.EOF) {
+				if n != 0 || !errors.Is(err, context.Canceled) {
+					t.Fatalf("canceled wrapped EOF published %d bytes, %v", n, err)
+				}
+			} else if n != 3 || string(buffer[:n]) != "abc" || err != terminal {
+				t.Fatalf("ordinary bytes/terminal cause changed: n%d, %v", n, err)
+			}
+		}
+	}
 }
 
 func (f *cooperativeFile) Close() error { f.closed = true; return nil }
@@ -147,7 +175,7 @@ func TestReadAdmitsMetadataSizeBeforeOpenDispatch(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	files := &countedOpenFiles{fakeFileSystem: fakeFileSystem{info: info, openErr: errors.New("inert opener invoked")}}
+	files := &countedOpenFiles{info: info, openErr: errors.New("inert opener invoked")}
 	_, err = read(root, "ordinary", 2, files)
 	if !errors.Is(err, ErrTooLarge) || files.calls != 0 {
 		t.Fatalf("oversized admission = %v, open calls%d; want ErrTooLarge and no dispatch", err, files.calls)

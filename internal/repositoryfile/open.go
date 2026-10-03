@@ -2,6 +2,7 @@ package repositoryfile
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -97,7 +98,7 @@ func (f *contextFile) Read(buffer []byte) (int, error) {
 		return 0, err
 	}
 	n, err := f.file.Read(buffer)
-	if err == nil || err == io.EOF {
+	if err == nil || errors.Is(err, io.EOF) {
 		if stopped := f.ctx.Err(); stopped != nil {
 			return 0, stopped
 		}
