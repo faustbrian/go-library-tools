@@ -2,6 +2,7 @@ package mutation
 
 import (
 	"errors"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -106,6 +107,23 @@ func TestOrdinarySourceReadAdmitsBeforeBytes(t *testing.T) {
 	data, err = readSourceFile(root, "empty.go", 2, 0)
 	if err != nil || len(data) != 0 {
 		t.Fatalf("empty file at zero remaining = %q, %v", data, err)
+	}
+}
+
+func TestOrdinarySourceReadPropagatesOverflowingLookAheadLimit(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "source.go"), []byte("abc"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	data, err := readSourceFile(root, "source.go", math.MaxInt64, math.MaxInt64)
+	if data != nil || !errors.Is(err, repositoryfile.ErrTooLarge) {
+		t.Fatalf("overflowing source read = %q, %v; want nil bytes and ErrTooLarge", data, err)
+	}
+	for _, limits := range [][2]int64{{math.MaxInt64 - 1, math.MaxInt64 - 1}, {math.MaxInt64, 3}, {3, math.MaxInt64}} {
+		data, err := readSourceFile(root, "source.go", limits[0], limits[1])
+		if err != nil || string(data) != "abc" {
+			t.Fatalf("source read with allowances %v = %q, %v; want exact fixture bytes", limits, data, err)
+		}
 	}
 }
 

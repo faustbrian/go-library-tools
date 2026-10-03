@@ -2,6 +2,7 @@ package repositoryfile_test
 
 import (
 	"errors"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -27,6 +28,21 @@ func TestReadRejectsNonPositiveLimitForEmptyFile(t *testing.T) {
 	for _, limit := range []int64{0, -1} {
 		if _, err := repositoryfile.Read(root, "empty", limit); !errors.Is(err, repositoryfile.ErrTooLarge) {
 			t.Fatalf("Read(%d) = %v", limit, err)
+		}
+	}
+}
+
+func TestReadRejectsOverflowingLookAheadLimit(t *testing.T) {
+	root := t.TempDir()
+	write(t, filepath.Join(root, "file"), "abc")
+	got, err := repositoryfile.Read(root, "file", math.MaxInt64)
+	if got != nil || !errors.Is(err, repositoryfile.ErrTooLarge) {
+		t.Fatalf("Read(MaxInt64) = %q, %v; want nil bytes and ErrTooLarge", got, err)
+	}
+	for _, limit := range []int64{math.MaxInt64 - 1, 3} {
+		got, err := repositoryfile.Read(root, "file", limit)
+		if err != nil || string(got) != "abc" {
+			t.Fatalf("Read(%d) = %q, %v; want exact fixture bytes", limit, got, err)
 		}
 	}
 }
