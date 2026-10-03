@@ -45,6 +45,12 @@ Original-process-group bounded execution is supported on Darwin and Linux. On ot
 platforms, bounded scanner commands fail before process start; ordinary
 unbounded command execution remains portable.
 
+After a bounded scanner's wait completes, its cancellation monitor is joined
+before the executor returns. Caller cancellation or deadline expiry observed by
+the terminal result policy is preserved alongside any child failure; classification
+does not depend on which monitor branch ran. This does not expand the original
+process-group termination boundary or promise interruption of arbitrary IO.
+
 Pinned scanners and Git are trusted executable collaborators processing hostile
 data. A process which detaches from its original group is outside that group's
 termination boundary. Repository tests do not use the scanner group mechanism.
@@ -109,7 +115,8 @@ automatically redacted.
 The mutation bootstrap/report strict parser and archive-admission owners also
 return static rejection categories without reader/parser causes, JSON keys,
 archive entry names, rejected report filenames or semantic identities. This
-includes strict JSON consumers for zero/equivalent inventories. These changes
+includes strict JSON consumers and reader-error categories for zero/equivalent
+inventories. These changes
 retain rejection, sentinel classification and accepted complete accounting;
 they do not mask the separate admitted mutation-coordinate diagnostics or
 successful checkpoint/report fields. Caller filesystem paths and other parser

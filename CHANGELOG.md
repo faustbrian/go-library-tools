@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Preserve observed caller cancellation or deadline expiry in bounded scanner
+  terminal errors alongside child failures, regardless of cancellation-monitor
+  scheduling, and join that monitor before returning.
 - Keep evidence read, decode and trailing-data failure diagnostics categorical
   instead of rendering reader or parser text, and omit record module values
   from unknown-module inventory failures. Invalid evidence remains rejected
@@ -14,6 +17,8 @@ All notable changes to this project are documented in this file.
   of default diagnostics, including archive names, duplicate identities and
   report filenames. Strict rejection and complete accepted accounting remain
   unchanged; admitted mutation-coordinate diagnostics remain available.
+- Keep zero/equivalent review-inventory reader failures categorical instead of
+  rendering reader causes, preserving `ErrInvalid` and zero failure inventories.
 - Validate every evidence-root path component before treating a missing root
   as empty, rejecting symlink and non-directory components categorically.
   Bound OpenSearch readiness requests to five seconds through the shared
