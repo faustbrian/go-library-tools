@@ -144,6 +144,7 @@ import (
 	_ "github.com/faustbrian/go-http-signature"
 	_ "github.com/faustbrian/go-idempotency"
 	_ "github.com/faustbrian/go-idempotency/v2"
+	_ "github.com/faustbrian/go-idempotency/v2/memory"
 	_ "github.com/faustbrian/go-identifier"
 	_ "github.com/faustbrian/go-identifier/v2"
 	_ "github.com/faustbrian/go-identifier/v2/idtest"

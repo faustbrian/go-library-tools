@@ -90,6 +90,10 @@ their published `/v2` modules, along with the optional measurement rule adapter.
 Barcode, Rate Limit, Sequencer and Idempotency
 add their released `/v2` modules while retaining v1 imports. Neither form
 rewrites the base set's v1 versions or historical evidence.
+Idempotency selects `/v2` v2.0.1 alongside the frozen v1 selection. A finite
+in-memory composition checks acquisition, completion, and replay; its graph
+retains the selected OpenTelemetry versions at or above the patch's v1.45.0
+dependency floor. This is not durable-backend or security certification.
 Matching module entries in the generated catalogs list the published set under
 `known_good_compatibility_sets`; unreleased drafts are never projected there.
 Candidate fingerprints withdrawn before the first publication are not public
