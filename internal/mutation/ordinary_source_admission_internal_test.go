@@ -26,6 +26,34 @@ func TestOrdinarySourceDirectoryAdmission(t *testing.T) {
 	}
 }
 
+func TestOrdinarySourceDirectoryNonpositiveAllowances(t *testing.T) {
+	t.Run("negative allowance precedes opening", func(t *testing.T) {
+		path := filepath.Join(t.TempDir(), "missing")
+		entries, err := readSourceEntries(path, -1)
+		if entries != nil || !errors.Is(err, errSourceEntryLimit) || errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("negative directory allowance = %#v, %v; want nil entries and entry-limit refusal before opening", entries, err)
+		}
+	})
+
+	t.Run("zero allowance admits empty directory", func(t *testing.T) {
+		entries, err := readSourceEntries(t.TempDir(), 0)
+		if err != nil || len(entries) != 0 {
+			t.Fatalf("empty directory at zero allowance = %#v, %v; want no entries and no error", entries, err)
+		}
+	})
+
+	t.Run("zero allowance rejects one entry", func(t *testing.T) {
+		root := t.TempDir()
+		if err := os.WriteFile(filepath.Join(root, "a.go"), []byte("a"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		entries, err := readSourceEntries(root, 0)
+		if entries != nil || !errors.Is(err, errSourceEntryLimit) {
+			t.Fatalf("one directory entry at zero allowance = %#v, %v; want nil entries and entry-limit refusal", entries, err)
+		}
+	})
+}
+
 func TestOrdinarySourceDirectoryEnumerationIOErrors(t *testing.T) {
 	t.Run("missing directory", func(t *testing.T) {
 		path := filepath.Join(t.TempDir(), "missing")
