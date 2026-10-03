@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Adopt Money v2.0.0 and canonical Knapsack money objective v3.0.0 in the
+  maintained compatibility consumer, preserving frozen cohorts and unrelated
+  selections. Its existing hosted consumer job also runs a finite exact-total
+  and copied-input composition assertion; this is not security certification.
 - Adopt Event Sourcing, Postgres, and the Outbox, Kafka, OTel, and Queue
   adapters at v2.0.0 in the maintained compatibility consumer through their
   official `/v2` entrypoints, preserving published cohorts and unrelated pins.

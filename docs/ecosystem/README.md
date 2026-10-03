@@ -66,14 +66,20 @@ current consumer is not evidence that the changed versions belong to the frozen
 verified cohort; its blank imports establish composition-only compilation, not
 runtime security certification. Query, International and Localized select
 their published v3.0.0 identities together, while Validation retains v2.0.0.
+Money selects published `/v2` v2.0.0 together with canonical Knapsack
+`objective/money/v3` v3.0.0; root Knapsack and Measurement retain `/v2`.
+The separate ordinary composition test checks exact Money v2 totals and copied
+cost-map ownership through canonical objective v3, not runtime security
+certification. Deprecated facade selections and frozen cohort records are
+unchanged.
 Other selections and the frozen cohort's release identities remain unchanged.
 Without this optional selection, older fixtures retain the existing candidate or
 published-set selection behavior. Remove the selection explicitly before
 generating a new cohort candidate; candidate writes must not silently overwrite
 a maintained current-release consumer. Middleware, feature-flags, measurement,
 filesystem, fault-injection, router, password, semaphore and Knapsack select
-their published `/v2` modules, along with the canonical money objective and
-optional measurement rule adapter. Barcode, Rate Limit, Sequencer and Idempotency
+their published `/v2` modules, along with the optional measurement rule adapter.
+Barcode, Rate Limit, Sequencer and Idempotency
 add their released `/v2` modules while retaining v1 imports. Neither form
 rewrites the base set's v1 versions or historical evidence.
 Matching module entries in the generated catalogs list the published set under

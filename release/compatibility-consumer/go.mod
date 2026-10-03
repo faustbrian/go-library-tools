@@ -71,7 +71,7 @@ require (
 	github.com/faustbrian/go-kafka/adapters/otel v1.0.0
 	github.com/faustbrian/go-kafka/adapters/service v1.0.0
 	github.com/faustbrian/go-keyphrase v1.0.0
-	github.com/faustbrian/go-knapsack/objective/money/v2 v2.0.0
+	github.com/faustbrian/go-knapsack/objective/money/v3 v3.0.0
 	github.com/faustbrian/go-knapsack/v2 v2.0.0
 	github.com/faustbrian/go-lease v1.1.0
 	github.com/faustbrian/go-localized/v3 v3.0.0
@@ -82,7 +82,7 @@ require (
 	github.com/faustbrian/go-merkle-tree v1.0.0
 	github.com/faustbrian/go-migrations v1.1.0
 	github.com/faustbrian/go-migrations/v2 v2.0.0
-	github.com/faustbrian/go-money v1.0.0
+	github.com/faustbrian/go-money/v2 v2.0.0
 	github.com/faustbrian/go-openapi v1.0.0
 	github.com/faustbrian/go-opening-hours v1.1.0
 	github.com/faustbrian/go-opening-hours/v2 v2.0.1

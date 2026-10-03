@@ -274,8 +274,8 @@ github.com/faustbrian/go-kafka/adapters/service v1.0.0 h1:gm/a43PD2iK3p4WsULJMIM
 github.com/faustbrian/go-kafka/adapters/service v1.0.0/go.mod h1:VZrb07XQJFpcNPglEv8NsTnIhwFwwoyebo9eFScrOO4=
 github.com/faustbrian/go-keyphrase v1.0.0 h1:IJWDKwo/9YOd9mq/POxQu9yAwWryLFmP1XrAYnTwrnQ=
 github.com/faustbrian/go-keyphrase v1.0.0/go.mod h1:5rL4+1EP2W/GP9GdDqvdjLr1fhXzgfxa4DkTXV7d1Dg=
-github.com/faustbrian/go-knapsack/objective/money/v2 v2.0.0 h1:yif5Lo/CJNU64X/YDRry2mZY1bgfkF92wMWrTYb1ujo=
-github.com/faustbrian/go-knapsack/objective/money/v2 v2.0.0/go.mod h1:lCKNztzSCAT3l/um/XIMiP1381Y43VL6phfXLY+t380=
+github.com/faustbrian/go-knapsack/objective/money/v3 v3.0.0 h1:vzvO8lQkYEu8oX7WTXhoh3Z7HqhxzJn3Skcte9eZF+s=
+github.com/faustbrian/go-knapsack/objective/money/v3 v3.0.0/go.mod h1:aT5Cwgb+PKQvdaisTEc6rj8m7mst0b/ZWy8g51e1Eug=
 github.com/faustbrian/go-knapsack/v2 v2.0.0 h1:6/tqyHhCv4RmgRT0BXB0D9O79HOhEhGXJNG0DPPORgA=
 github.com/faustbrian/go-knapsack/v2 v2.0.0/go.mod h1:fh0Eo1Vlu+4eICz6AXQ1J9w1/cbSqYEqNUyDHZJUqKk=
 github.com/faustbrian/go-lease v1.1.0 h1:6OgqqFOPBkFiTCafT0Jna+sVcmkZn1Rqnj3R1IjU0l8=
@@ -296,8 +296,8 @@ github.com/faustbrian/go-migrations v1.1.0 h1:RD1gCmEL8OSBzBP8MeIdadhDBiiX+zM6GQ
 github.com/faustbrian/go-migrations v1.1.0/go.mod h1:9+6xpROUsEAOd6vP2hx0yDw3JdIujDh192d6Mp9TAtw=
 github.com/faustbrian/go-migrations/v2 v2.0.0 h1:ipOKc3CA0p8vL5GPVh6xISQUfLiPCBfD6nT8stuWfUo=
 github.com/faustbrian/go-migrations/v2 v2.0.0/go.mod h1:bMXoptsGWGmURbKwwCoZxrNqHBgdmzXPxXlipGyWMsM=
-github.com/faustbrian/go-money v1.0.0 h1:HrT/a/ZAqmEKme9H3FcBTcL7uM1OA2rzqKM1KSdtwHk=
-github.com/faustbrian/go-money v1.0.0/go.mod h1:8IhDm0f6IYjtITpyOgXYMmKVeQTlplZaiVySM5VEY2o=
+github.com/faustbrian/go-money/v2 v2.0.0 h1:m9b+mRAR0uUUL5KTnP2r+J6Wz4/1Nq8kBkmQIV7dikM=
+github.com/faustbrian/go-money/v2 v2.0.0/go.mod h1:jaKcstdXBz4uaTKhJEedMmFwhTsdx7pVRA/o9JxzQe4=
 github.com/faustbrian/go-openapi v1.0.0 h1:I78okn/4twfERabfwrMwSwQCt66mPz0FZF+2qz0tUGQ=
 github.com/faustbrian/go-openapi v1.0.0/go.mod h1:mfPnE2VDlthZVCYI7UBM6RYMZQjMFUUHYtbBNTfs2BY=
 github.com/faustbrian/go-opening-hours v1.1.0 h1:zZ1aVhQcXt6reuuMn1db2lHEYVuj82gTJaS6Me6LVcs=

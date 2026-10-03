@@ -149,10 +149,22 @@
     },
     {
       "from_module_path": "github.com/faustbrian/go-knapsack/objective/money",
-      "module_path": "github.com/faustbrian/go-knapsack/objective/money/v2",
+      "module_path": "github.com/faustbrian/go-knapsack/objective/money/v3",
+      "version": "v3.0.0",
+      "source_revision": "35b3b3d4b8c0547e8454ea8e0551e738f11961a9",
+      "primary_entry_packages": ["github.com/faustbrian/go-knapsack/objective/money/v3"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-money",
+      "module_path": "github.com/faustbrian/go-money/v2",
       "version": "v2.0.0",
-      "source_revision": "3f43c721c4e2bffc6c0b48c7a2ced675533493fb",
-      "primary_entry_packages": ["github.com/faustbrian/go-knapsack/objective/money/v2"]
+      "source_revision": "7d39488120fbe3e5533b498442a31813ae5e274b",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-money/v2",
+        "github.com/faustbrian/go-money/v2/encoding",
+        "github.com/faustbrian/go-money/v2/format",
+        "github.com/faustbrian/go-money/v2/moneytest"
+      ]
     },
     {
       "from_module_path": "github.com/faustbrian/go-geo",
