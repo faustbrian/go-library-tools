@@ -138,8 +138,8 @@ github.com/faustbrian/go-adaptive-throttle v1.0.1 h1:Pyr0GK+bF/+0RdYd8rfOa+0tDFD
 github.com/faustbrian/go-adaptive-throttle v1.0.1/go.mod h1:zSIhmblphQqub+s3fYQZf1S9dUKVlRNh2WMvrKqlUk8=
 github.com/faustbrian/go-analysis v1.2.0 h1:w8pfSqS4fo9an+8AIQ1iG/4tvBZICj5eqLux3WL8n0o=
 github.com/faustbrian/go-analysis v1.2.0/go.mod h1:1GqiB4IDxxJZKBd4qpxuJfJxXG/pjxKqhumBM2tPRMU=
-github.com/faustbrian/go-api-query/v2 v2.0.0 h1:ojR3naWFhYRw19V/5F6LYEmr/EQk8gDkOwE/EUusogQ=
-github.com/faustbrian/go-api-query/v2 v2.0.0/go.mod h1:4D78wvgmxyv03rrLlzD0j7722L8i0VX6zu1w30cR4Oc=
+github.com/faustbrian/go-api-query/v3 v3.0.0 h1:EoXwcz2Mjr12wM9BeGfy6Hib4T6euibyryiJDt/nVaw=
+github.com/faustbrian/go-api-query/v3 v3.0.0/go.mod h1:Po10DQWFuCvihvFax5qsAB6GIU1msbjTwJfV2PasS6E=
 github.com/faustbrian/go-audit v1.0.0 h1:wVUkuXXBZIBj/6ORTZEgbbBPw2ymIaXnnTDrhBVn/N4=
 github.com/faustbrian/go-audit v1.0.0/go.mod h1:IrR+KzmsdkEizekCStgGor5Mqj4OfAj25REXAqDJ540=
 github.com/faustbrian/go-audit/postgres v1.0.0 h1:2zt/s5/QbKEojwBsfxA1TcAHDgVOMiv8dSiJuNcrAcQ=
@@ -256,8 +256,8 @@ github.com/faustbrian/go-identifier/v2 v2.0.0 h1:of6lfuAlyWzW0nDWW3gdzHu65nSZ79L
 github.com/faustbrian/go-identifier/v2 v2.0.0/go.mod h1:dfno42Fhe7wvGOXKwBNWO4Y0hSHi5a98RbmeB98ASVw=
 github.com/faustbrian/go-international v1.1.0 h1:YYBQTSdQOwS7/8GLDo/vf+xbr1uNLhIEEQfWzc6C+o0=
 github.com/faustbrian/go-international v1.1.0/go.mod h1:aua0cfp9flc3KclSm5trYa3pSekqhXeqhxOeTwY/OCk=
-github.com/faustbrian/go-international/v2 v2.0.0 h1:CZNUHBkK/ZHn2GdpF4BEW2da7eIGgZEK8OC+5H4yoIw=
-github.com/faustbrian/go-international/v2 v2.0.0/go.mod h1:tpSUd/Ac+gCXVHjMvsZ+gCVKMYvBHIjJBXuKxHIUai0=
+github.com/faustbrian/go-international/v3 v3.0.0 h1:l9tcjTJIJnZbTwXvK6zVB314OfVLRRsCk2crELOw6PI=
+github.com/faustbrian/go-international/v3 v3.0.0/go.mod h1:2T+l+vttonmgesUhtPN9cPAtycXw3ie04u4LIo7XUOY=
 github.com/faustbrian/go-json-schema v1.0.0 h1:clgfSg5qL5wvrbZz6klFUQlH+dc9E0l2RFCWyAw8Qrk=
 github.com/faustbrian/go-json-schema v1.0.0/go.mod h1:8FEVyrKHwaYqo+fG+dIaVaFiF9m1Ut/fHpk6WcIE1fE=
 github.com/faustbrian/go-jsonapi v1.0.0 h1:ymGBAgeuwY9YspXTenGbirRcgef9Bw2dYfuRGqsR/UM=
@@ -280,8 +280,8 @@ github.com/faustbrian/go-knapsack/v2 v2.0.0 h1:6/tqyHhCv4RmgRT0BXB0D9O79HOhEhGXJ
 github.com/faustbrian/go-knapsack/v2 v2.0.0/go.mod h1:fh0Eo1Vlu+4eICz6AXQ1J9w1/cbSqYEqNUyDHZJUqKk=
 github.com/faustbrian/go-lease v1.1.0 h1:6OgqqFOPBkFiTCafT0Jna+sVcmkZn1Rqnj3R1IjU0l8=
 github.com/faustbrian/go-lease v1.1.0/go.mod h1:59tKskK5RiwzQbMIvylPLW5bJZ/zzThMNXTfJLlky0M=
-github.com/faustbrian/go-localized/v2 v2.0.0 h1:8AMPMw7wyEAjcAlKKFC53vjaEb74TWcYf8DF4TDfQe8=
-github.com/faustbrian/go-localized/v2 v2.0.0/go.mod h1:+SXK3/9ZPP93hd4ZmLQKIOeII6IuOjjtNPeL9kNqG7w=
+github.com/faustbrian/go-localized/v3 v3.0.0 h1:nphviUA7uZssvrvBjAXvCW8gKkN/qdyRmpJoyXk32EU=
+github.com/faustbrian/go-localized/v3 v3.0.0/go.mod h1:M6tAwPOcihEN3fGP+xykyEQlHvKqdrs+87JgJ68Pa8Q=
 github.com/faustbrian/go-log v1.0.0 h1:OFH4CgQyIB+WGlKxXlWuJgK178sAmVUKVQBl3FwJgSY=
 github.com/faustbrian/go-log v1.0.0/go.mod h1:hwFD9uvNXWat2MF855ncxF4opNWHjhsErO/mE6SUN6E=
 github.com/faustbrian/go-math v1.1.2 h1:cH0VSYu/u6Xwc/NGDwbEUQEKpvIjNFOH/suiFIBLHbI=

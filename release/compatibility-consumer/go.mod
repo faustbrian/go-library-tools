@@ -5,7 +5,7 @@ go 1.27.0
 require (
 	github.com/faustbrian/go-adaptive-throttle v1.0.1
 	github.com/faustbrian/go-analysis v1.2.0
-	github.com/faustbrian/go-api-query/v2 v2.0.0
+	github.com/faustbrian/go-api-query/v3 v3.0.0
 	github.com/faustbrian/go-audit v1.0.0
 	github.com/faustbrian/go-audit/postgres v1.0.0
 	github.com/faustbrian/go-audit/v2 v2.0.0
@@ -62,7 +62,7 @@ require (
 	github.com/faustbrian/go-idempotency/v2 v2.0.0
 	github.com/faustbrian/go-identifier v1.0.0
 	github.com/faustbrian/go-identifier/v2 v2.0.0
-	github.com/faustbrian/go-international/v2 v2.0.0
+	github.com/faustbrian/go-international/v3 v3.0.0
 	github.com/faustbrian/go-json-schema v1.0.0
 	github.com/faustbrian/go-jsonapi v1.0.0
 	github.com/faustbrian/go-jsonrpc v1.0.0
@@ -74,7 +74,7 @@ require (
 	github.com/faustbrian/go-knapsack/objective/money/v2 v2.0.0
 	github.com/faustbrian/go-knapsack/v2 v2.0.0
 	github.com/faustbrian/go-lease v1.1.0
-	github.com/faustbrian/go-localized/v2 v2.0.0
+	github.com/faustbrian/go-localized/v3 v3.0.0
 	github.com/faustbrian/go-log v1.0.0
 	github.com/faustbrian/go-math v1.1.2
 	github.com/faustbrian/go-measurement/v2 v2.0.1
