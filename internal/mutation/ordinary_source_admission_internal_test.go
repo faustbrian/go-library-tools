@@ -109,6 +109,28 @@ func TestOrdinarySourceReadAdmitsBeforeBytes(t *testing.T) {
 	}
 }
 
+func TestOrdinarySourceReadPreservesValidationErrors(t *testing.T) {
+	root := t.TempDir()
+	for _, test := range []struct {
+		path string
+		is   error
+	}{
+		{"missing.go", os.ErrNotExist},
+		{".", repositoryfile.ErrNotRegular},
+	} {
+		t.Run(test.path, func(t *testing.T) {
+			data, err := readSourceFile(root, test.path, 0, 0)
+			if data != nil || !errors.Is(err, test.is) {
+				t.Fatalf("source validation before zero allowances = %q, %v; want nil bytes and %v", data, err, test.is)
+			}
+			validationErr := repositoryfile.ValidateRegularFile(root, test.path)
+			if validationErr == nil || err.Error() != validationErr.Error() {
+				t.Fatalf("source validation diagnostic = %v; want unchanged %v", err, validationErr)
+			}
+		})
+	}
+}
+
 func TestOrdinarySourceDigestFiniteAllowances(t *testing.T) {
 	root := t.TempDir()
 	const content = "package example\n"

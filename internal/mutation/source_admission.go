@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"slices"
 	"strings"
 
@@ -56,10 +55,7 @@ func readSourceEntries(directory string, maximum int) ([]os.DirEntry, error) {
 }
 
 func readSourceFile(root, relative string, perFile, remaining int64) ([]byte, error) {
-	if err := repositoryfile.ValidateRegularFile(root, relative); err != nil {
-		return nil, err
-	}
-	info, err := os.Lstat(filepath.Join(root, relative))
+	info, err := repositoryfile.InspectRegularFile(root, relative)
 	if err != nil {
 		return nil, err
 	}

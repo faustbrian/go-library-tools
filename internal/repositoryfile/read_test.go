@@ -124,6 +124,57 @@ func TestValidateRegularFileRejectsUnsafeAndNonRegularPaths(t *testing.T) {
 	}
 }
 
+func TestInspectRegularFileReturnsValidatedMetadata(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "nested", "file")
+	write(t, path, "abc")
+	want, err := os.Lstat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	info, err := repositoryfile.InspectRegularFile(root, "nested/file")
+	if err != nil || info == nil {
+		t.Fatalf("InspectRegularFile() = %v, %v; want admitted metadata", info, err)
+	}
+	if info.Name() != "file" || info.Size() != 3 || !info.Mode().IsRegular() || !os.SameFile(info, want) {
+		t.Fatalf("InspectRegularFile() metadata = %v; want the regular three-byte fixture", info)
+	}
+	if err := repositoryfile.ValidateRegularFile(root, "nested/file"); err != nil {
+		t.Fatalf("ValidateRegularFile() changed admitted-file result: %v", err)
+	}
+}
+
+func TestInspectRegularFilePreservesValidationFailures(t *testing.T) {
+	root := t.TempDir()
+	for _, test := range []struct {
+		name string
+		path string
+		is   error
+	}{
+		{"missing file", "missing", os.ErrNotExist},
+		{"directory", ".", repositoryfile.ErrNotRegular},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			info, err := repositoryfile.InspectRegularFile(root, test.path)
+			if info != nil || !errors.Is(err, test.is) {
+				t.Fatalf("InspectRegularFile(%q) = %v, %v; want nil metadata and %v", test.path, info, err, test.is)
+			}
+			validationErr := repositoryfile.ValidateRegularFile(root, test.path)
+			if !errors.Is(validationErr, test.is) || validationErr.Error() != err.Error() {
+				t.Fatalf("ValidateRegularFile(%q) = %v; want unchanged inspection diagnostic %v", test.path, validationErr, err)
+			}
+			if test.path == "missing" {
+				var pathErr *os.PathError
+				if !errors.As(err, &pathErr) || pathErr.Op == "" || pathErr.Path != filepath.Join(root, test.path) || !strings.HasPrefix(err.Error(), "inspect missing: ") {
+					t.Fatalf("missing inspection error = %v; want wrapped fixture lstat failure", err)
+				}
+			} else if err.Error() != "repository file is not regular: ." {
+				t.Fatalf("directory diagnostic = %q; want existing regular-file refusal", err.Error())
+			}
+		})
+	}
+}
+
 func write(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {

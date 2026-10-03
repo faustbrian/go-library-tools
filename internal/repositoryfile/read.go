@@ -42,14 +42,22 @@ func ValidateDirectory(root, relative string) error {
 // ValidateRegularFile verifies that relative identifies a real regular file
 // below root and that no existing path component is a symlink.
 func ValidateRegularFile(root, relative string) error {
+	_, err := InspectRegularFile(root, relative)
+	return err
+}
+
+// InspectRegularFile returns metadata for a real regular file below root after
+// rejecting symlinked path components. The snapshot is for pre-read admission;
+// Read independently rechecks the path and opened-file identity before reading.
+func InspectRegularFile(root, relative string) (os.FileInfo, error) {
 	_, info, err := inspectPath(root, relative, operatingSystem{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !info.Mode().IsRegular() {
-		return fmt.Errorf("%w: %s", ErrNotRegular, relative)
+		return nil, fmt.Errorf("%w: %s", ErrNotRegular, relative)
 	}
-	return nil
+	return info, nil
 }
 
 type fileSystem interface {
