@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Admit mutation source-directory entries incrementally and bound source bytes
+  before reading for current digests and historical package-path proofs, using
+  the existing entry, per-file and aggregate limits. Admitted digest identities,
+  filtering and historical per-file-first refusal remain unchanged.
 - Preserve observed caller cancellation or deadline expiry in bounded scanner
   terminal errors alongside child failures, regardless of cancellation-monitor
   scheduling, and join that monitor before returning.

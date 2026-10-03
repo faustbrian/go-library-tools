@@ -1,0 +1,125 @@
+package mutation
+
+import (
+	"errors"
+	"os"
+	"path/filepath"
+	"testing"
+
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
+)
+
+func TestOrdinarySourceDirectoryAdmission(t *testing.T) {
+	root := t.TempDir()
+	for _, name := range []string{"b.go", "a.go"} {
+		if err := os.WriteFile(filepath.Join(root, name), nil, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	entries, err := readSourceEntries(root, 1)
+	if !errors.Is(err, errSourceEntryLimit) || entries != nil {
+		t.Fatalf("below directory allowance = %#v, %v; want refusal before retaining excess entries", entries, err)
+	}
+	entries, err = readSourceEntries(root, 2)
+	if err != nil || len(entries) != 2 || entries[0].Name() != "a.go" || entries[1].Name() != "b.go" {
+		t.Fatalf("exact directory allowance = %#v, %v; want sorted admitted entries", entries, err)
+	}
+}
+
+func TestOrdinarySourceReadAdmitsBeforeBytes(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "source.go"), []byte("ab"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	data, err := readSourceFile(root, "source.go", 1, 0)
+	if !errors.Is(err, repositoryfile.ErrTooLarge) || data != nil {
+		t.Fatalf("file-first admission = %q, %v; want per-file refusal", data, err)
+	}
+	data, err = readSourceFile(root, "source.go", 2, 1)
+	if !errors.Is(err, errSourceTotalLimit) || data != nil {
+		t.Fatalf("remaining-byte admission = %q, %v; want aggregate refusal", data, err)
+	}
+	data, err = readSourceFile(root, "source.go", 2, 2)
+	if err != nil || string(data) != "ab" {
+		t.Fatalf("exact admitted bytes = %q, %v", data, err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "empty.go"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	data, err = readSourceFile(root, "empty.go", 2, 0)
+	if err != nil || len(data) != 0 {
+		t.Fatalf("empty file at zero remaining = %q, %v", data, err)
+	}
+}
+
+func TestOrdinarySourceDigestFiniteAllowances(t *testing.T) {
+	root := t.TempDir()
+	const content = "package example\n"
+	if err := os.WriteFile(filepath.Join(root, "a.go"), []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "b.go"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	exact := sourceReadLimits{entries: 2, file: int64(len(content)), total: int64(len(content))}
+	want, err := SourceDigest(root, ".", ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := sourceDigestWithLimits(operatingSourceFiles{}, root, ".", ".", exact)
+	if err != nil || got != want {
+		t.Fatalf("exact source digest = %s, %v; want unchanged admitted identity", got, err)
+	}
+	for _, below := range []sourceReadLimits{
+		{entries: 1, file: exact.file, total: exact.total},
+		{entries: 2, file: exact.file - 1, total: exact.total},
+		{entries: 2, file: exact.file, total: exact.total - 1},
+	} {
+		got, err := sourceDigestWithLimits(operatingSourceFiles{}, root, ".", ".", below)
+		if !errors.Is(err, ErrInvalid) || got != "" {
+			t.Fatalf("below source allowance = %s, %v; want no identity and ErrInvalid", got, err)
+		}
+	}
+}
+
+func TestOrdinaryHistoricalSourceFiniteAllowances(t *testing.T) {
+	root := t.TempDir()
+	const content = "package example\n"
+	for _, name := range []string{"b.go", "a.go"} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	source, err := SourceDigest(root, ".", ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	exact := sourceReadLimits{entries: 2, file: int64(len(content)), total: 2 * int64(len(content))}
+	if err := legacyPackagePathsUnchangedWithLimits(root, ".", ".", "example", source, exact); err != nil {
+		t.Fatalf("exact historical admission = %v", err)
+	}
+	for _, below := range []sourceReadLimits{
+		{entries: 1, file: exact.file, total: exact.total},
+		{entries: 2, file: exact.file - 1, total: exact.total},
+		{entries: 2, file: exact.file, total: exact.total - 1},
+	} {
+		if err := legacyPackagePathsUnchangedWithLimits(root, ".", ".", "example", source, below); !errors.Is(err, ErrInputChanged) {
+			t.Fatalf("below historical allowance = %v; want ErrInputChanged", err)
+		}
+	}
+	fileFirst := sourceReadLimits{entries: 2, file: exact.file - 1, total: 0}
+	err = legacyPackagePathsUnchangedWithLimits(root, ".", ".", "example", source, fileFirst)
+	if !errors.Is(err, ErrInputChanged) || !errors.Is(err, repositoryfile.ErrTooLarge) {
+		t.Fatalf("historical file-first admission = %v; want per-file refusal preserved", err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "a.go"), nil, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	source, err = SourceDigest(root, ".", ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := legacyPackagePathsUnchangedWithLimits(root, ".", ".", "example", source, exact); !errors.Is(err, ErrInputChanged) {
+		t.Fatalf("empty historical declaration = %v; want existing declaration refusal", err)
+	}
+}

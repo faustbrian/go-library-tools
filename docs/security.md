@@ -122,6 +122,16 @@ they do not mask the separate admitted mutation-coordinate diagnostics or
 successful checkpoint/report fields. Caller filesystem paths and other parser
 owners outside this scope are not covered by this default-text guarantee.
 
+Mutation source digests and historical package-path proofs enumerate directory
+entries in fixed batches, capped at 100,000 entries before retaining excess
+metadata. They admit regular source files against the existing 16 MiB per-file
+and 256 MiB aggregate bounds before bounded reads; per-file admission precedes
+aggregate admission. Admitted entries are sorted and digest bytes are unchanged.
+Regularity, confinement and opened-file identity checks remain fail closed.
+These operations assume a trusted, stable caller filesystem, not an atomic or
+race-resistant snapshot. `SourceDigest` remains non-context-aware; this resource
+control does not add cancellation or arbitrary filesystem-operation deadlines.
+
 Public evidence inspection validates every existing component below the caller's
 repository root before walking or returning an empty missing-root result.
 Symlink and non-directory components are rejected with a categorical
