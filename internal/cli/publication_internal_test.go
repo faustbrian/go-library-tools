@@ -30,7 +30,7 @@ func TestValidationPublicationAfterCompletedSecurity(t *testing.T) {
 			cancel()
 			t.Fatal(err)
 		}
-		assertValidationPublication(t, ctx, cancel, canceled, "ecosystem security records valid\n")
+		assertValidationPublication(ctx, t, cancel, canceled, "ecosystem security records valid\n")
 	}
 }
 
@@ -62,11 +62,11 @@ func TestValidationPublicationAfterClosedArchive(t *testing.T) {
 			cancel()
 			t.Fatalf("ordinary validation/close failed: %v, %v", validateErr, closeErr)
 		}
-		assertValidationPublication(t, ctx, cancel, canceled, "bootstrap archive valid\n")
+		assertValidationPublication(ctx, t, cancel, canceled, "bootstrap archive valid\n")
 	}
 }
 
-func assertValidationPublication(t *testing.T, ctx context.Context, cancel context.CancelFunc, canceled bool, message string) {
+func assertValidationPublication(ctx context.Context, t *testing.T, cancel context.CancelFunc, canceled bool, message string) {
 	t.Helper()
 	defer cancel()
 	if err := ctx.Err(); err != nil {
