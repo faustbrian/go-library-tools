@@ -2,6 +2,7 @@
 package repositoryfile
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -81,31 +82,11 @@ func read(root, relative string, maximum int64, files fileSystem) ([]byte, error
 	if err != nil {
 		return nil, err
 	}
-	if !expected.Mode().IsRegular() {
-		return nil, fmt.Errorf("%w: %s", ErrNotRegular, relative)
-	}
-
-	file, err := files.Open(current)
+	file, err := openAdmitted(context.Background(), relative, maximum, expected, func(string) (file, error) { return files.Open(current) })
 	if err != nil {
-		return nil, fmt.Errorf("open %s: %w", relative, err)
-	}
-	if file == nil {
-		return nil, fmt.Errorf("%w: open %s returned no file", ErrUnsafePath, relative)
+		return nil, err
 	}
 	defer file.Close()
-	opened, err := file.Stat()
-	if err != nil {
-		return nil, fmt.Errorf("inspect open %s: %w", relative, err)
-	}
-	if opened == nil {
-		return nil, fmt.Errorf("%w: inspect open %s returned no metadata", ErrUnsafePath, relative)
-	}
-	if !opened.Mode().IsRegular() {
-		return nil, fmt.Errorf("%w: %s changed while opening", ErrUnsafePath, relative)
-	}
-	if !os.SameFile(expected, opened) {
-		return nil, fmt.Errorf("%w: %s changed while opening", ErrUnsafePath, relative)
-	}
 
 	data, err := io.ReadAll(io.LimitReader(file, maximum+1))
 	if err != nil {
