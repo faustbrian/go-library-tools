@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"os"
 	"path/filepath"
 	"strings"
@@ -22,6 +23,8 @@ var (
 
 // Read returns at most maximum bytes from a regular file below root. Every
 // existing path component must be a real directory or file, never a symlink.
+// maximum must be positive and leave room for a one-byte look-ahead in int64;
+// unsupported limits return ErrTooLarge before filesystem acquisition.
 func Read(root, relative string, maximum int64) ([]byte, error) {
 	return read(root, relative, maximum, operatingSystem{})
 }
@@ -42,14 +45,22 @@ func ValidateDirectory(root, relative string) error {
 // ValidateRegularFile verifies that relative identifies a real regular file
 // below root and that no existing path component is a symlink.
 func ValidateRegularFile(root, relative string) error {
+	_, err := InspectRegularFile(root, relative)
+	return err
+}
+
+// InspectRegularFile returns metadata for a real regular file below root after
+// rejecting symlinked path components. The snapshot is for pre-read admission;
+// Read independently rechecks the path and opened-file identity before reading.
+func InspectRegularFile(root, relative string) (os.FileInfo, error) {
 	_, info, err := inspectPath(root, relative, operatingSystem{})
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if !info.Mode().IsRegular() {
-		return fmt.Errorf("%w: %s", ErrNotRegular, relative)
+		return nil, fmt.Errorf("%w: %s", ErrNotRegular, relative)
 	}
-	return nil
+	return info, nil
 }
 
 type fileSystem interface {
@@ -75,7 +86,7 @@ func (operatingSystem) Open(name string) (file, error) {
 }
 
 func read(root, relative string, maximum int64, files fileSystem) ([]byte, error) {
-	if maximum <= 0 {
+	if maximum <= 0 || maximum == math.MaxInt64 {
 		return nil, ErrTooLarge
 	}
 	current, expected, err := inspectPath(root, relative, files)

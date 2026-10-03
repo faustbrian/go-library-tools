@@ -2,6 +2,7 @@ package mutation
 
 import (
 	"errors"
+	"math"
 	"os"
 	"path/filepath"
 	"testing"
@@ -106,6 +107,45 @@ func TestOrdinarySourceReadAdmitsBeforeBytes(t *testing.T) {
 	data, err = readSourceFile(root, "empty.go", 2, 0)
 	if err != nil || len(data) != 0 {
 		t.Fatalf("empty file at zero remaining = %q, %v", data, err)
+	}
+}
+
+func TestOrdinarySourceReadPropagatesOverflowingLookAheadLimit(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "source.go"), []byte("abc"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	data, err := readSourceFile(root, "source.go", math.MaxInt64, math.MaxInt64)
+	if data != nil || !errors.Is(err, repositoryfile.ErrTooLarge) {
+		t.Fatalf("overflowing source read = %q, %v; want nil bytes and ErrTooLarge", data, err)
+	}
+	for _, limits := range [][2]int64{{math.MaxInt64 - 1, math.MaxInt64 - 1}, {math.MaxInt64, 3}, {3, math.MaxInt64}} {
+		data, err := readSourceFile(root, "source.go", limits[0], limits[1])
+		if err != nil || string(data) != "abc" {
+			t.Fatalf("source read with allowances %v = %q, %v; want exact fixture bytes", limits, data, err)
+		}
+	}
+}
+
+func TestOrdinarySourceReadPreservesValidationErrors(t *testing.T) {
+	root := t.TempDir()
+	for _, test := range []struct {
+		path string
+		is   error
+	}{
+		{"missing.go", os.ErrNotExist},
+		{".", repositoryfile.ErrNotRegular},
+	} {
+		t.Run(test.path, func(t *testing.T) {
+			data, err := readSourceFile(root, test.path, 0, 0)
+			if data != nil || !errors.Is(err, test.is) {
+				t.Fatalf("source validation before zero allowances = %q, %v; want nil bytes and %v", data, err, test.is)
+			}
+			validationErr := repositoryfile.ValidateRegularFile(root, test.path)
+			if validationErr == nil || err.Error() != validationErr.Error() {
+				t.Fatalf("source validation diagnostic = %v; want unchanged %v", err, validationErr)
+			}
+		})
 	}
 }
 
