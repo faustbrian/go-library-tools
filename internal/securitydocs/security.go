@@ -135,6 +135,11 @@ func validateAtContext(ctx context.Context, directory string, now time.Time, rea
 		return fmt.Errorf("open security document root: %w", err)
 	}
 	defer root.Close()
+	return validateRootContext(ctx, root, now, read)
+}
+
+// validateRootContext borrows the acquired root; its caller owns closure.
+func validateRootContext(ctx context.Context, root *os.Root, now time.Time, read securityDocumentReader) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -149,13 +154,21 @@ func validateAtContext(ctx context.Context, directory string, now time.Time, rea
 	if err := decodeDocument(riskData, riskRegisterSchema, &risks); err != nil {
 		return err
 	}
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	risksByID, err := admitRisks(risks.Risks, now)
+	risksByID, err := validateDecodedRisksContext(ctx, risks, now)
 	if err != nil {
 		return err
 	}
+	return validateAdmittedRisksContext(ctx, root, risksByID, read)
+}
+
+func validateDecodedRisksContext(ctx context.Context, risks riskRegister, now time.Time) (map[string]risk, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	return admitRisks(risks.Risks, now)
+}
+
+func validateAdmittedRisksContext(ctx context.Context, root *os.Root, risksByID map[string]risk, read securityDocumentReader) error {
 	if err := ctx.Err(); err != nil {
 		return err
 	}
@@ -172,13 +185,17 @@ func validateAtContext(ctx context.Context, directory string, now time.Time, rea
 	if err := decodeDocument(matrixData, securityMatrixSchema, &modules); err != nil {
 		return err
 	}
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	if err := admitModules(modules.Modules, risksByID, matrixDigest); err != nil {
+	if err := validateDecodedMatrixContext(ctx, modules, risksByID, matrixDigest); err != nil {
 		return err
 	}
 	return ctx.Err()
+}
+
+func validateDecodedMatrixContext(ctx context.Context, modules matrix, risksByID map[string]risk, matrixDigest string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	return admitModules(modules.Modules, risksByID, matrixDigest)
 }
 
 func admitRisks(records []risk, now time.Time) (map[string]risk, error) {
@@ -318,13 +335,19 @@ func readSecurityDocumentContext(ctx context.Context, root *os.Root, path string
 	if err != nil {
 		return nil, fmt.Errorf("open security document: %w", err)
 	}
+	return consumeSecurityDocumentContext(ctx, file, maximumSecurityDocument)
+}
+
+// consumeSecurityDocumentContext owns the already admitted stream's closure.
+// maximum is a trusted private allowance in [1, maximumSecurityDocument].
+func consumeSecurityDocumentContext(ctx context.Context, file io.ReadCloser, maximum int) ([]byte, error) {
 	defer file.Close()
-	data, err := io.ReadAll(io.LimitReader(file, maximumSecurityDocument+1))
+	data, err := io.ReadAll(io.LimitReader(file, int64(maximum)+1))
 	if err != nil {
 		return nil, fmt.Errorf("read security document: %w", err)
 	}
-	if len(data) > maximumSecurityDocument {
-		return nil, fmt.Errorf("security document exceeds %d bytes", maximumSecurityDocument)
+	if len(data) > maximum {
+		return nil, fmt.Errorf("security document exceeds %d bytes", maximum)
 	}
 	if err := ctx.Err(); err != nil {
 		return nil, err
