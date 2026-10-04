@@ -94,16 +94,31 @@ func Verify(profile io.Reader, expected []string) (string, error) {
 		ordered = append(ordered, packagePath)
 	}
 	sort.Strings(ordered)
-	var report strings.Builder
+	var failures []packageFailure
+	var firstError error
 	for _, packagePath := range ordered {
 		value, exists := packages[packagePath]
 		if !exists || value.total == 0 {
-			return "", fmt.Errorf("%s missing executable coverage evidence", packagePath)
+			failures = append(failures, packageFailure{packagePath: packagePath, missing: true})
+			if firstError == nil {
+				firstError = fmt.Errorf("%s missing executable coverage evidence", packagePath)
+			}
+			continue
 		}
-		_, _ = fmt.Fprintf(&report, "%s %d/%d statements\n", packagePath, value.covered, value.total)
 		if value.covered != value.total {
-			return uncoveredReport(blocks, packagePath), fmt.Errorf("%s is below exact 100%% coverage", packagePath)
+			failures = append(failures, packageFailure{packagePath: packagePath})
+			if firstError == nil {
+				firstError = fmt.Errorf("%s is below exact 100%% coverage", packagePath)
+			}
 		}
+	}
+	if firstError != nil {
+		return incompleteReport(blocks, failures, diagnosticLimits{blocks: diagnosticBlockLimit, bytes: diagnosticByteLimit}), firstError
+	}
+	var report strings.Builder
+	for _, packagePath := range ordered {
+		value := packages[packagePath]
+		_, _ = fmt.Fprintf(&report, "%s %d/%d statements\n", packagePath, value.covered, value.total)
 	}
 	return report.String(), nil
 }
@@ -111,21 +126,44 @@ func Verify(profile io.Reader, expected []string) (string, error) {
 // Limit failure output without changing which blocks determine exact coverage.
 const diagnosticBlockLimit = 512
 const diagnosticLocationByteLimit = 160
+const diagnosticByteLimit = 85_000
+
+type packageFailure struct {
+	packagePath string
+	missing     bool
+}
+
+type diagnosticLimits struct {
+	blocks int
+	bytes  int
+}
+
+type diagnosticLocation struct {
+	packagePath string
+	location    string
+}
 
 var sourceCoordinates = regexp.MustCompile(`^[0-9]+\.[0-9]+,[0-9]+\.[0-9]+$`)
 
-func uncoveredReport(blocks map[string]block, packagePath string) string {
-	locations := make([]string, 0)
+func incompleteReport(blocks map[string]block, failures []packageFailure, limits diagnosticLimits) string {
+	if len(failures) == 1 && failures[0].missing {
+		return ""
+	}
+	failed := make(map[string]struct{}, len(failures))
+	for _, failure := range failures {
+		failed[failure.packagePath] = struct{}{}
+	}
+	locations := make([]diagnosticLocation, 0)
 	uncovered := 0
 	for identity, value := range blocks {
-		if value.packagePath != packagePath || value.statements == 0 || value.covered {
+		if _, expectedFailure := failed[value.packagePath]; !expectedFailure || value.statements == 0 || value.covered {
 			continue
 		}
 		uncovered++
 		separator := strings.LastIndexByte(identity, ':')
 		filename, coordinates := identity[:separator], identity[separator+1:]
 		if path.IsAbs(filename) || strings.ContainsAny(filename, `\:`) ||
-			filename != packagePath+"/"+path.Base(filename) || !strings.HasSuffix(filename, ".go") ||
+			filename != value.packagePath+"/"+path.Base(filename) || !strings.HasSuffix(filename, ".go") ||
 			!sourceCoordinates.MatchString(coordinates) {
 			continue
 		}
@@ -134,19 +172,75 @@ func uncoveredReport(blocks map[string]block, packagePath string) string {
 		if len(location) > diagnosticLocationByteLimit {
 			continue
 		}
-		locations = append(locations, location)
-	}
-	sort.Strings(locations)
-	if len(locations) > diagnosticBlockLimit {
-		locations = locations[:diagnosticBlockLimit]
+		candidate := diagnosticLocation{packagePath: value.packagePath, location: location}
+		index := sort.Search(len(locations), func(index int) bool {
+			return locations[index].packagePath > candidate.packagePath ||
+				(locations[index].packagePath == candidate.packagePath && locations[index].location >= candidate.location)
+		})
+		if index >= limits.blocks {
+			continue
+		}
+		if len(locations) < limits.blocks {
+			locations = append(locations, diagnosticLocation{})
+		}
+		copy(locations[index+1:], locations[index:len(locations)-1])
+		locations[index] = candidate
 	}
 	var report strings.Builder
-	report.WriteString("uncovered production blocks:\n")
-	for _, location := range locations {
-		fmt.Fprintf(&report, "  %s\n", location)
+	// Reserve room for bounded omission summaries. This is one shared byte
+	// allowance, independent of the number of failed packages.
+	write := func(text string, footer bool) bool {
+		maximum := limits.bytes
+		if !footer {
+			maximum = max(0, maximum-128)
+		}
+		if len(text) > maximum-report.Len() {
+			return false
+		}
+		report.WriteString(text)
+		return true
 	}
-	if omitted := uncovered - len(locations); omitted > 0 {
-		fmt.Fprintf(&report, "  (%d additional blocks omitted)\n", omitted)
+	printed, omittedPackages := 0, 0
+	if len(failures) == 1 {
+		write("uncovered production blocks:\n", false)
+		for _, location := range locations {
+			if write("  "+location.location+"\n", false) {
+				printed++
+			}
+		}
+	} else {
+		write("incomplete production coverage:\n", false)
+		locationIndex := 0
+		for _, failure := range failures {
+			label := ""
+			if len(failure.packagePath) <= diagnosticLocationByteLimit && !path.IsAbs(failure.packagePath) &&
+				path.Clean(failure.packagePath) == failure.packagePath && !strings.ContainsAny(failure.packagePath, `\:`) {
+				escaped := strconv.QuoteToASCII(failure.packagePath)
+				if len(escaped)-2 <= diagnosticLocationByteLimit {
+					label = escaped[1 : len(escaped)-1]
+				}
+			}
+			status := " is below exact 100% coverage\n"
+			if failure.missing {
+				status = " missing executable coverage evidence\n"
+			}
+			admittedPackage := label != "" && write("  "+label+status, false)
+			if !admittedPackage {
+				omittedPackages++
+			}
+			for locationIndex < len(locations) && locations[locationIndex].packagePath == failure.packagePath {
+				if admittedPackage && write("    "+locations[locationIndex].location+"\n", false) {
+					printed++
+				}
+				locationIndex++
+			}
+		}
+	}
+	if omitted := uncovered - printed; omitted > 0 {
+		write(fmt.Sprintf("  (%d additional blocks omitted)\n", omitted), true)
+	}
+	if omittedPackages > 0 {
+		write(fmt.Sprintf("  (%d additional packages omitted)\n", omittedPackages), true)
 	}
 	return report.String()
 }

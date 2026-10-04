@@ -54,10 +54,13 @@ runner instruments the exact production-package set once while executing the
 complete module test set. This keeps denominators production-specific while
 allowing integration and external-package tests to contribute only when they
 actually exercise a package.
-Coverage failures retain the failing-package error and print up to 512 uncovered
-source-block filenames and ranges to gate output. Each location is limited to
-160 escaped ASCII bytes; unsafe, oversized, and excess locations are counted as
-omitted. Profiles remain task-owned and are removed on success and failure.
+Coverage failures retain the first sorted failing-package error and report all
+incomplete expected packages from the same profile. Source-block filenames and
+ranges share a global limit of 512 records; package labels and locations are
+limited to 160 escaped ASCII bytes, and the complete failure report to 85,000
+bytes. Unsafe, oversized, and excess locations or package records are counted
+as omitted. Single-package reports retain their existing shape. Profiles remain
+task-owned and are removed on success and failure.
 
 When selected for an aggregate milestone or release, mutation reports must
 account for every viable mutant: each must be killed or covered by a narrow

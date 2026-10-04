@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Report incomplete coverage across all expected production packages from the
+  same profile, with deterministic globally bounded diagnostics and unchanged
+  exact-coverage failure policy and first failing-package error.
+
 - Adopt published Calendar v2.0.0 alongside the retained v1 maintained consumer.
   Exercise nominal civil-date values, text and JSON roundtrips, and immutable
   leap-day arithmetic without changing frozen cohorts or sibling module majors.

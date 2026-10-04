@@ -159,7 +159,7 @@ example/a/missing.go:3.1,4.1 2 0
 example/a/covered.go:1.1,2.1 1 1
 example/a/empty.go:5.1,6.1 0 0
 `
-	want := "uncovered production blocks:\n  missing.go:3.1,4.1\n"
+	want := "incomplete production coverage:\n  example/a is below exact 100% coverage\n    missing.go:3.1,4.1\n  example/z is below exact 100% coverage\n    other.go:1.1,2.1\n"
 	lines := strings.Split(strings.TrimSuffix(profile, "\n"), "\n")
 	slices.Reverse(lines[1:])
 	reversed := strings.Join(lines, "\n") + "\n"
@@ -168,6 +168,20 @@ example/a/empty.go:5.1,6.1 0 0
 		if err == nil || err.Error() != "example/a is below exact 100% coverage" || report != want {
 			t.Fatalf("Verify() = %q, %v", report, err)
 		}
+	}
+}
+
+func TestVerifyReportsMissingAndUncoveredPackagesTogether(t *testing.T) {
+	profile := `mode: atomic
+example/b/empty.go:1.1,2.1 0 1
+example/c/file.go:3.1,4.1 1 0
+example/unexpected/covered.go:1.1,2.1 1 1
+example/unexpected/uncovered.go:3.1,4.1 1 0
+`
+	report, err := coverage.Verify(strings.NewReader(profile), []string{"example/c", "example/a", "example/b", "example/c"})
+	want := "incomplete production coverage:\n  example/a missing executable coverage evidence\n  example/b missing executable coverage evidence\n  example/c is below exact 100% coverage\n    file.go:3.1,4.1\n"
+	if err == nil || err.Error() != "example/a missing executable coverage evidence" || report != want {
+		t.Fatal("complete expected-package diagnostics lost missing evidence, ordering or the first error")
 	}
 }
 
