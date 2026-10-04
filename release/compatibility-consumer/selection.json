@@ -304,6 +304,13 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-calendar",
+      "module_path": "github.com/faustbrian/go-calendar/v2",
+      "version": "v2.0.0",
+      "source_revision": "20ea490891f2cf39558c647eb165f413395dfa03",
+      "primary_entry_packages": ["github.com/faustbrian/go-calendar/v2"]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-cloudevents/adapters/workflow",
       "module_path": "github.com/faustbrian/go-cloudevents/adapters/workflow/v2",
       "version": "v2.0.0",

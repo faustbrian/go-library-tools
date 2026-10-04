@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Adopt published Calendar v2.0.0 alongside the retained v1 maintained consumer.
+  Exercise nominal civil-date values, text and JSON roundtrips, and immutable
+  leap-day arithmetic without changing frozen cohorts or sibling module majors.
+
 - Adopt the published CloudEvents Workflow v2.0.0 adapter alongside its retained
   v1 consumer. Exercise nominal Workflow v2 history conversion, copied payload
   ownership, retained state and occurrence time, and explicit source loss

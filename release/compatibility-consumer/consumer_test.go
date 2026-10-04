@@ -105,6 +105,7 @@ import (
 	_ "github.com/faustbrian/go-cache/v2/observability/otel"
 	_ "github.com/faustbrian/go-cache/v2/observability/slog"
 	_ "github.com/faustbrian/go-calendar"
+	_ "github.com/faustbrian/go-calendar/v2"
 	_ "github.com/faustbrian/go-capability"
 	_ "github.com/faustbrian/go-circuit-breaker"
 	_ "github.com/faustbrian/go-cli"
