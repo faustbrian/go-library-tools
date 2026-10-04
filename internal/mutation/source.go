@@ -49,16 +49,22 @@ func sourceDigestWithLimits(files sourceFileSystem, root, moduleDirectory, packa
 	if !filepath.IsAbs(root) || !validRelative(moduleDirectory) || !validRelative(packageDirectory) {
 		return "", fmt.Errorf("%w: source digest paths are malformed", ErrInvalid)
 	}
-	directory := filepath.Join(root, filepath.FromSlash(moduleDirectory), filepath.FromSlash(packageDirectory))
-	info, err := files.Lstat(directory)
-	if err != nil {
-		return "", fmt.Errorf("inspect mutation source directory: %w", err)
-	}
-	if info == nil {
-		return "", fmt.Errorf("%w: inspect mutation source directory returned no metadata", ErrInvalid)
-	}
-	if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
-		return "", fmt.Errorf("%w: mutation source path is not a real directory", ErrInvalid)
+	relativeDirectory := filepath.Join(filepath.FromSlash(moduleDirectory), filepath.FromSlash(packageDirectory))
+	directory := root
+	// Check components below the trusted root before enumeration, rather than
+	// allowing Lstat of the final directory to follow an unchecked ancestor.
+	for component := range strings.SplitSeq(relativeDirectory, string(filepath.Separator)) {
+		directory = filepath.Join(directory, component)
+		info, err := files.Lstat(directory)
+		if err != nil {
+			return "", fmt.Errorf("inspect mutation source directory: %w", err)
+		}
+		if info == nil {
+			return "", fmt.Errorf("%w: inspect mutation source directory returned no metadata", ErrInvalid)
+		}
+		if !info.IsDir() || info.Mode()&os.ModeSymlink != 0 {
+			return "", fmt.Errorf("%w: mutation source path is not a real directory", ErrInvalid)
+		}
 	}
 	entries, err := files.ReadDir(directory, limits.entries)
 	if err != nil {
