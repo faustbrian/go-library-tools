@@ -295,7 +295,11 @@ func (f *failureDocumentFS) Open(name string) (fs.File, error) {
 	if f.noReadDir {
 		return file, nil
 	}
-	return &failureDocumentDirectory{failureDocumentFile: file, reader: opened.(fs.ReadDirFile)}, nil
+	reader, ok := opened.(fs.ReadDirFile)
+	if !ok {
+		return nil, errors.Join(repositoryfile.ErrNotRegular, file.Close())
+	}
+	return &failureDocumentDirectory{failureDocumentFile: file, reader: reader}, nil
 }
 
 type failureDocumentFile struct {
