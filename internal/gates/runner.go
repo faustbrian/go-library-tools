@@ -556,7 +556,7 @@ func (runner Runner) checkModuleLocal(ctx context.Context, output io.Writer, mod
 	}
 	if module.Gates["documentation"] {
 		if err := announce(output, module.Directory, "docs-local", func() error {
-			return docscheck.CheckWithin(runner.Root, directory)
+			return docscheck.CheckWithinContext(ctx, runner.Root, directory)
 		}); err != nil {
 			return err
 		}

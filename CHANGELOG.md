@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Security
+
+- Admit Markdown as regular, size-bounded repository files before reading,
+  retaining the inclusive 4 MiB and 4096-document limits. Documentation walks
+  now use bounded batches and reject more than 100,000 enumerated entries or
+  depth 128, including non-Markdown entries. Local and full documentation checks
+  carry caller cancellation through traversal, reads and validation while
+  preserving local-link rules and requiring a trusted, stable filesystem.
+
 ### Fixed
 
 - Adopt published Calendar v2.0.0 alongside the retained v1 maintained consumer.

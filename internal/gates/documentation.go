@@ -79,7 +79,7 @@ func (runner Runner) checkDocumentation(ctx context.Context, directory string, m
 		}
 		return nil
 	}
-	if err := docscheck.Check(directory); err != nil {
+	if err := docscheck.CheckContext(ctx, directory); err != nil {
 		return err
 	}
 	spelling := runner.DocumentationSpelling
