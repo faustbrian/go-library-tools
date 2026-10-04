@@ -128,6 +128,9 @@ metadata. They admit regular source files against the existing 16 MiB per-file
 and 256 MiB aggregate bounds before bounded reads; per-file admission precedes
 aggregate admission. Admitted entries are sorted and digest bytes are unchanged.
 Regularity, confinement and opened-file identity checks remain fail closed.
+`SourceDigest` validates every module and package directory component below the
+trusted caller-selected root before enumeration, rejecting symlink and
+non-directory ancestors with no digest. Metadata failures retain their causes.
 These operations assume a trusted, stable caller filesystem, not an atomic or
 race-resistant snapshot. `SourceDigest` remains non-context-aware; this resource
 control does not add cancellation or arbitrary filesystem-operation deadlines.

@@ -25,6 +25,10 @@ All notable changes to this project are documented in this file.
   preventing source digests and relative command targets from selecting parent
   directories. Dot and ordinary nested paths remain admitted. This lexical
   correction does not add ancestor-component validation or atomic traversal.
+- Validate mutation source directory ancestors below the trusted caller root
+  before enumeration, rejecting symlink and non-directory components without
+  a digest. Ordinary source identities and metadata error causes are preserved;
+  this requires a stable filesystem and does not add atomic traversal.
 - Admit mutation source-directory entries incrementally and bound source bytes
   before reading for current digests and historical package-path proofs, using
   the existing entry, per-file and aggregate limits. Admitted digest identities,
