@@ -47,13 +47,14 @@ func TestStreamingOpenCancellationCheckpointsReleaseOwnership(t *testing.T) {
 					}
 					return owned, nil
 				})
-			if opened != nil || err != context.Canceled || !errors.Is(err, context.Canceled) {
+			if opened != nil || !errors.Is(err, context.Canceled) {
 				t.Fatal("canceled acquisition published a reader or replaced cancellation")
 			}
 			wantOpen, wantStat, wantClose := 1, 0, 1
-			if stage == "metadata" {
+			switch stage {
+			case "metadata":
 				wantOpen, wantClose = 0, 0
-			} else if stage == "opened metadata" {
+			case "opened metadata":
 				wantStat = 1
 			}
 			if openCalls != wantOpen || owned.statCalls != wantStat || owned.closeCalls != wantClose || owned.readCalls != 0 {
