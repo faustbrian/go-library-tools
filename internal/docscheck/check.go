@@ -2,7 +2,6 @@
 package docscheck
 
 import (
-	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -11,10 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-
-	"github.com/yuin/goldmark"
-	"github.com/yuin/goldmark/ast"
-	"github.com/yuin/goldmark/text"
 
 	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 )
@@ -45,32 +40,9 @@ func CheckWithin(repositoryRoot, documentationRoot string) error {
 // Roots are canonicalized as before. Below-root paths must be stable and trusted;
 // filesystem operations and bounded Markdown parsing are not forcibly interrupted.
 func CheckWithinContext(ctx context.Context, repositoryRoot, documentationRoot string) error {
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	if !filepath.IsAbs(repositoryRoot) {
-		return errors.New("documentation root must be absolute")
-	}
-	canonicalRoot, err := filepath.EvalSymlinks(repositoryRoot)
+	canonicalRoot, canonicalTree, err := rootResolver(filepath.EvalSymlinks).admit(ctx, repositoryRoot, documentationRoot)
 	if err != nil {
-		return fmt.Errorf("resolve documentation root: %w", err)
-	}
-	if err := ctx.Err(); err != nil {
 		return err
-	}
-	if !filepath.IsAbs(documentationRoot) {
-		return errors.New("documentation tree must be absolute")
-	}
-	canonicalTree, err := filepath.EvalSymlinks(documentationRoot)
-	if err != nil {
-		return fmt.Errorf("resolve documentation tree: %w", err)
-	}
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	relative, err := filepath.Rel(canonicalRoot, canonicalTree)
-	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
-		return errors.New("documentation tree must be inside repository")
 	}
 	limits := defaultDocumentLimits()
 	paths, err := documentsFS(ctx, canonicalTree, os.DirFS(canonicalTree), limits)
@@ -132,39 +104,7 @@ func checkDocumentWithSource(ctx context.Context, root, document string, maximum
 	if int64(len(data)) > maximum {
 		return fmt.Errorf("documentation %s exceeds size limit: %w", document, repositoryfile.ErrTooLarge)
 	}
-	for index, text := range strings.Split(string(data), "\n") {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		line := index + 1
-		if strings.HasSuffix(text, " ") || strings.HasSuffix(text, "\t") {
-			return fmt.Errorf("documentation %s:%d has trailing whitespace", document, line)
-		}
-	}
-	parsed := goldmark.DefaultParser().Parse(text.NewReader(data))
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	return ast.Walk(parsed, func(node ast.Node, _ bool) (ast.WalkStatus, error) {
-		if err := ctx.Err(); err != nil {
-			return ast.WalkStop, err
-		}
-		var destination []byte
-		switch value := node.(type) {
-		case *ast.Link:
-			destination = value.Destination
-		case *ast.Image:
-			destination = value.Destination
-		default:
-			return ast.WalkContinue, nil
-		}
-		if err := checkLinkContext(ctx, root, document, string(destination)); err != nil {
-			position := min(max(node.Pos(), 0), len(data))
-			line := bytes.Count(data[:position], []byte{'\n'}) + 1
-			return ast.WalkStop, fmt.Errorf("documentation %s:%d: %w", document, line, err)
-		}
-		return ast.WalkContinue, nil
-	})
+	return markdownParser(parseDocument).validate(ctx, root, document, data)
 }
 
 func checkLink(root, document, target string) error {
@@ -198,28 +138,5 @@ func checkLinkContext(ctx context.Context, root, document, target string) error 
 	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
 		return fmt.Errorf("local link escapes repository: %q", target)
 	}
-	current := root
-	if relative == "." {
-		relative = ""
-	}
-	for component := range strings.SplitSeq(relative, string(filepath.Separator)) {
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		if component == "" {
-			continue
-		}
-		current = filepath.Join(current, component)
-		info, statErr := os.Lstat(current)
-		if statErr != nil {
-			return fmt.Errorf("broken local link %q: %w", target, statErr)
-		}
-		if err := ctx.Err(); err != nil {
-			return err
-		}
-		if info.Mode()&os.ModeSymlink != 0 {
-			return fmt.Errorf("local link targets symlink %q", target)
-		}
-	}
-	return nil
+	return linkInspector(os.Lstat).validateComponents(ctx, root, relative, target)
 }
