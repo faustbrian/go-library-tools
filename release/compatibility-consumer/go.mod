@@ -21,6 +21,7 @@ require (
 	github.com/faustbrian/go-cache v1.0.0
 	github.com/faustbrian/go-cache/v2 v2.0.0
 	github.com/faustbrian/go-calendar v1.1.0
+	github.com/faustbrian/go-calendar/v2 v2.0.0
 	github.com/faustbrian/go-capability v1.1.0
 	github.com/faustbrian/go-circuit-breaker v1.0.0
 	github.com/faustbrian/go-cli v1.0.0

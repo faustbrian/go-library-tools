@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	calendar "github.com/faustbrian/go-calendar/v2"
 	idempotency "github.com/faustbrian/go-idempotency/v2"
 	idempotencymemory "github.com/faustbrian/go-idempotency/v2/memory"
 	moneyobjective "github.com/faustbrian/go-knapsack/objective/money/v3"
@@ -19,6 +20,38 @@ import (
 	"github.com/faustbrian/go-openrpc/v2/builder"
 	"github.com/faustbrian/go-openrpc/v2/validate"
 )
+
+func TestCalendarV2PublishedCivilDateComposition(t *testing.T) {
+	date, err := calendar.NewDate(2024, time.February, 29)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if date.String() != "2024-02-29" || date.Year() != 2024 ||
+		date.Month() != time.February || date.Day() != 29 ||
+		date.Weekday() != time.Thursday || date.DayOfYear() != 60 {
+		t.Fatal("published Calendar v2 lost literal leap-day identity")
+	}
+	text, err := date.MarshalText()
+	if err != nil || string(text) != "2024-02-29" {
+		t.Fatalf("MarshalText() = %q, %v", text, err)
+	}
+	var fromText calendar.Date
+	if err := fromText.UnmarshalText([]byte("2024-02-29")); err != nil || !fromText.Equal(date) {
+		t.Fatalf("UnmarshalText() = %v, %v", fromText, err)
+	}
+	encoded, err := json.Marshal(date)
+	if err != nil || string(encoded) != `"2024-02-29"` {
+		t.Fatalf("Marshal() = %s, %v", encoded, err)
+	}
+	var fromJSON calendar.Date
+	if err := json.Unmarshal([]byte(`"2024-02-29"`), &fromJSON); err != nil || !fromJSON.Equal(date) {
+		t.Fatalf("Unmarshal() = %v, %v", fromJSON, err)
+	}
+	next, err := date.AddDays(1)
+	if err != nil || next.String() != "2024-03-01" || date.String() != "2024-02-29" {
+		t.Fatalf("AddDays() = %v, %v; original = %v", next, err, date)
+	}
+}
 
 type idempotencyCompositionClock struct{}
 
