@@ -11,6 +11,20 @@ evidence, digest-pinned images, exact resource ownership, redacted diagnostics,
 least-privileged workflows, immutable action pins, checksum verification,
 SBOMs, and provenance.
 
+Owned Markdown validation admits only regular files, at most 4 MiB each and
+4096 documents per selected documentation tree, before reading or parsing.
+Directory enumeration uses batches of at most 128 entries, a shared allowance
+of 100,000 entries (including ignored files and directories), and maximum
+directory depth 128 from the tree root at depth zero. Excluded directories are
+counted but not descended into; admitted documents retain deterministic order.
+Document reads reuse the repository-file admission owner, recheck opened-file
+identity and type, and retain a one-byte bounded lookahead. Caller cancellation
+is checked during enumeration, reads, line/link validation and around bounded
+Markdown parsing. Repository/documentation roots retain their existing
+canonicalization policy, and below-root symlinks remain refused. The caller
+must supply a trusted, stable filesystem: these checks are not an atomic
+snapshot and cannot preempt an in-flight filesystem operation or parser call.
+
 For every module with the `security` gate enabled, `golib check` generates a
 deterministic CycloneDX 1.6 library SBOM with the pinned `cyclonedx-gomod`
 version. The CLI captures output in memory with a hard size limit, rejects

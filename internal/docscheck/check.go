@@ -3,18 +3,20 @@ package docscheck
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
-	"io/fs"
+	"io"
 	"net/url"
 	"os"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
+
+	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 )
 
 const (
@@ -25,18 +27,36 @@ const (
 // Check validates root documentation and local Markdown links without network
 // access or following symlinks.
 func Check(root string) error {
-	return CheckWithin(root, root)
+	return CheckContext(context.Background(), root)
+}
+
+// CheckContext validates root documentation using the caller's context.
+func CheckContext(ctx context.Context, root string) error {
+	return CheckWithinContext(ctx, root, root)
 }
 
 // CheckWithin validates one documentation tree while allowing its local links
 // to target files elsewhere in the containing repository.
 func CheckWithin(repositoryRoot, documentationRoot string) error {
+	return CheckWithinContext(context.Background(), repositoryRoot, documentationRoot)
+}
+
+// CheckWithinContext validates a documentation tree with cooperative cancellation.
+// Roots are canonicalized as before. Below-root paths must be stable and trusted;
+// filesystem operations and bounded Markdown parsing are not forcibly interrupted.
+func CheckWithinContext(ctx context.Context, repositoryRoot, documentationRoot string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	if !filepath.IsAbs(repositoryRoot) {
 		return errors.New("documentation root must be absolute")
 	}
 	canonicalRoot, err := filepath.EvalSymlinks(repositoryRoot)
 	if err != nil {
 		return fmt.Errorf("resolve documentation root: %w", err)
+	}
+	if err := ctx.Err(); err != nil {
+		return err
 	}
 	if !filepath.IsAbs(documentationRoot) {
 		return errors.New("documentation tree must be absolute")
@@ -45,80 +65,90 @@ func CheckWithin(repositoryRoot, documentationRoot string) error {
 	if err != nil {
 		return fmt.Errorf("resolve documentation tree: %w", err)
 	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	relative, err := filepath.Rel(canonicalRoot, canonicalTree)
 	if err != nil || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
 		return errors.New("documentation tree must be inside repository")
 	}
-	paths, err := documents(canonicalTree)
+	limits := defaultDocumentLimits()
+	paths, err := documentsFS(ctx, canonicalTree, os.DirFS(canonicalTree), limits)
 	if err != nil {
 		return err
 	}
 	for _, path := range paths {
-		if err := checkDocument(canonicalRoot, path); err != nil {
+		if err := checkDocumentWithSource(ctx, canonicalRoot, path, limits.bytes, ordinaryDocumentSource()); err != nil {
 			return err
 		}
 	}
-	return nil
+	return ctx.Err()
 }
 
-func documents(root string) ([]string, error) {
-	paths := make([]string, 0, 32)
-	readme := filepath.Join(root, "README.md")
-	err := filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
-		if walkErr != nil {
-			return walkErr
-		}
-		if path == root {
-			return nil
-		}
-		relative := strings.TrimPrefix(path, root+string(filepath.Separator))
-		inDocs := relative == "docs" || strings.HasPrefix(relative, "docs"+string(filepath.Separator))
-		if entry.Type()&os.ModeSymlink != 0 {
-			if inDocs || filepath.Ext(path) == ".md" {
-				return fmt.Errorf("documentation symlink is not allowed: %s", path)
-			}
-			return nil
-		}
-		if entry.IsDir() && !inDocs {
-			if path == readme {
-				return errors.New("README.md must be a regular file")
-			}
-			return filepath.SkipDir
-		}
-		if !entry.IsDir() && filepath.Ext(path) == ".md" {
-			paths = append(paths, path)
-			if len(paths) > maximumDocuments {
-				return errors.New("documentation file count exceeds limit")
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("walk documentation: %w", err)
+func checkDocumentWithSource(ctx context.Context, root, document string, maximum int64, source documentSource) error {
+	if err := ctx.Err(); err != nil {
+		return err
 	}
-	if !slices.Contains(paths, readme) {
-		return nil, errors.New("README.md is required")
+	if maximum <= 0 || maximum > maximumDocumentSize {
+		return repositoryfile.ErrTooLarge
 	}
-	return paths, nil
-}
-
-func checkDocument(root, document string) error {
-	// #nosec G304 -- document paths come from a bounded walk beneath the repository root
-	data, err := os.ReadFile(document)
+	info, err := source.inspect(root, document)
 	if err != nil {
 		return fmt.Errorf("read documentation %s: %w", document, err)
 	}
-	if len(data) > maximumDocumentSize {
-		return fmt.Errorf("documentation %s exceeds size limit", document)
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if info == nil {
+		return fmt.Errorf("read documentation %s: %w", document, repositoryfile.ErrUnsafePath)
+	}
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("read documentation %s: %w", document, repositoryfile.ErrNotRegular)
+	}
+	if info.Size() > maximum {
+		return fmt.Errorf("documentation %s exceeds size limit: %w", document, repositoryfile.ErrTooLarge)
+	}
+	reader, err := source.open(ctx, document, maximum)
+	if err != nil {
+		if reader != nil {
+			err = errors.Join(err, reader.Close())
+		}
+		return fmt.Errorf("read documentation %s: %w", document, err)
+	}
+	if reader == nil {
+		return fmt.Errorf("read documentation %s: %w", document, repositoryfile.ErrUnsafePath)
+	}
+	if err := ctx.Err(); err != nil {
+		return errors.Join(err, reader.Close())
+	}
+	data, err := io.ReadAll(io.LimitReader(reader, maximum+1))
+	err = errors.Join(err, reader.Close())
+	if err != nil {
+		return fmt.Errorf("read documentation %s: %w", document, err)
+	}
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	if int64(len(data)) > maximum {
+		return fmt.Errorf("documentation %s exceeds size limit: %w", document, repositoryfile.ErrTooLarge)
 	}
 	for index, text := range strings.Split(string(data), "\n") {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		line := index + 1
 		if strings.HasSuffix(text, " ") || strings.HasSuffix(text, "\t") {
 			return fmt.Errorf("documentation %s:%d has trailing whitespace", document, line)
 		}
 	}
 	parsed := goldmark.DefaultParser().Parse(text.NewReader(data))
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	return ast.Walk(parsed, func(node ast.Node, _ bool) (ast.WalkStatus, error) {
+		if err := ctx.Err(); err != nil {
+			return ast.WalkStop, err
+		}
 		var destination []byte
 		switch value := node.(type) {
 		case *ast.Link:
@@ -128,7 +158,7 @@ func checkDocument(root, document string) error {
 		default:
 			return ast.WalkContinue, nil
 		}
-		if err := checkLink(root, document, string(destination)); err != nil {
+		if err := checkLinkContext(ctx, root, document, string(destination)); err != nil {
 			position := min(max(node.Pos(), 0), len(data))
 			line := bytes.Count(data[:position], []byte{'\n'}) + 1
 			return ast.WalkStop, fmt.Errorf("documentation %s:%d: %w", document, line, err)
@@ -138,6 +168,13 @@ func checkDocument(root, document string) error {
 }
 
 func checkLink(root, document, target string) error {
+	return checkLinkContext(context.Background(), root, document, target)
+}
+
+func checkLinkContext(ctx context.Context, root, document, target string) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 	target = strings.TrimSpace(target)
 	parsed, err := url.Parse(target)
 	if err != nil {
@@ -166,6 +203,9 @@ func checkLink(root, document, target string) error {
 		relative = ""
 	}
 	for component := range strings.SplitSeq(relative, string(filepath.Separator)) {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		if component == "" {
 			continue
 		}
@@ -173,6 +213,9 @@ func checkLink(root, document, target string) error {
 		info, statErr := os.Lstat(current)
 		if statErr != nil {
 			return fmt.Errorf("broken local link %q: %w", target, statErr)
+		}
+		if err := ctx.Err(); err != nil {
+			return err
 		}
 		if info.Mode()&os.ModeSymlink != 0 {
 			return fmt.Errorf("local link targets symlink %q", target)
