@@ -204,6 +204,8 @@ github.com/faustbrian/go-cloudevents/adapters/tenancy v1.0.0 h1:Vhw6csSWY/EqS8Im
 github.com/faustbrian/go-cloudevents/adapters/tenancy v1.0.0/go.mod h1:bBWVyXGHfTpC9dMCm5kp+d6omMReEEFqTG9JC/oioZQ=
 github.com/faustbrian/go-cloudevents/adapters/workflow v1.0.0 h1:p7xCM59frdLEPONK5JRz+lID8zuF6+tR2hWrQZPa6tk=
 github.com/faustbrian/go-cloudevents/adapters/workflow v1.0.0/go.mod h1:Ue4Bd4wMGsA3oAH0E57b9Z4ZzoqEj7+4/eUDCUDBGrg=
+github.com/faustbrian/go-cloudevents/adapters/workflow/v2 v2.0.0 h1:th/UX7nhftm5vIaeA//ICM5ACFLEQdGxaJ41xlUFS3c=
+github.com/faustbrian/go-cloudevents/adapters/workflow/v2 v2.0.0/go.mod h1:DFS8CWPpQ39C5G6SWm3K5tU2qp21hnK6DsXmK5YyH3Y=
 github.com/faustbrian/go-concurrency-limit v1.0.0 h1:7YXJz1vSlO+EMvh/vtvj+aYKHC+tOB1cGbcLSVUI9LQ=
 github.com/faustbrian/go-concurrency-limit v1.0.0/go.mod h1:q3dIb4dYxXlr/aDOp87ZRBIRXg57wsK95qcC74P2I5A=
 github.com/faustbrian/go-config v1.1.0 h1:N/2lp+Vf3sBJ4Qnk3yofR+276QEXpOcPw9PqanwCGZg=
