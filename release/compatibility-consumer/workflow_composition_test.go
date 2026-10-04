@@ -6,9 +6,64 @@ import (
 	"testing"
 	"time"
 
+	workflowevents "github.com/faustbrian/go-cloudevents/adapters/workflow/v2"
 	workflow "github.com/faustbrian/go-workflow/v2"
 	_ "github.com/faustbrian/go-workflow/v2/postgres"
 )
+
+func TestCloudEventsWorkflowV2PublishedHistoryComposition(t *testing.T) {
+	reference, err := workflow.NewDefinitionReference("orders", "v1", "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef")
+	if err != nil {
+		t.Fatal(err)
+	}
+	occurredAt := time.Date(2026, 10, 4, 1, 2, 3, 0, time.UTC)
+	payload := []byte("body")
+	history, err := workflow.NewHistoryEvent(workflow.HistoryEventSpec{
+		Sequence: 1, InstanceID: "workflow-1", Kind: workflow.EventInstanceStarted,
+		OccurredAt: occurredAt, Definition: reference, Data: payload,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	payload[0] = 'x'
+	event, state, report, err := workflowevents.ToCloudEvent(history, workflowevents.Options{
+		StableID: "event-1", Source: "/workflow",
+	})
+	if err != nil || len(report.Losses) != 0 {
+		t.Fatalf("ToCloudEvent() = %#v, %v", report, err)
+	}
+	wantState := workflowevents.State{StableID: "event-1", Sequence: 1, Definition: reference}
+	if state != wantState {
+		t.Fatalf("ToCloudEvent() lost workflow-owned state: %#v", state)
+	}
+	subject, hasSubject := event.Subject()
+	eventTime, hasTime := event.Time()
+	if event.ID() != "event-1" || event.Source() != "/workflow" ||
+		event.Type() != "golib.workflow.history.1" || !hasSubject || subject != "workflow-1" ||
+		!hasTime || !eventTime.Equal(occurredAt) || !bytes.Equal(event.Data().Bytes(), []byte("body")) {
+		t.Fatal("ToCloudEvent() lost portable identity, time, or payload")
+	}
+	copyInput := history.Data()
+	copyInput[0] = 'x'
+	copyEvent := event.Data().Bytes()
+	copyEvent[0] = 'x'
+	roundTrip, reverseReport, err := workflowevents.FromCloudEvent(event, state)
+	if err != nil || roundTrip.Sequence() != history.Sequence() ||
+		roundTrip.InstanceID() != history.InstanceID() || roundTrip.Kind() != history.Kind() ||
+		roundTrip.Definition() != reference || !roundTrip.OccurredAt().Equal(occurredAt) ||
+		!bytes.Equal(roundTrip.Data(), []byte("body")) {
+		t.Fatalf("FromCloudEvent() lost nominal history: %#v, %v", roundTrip, err)
+	}
+	if len(reverseReport.Losses) != 1 || reverseReport.Losses[0].Field != "source" ||
+		reverseReport.Losses[0].Reason != "not represented by workflow history" {
+		t.Fatalf("FromCloudEvent() lost explicit source loss: %#v", reverseReport)
+	}
+	copyOutput := roundTrip.Data()
+	copyOutput[0] = 'x'
+	if !bytes.Equal(roundTrip.Data(), []byte("body")) || !bytes.Equal(event.Data().Bytes(), []byte("body")) {
+		t.Fatal("round-trip output exposed owned payload")
+	}
+}
 
 func TestWorkflowV2PublishedDefinitionActivityComposition(t *testing.T) {
 	steps := []workflow.StepSpec{{

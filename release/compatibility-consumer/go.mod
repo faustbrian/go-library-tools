@@ -38,6 +38,7 @@ require (
 	github.com/faustbrian/go-cloudevents/adapters/telemetry v1.0.0
 	github.com/faustbrian/go-cloudevents/adapters/tenancy v1.0.0
 	github.com/faustbrian/go-cloudevents/adapters/workflow v1.0.0
+	github.com/faustbrian/go-cloudevents/adapters/workflow/v2 v2.0.0
 	github.com/faustbrian/go-concurrency-limit v1.0.0
 	github.com/faustbrian/go-config v1.1.0
 	github.com/faustbrian/go-config/adapters/awssecretsmanager v1.0.0

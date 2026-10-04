@@ -304,6 +304,13 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-cloudevents/adapters/workflow",
+      "module_path": "github.com/faustbrian/go-cloudevents/adapters/workflow/v2",
+      "version": "v2.0.0",
+      "source_revision": "17e1234c015ecec77b40d36418d5dfa5f18b479e",
+      "primary_entry_packages": ["github.com/faustbrian/go-cloudevents/adapters/workflow/v2"]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-audit",
       "module_path": "github.com/faustbrian/go-audit/v2",
       "version": "v2.0.0",

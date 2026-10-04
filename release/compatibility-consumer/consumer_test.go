@@ -122,6 +122,7 @@ import (
 	_ "github.com/faustbrian/go-cloudevents/adapters/telemetry"
 	_ "github.com/faustbrian/go-cloudevents/adapters/tenancy"
 	_ "github.com/faustbrian/go-cloudevents/adapters/workflow"
+	_ "github.com/faustbrian/go-cloudevents/adapters/workflow/v2"
 	_ "github.com/faustbrian/go-concurrency-limit"
 	_ "github.com/faustbrian/go-config"
 	_ "github.com/faustbrian/go-config/adapters/awssecretsmanager"

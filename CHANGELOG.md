@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Adopt the published CloudEvents Workflow v2.0.0 adapter alongside its retained
+  v1 consumer. Exercise nominal Workflow v2 history conversion, copied payload
+  ownership, retained state and occurrence time, and explicit source loss
+  without changing frozen compatibility cohorts or claiming security qualification.
+
 - Adopt published Workflow v2.0.0 root and PostgreSQL entrypoints in the
   maintained compatibility consumer alongside Workflow v1, preserving frozen
   cohorts and unrelated selections. Exercise a finite definition, registry,
