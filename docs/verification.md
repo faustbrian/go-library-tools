@@ -28,6 +28,13 @@ all other tracked and untracked repository paths remain in scope.
 Security-enabled checks reject a repository-owned `.gitleaksignore`, and both
 scan modes ignore inline `gitleaks:allow` directives.
 
+Security-record validation registers its embedded schemas under an absolute
+in-memory resource identity. Validating an absolute document directory does
+not require an unrelated ambient working directory to remain available;
+schema registration and compilation do not fetch that logical URI. Published
+schemas, built-in draft resolution, document admission and cooperative
+cancellation retain their existing behavior.
+
 The documentation gate requires a regular root README, bounds document count
 and size, rejects trailing whitespace and symlinks, and verifies local Markdown
 targets without making network requests. Link-shaped text inside fenced,

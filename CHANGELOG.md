@@ -15,6 +15,11 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Resolve embedded security schemas under an absolute in-memory resource
+  identity, so validating an absolute document directory does not depend on
+  unrelated ambient working-directory availability. Published schemas,
+  document admission and cancellation behavior remain unchanged.
+
 - Report incomplete coverage across all expected production packages from the
   same profile, with deterministic globally bounded diagnostics and unchanged
   exact-coverage failure policy and first failing-package error.

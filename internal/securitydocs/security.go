@@ -22,7 +22,12 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 )
 
-const maximumSecurityDocument = 4 << 20
+const (
+	maximumSecurityDocument = 4 << 20
+	// This logical resource is registered in memory, not loaded from the URL.
+	// Its absolute identity keeps schema resolution independent of ambient CWD.
+	securitySchemaResource = "https://golib.invalid/security-schema.json"
+)
 
 var (
 	revisionPattern = regexp.MustCompile(`^[0-9a-f]{40}$`)
@@ -336,10 +341,10 @@ func decodeDocument(data []byte, publishedSchema string, target any) error {
 	if err != nil {
 		return fmt.Errorf("decode published security schema: %w", err)
 	}
-	if err := compiler.AddResource("schema.json", schemaDocument); err != nil {
+	if err := compiler.AddResource(securitySchemaResource, schemaDocument); err != nil {
 		return fmt.Errorf("load published security schema: %w", err)
 	}
-	compiled, err := compiler.Compile("schema.json")
+	compiled, err := compiler.Compile(securitySchemaResource)
 	if err != nil {
 		return fmt.Errorf("compile published security schema: %w", err)
 	}
