@@ -9,6 +9,7 @@ import (
 	"io"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -112,18 +113,19 @@ func TestGosecUnusableReportsRemainToolFailures(t *testing.T) {
 func TestGosecLocationsAreBoundedWhileCountsRemainComplete(t *testing.T) {
 	root := t.TempDir()
 	for _, count := range []int{33, 51, 64, 65} {
-		t.Run(fmt.Sprint(count), func(t *testing.T) {
+		t.Run(strconv.Itoa(count), func(t *testing.T) {
 			report, _ := ordinaryGosecFindings(root, count)
 			data, err := json.Marshal(report)
 			if err != nil {
 				t.Fatal(err)
 			}
-			want := fmt.Sprintf("gosec-findings findings=%d loading_packages=0 loading_errors=0", count)
-			for index := 0; index < min(count, 64); index++ {
+			var want strings.Builder
+			fmt.Fprintf(&want, "gosec-findings findings=%d loading_packages=0 loading_errors=0", count)
+			for index := range min(count, 64) {
 				relative := fmt.Sprintf("resource-%02d.go", index)
-				want += fmt.Sprintf("\ngosec-location %x G115 %d 4", sha256.Sum256([]byte(relative)), index+1)
+				fmt.Fprintf(&want, "\ngosec-location %x G115 %d 4", sha256.Sum256([]byte(relative)), index+1)
 			}
-			if gosecFailureMetadata(data, root) != want {
+			if gosecFailureMetadata(data, root) != want.String() {
 				t.Fatal("projection must preserve complete counts and exactly the first 64 sanitized identities")
 			}
 		})
@@ -171,7 +173,7 @@ func ordinaryGosecFindings(root string, count int) (map[string]any, []map[string
 	for index := range issues {
 		issues[index] = map[string]any{
 			"rule_id": "G115", "file": filepath.Join(root, fmt.Sprintf("resource-%02d.go", index)),
-			"line": fmt.Sprint(index + 1), "column": "4", "nosec": false, "suppressions": nil,
+			"line": strconv.Itoa(index + 1), "column": "4", "nosec": false, "suppressions": nil,
 			"details": "private diagnostic", "code": "private source",
 		}
 	}
