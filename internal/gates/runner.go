@@ -150,6 +150,10 @@ type boundedProcessOutput struct {
 	written  int
 	overflow bool
 	onLimit  func()
+	// Only a fixed owned terminal line may be recognized; stream text is never retained.
+	terminalLine       string
+	terminalLineOffset int
+	terminalLineMatch  bool
 }
 
 func (output *boundedProcessOutput) Write(value []byte) (int, error) {
@@ -166,6 +170,21 @@ func (output *boundedProcessOutput) Write(value []byte) (int, error) {
 		return len(value), nil
 	}
 	output.written += len(value)
+	if output.terminalLine != "" {
+		for _, character := range value {
+			if character == '\n' {
+				output.terminalLineMatch = output.terminalLineOffset == len(output.terminalLine)
+				output.terminalLineOffset = 0
+				continue
+			}
+			output.terminalLineMatch = false
+			if output.terminalLineOffset >= 0 && output.terminalLineOffset < len(output.terminalLine) && character == output.terminalLine[output.terminalLineOffset] {
+				output.terminalLineOffset++
+			} else {
+				output.terminalLineOffset = -1
+			}
+		}
+	}
 	output.mutex.Unlock()
 	return len(value), nil
 }
@@ -184,6 +203,12 @@ func (output *boundedProcessOutput) didOverflow() bool {
 	output.mutex.Lock()
 	defer output.mutex.Unlock()
 	return output.overflow
+}
+
+func (output *boundedProcessOutput) matchedTerminalLine() bool {
+	output.mutex.Lock()
+	defer output.mutex.Unlock()
+	return !output.overflow && output.terminalLineMatch
 }
 
 // Executor runs one external command.
@@ -933,10 +958,20 @@ func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate,
 }
 
 func (runner Runner) securityTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
+	gitleaks := tool == "github.com/zricethezav/gitleaks/v8@"+gitleaksVersion
+	if gitleaks {
+		args = append(slices.Clone(args), "--exit-code=42")
+	}
 	arguments := append([]string{"run", tool}, args...)
 	return announce(output, module, gate, func() error {
 		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+		if gitleaks {
+			// Go run reports the child status as its final stderr line while itself
+			// returning status 1. Gitleaks reserves 42 here for completed findings;
+			// its setup and scanning errors still use status 1.
+			stderr.terminalLine = "exit status 42"
+		}
 		err := runner.Executor.Run(ctx, Command{
 			Name: "go", Args: arguments, Dir: directory, Env: map[string]string{"GOWORK": "off"}, boundedScanner: true,
 			Stdout: stdout, Stderr: stderr,
@@ -946,7 +981,11 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 			overflow = fmt.Errorf("security scanner output exceeded %d bytes", maximumSecurityProcessOutput)
 		}
 		if err != nil || overflow != nil {
-			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err))
+			var classification error
+			if err != nil && overflow == nil && ctx.Err() == nil && gitleaks && stderr.matchedTerminalLine() {
+				classification = errors.New("secret-findings")
+			}
+			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err, classification))
 		}
 		return nil
 	})

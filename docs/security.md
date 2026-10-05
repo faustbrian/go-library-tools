@@ -53,7 +53,11 @@ native gosec suppressions must name exact rules and include a reason, while
 `nolint:gosec` explanations must appear on the same comment line. A consumer
 cannot silently widen the shared policy. NilAway remains advisory.
 Scanner-controlled stdout and stderr are suppressed and independently limited
-to 4 MiB. Exceeding either limit terminates the scanner's original process group
+to 4 MiB. Gitleaks uses a distinct findings exit status; only the exact final
+Go-wrapper status line is recognized, without retaining scanner text. Completed
+findings produce the fixed `secret-findings` diagnostic and still fail the gate.
+Other failures remain unclassified; cancellation or overflow cannot qualify as
+completed findings. Exceeding either limit terminates the scanner's original process group
 and returns only an owned overflow class while preserving the process failure.
 Original-process-group bounded execution is supported on Darwin and Linux. On other
 platforms, bounded scanner commands fail before process start; ordinary

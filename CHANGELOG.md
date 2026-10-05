@@ -15,6 +15,11 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Distinguish completed secret findings from other Gitleaks failures with a
+  fixed diagnostic, without retaining or publishing scanner output. History and
+  current-tree failures remain fail-closed; canceled or overflowing commands
+  cannot be classified as completed findings.
+
 - Resolve embedded security schemas under an absolute in-memory resource
   identity, so validating an absolute document directory does not depend on
   unrelated ambient working-directory availability. Published schemas,
