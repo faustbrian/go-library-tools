@@ -275,6 +275,13 @@
       "primary_entry_packages": ["github.com/faustbrian/go-rule-engine/adapters/measurement/v2"]
     },
     {
+      "from_module_path": "github.com/faustbrian/go-secret-envelope",
+      "module_path": "github.com/faustbrian/go-secret-envelope/v2",
+      "version": "v2.0.0",
+      "source_revision": "cc92e6def8bfa83f6ebb9f440820576da6ea02e1",
+      "primary_entry_packages": ["github.com/faustbrian/go-secret-envelope/v2"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-semaphore",
       "module_path": "github.com/faustbrian/go-semaphore/v2",
       "version": "v2.0.0",

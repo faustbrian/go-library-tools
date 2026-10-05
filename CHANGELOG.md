@@ -15,6 +15,9 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Select the published Secret Envelope v2 module in the maintained public
+  compatibility consumer without changing the frozen base compatibility set.
+
 - Recognize only the exact public JSONAPI specification decision checksum
   records as metadata during secret scanning, retaining findings for changed
   checksums, identifiers, paths and credential assignments.

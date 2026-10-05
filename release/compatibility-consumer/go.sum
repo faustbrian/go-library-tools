@@ -366,8 +366,8 @@ github.com/faustbrian/go-search v1.0.0 h1:cSLM12UDc5I2mYE4TSJSvee2YfqMcArJzBdYRP
 github.com/faustbrian/go-search v1.0.0/go.mod h1:7cJAoRD/SOhulx8YmDkFPqoz6FB3Myuw+A7HKg2U4lA=
 github.com/faustbrian/go-search/adapters/opensearch v1.0.0 h1:zCvsApdxxD0VD/P9kBH8Dr6jsHuKzYasZxPMrtjiduo=
 github.com/faustbrian/go-search/adapters/opensearch v1.0.0/go.mod h1:l73CQm7M5s9YlcMcNEcexj6TupDq+5HXnBUvsVtewp8=
-github.com/faustbrian/go-secret-envelope v1.0.0 h1:z1AqUglQLov5f9PxlHwn9lUCeRP063AtSMlwDjq/8WI=
-github.com/faustbrian/go-secret-envelope v1.0.0/go.mod h1:mk06procHoz9QhU9QJ1eWaLw3ZPO2o59g4s/5u0/X9k=
+github.com/faustbrian/go-secret-envelope/v2 v2.0.0 h1:9UNFcXIP5lmQm+2+gGNk4zGwcbOVmfSNKGGzbJkkluY=
+github.com/faustbrian/go-secret-envelope/v2 v2.0.0/go.mod h1:auJY1UgyVIJi1qDLDRQDmSArfx6idzBYMe87/BtArTs=
 github.com/faustbrian/go-semaphore/v2 v2.0.0 h1:kRlP5nx8BnYGvyCIeR6FWSB6urQmxZ2SMWL3Rvo9FeQ=
 github.com/faustbrian/go-semaphore/v2 v2.0.0/go.mod h1:SFouwFxMjzCk8kz9CmyhrvWLmMuCiuivoZ6q6mqmX/s=
 github.com/faustbrian/go-sequencer v1.1.0 h1:gndMcKGiOfVQoEZD1l4o5osKyyfih93lwrmER7outvI=
