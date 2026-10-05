@@ -8,11 +8,6 @@ on:
     - cron: '17 3 * * *'
   workflow_dispatch:
     inputs:
-      gosec_diagnostic:
-        description: Run only the bounded standalone gosec diagnostic
-        required: false
-        type: boolean
-        default: false
       release_rehearsal:
         description: Run the complete pre-tag release dry-run
         required: false
@@ -31,91 +26,6 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  gosec-diagnostic:
-    name: Bounded gosec diagnostic
-    if: github.event_name == 'workflow_dispatch' && inputs.gosec_diagnostic
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    env:
-      TASK_NAME: golib-gosec-${{ github.run_id }}-${{ github.run_attempt }}
-      GOMAXPROCS: '2'
-      GOFLAGS: '-p=1'
-      GOWORK: 'off'
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: 71862edbff6d1cb69e250164ffac0a344eba8e81
-          path: producer
-          persist-credentials: false
-      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
-        with:
-          go-version: '1.27.0'
-          cache: false
-      - name: Initialize private task resources
-        run: |
-          set -euo pipefail
-          umask 077
-          TASK_ROOT="${RUNNER_TEMP}/${TASK_NAME}"
-          mkdir -p "${TASK_ROOT}/cache" "${TASK_ROOT}/mod" "${TASK_ROOT}/tmp" "${TASK_ROOT}/bin"
-          printf 'TASK_ROOT=%s\n' "${TASK_ROOT}" >>"${GITHUB_ENV}"
-          printf 'GOCACHE=%s/cache\nGOMODCACHE=%s/mod\nGOTMPDIR=%s/tmp\nGOBIN=%s/bin\nTMPDIR=%s/tmp\n' \
-            "${TASK_ROOT}" "${TASK_ROOT}" "${TASK_ROOT}" "${TASK_ROOT}" "${TASK_ROOT}" >>"${GITHUB_ENV}"
-      - name: Report only bounded issue identities and counts
-        working-directory: producer
-        run: |
-          set -euo pipefail
-          umask 077
-          if ! go install -p 1 github.com/securego/gosec/v2/cmd/gosec@v2.29.0 \
-            >"${TASK_ROOT}/build.log" 2>&1; then
-            echo 'gosec diagnostic build failed; private output suppressed'
-            exit 1
-          fi
-          set +e
-          (ulimit -f 16384; timeout 10m "${GOBIN}/gosec" \
-            -nosec-require-rules -nosec-require-justification \
-            -fmt=json -out="${TASK_ROOT}/report.json" ./...) \
-            >"${TASK_ROOT}/scanner.log" 2>&1
-          scanner_status=$?
-          set -e
-          if [[ ! -f "${TASK_ROOT}/report.json" ]] || \
-             ! jq -e '((.Issues // []) | type == "array") and
-               ((.["Golang errors"] // {}) | type == "object") and
-               all((.Issues // [])[];
-                 (.rule_id | test("^G[0-9]{3}$")) and
-                 (.file | type == "string") and
-                 (.line | test("^[1-9][0-9]{0,6}(-[1-9][0-9]{0,6})?$")))' \
-               "${TASK_ROOT}/report.json" > /dev/null 2>&1; then
-            echo 'gosec diagnostic report unavailable or invalid; private output suppressed'
-            exit 1
-          fi
-          issue_count=$(jq '(.Issues // []) | length' "${TASK_ROOT}/report.json")
-          load_error_count=$(jq '(.["Golang errors"] // {}) | [.[] | length] | add // 0' "${TASK_ROOT}/report.json")
-          printf 'gosec-diagnostic status=%d issues=%d load-errors=%d\n' \
-            "${scanner_status}" "${issue_count}" "${load_error_count}"
-          while IFS=$'\t' read -r file rule line; do
-            relative=${file#"${PWD}/"}
-            identity=$(printf '%s' "${relative}" | sha256sum)
-            printf 'gosec-location %s %s %s\n' "${identity%% *}" "${rule}" "${line}"
-          done < <(jq -r '(.Issues // [])[0:32][] | [.file, .rule_id, .line] | @tsv' "${TASK_ROOT}/report.json")
-          if (( issue_count > 32 )); then
-            echo 'additional gosec locations omitted'
-          fi
-          if (( scanner_status != 0 )); then
-            exit "${scanner_status}"
-          fi
-          test "${issue_count}" -eq 0
-          test "${load_error_count}" -eq 0
-      - name: Remove private reports and task resources
-        if: always()
-        run: |
-          set -euo pipefail
-          for owned in "${RUNNER_TEMP}/${TASK_NAME}" "${GITHUB_WORKSPACE}/producer"; do
-            if [[ -d "${owned}" ]]; then
-              find "${owned}" -type d -exec chmod u+w {} +
-              find "${owned}" -depth -delete
-            fi
-          done
-
   dependency-review:
     name: Dependency review
     if: github.event_name == 'pull_request'
@@ -134,7 +44,6 @@ jobs:
 
   quality:
     name: Quality
-    if: github.event_name != 'workflow_dispatch' || !inputs.gosec_diagnostic
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -287,7 +196,6 @@ jobs:
 
   codeql:
     name: CodeQL
-    if: github.event_name != 'workflow_dispatch' || !inputs.gosec_diagnostic
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     permissions:

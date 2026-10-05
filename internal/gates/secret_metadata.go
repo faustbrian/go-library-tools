@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// #nosec G101 -- this public hash-only report template is not a credential.
 const secretMetadataTemplate = `{{range .}}{{sha256sum .File}} {{sha256sum .RuleID}} {{.StartLine}} {{if .Commit}}{{.Commit}}{{else}}-{{end}}
 {{end}}`
 
