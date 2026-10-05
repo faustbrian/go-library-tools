@@ -119,7 +119,7 @@ require (
 	github.com/faustbrian/go-schema-registry/v2 v2.0.0
 	github.com/faustbrian/go-search v1.0.0
 	github.com/faustbrian/go-search/adapters/opensearch v1.0.0
-	github.com/faustbrian/go-secret-envelope v1.0.0
+	github.com/faustbrian/go-secret-envelope/v2 v2.0.0
 	github.com/faustbrian/go-semaphore/v2 v2.0.0
 	github.com/faustbrian/go-sequencer v1.1.0
 	github.com/faustbrian/go-sequencer/v2 v2.0.0
