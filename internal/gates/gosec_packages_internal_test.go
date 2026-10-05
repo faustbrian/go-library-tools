@@ -19,7 +19,7 @@ func TestGosecReceivesGoSelectedDirectories(t *testing.T) {
 	root := t.TempDir()
 	stop := errors.New("inert gosec boundary")
 	var selected []string
-	runner := Runner{Root: root, Executor: executorFunction(func(ctx context.Context, command Command) error {
+	runner := Runner{Root: root, Executor: executorFunction(func(_ context.Context, command Command) error {
 		if slices.Contains(command.Args, "list") {
 			if !slices.Equal(command.Args, []string{"list", "-json=Dir", "./..."}) || command.Env["GOWORK"] != "off" || !command.boundedScanner || command.Stdout == nil || command.Stderr == nil {
 				t.Fatal("discovery is not the bounded, workspace-independent ordinary Go selection")

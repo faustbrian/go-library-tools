@@ -55,7 +55,8 @@ func TestGosecSelectedPackagesHosted(t *testing.T) {
 		t.Fatal("recursive scanner counterfactual unexpectedly admitted incomplete fixture dependencies")
 	}
 	stop := errors.New("stop after production gosec boundary")
-	report := &goPackageOutput{sourceInventoryOutput: sourceInventoryOutput{boundedProcessOutput: boundedProcessOutput{limit: maximumSecurityProcessOutput}}}
+	report := &goPackageOutput{}
+	report.limit = maximumSecurityProcessOutput
 	runner := Runner{Root: root, Executor: workspaceExecutor{directory: executorWorkspace(executor), run: func(ctx context.Context, command Command) error {
 		if slices.Contains(command.Args, "list") {
 			return executor.Run(ctx, command)
@@ -77,7 +78,7 @@ func TestGosecSelectedPackagesHosted(t *testing.T) {
 	var result struct {
 		Stats struct {
 			Files int `json:"files"`
-		}
+		} `json:"Stats"`
 	}
 	if err := json.Unmarshal(report.data.Bytes(), &result); err != nil || result.Stats.Files != 3 {
 		t.Fatal("pinned scanner did not scan root, newly added production and test-support files")

@@ -30,7 +30,8 @@ func (runner Runner) gosecPackages(ctx context.Context, directory string) ([]str
 	if err != nil {
 		return nil, errors.New("gosec package discovery requires an absolute module root")
 	}
-	stdout := &goPackageOutput{sourceInventoryOutput: sourceInventoryOutput{boundedProcessOutput: boundedProcessOutput{limit: maximumSecurityProcessOutput}}}
+	stdout := &goPackageOutput{}
+	stdout.limit = maximumSecurityProcessOutput
 	stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 	err = runner.Executor.Run(ctx, Command{
 		Name: "go", Args: []string{"list", "-json=Dir", "./..."}, Dir: directory,
@@ -48,7 +49,9 @@ func (runner Runner) gosecPackages(ctx context.Context, directory string) ([]str
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
-		var selected struct{ Dir string }
+		var selected struct {
+			Dir string `json:"Dir"`
+		}
 		if err := decoder.Decode(&selected); err != nil {
 			if errors.Is(err, io.EOF) {
 				break
