@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Recognize only the exact public JSONAPI specification decision checksum
+  records as metadata during secret scanning, retaining findings for changed
+  checksums, identifiers, paths and credential assignments.
+
 - Include bounded, validated file/rule hashes and positions for completed
   secret findings using an owned report template. Suppress invalid metadata and
   never render filenames, finding values or reporter data.

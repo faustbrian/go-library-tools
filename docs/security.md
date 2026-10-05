@@ -52,6 +52,18 @@ and inline `gitleaks:allow` directives are ignored by both scans. Source-level
 native gosec suppressions must name exact rules and include a reason, while
 `nolint:gosec` explanations must appear on the same comment line. A consumer
 cannot silently widen the shared policy. NilAway remains advisory.
+The centrally owned generic-api-key exception for JSONAPI decision metadata
+matches only 23 exact decision-ID/SHA-256 lines in root `CHANGELOG.md`.
+The optional single leading newline accommodates Gitleaks v8.30.1's line
+framing; no arbitrary whitespace or surrounding content is admitted.
+Each checksum was independently recomputed from the decision register at
+`4d52a36a5b76853597bcf85506f3c4ba2b8a1262` or
+`ad9dda2d359e7474b25abe59909818cc68686bf9` and matched its decision history.
+These public checksums are not credentials. The shared exception is content
+bound, not repository or commit bound: an identical public line is recognized
+elsewhere, but another ID, checksum, path, surrounding text, rule or credential
+assignment remains scanned. Owner: library maintainer; review condition:
+changed decision provenance, scanner matching semantics or exception scope.
 Scanner-controlled stdout and stderr are suppressed and independently limited
 to 4 MiB. Gitleaks uses a distinct findings exit status; only the exact final
 Go-wrapper status line is recognized, without retaining scanner text. Completed
