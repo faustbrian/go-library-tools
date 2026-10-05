@@ -103,6 +103,38 @@ targetRules = ["generic-api-key"]
 regexTarget = "line"
 paths = ['''^docs/threat-model\.md$''']
 regexes = ['''^\n?parent directory, AES-256 key, record/(?:)chunk/(?:)population limits, context, and$''']
+
+[[allowlists]]
+description = "Exact public JSONAPI specification decision ID and SHA-256 records, independently recomputed from immutable decision registers."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^CHANGELOG\.md$''']
+regexes = [
+  '''^\n?- JSONAPI-DEC-011 sha256:d234cd9a(?:)4e40ce09(?:)214a023d(?:)09c11af6(?:)e7077c1b(?:)a5a39f8c(?:)01a9dc6c(?:)bbb98095$''',
+  '''^\n?- JSONAPI-DEC-012 sha256:85161bb4(?:)7428b3ae(?:)ad1e8930(?:)b318ccd9(?:)a8146800(?:)1e190378(?:)cdb7b621(?:)eb3022ef$''',
+  '''^\n?- JSONAPI-DEC-013 sha256:9b156b1a(?:)af44e12e(?:)b6f10ee7(?:)4a737c98(?:)1aec3f89(?:)8b94fad1(?:)f547ac2e(?:)68c57e04$''',
+  '''^\n?- JSONAPI-DEC-001 sha256:7ab9e941(?:)c1eed52a(?:)bff8d37e(?:)d674e466(?:)d75682bf(?:)c9dc3427(?:)24208969(?:)2c7fadd4$''',
+  '''^\n?- JSONAPI-DEC-002 sha256:92b24e46(?:)b91b1722(?:)39d6c7ef(?:)6afeab30(?:)28f6d3d8(?:)83f6c66e(?:)641b9515(?:)74811cb3$''',
+  '''^\n?- JSONAPI-DEC-003 sha256:b894d768(?:)df3cdfa9(?:)6914f4b8(?:)805c3dfd(?:)fe3bf398(?:)8b7281e4(?:)8f73113c(?:)7abff5c1$''',
+  '''^\n?- JSONAPI-DEC-004 sha256:eefa54a5(?:)8ed63f71(?:)bbaa3b6d(?:)2d8be4ca(?:)bcaef92e(?:)e05d1d9c(?:)7e7014ae(?:)bde062fd$''',
+  '''^\n?- JSONAPI-DEC-005 sha256:8c5339c0(?:)c40d1ca9(?:)ecbc7db8(?:)fe8ecb13(?:)3d597b6d(?:)fa4d535f(?:)9140e7a8(?:)03751050$''',
+  '''^\n?- JSONAPI-DEC-006 sha256:91709eb6(?:)d8259986(?:)3d8e0375(?:)9d1cd9f7(?:)268d26e8(?:)cfb3b0dd(?:)652b7e27(?:)1873cb97$''',
+  '''^\n?- JSONAPI-DEC-007 sha256:17f841ab(?:)f7b95111(?:)69d91641(?:)2f03e7b5(?:)13bfde2b(?:)93b76422(?:)66a23d92(?:)e5ee99f0$''',
+  '''^\n?- JSONAPI-DEC-008 sha256:383a65c3(?:)c89cae68(?:)d2d61499(?:)3caab29d(?:)a026c9a6(?:)a2c057e5(?:)70b6bbf6(?:)52c9a7db$''',
+  '''^\n?- JSONAPI-DEC-009 sha256:ee353253(?:)3128439a(?:)7617e7da(?:)04fbbda1(?:)3f30b14b(?:)7eb30119(?:)0fd5712a(?:)1d2c0625$''',
+  '''^\n?- JSONAPI-DEC-010 sha256:6721f9d3(?:)ea09062d(?:)9665828d(?:)3e1f2127(?:)d3bd3d1d(?:)967d6214(?:)e01a164b(?:)c7b8b1f2$''',
+  '''^\n?- JSONAPI-DEC-001 sha256:1c992612(?:)f6fdf57e(?:)58587537(?:)47bcb574(?:)64f149b5(?:)17084813(?:)681e7029(?:)f31186f0$''',
+  '''^\n?- JSONAPI-DEC-002 sha256:7d6658ae(?:)3e8b8176(?:)dffdb809(?:)96a5439f(?:)55b30d8d(?:)3c1e5a2a(?:)3d1c9f28(?:)5f2d2338$''',
+  '''^\n?- JSONAPI-DEC-003 sha256:86ae12b7(?:)a1ba561c(?:)f2f69475(?:)6d980ed6(?:)eec544b3(?:)007f4705(?:)8e87f8c5(?:)1023115e$''',
+  '''^\n?- JSONAPI-DEC-004 sha256:be285995(?:)51762934(?:)5b407e0b(?:)93744ada(?:)5cc85d54(?:)b72092b3(?:)8310d9ff(?:)16b795f5$''',
+  '''^\n?- JSONAPI-DEC-005 sha256:db4077bb(?:)84f3aadc(?:)3f3b68c3(?:)07029f01(?:)c2f49ae4(?:)5a8f17d3(?:)4e0d4945(?:)a03f31d3$''',
+  '''^\n?- JSONAPI-DEC-006 sha256:526de3bc(?:)95e292ca(?:)970e560b(?:)d06783a9(?:)ce70a8ef(?:)656dfd8e(?:)7ef51151(?:)a00339c5$''',
+  '''^\n?- JSONAPI-DEC-007 sha256:ad587c6d(?:)3623a796(?:)4b3047f7(?:)42d2b9c1(?:)91b9b979(?:)98417185(?:)7c727709(?:)2d110501$''',
+  '''^\n?- JSONAPI-DEC-008 sha256:98b181e4(?:)0f339a4a(?:)11b389a6(?:)bfe2ed0c(?:)a28ac122(?:)5fabfdaa(?:)d62f5430(?:)bb5363b7$''',
+  '''^\n?- JSONAPI-DEC-009 sha256:47736a06(?:)49bf48e1(?:)9fed8cc7(?:)5bb8308a(?:)c1790699(?:)487a4e40(?:)55a8e2a4(?:)d486ec2b$''',
+  '''^\n?- JSONAPI-DEC-010 sha256:c7a9604e(?:)5ef3e66a(?:)7576826b(?:)8ab08b6e(?:)58d5de1b(?:)d4d95451(?:)84b4ff0c(?:)66d8c2fa$''',
+]
 `
 	analysisSecurityPolicy = `version: 1
 rules:
@@ -150,6 +182,11 @@ type boundedProcessOutput struct {
 	written  int
 	overflow bool
 	onLimit  func()
+	// Only a fixed owned terminal line may be recognized; stream text is never retained.
+	terminalLine       string
+	terminalLineOffset int
+	terminalLineMatch  bool
+	metadata           *secretMetadata
 }
 
 func (output *boundedProcessOutput) Write(value []byte) (int, error) {
@@ -166,6 +203,24 @@ func (output *boundedProcessOutput) Write(value []byte) (int, error) {
 		return len(value), nil
 	}
 	output.written += len(value)
+	if output.metadata != nil {
+		output.metadata.write(value)
+	}
+	if output.terminalLine != "" {
+		for _, character := range value {
+			if character == '\n' {
+				output.terminalLineMatch = output.terminalLineOffset == len(output.terminalLine)
+				output.terminalLineOffset = 0
+				continue
+			}
+			output.terminalLineMatch = false
+			if output.terminalLineOffset >= 0 && output.terminalLineOffset < len(output.terminalLine) && character == output.terminalLine[output.terminalLineOffset] {
+				output.terminalLineOffset++
+			} else {
+				output.terminalLineOffset = -1
+			}
+		}
+	}
 	output.mutex.Unlock()
 	return len(value), nil
 }
@@ -184,6 +239,21 @@ func (output *boundedProcessOutput) didOverflow() bool {
 	output.mutex.Lock()
 	defer output.mutex.Unlock()
 	return output.overflow
+}
+
+func (output *boundedProcessOutput) matchedTerminalLine() bool {
+	output.mutex.Lock()
+	defer output.mutex.Unlock()
+	return !output.overflow && output.terminalLineMatch
+}
+
+func (output *boundedProcessOutput) findingMetadata() string {
+	output.mutex.Lock()
+	defer output.mutex.Unlock()
+	if output.overflow || output.metadata == nil {
+		return ""
+	}
+	return output.metadata.summary()
 }
 
 // Executor runs one external command.
@@ -932,11 +1002,27 @@ func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate,
 	return runner.command(ctx, output, module, gate, directory, arguments...)
 }
 
-func (runner Runner) securityTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
+func (runner Runner) securityTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) (result error) {
+	gitleaks := tool == "github.com/zricethezav/gitleaks/v8@"+gitleaksVersion
+	if gitleaks {
+		path, cleanup, err := runner.createOwnedPolicy("gitleaks metadata", "gitleaks-metadata-*.tmpl", secretMetadataTemplate)
+		if err != nil {
+			return err
+		}
+		defer func() { result = errors.Join(result, cleanup()) }()
+		args = append(slices.Clone(args), "--exit-code=42", "--report-format=template", "--report-path=-", "--report-template", path)
+	}
 	arguments := append([]string{"run", tool}, args...)
 	return announce(output, module, gate, func() error {
 		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+		if gitleaks {
+			stdout.metadata = &secretMetadata{}
+			// Go run reports the child status as its final stderr line while itself
+			// returning status 1. Gitleaks reserves 42 here for completed findings;
+			// its setup and scanning errors still use status 1.
+			stderr.terminalLine = "exit status 42"
+		}
 		err := runner.Executor.Run(ctx, Command{
 			Name: "go", Args: arguments, Dir: directory, Env: map[string]string{"GOWORK": "off"}, boundedScanner: true,
 			Stdout: stdout, Stderr: stderr,
@@ -946,7 +1032,11 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 			overflow = fmt.Errorf("security scanner output exceeded %d bytes", maximumSecurityProcessOutput)
 		}
 		if err != nil || overflow != nil {
-			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err))
+			var classification error
+			if err != nil && overflow == nil && ctx.Err() == nil && gitleaks && stderr.matchedTerminalLine() {
+				classification = errors.New("secret-findings" + stdout.findingMetadata())
+			}
+			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err, classification))
 		}
 		return nil
 	})
