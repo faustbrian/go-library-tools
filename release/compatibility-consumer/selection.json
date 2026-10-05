@@ -3,6 +3,13 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-tenancy",
+      "module_path": "github.com/faustbrian/go-tenancy/v2",
+      "version": "v2.0.0",
+      "source_revision": "7f52a96aecc0760efec83826cd1d68490f895dcd",
+      "primary_entry_packages": ["github.com/faustbrian/go-tenancy/v2"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-config",
       "module_path": "github.com/faustbrian/go-config/v2",
       "version": "v2.0.0",

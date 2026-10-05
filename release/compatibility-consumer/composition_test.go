@@ -19,7 +19,27 @@ import (
 	openrpc "github.com/faustbrian/go-openrpc/v2"
 	"github.com/faustbrian/go-openrpc/v2/builder"
 	"github.com/faustbrian/go-openrpc/v2/validate"
+	"github.com/faustbrian/go-tenancy/v2"
 )
+
+func TestTenancyV2PublishedTenantScopeComposition(t *testing.T) {
+	tenant, err := tenancy.ParseTenantID("tenant-reference")
+	if err != nil {
+		t.Fatal(err)
+	}
+	scope, err := tenancy.NewTenantScope(tenant, tenancy.Metadata{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx, err := tenancy.WithScope(context.Background(), scope)
+	if err != nil {
+		t.Fatal(err)
+	}
+	resolved, err := tenancy.RequireTenant(ctx)
+	if err != nil || resolved.Value() != "tenant-reference" {
+		t.Fatalf("published tenant scope identity = %v, %v", resolved, err)
+	}
+}
 
 func TestCalendarV2PublishedCivilDateComposition(t *testing.T) {
 	date, err := calendar.NewDate(2024, time.February, 29)
