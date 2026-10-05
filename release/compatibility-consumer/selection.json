@@ -3,6 +3,20 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-config",
+      "module_path": "github.com/faustbrian/go-config/v2",
+      "version": "v2.0.0",
+      "source_revision": "81b390daf52c8e5771e819cb411911c23d9dfb8c",
+      "primary_entry_packages": ["github.com/faustbrian/go-config/v2"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-config/adapters/awssecretsmanager",
+      "module_path": "github.com/faustbrian/go-config/adapters/awssecretsmanager/v2",
+      "version": "v2.0.0",
+      "source_revision": "f03e83d52d4e7250238974f564f2ef558f92ff2f",
+      "primary_entry_packages": ["github.com/faustbrian/go-config/adapters/awssecretsmanager/v2"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-openrpc",
       "module_path": "github.com/faustbrian/go-openrpc/v2",
       "version": "v2.0.0",

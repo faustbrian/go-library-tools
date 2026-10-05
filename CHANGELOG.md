@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Select Config v2 and its AWS Secrets Manager v2 adapter in the maintained
+  public compatibility consumer without changing the frozen base cohort or
+  unrelated module selections.
+
 - Select the published Secret Envelope v2 module in the maintained public
   compatibility consumer without changing the frozen base compatibility set.
 

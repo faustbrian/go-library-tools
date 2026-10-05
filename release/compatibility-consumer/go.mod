@@ -41,8 +41,8 @@ require (
 	github.com/faustbrian/go-cloudevents/adapters/workflow v1.0.0
 	github.com/faustbrian/go-cloudevents/adapters/workflow/v2 v2.0.0
 	github.com/faustbrian/go-concurrency-limit v1.0.0
-	github.com/faustbrian/go-config v1.1.0
-	github.com/faustbrian/go-config/adapters/awssecretsmanager v1.0.0
+	github.com/faustbrian/go-config/adapters/awssecretsmanager/v2 v2.0.0
+	github.com/faustbrian/go-config/v2 v2.0.0
 	github.com/faustbrian/go-correlation v1.1.1
 	github.com/faustbrian/go-ecma-regexp v1.0.0
 	github.com/faustbrian/go-event-sourcing/adapters/kafka/v2 v2.0.0
