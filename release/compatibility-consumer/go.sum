@@ -176,6 +176,8 @@ github.com/faustbrian/go-cli v1.0.0 h1:K+hYLS572nR/tz/zqkyjN7RT6wa96Ln710Fp1azj2
 github.com/faustbrian/go-cli v1.0.0/go.mod h1:pvGIf3RUGkGjlA7oJwPdTuWkH/lLWgQjroJZEhkrZMM=
 github.com/faustbrian/go-clock v1.1.0 h1:QL1k/Xm+YvoeUs/c2d2grsp6XxxwPRlLUmg792kJAEs=
 github.com/faustbrian/go-clock v1.1.0/go.mod h1:WKZ5p79IKGNTZGDp2L81cYjbsEjv3+9U0be7uwS8t6Y=
+github.com/faustbrian/go-clock v1.2.0 h1:vy2700wB/gaXRgW7zWw1iF7twxrKDyL3dSd3fz1DdAA=
+github.com/faustbrian/go-clock v1.2.0/go.mod h1:ZU+wKx09xmXbtOf+swccuicq5Bkezby3k49uk7PCoA0=
 github.com/faustbrian/go-cloudevents v1.1.0 h1:YJUxH5XkWMCzhSY5QD9a8HSiLGf2TP+g7s8PZElLw+8=
 github.com/faustbrian/go-cloudevents v1.1.0/go.mod h1:icPshOQcLVwjqQoaAlDDQFotOPTEm2dlS8cFWuQ4OVM=
 github.com/faustbrian/go-cloudevents/adapters/audit v1.0.0 h1:DzEdGHcG3QpVRtO8k8WNgVK7jYDGT6OxCbYZWd8zGQs=
@@ -306,6 +308,8 @@ github.com/faustbrian/go-opening-hours v1.1.0 h1:zZ1aVhQcXt6reuuMn1db2lHEYVuj82g
 github.com/faustbrian/go-opening-hours v1.1.0/go.mod h1:eWYveNhk37a6CanwTWyaT8Dkcz4tkWiKUTS3sDaixwg=
 github.com/faustbrian/go-opening-hours/v2 v2.0.1 h1:hox2IMeEWGxsIY8zn0F7ZjXI5t2BfPO8pODaQTEiSow=
 github.com/faustbrian/go-opening-hours/v2 v2.0.1/go.mod h1://TvkRkCdCFHwAuLT8Qf/qEYp23N6GgpBXAGYiKQlc0=
+github.com/faustbrian/go-opening-hours/v3 v3.0.0 h1:aMn1pyUZIW90lnnUpwWXQ42K6uj4q/GtcLeg6GArG+Y=
+github.com/faustbrian/go-opening-hours/v3 v3.0.0/go.mod h1:e1hqcz/Y+yTnV7J9REQWVudswhPHmw5YPTBB+LLOrYc=
 github.com/faustbrian/go-openrpc/v2 v2.0.0 h1:84hIuzlR3OlJIIdMWGzUHVZN+o/1hGvbf4W50mpOupk=
 github.com/faustbrian/go-openrpc/v2 v2.0.0/go.mod h1:rSZ0peyoQyItK49DVAF5GUiB7Woz8Aph5FpGdE7wzUU=
 github.com/faustbrian/go-password/v2 v2.0.0 h1:xEquWDSC9CIeDVDwcZJDQKdhbtEcVIxKEQGzcFZseaQ=
@@ -416,6 +420,8 @@ github.com/faustbrian/go-webhook v1.0.0 h1:ddRMEOhhSlhp/7ndxkFPUlQYwlaXYqwbxSNvX
 github.com/faustbrian/go-webhook v1.0.0/go.mod h1:2+Q3h8CW+ZW2v6cb50kCRiA1POHllMvDgbOEIDsjfFA=
 github.com/faustbrian/go-wire v1.0.0 h1:vVniAQ0+dtWPlYvLzJc4xM74oyZ4ZGo5IvQKBTO6UyM=
 github.com/faustbrian/go-wire v1.0.0/go.mod h1:wcQnBeNpF6pw7vFhnBd0W9+qS7zlATxn2zuUae8aLyU=
+github.com/faustbrian/go-wire v1.0.1 h1:ohJu+Hp+i5HIhoDxqBmd0L3uL71XuvE90/oRzP+zd8Q=
+github.com/faustbrian/go-wire v1.0.1/go.mod h1:2XRDGdmRO4lYwnzGTuF5rxwUqyui0ml9ZuBB6cqLde0=
 github.com/faustbrian/go-workflow v1.0.0 h1:u81r6/CPm3a/KDjFWRqk62vu9INi0RFTjBI8OBznLXA=
 github.com/faustbrian/go-workflow v1.0.0/go.mod h1:NFjuML2qg4CjXjeUYAWts7cMkQOEG9sGL3ZfI+hPlHs=
 github.com/faustbrian/go-workflow/v2 v2.0.0 h1:CtOrh9dzEAbdwYW16sV6Ym+8cTsDHdHKCSFVcQrC10s=
@@ -430,6 +436,8 @@ github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHk
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
 github.com/fxamacker/cbor/v2 v2.9.2 h1:X4Ksno9+x3cz0TZv69ec1hxP/+tymuR8PXQJyDwfh78=
 github.com/fxamacker/cbor/v2 v2.9.2/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
+github.com/fxamacker/cbor/v2 v2.9.3 h1:oQBnFATpNdY8gJHTndDDv5Xl4QqNaz51G5LLEPhng3Q=
+github.com/fxamacker/cbor/v2 v2.9.3/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
 github.com/go-jose/go-jose/v4 v4.1.4 h1:moDMcTHmvE6Groj34emNPLs/qtYXRVcd6S7NHbHz3kA=
 github.com/go-jose/go-jose/v4 v4.1.4/go.mod h1:x4oUasVrzR7071A4TnHLGSPpNOm2a21K9Kf04k1rs08=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
@@ -723,6 +731,8 @@ go.jetify.com/typeid/v2 v2.0.0-alpha.3 h1:T6RPx6bNl10lp0JN2Xz/XcgLZWSlVmL58Xqy9c
 go.jetify.com/typeid/v2 v2.0.0-alpha.3/go.mod h1:zfD1ZDHDJNgXZANsO9jDOD81XRRQ0zAOnDBEHmIV/Gw=
 go.mongodb.org/mongo-driver/v2 v2.8.0 h1:CxWDGQYY8QQwNjAl/aq2sfWakdnWZynnqJ9F4DhHbP8=
 go.mongodb.org/mongo-driver/v2 v2.8.0/go.mod h1:yOI9kBsufol30iFsl1slpdq1I0eHPzybRWdyYUs8K/0=
+go.mongodb.org/mongo-driver/v2 v2.9.0 h1:e2mQdOmbkiYz+dj3faM7lVDwl7WdnRD+g5VicafMhL0=
+go.mongodb.org/mongo-driver/v2 v2.9.0/go.mod h1:SHKN0IWkKmEVGHLjXnni6s4wPKX4v86FTgOeJJFuXcA=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0 h1:8tvICD4vSTOOsNrsI4Ljf6C+6UKvpTEH5XY3JMoyPoo=
