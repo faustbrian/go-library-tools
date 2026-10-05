@@ -85,6 +85,14 @@ regexes = ['''^sk_test_0123456789abcdefghijklmnopqrstuv$''']
 paths = ['''^internal/inventory/inventory_test\.go$''']
 
 [[allowlists]]
+description = "Exact public Ethereum legacy trie fixture line."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^testdata/ethereum-tests/TrieTests/trietest\.json$''']
+regexes = ['''^\n?      \[ "key1", "01234567(?:)89012345(?:)67890123(?:)45678901(?:)23456789(?:)Very_Lon(?:)g"\],$''']
+
+[[allowlists]]
 description = "Exact public signing fixture in the shared HTTP-signature differential corpus."
 condition = "AND"
 targetRules = ["generic-api-key"]

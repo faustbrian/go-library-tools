@@ -111,6 +111,37 @@ jobs:
             go test -tags=verifierintegration ./internal/mutation \
               -run '^TestPatchedVerifierRenewsTimeoutForEachIntegrationPhase$' -count=1 -timeout=2m
 
+      - name: Verify public Ethereum fixture finding retention when affected
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          GOLIB_GITLEAKS_INTEGRATION: '1'
+          GOENV: 'off'
+          GOWORK: 'off'
+          GOTOOLCHAIN: local
+          GOMAXPROCS: '2'
+          GOFLAGS: -p=1
+          GOPROXY: https://proxy.golang.org
+          GOSUMDB: sum.golang.org
+          GOPRIVATE: ''
+          GONOPROXY: ''
+          GONOSUMDB: ''
+        run: |
+          set -euo pipefail
+          if [[ -n "${BASE_SHA}" ]] && git cat-file -e "${BASE_SHA}^{commit}" &&
+            git diff --quiet "${BASE_SHA}" HEAD -- internal/gates/runner.go \
+              internal/gates/ethereum_trie_fixture_policy_internal_test.go .github/workflows/ci.yml; then
+            exit 0
+          fi
+          test "${GITHUB_ACTIONS}" = true
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-ethereum-fixture.XXXXXX")"
+          trap 'chmod -R u+w "${task}"; find "${task}" -depth -delete; test ! -e "${task}"' EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod"
+          export GOTMPDIR="${task}/tmp" TMPDIR="${task}/tmp"
+          test "$(go env GOVERSION)" = go1.27.0
+          go test -p=1 ./internal/gates \
+            -run '^TestEthereumTrieFixturePolicyHosted$' -count=1 -timeout=15m
+
   compatibility-consumer-scope:
     name: Compatibility consumer scope
     if: github.event_name == 'pull_request' || github.event_name == 'push'
