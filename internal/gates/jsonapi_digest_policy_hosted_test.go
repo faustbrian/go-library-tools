@@ -68,22 +68,33 @@ func TestJSONAPIDecisionDigestPolicyHosted(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			root, configPath := gitleaksRepository(t, map[string]string{test.path: test.content})
 			for _, mode := range []string{"git", "dir"} {
-				findings, _, err := runGitleaksIntegration(t, root, configPath, mode)
-				if !test.wantFindings {
-					if err != nil || len(findings) != 0 {
-						t.Fatalf("%s: exact public decision records remain scanner findings (count=%d)", mode, len(findings))
+				t.Run(mode, func(t *testing.T) {
+					findings, _, err := runGitleaksIntegration(t, root, configPath, mode)
+					if !test.wantFindings {
+						if err != nil || len(findings) != 0 {
+							matched := 0
+							for _, finding := range findings {
+								if finding.RuleID == "generic-api-key" && finding.File == test.path {
+									matched++
+								}
+							}
+							if err == nil || matched != len(records) || len(findings) != len(records) {
+								t.Fatalf("%s: scanner did not complete the expected metadata finding set", mode)
+							}
+							t.Fatalf("%s: exact public decision records remain scanner findings (count=%d)", mode, matched)
+						}
+						return
 					}
-					continue
-				}
-				matched := false
-				for _, finding := range findings {
-					if finding.RuleID == "generic-api-key" && finding.File == test.path {
-						matched = true
+					matched := false
+					for _, finding := range findings {
+						if finding.RuleID == "generic-api-key" && finding.File == test.path {
+							matched = true
+						}
 					}
-				}
-				if err == nil || !matched {
-					t.Fatalf("%s: non-allowlisted content was not retained as a finding", mode)
-				}
+					if err == nil || !matched {
+						t.Fatalf("%s: non-allowlisted content was not retained as a finding", mode)
+					}
+				})
 			}
 		})
 	}
