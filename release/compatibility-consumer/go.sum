@@ -206,10 +206,12 @@ github.com/faustbrian/go-cloudevents/adapters/workflow/v2 v2.0.0 h1:th/UX7nhftm5
 github.com/faustbrian/go-cloudevents/adapters/workflow/v2 v2.0.0/go.mod h1:DFS8CWPpQ39C5G6SWm3K5tU2qp21hnK6DsXmK5YyH3Y=
 github.com/faustbrian/go-concurrency-limit v1.0.0 h1:7YXJz1vSlO+EMvh/vtvj+aYKHC+tOB1cGbcLSVUI9LQ=
 github.com/faustbrian/go-concurrency-limit v1.0.0/go.mod h1:q3dIb4dYxXlr/aDOp87ZRBIRXg57wsK95qcC74P2I5A=
-github.com/faustbrian/go-config v1.1.0 h1:N/2lp+Vf3sBJ4Qnk3yofR+276QEXpOcPw9PqanwCGZg=
-github.com/faustbrian/go-config v1.1.0/go.mod h1:pnqiOzoqa91gG8gWhQI7S1BXuE/E0DKRCOh19SQ3qYc=
-github.com/faustbrian/go-config/adapters/awssecretsmanager v1.0.0 h1:7fO6XH1216ZMUoTnnEIT7Z93zuwWSIU6GAHTqPvimBg=
-github.com/faustbrian/go-config/adapters/awssecretsmanager v1.0.0/go.mod h1:a+rYx6qwIOIHs7BhXkwu8RRD1mqdozW9NrpK0txS6q8=
+github.com/faustbrian/go-config v1.0.0 h1:jM5qlZmMbcLmo/SZmB5gRs4BoZIRdLg3ZXjSfkpnxrI=
+github.com/faustbrian/go-config v1.0.0/go.mod h1:pnqiOzoqa91gG8gWhQI7S1BXuE/E0DKRCOh19SQ3qYc=
+github.com/faustbrian/go-config/adapters/awssecretsmanager/v2 v2.0.0 h1:YPh+CFqSpkl770z1OO/s4s8PGMYcrLBEI1nNO2kPg8Q=
+github.com/faustbrian/go-config/adapters/awssecretsmanager/v2 v2.0.0/go.mod h1:DG6sl1KoWrUhuf235QHxz9lgBVuxeOuTMpnzGhq8qFw=
+github.com/faustbrian/go-config/v2 v2.0.0 h1:G/ZWxfJ4S9aiws/wdora/2v+RILM893qZwCtS2t0Ytk=
+github.com/faustbrian/go-config/v2 v2.0.0/go.mod h1:LYiKGa3Eg8TAmN3w9wGeo6TvJ0alNPNMkofoqKnfvAg=
 github.com/faustbrian/go-correlation v1.1.1 h1:Waq5affEOsGzYnqBZofZWNJgjP+3sP2QogAQaF7FThU=
 github.com/faustbrian/go-correlation v1.1.1/go.mod h1:iZpD2BdUdQl1F/j4ORQ414W5+2ElMURk4ivcax4dLWk=
 github.com/faustbrian/go-ecma-regexp v1.0.0 h1:7iAhAgAnp7oMvjBe52nDsG9g5mcThWoXh/qWIb+q0KM=
