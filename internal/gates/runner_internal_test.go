@@ -105,7 +105,7 @@ func TestSecurityOrchestrationConfigFailureStopsLaterEffects(t *testing.T) {
 	if !errors.Is(err, failure) || !strings.Contains(err.Error(), "create temporary analysis config") {
 		t.Fatalf("analysis configuration failure = %v", err)
 	}
-	if len(commands) != 2 || !strings.Contains(commands[0], "govulncheck@") || !strings.Contains(commands[1], "gosec@") || files.removed != "" {
+	if len(commands) != 3 || !strings.Contains(commands[0], "govulncheck@") || !strings.HasPrefix(commands[1], "list ") || !strings.Contains(commands[2], "gosec@") || files.removed != "" {
 		t.Fatalf("configuration failure allowed later effects: commands=%v, removed=%q", commands, files.removed)
 	}
 }

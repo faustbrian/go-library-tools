@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"strings"
@@ -326,6 +327,9 @@ type workspaceExecutor struct {
 
 func (executor workspaceExecutor) Run(ctx context.Context, command Command) error {
 	err := executor.run(ctx, command)
+	if output, ok := command.Stdout.(*goPackageOutput); ok && err == nil && output.Len() == 0 {
+		_, err = fmt.Fprintf(output, "{\"Dir\":%q}\n", command.Dir)
+	}
 	// Most gate tests deliberately double the Git/scanner command boundary.
 	// Supply the small valid inventory only when that double did not provide
 	// real or explicitly malformed output; real Git fixtures remain real.

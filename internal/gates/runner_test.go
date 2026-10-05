@@ -3,6 +3,7 @@ package gates_test
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"io"
 	"os"
@@ -86,7 +87,8 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact --exit-code=42 --report-format=template --report-path=- --report-template <generated-gitleaks-metadata-template>",
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact --exit-code=42 --report-format=template --report-path=- --report-template <generated-gitleaks-metadata-template>",
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
-		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
+		"go list -json=Dir ./...",
+		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./",
 		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
@@ -543,7 +545,8 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <generated-gitleaks-config> --log-opts=--all --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact --exit-code=42 --report-format=template --report-path=- --report-template <generated-gitleaks-metadata-template>",
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact --exit-code=42 --report-format=template --report-path=- --report-template <generated-gitleaks-metadata-template>",
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
-		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./...",
+		"go list -json=Dir ./...",
+		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -nosec-require-rules -nosec-require-justification ./",
 		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/acme/example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
@@ -690,12 +693,13 @@ func TestCheckStopsAtAnalyzerAndSecurityFailures(t *testing.T) {
 		{"lint", map[string]bool{"lint": true}, 3},
 		{"staticcheck", map[string]bool{"lint": true}, 4},
 		{"vulnerability", map[string]bool{"security": true}, 7},
-		{"gosec", map[string]bool{"security": true}, 8},
-		{"owned analysis", map[string]bool{"security": true}, 9},
+		{"package discovery", map[string]bool{"security": true}, 8},
+		{"gosec", map[string]bool{"security": true}, 9},
+		{"owned analysis", map[string]bool{"security": true}, 10},
 		{"secrets history", map[string]bool{"security": true}, 5},
 		{"secrets tree", map[string]bool{"security": true}, 6},
-		{"licenses", map[string]bool{"security": true}, 10},
-		{"SBOM", map[string]bool{"security": true}, 11},
+		{"licenses", map[string]bool{"security": true}, 11},
+		{"SBOM", map[string]bool{"security": true}, 12},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -958,6 +962,15 @@ func (executor *recordingExecutor) Run(_ context.Context, command gates.Command)
 		}
 	}
 	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, arguments...), " "))
+	if command.Name == "go" && slices.Equal(command.Args, []string{"list", "-json=Dir", "./..."}) {
+		encoded, err := json.Marshal(map[string]string{"Dir": command.Dir})
+		if err != nil {
+			return err
+		}
+		if _, err := command.Stdout.Write(encoded); err != nil {
+			return err
+		}
+	}
 	if command.Name == "gofmt" && command.Stdout != nil {
 		_, _ = command.Stdout.Write([]byte(executor.formatOutput))
 	}

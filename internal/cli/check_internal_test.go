@@ -1130,7 +1130,10 @@ func (executor releaseSelectionExecutor) Run(_ context.Context, command gates.Co
 		}
 		return nil
 	}
-	if command.Name == "go" && len(command.Args) > 0 && command.Args[0] == "list" {
+	if command.Name == "go" && slices.Equal(command.Args, []string{"list", "-json=Dir", "./..."}) {
+		return json.NewEncoder(command.Stdout).Encode(map[string]string{"Dir": command.Dir})
+	}
+	if command.Name == "go" && len(command.Args) == 3 && command.Args[0] == "list" && command.Args[1] == "-m" {
 		*executor.proxyQueries = append(*executor.proxyQueries, command.Args[2])
 		return nil
 	}

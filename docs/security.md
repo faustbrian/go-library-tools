@@ -52,6 +52,16 @@ and inline `gitleaks:allow` directives are ignored by both scans. Source-level
 native gosec suppressions must name exact rules and include a reason, while
 `nolint:gosec` explanations must appear on the same comment line. A consumer
 cannot silently widen the shared policy. NilAway remains advisory.
+Gosec receives explicit directories from `go list -json=Dir ./...` with
+`GOWORK=off`, not the scanner's recursive filesystem pattern or a production
+package manifest. This includes newly added and test-support packages selected
+by Go; ignored fixture trees and nested modules are not selected. Intentional
+fixture qualification remains a separate, dependency-complete check owned by
+the relevant repository. Discovery uses private, independently bounded 4 MiB
+streams and the same cancellation owner as scanners. Empty, failed, malformed,
+duplicate or out-of-module selections fail closed. At most 4096 directories,
+4096 bytes per argument and 128 KiB of package arguments are admitted. No
+scanner rules or source suppression requirements change.
 The centrally owned generic-api-key exception for JSONAPI decision metadata
 matches only 23 exact decision-ID/SHA-256 lines in root `CHANGELOG.md`.
 The optional single leading newline accommodates Gitleaks v8.30.1's line
