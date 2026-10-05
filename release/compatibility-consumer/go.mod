@@ -129,6 +129,7 @@ require (
 	github.com/faustbrian/go-tabular v1.0.0
 	github.com/faustbrian/go-telemetry v1.2.0
 	github.com/faustbrian/go-temporal v1.1.0
+	github.com/faustbrian/go-temporal/v2 v2.0.0
 	github.com/faustbrian/go-tenancy/v2 v2.0.0
 	github.com/faustbrian/go-transactional-outbox v1.0.0
 	github.com/faustbrian/go-transactional-outbox/adapters/kafka v1.0.0

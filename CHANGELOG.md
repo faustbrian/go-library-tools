@@ -20,6 +20,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Add published Temporal v2 alongside retained Temporal v1 in the maintained
+  public consumer, exercising Calendar, Config and Validation v2 composition
+  and typed admission refusal without changing historical cohorts.
+
 - Select published Tenancy v2 in the maintained public compatibility consumer
   and exercise nominal tenant scope composition without changing the frozen
   base cohort or unrelated module selections.

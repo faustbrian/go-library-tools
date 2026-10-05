@@ -4,11 +4,13 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"testing"
 	"time"
 
 	calendar "github.com/faustbrian/go-calendar/v2"
+	configdecode "github.com/faustbrian/go-config/v2/decode"
 	idempotency "github.com/faustbrian/go-idempotency/v2"
 	idempotencymemory "github.com/faustbrian/go-idempotency/v2/memory"
 	moneyobjective "github.com/faustbrian/go-knapsack/objective/money/v3"
@@ -19,8 +21,63 @@ import (
 	openrpc "github.com/faustbrian/go-openrpc/v2"
 	"github.com/faustbrian/go-openrpc/v2/builder"
 	"github.com/faustbrian/go-openrpc/v2/validate"
+	temporal "github.com/faustbrian/go-temporal/v2"
+	temporalconfig "github.com/faustbrian/go-temporal/v2/adapters/config"
+	temporalvalidation "github.com/faustbrian/go-temporal/v2/adapters/validation"
+	"github.com/faustbrian/go-temporal/v2/dateperiod"
+	"github.com/faustbrian/go-temporal/v2/instant"
 	"github.com/faustbrian/go-tenancy/v2"
+	validation "github.com/faustbrian/go-validation/v2"
 )
+
+func TestTemporalV2PublishedNominalCompositionAndAdmission(t *testing.T) {
+	date := calendar.MustDate(2026, time.October, 5)
+	civil, err := dateperiod.New(date, date, temporal.Closed)
+	if err != nil || civil.Start() != date || civil.Bounds() != temporal.Closed || civil.Days() != 1 {
+		t.Fatalf("Calendar v2 closed singleton = %v, %v", civil, err)
+	}
+	var rule validation.Validator[dateperiod.Period] = temporalvalidation.DateNonEmpty()
+	if report := rule.Validate(validation.Context{}, civil); !report.Empty() {
+		t.Fatalf("Validation v2 singleton report = %v", report)
+	}
+	empty, err := dateperiod.New(date, date, temporal.Open)
+	if err != nil || !rule.Validate(validation.Context{}, empty).HasCode("temporal_empty") {
+		t.Fatalf("Validation v2 empty period classification = %v", err)
+	}
+	encoded, err := temporalconfig.NewDatePeriod(civil).MarshalText()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var decoded temporalconfig.DatePeriod
+	if err := configdecode.Value(string(encoded), &decoded); err != nil || decoded.Value() != civil {
+		t.Fatalf("Config v2 date/bounds composition = %v, %v", decoded.Value(), err)
+	}
+	start := time.Date(2026, time.October, 5, 0, 0, 0, 0, time.UTC)
+	first, err := instant.New(start, start.Add(time.Hour), temporal.OpenClosed)
+	if err != nil || first.Includes(start) || !first.Includes(start.Add(time.Hour)) {
+		t.Fatalf("instant endpoint bounds = %v, %v", first, err)
+	}
+	second, err := instant.New(start.Add(2*time.Hour), start.Add(3*time.Hour), temporal.Closed)
+	if err != nil {
+		t.Fatal(err)
+	}
+	left, err := instant.NewSet(temporal.Limits{InputPeriods: 1}, first)
+	if err != nil {
+		t.Fatal(err)
+	}
+	right, err := instant.NewSet(temporal.Limits{InputPeriods: 1}, second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	refused, err := left.Union(right)
+	var limit *temporal.LimitError
+	if !errors.Is(err, temporal.ErrLimit) || !errors.As(err, &limit) || limit.Field != "input_periods" || limit.Value != 2 || limit.Max != 1 || refused.Len() != 0 {
+		t.Fatalf("Union refusal = %v, %v; want empty typed 2/1 refusal", refused, err)
+	}
+	if left.Len() != 1 || right.Len() != 1 || left.Periods()[0] != first || right.Periods()[0] != second {
+		t.Fatal("refused Union changed an operand")
+	}
+}
 
 func TestTenancyV2PublishedTenantScopeComposition(t *testing.T) {
 	tenant, err := tenancy.ParseTenantID("tenant-reference")
