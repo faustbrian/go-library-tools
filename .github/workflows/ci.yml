@@ -57,6 +57,25 @@ jobs:
           cache: false
       - name: Run fast local CI
         run: make local-ci
+      - name: Verify pinned gosec package selection when affected
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${BASE_SHA}" ]] && git cat-file -e "${BASE_SHA}^{commit}" &&
+            git diff --quiet "${BASE_SHA}" HEAD -- internal/gates/gosec_packages.go \
+              internal/gates/gosec_packages_internal_test.go internal/gates/gosec_packages_hosted_test.go \
+              internal/gates/runner.go .github/workflows/ci.yml; then
+            exit 0
+          fi
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-gosec-selection.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+            GOWORK=off GOTOOLCHAIN=local GOPROXY=https://proxy.golang.org \
+            GOSUMDB=sum.golang.org GOMAXPROCS=2 \
+            go test -p=1 -tags=scannerintegration ./internal/gates \
+              -run '^TestGosecSelectedPackagesHosted$' -count=1 -timeout=15m
       - name: Run mutation verifier behavior when affected
         if: github.event_name == 'pull_request'
         env:

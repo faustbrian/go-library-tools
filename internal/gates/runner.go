@@ -712,9 +712,14 @@ func (runner Runner) runSecurity(ctx context.Context, output io.Writer, director
 		"golang.org/x/vuln/cmd/govulncheck@"+govulncheckVersion, "./..."); err != nil {
 		return err
 	}
+	packages, err := runner.gosecPackages(ctx, directory)
+	if err != nil {
+		return err
+	}
+	gosecArguments := append([]string{"-nosec-require-rules", "-nosec-require-justification"}, packages...)
 	if err := runner.securityTool(ctx, output, module.Directory, "gosec", directory,
 		"github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion,
-		"-nosec-require-rules", "-nosec-require-justification", "./..."); err != nil {
+		gosecArguments...); err != nil {
 		return err
 	}
 	analysisPath, cleanupAnalysis, err := runner.createAnalysisConfig()

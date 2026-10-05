@@ -15,6 +15,11 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Discover security scan packages using ordinary Go selection and pass explicit
+  directories to pinned gosec, retaining new and test-support packages without
+  recursively selecting ignored fixture trees or nested modules. Discovery
+  errors, malformed output and resource limits fail closed.
+
 - Select Config v2 and its AWS Secrets Manager v2 adapter in the maintained
   public compatibility consumer without changing the frozen base cohort or
   unrelated module selections.
