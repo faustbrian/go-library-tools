@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 
 ### Security
 
+- Classify pinned Gosec failures from bounded private JSON as completed findings,
+  package-loading failures, or unusable tool/report failures. Report only fixed
+  counts, validated rule identities, coordinates and hashed module-relative file
+  identities; retain strict suppressions, package selection and native failure.
+
 - Admit Markdown as regular, size-bounded repository files before reading,
   retaining the inclusive 4 MiB and 4096-document limits. Documentation walks
   now use bounded batches and reject more than 100,000 enumerated entries or

@@ -62,7 +62,9 @@ func TestGosecSelectedPackagesHosted(t *testing.T) {
 			return executor.Run(ctx, command)
 		}
 		if slices.Contains(command.Args, tool) {
-			command.Args = slices.Insert(slices.Clone(command.Args), 2, "-fmt=json")
+			if !slices.Contains(command.Args, "-fmt=json") {
+				t.Fatal("production Gosec does not request structured output")
+			}
 			command.Stdout = report
 			return executor.Run(ctx, command)
 		}
