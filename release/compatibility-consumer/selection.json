@@ -332,6 +332,13 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-temporal",
+      "module_path": "github.com/faustbrian/go-temporal/v2",
+      "version": "v2.0.0",
+      "source_revision": "e79d4d85da711fdfa5b9de7618229842952cd044",
+      "primary_entry_packages": ["github.com/faustbrian/go-temporal/v2"]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-calendar",
       "module_path": "github.com/faustbrian/go-calendar/v2",
       "version": "v2.0.0",

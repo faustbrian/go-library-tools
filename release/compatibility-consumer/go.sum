@@ -390,6 +390,8 @@ github.com/faustbrian/go-telemetry/v2 v2.0.0 h1:QhqiUbgdJu4Bus/3yYmDXUBsakSlx7AR
 github.com/faustbrian/go-telemetry/v2 v2.0.0/go.mod h1:LP33MN5e01RYDHBD4SvZSJNphRQ43WpoX3uBtBXdKmM=
 github.com/faustbrian/go-temporal v1.1.0 h1:toqB2DuOVI1nbJob3uJf7zqmT7+f69dTRtBPQSD/F6I=
 github.com/faustbrian/go-temporal v1.1.0/go.mod h1:TfsoJQIryKFKu6qmxpw8AfhelOco+d1as65rt0IZQVE=
+github.com/faustbrian/go-temporal/v2 v2.0.0 h1:arh10tDetanujivCUoXF+S++XcOAXX6naNVxO/MKtK0=
+github.com/faustbrian/go-temporal/v2 v2.0.0/go.mod h1:SauYnDJNJmHvs37x6EpcMLdX8goqcl/wEhcoJi9Q4/A=
 github.com/faustbrian/go-tenancy v1.1.0 h1:siH524OklYNzUjooYeoJl22WvtrV0BCcoctotqP2G4c=
 github.com/faustbrian/go-tenancy v1.1.0/go.mod h1:aiEdsa3aoVg41f4Xy04fUiDjcD5CkPhhSHpexm4HheQ=
 github.com/faustbrian/go-tenancy/v2 v2.0.0 h1:mBnku3tgoqnFAYLR21sI/2DCOazicriIRdLniXV4rF0=

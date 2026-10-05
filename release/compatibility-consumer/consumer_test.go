@@ -282,6 +282,7 @@ import (
 	_ "github.com/faustbrian/go-tabular"
 	_ "github.com/faustbrian/go-telemetry"
 	_ "github.com/faustbrian/go-temporal"
+	_ "github.com/faustbrian/go-temporal/v2"
 	_ "github.com/faustbrian/go-tenancy/v2"
 	_ "github.com/faustbrian/go-transactional-outbox"
 	_ "github.com/faustbrian/go-transactional-outbox/adapters/kafka"
