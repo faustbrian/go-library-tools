@@ -31,7 +31,10 @@ func TestGosecReceivesGoSelectedDirectories(t *testing.T) {
 			}
 		}
 		if slices.Contains(command.Args, "github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion) {
-			selected = command.Args[4:]
+			if !slices.Equal(command.Args[:5], []string{"run", "github.com/securego/gosec/v2/cmd/gosec@" + gosecVersion, "-fmt=json", "-nosec-require-rules", "-nosec-require-justification"}) {
+				t.Fatal("structured reporting changed strict scanner flags")
+			}
+			selected = command.Args[5:]
 			return stop
 		}
 		return nil
@@ -131,7 +134,7 @@ func TestGosecOrdinaryGoSelectionIncludesNewAndSupportPackages(t *testing.T) {
 			return process.Run()
 		}
 		if slices.Contains(command.Args, "github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion) {
-			selected = command.Args[4:]
+			selected = command.Args[5:]
 			return stop
 		}
 		return nil

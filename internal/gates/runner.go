@@ -1017,6 +1017,10 @@ func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate,
 
 func (runner Runner) securityTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) (result error) {
 	gitleaks := tool == "github.com/zricethezav/gitleaks/v8@"+gitleaksVersion
+	gosec := tool == "github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion
+	if gosec {
+		args = append([]string{"-fmt=json"}, args...)
+	}
 	if gitleaks {
 		path, cleanup, err := runner.createOwnedPolicy("gitleaks metadata", "gitleaks-metadata-*.tmpl", secretMetadataTemplate)
 		if err != nil {
@@ -1029,6 +1033,16 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 	return announce(output, module, gate, func() error {
 		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+		var stdoutWriter io.Writer = stdout
+		var report *sourceInventoryOutput
+		if gosec {
+			report = &sourceInventoryOutput{}
+			report.limit = maximumSecurityProcessOutput
+			stdout = &report.boundedProcessOutput
+			stdoutWriter = report
+			defer func() { clear(report.data.Bytes()); report.data.Reset() }()
+			stderr.terminalLine = "exit status 1"
+		}
 		if gitleaks {
 			stdout.metadata = &secretMetadata{}
 			// Go run reports the child status as its final stderr line while itself
@@ -1038,7 +1052,7 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 		}
 		err := runner.Executor.Run(ctx, Command{
 			Name: "go", Args: arguments, Dir: directory, Env: map[string]string{"GOWORK": "off"}, boundedScanner: true,
-			Stdout: stdout, Stderr: stderr,
+			Stdout: stdoutWriter, Stderr: stderr,
 		})
 		var overflow error
 		if stdout.didOverflow() || stderr.didOverflow() {
@@ -1048,6 +1062,13 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 			var classification error
 			if err != nil && overflow == nil && ctx.Err() == nil && gitleaks && stderr.matchedTerminalLine() {
 				classification = errors.New("secret-findings" + stdout.findingMetadata())
+			}
+			if err != nil && overflow == nil && ctx.Err() == nil && gosec {
+				metadata := "gosec-tool-or-report-failure"
+				if stderr.matchedTerminalLine() {
+					metadata = gosecFailureMetadata(report.data.Bytes(), directory)
+				}
+				classification = errors.New(metadata)
 			}
 			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err, classification))
 		}
