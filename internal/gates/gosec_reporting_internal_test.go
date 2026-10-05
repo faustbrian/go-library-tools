@@ -115,13 +115,24 @@ func TestGosecLocationsAreBoundedWhileCountsRemainComplete(t *testing.T) {
 	if err := json.Unmarshal(ordinaryGosecReport(root, true, false), &report); err != nil {
 		t.Fatal(err)
 	}
-	issue := report["Issues"].([]any)[0]
+	fixtureIssues, ok := report["Issues"].([]any)
+	if !ok || len(fixtureIssues) != 1 {
+		t.Fatal("ordinary report fixture must contain exactly one issue")
+	}
+	issue, ok := fixtureIssues[0].(map[string]any)
+	if !ok {
+		t.Fatal("ordinary report fixture issue must be an object")
+	}
+	stats, ok := report["Stats"].(map[string]any)
+	if !ok {
+		t.Fatal("ordinary report fixture statistics must be an object")
+	}
 	issues := make([]any, 33)
 	for index := range issues {
 		issues[index] = issue
 	}
 	report["Issues"] = issues
-	report["Stats"].(map[string]any)["found"] = 33
+	stats["found"] = 33
 	data, err := json.Marshal(report)
 	if err != nil {
 		t.Fatal(err)
@@ -130,7 +141,7 @@ func TestGosecLocationsAreBoundedWhileCountsRemainComplete(t *testing.T) {
 	if !strings.Contains(metadata, "gosec-findings findings=33") || strings.Count(metadata, "gosec-location ") != 32 {
 		t.Fatal("private report projection lost complete count or exceeded location bound")
 	}
-	issue.(map[string]any)["line"] = "12-14"
+	issue["line"] = "12-14"
 	data, _ = json.Marshal(report)
 	if !strings.Contains(gosecFailureMetadata(data, root), " G115 12-14 4") {
 		t.Fatal("official multi-line coordinate was not retained")
