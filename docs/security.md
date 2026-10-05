@@ -52,6 +52,17 @@ and inline `gitleaks:allow` directives are ignored by both scans. Source-level
 native gosec suppressions must name exact rules and include a reason, while
 `nolint:gosec` explanations must appear on the same comment line. A consumer
 cannot silently widen the shared policy. NilAway remains advisory.
+The historical public-tool-identity exception for root `Makefile` and exact
+`.golib/package.mk` is restricted to `generic-api-key` findings on complete
+`APIDIFF_VERSION := v0.0.0-<14 digits>-<12 lowercase hex>` assignment lines.
+Only spaces/tabs around `:=` and after the version, plus the scanner's optional
+single leading newline, are admitted. The line target binds the assignment
+identity, not merely the version-shaped value: other keys, paths, rules,
+operators or surrounding content remain scanned. No file or commit is
+allowlisted wholesale, and the existing `.golib/versions.env` exception is
+unchanged. Owner: library maintainer; review when historical tool identity or
+pinned scanner line-framing semantics changes. Full-history and current-tree
+scanning, private finding metadata and suppression accounting are unchanged.
 Gosec receives explicit directories from `go list -json=Dir ./...` with
 `GOWORK=off`, not the scanner's recursive filesystem pattern or a production
 package manifest. This includes newly added and test-support packages selected

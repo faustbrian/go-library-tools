@@ -15,6 +15,11 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Recognize exact historical `APIDIFF_VERSION :=` public pseudo-version
+  assignments in root `Makefile` and `.golib/package.mk` during secret scanning.
+  Match the complete assignment line and generic rule as well as the path;
+  unrelated assignment keys and surrounding content remain findings.
+
 - Discover security scan packages using ordinary Go selection and pass explicit
   directories to pinned gosec, retaining new and test-support packages without
   recursively selecting ignored fixture trees or nested modules. Discovery

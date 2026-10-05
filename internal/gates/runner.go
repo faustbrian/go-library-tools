@@ -69,6 +69,14 @@ regexes = ['''^v0\.0\.0-[0-9]{14}-[0-9a-f]{12}$''']
 paths = ['''^\.golib/versions\.env$''']
 
 [[allowlists]]
+description = "Historical APIDIFF_VERSION assignments in exact retired Makefiles are public tool identities."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+regexes = ['''^\n?APIDIFF_VERSION[ \t]*:=[ \t]*v0\.0\.0-[0-9]{14}-[0-9a-f]{12}[ \t]*$''']
+paths = ['''^(?:\.golib/package\.mk|Makefile)$''']
+
+[[allowlists]]
 description = "Exact synthetic Stripe token used by hostile inventory identity tests."
 condition = "AND"
 targetRules = ["stripe-access-token"]
