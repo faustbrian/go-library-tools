@@ -154,6 +154,7 @@ type boundedProcessOutput struct {
 	terminalLine       string
 	terminalLineOffset int
 	terminalLineMatch  bool
+	metadata           *secretMetadata
 }
 
 func (output *boundedProcessOutput) Write(value []byte) (int, error) {
@@ -170,6 +171,9 @@ func (output *boundedProcessOutput) Write(value []byte) (int, error) {
 		return len(value), nil
 	}
 	output.written += len(value)
+	if output.metadata != nil {
+		output.metadata.write(value)
+	}
 	if output.terminalLine != "" {
 		for _, character := range value {
 			if character == '\n' {
@@ -209,6 +213,15 @@ func (output *boundedProcessOutput) matchedTerminalLine() bool {
 	output.mutex.Lock()
 	defer output.mutex.Unlock()
 	return !output.overflow && output.terminalLineMatch
+}
+
+func (output *boundedProcessOutput) findingMetadata() string {
+	output.mutex.Lock()
+	defer output.mutex.Unlock()
+	if output.overflow || output.metadata == nil {
+		return ""
+	}
+	return output.metadata.summary()
 }
 
 // Executor runs one external command.
@@ -957,16 +970,22 @@ func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate,
 	return runner.command(ctx, output, module, gate, directory, arguments...)
 }
 
-func (runner Runner) securityTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
+func (runner Runner) securityTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) (result error) {
 	gitleaks := tool == "github.com/zricethezav/gitleaks/v8@"+gitleaksVersion
 	if gitleaks {
-		args = append(slices.Clone(args), "--exit-code=42")
+		path, cleanup, err := runner.createOwnedPolicy("gitleaks metadata", "gitleaks-metadata-*.tmpl", secretMetadataTemplate)
+		if err != nil {
+			return err
+		}
+		defer func() { result = errors.Join(result, cleanup()) }()
+		args = append(slices.Clone(args), "--exit-code=42", "--report-format=template", "--report-path=-", "--report-template", path)
 	}
 	arguments := append([]string{"run", tool}, args...)
 	return announce(output, module, gate, func() error {
 		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 		if gitleaks {
+			stdout.metadata = &secretMetadata{}
 			// Go run reports the child status as its final stderr line while itself
 			// returning status 1. Gitleaks reserves 42 here for completed findings;
 			// its setup and scanning errors still use status 1.
@@ -983,7 +1002,7 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 		if err != nil || overflow != nil {
 			var classification error
 			if err != nil && overflow == nil && ctx.Err() == nil && gitleaks && stderr.matchedTerminalLine() {
-				classification = errors.New("secret-findings")
+				classification = errors.New("secret-findings" + stdout.findingMetadata())
 			}
 			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err, classification))
 		}

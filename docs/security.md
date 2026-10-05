@@ -56,6 +56,12 @@ Scanner-controlled stdout and stderr are suppressed and independently limited
 to 4 MiB. Gitleaks uses a distinct findings exit status; only the exact final
 Go-wrapper status line is recognized, without retaining scanner text. Completed
 findings produce the fixed `secret-findings` diagnostic and still fail the gate.
+An owned report template emits only SHA-256 file and rule identities, positive
+line numbers and Git commit identities. At most 32 validated, 256-byte locations
+are included as `secret-location <file-sha256> <rule-sha256> <line> <commit>`;
+current-tree findings use `-` for the commit. Additional locations are explicitly
+omitted. Filenames, rule text, finding payloads and reporter metadata are never
+rendered. Invalid or incomplete location metadata is suppressed in full.
 Other failures remain unclassified; cancellation or overflow cannot qualify as
 completed findings. Exceeding either limit terminates the scanner's original process group
 and returns only an owned overflow class while preserving the process failure.

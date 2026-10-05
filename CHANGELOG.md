@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Include bounded, validated file/rule hashes and positions for completed
+  secret findings using an owned report template. Suppress invalid metadata and
+  never render filenames, finding values or reporter data.
+
 - Distinguish completed secret findings from other Gitleaks failures with a
   fixed diagnostic, without retaining or publishing scanner output. History and
   current-tree failures remain fail-closed; canceled or overflowing commands

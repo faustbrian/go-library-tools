@@ -42,7 +42,7 @@ func TestSecretScannerFailureClassificationWithoutOutput(t *testing.T) {
 			}
 			failure := errors.New("process failure")
 			var announced strings.Builder
-			runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
+			runner := Runner{Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
 				if test.tool == "" && !slices.Contains(command.Args, "--exit-code=42") {
 					t.Fatal("Gitleaks findings still share the scanner failure status")
 				}
@@ -66,7 +66,7 @@ func TestSecretScannerFailureClassificationWithoutOutput(t *testing.T) {
 					return nil
 				}
 				return failure
-			})}
+			}}}
 			err := runner.securityTool(ctx, &announced, ".", "secrets-history", ".", tool, "git", ".")
 			if test.succeeded {
 				if err != nil {

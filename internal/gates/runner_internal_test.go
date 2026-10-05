@@ -710,6 +710,9 @@ func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
 }
 
 func TestRunSecurityScansUploadPackHiddenHistory(t *testing.T) {
+	if os.Getenv("GITHUB_ACTIONS") != "true" {
+		t.Skip("scanner integration runs only in hosted CI")
+	}
 	if os.Getenv("GOLIB_GITLEAKS_INTEGRATION") != "1" {
 		t.Skip("set GOLIB_GITLEAKS_INTEGRATION=1 to run the pinned scanner contract")
 	}
@@ -747,6 +750,9 @@ func TestRunSecurityScansUploadPackHiddenHistory(t *testing.T) {
 		commands = append(commands, joined)
 		if command.Name == "git" || strings.Contains(joined, "gitleaks") {
 			if strings.Contains(joined, "gitleaks") && strings.Contains(joined, " git ") {
+				if index := slices.Index(command.Args, "--report-template"); index >= 0 {
+					command.Args = slices.Delete(command.Args, index, index+2)
+				}
 				command.Args = append(command.Args, "--report-format", "json", "--report-path", reportPath)
 			}
 			// #nosec G204 -- executable and arguments are fixed by the production gate under test.
@@ -1682,6 +1688,9 @@ func TestRunSecurityIsolatesGitleaksIgnoreCreatedDuringScans(t *testing.T) {
 }
 
 func TestRunSecurityRejectsTransientGitleaksIgnore(t *testing.T) {
+	if os.Getenv("GITHUB_ACTIONS") != "true" {
+		t.Skip("scanner integration runs only in hosted CI")
+	}
 	if os.Getenv("GOLIB_GITLEAKS_INTEGRATION") != "1" {
 		t.Skip("set GOLIB_GITLEAKS_INTEGRATION=1 to run the pinned scanner contract")
 	}
@@ -1738,6 +1747,9 @@ func TestRunSecurityRejectsTransientGitleaksIgnore(t *testing.T) {
 				}
 				if err := os.WriteFile(ignorePath, []byte(findings[0].Fingerprint+"\n"), 0o600); err != nil {
 					return err
+				}
+				if index := slices.Index(command.Args, "--report-template"); index >= 0 {
+					command.Args = slices.Delete(command.Args, index, index+2)
 				}
 				command.Args = append(command.Args, "--report-format", "json", "--report-path", reportPath)
 				// #nosec G204 -- the executable and arguments are fixed by the production gate under test.
