@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Select published Tenancy v2 in the maintained public compatibility consumer
+  and exercise nominal tenant scope composition without changing the frozen
+  base cohort or unrelated module selections.
+
 - Recognize exact historical `APIDIFF_VERSION :=` public pseudo-version
   assignments in root `Makefile` and `.golib/package.mk` during secret scanning.
   Match the complete assignment line and generic rule as well as the path;

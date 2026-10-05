@@ -392,6 +392,8 @@ github.com/faustbrian/go-temporal v1.1.0 h1:toqB2DuOVI1nbJob3uJf7zqmT7+f69dTRtBP
 github.com/faustbrian/go-temporal v1.1.0/go.mod h1:TfsoJQIryKFKu6qmxpw8AfhelOco+d1as65rt0IZQVE=
 github.com/faustbrian/go-tenancy v1.1.0 h1:siH524OklYNzUjooYeoJl22WvtrV0BCcoctotqP2G4c=
 github.com/faustbrian/go-tenancy v1.1.0/go.mod h1:aiEdsa3aoVg41f4Xy04fUiDjcD5CkPhhSHpexm4HheQ=
+github.com/faustbrian/go-tenancy/v2 v2.0.0 h1:mBnku3tgoqnFAYLR21sI/2DCOazicriIRdLniXV4rF0=
+github.com/faustbrian/go-tenancy/v2 v2.0.0/go.mod h1:X1W2eQH89pZQ13LI9eW4ra3bKnJtp6PoQ1MX2el7rXg=
 github.com/faustbrian/go-transactional-outbox v1.0.0 h1:FGCv7v4VIYFt1OPr8yyb/CX+NO9nlgjRpCsFPTJP2VI=
 github.com/faustbrian/go-transactional-outbox v1.0.0/go.mod h1:xfUyb0Wxg9+fN2RttzFgoAHZdHhG64WJRfpoDrKIJ58=
 github.com/faustbrian/go-transactional-outbox/adapters/kafka v1.0.0 h1:NqsZguWxrH8G9agKiK4gbMg2YCkL8OC+ig6+Iuu43eM=

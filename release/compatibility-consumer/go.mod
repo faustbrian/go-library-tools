@@ -129,7 +129,7 @@ require (
 	github.com/faustbrian/go-tabular v1.0.0
 	github.com/faustbrian/go-telemetry v1.2.0
 	github.com/faustbrian/go-temporal v1.1.0
-	github.com/faustbrian/go-tenancy v1.1.0
+	github.com/faustbrian/go-tenancy/v2 v2.0.0
 	github.com/faustbrian/go-transactional-outbox v1.0.0
 	github.com/faustbrian/go-transactional-outbox/adapters/kafka v1.0.0
 	github.com/faustbrian/go-transactional-outbox/adapters/otel v1.0.0
@@ -180,6 +180,7 @@ require (
 	github.com/faustbrian/go-event-sourcing v1.0.0 // indirect
 	github.com/faustbrian/go-international v1.1.0 // indirect
 	github.com/faustbrian/go-telemetry/v2 v2.0.0 // indirect
+	github.com/faustbrian/go-tenancy v1.1.0 // indirect
 	github.com/faustbrian/go-validation v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.2 // indirect
