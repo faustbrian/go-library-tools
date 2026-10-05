@@ -9,6 +9,7 @@ import (
 	"io"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -111,41 +112,75 @@ func TestGosecUnusableReportsRemainToolFailures(t *testing.T) {
 
 func TestGosecLocationsAreBoundedWhileCountsRemainComplete(t *testing.T) {
 	root := t.TempDir()
-	var report map[string]any
-	if err := json.Unmarshal(ordinaryGosecReport(root, true, false), &report); err != nil {
-		t.Fatal(err)
+	for _, count := range []int{33, 51, 64, 65} {
+		t.Run(strconv.Itoa(count), func(t *testing.T) {
+			report, _ := ordinaryGosecFindings(root, count)
+			data, err := json.Marshal(report)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var want strings.Builder
+			fmt.Fprintf(&want, "gosec-findings findings=%d loading_packages=0 loading_errors=0", count)
+			for index := range min(count, 64) {
+				relative := fmt.Sprintf("resource-%02d.go", index)
+				fmt.Fprintf(&want, "\ngosec-location %x G115 %d 4", sha256.Sum256([]byte(relative)), index+1)
+			}
+			if gosecFailureMetadata(data, root) != want.String() {
+				t.Fatal("projection must preserve complete counts and exactly the first 64 sanitized identities")
+			}
+		})
 	}
-	fixtureIssues, ok := report["Issues"].([]any)
-	if !ok || len(fixtureIssues) != 1 {
-		t.Fatal("ordinary report fixture must contain exactly one issue")
-	}
-	issue, ok := fixtureIssues[0].(map[string]any)
-	if !ok {
-		t.Fatal("ordinary report fixture issue must be an object")
-	}
-	stats, ok := report["Stats"].(map[string]any)
-	if !ok {
-		t.Fatal("ordinary report fixture statistics must be an object")
-	}
-	issues := make([]any, 33)
-	for index := range issues {
-		issues[index] = issue
-	}
-	report["Issues"] = issues
-	stats["found"] = 33
+	report, issues := ordinaryGosecFindings(root, 1)
+	issues[0]["line"] = "12-14"
 	data, err := json.Marshal(report)
 	if err != nil {
 		t.Fatal(err)
 	}
-	metadata := gosecFailureMetadata(data, root)
-	if !strings.Contains(metadata, "gosec-findings findings=33") || strings.Count(metadata, "gosec-location ") != 32 {
-		t.Fatal("private report projection lost complete count or exceeded location bound")
-	}
-	issue["line"] = "12-14"
-	data, _ = json.Marshal(report)
 	if !strings.Contains(gosecFailureMetadata(data, root), " G115 12-14 4") {
 		t.Fatal("official multi-line coordinate was not retained")
 	}
+}
+
+func TestGosecValidatesIssuesBeyondLocationCap(t *testing.T) {
+	root := t.TempDir()
+	for name, invalid := range map[string]struct {
+		field string
+		value any
+	}{
+		"rule":                 {"rule_id", "G999"},
+		"coordinate":           {"line", "0"},
+		"outside module":       {"file", filepath.Join(filepath.Dir(root), "outside.go")},
+		"suppression":          {"nosec", true},
+		"suppression evidence": {"suppressions", []any{map[string]string{"kind": "inert"}}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			report, issues := ordinaryGosecFindings(root, 65)
+			issues[64][invalid.field] = invalid.value
+			data, err := json.Marshal(report)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if gosecFailureMetadata(data, root) != "gosec-tool-or-report-failure" {
+				t.Fatal("an invalid undisclosed issue must invalidate the whole projection")
+			}
+		})
+	}
+}
+
+// Reports are tiny inert data fixtures; no scanner or process is invoked.
+func ordinaryGosecFindings(root string, count int) (map[string]any, []map[string]any) {
+	issues := make([]map[string]any, count)
+	for index := range issues {
+		issues[index] = map[string]any{
+			"rule_id": "G115", "file": filepath.Join(root, fmt.Sprintf("resource-%02d.go", index)),
+			"line": strconv.Itoa(index + 1), "column": "4", "nosec": false, "suppressions": nil,
+			"details": "private diagnostic", "code": "private source",
+		}
+	}
+	return map[string]any{
+		"Golang errors": map[string]any{}, "Issues": issues,
+		"Stats": map[string]int{"files": 1, "lines": 100, "nosec": 0, "found": count},
+	}, issues
 }
 
 func TestGosecFailurePreservesProcessBoundaries(t *testing.T) {

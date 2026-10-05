@@ -88,7 +88,7 @@ func gosecFailureMetadata(data []byte, directory string) string {
 			return unusable
 		}
 		findings++
-		if findings <= 32 {
+		if findings <= 64 {
 			fmt.Fprintf(&locations, "\ngosec-location %x %s %s %s", sha256.Sum256([]byte(filepath.ToSlash(relative))), issue.Rule, issue.Line, issue.Column)
 		}
 	}

@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 
 ### Security
 
+- Increase the bounded sanitized Gosec location projection from 32 to 64,
+  retaining complete finding counts and validation of every issue beyond the
+  projection cap. Output still contains only hashed module-relative identities,
+  validated rules and coordinates, never source, details or raw paths.
+
 - Classify pinned Gosec failures from bounded private JSON as completed findings,
   package-loading failures, or unusable tool/report failures. Report only fixed
   counts, validated rule identities, coordinates and hashed module-relative file
