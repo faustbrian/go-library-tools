@@ -50,12 +50,18 @@ func TestSecretScannerFailureClassificationWithoutOutput(t *testing.T) {
 					_, _ = io.WriteString(command.Stderr, chunk)
 				}
 				if test.overflow {
-					output := command.Stdout.(*boundedProcessOutput)
+					output, ok := command.Stdout.(*boundedProcessOutput)
+					if !ok {
+						t.Fatal("stdout is not the bounded scanner output")
+					}
 					output.limit = 0
 					_, _ = io.WriteString(output, "x")
 				}
 				if test.stderrOverflow {
-					output := command.Stderr.(*boundedProcessOutput)
+					output, ok := command.Stderr.(*boundedProcessOutput)
+					if !ok {
+						t.Fatal("stderr is not the bounded scanner output")
+					}
 					output.limit = output.written
 					_, _ = io.WriteString(output, "x")
 				}
