@@ -20,6 +20,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Add published Opening v3 alongside retained Opening v1 and v2 in the
+  maintained public consumer, preserving Calendar v2 civil-date and Temporal
+  v2 half-open range composition through canonical and retained adapters.
+
 - Add published Temporal v2 alongside retained Temporal v1 in the maintained
   public consumer, exercising Calendar, Config and Validation v2 composition
   and typed admission refusal without changing historical cohorts.

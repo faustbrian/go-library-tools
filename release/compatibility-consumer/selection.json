@@ -3,6 +3,20 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-clock",
+      "module_path": "github.com/faustbrian/go-clock",
+      "version": "v1.2.0",
+      "source_revision": "6bf5fc30b87703813b50758c40a3f3b13f668b48",
+      "primary_entry_packages": ["github.com/faustbrian/go-clock"]
+    },
+    {
+      "from_module_path": "github.com/faustbrian/go-wire",
+      "module_path": "github.com/faustbrian/go-wire",
+      "version": "v1.0.1",
+      "source_revision": "609cfd9a80e0967ddf94f10f93b554ecd2ff6a92",
+      "primary_entry_packages": ["github.com/faustbrian/go-wire"]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-tenancy",
       "module_path": "github.com/faustbrian/go-tenancy/v2",
       "version": "v2.0.0",
@@ -331,6 +345,29 @@
     }
   ],
   "additions": [
+    {
+      "alongside_module_path": "github.com/faustbrian/go-opening-hours",
+      "module_path": "github.com/faustbrian/go-opening-hours/v3",
+      "version": "v3.0.0",
+      "source_revision": "2c788b17f5a829bc57a7d37564829fd791391730",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-opening-hours/v3",
+        "github.com/faustbrian/go-opening-hours/v3/adapters/calendar",
+        "github.com/faustbrian/go-opening-hours/v3/adapters/config",
+        "github.com/faustbrian/go-opening-hours/v3/adapters/temporal",
+        "github.com/faustbrian/go-opening-hours/v3/adapters/validation",
+        "github.com/faustbrian/go-opening-hours/v3/adapters/wire",
+        "github.com/faustbrian/go-opening-hours/v3/compile",
+        "github.com/faustbrian/go-opening-hours/v3/encoding",
+        "github.com/faustbrian/go-opening-hours/v3/openinghourscalendar",
+        "github.com/faustbrian/go-opening-hours/v3/openinghoursconfig",
+        "github.com/faustbrian/go-opening-hours/v3/openinghourstemporal",
+        "github.com/faustbrian/go-opening-hours/v3/openinghourstest",
+        "github.com/faustbrian/go-opening-hours/v3/openinghoursvalidation",
+        "github.com/faustbrian/go-opening-hours/v3/openinghourswire",
+        "github.com/faustbrian/go-opening-hours/v3/postgres"
+      ]
+    },
     {
       "alongside_module_path": "github.com/faustbrian/go-temporal",
       "module_path": "github.com/faustbrian/go-temporal/v2",

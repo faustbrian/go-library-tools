@@ -25,7 +25,7 @@ require (
 	github.com/faustbrian/go-capability v1.1.0
 	github.com/faustbrian/go-circuit-breaker v1.0.0
 	github.com/faustbrian/go-cli v1.0.0
-	github.com/faustbrian/go-clock v1.1.0
+	github.com/faustbrian/go-clock v1.2.0
 	github.com/faustbrian/go-cloudevents v1.1.0
 	github.com/faustbrian/go-cloudevents/adapters/audit v1.0.0
 	github.com/faustbrian/go-cloudevents/adapters/correlation v1.0.0
@@ -88,6 +88,7 @@ require (
 	github.com/faustbrian/go-openapi v1.0.0
 	github.com/faustbrian/go-opening-hours v1.1.0
 	github.com/faustbrian/go-opening-hours/v2 v2.0.1
+	github.com/faustbrian/go-opening-hours/v3 v3.0.0
 	github.com/faustbrian/go-openrpc/v2 v2.0.0
 	github.com/faustbrian/go-password/v2 v2.0.0
 	github.com/faustbrian/go-postgres v1.1.0
@@ -139,7 +140,7 @@ require (
 	github.com/faustbrian/go-validation/v2 v2.0.0
 	github.com/faustbrian/go-verkle-tree v1.0.0
 	github.com/faustbrian/go-webhook v1.0.0
-	github.com/faustbrian/go-wire v1.0.0
+	github.com/faustbrian/go-wire v1.0.1
 	github.com/faustbrian/go-workflow v1.0.0
 	github.com/faustbrian/go-workflow/v2 v2.0.0
 	github.com/faustbrian/go-wsdl v1.0.0
@@ -147,6 +148,7 @@ require (
 )
 
 require (
+	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/appleboy/com v1.2.0 // indirect
 	github.com/aws/aws-msk-iam-sasl-signer-go v1.0.4 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.43.4 // indirect
@@ -184,7 +186,7 @@ require (
 	github.com/faustbrian/go-tenancy v1.1.0 // indirect
 	github.com/faustbrian/go-validation v1.1.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
-	github.com/fxamacker/cbor/v2 v2.9.2 // indirect
+	github.com/fxamacker/cbor/v2 v2.9.3 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
@@ -241,10 +243,13 @@ require (
 	github.com/unixdj/qr v0.8.2 // indirect
 	github.com/valkey-io/valkey-go v1.0.76 // indirect
 	github.com/valyala/fastjson v1.6.10 // indirect
+	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
+	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xuri/efp v0.0.1 // indirect
 	github.com/xuri/excelize/v2 v2.11.0 // indirect
 	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
+	go.mongodb.org/mongo-driver/v2 v2.9.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.46.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.45.0 // indirect
@@ -262,6 +267,7 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
+	go.yaml.in/yaml/v4 v4.0.0-rc.6 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect

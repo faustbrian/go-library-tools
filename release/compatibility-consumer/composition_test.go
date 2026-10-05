@@ -18,6 +18,11 @@ import (
 	log "github.com/faustbrian/go-log/v2"
 	"github.com/faustbrian/go-money/v2"
 	"github.com/faustbrian/go-money/v2/moneytest"
+	openinghours "github.com/faustbrian/go-opening-hours/v3"
+	openingcalendar "github.com/faustbrian/go-opening-hours/v3/adapters/calendar"
+	openingtemporal "github.com/faustbrian/go-opening-hours/v3/adapters/temporal"
+	openingcalendarlegacy "github.com/faustbrian/go-opening-hours/v3/openinghourscalendar"
+	openingtemporallegacy "github.com/faustbrian/go-opening-hours/v3/openinghourstemporal"
 	openrpc "github.com/faustbrian/go-openrpc/v2"
 	"github.com/faustbrian/go-openrpc/v2/builder"
 	"github.com/faustbrian/go-openrpc/v2/validate"
@@ -26,9 +31,60 @@ import (
 	temporalvalidation "github.com/faustbrian/go-temporal/v2/adapters/validation"
 	"github.com/faustbrian/go-temporal/v2/dateperiod"
 	"github.com/faustbrian/go-temporal/v2/instant"
+	"github.com/faustbrian/go-temporal/v2/timeofday"
 	"github.com/faustbrian/go-tenancy/v2"
 	validation "github.com/faustbrian/go-validation/v2"
 )
+
+func TestOpeningV3PublishedNominalComposition(t *testing.T) {
+	date := calendar.MustDate(2026, time.December, 25)
+	canonicalDate, err := openingcalendar.FromDate(date)
+	if err != nil || canonicalDate != date || canonicalDate.String() != "2026-12-25" {
+		t.Fatalf("Opening v3 Calendar v2 date = %v, %v", canonicalDate, err)
+	}
+	legacyDate, err := openingcalendarlegacy.FromDate(date)
+	if err != nil || legacyDate != canonicalDate {
+		t.Fatalf("retained calendar facade date = %v, %v", legacyDate, err)
+	}
+	start, err := timeofday.New(9, 0, 0, 0, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	end, err := timeofday.New(17, 0, 0, 0, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	interval, err := timeofday.Between(start, end, temporal.ClosedOpen)
+	if err != nil {
+		t.Fatal(err)
+	}
+	canonicalRange, err := openingtemporal.RangeFromInterval(interval)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacyRange, err := openingtemporallegacy.RangeFromInterval(interval)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantStart, err := openinghours.NewLocalTime(9, 0, 0, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantEnd, err := openinghours.NewLocalTime(17, 0, 0, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if canonicalRange != legacyRange || canonicalRange.Start() != wantStart || canonicalRange.End() != wantEnd || canonicalRange.Overnight() {
+		t.Fatal("Opening v3 lost literal 09:00–17:00 local range")
+	}
+	roundTrip, err := openingtemporal.IntervalFromRange(canonicalRange, 0)
+	if err != nil || !roundTrip.Equal(interval) || roundTrip.Bounds() != temporal.ClosedOpen {
+		t.Fatalf("Temporal v2 half-open round trip = %v, %v", roundTrip, err)
+	}
+	if openingcalendar.ErrInvalidInput != openingcalendarlegacy.ErrInvalidInput || openingtemporal.ErrLossyMapping != openingtemporallegacy.ErrLossyMapping {
+		t.Fatal("retained facade changed sentinel identity")
+	}
+}
 
 func TestTemporalV2PublishedNominalCompositionAndAdmission(t *testing.T) {
 	date := calendar.MustDate(2026, time.October, 5)
