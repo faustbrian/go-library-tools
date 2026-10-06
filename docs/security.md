@@ -73,6 +73,20 @@ streams and the same cancellation owner as scanners. Empty, failed, malformed,
 duplicate or out-of-module selections fail closed. At most 4096 directories,
 4096 bytes per argument and 128 KiB of package arguments are admitted. No
 scanner rules or source suppression requirements change.
+The Authentication metadata exceptions require the generic-api-key detector,
+the exact root `CHANGELOG.md` or `jwt/specification/README.md` path, and an
+exact enumerated line. The 16 deduplicated AUTH decision-ID/SHA-256 lines are
+registered in both immutable decision histories at Authentication commits
+`0062d0a8c92135e6020522db36d361f7ca9e3b5d` and
+`2931094d5e905565e52f0be9cada6b009a147939`. The single JWT-DEC-004 table row
+at the first commit names public RFC authorities and real executable tests;
+its comma-separated test names are not a credential assignment. Only the
+scanner's optional single leading newline is accepted. Other detectors,
+paths, changed metadata and adjacent assignments remain eligible for scanning.
+Owner: library maintainer; review when the public source facts or pinned
+scanner framing changes. These exceptions do not waive any historical gate
+failure or claim a completed Authentication qualification.
+
 The centrally owned generic-api-key exception for JSONAPI decision metadata
 matches only 23 exact decision-ID/SHA-256 lines in root `CHANGELOG.md`.
 The optional single leading newline accommodates Gitleaks v8.30.1's line

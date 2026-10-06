@@ -25,6 +25,11 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Recognize only exact public Authentication decision checksum records and the
+  verified JWT specification test-reference row as metadata during secret
+  scanning, retaining findings for other detectors, paths, changed content and
+  adjacent credential assignments.
+
 - Add published Opening v3 alongside retained Opening v1 and v2 in the
   maintained public consumer, preserving Calendar v2 civil-date and Temporal
   v2 half-open range composition through canonical and retained adapters.

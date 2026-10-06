@@ -121,6 +121,39 @@ paths = ['''^docs/threat-model\.md$''']
 regexes = ['''^\n?parent directory, AES-256 key, record/(?:)chunk/(?:)population limits, context, and$''']
 
 [[allowlists]]
+description = "Exact public Authentication decision ID and SHA-256 records in both immutable decision histories."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^CHANGELOG\.md$''']
+regexes = [
+  '''^\n?- AUTH-DEC-011 sha256:be33f511(?:)1184dec4(?:)c31bdeac(?:)3760ee2e(?:)f0fcdd73(?:)0a677f55(?:)479e7ee8(?:)f66ad659$''',
+  '''^\n?- AUTH-DEC-012 sha256:91356766(?:)40d9c0df(?:)84a1b676(?:)985d9f5c(?:)25129983(?:)04591b88(?:)09092b50(?:)ce0d7884$''',
+  '''^\n?- AUTH-DEC-001 sha256:dbf293fd(?:)525d952d(?:)fe51ac1a(?:)f7a43325(?:)429fa00d(?:)fe6d34e2(?:)cdc45069(?:)830330f5$''',
+  '''^\n?- AUTH-DEC-002 sha256:5d9b14d2(?:)4d6ac9ea(?:)1f84b43d(?:)5d745454(?:)b53e5271(?:)fee035aa(?:)909d1d9a(?:)2342d5fe$''',
+  '''^\n?- AUTH-DEC-002 sha256:15e8ade4(?:)98da8125(?:)48bf36de(?:)b3ab0b77(?:)d5fae914(?:)62036bc3(?:)6e27aaa3(?:)9fb4f273$''',
+  '''^\n?- AUTH-DEC-003 sha256:81ffead7(?:)7cfa5491(?:)3477444f(?:)24798f9b(?:)632beb94(?:)057e578e(?:)c1f266b0(?:)20c6a7c1$''',
+  '''^\n?- AUTH-DEC-003 sha256:10e348b7(?:)b49b28fb(?:)53f35f00(?:)72cbda5f(?:)f08156f8(?:)71c854fc(?:)b7e0f62b(?:)70f0ed9e$''',
+  '''^\n?- AUTH-DEC-004 sha256:86762f7d(?:)564203e9(?:)714e51b8(?:)67aa8ec4(?:)ebc913d0(?:)ca704e71(?:)6a409e56(?:)b2537722$''',
+  '''^\n?- AUTH-DEC-004 sha256:06998d20(?:)abf14867(?:)af6c7195(?:)a88b8ada(?:)dc4a66dd(?:)a00e1990(?:)172180c5(?:)c71a61a6$''',
+  '''^\n?- AUTH-DEC-005 sha256:b8d53a0e(?:)3c098089(?:)2e5b161e(?:)2e5b2534(?:)f635d250(?:)e4310757(?:)d11d78ff(?:)08b773c4$''',
+  '''^\n?- AUTH-DEC-006 sha256:e18d6391(?:)38c2828e(?:)3b8240a6(?:)bf80c543(?:)7b04d630(?:)da12cc3e(?:)419d476a(?:)b35b88e7$''',
+  '''^\n?- AUTH-DEC-007 sha256:f8b3f8e8(?:)393811a2(?:)c3ce0698(?:)8b92f812(?:)52babeed(?:)e518c683(?:)6afaac7a(?:)3de89326$''',
+  '''^\n?- AUTH-DEC-007 sha256:e9a92111(?:)6a9efa03(?:)3845aff4(?:)eb3e9313(?:)03ad4f13(?:)80b19033(?:)8c730245(?:)ea8860d6$''',
+  '''^\n?- AUTH-DEC-008 sha256:b4f02bec(?:)b2f6f0f2(?:)d098c8d2(?:)4fe75004(?:)8bf87f8d(?:)2aefc8c6(?:)80745c0d(?:)240c812a$''',
+  '''^\n?- AUTH-DEC-009 sha256:0104da4c(?:)0dca68fb(?:)7146d17f(?:)5d70077f(?:)e34edaf9(?:)19feef29(?:)b718252e(?:)db65ee37$''',
+  '''^\n?- AUTH-DEC-010 sha256:4a94dc00(?:)885603ca(?:)190f6e2e(?:)da39a98d(?:)09511ff7(?:)417bb3de(?:)9cb13177(?:)4398d60f$''',
+]
+
+[[allowlists]]
+description = "Exact public Authentication JWT decision table row naming authority and executable tests."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^jwt/specification/README\.md$''']
+regexes = ['''^\n?\| \[JWT-DEC-004\]\(\.\./docs/specification-decisions\.md\) \| rfc7518-source, rfc7517-source, rfc8725-source \| TestValidatorRejectsCryptographicallyUnsafeKeys, TestValidateKeyMaterialRejectsEveryInvalidRepresentation, TestRemoteJWKValidationRejectsEveryKey(?:)PolicyViolation, TestRFC(?:)7520HMACJWKInteroperability \|$''']
+
+[[allowlists]]
 description = "Exact public JSONAPI specification decision ID and SHA-256 records, independently recomputed from immutable decision registers."
 condition = "AND"
 targetRules = ["generic-api-key"]
