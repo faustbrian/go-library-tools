@@ -266,6 +266,8 @@ github.com/faustbrian/go-international v1.1.0 h1:YYBQTSdQOwS7/8GLDo/vf+xbr1uNLhI
 github.com/faustbrian/go-international v1.1.0/go.mod h1:aua0cfp9flc3KclSm5trYa3pSekqhXeqhxOeTwY/OCk=
 github.com/faustbrian/go-international/v3 v3.0.0 h1:l9tcjTJIJnZbTwXvK6zVB314OfVLRRsCk2crELOw6PI=
 github.com/faustbrian/go-international/v3 v3.0.0/go.mod h1:2T+l+vttonmgesUhtPN9cPAtycXw3ie04u4LIo7XUOY=
+github.com/faustbrian/go-international/v4 v4.0.0 h1:z5WryiFcIlK5HOrsrytfL+/n0Cq38YqnL0gkfVOmLVE=
+github.com/faustbrian/go-international/v4 v4.0.0/go.mod h1:0cBS/dqbFo0qco2vFee4TQD6TM3XnBeCgFR4xxFcvuI=
 github.com/faustbrian/go-json-schema v1.0.0 h1:clgfSg5qL5wvrbZz6klFUQlH+dc9E0l2RFCWyAw8Qrk=
 github.com/faustbrian/go-json-schema v1.0.0/go.mod h1:8FEVyrKHwaYqo+fG+dIaVaFiF9m1Ut/fHpk6WcIE1fE=
 github.com/faustbrian/go-jsonapi v1.0.0 h1:ymGBAgeuwY9YspXTenGbirRcgef9Bw2dYfuRGqsR/UM=
@@ -302,6 +304,8 @@ github.com/faustbrian/go-math v1.1.2 h1:cH0VSYu/u6Xwc/NGDwbEUQEKpvIjNFOH/suiFIBL
 github.com/faustbrian/go-math v1.1.2/go.mod h1:e7fzSBNkWWq+1EsCSjpvjIAc//nJAS/iRU4Qc87TfTU=
 github.com/faustbrian/go-measurement/v2 v2.0.1 h1:E1EiJKXtOIITw+E9ppq49BPNJehCV4lK8rBTfQwqZLQ=
 github.com/faustbrian/go-measurement/v2 v2.0.1/go.mod h1:KBM0yghnRL8VUWtaxwkT/cxyV6eblOoKnmZzEgGjm3I=
+github.com/faustbrian/go-measurement/v3 v3.0.0 h1:7gXJn/DlN4XJyTgtRIV1LG3POmKphytIBbxWdQaSBFk=
+github.com/faustbrian/go-measurement/v3 v3.0.0/go.mod h1:lqgcf+Iej3L9J90xrYqT4Pgtydi5iYtkiaS6Su5h/wQ=
 github.com/faustbrian/go-merkle-patricia-trie v1.0.0 h1:ZofhkLLD1xsHX3cTdx95XaX5QsFNAk+72A0G/FVTJrw=
 github.com/faustbrian/go-merkle-patricia-trie v1.0.0/go.mod h1:slOBbuEXP+9x3v7JgwWBUL22hb/lWkHoyKYxvBrek6Q=
 github.com/faustbrian/go-merkle-patricia-trie/v2 v2.0.0 h1:Tk9jT05fuHUbXBdiDBwuGgOCGtZGeJxP9mJUNqgjoKs=
@@ -322,6 +326,8 @@ github.com/faustbrian/go-opening-hours/v2 v2.0.1 h1:hox2IMeEWGxsIY8zn0F7ZjXI5t2B
 github.com/faustbrian/go-opening-hours/v2 v2.0.1/go.mod h1://TvkRkCdCFHwAuLT8Qf/qEYp23N6GgpBXAGYiKQlc0=
 github.com/faustbrian/go-opening-hours/v3 v3.0.0 h1:aMn1pyUZIW90lnnUpwWXQ42K6uj4q/GtcLeg6GArG+Y=
 github.com/faustbrian/go-opening-hours/v3 v3.0.0/go.mod h1:e1hqcz/Y+yTnV7J9REQWVudswhPHmw5YPTBB+LLOrYc=
+github.com/faustbrian/go-opening-hours/v4 v4.0.0 h1:MaBtHPaDZN9IXT6/7N9D5EqqFGlN+RnHl3bj+WobOao=
+github.com/faustbrian/go-opening-hours/v4 v4.0.0/go.mod h1:d5Z7B6gQCWrQMEJoUtdYk1/6SQQ7CjW5ODpqd/NhUbI=
 github.com/faustbrian/go-openrpc/v2 v2.0.0 h1:84hIuzlR3OlJIIdMWGzUHVZN+o/1hGvbf4W50mpOupk=
 github.com/faustbrian/go-openrpc/v2 v2.0.0/go.mod h1:rSZ0peyoQyItK49DVAF5GUiB7Woz8Aph5FpGdE7wzUU=
 github.com/faustbrian/go-password/v2 v2.0.0 h1:xEquWDSC9CIeDVDwcZJDQKdhbtEcVIxKEQGzcFZseaQ=
@@ -434,6 +440,8 @@ github.com/faustbrian/go-webhook v1.0.0 h1:ddRMEOhhSlhp/7ndxkFPUlQYwlaXYqwbxSNvX
 github.com/faustbrian/go-webhook v1.0.0/go.mod h1:2+Q3h8CW+ZW2v6cb50kCRiA1POHllMvDgbOEIDsjfFA=
 github.com/faustbrian/go-wire v1.0.1 h1:ohJu+Hp+i5HIhoDxqBmd0L3uL71XuvE90/oRzP+zd8Q=
 github.com/faustbrian/go-wire v1.0.1/go.mod h1:2XRDGdmRO4lYwnzGTuF5rxwUqyui0ml9ZuBB6cqLde0=
+github.com/faustbrian/go-wire/v3 v3.0.0 h1:lNSSquTwH2ALHKahCbG2UuLkW/2n6yp4ptwy0iDSlVI=
+github.com/faustbrian/go-wire/v3 v3.0.0/go.mod h1:lLjJuGHfmcUJgZG2RP0zUtHmh7gnnLeTeZR8W8XHxTQ=
 github.com/faustbrian/go-workflow v1.0.0 h1:u81r6/CPm3a/KDjFWRqk62vu9INi0RFTjBI8OBznLXA=
 github.com/faustbrian/go-workflow v1.0.0/go.mod h1:NFjuML2qg4CjXjeUYAWts7cMkQOEG9sGL3ZfI+hPlHs=
 github.com/faustbrian/go-workflow/v2 v2.0.0 h1:CtOrh9dzEAbdwYW16sV6Ym+8cTsDHdHKCSFVcQrC10s=
@@ -446,8 +454,8 @@ github.com/felixge/httpsnoop v1.1.0 h1:3YtUj32ZZkqZtt3sZZsClsymw/QDuVfpNhoA31zeO
 github.com/felixge/httpsnoop v1.1.0/go.mod h1:Zqxgdd+1Rkcz8euOqdr7lqgCRJztwr5hp9vDSi5UZCE=
 github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
-github.com/fxamacker/cbor/v2 v2.9.3 h1:oQBnFATpNdY8gJHTndDDv5Xl4QqNaz51G5LLEPhng3Q=
-github.com/fxamacker/cbor/v2 v2.9.3/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
+github.com/fxamacker/cbor/v2 v2.9.4 h1:xwjVlxEMR3S605oUlgBjKLTTeGFciYPGYCtF/35LKGo=
+github.com/fxamacker/cbor/v2 v2.9.4/go.mod h1:vM4b+DJCtHn+zz7h3FFp/hDAI9WNWCsZj23V5ytsSxQ=
 github.com/go-jose/go-jose/v4 v4.1.4 h1:moDMcTHmvE6Groj34emNPLs/qtYXRVcd6S7NHbHz3kA=
 github.com/go-jose/go-jose/v4 v4.1.4/go.mod h1:x4oUasVrzR7071A4TnHLGSPpNOm2a21K9Kf04k1rs08=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
@@ -739,8 +747,8 @@ github.com/zeebo/xxh3 v1.1.0 h1:s7DLGDK45Dyfg7++yxI0khrfwq9661w9EN78eP/UZVs=
 github.com/zeebo/xxh3 v1.1.0/go.mod h1:IisAie1LELR4xhVinxWS5+zf1lA4p0MW4T+w+W07F5s=
 go.jetify.com/typeid/v2 v2.0.0-alpha.3 h1:T6RPx6bNl10lp0JN2Xz/XcgLZWSlVmL58Xqy9cgTCcc=
 go.jetify.com/typeid/v2 v2.0.0-alpha.3/go.mod h1:zfD1ZDHDJNgXZANsO9jDOD81XRRQ0zAOnDBEHmIV/Gw=
-go.mongodb.org/mongo-driver/v2 v2.9.0 h1:e2mQdOmbkiYz+dj3faM7lVDwl7WdnRD+g5VicafMhL0=
-go.mongodb.org/mongo-driver/v2 v2.9.0/go.mod h1:SHKN0IWkKmEVGHLjXnni6s4wPKX4v86FTgOeJJFuXcA=
+go.mongodb.org/mongo-driver/v2 v2.9.1 h1:jewiFs2m1/VOQp8qhFshX6hWZ+EAXDhZHXExAUMcOgQ=
+go.mongodb.org/mongo-driver/v2 v2.9.1/go.mod h1:SHKN0IWkKmEVGHLjXnni6s4wPKX4v86FTgOeJJFuXcA=
 go.opentelemetry.io/auto/sdk v1.2.1 h1:jXsnJ4Lmnqd11kwkBV2LgLoFMZKizbCi5fNZ/ipaZ64=
 go.opentelemetry.io/auto/sdk v1.2.1/go.mod h1:KRTj+aOaElaLi+wW1kO/DZRXwkF4C5xPbEe3ZiIhN7Y=
 go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.69.0 h1:8tvICD4vSTOOsNrsI4Ljf6C+6UKvpTEH5XY3JMoyPoo=

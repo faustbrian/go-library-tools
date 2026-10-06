@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Allow maintained compatibility consumers to add a published module major
+  alongside an already-selected replacement without dropping that replacement
+  or relaxing family, duplicate, remote-tag or public-proxy validation.
+
 - Apply metadata assurance to documentation/license-only source-bootstrap pull
   requests without relaxing runtime checks for development tooling-pin changes,
   source changes, pushes, scheduled runs or release rehearsals.
@@ -17,6 +21,10 @@ All notable changes to this project are documented in this file.
   gzip integrity checks and rejection of nonzero trailing content.
 
 ### Added
+
+- Retain earlier selected majors while adding published Wire v3,
+  International v4, Measurement v3 and Opening Hours v4 to the maintained
+  consumer, including ordinary successor adapter composition coverage.
 
 - Add optional per-module coverage evidence collection while preserving exact
   enforcement by default. Collection retains production instrumentation and

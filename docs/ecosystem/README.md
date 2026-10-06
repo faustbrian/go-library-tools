@@ -58,8 +58,9 @@ The maintained `release/compatibility-consumer` may separately declare
 `selection.json`: a published base set and explicit released-module
 `replacements` or `additions`, each with its exact tag source revision and
 primary imports. Replacements substitute a selected module path or version;
-additions import a distinct major path alongside the base module, preserving
-its v1 coverage. The generator checks each remote tag and public Go proxy
+additions import a distinct major path alongside the original base family,
+preserving its currently selected module even when a replacement already
+selects a newer major. The generator checks each remote tag and public Go proxy
 version and the resulting consumer files without modifying the published base
 set or projecting new `known_good_compatibility_sets` membership. This
 current consumer is not evidence that the changed versions belong to the frozen
@@ -81,6 +82,10 @@ builds a single method, validates it with explicit method and diagnostic
 bounds, and checks exact canonical output; it does not certify all protocol
 or security boundaries.
 Other selections and the frozen cohort's release identities remain unchanged.
+Wire v3, International v4, Measurement v3 and Opening Hours v4 are added
+alongside their earlier selected majors. The ordinary published composition
+tests exercise Wire v3 format identities through each successor adapter;
+they do not certify unrelated runtime security boundaries.
 Without this optional selection, older fixtures retain the existing candidate or
 published-set selection behavior. Remove the selection explicitly before
 generating a new cohort candidate; candidate writes must not silently overwrite

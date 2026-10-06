@@ -900,6 +900,74 @@ class CompatibilitySetTest(unittest.TestCase):
                 public_version_lookup=lambda *_: True,
             )
 
+    def test_current_consumer_addition_retains_selected_replacement(self):
+        historical = self.base_set("a" * 40)
+        historical["roster"] = {"selection": "active-public", "module_count": 1}
+        module = self.catalog_module()
+        origin = module["module_path"]
+        module["cohesion"] = {"primary_entry_packages": [origin]}
+        module["packages"] = [{"import_path": origin, "name": "foo"}]
+        value = {"sets": [historical]}
+        original = copy.deepcopy((value, module))
+        selection = {
+            "format": "golib-current-consumer-v1",
+            "base_set_id": historical["set_id"],
+            "replacements": [{
+                "from_module_path": origin,
+                "module_path": origin + "/v2",
+                "version": "v2.0.0",
+                "source_revision": "b" * 40,
+                "primary_entry_packages": [origin + "/v2"],
+            }],
+            "additions": [{
+                "alongside_module_path": origin,
+                "module_path": origin + "/v3",
+                "version": "v3.0.0",
+                "source_revision": "c" * 40,
+                "primary_entry_packages": [origin + "/v3"],
+            }],
+        }
+        tags = {"adapters/foo/v2.0.0": "b" * 40, "adapters/foo/v3.0.0": "c" * 40}
+        versions = {(origin + "/v2", "v2.0.0"), (origin + "/v3", "v3.0.0")}
+
+        def project(candidate, public=versions):
+            return generate.current_consumer_inputs(
+                value, [module], candidate,
+                remote_tag_lookup=lambda repository, tag: tags.get(tag)
+                    if repository == module["repository"] else None,
+                public_version_lookup=lambda path, version: (path, version) in public,
+            )
+
+        current, catalogs = project(selection)
+        self.assertEqual(
+            [(item["module_path"], item["version"], item["source_revision"])
+             for item in current["modules"]],
+            [(origin + "/v2", "v2.0.0", "b" * 40),
+             (origin + "/v3", "v3.0.0", "c" * 40)],
+        )
+        go_mod, source = generate.render_clean_consumer(current, catalogs)
+        for path, version in sorted(versions):
+            self.assertIn(path + " " + version, go_mod)
+            self.assertIn('"' + path + '"', source)
+        self.assertEqual(current["roster"]["module_count"], 2)
+        self.assertEqual((value, module), original)
+        self.assertNotIn("evidence", current)
+        self.assertNotIn("set_id", current)
+        for change, message in (
+            ({"alongside_module_path": "example.com/absent"}, "origin"),
+            ({"module_path": "example.com/other/v3"}, "module family"),
+            ({"module_path": origin + "/v2"}, "duplicates a selected module"),
+            ({"source_revision": "d" * 40}, "matching remote tag"),
+            ({"version": "v4.0.0"}, "major mismatch"),
+        ):
+            with self.subTest(change=change):
+                invalid = copy.deepcopy(selection)
+                invalid["additions"][0].update(change)
+                with self.assertRaisesRegex(ValueError, message):
+                    project(invalid)
+        with self.assertRaisesRegex(ValueError, "unavailable from the public proxy"):
+            project(selection, {(origin + "/v2", "v2.0.0")})
+
     def test_candidate_cannot_overwrite_current_consumer_selection(self):
         generate.CONSUMER_DIRECTORY.mkdir(parents=True)
         (generate.CONSUMER_DIRECTORY / "selection.json").write_text("{}")

@@ -332,6 +332,80 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-wire",
+      "module_path": "github.com/faustbrian/go-wire/v3",
+      "version": "v3.0.0",
+      "source_revision": "74657780a955b05f8a346d691c03153c13ac8f07",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-wire/v3",
+        "github.com/faustbrian/go-wire/v3/bsonwire",
+        "github.com/faustbrian/go-wire/v3/cborwire",
+        "github.com/faustbrian/go-wire/v3/jsonwire",
+        "github.com/faustbrian/go-wire/v3/msgpackwire",
+        "github.com/faustbrian/go-wire/v3/soap",
+        "github.com/faustbrian/go-wire/v3/tomlwire",
+        "github.com/faustbrian/go-wire/v3/xmlwire",
+        "github.com/faustbrian/go-wire/v3/yamlwire"
+      ]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-international",
+      "module_path": "github.com/faustbrian/go-international/v4",
+      "version": "v4.0.0",
+      "source_revision": "7511086bcf28a8f8d745da1c0a570c5fa688de5a",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-international/v4",
+        "github.com/faustbrian/go-international/v4/adapters/postgres",
+        "github.com/faustbrian/go-international/v4/adapters/validation",
+        "github.com/faustbrian/go-international/v4/adapters/wire",
+        "github.com/faustbrian/go-international/v4/country",
+        "github.com/faustbrian/go-international/v4/currency",
+        "github.com/faustbrian/go-international/v4/internationalpgx",
+        "github.com/faustbrian/go-international/v4/internationaltest",
+        "github.com/faustbrian/go-international/v4/internationalvalidation",
+        "github.com/faustbrian/go-international/v4/internationalwire",
+        "github.com/faustbrian/go-international/v4/language",
+        "github.com/faustbrian/go-international/v4/locale",
+        "github.com/faustbrian/go-international/v4/phone",
+        "github.com/faustbrian/go-international/v4/postal",
+        "github.com/faustbrian/go-international/v4/subdivision"
+      ]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-measurement",
+      "module_path": "github.com/faustbrian/go-measurement/v3",
+      "version": "v3.0.0",
+      "source_revision": "a98e9b336268bd71d2d5051137b045722413530a",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-measurement/v3",
+        "github.com/faustbrian/go-measurement/v3/adapters/wire",
+        "github.com/faustbrian/go-measurement/v3/measurementwire"
+      ]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-opening-hours",
+      "module_path": "github.com/faustbrian/go-opening-hours/v4",
+      "version": "v4.0.0",
+      "source_revision": "a78aeaf2f39171fe079d14e962f7a4ecf8ffcc12",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-opening-hours/v4",
+        "github.com/faustbrian/go-opening-hours/v4/adapters/calendar",
+        "github.com/faustbrian/go-opening-hours/v4/adapters/config",
+        "github.com/faustbrian/go-opening-hours/v4/adapters/temporal",
+        "github.com/faustbrian/go-opening-hours/v4/adapters/validation",
+        "github.com/faustbrian/go-opening-hours/v4/adapters/wire",
+        "github.com/faustbrian/go-opening-hours/v4/compile",
+        "github.com/faustbrian/go-opening-hours/v4/encoding",
+        "github.com/faustbrian/go-opening-hours/v4/openinghourscalendar",
+        "github.com/faustbrian/go-opening-hours/v4/openinghoursconfig",
+        "github.com/faustbrian/go-opening-hours/v4/openinghourstemporal",
+        "github.com/faustbrian/go-opening-hours/v4/openinghourstest",
+        "github.com/faustbrian/go-opening-hours/v4/openinghoursvalidation",
+        "github.com/faustbrian/go-opening-hours/v4/openinghourswire",
+        "github.com/faustbrian/go-opening-hours/v4/postgres"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-capability",
       "module_path": "github.com/faustbrian/go-capability/v2",
       "version": "v2.0.0",
