@@ -22,6 +22,11 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Record one source/verifier-bound CLI compressed-limit mutant as equivalent
+  only for admitted ordinary stable regular files. Retain production streaming
+  enforcement and native mutant statuses; exclude changing files and general
+  archive readers from this disposition.
+
 - Retain earlier selected majors while adding published Wire v3,
   International v4, Measurement v3 and Opening Hours v4 to the maintained
   consumer, including ordinary successor adapter composition coverage.
