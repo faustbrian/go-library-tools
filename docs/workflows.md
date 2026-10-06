@@ -1,11 +1,11 @@
 # Reusable Workflows
 
 Consumer CI calls `library-ci.yml` at an immutable commit SHA. The same SHA is
-passed as `tooling_sha` for the isolated tooling checkout. The setup action
+passed as `tooling_sha` for the isolated tooling checkout. By default the setup action
 is pinned to `562f083a6d7eb499eed8d464e5f3e1a1b58902d0`; the bootstrap
 action is pinned to `7e4cd2983099490e7f350724044b86835cc5d342`.
-`tooling_sha` does not select those executable actions. A nearby comment
-records the corresponding tooling release.
+By default, `tooling_sha` does not select those executable actions. A nearby
+comment records the corresponding tooling release.
 
 ```yaml
 name: CI
@@ -80,10 +80,25 @@ Build caches are removed on success and failure. On success the installed
 binary and ancillary caches remain job-owned at `GOLIB_SOURCE_INSTALL_ROOT`.
 The caller must remove that exact directory in an always-cleanup step, after
 checking it lies beneath `RUNNER_TEMP` with the `golib-source-install.` prefix.
-The development action does not select or waive any consumer gate. Existing
-reusable `library-ci.yml` callers still use released binaries; they do not yet
-expose a source-bootstrap input. The action's default false route retains the
-existing release checksum, attestation and exact-version verification.
+The development action does not select or waive any consumer gate. The action's
+default false route retains the existing release checksum, attestation and
+exact-version verification.
+
+Reusable callers may explicitly set `source_bootstrap: true`, default false.
+All four setup sites then use the immutable remote setup action at
+`14a365e423d6fa50fc2bf78d439d48a098723d3e`, passing the same `tooling_sha`
+used for their fixed tooling checkout. The workflow forces runtime assurance
+even for documentation-only pull requests and runs full ordinary
+`golib check --all`, never the help-detected local shortcut. Every source-mode
+job removes the exact owned installation and ancillary caches in an
+always-cleanup step, including when later gates fail. Setup failures clean
+build resources inside the action; cleanup tolerates an installation that was
+never created or was already removed on failure.
+
+Default release installation and routing remain unchanged. Repository,
+specification, dependency review, CodeQL, artifact retention, release selectors
+and Required remain in force. Source bootstrap supports reviewed development
+prerequisites; it is not a released-tool attestation or a consumer release pass.
 
 Repositories whose initial dependency graph cannot be reconstructed from the
 public Go proxy may define both `GOLIB_BOOTSTRAP_PROXY_URL` and
@@ -153,8 +168,8 @@ write to sibling repositories. The workflow changes only `.golib.yaml` and the
 thin CI caller and never force-pushes an existing rollout branch.
 
 This repository bootstraps its own CI from source so the first release does not
-depend on itself. Reusable consumer workflows continue to use released binaries;
-individually pinned setup-action calls may explicitly select reviewed source.
+depend on itself. Consumer workflows use released binaries by default;
+the optional source-bootstrap route explicitly selects reviewed development source.
 
 Tooling tags publish only the four platform archives, their SBOMs, the release
 manifest, and checksums by default. Catalog, compatibility-set, residual, and

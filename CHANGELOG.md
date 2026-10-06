@@ -25,6 +25,11 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Allow reusable CI to opt into immutable development tooling while retaining
+  verified release installation by default. Source bootstrap runs the full
+  ordinary contract, forces runtime assurance and removes each job's owned
+  installation without changing release selectors or required gates.
+
 - Support explicitly selected immutable development source in the setup action,
   retaining verified released binaries by default. Source builds require the
   fixed pristine tooling checkout without hidden index entries and an honest

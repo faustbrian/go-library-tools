@@ -7,6 +7,11 @@ on:
         description: Immutable go-library-tools commit used by this workflow reference
         required: true
         type: string
+      source_bootstrap:
+        description: Use this exact tooling checkout as an honest development verifier and run the full ordinary contract
+        required: false
+        default: false
+        type: boolean
       release_dry_run:
         description: Run the stable release rehearsal instead of the standard contract
         required: false
@@ -62,6 +67,7 @@ jobs:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           EVENT_NAME: ${{ github.event_name }}
           RELEASE_DRY_RUN: ${{ inputs.release_dry_run }}
+          SOURCE_BOOTSTRAP: ${{ inputs.source_bootstrap }}
         run: |
           set -euo pipefail
           reusable_pin_only() {
@@ -106,7 +112,7 @@ jobs:
               "${old_uses}" == "${old_input}" && "${new_uses}" == "${new_input}" ]]
           }
           runtime=true
-          if [[ "${EVENT_NAME}" == pull_request && "${RELEASE_DRY_RUN}" != true ]]; then
+          if [[ "${EVENT_NAME}" == pull_request && "${RELEASE_DRY_RUN}" != true && "${SOURCE_BOOTSTRAP}" != true ]]; then
             runtime=false
             changed=false
             while IFS= read -r path; do
@@ -140,6 +146,12 @@ jobs:
           path: .golib-tooling
           persist-credentials: false
       - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
+        if: inputs.source_bootstrap != true
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@14a365e423d6fa50fc2bf78d439d48a098723d3e
+        if: inputs.source_bootstrap == true
+        with:
+          source_bootstrap: 'true'
+          tooling_sha: ${{ inputs.tooling_sha }}
       - id: modules
         name: Build module matrix
         env:
@@ -181,6 +193,27 @@ jobs:
             echo "zsh=$(jq -r '.runtimes.zsh // empty' <<<"${configuration}")"
           } >>"${GITHUB_OUTPUT}"
 
+      - name: Remove source bootstrap workspace
+        if: always() && inputs.source_bootstrap == true
+        env:
+          SOURCE_BOOTSTRAP: ${{ inputs.source_bootstrap }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GOLIB_SOURCE_INSTALL_ROOT:-}" ]]; then
+            exit 0
+          fi
+          case "${GOLIB_SOURCE_INSTALL_ROOT}" in
+            "${RUNNER_TEMP}"/golib-source-install.*/*) echo 'unexpected source bootstrap workspace' >&2; exit 1 ;;
+            "${RUNNER_TEMP}"/golib-source-install.*) ;;
+            *) echo 'unexpected source bootstrap workspace' >&2; exit 1 ;;
+          esac
+          [[ ! -L "${GOLIB_SOURCE_INSTALL_ROOT}" ]] || { echo 'unexpected source bootstrap workspace' >&2; exit 1; }
+          if [[ -d "${GOLIB_SOURCE_INSTALL_ROOT}" ]]; then
+            chmod -R u+w "${GOLIB_SOURCE_INSTALL_ROOT}"
+            find "${GOLIB_SOURCE_INSTALL_ROOT}" -depth -delete
+          fi
+          test ! -e "${GOLIB_SOURCE_INSTALL_ROOT}"
+
   repository-contract:
     name: Repository contract
     runs-on: ubuntu-24.04
@@ -201,6 +234,12 @@ jobs:
           path: .golib-tooling
           persist-credentials: false
       - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
+        if: inputs.source_bootstrap != true
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@14a365e423d6fa50fc2bf78d439d48a098723d3e
+        if: inputs.source_bootstrap == true
+        with:
+          source_bootstrap: 'true'
+          tooling_sha: ${{ inputs.tooling_sha }}
       - run: golib repository check
       - run: golib workflows check
       - run: golib cohesion check
@@ -220,6 +259,27 @@ jobs:
           else
             golib release check
           fi
+
+      - name: Remove source bootstrap workspace
+        if: always() && inputs.source_bootstrap == true
+        env:
+          SOURCE_BOOTSTRAP: ${{ inputs.source_bootstrap }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GOLIB_SOURCE_INSTALL_ROOT:-}" ]]; then
+            exit 0
+          fi
+          case "${GOLIB_SOURCE_INSTALL_ROOT}" in
+            "${RUNNER_TEMP}"/golib-source-install.*/*) echo 'unexpected source bootstrap workspace' >&2; exit 1 ;;
+            "${RUNNER_TEMP}"/golib-source-install.*) ;;
+            *) echo 'unexpected source bootstrap workspace' >&2; exit 1 ;;
+          esac
+          [[ ! -L "${GOLIB_SOURCE_INSTALL_ROOT}" ]] || { echo 'unexpected source bootstrap workspace' >&2; exit 1; }
+          if [[ -d "${GOLIB_SOURCE_INSTALL_ROOT}" ]]; then
+            chmod -R u+w "${GOLIB_SOURCE_INSTALL_ROOT}"
+            find "${GOLIB_SOURCE_INSTALL_ROOT}" -depth -delete
+          fi
+          test ! -e "${GOLIB_SOURCE_INSTALL_ROOT}"
 
   quality:
     name: Quality / selected modules
@@ -270,14 +330,24 @@ jobs:
           path: .golib-tooling
           persist-credentials: false
       - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
+        if: inputs.source_bootstrap != true
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@14a365e423d6fa50fc2bf78d439d48a098723d3e
+        if: inputs.source_bootstrap == true
+        with:
+          source_bootstrap: 'true'
+          tooling_sha: ${{ inputs.tooling_sha }}
       - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@7e4cd2983099490e7f350724044b86835cc5d342
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
           bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}
       - name: Run repository module contracts
         if: inputs.release_dry_run != true
+        env:
+          SOURCE_BOOTSTRAP: ${{ inputs.source_bootstrap }}
         run: |
-          if golib --help | grep -Fq 'golib check [--local]'; then
+          if [[ "${SOURCE_BOOTSTRAP}" == true ]]; then
+            golib check --all
+          elif golib --help | grep -Fq 'golib check [--local]'; then
             golib check --local --all
           else
             golib check --all
@@ -306,6 +376,27 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+      - name: Remove source bootstrap workspace
+        if: always() && inputs.source_bootstrap == true
+        env:
+          SOURCE_BOOTSTRAP: ${{ inputs.source_bootstrap }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GOLIB_SOURCE_INSTALL_ROOT:-}" ]]; then
+            exit 0
+          fi
+          case "${GOLIB_SOURCE_INSTALL_ROOT}" in
+            "${RUNNER_TEMP}"/golib-source-install.*/*) echo 'unexpected source bootstrap workspace' >&2; exit 1 ;;
+            "${RUNNER_TEMP}"/golib-source-install.*) ;;
+            *) echo 'unexpected source bootstrap workspace' >&2; exit 1 ;;
+          esac
+          [[ ! -L "${GOLIB_SOURCE_INSTALL_ROOT}" ]] || { echo 'unexpected source bootstrap workspace' >&2; exit 1; }
+          if [[ -d "${GOLIB_SOURCE_INSTALL_ROOT}" ]]; then
+            chmod -R u+w "${GOLIB_SOURCE_INSTALL_ROOT}"
+            find "${GOLIB_SOURCE_INSTALL_ROOT}" -depth -delete
+          fi
+          test ! -e "${GOLIB_SOURCE_INSTALL_ROOT}"
+
   codeql:
     name: CodeQL
     needs: prepare
@@ -331,6 +422,12 @@ jobs:
           path: .golib-tooling
           persist-credentials: false
       - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
+        if: inputs.source_bootstrap != true
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@14a365e423d6fa50fc2bf78d439d48a098723d3e
+        if: inputs.source_bootstrap == true
+        with:
+          source_bootstrap: 'true'
+          tooling_sha: ${{ inputs.tooling_sha }}
       - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@7e4cd2983099490e7f350724044b86835cc5d342
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
@@ -355,6 +452,27 @@ jobs:
             fi
           done
       - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+
+      - name: Remove source bootstrap workspace
+        if: always() && inputs.source_bootstrap == true
+        env:
+          SOURCE_BOOTSTRAP: ${{ inputs.source_bootstrap }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GOLIB_SOURCE_INSTALL_ROOT:-}" ]]; then
+            exit 0
+          fi
+          case "${GOLIB_SOURCE_INSTALL_ROOT}" in
+            "${RUNNER_TEMP}"/golib-source-install.*/*) echo 'unexpected source bootstrap workspace' >&2; exit 1 ;;
+            "${RUNNER_TEMP}"/golib-source-install.*) ;;
+            *) echo 'unexpected source bootstrap workspace' >&2; exit 1 ;;
+          esac
+          [[ ! -L "${GOLIB_SOURCE_INSTALL_ROOT}" ]] || { echo 'unexpected source bootstrap workspace' >&2; exit 1; }
+          if [[ -d "${GOLIB_SOURCE_INSTALL_ROOT}" ]]; then
+            chmod -R u+w "${GOLIB_SOURCE_INSTALL_ROOT}"
+            find "${GOLIB_SOURCE_INSTALL_ROOT}" -depth -delete
+          fi
+          test ! -e "${GOLIB_SOURCE_INSTALL_ROOT}"
 
   required:
     name: Required
