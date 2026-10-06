@@ -150,6 +150,7 @@ func TestValidateChargesDeclaredDirectorySizes(t *testing.T) {
 		{name: "exact declaration limit", sizes: []int64{4096}},
 		{name: "one over declaration limit", sizes: []int64{4097}, want: "expanded byte limit exceeded: 4096"},
 		{name: "cumulative declarations", sizes: []int64{3072, 3072}, want: "expanded byte limit exceeded: 4096"},
+		{name: "three cumulative declarations", sizes: []int64{1536, 1536, 1536}, want: "expanded byte limit exceeded: 4096"},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -170,7 +171,7 @@ func TestValidateChargesDeclaredDirectorySizes(t *testing.T) {
 			if err := gzipWriter.Close(); err != nil {
 				t.Fatal(err)
 			}
-			err := archivecheck.Validate(bytes.NewReader(value.Bytes()), archivecheck.Limits{Entries: 2, Bytes: 4096})
+			err := archivecheck.Validate(bytes.NewReader(value.Bytes()), archivecheck.Limits{Entries: len(test.sizes), Bytes: 4096})
 			if test.want == "" {
 				if err != nil {
 					t.Fatalf("Validate() at declaration boundary = %v", err)
