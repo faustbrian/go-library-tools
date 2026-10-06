@@ -1,10 +1,97 @@
 name: Set up golib
-description: Install and verify the exact golib release declared by a repository
+description: Install the verified declared release or explicitly selected immutable development source
+
+inputs:
+  source_bootstrap:
+    description: Build the exact checked-out development source instead of installing a release
+    required: false
+    default: 'false'
+  tooling_sha:
+    description: Exact go-library-tools commit at the fixed .golib-tooling checkout
+    required: false
+    default: ''
 
 runs:
   using: composite
   steps:
+    - name: Validate bootstrap selection
+      shell: bash
+      env:
+        SOURCE_BOOTSTRAP: ${{ inputs.source_bootstrap }}
+      run: |
+        set -euo pipefail
+        case "${SOURCE_BOOTSTRAP}" in
+          true|false) ;;
+          *) echo 'source_bootstrap must be true or false' >&2; exit 1 ;;
+        esac
+    - name: Build exact source golib
+      if: inputs.source_bootstrap == 'true'
+      shell: bash
+      env:
+        TOOLING_SHA: ${{ inputs.tooling_sha }}
+        GOENV: 'off'
+        GOWORK: 'off'
+        GOTOOLCHAIN: local
+        GOMAXPROCS: '2'
+        GOFLAGS: -p=1
+        GOPROXY: https://proxy.golang.org
+        GOSUMDB: sum.golang.org
+        GOPRIVATE: ''
+        GONOPROXY: ''
+        GONOSUMDB: ''
+      run: |
+        set -euo pipefail
+        [[ "${TOOLING_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo 'tooling_sha must be an immutable lowercase commit' >&2; exit 1; }
+        source_root="${GITHUB_WORKSPACE}/.golib-tooling"
+        [[ ! -L "${source_root}" ]] || { echo 'symbolic tooling checkout refused' >&2; exit 1; }
+        [[ "$(git -C "${source_root}" rev-parse --show-toplevel)" == "${source_root}" ]] || { echo 'unexpected tooling checkout root' >&2; exit 1; }
+        [[ "$(git -C "${source_root}" rev-parse HEAD)" == "${TOOLING_SHA}" ]] || { echo 'tooling checkout commit mismatch' >&2; exit 1; }
+        case "$(git -C "${source_root}" remote get-url origin)" in
+          https://github.com/faustbrian/go-library-tools|https://github.com/faustbrian/go-library-tools.git) ;;
+          *) echo 'source bootstrap requires the fixed go-library-tools repository' >&2; exit 1 ;;
+        esac
+
+        checkout_status="$(git -C "${source_root}" status --porcelain=v1 --untracked-files=all --ignored 2>/dev/null)" || { echo 'cannot inspect tooling checkout cleanliness' >&2; exit 1; }
+        [[ -z "${checkout_status}" ]] || { echo 'source bootstrap requires a pristine tooling checkout' >&2; exit 1; }
+        index_flags="$(git -C "${source_root}" ls-files -v 2>/dev/null)" || { echo 'cannot inspect tooling index flags' >&2; exit 1; }
+        if grep -Eq '^[a-zS] ' <<<"${index_flags}"; then
+          echo 'source bootstrap refuses assume-unchanged or skip-worktree entries' >&2
+          exit 1
+        fi
+        build_task="$(mktemp -d "${RUNNER_TEMP}/golib-source-build.XXXXXX")"
+        install_root=''
+        cleanup_build() {
+          status=$?
+          chmod -R u+w "${build_task}" || status=1
+          find "${build_task}" -depth -delete || status=1
+          if [[ "${status}" -ne 0 && -n "${install_root}" && -d "${install_root}" ]]; then
+            chmod -R u+w "${install_root}" || status=1
+            find "${install_root}" -depth -delete || status=1
+          fi
+          exit "${status}"
+        }
+        trap cleanup_build EXIT
+        install_root="$(mktemp -d "${RUNNER_TEMP}/golib-source-install.XXXXXX")"
+        echo "GOLIB_SOURCE_INSTALL_ROOT=${install_root}" >>"${GITHUB_ENV}"
+        mkdir -p "${build_task}/cache" "${build_task}/mod" "${build_task}/tmp" \
+          "${install_root}/bin" "${install_root}/lint" "${install_root}/xdg" "${install_root}/npm" "${install_root}/tmp"
+        export GOCACHE="${build_task}/cache" GOMODCACHE="${build_task}/mod" GOTMPDIR="${build_task}/tmp"
+        (cd "${source_root}" && go build -mod=readonly -trimpath -buildvcs=false -o "${install_root}/bin/golib" ./cmd/golib)
+        test "$("${install_root}/bin/golib" --version)" = dev
+        {
+          echo "GOLANGCI_LINT_CACHE=${install_root}/lint"
+          echo "XDG_CACHE_HOME=${install_root}/xdg"
+          echo "NPM_CONFIG_CACHE=${install_root}/npm"
+          echo "TMPDIR=${install_root}/tmp"
+          echo "GOENV=off"
+          echo "GOWORK=off"
+          echo "GOTOOLCHAIN=local"
+          echo "GOMAXPROCS=2"
+          echo "GOFLAGS=-p=1"
+        } >>"${GITHUB_ENV}"
+        echo "${install_root}/bin" >>"${GITHUB_PATH}"
     - name: Install verified golib release
+      if: inputs.source_bootstrap != 'true'
       shell: bash
       env:
         GOLIB_REPOSITORY: faustbrian/go-library-tools

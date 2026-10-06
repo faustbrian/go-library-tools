@@ -25,6 +25,13 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Support explicitly selected immutable development source in the setup action,
+  retaining verified released binaries by default. Source builds require the
+  fixed pristine tooling checkout without hidden index entries and an honest
+  `dev` identity, remove build caches and expose the owned installation for
+  caller cleanup without changing reusable
+  workflow routing or consumer gate selection.
+
 - Recognize only exact public Authentication decision checksum records and the
   verified JWT specification test-reference row as metadata during secret
   scanning, retaining findings for other detectors, paths, changed content and

@@ -60,6 +60,31 @@ immutable workflow pin does not force a simultaneous tool-manifest migration.
 Release rehearsals similarly omit module selectors when the installed tool
 predates module-scoped release commands.
 
+The setup action also offers an explicit development-source option for a
+reviewed prerequisite. An individually pinned action call may set
+`source_bootstrap: 'true'` and supply `tooling_sha`; it must first check out
+`faustbrian/go-library-tools` at that exact lowercase 40-character commit into
+the fixed `.golib-tooling` directory. No arbitrary repository or source path
+is accepted. The action verifies the checkout identity and requires a pristine
+checkout, including tracked, untracked and ignored files. Assume-unchanged and
+skip-worktree index entries are refused because they can conceal changed inputs.
+Git inspection failures also refuse the build without rendering file paths.
+The caller owns a stable checkout during validation and building; this is not
+an atomic snapshot against concurrent filesystem changes. The action uses
+read-only module resolution and private public-proxy/SumDB Go caches, and
+requires the unmodified `dev` version.
+It does not represent a checksum-verified or attested release, and
+`.golib.yaml` keeps its existing public declarations unchanged.
+
+Build caches are removed on success and failure. On success the installed
+binary and ancillary caches remain job-owned at `GOLIB_SOURCE_INSTALL_ROOT`.
+The caller must remove that exact directory in an always-cleanup step, after
+checking it lies beneath `RUNNER_TEMP` with the `golib-source-install.` prefix.
+The development action does not select or waive any consumer gate. Existing
+reusable `library-ci.yml` callers still use released binaries; they do not yet
+expose a source-bootstrap input. The action's default false route retains the
+existing release checksum, attestation and exact-version verification.
+
 Repositories whose initial dependency graph cannot be reconstructed from the
 public Go proxy may define both `GOLIB_BOOTSTRAP_PROXY_URL` and
 `GOLIB_BOOTSTRAP_PROXY_SHA256` as repository variables. The URL must identify
@@ -128,7 +153,8 @@ write to sibling repositories. The workflow changes only `.golib.yaml` and the
 thin CI caller and never force-pushes an existing rollout branch.
 
 This repository bootstraps its own CI from source so the first release does not
-depend on itself. Consumer repositories always use released binaries.
+depend on itself. Reusable consumer workflows continue to use released binaries;
+individually pinned setup-action calls may explicitly select reviewed source.
 
 Tooling tags publish only the four platform archives, their SBOMs, the release
 manifest, and checksums by default. Catalog, compatibility-set, residual, and
