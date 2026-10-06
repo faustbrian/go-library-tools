@@ -22,6 +22,11 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Adopt published Localized v5 with International v4, HTTP Client v2 and
+  Wire v3 in the maintained compatibility consumer. Preserve historical
+  Localized selections and cover canonical/retained nominal composition,
+  exact empty/missing locales and immutable request/payload ownership.
+
 - Cover inclusive documentation batch limits, finite non-progress refusal,
   later Markdown selection and exact-parent confinement. Record one
   source/verifier-bound empty-component mutant as equivalent only for cleaned

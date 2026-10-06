@@ -8,6 +8,7 @@ import (
 	"errors"
 	"io"
 	"log/slog"
+	"net/http"
 	"net/url"
 	"reflect"
 	"strings"
@@ -20,15 +21,20 @@ import (
 	calendar "github.com/faustbrian/go-calendar/v2"
 	capability "github.com/faustbrian/go-capability/v2"
 	configdecode "github.com/faustbrian/go-config/v2/decode"
+	httpclient "github.com/faustbrian/go-http-client/v2"
 	idempotency "github.com/faustbrian/go-idempotency/v2"
 	idempotencymemory "github.com/faustbrian/go-idempotency/v2/memory"
-	"github.com/faustbrian/go-international/v3/locale"
+	"github.com/faustbrian/go-international/v4/locale"
 	jsonapi "github.com/faustbrian/go-jsonapi/v2"
 	moneyobjective "github.com/faustbrian/go-knapsack/objective/money/v3"
 	"github.com/faustbrian/go-knapsack/v2"
-	localized "github.com/faustbrian/go-localized/v4"
-	localizedquery "github.com/faustbrian/go-localized/v4/adapters/query"
-	localizedquerylegacy "github.com/faustbrian/go-localized/v4/localizedquery"
+	localized "github.com/faustbrian/go-localized/v5"
+	localizedclient "github.com/faustbrian/go-localized/v5/adapters/httpclient"
+	localizedquery "github.com/faustbrian/go-localized/v5/adapters/query"
+	localizedhttp "github.com/faustbrian/go-localized/v5/http"
+	localizedclientlegacy "github.com/faustbrian/go-localized/v5/localizedhttpclient"
+	localizedquerylegacy "github.com/faustbrian/go-localized/v5/localizedquery"
+	localizedmatch "github.com/faustbrian/go-localized/v5/match"
 	log "github.com/faustbrian/go-log/v2"
 	mpt "github.com/faustbrian/go-merkle-patricia-trie/v2"
 	mptmemory "github.com/faustbrian/go-merkle-patricia-trie/v2/memory"
@@ -104,7 +110,7 @@ func TestCapabilityV2PublishedIssuerBoundReusableGrantComposition(t *testing.T) 
 	}
 }
 
-func TestLocalizedV4PublishedAPIQueryV4Composition(t *testing.T) {
+func TestLocalizedV5PublishedAPIQueryV4Composition(t *testing.T) {
 	text, err := localized.TextFromMap(map[string]string{"en": "Hello", "fi": ""})
 	if err != nil {
 		t.Fatal(err)
@@ -146,6 +152,51 @@ func TestLocalizedV4PublishedAPIQueryV4Composition(t *testing.T) {
 			}
 			if _, err := adapter.predicate("title", apiquery.OpEqual, text, swedish); !errors.Is(err, localized.ErrMissingLocale) {
 				t.Fatal("missing localized predicate lost sentinel semantics")
+			}
+		})
+	}
+}
+
+func TestLocalizedV5PublishedHTTP2Composition(t *testing.T) {
+	english, err := locale.Parse("EN-us")
+	if err != nil {
+		t.Fatal(err)
+	}
+	text, err := localized.TextFromMap(map[string]string{"en-US": "Hello", "fi": ""})
+	if err != nil {
+		t.Fatal(err)
+	}
+	original, err := httpclient.NewRequestSpec("https://example.test", "/content")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, adapter := range []struct {
+		name           string
+		preferences    func(httpclient.RequestSpec, httpclient.RequestLayer, ...localizedmatch.Preference) (httpclient.RequestSpec, error)
+		selectResponse func(localized.Text, *http.Response, localizedhttp.ParseOptions) (localizedmatch.Result, error)
+	}{
+		{"canonical", localizedclient.WithPreferences, localizedclient.SelectResponse},
+		{"retained", localizedclientlegacy.WithPreferences, localizedclientlegacy.SelectResponse},
+	} {
+		t.Run(adapter.name, func(t *testing.T) {
+			selected, err := adapter.preferences(original, httpclient.LayerRequest, localizedmatch.Preference{Locale: english, Weight: 1})
+			if err != nil {
+				t.Fatal(err)
+			}
+			request, err := selected.Build(context.Background(), http.MethodGet)
+			if err != nil || request.Header.Get("Accept-Language") != "en-US" {
+				t.Fatalf("canonical request preferences lost: %v", err)
+			}
+			base, err := original.Build(context.Background(), http.MethodGet)
+			if err != nil || base.Header.Get("Accept-Language") != "" {
+				t.Fatal("preference adapter mutated the original request spec")
+			}
+			result, err := adapter.selectResponse(text, &http.Response{Request: request}, localizedhttp.ParseOptions{})
+			if err != nil || result.Locale.String() != "en-US" || result.Text != "Hello" {
+				t.Fatalf("published locale/request nominal composition lost: %v", err)
+			}
+			if _, err := adapter.selectResponse(text, nil, localizedhttp.ParseOptions{}); !errors.Is(err, localizedclient.ErrInvalidResponse) {
+				t.Fatal("canonical/retained invalid-response identity lost")
 			}
 		})
 	}

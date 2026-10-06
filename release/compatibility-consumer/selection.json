@@ -332,6 +332,13 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-http-client",
+      "module_path": "github.com/faustbrian/go-http-client/v2",
+      "version": "v2.0.0",
+      "source_revision": "de9f12ea6a1596e9231dad52fb467cbef0ced03a",
+      "primary_entry_packages": ["github.com/faustbrian/go-http-client/v2"]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-wire",
       "module_path": "github.com/faustbrian/go-wire/v3",
       "version": "v3.0.0",
@@ -421,10 +428,10 @@
     },
     {
       "alongside_module_path": "github.com/faustbrian/go-localized",
-      "module_path": "github.com/faustbrian/go-localized/v4",
-      "version": "v4.0.0",
-      "source_revision": "4474360bfbf65c69baf1cd68822b33856947047c",
-      "primary_entry_packages": ["github.com/faustbrian/go-localized/v4"]
+      "module_path": "github.com/faustbrian/go-localized/v5",
+      "version": "v5.0.0",
+      "source_revision": "c56b9eff3228ad7c974e87f9e6b8d6bfe1d56479",
+      "primary_entry_packages": ["github.com/faustbrian/go-localized/v5"]
     },
     {
       "alongside_module_path": "github.com/faustbrian/go-tabular",

@@ -82,6 +82,13 @@ builds a single method, validates it with explicit method and diagnostic
 bounds, and checks exact canonical output; it does not certify all protocol
 or security boundaries.
 Other selections and the frozen cohort's release identities remain unchanged.
+The maintained Localized v4 addition is superseded by published `/v5` v5.0.0,
+composed with International v4 locale identities, HTTP Client `/v2` v2.0.0
+request identities, API Query v4 predicates and Wire v3 codecs. Its ordinary
+composition assertions cover canonical and retained adapters, exact
+present-empty and missing locales, immutable request preferences and decoded
+payload ownership. Localized v1 and v3 and the original HTTP Client remain
+selected; this does not update the frozen compatibility set or release Tools.
 Wire v3, International v4, Measurement v3 and Opening Hours v4 are added
 alongside their earlier selected majors. The ordinary published composition
 tests exercise Wire v3 format identities through each successor adapter;

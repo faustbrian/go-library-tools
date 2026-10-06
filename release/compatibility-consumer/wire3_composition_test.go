@@ -1,6 +1,7 @@
 package compatibilityconsumer_test
 
 import (
+	"bytes"
 	"errors"
 	"testing"
 	"time"
@@ -8,6 +9,10 @@ import (
 	internationalwire "github.com/faustbrian/go-international/v4/adapters/wire"
 	"github.com/faustbrian/go-international/v4/country"
 	internationallegacy "github.com/faustbrian/go-international/v4/internationalwire"
+	"github.com/faustbrian/go-international/v4/locale"
+	localized "github.com/faustbrian/go-localized/v5"
+	localizedwire "github.com/faustbrian/go-localized/v5/adapters/wire"
+	localizedlegacy "github.com/faustbrian/go-localized/v5/localizedwire"
 	"github.com/faustbrian/go-math/decimal"
 	measurement "github.com/faustbrian/go-measurement/v3"
 	measurementwire "github.com/faustbrian/go-measurement/v3/adapters/wire"
@@ -16,7 +21,93 @@ import (
 	openingwire "github.com/faustbrian/go-opening-hours/v4/adapters/wire"
 	openinglegacy "github.com/faustbrian/go-opening-hours/v4/openinghourswire"
 	wire "github.com/faustbrian/go-wire/v3"
+	"github.com/faustbrian/go-wire/v3/jsonwire"
+	"github.com/faustbrian/go-wire/v3/msgpackwire"
+	"github.com/faustbrian/go-wire/v3/tomlwire"
+	"github.com/faustbrian/go-wire/v3/yamlwire"
 )
+
+func TestWire3PublishedLocalized5Composition(t *testing.T) {
+	value, err := localized.TextFromMap(map[string]string{"EN-us": "Hello", "fi": ""})
+	if err != nil {
+		t.Fatal(err)
+	}
+	finnish, err := locale.Parse("fi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	swedish, err := locale.Parse("sv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, codec := range []struct {
+		name           string
+		encode         func(localized.Text) ([]byte, error)
+		retainedEncode func(localized.Text) ([]byte, error)
+		decode         func([]byte) (localized.Text, error)
+		retainedDecode func([]byte) (localized.Text, error)
+	}{
+		{"json", func(v localized.Text) ([]byte, error) { return localizedwire.EncodeJSON(v, jsonwire.EncodeOptions{}) },
+			func(v localized.Text) ([]byte, error) { return localizedlegacy.EncodeJSON(v, jsonwire.EncodeOptions{}) },
+			func(b []byte) (localized.Text, error) { return localizedwire.DecodeJSON(b, jsonwire.DecodeOptions{}) },
+			func(b []byte) (localized.Text, error) { return localizedlegacy.DecodeJSON(b, jsonwire.DecodeOptions{}) }},
+		{"yaml", func(v localized.Text) ([]byte, error) { return localizedwire.EncodeYAML(v, yamlwire.EncodeOptions{}) },
+			func(v localized.Text) ([]byte, error) { return localizedlegacy.EncodeYAML(v, yamlwire.EncodeOptions{}) },
+			func(b []byte) (localized.Text, error) { return localizedwire.DecodeYAML(b, yamlwire.DecodeOptions{}) },
+			func(b []byte) (localized.Text, error) { return localizedlegacy.DecodeYAML(b, yamlwire.DecodeOptions{}) }},
+		{"toml", func(v localized.Text) ([]byte, error) { return localizedwire.EncodeTOML(v, tomlwire.EncodeOptions{}) },
+			func(v localized.Text) ([]byte, error) { return localizedlegacy.EncodeTOML(v, tomlwire.EncodeOptions{}) },
+			func(b []byte) (localized.Text, error) { return localizedwire.DecodeTOML(b, tomlwire.DecodeOptions{}) },
+			func(b []byte) (localized.Text, error) { return localizedlegacy.DecodeTOML(b, tomlwire.DecodeOptions{}) }},
+		{"messagepack", func(v localized.Text) ([]byte, error) {
+			return localizedwire.EncodeMessagePack(v, msgpackwire.EncodeOptions{})
+		},
+			func(v localized.Text) ([]byte, error) {
+				return localizedlegacy.EncodeMessagePack(v, msgpackwire.EncodeOptions{})
+			},
+			func(b []byte) (localized.Text, error) {
+				return localizedwire.DecodeMessagePack(b, msgpackwire.DecodeOptions{})
+			},
+			func(b []byte) (localized.Text, error) {
+				return localizedlegacy.DecodeMessagePack(b, msgpackwire.DecodeOptions{})
+			}},
+	} {
+		t.Run(codec.name, func(t *testing.T) {
+			payload, err := codec.encode(value)
+			if err != nil {
+				t.Fatal(err)
+			}
+			retained, err := codec.retainedEncode(value)
+			if err != nil || !bytes.Equal(payload, retained) {
+				t.Fatal("canonical/retained encoded identity differs")
+			}
+			if codec.name == "json" && string(payload) != `{"en-US":"Hello","fi":""}` {
+				t.Fatalf("canonical localized JSON = %q", payload)
+			}
+			for name, decode := range map[string]func([]byte) (localized.Text, error){"canonical": codec.decode, "retained": codec.retainedDecode} {
+				t.Run(name, func(t *testing.T) {
+					input := bytes.Clone(payload)
+					decoded, err := decode(input)
+					if err != nil || !decoded.Equal(value) {
+						t.Fatalf("published codec round-trip failed: %v", err)
+					}
+					for i := range input {
+						input[i] = 'x'
+					}
+					if !decoded.Equal(value) {
+						t.Fatal("decoded localized text aliased input")
+					}
+					if got, present := decoded.Get(finnish); !present || got != "" {
+						t.Fatal("present-empty locale lost")
+					}
+					if _, present := decoded.Get(swedish); present {
+						t.Fatal("missing locale gained fallback")
+					}
+				})
+			}
+		})
+	}
+}
 
 func TestWire3PublishedInternational4Composition(t *testing.T) {
 	finland, err := country.Parse("FI")
