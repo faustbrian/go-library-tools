@@ -62,6 +62,25 @@
         }
       }
     },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "modules": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["module", "mode"],
+            "properties": {
+              "module": { "$ref": "#/$defs/repositoryPath" },
+              "mode": { "enum": ["exact", "evidence"] }
+            }
+          }
+        }
+      },
+      "description": "Explicit module-level statement acceptance; omission preserves exact enforcement. Evidence mode collects counts, not risk or release approval."
+    },
     "api": {
       "type": "object",
       "additionalProperties": false,

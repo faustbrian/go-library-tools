@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add optional per-module coverage evidence collection while preserving exact
+  enforcement by default. Collection retains production instrumentation and
+  rejects missing, wholly unexecuted, or invalid package evidence; counts alone
+  do not certify behavioral adequacy or release readiness.
+
 ### Security
 
 - Increase the bounded sanitized Gosec location projection from 32 to 64,

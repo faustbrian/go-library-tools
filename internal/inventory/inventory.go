@@ -320,6 +320,15 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 		"test": "tests",
 	}
 	apiOwners := make(map[string]struct{}, len(policy.API.Baselines))
+	for index, acceptance := range policy.Coverage.Modules {
+		module, exists := byDirectory[acceptance.Module]
+		if !exists {
+			return modules, fmt.Errorf("coverage.modules[%d] references unknown module %q", index, acceptance.Module)
+		}
+		if !module.Gates["coverage"] {
+			return modules, fmt.Errorf("coverage.modules[%d] is not enabled for module %q", index, acceptance.Module)
+		}
+	}
 	for index, migration := range policy.Mutation.Imports {
 		module, exists := byDirectory[migration.Module]
 		if !exists {

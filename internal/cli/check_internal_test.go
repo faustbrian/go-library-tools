@@ -829,6 +829,23 @@ func TestExecuteRoutesStandaloneCoverage(t *testing.T) {
 		!strings.Contains(stdout.String(), "file.go:1.1,2.1") || strings.Contains(stdout.String(), "all production packages have exact") {
 		t.Fatalf("uncovered execute() = %d, stdout %q, stderr %q", code, stdout.String(), stderr.String())
 	}
+	if err := os.WriteFile(filepath.Join(root, ".golib.yaml"), []byte("schema_version: 1\ntool_version: v1.0.0\ncoverage:\n  modules:\n    - module: .\n      mode: evidence\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	stdout.Reset()
+	stderr.Reset()
+	profile = "mode: atomic\nexample/file.go:1.1,2.1 1 1\nexample/file.go:3.1,4.1 2 0\n"
+	if code := execute([]string{"coverage", "--module", "."}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 ||
+		!strings.Contains(stdout.String(), "example 1/3 statements") || !strings.Contains(stdout.String(), "coverage evidence collected") || strings.Contains(stdout.String(), "exact 100%") {
+		t.Fatalf("evidence execute() = %d, stdout %q, stderr %q", code, stdout.String(), stderr.String())
+	}
+	stdout.Reset()
+	stderr.Reset()
+	profile = "mode: atomic\nexample/file.go:1.1,2.1 1 0\n"
+	if code := execute([]string{"coverage", "--module", "."}, root, &stdout, &stderr, factory); code != 1 ||
+		!strings.Contains(stderr.String(), "no executed coverage statements") || strings.Contains(stdout.String(), "coverage evidence collected") {
+		t.Fatalf("unexecuted evidence execute() = %d, stdout %q, stderr %q", code, stdout.String(), stderr.String())
+	}
 	for _, filename := range profiles {
 		if _, err := os.Stat(filename); !errors.Is(err, os.ErrNotExist) {
 			t.Fatalf("coverage profile retained: %v", err)

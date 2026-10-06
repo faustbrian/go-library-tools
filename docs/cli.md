@@ -61,7 +61,10 @@ Core commands:
   toolchain selected for the repository rather than the CLI build toolchain.
   Configured mutation imports are materialized before mutation verification,
   using the same fail-closed behavior as `golib mutation`.
-- `golib coverage [--module DIR]` verifies exact package coverage.
+- `golib coverage [--module DIR]` collects production-package coverage with exact
+  enforcement by default. An explicit `coverage.modules` evidence policy retains
+  instrumentation and counts without claiming exact coverage or release readiness;
+  see [Verification](verification.md).
 - `golib mutation [--module DIR]` verifies or executes mutation evidence.
   Native `LIVED` statuses remain visible when an exact repository-owned
   equivalence review applies; diagnostics report killed and reviewed-equivalent
