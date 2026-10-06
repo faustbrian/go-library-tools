@@ -13,6 +13,59 @@ import (
 	"github.com/faustbrian/go-library-tools/v2/internal/archivecheck"
 )
 
+// Exercise a successful multi-read trailer before other successful archives.
+// The pinned mutation runner uses failfast, so a broken continuation is
+// diagnosed here rather than hanging later on repeated end-of-stream reads.
+func TestValidateAcceptsBoundedZeroRecordPadding(t *testing.T) {
+	value := archive(t, tar.Header{Name: "proxy/data", Mode: 0o600, Typeflag: tar.TypeReg}, "value")
+	reader, err := gzip.NewReader(bytes.NewReader(value))
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := io.ReadAll(reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := reader.Close(); err != nil {
+		t.Fatal(err)
+	}
+	// A common GNU tar record size is twenty 512-byte blocks. The extra
+	// zero blocks after the two-block terminator are padding, not entries.
+	const recordBytes = 20 * 512
+	if len(raw) >= recordBytes {
+		t.Fatal("fixture no longer fits one ordinary tar record")
+	}
+	raw = append(raw, make([]byte, recordBytes-len(raw))...)
+	padded := raw
+	compressed := gzipBytes(t, padded)
+	limits := archivecheck.Limits{Entries: 1, Bytes: recordBytes, CompressedBytes: int64(len(compressed))}
+	if err := archivecheck.Validate(bytes.NewReader(compressed), limits); err != nil {
+		t.Fatalf("Validate() with ordinary zero record padding = %v", err)
+	}
+	limits.Bytes--
+	if err := archivecheck.Validate(bytes.NewReader(compressed), limits); err == nil ||
+		!strings.HasPrefix(err.Error(), "expanded byte limit exceeded:") {
+		t.Fatalf("Validate() below padded stream length = %v", err)
+	}
+	limits.Bytes++
+	limits.CompressedBytes--
+	if err := archivecheck.Validate(bytes.NewReader(compressed), limits); err == nil ||
+		!strings.HasPrefix(err.Error(), "compressed byte limit exceeded:") {
+		t.Fatalf("Validate() below padded compressed length = %v", err)
+	}
+	limits.CompressedBytes = 0
+	padded[len(padded)-1] = 'x'
+	if err := archivecheck.Validate(bytes.NewReader(gzipBytes(t, padded)), limits); err == nil ||
+		err.Error() != "gzip archive contains trailing decompressed data" {
+		t.Fatalf("Validate() with nonzero byte after zero padding = %v", err)
+	}
+	compressed[len(compressed)-1] ^= 0xff
+	if err := archivecheck.Validate(bytes.NewReader(compressed), limits); err == nil ||
+		!strings.HasPrefix(err.Error(), "finish gzip archive:") {
+		t.Fatalf("Validate() with corrupt padded gzip trailer = %v", err)
+	}
+}
+
 func TestValidateRejectsUnsafeAndOversizedBootstrapArchives(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -85,6 +138,47 @@ func TestValidateAcceptsBoundedRegularBootstrapArchive(t *testing.T) {
 	value := archive(t, tar.Header{Name: "proxy/cache/download/example/@v/v1.0.0.mod", Mode: 0o600, Typeflag: tar.TypeReg}, "module example\n")
 	if err := archivecheck.Validate(bytes.NewReader(value), archivecheck.Limits{Entries: 4, Bytes: 4 << 10}); err != nil {
 		t.Fatalf("Validate() error = %v", err)
+	}
+}
+
+func TestValidateChargesDeclaredDirectorySizes(t *testing.T) {
+	tests := []struct {
+		name  string
+		sizes []int64
+		want  string
+	}{
+		{name: "exact declaration limit", sizes: []int64{4096}},
+		{name: "one over declaration limit", sizes: []int64{4097}, want: "expanded byte limit exceeded: 4096"},
+		{name: "cumulative declarations", sizes: []int64{3072, 3072}, want: "expanded byte limit exceeded: 4096"},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var value bytes.Buffer
+			gzipWriter := gzip.NewWriter(&value)
+			tarWriter := tar.NewWriter(gzipWriter)
+			for index, size := range test.sizes {
+				// Directory declarations have metadata sizes but no body bytes.
+				// Preserve those sizes rather than using the payload helper.
+				header := tar.Header{Name: string(rune('a'+index)) + "/", Mode: 0o700, Typeflag: tar.TypeDir, Size: size, Format: tar.FormatUSTAR}
+				if err := tarWriter.WriteHeader(&header); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err := tarWriter.Close(); err != nil {
+				t.Fatal(err)
+			}
+			if err := gzipWriter.Close(); err != nil {
+				t.Fatal(err)
+			}
+			err := archivecheck.Validate(bytes.NewReader(value.Bytes()), archivecheck.Limits{Entries: 2, Bytes: 4096})
+			if test.want == "" {
+				if err != nil {
+					t.Fatalf("Validate() at declaration boundary = %v", err)
+				}
+			} else if err == nil || err.Error() != test.want {
+				t.Fatalf("Validate() = %v, want %q", err, test.want)
+			}
+		})
 	}
 }
 
@@ -189,56 +283,6 @@ func TestValidateEntryCountBoundaries(t *testing.T) {
 		} else if err != nil {
 			t.Fatalf("Validate() with entry bound %d = %v", limit, err)
 		}
-	}
-}
-
-func TestValidateAcceptsBoundedZeroRecordPadding(t *testing.T) {
-	value := archive(t, tar.Header{Name: "proxy/data", Mode: 0o600, Typeflag: tar.TypeReg}, "value")
-	reader, err := gzip.NewReader(bytes.NewReader(value))
-	if err != nil {
-		t.Fatal(err)
-	}
-	raw, err := io.ReadAll(reader)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if err := reader.Close(); err != nil {
-		t.Fatal(err)
-	}
-	// A common GNU tar record size is twenty 512-byte blocks. The extra
-	// zero blocks after the two-block terminator are padding, not entries.
-	const recordBytes = 20 * 512
-	if len(raw) >= recordBytes {
-		t.Fatal("fixture no longer fits one ordinary tar record")
-	}
-	raw = append(raw, make([]byte, recordBytes-len(raw))...)
-	padded := raw
-	compressed := gzipBytes(t, padded)
-	limits := archivecheck.Limits{Entries: 1, Bytes: recordBytes, CompressedBytes: int64(len(compressed))}
-	if err := archivecheck.Validate(bytes.NewReader(compressed), limits); err != nil {
-		t.Fatalf("Validate() with ordinary zero record padding = %v", err)
-	}
-	limits.Bytes--
-	if err := archivecheck.Validate(bytes.NewReader(compressed), limits); err == nil ||
-		!strings.HasPrefix(err.Error(), "expanded byte limit exceeded:") {
-		t.Fatalf("Validate() below padded stream length = %v", err)
-	}
-	limits.Bytes++
-	limits.CompressedBytes--
-	if err := archivecheck.Validate(bytes.NewReader(compressed), limits); err == nil ||
-		!strings.HasPrefix(err.Error(), "compressed byte limit exceeded:") {
-		t.Fatalf("Validate() below padded compressed length = %v", err)
-	}
-	limits.CompressedBytes = 0
-	padded[len(padded)-1] = 'x'
-	if err := archivecheck.Validate(bytes.NewReader(gzipBytes(t, padded)), limits); err == nil ||
-		err.Error() != "gzip archive contains trailing decompressed data" {
-		t.Fatalf("Validate() with nonzero byte after zero padding = %v", err)
-	}
-	compressed[len(compressed)-1] ^= 0xff
-	if err := archivecheck.Validate(bytes.NewReader(compressed), limits); err == nil ||
-		!strings.HasPrefix(err.Error(), "finish gzip archive:") {
-		t.Fatalf("Validate() with corrupt padded gzip trailer = %v", err)
 	}
 }
 
