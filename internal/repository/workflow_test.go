@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"runtime"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -235,7 +236,7 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 	}
 
 	repository := t.TempDir()
-	run := func(t *testing.T, event, dryRun, changedPath string, rename bool, pinMode string) string {
+	run := func(t *testing.T, event, dryRun, changedPath string, rename bool, pinMode string, sourceBootstrap bool) string {
 		t.Helper()
 		if combined, err := exec.CommandContext(t.Context(), "git", "init", "-q", repository).CombinedOutput(); err != nil {
 			t.Fatalf("git init: %v\n%s", err, combined)
@@ -345,6 +346,7 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 			"EVENT_NAME="+event,
 			"GITHUB_OUTPUT="+output,
 			"RELEASE_DRY_RUN="+dryRun,
+			"SOURCE_BOOTSTRAP="+strconv.FormatBool(sourceBootstrap),
 		)
 		if combined, err := command.CombinedOutput(); err != nil {
 			t.Fatalf("scope selector: %v\n%s", err, combined)
@@ -360,6 +362,7 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 		name, event, dryRun, path, want string
 		rename                          bool
 		pinMode                         string
+		sourceBootstrap                 bool
 	}{
 		{name: "policy only", event: "pull_request", dryRun: "false", path: "AGENTS.md", want: "false"},
 		{name: "documentation only", event: "pull_request", dryRun: "false", path: "docs/usage.md", want: "false"},
@@ -374,10 +377,12 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 		{name: "source", event: "pull_request", dryRun: "false", path: "internal/example/example.go", want: "true"},
 		{name: "release rehearsal", event: "pull_request", dryRun: "true", path: "AGENTS.md", want: "true"},
 		{name: "main push", event: "push", dryRun: "false", path: "AGENTS.md", want: "true"},
+		{name: "source bootstrap documentation", event: "pull_request", dryRun: "false", path: "docs/usage.md", want: "true", sourceBootstrap: true},
+		{name: "source bootstrap matched pins", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "true", pinMode: "matched", sourceBootstrap: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			repository = t.TempDir()
-			if got := run(t, test.event, test.dryRun, test.path, test.rename, test.pinMode); got != test.want {
+			if got := run(t, test.event, test.dryRun, test.path, test.rename, test.pinMode, test.sourceBootstrap); got != test.want {
 				t.Fatalf("runtime = %q, want %q", got, test.want)
 			}
 		})
@@ -638,13 +643,16 @@ printf '%s\n' "$*" >>"$INVOCATIONS"
 	}
 
 	for _, test := range []struct {
-		name   string
-		legacy string
-		want   string
+		name            string
+		legacy          string
+		want            string
+		sourceBootstrap bool
 	}{
 		{name: "v1.4 tool", legacy: "true", want: "check --all"},
 		{name: "v1.5 tool", legacy: "true", want: "check --all"},
 		{name: "local capable tool", legacy: "false", want: "check --local --all"},
+		{name: "source legacy tool", legacy: "true", want: "check --all", sourceBootstrap: true},
+		{name: "source local capable tool", legacy: "false", want: "check --all", sourceBootstrap: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if err := os.WriteFile(invocations, nil, 0o600); err != nil {
@@ -656,6 +664,7 @@ printf '%s\n' "$*" >>"$INVOCATIONS"
 				"INVOCATIONS="+invocations,
 				"LEGACY="+test.legacy,
 				"MODULE_DIRECTORY=nested",
+				"SOURCE_BOOTSTRAP="+strconv.FormatBool(test.sourceBootstrap),
 			)
 			if combined, err := command.CombinedOutput(); err != nil {
 				t.Fatalf("module contract error = %v, output = %q", err, combined)
