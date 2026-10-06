@@ -34,6 +34,23 @@
           "reason": "Review owner /root/tools_profile_final_review; date 2026-10-06; expiry 2026-11-05 or any bound source/verifier, block identity, filename admission or quoting change. Pinned Gremlins v0.6.0 internal/engine/mappings.go changes >= to >. The predicates differ only for an existing location equal to the candidate within the same package. Public parsing deduplicates the complete filename:coordinates identity. Before insertion, admitted filename equals packagePath plus slash plus its basename, forbids colon and backslash, and coordinates match the numeric grammar. QuoteToASCII preserves distinct basename:coordinates identities, so equal package and escaped location implies identical map identity, already merged before iteration. The equality branch is therefore unreachable for public caller-created blocks; both predicates return the same insertion index on all reachable candidates and change no observable report, error or accounting. Artificial duplicate internal block representations are excluded because they violate the parser and admission invariants. Native failure37515376497 remains a failure with this LIVED coordinate; fresh matching-source qualification remains required. No other survivor is accepted by this record."
         }
       ]
+    },
+    {
+      "module_directory": ".",
+      "package_directory": "internal/docscheck",
+      "source_digest": "6d33180db1c5eda6595decdba3f843707cf9f08f0ab30fe7835cdc078b5550c3",
+      "gremlins_version": "v0.6.0",
+      "gremlins_verifier_sha256": "c28707fd4ce35dd228260de564107c1fb7726e42d4e9ea2bf9e988083e1f3b5b",
+      "mutations": [
+        {
+          "file_name": "operations.go",
+          "type": "INVERT_LOOPCTRL",
+          "line": 119,
+          "column": 4,
+          "contract_domain": "Documentation local-link component inspection reached through checkLinkContext's cleaned resolved path and filepath.Rel; identical inspection, cancellation checkpoints and refusal outcomes",
+          "reason": "Owner faustbrian; date 2026-10-06; expiry 2026-11-05 or any bound source/verifier, path admission or supported filepath semantics change. Pinned Gremlins v0.6.0 changes continue to break. The sole production caller cleans the resolved path and passes filepath.Rel's canonical relative result, which contains no empty separator components. The only empty component is the single empty string created when validateComponents normalizes relative dot to empty. In that one-iteration case both continue and break finish without dispatching metadata inspection. All nonempty-component cases execute unchanged. Arbitrary private inputs with repeated or leading separators are excluded because the production caller cannot create them. No other docscheck mutant is accepted; the five viable admission/selection mutations remain subject to ordinary regression tests. Native run37524076041 remains failed, with original LIVED/TIMED OUT statuses preserved; fresh matching-source qualification remains required."
+        }
+      ]
     }
   ]
 }

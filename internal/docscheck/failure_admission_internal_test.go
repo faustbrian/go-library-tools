@@ -155,7 +155,12 @@ func TestDocumentWalkFailuresPreserveCausesAndCleanup(t *testing.T) {
 			case "empty progress":
 				// These two responses intentionally violate fs.ReadDirFile's
 				// contract; they only prove the existing defensive refusal.
-				files.readDir = func(int) ([]fs.DirEntry, error) { return nil, nil }
+				files.readDir = func(int) ([]fs.DirEntry, error) {
+					if files.listings == 1 {
+						return nil, nil
+					}
+					return nil, failure
+				}
 			case "excess batch":
 				files.readDir = func(n int) ([]fs.DirEntry, error) {
 					return make([]fs.DirEntry, n+1), io.EOF

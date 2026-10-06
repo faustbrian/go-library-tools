@@ -22,6 +22,12 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Cover inclusive documentation batch limits, finite non-progress refusal,
+  later Markdown selection and exact-parent confinement. Record one
+  source/verifier-bound empty-component mutant as equivalent only for cleaned
+  relative paths admitted by the production link checker; retain native statuses
+  and all documentation admission controls.
+
 - Record one source/verifier-bound coverage insertion-tie mutant as equivalent
   only for identities deduplicated by the public parser and admitted canonical
   filenames. Preserve native statuses and all diagnostic output allowances.
