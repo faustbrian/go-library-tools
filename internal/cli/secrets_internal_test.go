@@ -14,6 +14,36 @@ import (
 	"github.com/faustbrian/go-library-tools/v2/internal/gates"
 )
 
+func TestExecuteRepositorySecretsRejectsMalformedArguments(t *testing.T) {
+	for _, test := range []struct {
+		name string
+		args []string
+	}{
+		{name: "missing subcommand", args: []string{"secrets"}},
+		{name: "wrong subcommand", args: []string{"secrets", "invalid"}},
+		{name: "empty subcommand", args: []string{"secrets", ""}},
+		{name: "extra argument", args: []string{"secrets", "check", "extra"}},
+		{name: "wrong subcommand and extra argument", args: []string{"secrets", "invalid", "extra"}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := internalFixture(t)
+			factoryCalled := false
+			factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
+				factoryCalled = true
+				return nil, nil, errors.New("unexpected executor creation")
+			}
+			var stdout, stderr bytes.Buffer
+			code := executeContext(t.Context(), test.args, root, &stdout, &stderr, factory)
+			if code != 2 || stderr.String() != "usage: golib secrets check\n" || stdout.Len() != 0 {
+				t.Fatalf("malformed command result = %d, stdout=%q, stderr=%q", code, stdout.String(), stderr.String())
+			}
+			if factoryCalled {
+				t.Fatal("malformed command created an execution capability")
+			}
+		})
+	}
+}
+
 func TestExecuteRepositorySecretsOnly(t *testing.T) {
 	for _, stage := range []string{"success", "history", "current", "ignore", "cancelled"} {
 		t.Run(stage, func(t *testing.T) {
