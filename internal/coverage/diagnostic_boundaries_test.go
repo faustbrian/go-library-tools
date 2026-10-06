@@ -26,7 +26,7 @@ func TestVerifyDiagnosticSelectionAccountsForEveryBlock(t *testing.T) {
 	var profile, want strings.Builder
 	profile.WriteString("mode: atomic\n")
 	want.WriteString("uncovered production blocks:\n")
-	for index := 0; index < 1024; index++ {
+	for index := range 1024 {
 		fmt.Fprintf(&profile, "example/file-%04d.go:1.1,2.1 1 0\n", index)
 		if index < 512 {
 			fmt.Fprintf(&want, "  file-%04d.go:1.1,2.1\n", index)
