@@ -60,3 +60,20 @@ coverage:
 		t.Fatal("explicit coverage policy was not retained for the gate owner")
 	}
 }
+
+func TestLoadRetainsNestedModuleCoveragePolicies(t *testing.T) {
+	for _, mode := range []string{"exact", "evidence"} {
+		t.Run(mode, func(t *testing.T) {
+			root := t.TempDir()
+			write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\ncoverage:\n  modules:\n    - module: adapters/http\n      mode: "+mode+"\n")
+			policy, err := config.Load(root)
+			if err != nil {
+				t.Fatalf("nested coverage policy refused: %v", err)
+			}
+			want := config.CoverageModule{Module: "adapters/http", Mode: mode}
+			if len(policy.Coverage.Modules) != 1 || policy.Coverage.Modules[0] != want {
+				t.Fatalf("nested coverage policy = %#v, want %#v", policy.Coverage.Modules, want)
+			}
+		})
+	}
+}
