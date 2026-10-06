@@ -211,7 +211,8 @@ func TestValidateAcceptsBoundedZeroRecordPadding(t *testing.T) {
 	if len(raw) >= recordBytes {
 		t.Fatal("fixture no longer fits one ordinary tar record")
 	}
-	padded := append(raw, make([]byte, recordBytes-len(raw))...)
+	raw = append(raw, make([]byte, recordBytes-len(raw))...)
+	padded := raw
 	compressed := gzipBytes(t, padded)
 	limits := archivecheck.Limits{Entries: 1, Bytes: recordBytes, CompressedBytes: int64(len(compressed))}
 	if err := archivecheck.Validate(bytes.NewReader(compressed), limits); err != nil {
