@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"bytes"
 	"compress/gzip"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,6 +31,50 @@ func TestExecuteAcceptsBootstrapArchiveWithoutExtraction(t *testing.T) {
 	}
 	if _, err := os.Stat(filepath.Join(root, "proxy")); !os.IsNotExist(err) {
 		t.Fatal("validation extracted archive entries")
+	}
+}
+
+func TestExecuteAcceptsZeroPaddedBootstrapArchiveWithoutExtraction(t *testing.T) {
+	root := fixture(t)
+	reader, err := gzip.NewReader(bytes.NewReader(bootstrapArchive(t, "proxy/data")))
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := io.ReadAll(reader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := reader.Close(); err != nil {
+		t.Fatal(err)
+	}
+	const recordBytes = 20 * 512
+	if len(raw) >= recordBytes {
+		t.Fatal("fixture no longer fits one ordinary tar record")
+	}
+	raw = append(raw, make([]byte, recordBytes-len(raw))...)
+	var input bytes.Buffer
+	writer := gzip.NewWriter(&input)
+	if _, err := writer.Write(raw); err != nil {
+		t.Fatal(err)
+	}
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(root, "padded.tgz")
+	if err := os.WriteFile(path, input.Bytes(), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	var stdout, stderr bytes.Buffer
+	code := cli.Execute([]string{"archive", "validate", "--file", path}, root, &stdout, &stderr)
+	if code != 0 || stdout.String() != "bootstrap archive valid\n" || stderr.Len() != 0 {
+		t.Fatalf("padded archive result: code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
+	}
+	stored, err := os.ReadFile(path)
+	if err != nil || !bytes.Equal(stored, input.Bytes()) {
+		t.Fatal("validation altered its padded input")
+	}
+	if _, err := os.Stat(filepath.Join(root, "proxy")); !os.IsNotExist(err) {
+		t.Fatal("validation extracted padded archive entries")
 	}
 }
 

@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Accept ordinary zero tar-record padding during archive validation, charging
+  the entire stream to expansion limits while retaining compressed limits,
+  gzip integrity checks and rejection of nonzero trailing content.
+
 ### Added
 
 - Add optional per-module coverage evidence collection while preserving exact
