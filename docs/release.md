@@ -1,9 +1,20 @@
 # Release Process
 
 The first public release is `v1.0.0`. A release requires a clean final diff,
-exact coverage and mutation results, race and fuzz checks, static analysis,
+coverage under the selected acceptance policy and mutation results, race and
+fuzz checks, static analysis,
 security and license checks, documentation validation, representative consumer
 parity, and successful remote CI.
+
+The root module explicitly selects coverage evidence mode: it still runs the
+complete instrumented module tests and requires valid, nonzero execution for
+every expected production package. Counts do not certify behavioral adequacy.
+The release review owns the assessment of reachable behavior and defensive
+guards that cannot be independently reached through admitted inputs; tests
+must cover concrete scanner metadata, failure and redaction contracts. Other
+modules retain exact coverage unless their own policy explicitly selects
+evidence mode. Security, mutation, race, fuzz, API and consumer gates remain
+unchanged.
 
 Release automation builds Linux and macOS archives for amd64 and arm64,
 generates checksums, SBOMs, provenance, and a release manifest, and publishes

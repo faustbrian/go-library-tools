@@ -19,6 +19,11 @@ All notable changes to this project are documented in this file.
 
 ### Security
 
+- Select root-only coverage evidence acceptance while retaining instrumented
+  package execution and every other release gate. Strengthen finite scanner
+  metadata refusal, relative-path projection, sticky invalidation and template
+  creation failure tests; counts alone do not certify security or readiness.
+
 - Increase the bounded sanitized Gosec location projection from 32 to 64,
   retaining complete finding counts and validation of every issue beyond the
   projection cap. Output still contains only hashed module-relative identities,
