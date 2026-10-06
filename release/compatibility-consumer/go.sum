@@ -134,8 +134,12 @@ github.com/faustbrian/go-adaptive-throttle v1.0.1 h1:Pyr0GK+bF/+0RdYd8rfOa+0tDFD
 github.com/faustbrian/go-adaptive-throttle v1.0.1/go.mod h1:zSIhmblphQqub+s3fYQZf1S9dUKVlRNh2WMvrKqlUk8=
 github.com/faustbrian/go-analysis v1.2.0 h1:w8pfSqS4fo9an+8AIQ1iG/4tvBZICj5eqLux3WL8n0o=
 github.com/faustbrian/go-analysis v1.2.0/go.mod h1:1GqiB4IDxxJZKBd4qpxuJfJxXG/pjxKqhumBM2tPRMU=
+github.com/faustbrian/go-api-query v1.1.0 h1:fq7OLmsl4hjTuXiOLZDSLpY9ipUWaMaTbLLKCO4BBJ8=
+github.com/faustbrian/go-api-query v1.1.0/go.mod h1:Tb9fPaZOvKu3vJ+Ewv2IHVHss5IGJ6bvQy1wnaBpchc=
 github.com/faustbrian/go-api-query/v3 v3.0.0 h1:EoXwcz2Mjr12wM9BeGfy6Hib4T6euibyryiJDt/nVaw=
 github.com/faustbrian/go-api-query/v3 v3.0.0/go.mod h1:Po10DQWFuCvihvFax5qsAB6GIU1msbjTwJfV2PasS6E=
+github.com/faustbrian/go-api-query/v4 v4.0.0 h1:odUWsP6sM0oJdozJ/1CG4d4kvSj+QdA95xb/vW4Wx+c=
+github.com/faustbrian/go-api-query/v4 v4.0.0/go.mod h1:1cWg73KkXjGc7v0LZmWEkG9NlqIIXsr/JS1yFOXNFXc=
 github.com/faustbrian/go-audit v1.0.0 h1:wVUkuXXBZIBj/6ORTZEgbbBPw2ymIaXnnTDrhBVn/N4=
 github.com/faustbrian/go-audit v1.0.0/go.mod h1:IrR+KzmsdkEizekCStgGor5Mqj4OfAj25REXAqDJ540=
 github.com/faustbrian/go-audit/postgres v1.0.0 h1:2zt/s5/QbKEojwBsfxA1TcAHDgVOMiv8dSiJuNcrAcQ=
@@ -390,6 +394,8 @@ github.com/faustbrian/go-state-machine v1.0.0 h1:4wX293ijoWF5HcBAMyAZL+7zilfhe8X
 github.com/faustbrian/go-state-machine v1.0.0/go.mod h1:8YocqriHNQog36xVfS/aAVgFcAuNneNHQXrw/jYN6R0=
 github.com/faustbrian/go-tabular v1.0.0 h1:k+M86Fr01/426Z4bJW2vSnizx5KXK+jxiCNsNcJ8IpE=
 github.com/faustbrian/go-tabular v1.0.0/go.mod h1:XNM1SxRtn0LeasyOh+xJ3iUpjhLcZkTA9ohqJTOM1gw=
+github.com/faustbrian/go-tabular/v2 v2.0.0 h1:WV/ZAUgVMF+hhDlNwXiHKNIsZH/yhdsQyfyy8rGOb/I=
+github.com/faustbrian/go-tabular/v2 v2.0.0/go.mod h1:GR7uPbhK97+3JtGCXTr/hFZ/QScyntIL55cnzJWrGUE=
 github.com/faustbrian/go-telemetry v1.2.0 h1:moTGe8fFYVCtH9VxlD3PPQ1BuHL03A5RAxIau6n7auE=
 github.com/faustbrian/go-telemetry v1.2.0/go.mod h1:DWJbW/tD1cq8kM02aQo7CMVet6gzAw94cv0KuvsIoho=
 github.com/faustbrian/go-telemetry/v2 v2.0.0 h1:QhqiUbgdJu4Bus/3yYmDXUBsakSlx7AROKG0pyPecLM=

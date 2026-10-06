@@ -5,7 +5,9 @@ go 1.27.0
 require (
 	github.com/faustbrian/go-adaptive-throttle v1.0.1
 	github.com/faustbrian/go-analysis v1.2.0
+	github.com/faustbrian/go-api-query v1.1.0
 	github.com/faustbrian/go-api-query/v3 v3.0.0
+	github.com/faustbrian/go-api-query/v4 v4.0.0
 	github.com/faustbrian/go-audit v1.0.0
 	github.com/faustbrian/go-audit/postgres v1.0.0
 	github.com/faustbrian/go-audit/v2 v2.0.0
@@ -130,6 +132,7 @@ require (
 	github.com/faustbrian/go-settings/v2 v2.0.0
 	github.com/faustbrian/go-state-machine v1.0.0
 	github.com/faustbrian/go-tabular v1.0.0
+	github.com/faustbrian/go-tabular/v2 v2.0.0
 	github.com/faustbrian/go-telemetry v1.2.0
 	github.com/faustbrian/go-temporal v1.1.0
 	github.com/faustbrian/go-temporal/v2 v2.0.0
