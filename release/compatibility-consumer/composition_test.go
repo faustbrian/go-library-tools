@@ -16,6 +16,8 @@ import (
 	moneyobjective "github.com/faustbrian/go-knapsack/objective/money/v3"
 	"github.com/faustbrian/go-knapsack/v2"
 	log "github.com/faustbrian/go-log/v2"
+	mpt "github.com/faustbrian/go-merkle-patricia-trie/v2"
+	mptmemory "github.com/faustbrian/go-merkle-patricia-trie/v2/memory"
 	"github.com/faustbrian/go-money/v2"
 	"github.com/faustbrian/go-money/v2/moneytest"
 	openinghours "github.com/faustbrian/go-opening-hours/v3"
@@ -35,6 +37,56 @@ import (
 	"github.com/faustbrian/go-tenancy/v2"
 	validation "github.com/faustbrian/go-validation/v2"
 )
+
+func TestMPTV2PublishedMemoryComposition(t *testing.T) {
+	ctx := context.Background()
+	original, err := mpt.NewRawTrie(mpt.DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	key, input := []byte("key"), []byte("ordinary")
+	changed, err := original.Update(ctx, key, input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	input[0] = 'X'
+	if _, err := original.Get(ctx, key); !errors.Is(err, mpt.ErrAbsentKey) {
+		t.Fatalf("Update changed original snapshot: %v", err)
+	}
+	value, err := changed.Get(ctx, key)
+	if err != nil || !bytes.Equal(value, []byte("ordinary")) {
+		t.Fatalf("Update retained caller value alias: %q, %v", value, err)
+	}
+	store := mptmemory.New()
+	committed, err := changed.Commit(ctx, store)
+	if err != nil {
+		t.Fatal(err)
+	}
+	changedRoot, err := changed.Root()
+	if err != nil {
+		t.Fatal(err)
+	}
+	committedRoot, err := committed.Root()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if store.Root() != committedRoot || committedRoot != changedRoot {
+		t.Fatal("Commit changed immutable root identity")
+	}
+	loaded, err := mpt.LoadRawTrie(store.Root(), store, mpt.DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	value, err = loaded.Get(ctx, key)
+	if err != nil || !bytes.Equal(value, []byte("ordinary")) {
+		t.Fatalf("public stored round trip: %q, %v", value, err)
+	}
+	value[0] = 'X'
+	again, err := loaded.Get(ctx, key)
+	if err != nil || !bytes.Equal(again, []byte("ordinary")) {
+		t.Fatalf("Get exposed retained value storage: %q, %v", again, err)
+	}
+}
 
 func TestOpeningV3PublishedNominalComposition(t *testing.T) {
 	date := calendar.MustDate(2026, time.December, 25)
