@@ -147,6 +147,30 @@ func TestConsumerCatalogMarkdownPreservesAbsoluteDocumentationURLs(t *testing.T)
 	}
 }
 
+func TestActiveConsumerCatalogDoesNotPresentAdoptionAsMigration(t *testing.T) {
+	adoption := "docs/adoption.md"
+	active := module("github.com/faustbrian/example/library", "public library", true, "foundations", "active")
+	active.Version = "1.0.0"
+	active.Directory = "."
+	active.Cohesion.Documentation.Adoption = &adoption
+	catalog := inventory.Inventory{Repository: "github.com/faustbrian/example", Modules: []inventory.Module{active}}
+	identity := cohesion.Identity{DesignLanguageVersion: "1.0", DesignLanguageSHA256: strings.Repeat("a", 64), SourceIdentity: "unpublished", ToolingVersion: "dev", PublicationStatus: "unpublished"}
+	consumer, err := cohesion.Project(catalog, "consumer", identity)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rendered, err := cohesion.RenderMarkdown(consumer)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(rendered), "**active**") || !strings.Contains(string(rendered), active.ModulePath) {
+		t.Fatal("active module missing from consumer catalog")
+	}
+	if strings.Contains(string(rendered), "[migration]") || strings.Contains(string(rendered), adoption) {
+		t.Fatal("active module incorrectly advertised as requiring migration")
+	}
+}
+
 func module(path, kind string, releasable bool, family, lifecycle string) inventory.Module {
 	module := inventory.Module{Directory: path, ModulePath: path, GoVersion: "1.27.0", Kind: kind, Releasable: releasable}
 	if family != "" {
