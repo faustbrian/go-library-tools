@@ -346,6 +346,17 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-merkle-patricia-trie",
+      "module_path": "github.com/faustbrian/go-merkle-patricia-trie/v2",
+      "version": "v2.0.0",
+      "source_revision": "a8031c2645b41d6d46fbb3efcf4b61c4580cc840",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-merkle-patricia-trie/v2",
+        "github.com/faustbrian/go-merkle-patricia-trie/v2/filesystem",
+        "github.com/faustbrian/go-merkle-patricia-trie/v2/memory"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-opening-hours",
       "module_path": "github.com/faustbrian/go-opening-hours/v3",
       "version": "v3.0.0",
