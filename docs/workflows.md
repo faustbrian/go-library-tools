@@ -100,6 +100,18 @@ specification, dependency review, CodeQL, artifact retention, release selectors
 and Required remain in force. Source bootstrap supports reviewed development
 prerequisites; it is not a released-tool attestation or a consumer release pass.
 
+Callers whose external dependency graph is publicly available may independently
+set `public_dependencies: true`, default false. All four reusable jobs then
+persist `GOPROXY=https://proxy.golang.org`, `GOSUMDB=sum.golang.org`, and empty
+`GOPRIVATE`, `GONOPROXY` and `GONOSUMDB` before dependency-consuming gates.
+Quality and CodeQL skip legacy bootstrap archive restoration in this mode.
+Unavailable public dependencies fail without file-proxy or direct fallback;
+checksum verification remains enabled for owned modules. Gate-owned
+same-repository composition retains its separate source-qualified boundary.
+This input does not select development tooling or change any required gate.
+Omitting it preserves historical bootstrap routing, regardless of
+`source_bootstrap` selection.
+
 Repositories whose initial dependency graph cannot be reconstructed from the
 public Go proxy may define both `GOLIB_BOOTSTRAP_PROXY_URL` and
 `GOLIB_BOOTSTRAP_PROXY_SHA256` as repository variables. The URL must identify
