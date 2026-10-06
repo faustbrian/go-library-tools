@@ -17,6 +17,11 @@ on:
         required: false
         default: false
         type: boolean
+      public_dependencies:
+        description: Resolve external Go dependencies only through the public proxy and checksum database
+        required: false
+        default: false
+        type: boolean
       release_module:
         description: Rehearse exactly one module directory; blank rehearses every releasable module
         required: false
@@ -152,6 +157,12 @@ jobs:
         with:
           source_bootstrap: 'true'
           tooling_sha: ${{ inputs.tooling_sha }}
+      - name: Select public dependency authority
+        if: inputs.public_dependencies == true
+        run: |
+          set -euo pipefail
+          printf '%s\n' 'GOPROXY=https://proxy.golang.org' 'GOSUMDB=sum.golang.org' \
+            'GOPRIVATE=' 'GONOPROXY=' 'GONOSUMDB=' >>"${GITHUB_ENV}"
       - id: modules
         name: Build module matrix
         env:
@@ -240,6 +251,12 @@ jobs:
         with:
           source_bootstrap: 'true'
           tooling_sha: ${{ inputs.tooling_sha }}
+      - name: Select public dependency authority
+        if: inputs.public_dependencies == true
+        run: |
+          set -euo pipefail
+          printf '%s\n' 'GOPROXY=https://proxy.golang.org' 'GOSUMDB=sum.golang.org' \
+            'GOPRIVATE=' 'GONOPROXY=' 'GONOSUMDB=' >>"${GITHUB_ENV}"
       - run: golib repository check
       - run: golib workflows check
       - run: golib cohesion check
@@ -337,9 +354,16 @@ jobs:
           source_bootstrap: 'true'
           tooling_sha: ${{ inputs.tooling_sha }}
       - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@7e4cd2983099490e7f350724044b86835cc5d342
+        if: inputs.public_dependencies != true
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
           bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}
+      - name: Select public dependency authority
+        if: inputs.public_dependencies == true
+        run: |
+          set -euo pipefail
+          printf '%s\n' 'GOPROXY=https://proxy.golang.org' 'GOSUMDB=sum.golang.org' \
+            'GOPRIVATE=' 'GONOPROXY=' 'GONOSUMDB=' >>"${GITHUB_ENV}"
       - name: Run repository module contracts
         if: inputs.release_dry_run != true
         env:
@@ -429,9 +453,16 @@ jobs:
           source_bootstrap: 'true'
           tooling_sha: ${{ inputs.tooling_sha }}
       - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@7e4cd2983099490e7f350724044b86835cc5d342
+        if: inputs.public_dependencies != true
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
           bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}
+      - name: Select public dependency authority
+        if: inputs.public_dependencies == true
+        run: |
+          set -euo pipefail
+          printf '%s\n' 'GOPROXY=https://proxy.golang.org' 'GOSUMDB=sum.golang.org' \
+            'GOPRIVATE=' 'GONOPROXY=' 'GONOSUMDB=' >>"${GITHUB_ENV}"
       - uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
         with:
           languages: go

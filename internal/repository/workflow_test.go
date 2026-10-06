@@ -20,6 +20,42 @@ import (
 var remoteAction = regexp.MustCompile(`(?m)^\s*- uses: ([^./][^@\s]+)@([^\s#]+)`)
 var immutableAction = regexp.MustCompile(`^[0-9a-f]{40}$`)
 
+func TestReusableWorkflowPersistsPublicDependencyAuthority(t *testing.T) {
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &workflow); err != nil {
+		t.Fatal(err)
+	}
+	for _, job := range []string{"prepare", "repository-contract", "quality", "codeql"} {
+		t.Run(job, func(t *testing.T) {
+			var script string
+			for _, step := range workflow.Jobs[job].Steps {
+				if step.Name == "Select public dependency authority" {
+					script = step.Run
+				}
+			}
+			if script == "" {
+				t.Fatal("no persistent public dependency selection")
+			}
+			output := filepath.Join(t.TempDir(), "github-env")
+			command := exec.CommandContext(t.Context(), "bash", "-c", script)
+			command.Env = append(os.Environ(), "GITHUB_ENV="+output,
+				"GOPROXY=file:///unavailable,direct", "GOSUMDB=off",
+				"GOPRIVATE=*", "GONOPROXY=*", "GONOSUMDB=*")
+			if combined, err := command.CombinedOutput(); err != nil {
+				t.Fatalf("public dependency selection: %v\n%s", err, combined)
+			}
+			contents, err := os.ReadFile(output)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "GOPROXY=https://proxy.golang.org\nGOSUMDB=sum.golang.org\nGOPRIVATE=\nGONOPROXY=\nGONOSUMDB=\n"
+			if string(contents) != want {
+				t.Fatalf("persisted public authority = %q, want %q", contents, want)
+			}
+		})
+	}
+}
+
 func TestRepositoryWorkflowsPinRemoteActions(t *testing.T) {
 	root := projectRoot(t)
 	entries, err := os.ReadDir(filepath.Join(root, ".github", "workflows"))

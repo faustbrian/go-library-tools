@@ -25,6 +25,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Add an explicit public dependency route to reusable CI, retaining public
+  checksum verification and refusing file or direct fallback. The default
+  historical bootstrap route and all required gates remain unchanged.
+
 - Allow reusable CI to opt into immutable development tooling while retaining
   verified release installation by default. Source bootstrap runs the full
   ordinary contract, forces runtime assurance and removes each job's owned
