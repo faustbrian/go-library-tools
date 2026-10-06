@@ -387,6 +387,19 @@ func (operatingSecretConfigFiles) Remove(path string) error {
 	return os.Remove(path)
 }
 
+// Secrets scans repository history and the current tree with the same bounded,
+// sanitized policies used by the standard contract, without runtime gates.
+func (runner Runner) Secrets(ctx context.Context) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	output := runner.Output
+	if output == nil {
+		output = io.Discard
+	}
+	return runner.runRepositorySecrets(ctx, output, ".")
+}
+
 // Check runs the standard contract for each explicitly selected module.
 func (runner Runner) Check(ctx context.Context, selection []string) error {
 	modules, err := runner.selectModules(selection)

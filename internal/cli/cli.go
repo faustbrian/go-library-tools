@@ -34,6 +34,7 @@ Usage:
   golib --version
   golib archive validate --file <path>
   golib security validate --directory <path>
+  golib secrets check
   golib check [--local] [--all|--module <directory>]
   golib cohesion check [--json]
   golib cohesion catalog <consumer|engineering> [--json]
@@ -141,6 +142,13 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 			return failure(stderr, errors.Join(validateErr, closeErr))
 		}
 		return publishValidationSuccess(ctx, stdout, stderr, "bootstrap archive valid\n")
+	case "secrets":
+		if len(args) != 2 || args[1] != "check" {
+			return usage(stderr, "usage: golib secrets check")
+		}
+		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
+			return (gates.Runner{Root: root, Executor: executor, Output: stdout}).Secrets(ctx)
+		})
 	case "check":
 		local := len(args) > 1 && args[1] == "--local"
 		selectionArguments := args[1:]

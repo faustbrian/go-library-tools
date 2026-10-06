@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Apply metadata assurance to documentation/license-only source-bootstrap pull
+  requests without relaxing runtime checks for development tooling-pin changes,
+  source changes, pushes, scheduled runs or release rehearsals.
+  Preserve repository history/current-tree secret scanning with the standalone
+  `golib secrets check` route to the existing bounded scanner owner.
+
 - Accept ordinary zero tar-record padding during archive validation, charging
   the entire stream to expansion limits while retaining compressed limits,
   gzip integrity checks and rejection of nonzero trailing content.
