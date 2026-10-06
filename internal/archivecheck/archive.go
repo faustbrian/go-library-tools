@@ -47,24 +47,34 @@ func Validate(source io.Reader, limits Limits) error {
 	for {
 		header, nextErr := reader.Next()
 		if errors.Is(nextErr, io.EOF) {
-			var trailing [1]byte
-			count, err := decompressed.Read(trailing[:])
-			if decompressed.N == 0 {
-				return fmt.Errorf("expanded byte limit exceeded: %d", limits.Bytes)
-			}
-			if count > 0 {
-				return errors.New("gzip archive contains trailing decompressed data")
-			}
-			if !errors.Is(err, io.EOF) {
+			// Ordinary tar producers pad the final record with zero blocks.
+			// Charge all padding to the expansion bound and finish gzip so its
+			// checksum and compressed-byte bound remain authoritative.
+			var trailing [4096]byte
+			for {
+				count, err := decompressed.Read(trailing[:])
+				if decompressed.N == 0 {
+					return fmt.Errorf("expanded byte limit exceeded: %d", limits.Bytes)
+				}
+				for _, value := range trailing[:count] {
+					if value != 0 {
+						return errors.New("gzip archive contains trailing decompressed data")
+					}
+				}
+				if err == nil {
+					continue
+				}
+				if !errors.Is(err, io.EOF) {
+					if compressedLimit != nil && compressedLimit.N == 0 {
+						return fmt.Errorf("compressed byte limit exceeded: %d", limits.CompressedBytes)
+					}
+					return fmt.Errorf("finish gzip archive: %w", err)
+				}
 				if compressedLimit != nil && compressedLimit.N == 0 {
 					return fmt.Errorf("compressed byte limit exceeded: %d", limits.CompressedBytes)
 				}
-				return fmt.Errorf("finish gzip archive: %w", err)
+				return nil
 			}
-			if compressedLimit != nil && compressedLimit.N == 0 {
-				return fmt.Errorf("compressed byte limit exceeded: %d", limits.CompressedBytes)
-			}
-			return nil
 		}
 		if nextErr != nil {
 			if decompressed.N == 0 {

@@ -6,6 +6,8 @@
 scanner results, residual-risk references, and per-module release verdicts.
 `golib archive validate --file <path>` validates a gzip tar archive with fixed
 compressed, entry, and expansion bounds before a caller extracts it.
+Zero padding after the tar terminator is accepted within the full expansion
+bound; nonzero trailing content and invalid gzip trailers remain rejected.
 
 `golib --help` lists the stable command surface. Commands locate the repository
 by walking upward to `.golib.yaml`; failure to find it exits with status 1.
