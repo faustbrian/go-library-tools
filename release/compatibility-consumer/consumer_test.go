@@ -109,6 +109,7 @@ import (
 	_ "github.com/faustbrian/go-calendar"
 	_ "github.com/faustbrian/go-calendar/v2"
 	_ "github.com/faustbrian/go-capability"
+	_ "github.com/faustbrian/go-capability/v2"
 	_ "github.com/faustbrian/go-circuit-breaker"
 	_ "github.com/faustbrian/go-cli"
 	_ "github.com/faustbrian/go-clock"

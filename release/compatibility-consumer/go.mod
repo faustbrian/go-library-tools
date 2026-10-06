@@ -25,6 +25,7 @@ require (
 	github.com/faustbrian/go-calendar v1.1.0
 	github.com/faustbrian/go-calendar/v2 v2.0.0
 	github.com/faustbrian/go-capability v1.1.0
+	github.com/faustbrian/go-capability/v2 v2.0.0
 	github.com/faustbrian/go-circuit-breaker v1.0.0
 	github.com/faustbrian/go-cli v1.0.0
 	github.com/faustbrian/go-clock v1.2.0
@@ -247,7 +248,7 @@ require (
 	github.com/twmb/franz-go/pkg/kadm v1.18.0 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.13.1 // indirect
 	github.com/unixdj/qr v0.8.2 // indirect
-	github.com/valkey-io/valkey-go v1.0.76 // indirect
+	github.com/valkey-io/valkey-go v1.0.78 // indirect
 	github.com/valyala/fastjson v1.6.10 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xuri/efp v0.0.1 // indirect

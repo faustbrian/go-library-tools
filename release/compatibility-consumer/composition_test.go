@@ -3,6 +3,7 @@ package compatibilityconsumer_test
 import (
 	"bytes"
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"errors"
 	"io"
@@ -17,6 +18,7 @@ import (
 	queryjsonapi "github.com/faustbrian/go-api-query/v4/adapters/jsonapi"
 	queryjsonapilegacy "github.com/faustbrian/go-api-query/v4/apiqueryjsonapi"
 	calendar "github.com/faustbrian/go-calendar/v2"
+	capability "github.com/faustbrian/go-capability/v2"
 	configdecode "github.com/faustbrian/go-config/v2/decode"
 	idempotency "github.com/faustbrian/go-idempotency/v2"
 	idempotencymemory "github.com/faustbrian/go-idempotency/v2/memory"
@@ -50,6 +52,57 @@ import (
 	"github.com/faustbrian/go-tenancy/v2"
 	validation "github.com/faustbrian/go-validation/v2"
 )
+
+func TestCapabilityV2PublishedIssuerBoundReusableGrantComposition(t *testing.T) {
+	publicKey, privateKey, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatal("standard-library key generation failed")
+	}
+	signer, err := capability.NewEd25519Signer("consumer-key", privateKey)
+	if err != nil {
+		t.Fatal("published signer construction failed")
+	}
+	verifier, err := capability.NewEd25519Verifier(publicKey)
+	if err != nil {
+		t.Fatal("published verifier construction failed")
+	}
+	ctx := context.Background()
+	now := time.Date(2026, time.October, 6, 0, 0, 0, 0, time.UTC)
+	limits := capability.DefaultLimits()
+	token, err := capability.Issue(ctx, capability.Payload{
+		Version: 1, Issuer: "consumer-issuer", Audiences: []string{"consumer"},
+		Subject: "reader", Resource: "orders", Operation: "read", ID: "ordinary-grant",
+		IssuedAt: now, NotBefore: now, ExpiresAt: now.Add(time.Hour), MaxUses: 0,
+	}, signer, limits)
+	if err != nil {
+		t.Fatal("published reusable grant signing failed")
+	}
+	resolver := capability.ResolverFunc(func(_ context.Context, keyID string, algorithm capability.Algorithm) (capability.ResolvedKey, error) {
+		if keyID != "consumer-key" || algorithm != capability.Ed25519 {
+			return capability.ResolvedKey{}, capability.ErrUnknownKey
+		}
+		return capability.ResolvedKey{Issuer: "consumer-issuer", Verifier: verifier}, nil
+	})
+	grant, err := capability.Verify(ctx, token, resolver, capability.VerifyOptions{
+		Issuer: "consumer-issuer", Now: now, Limits: limits,
+	})
+	if err != nil {
+		t.Fatal("published issuer-bound grant verification failed")
+	}
+	if grant.Payload().MaxUses != 0 {
+		t.Fatal("reusable grant acquired a bounded-use policy")
+	}
+	use := capability.Use{Issuer: "consumer-issuer", Audience: "consumer", Subject: "reader", Resource: "orders", Operation: "read"}
+	for range 2 {
+		if err := grant.Authorize(use); err != nil {
+			t.Fatal("published exact reusable authorization failed")
+		}
+		result, err := grant.Consume(ctx, nil)
+		if err != nil || !result.Reusable || result.Use != 0 || result.Remaining != 0 {
+			t.Fatal("published reusable grant unexpectedly required a consumption store")
+		}
+	}
+}
 
 func TestLocalizedV4PublishedAPIQueryV4Composition(t *testing.T) {
 	text, err := localized.TextFromMap(map[string]string{"en": "Hello", "fi": ""})
