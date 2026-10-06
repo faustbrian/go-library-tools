@@ -67,6 +67,7 @@ require (
 	github.com/faustbrian/go-international/v3 v3.0.0
 	github.com/faustbrian/go-json-schema v1.0.0
 	github.com/faustbrian/go-jsonapi v1.0.0
+	github.com/faustbrian/go-jsonapi/v2 v2.0.0
 	github.com/faustbrian/go-jsonrpc v1.0.0
 	github.com/faustbrian/go-kafka v1.1.0
 	github.com/faustbrian/go-kafka/adapters/mskiam v1.1.0
