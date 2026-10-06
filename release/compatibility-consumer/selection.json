@@ -346,6 +346,13 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-jsonapi",
+      "module_path": "github.com/faustbrian/go-jsonapi/v2",
+      "version": "v2.0.0",
+      "source_revision": "41700010871799526a9dcfd7e96affe98bdecbba",
+      "primary_entry_packages": ["github.com/faustbrian/go-jsonapi/v2"]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-merkle-patricia-trie",
       "module_path": "github.com/faustbrian/go-merkle-patricia-trie/v2",
       "version": "v2.0.0",

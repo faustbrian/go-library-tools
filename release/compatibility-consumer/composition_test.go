@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"net/url"
 	"testing"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	configdecode "github.com/faustbrian/go-config/v2/decode"
 	idempotency "github.com/faustbrian/go-idempotency/v2"
 	idempotencymemory "github.com/faustbrian/go-idempotency/v2/memory"
+	jsonapi "github.com/faustbrian/go-jsonapi/v2"
 	moneyobjective "github.com/faustbrian/go-knapsack/objective/money/v3"
 	"github.com/faustbrian/go-knapsack/v2"
 	log "github.com/faustbrian/go-log/v2"
@@ -37,6 +39,33 @@ import (
 	"github.com/faustbrian/go-tenancy/v2"
 	validation "github.com/faustbrian/go-validation/v2"
 )
+
+func TestJSONAPIV2PublishedFiniteCursorComposition(t *testing.T) {
+	pagination, err := jsonapi.NewCursorPagination(jsonapi.CursorPaginationConfig{DefaultSize: 5, MaxSize: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	query, err := jsonapi.ParseQuery(url.Values{
+		"fields[articles]": {"title"}, "sort": {"id"}, "page[size]": {"10"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	page, err := pagination.ParseQuery(query)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if page.Size != 10 || !page.SizePresent || page.PageMember != "page" || page.Range || page.AfterPresent || page.BeforePresent {
+		t.Fatal("published JSONAPI v2 lost finite initial-page request semantics")
+	}
+	defaults, err := pagination.Parse(jsonapi.ParameterFamily{})
+	if err != nil || defaults.Size != 5 || defaults.SizePresent {
+		t.Fatal("published JSONAPI v2 lost configured default page size")
+	}
+	if len(query.Fields["articles"]) != 1 || query.Fields["articles"][0] != "title" || len(query.Sort) != 1 || query.Sort[0].Name != "id" {
+		t.Fatal("cursor parsing changed ordinary query fields or sorting")
+	}
+}
 
 func TestMPTV2PublishedMemoryComposition(t *testing.T) {
 	ctx := context.Background()

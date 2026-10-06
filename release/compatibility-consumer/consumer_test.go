@@ -159,6 +159,7 @@ import (
 	_ "github.com/faustbrian/go-international/v3"
 	_ "github.com/faustbrian/go-json-schema"
 	_ "github.com/faustbrian/go-jsonapi"
+	_ "github.com/faustbrian/go-jsonapi/v2"
 	_ "github.com/faustbrian/go-jsonrpc"
 	_ "github.com/faustbrian/go-kafka"
 	_ "github.com/faustbrian/go-kafka/adapters/mskiam"
