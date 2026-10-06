@@ -332,6 +332,13 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-capability",
+      "module_path": "github.com/faustbrian/go-capability/v2",
+      "version": "v2.0.0",
+      "source_revision": "0225ce992c8722a3dc0712b2c5942a2c1307c6ca",
+      "primary_entry_packages": ["github.com/faustbrian/go-capability/v2"]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-localized",
       "module_path": "github.com/faustbrian/go-localized/v3",
       "version": "v3.0.0",
