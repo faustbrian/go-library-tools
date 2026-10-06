@@ -117,7 +117,7 @@ jobs:
               "${old_uses}" == "${old_input}" && "${new_uses}" == "${new_input}" ]]
           }
           runtime=true
-          if [[ "${EVENT_NAME}" == pull_request && "${RELEASE_DRY_RUN}" != true && "${SOURCE_BOOTSTRAP}" != true ]]; then
+          if [[ "${EVENT_NAME}" == pull_request && "${RELEASE_DRY_RUN}" != true ]]; then
             runtime=false
             changed=false
             while IFS= read -r path; do
@@ -126,6 +126,7 @@ jobs:
               case "${path}" in
                 *.md|LICENSE|LICENSE.*|NOTICE|NOTICE.*) ;;
                 .github/workflows/ci.yml)
+                  [[ "${SOURCE_BOOTSTRAP}" != true ]] || { runtime=true; break; }
                   reusable_pin_only "${path}" || { runtime=true; break; }
                   ;;
                 *) runtime=true; break ;;
@@ -228,6 +229,7 @@ jobs:
 
   repository-contract:
     name: Repository contract
+    needs: prepare
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -262,6 +264,9 @@ jobs:
       - run: golib workflows check
       - run: golib cohesion check
       - run: golib specification check
+      - name: Scan metadata-only bootstrap changes for secrets
+        if: inputs.source_bootstrap == true && needs.prepare.outputs.runtime == 'false'
+        run: golib secrets check
       - name: Monitor upstream specification drift
         if: github.event_name == 'schedule'
         run: golib specification check --online

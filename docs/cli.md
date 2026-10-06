@@ -2,6 +2,11 @@
 
 ## Security records and bootstrap archives
 
+`golib secrets check` scans repository history and the current tree using the
+same bounded sources, pinned scanner and sanitized reporting as the standard
+security gate, without compiling modules or running runtime assurance. Scan
+failures, unsupported inputs and repository-owned ignore files fail closed.
+
 `golib security validate --directory <path>` validates the v1 risk register,
 scanner results, residual-risk references, and per-module release verdicts.
 `golib archive validate --file <path>` validates a gzip tar archive with fixed

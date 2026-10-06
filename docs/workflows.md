@@ -87,9 +87,17 @@ exact-version verification.
 Reusable callers may explicitly set `source_bootstrap: true`, default false.
 All four setup sites then use the immutable remote setup action at
 `14a365e423d6fa50fc2bf78d439d48a098723d3e`, passing the same `tooling_sha`
-used for their fixed tooling checkout. The workflow forces runtime assurance
-even for documentation-only pull requests and runs full ordinary
-`golib check --all`, never the help-detected local shortcut. Every source-mode
+used for their fixed tooling checkout. Documentation/license-only pull requests
+use the ordinary metadata assurance tier, including in source-bootstrap mode.
+Metadata-only source-bootstrap jobs still scan repository history and the
+current tree through `golib secrets check`, using the existing bounded scan
+policy. Older source tooling without this command fails closed; adopt the
+workflow and supporting tooling source together.
+Changed source-bootstrap tooling pins still require runtime assurance, even
+when the reusable workflow and tooling pins match. Runtime-selected source
+jobs run full ordinary `golib check --all`, never the help-detected local
+shortcut. Pushes, schedules, manual runs and release rehearsals retain runtime
+assurance. Every source-mode
 job removes the exact owned installation and ancillary caches in an
 always-cleanup step, including when later gates fail. Setup failures clean
 build resources inside the action; cleanup tolerates an installation that was

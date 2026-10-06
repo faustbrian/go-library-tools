@@ -482,7 +482,15 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 		{name: "source", event: "pull_request", dryRun: "false", path: "internal/example/example.go", want: "true"},
 		{name: "release rehearsal", event: "pull_request", dryRun: "true", path: "AGENTS.md", want: "true"},
 		{name: "main push", event: "push", dryRun: "false", path: "AGENTS.md", want: "true"},
-		{name: "source bootstrap documentation", event: "pull_request", dryRun: "false", path: "docs/usage.md", want: "true", sourceBootstrap: true},
+		{name: "source bootstrap documentation", event: "pull_request", dryRun: "false", path: "docs/usage.md", want: "false", sourceBootstrap: true},
+		{name: "source bootstrap license", event: "pull_request", dryRun: "false", path: "LICENSE", want: "false", sourceBootstrap: true},
+		{name: "source bootstrap source", event: "pull_request", dryRun: "false", path: "internal/example/example.go", want: "true", sourceBootstrap: true},
+		{name: "source bootstrap structured metadata", event: "pull_request", dryRun: "false", path: "docs/config.json", want: "true", sourceBootstrap: true},
+		{name: "source bootstrap renamed source", event: "pull_request", dryRun: "false", path: "docs/baseline.md", want: "true", rename: true, sourceBootstrap: true},
+		{name: "source bootstrap release rehearsal", event: "pull_request", dryRun: "true", path: "docs/usage.md", want: "true", sourceBootstrap: true},
+		{name: "source bootstrap push", event: "push", dryRun: "false", path: "docs/usage.md", want: "true", sourceBootstrap: true},
+		{name: "source bootstrap scheduled", event: "schedule", dryRun: "false", path: "docs/usage.md", want: "true", sourceBootstrap: true},
+		{name: "source bootstrap manual", event: "workflow_dispatch", dryRun: "false", path: "docs/usage.md", want: "true", sourceBootstrap: true},
 		{name: "source bootstrap matched pins", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "true", pinMode: "matched", sourceBootstrap: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
