@@ -81,6 +81,7 @@ require (
 	github.com/faustbrian/go-math v1.1.2
 	github.com/faustbrian/go-measurement/v2 v2.0.1
 	github.com/faustbrian/go-merkle-patricia-trie v1.0.0
+	github.com/faustbrian/go-merkle-patricia-trie/v2 v2.0.0
 	github.com/faustbrian/go-merkle-tree v1.0.0
 	github.com/faustbrian/go-migrations v1.1.0
 	github.com/faustbrian/go-migrations/v2 v2.0.0
@@ -148,7 +149,6 @@ require (
 )
 
 require (
-	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/appleboy/com v1.2.0 // indirect
 	github.com/aws/aws-msk-iam-sasl-signer-go v1.0.4 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.43.4 // indirect
@@ -200,7 +200,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.19.1 // indirect
+	github.com/klauspost/compress v1.19.2 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/dsig v1.2.1 // indirect
 	github.com/lestrrat-go/dsig-secp256k1 v1.0.0 // indirect
@@ -243,13 +243,10 @@ require (
 	github.com/unixdj/qr v0.8.2 // indirect
 	github.com/valkey-io/valkey-go v1.0.76 // indirect
 	github.com/valyala/fastjson v1.6.10 // indirect
-	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
-	github.com/vmihailenco/tagparser/v2 v2.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/xuri/efp v0.0.1 // indirect
 	github.com/xuri/excelize/v2 v2.11.0 // indirect
 	github.com/xuri/nfp v0.0.2-0.20250530014748-2ddeb826f9a9 // indirect
-	go.mongodb.org/mongo-driver/v2 v2.9.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/otel v1.46.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc v1.45.0 // indirect
@@ -267,7 +264,6 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	go.yaml.in/yaml/v4 v4.0.0-rc.6 // indirect
 	golang.org/x/crypto v0.57.0 // indirect
 	golang.org/x/net v0.58.0 // indirect
 	golang.org/x/oauth2 v0.36.0 // indirect
