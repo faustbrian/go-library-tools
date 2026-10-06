@@ -237,13 +237,6 @@
       "primary_entry_packages": ["github.com/faustbrian/go-localized/v3"]
     },
     {
-      "from_module_path": "github.com/faustbrian/go-api-query",
-      "module_path": "github.com/faustbrian/go-api-query/v3",
-      "version": "v3.0.0",
-      "source_revision": "df52f60527d89cf4115e1ca71c9319cdc1801e2d",
-      "primary_entry_packages": ["github.com/faustbrian/go-api-query/v3"]
-    },
-    {
       "from_module_path": "github.com/faustbrian/go-international",
       "module_path": "github.com/faustbrian/go-international/v3",
       "version": "v3.0.0",
@@ -345,6 +338,27 @@
     }
   ],
   "additions": [
+    {
+      "alongside_module_path": "github.com/faustbrian/go-tabular",
+      "module_path": "github.com/faustbrian/go-tabular/v2",
+      "version": "v2.0.0",
+      "source_revision": "65a736f880bcf28d419c4375ba0865c5f8a43919",
+      "primary_entry_packages": ["github.com/faustbrian/go-tabular/v2"]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-api-query",
+      "module_path": "github.com/faustbrian/go-api-query/v3",
+      "version": "v3.0.0",
+      "source_revision": "df52f60527d89cf4115e1ca71c9319cdc1801e2d",
+      "primary_entry_packages": ["github.com/faustbrian/go-api-query/v3"]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-api-query",
+      "module_path": "github.com/faustbrian/go-api-query/v4",
+      "version": "v4.0.0",
+      "source_revision": "1304aaf48ccbaa8a042bd53a94aa9a45f66e1189",
+      "primary_entry_packages": ["github.com/faustbrian/go-api-query/v4"]
+    },
     {
       "alongside_module_path": "github.com/faustbrian/go-jsonapi",
       "module_path": "github.com/faustbrian/go-jsonapi/v2",

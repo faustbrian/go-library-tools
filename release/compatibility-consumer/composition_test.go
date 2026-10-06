@@ -5,11 +5,17 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/url"
+	"reflect"
+	"strings"
 	"testing"
 	"time"
 
+	apiquery "github.com/faustbrian/go-api-query/v4"
+	queryjsonapi "github.com/faustbrian/go-api-query/v4/adapters/jsonapi"
+	queryjsonapilegacy "github.com/faustbrian/go-api-query/v4/apiqueryjsonapi"
 	calendar "github.com/faustbrian/go-calendar/v2"
 	configdecode "github.com/faustbrian/go-config/v2/decode"
 	idempotency "github.com/faustbrian/go-idempotency/v2"
@@ -30,6 +36,7 @@ import (
 	openrpc "github.com/faustbrian/go-openrpc/v2"
 	"github.com/faustbrian/go-openrpc/v2/builder"
 	"github.com/faustbrian/go-openrpc/v2/validate"
+	tabular "github.com/faustbrian/go-tabular/v2"
 	temporal "github.com/faustbrian/go-temporal/v2"
 	temporalconfig "github.com/faustbrian/go-temporal/v2/adapters/config"
 	temporalvalidation "github.com/faustbrian/go-temporal/v2/adapters/validation"
@@ -39,6 +46,71 @@ import (
 	"github.com/faustbrian/go-tenancy/v2"
 	validation "github.com/faustbrian/go-validation/v2"
 )
+
+func TestTabularV2PublishedBoundedCSVComposition(t *testing.T) {
+	reader, err := tabular.NewCSVReader(strings.NewReader("Name,City\nAda,Helsinki\n"), tabular.DelimitedConfig{
+		FieldsPerRecord: 2,
+		MaxSourceBytes:  128,
+		MaxRecordBytes:  64,
+		MaxFieldBytes:   32,
+		Header: &tabular.HeaderConfig{
+			Case: tabular.HeaderCaseLower, RejectEmpty: true, RejectDuplicates: true,
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	header, err := reader.Header()
+	if err != nil || !reflect.DeepEqual(header, tabular.Row{"name", "city"}) {
+		t.Fatalf("published Tabular v2 normalized header = %v, %v", header, err)
+	}
+	row, err := reader.Read()
+	if err != nil || !reflect.DeepEqual(row, tabular.Row{"Ada", "Helsinki"}) {
+		t.Fatalf("published Tabular v2 finite CSV row = %v, %v", row, err)
+	}
+	if _, err := reader.Read(); !errors.Is(err, io.EOF) {
+		t.Fatalf("published Tabular v2 clean input end = %v", err)
+	}
+}
+
+func TestAPIQueryV4PublishedJSONAPIV2Composition(t *testing.T) {
+	pagination, err := jsonapi.NewCursorPagination(jsonapi.CursorPaginationConfig{DefaultSize: 5, MaxSize: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	query, err := jsonapi.ParseQuery(url.Values{
+		"fields[orders]": {"status"}, "filter[status]": {"paid"}, "sort": {"id"}, "page[size]": {"10"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	decodeFilter := func(family jsonapi.ParameterFamily) (*apiquery.FilterExpr, error) {
+		return &apiquery.FilterExpr{Predicate: &apiquery.Predicate{
+			Name: "status", Operator: apiquery.OpEqual, Values: []apiquery.Value{apiquery.StringValue(family["filter[status]"][0])},
+		}}, nil
+	}
+	decodePage := func(family jsonapi.ParameterFamily) (apiquery.PageRequest, error) {
+		page, err := pagination.Parse(family)
+		return apiquery.PageRequest{Mode: apiquery.PageCursor, Size: page.Size}, err
+	}
+	preferred, err := queryjsonapi.FromQuery(query, queryjsonapi.Config{Resource: "orders", DecodeFilter: decodeFilter, DecodePage: decodePage})
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacy, err := queryjsonapilegacy.FromQuery(query, queryjsonapilegacy.Config{Resource: "orders", DecodeFilter: decodeFilter, DecodePage: decodePage})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := apiquery.Request{
+		Fields: apiquery.Present([]string{"status"}),
+		Sorts:  apiquery.Present([]apiquery.SortTerm{{Name: "id", Direction: apiquery.Ascending}}),
+		Filter: &apiquery.FilterExpr{Predicate: &apiquery.Predicate{Name: "status", Operator: apiquery.OpEqual, Values: []apiquery.Value{apiquery.StringValue("paid")}}},
+		Page:   apiquery.PageRequest{Mode: apiquery.PageCursor, Size: 10},
+	}
+	if !reflect.DeepEqual(preferred, want) || !reflect.DeepEqual(legacy, want) {
+		t.Fatal("published APIQuery v4 bridges lost JSONAPI v2 field, filter, sort or finite page semantics")
+	}
+}
 
 func TestJSONAPIV2PublishedFiniteCursorComposition(t *testing.T) {
 	pagination, err := jsonapi.NewCursorPagination(jsonapi.CursorPaginationConfig{DefaultSize: 5, MaxSize: 10})
