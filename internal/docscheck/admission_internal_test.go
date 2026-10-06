@@ -73,7 +73,7 @@ func TestDocumentWalkBoundsAllEntriesAndBatches(t *testing.T) {
 	for _, test := range []struct {
 		name  string
 		limit int
-	}{{"inclusive", 2}, {"one over", 1}} {
+	}{{"inclusive", 2}, {"one over", 1}, {"batch ceiling", 128}} {
 		t.Run(test.name, func(t *testing.T) {
 			limit := test.limit
 			files := &observedDocumentFS{FS: fstest.MapFS{
@@ -81,7 +81,7 @@ func TestDocumentWalkBoundsAllEntriesAndBatches(t *testing.T) {
 			}}
 			limits := documentLimits{bytes: 4, documents: 1, entries: limit, depth: 1}
 			paths, err := documentsFS(t.Context(), "ordinary", files, limits)
-			if limit == 2 {
+			if limit >= 2 {
 				if err != nil || len(paths) != 1 || paths[0] != filepath.Join("ordinary", "README.md") {
 					t.Fatal("inclusive traversal changed ordinary document selection")
 				}
@@ -190,6 +190,45 @@ func TestDocumentCountAndOrderAreRetained(t *testing.T) {
 	paths, err = documentsFS(t.Context(), "ordinary", files, documentLimits{bytes: 4, documents: 2, entries: 5, depth: 1})
 	if paths != nil || err == nil || !strings.Contains(err.Error(), "file count") {
 		t.Fatal("document count allowance admitted an extra Markdown file")
+	}
+}
+
+func TestDocumentWalkRetainsDocumentsAfterIgnoredOrCompletedEntries(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		files fstest.MapFS
+		want  []string
+	}{
+		{
+			name: "ignored non-Markdown symlink",
+			files: fstest.MapFS{
+				"README.md":  {Data: []byte("# R\n")},
+				"a-link.txt": {Mode: os.ModeSymlink},
+				"z.md":       {Data: []byte("# Z\n")},
+			},
+			want: []string{"README.md", "z.md"},
+		},
+		{
+			name: "completed documentation directory",
+			files: fstest.MapFS{
+				"README.md":     {Data: []byte("# R\n")},
+				"docs/guide.md": {Data: []byte("# G\n")},
+				"z.md":          {Data: []byte("# Z\n")},
+			},
+			want: []string{"README.md", "docs/guide.md", "z.md"},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			paths, err := documentsFS(t.Context(), "ordinary", test.files,
+				documentLimits{bytes: 4, documents: 3, entries: 4, depth: 1})
+			want := make([]string, len(test.want))
+			for index, name := range test.want {
+				want[index] = filepath.Join("ordinary", filepath.FromSlash(name))
+			}
+			if err != nil || !slices.Equal(paths, want) {
+				t.Fatal("ordinary later Markdown was dropped from document selection")
+			}
+		})
 	}
 }
 

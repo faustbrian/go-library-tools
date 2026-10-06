@@ -6,10 +6,23 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/yuin/goldmark/ast"
 )
+
+func TestPublicDocumentationRootRejectsExactParentTree(t *testing.T) {
+	parent := basic(t)
+	child := filepath.Join(parent, "child")
+	if err := os.Mkdir(child, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := CheckWithin(child, parent); err == nil ||
+		!strings.Contains(err.Error(), "documentation tree must be inside repository") {
+		t.Fatal("exact parent documentation tree lost its early confinement refusal")
+	}
+}
 
 func TestDocumentationRootResolutionOwnsCancellation(t *testing.T) {
 	root := basic(t)
