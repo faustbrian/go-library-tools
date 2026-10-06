@@ -5,6 +5,17 @@ import (
 	"testing"
 )
 
+func TestIncompleteDiagnosticsAcceptExactRemainingBytes(t *testing.T) {
+	blocks := map[string]block{
+		"example/a.go:1.1,2.1": {packagePath: "example", statements: 1},
+	}
+	want := "uncovered production blocks:\n  a.go:1.1,2.1\n"
+	report := incompleteReport(blocks, []packageFailure{{packagePath: "example"}}, diagnosticLimits{blocks: 1, bytes: 128 + len(want)})
+	if report != want {
+		t.Fatalf("exact-fit diagnostic = %q, want %q", report, want)
+	}
+}
+
 func TestIncompleteDiagnosticsShareOneGlobalAllowance(t *testing.T) {
 	blocks := map[string]block{
 		"example/a/a.go:1.1,2.1":     {packagePath: "example/a", statements: 1},

@@ -22,6 +22,12 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Record one source/verifier-bound coverage insertion-tie mutant as equivalent
+  only for identities deduplicated by the public parser and admitted canonical
+  filenames. Preserve native statuses and all diagnostic output allowances.
+  Add inclusive location, escaped label and byte-boundary assertions with
+  complete capped selection and omission accounting.
+
 - Record one source/verifier-bound CLI compressed-limit mutant as equivalent
   only for admitted ordinary stable regular files. Retain production streaming
   enforcement and native mutant statuses; exclude changing files and general
