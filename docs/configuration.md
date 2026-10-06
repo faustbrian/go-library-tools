@@ -90,6 +90,13 @@ reused raw report is checked against the exact selection captured at campaign
 start. Inventory edits and withdrawals apply on the next invocation, not to
 a campaign already running.
 
+The root CLI's record covers only its repeated compressed-byte bound after
+ordinary stable regular-file admission at the same byte limit. Production
+streaming enforcement remains intact. Changing or virtual files, arbitrary
+readers and the archive validator's own limit mutations are outside that
+disposition. Native statuses and failed historical runs remain unchanged;
+the record does not establish a successful matching-source release rehearsal.
+
 Typed operations may invoke bounded `go test` runs or one named target from a
 repository-owned Makefile. A `test` operation runs after the module's standard
 test command and preserves package-specific stress, leak, or lifecycle checks.
