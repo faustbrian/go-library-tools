@@ -587,7 +587,7 @@ func TestDeriveReverseOwnedDependenciesIgnoresStaleReverseMetadata(t *testing.T)
 	modules := []engineeringModule{
 		{
 			ModulePath:               "github.com/faustbrian/go-caller",
-			OwnedDependencies:        []string{"github.com/faustbrian/go-target"},
+			OwnedDependencies:        []string{"github.com/faustbrian/go-absent", "github.com/faustbrian/go-target"},
 			ReverseOwnedDependencies: []string{"github.com/faustbrian/go-stale"},
 		},
 		{
