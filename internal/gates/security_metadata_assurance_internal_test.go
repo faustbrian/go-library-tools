@@ -14,13 +14,21 @@ import (
 )
 
 func TestGosecMetadataRejectsInvalidStatisticsAndLoading(t *testing.T) {
+	statistics := func(report map[string]any) map[string]int {
+		t.Helper()
+		stats, ok := report["Stats"].(map[string]int)
+		if !ok {
+			t.Fatal("ordinary report fixture has invalid statistics")
+		}
+		return stats
+	}
 	for _, test := range []struct {
 		name   string
 		change func(map[string]any)
 	}{
-		{"missing statistic", func(report map[string]any) { delete(report["Stats"].(map[string]int), "lines") }},
-		{"negative statistic", func(report map[string]any) { report["Stats"].(map[string]int)["files"] = -1 }},
-		{"excessive statistic", func(report map[string]any) { report["Stats"].(map[string]int)["nosec"] = 100000001 }},
+		{"missing statistic", func(report map[string]any) { delete(statistics(report), "lines") }},
+		{"negative statistic", func(report map[string]any) { statistics(report)["files"] = -1 }},
+		{"excessive statistic", func(report map[string]any) { statistics(report)["nosec"] = 100000001 }},
 		{"invalid issues type", func(report map[string]any) { report["Issues"] = "private diagnostic" }},
 		{"invalid loading type", func(report map[string]any) { report["Golang errors"] = "private diagnostic" }},
 		{"empty loading entry", func(report map[string]any) { report["Golang errors"] = map[string]any{"private.go": []any{}} }},
