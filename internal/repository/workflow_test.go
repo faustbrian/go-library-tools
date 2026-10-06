@@ -20,6 +20,75 @@ import (
 var remoteAction = regexp.MustCompile(`(?m)^\s*- uses: ([^./][^@\s]+)@([^\s#]+)`)
 var immutableAction = regexp.MustCompile(`^[0-9a-f]{40}$`)
 
+func TestReusableWorkflowCleanupRestoresTemporaryDirectory(t *testing.T) {
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &workflow); err != nil {
+		t.Fatal(err)
+	}
+	node, err := exec.LookPath("node")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, job := range []string{"prepare", "repository-contract", "quality", "codeql"} {
+		for _, present := range []bool{true, false} {
+			t.Run(job+"/present="+strconv.FormatBool(present), func(t *testing.T) {
+				var script string
+				for _, step := range workflow.Jobs[job].Steps {
+					if step.Name == "Remove source bootstrap workspace" {
+						script = step.Run
+					}
+				}
+				if script == "" {
+					t.Fatal("missing cleanup")
+				}
+				runner := t.TempDir()
+				install := filepath.Join(runner, "golib-source-install.fixture")
+				if present {
+					for _, directory := range []string{"bin", "lint", "xdg", "npm", "tmp"} {
+						path := filepath.Join(install, directory)
+						if err := os.MkdirAll(path, 0o700); err != nil {
+							t.Fatal(err)
+						}
+						if err := os.WriteFile(filepath.Join(path, "owned"), []byte("fixture"), 0o600); err != nil {
+							t.Fatal(err)
+						}
+					}
+				}
+				environment := filepath.Join(runner, "github-env")
+				if err := os.WriteFile(environment, nil, 0o600); err != nil {
+					t.Fatal(err)
+				}
+				command := exec.CommandContext(t.Context(), "bash", "-c", script)
+				command.Env = append(os.Environ(), "RUNNER_TEMP="+runner,
+					"GOLIB_SOURCE_INSTALL_ROOT="+install, "GITHUB_ENV="+environment)
+				if combined, err := command.CombinedOutput(); err != nil {
+					t.Fatalf("cleanup: %v\n%s", err, combined)
+				}
+				if _, err := os.Stat(install); !os.IsNotExist(err) {
+					t.Fatalf("installation remains: %v", err)
+				}
+				data, err := os.ReadFile(environment)
+				if err != nil {
+					t.Fatal(err)
+				}
+				post := exec.CommandContext(t.Context(), node, "-e", "process.stdout.write(require('node:fs').realpathSync(require('node:os').tmpdir()))")
+				post.Env = append(os.Environ(), "TMPDIR="+filepath.Join(install, "tmp"))
+				if updates := strings.TrimSuffix(string(data), "\n"); updates != "" {
+					post.Env = append(post.Env, strings.Split(updates, "\n")...)
+				}
+				expected, err := filepath.EvalSymlinks(runner)
+				if err != nil {
+					t.Fatal(err)
+				}
+				combined, err := post.CombinedOutput()
+				if err != nil || string(combined) != expected {
+					t.Fatalf("post temporary directory: %v, output=%q", err, combined)
+				}
+			})
+		}
+	}
+}
+
 func TestReusableWorkflowPersistsPublicDependencyAuthority(t *testing.T) {
 	var workflow workflowDocument
 	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &workflow); err != nil {

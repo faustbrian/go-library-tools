@@ -25,6 +25,9 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Restore a stable temporary directory before deleting source-bootstrap
+  resources so CodeQL post-job actions retain valid temporary storage.
+
 - Add an explicit public dependency route to reusable CI, retaining public
   checksum verification and refusing file or direct fallback. The default
   historical bootstrap route and all required gates remain unchanged.
