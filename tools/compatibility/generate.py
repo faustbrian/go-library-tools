@@ -459,8 +459,10 @@ def current_consumer_inputs(
         old, new = addition["alongside_module_path"], addition["module_path"]
         validate_string(old, "addition origin")
         validate_string(new, "addition module")
-        if old not in selected or old not in by_path or old in seen:
-            raise ValueError("current consumer addition origin is absent or replaced")
+        if old not in selected or old not in by_path:
+            raise ValueError("current consumer addition origin is absent")
+        # The original family may already select a replacement major. Keep it
+        # selected while validating the additional public major independently.
         stem = re.sub(r"/v(?:[2-9]|[1-9][0-9]+)$", "", old)
         if new == old or not re.fullmatch(
             re.escape(stem) + r"/v(?:[2-9]|[1-9][0-9]+)", new
