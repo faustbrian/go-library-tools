@@ -29,6 +29,16 @@ type block struct {
 // has executable statements and exact statement coverage. On incomplete coverage,
 // it returns bounded source-block diagnostics alongside the unchanged error.
 func Verify(profile io.Reader, expected []string) (string, error) {
+	return VerifyWithMode(profile, expected, "exact")
+}
+
+// VerifyWithMode uses the same profile accounting for exact enforcement or
+// explicit evidence collection. Evidence requires executed statements in every
+// expected package but does not certify coverage adequacy or release readiness.
+func VerifyWithMode(profile io.Reader, expected []string, mode string) (string, error) {
+	if mode != "exact" && mode != "evidence" {
+		return "", errors.New("coverage acceptance mode must be exact or evidence")
+	}
 	if len(expected) == 0 {
 		return "", errors.New("coverage expected packages are empty")
 	}
@@ -36,6 +46,9 @@ func Verify(profile io.Reader, expected []string) (string, error) {
 	scanner.Buffer(make([]byte, 4096), 1<<20)
 	if !scanner.Scan() || !strings.HasPrefix(scanner.Text(), "mode: ") {
 		return "", errors.New("coverage profile is missing mode header")
+	}
+	if mode == "evidence" && scanner.Text() != "mode: atomic" && scanner.Text() != "mode: count" && scanner.Text() != "mode: set" {
+		return "", errors.New("coverage profile has an unsupported mode header")
 	}
 	blocks := make(map[string]block)
 	line := 1
@@ -47,6 +60,9 @@ func Verify(profile io.Reader, expected []string) (string, error) {
 		}
 		separator := strings.LastIndexByte(fields[0], ':')
 		if separator <= 0 {
+			return "", fmt.Errorf("invalid coverage profile line %d", line)
+		}
+		if mode == "evidence" && !sourceCoordinates.MatchString(fields[0][separator+1:]) {
 			return "", fmt.Errorf("invalid coverage profile line %d", line)
 		}
 		statements, err := strconv.Atoi(fields[1])
@@ -105,7 +121,10 @@ func Verify(profile io.Reader, expected []string) (string, error) {
 			}
 			continue
 		}
-		if value.covered != value.total {
+		if mode == "evidence" && value.covered == 0 {
+			return "", fmt.Errorf("%s has no executed coverage statements", packagePath)
+		}
+		if mode == "exact" && value.covered != value.total {
 			failures = append(failures, packageFailure{packagePath: packagePath})
 			if firstError == nil {
 				firstError = fmt.Errorf("%s is below exact 100%% coverage", packagePath)
@@ -113,6 +132,9 @@ func Verify(profile io.Reader, expected []string) (string, error) {
 		}
 	}
 	if firstError != nil {
+		if mode == "evidence" {
+			return "", firstError
+		}
 		return incompleteReport(blocks, failures, diagnosticLimits{blocks: diagnosticBlockLimit, bytes: diagnosticByteLimit}), firstError
 	}
 	var report strings.Builder

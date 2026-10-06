@@ -445,7 +445,8 @@ func (runner Runner) Local(ctx context.Context, selection []string) error {
 	return nil
 }
 
-// Coverage runs only exact production-package coverage for selected modules.
+// Coverage collects production-package coverage using each module's acceptance
+// policy. Omission preserves exact enforcement.
 func (runner Runner) Coverage(ctx context.Context, selection []string) error {
 	modules, err := runner.selectModules(selection)
 	if err != nil {
@@ -1159,12 +1160,23 @@ func (runner Runner) runCoverage(ctx context.Context, output io.Writer, director
 		return fmt.Errorf("open coverage profile: %w", err)
 	}
 	defer opened.Close()
-	report, err := coverage.Verify(opened, targets)
+	mode := "exact"
+	for _, acceptance := range runner.Policy.Coverage.Modules {
+		if acceptance.Module == module.Directory {
+			mode = acceptance.Mode
+			break
+		}
+	}
+	report, err := coverage.VerifyWithMode(opened, targets, mode)
 	_, _ = io.WriteString(output, report)
 	if err != nil {
 		return err
 	}
-	_, _ = io.WriteString(output, "all production packages have exact 100% statement coverage\n")
+	if mode == "evidence" {
+		_, _ = io.WriteString(output, "coverage evidence collected; adequacy and release readiness are not certified\n")
+	} else {
+		_, _ = io.WriteString(output, "all production packages have exact 100% statement coverage\n")
+	}
 	return nil
 }
 

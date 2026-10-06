@@ -56,12 +56,36 @@ documentation gate runs the configured typed operation or a bounded Go example
 test when no module-specific operation is declared.
 
 When selected for an aggregate milestone or release, coverage is evaluated per
-production package and must be exactly 100%. The
+production package and defaults to exact 100% enforcement. The
 runner instruments the exact production-package set once while executing the
 complete module test set. This keeps denominators production-specific while
 allowing integration and external-package tests to contribute only when they
 actually exercise a package.
-Coverage failures retain the first sorted failing-package error and report all
+
+An explicit repository policy may instead collect statement evidence for a
+named module:
+
+```yaml
+coverage:
+  modules:
+    - module: .
+      mode: evidence
+```
+
+The optional `coverage.modules` entries accept only `exact` or `evidence`, must
+name distinct canonical module directories, and require the module's coverage
+gate to be enabled. Omission keeps exact enforcement, including for other
+modules in the same repository. Evidence mode runs the identical instrumented
+module tests and reports attributed covered/total counts; every expected package
+must have executable statements and at least one executed statement. Missing,
+malformed, inconsistent, unreadable, or overflowing profiles still fail closed.
+Evidence collection does not certify adequate behavioral-risk coverage or
+release readiness. Those decisions require the repository's acceptance contract,
+meaningful behavior tests, review, and all other applicable gates. Adopt the
+policy deliberately with tooling that supports it; older strict decoders reject
+the new optional field. Neither mode skips collection or changes other gates.
+
+Exact-coverage failures retain the first sorted failing-package error and report all
 incomplete expected packages from the same profile. Source-block filenames and
 ranges share a global limit of 512 records; package labels and locations are
 limited to 160 escaped ASCII bytes, and the complete failure report to 85,000

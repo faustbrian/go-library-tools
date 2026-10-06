@@ -40,6 +40,7 @@ type Config struct {
 	Manifests           Manifests   `json:"manifest" yaml:"manifest,omitempty"`
 	Evidence            Evidence    `json:"evidence" yaml:"evidence,omitempty"`
 	Mutation            Mutation    `json:"mutation" yaml:"mutation,omitempty"`
+	Coverage            Coverage    `json:"coverage,omitzero" yaml:"coverage,omitempty"`
 	API                 API         `json:"api,omitzero" yaml:"api,omitempty"`
 	Runtimes            Runtimes    `json:"runtimes" yaml:"runtimes,omitempty"`
 	Operations          []Operation `json:"operations,omitempty" yaml:"operations,omitempty"`
@@ -68,6 +69,18 @@ type MutationImport struct {
 	Module  string `json:"module" yaml:"module"`
 	Archive string `json:"archive" yaml:"archive"`
 	Ledger  string `json:"ledger" yaml:"ledger"`
+}
+
+// Coverage selects explicit module-level statement acceptance. Omission keeps
+// exact coverage; evidence mode collects counts without certifying risk coverage.
+type Coverage struct {
+	Modules []CoverageModule `json:"modules,omitempty" yaml:"modules,omitempty"`
+}
+
+// CoverageModule changes acceptance only for its named canonical module.
+type CoverageModule struct {
+	Module string `json:"module" yaml:"module"`
+	Mode   string `json:"mode" yaml:"mode"`
 }
 
 // API identifies module-specific exported API baseline formats and locations.
@@ -231,6 +244,19 @@ func (value Config) validate() error {
 		mutationImports[migration.Module] = struct{}{}
 	}
 	apiModules := make(map[string]struct{}, len(value.API.Baselines))
+	coverageModules := make(map[string]struct{}, len(value.Coverage.Modules))
+	for index, acceptance := range value.Coverage.Modules {
+		if acceptance.Module == "" || (acceptance.Module != "." && validateRelativePath(acceptance.Module) != nil) {
+			return fmt.Errorf("%w: coverage.modules[%d].module is invalid", ErrInvalid, index)
+		}
+		if acceptance.Mode != "exact" && acceptance.Mode != "evidence" {
+			return fmt.Errorf("%w: coverage.modules[%d].mode must be exact or evidence", ErrInvalid, index)
+		}
+		if _, exists := coverageModules[acceptance.Module]; exists {
+			return fmt.Errorf("%w: coverage.modules[%d]: duplicate module", ErrInvalid, index)
+		}
+		coverageModules[acceptance.Module] = struct{}{}
+	}
 	for index, baseline := range value.API.Baselines {
 		if err := baseline.validate(); err != nil {
 			return fmt.Errorf("%w: api.baselines[%d]: %s", ErrInvalid, index, err.Error())
