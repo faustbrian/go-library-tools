@@ -20,9 +20,13 @@ import (
 	configdecode "github.com/faustbrian/go-config/v2/decode"
 	idempotency "github.com/faustbrian/go-idempotency/v2"
 	idempotencymemory "github.com/faustbrian/go-idempotency/v2/memory"
+	"github.com/faustbrian/go-international/v3/locale"
 	jsonapi "github.com/faustbrian/go-jsonapi/v2"
 	moneyobjective "github.com/faustbrian/go-knapsack/objective/money/v3"
 	"github.com/faustbrian/go-knapsack/v2"
+	localized "github.com/faustbrian/go-localized/v4"
+	localizedquery "github.com/faustbrian/go-localized/v4/adapters/query"
+	localizedquerylegacy "github.com/faustbrian/go-localized/v4/localizedquery"
 	log "github.com/faustbrian/go-log/v2"
 	mpt "github.com/faustbrian/go-merkle-patricia-trie/v2"
 	mptmemory "github.com/faustbrian/go-merkle-patricia-trie/v2/memory"
@@ -46,6 +50,53 @@ import (
 	"github.com/faustbrian/go-tenancy/v2"
 	validation "github.com/faustbrian/go-validation/v2"
 )
+
+func TestLocalizedV4PublishedAPIQueryV4Composition(t *testing.T) {
+	text, err := localized.TextFromMap(map[string]string{"en": "Hello", "fi": ""})
+	if err != nil {
+		t.Fatal(err)
+	}
+	english, err := locale.Parse("en")
+	if err != nil {
+		t.Fatal(err)
+	}
+	finnish, err := locale.Parse("fi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	swedish, err := locale.Parse("sv")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, adapter := range []struct {
+		name      string
+		value     func(localized.Text, locale.Tag) (apiquery.Value, bool)
+		predicate func(string, apiquery.Operator, localized.Text, locale.Tag) (*apiquery.Predicate, error)
+	}{
+		{"canonical", localizedquery.ExactValue, localizedquery.ExactPredicate},
+		{"retained", localizedquerylegacy.ExactValue, localizedquerylegacy.ExactPredicate},
+	} {
+		t.Run(adapter.name, func(t *testing.T) {
+			if value, present := adapter.value(text, english); !present || value.Type() != apiquery.TypeString || value.String() != "Hello" {
+				t.Fatal("exact localized value lost APIQuery v4 string semantics")
+			}
+			if value, present := adapter.value(text, finnish); !present || value.Type() != apiquery.TypeString || value.String() != "" {
+				t.Fatal("present-empty localized value became absent")
+			}
+			predicate, err := adapter.predicate("title", apiquery.OpEqual, text, english)
+			want := &apiquery.Predicate{Name: "title", Operator: apiquery.OpEqual, Values: []apiquery.Value{apiquery.StringValue("Hello")}}
+			if err != nil || !reflect.DeepEqual(predicate, want) {
+				t.Fatal("exact localized predicate lost APIQuery v4 nominal semantics")
+			}
+			if _, present := adapter.value(text, swedish); present {
+				t.Fatal("exact localized lookup applied fallback")
+			}
+			if _, err := adapter.predicate("title", apiquery.OpEqual, text, swedish); !errors.Is(err, localized.ErrMissingLocale) {
+				t.Fatal("missing localized predicate lost sentinel semantics")
+			}
+		})
+	}
+}
 
 func TestTabularV2PublishedBoundedCSVComposition(t *testing.T) {
 	reader, err := tabular.NewCSVReader(strings.NewReader("Name,City\nAda,Helsinki\n"), tabular.DelimitedConfig{

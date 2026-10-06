@@ -230,13 +230,6 @@
       "primary_entry_packages": ["github.com/faustbrian/go-hedge"]
     },
     {
-      "from_module_path": "github.com/faustbrian/go-localized",
-      "module_path": "github.com/faustbrian/go-localized/v3",
-      "version": "v3.0.0",
-      "source_revision": "95d141cd9d0316bed21c96b3752ce219770e550d",
-      "primary_entry_packages": ["github.com/faustbrian/go-localized/v3"]
-    },
-    {
       "from_module_path": "github.com/faustbrian/go-international",
       "module_path": "github.com/faustbrian/go-international/v3",
       "version": "v3.0.0",
@@ -338,6 +331,20 @@
     }
   ],
   "additions": [
+    {
+      "alongside_module_path": "github.com/faustbrian/go-localized",
+      "module_path": "github.com/faustbrian/go-localized/v3",
+      "version": "v3.0.0",
+      "source_revision": "95d141cd9d0316bed21c96b3752ce219770e550d",
+      "primary_entry_packages": ["github.com/faustbrian/go-localized/v3"]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-localized",
+      "module_path": "github.com/faustbrian/go-localized/v4",
+      "version": "v4.0.0",
+      "source_revision": "4474360bfbf65c69baf1cd68822b33856947047c",
+      "primary_entry_packages": ["github.com/faustbrian/go-localized/v4"]
+    },
     {
       "alongside_module_path": "github.com/faustbrian/go-tabular",
       "module_path": "github.com/faustbrian/go-tabular/v2",

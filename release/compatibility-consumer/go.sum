@@ -288,8 +288,12 @@ github.com/faustbrian/go-knapsack/v2 v2.0.0 h1:6/tqyHhCv4RmgRT0BXB0D9O79HOhEhGXJ
 github.com/faustbrian/go-knapsack/v2 v2.0.0/go.mod h1:fh0Eo1Vlu+4eICz6AXQ1J9w1/cbSqYEqNUyDHZJUqKk=
 github.com/faustbrian/go-lease v1.1.0 h1:6OgqqFOPBkFiTCafT0Jna+sVcmkZn1Rqnj3R1IjU0l8=
 github.com/faustbrian/go-lease v1.1.0/go.mod h1:59tKskK5RiwzQbMIvylPLW5bJZ/zzThMNXTfJLlky0M=
+github.com/faustbrian/go-localized v1.1.0 h1:tiGhWePsCTk+zXX1tkXm2D6AXcP37ag08DRjBN79MbQ=
+github.com/faustbrian/go-localized v1.1.0/go.mod h1:0HcuHameLTUYwPWKTmfUGT6AW/PHdnxpEhqxvdzMRD0=
 github.com/faustbrian/go-localized/v3 v3.0.0 h1:nphviUA7uZssvrvBjAXvCW8gKkN/qdyRmpJoyXk32EU=
 github.com/faustbrian/go-localized/v3 v3.0.0/go.mod h1:M6tAwPOcihEN3fGP+xykyEQlHvKqdrs+87JgJ68Pa8Q=
+github.com/faustbrian/go-localized/v4 v4.0.0 h1:bu2fPYM9mPGsbeZLHW5+S+JlX2bSg1rwkGczX6M/xSk=
+github.com/faustbrian/go-localized/v4 v4.0.0/go.mod h1:YMQUqv4knQ76KUJ6i6ibL/LhcowA8m9XvT61WKDdU0g=
 github.com/faustbrian/go-log/v2 v2.0.0 h1:VQIEvZfXXEYXoTeavlEeMT1YtinFV1KDFAMyNhixQ7o=
 github.com/faustbrian/go-log/v2 v2.0.0/go.mod h1:FJ34JaICS4Lda+67LUgNp4e4S3y2GBl0l3UsvIqrVFY=
 github.com/faustbrian/go-math v1.1.2 h1:cH0VSYu/u6Xwc/NGDwbEUQEKpvIjNFOH/suiFIBLHbI=
