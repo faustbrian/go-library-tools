@@ -95,6 +95,12 @@ always-cleanup step, including when later gates fail. Setup failures clean
 build resources inside the action; cleanup tolerates an installation that was
 never created or was already removed on failure.
 
+Cleanup restores `TMPDIR` to the hosted job's stable `RUNNER_TEMP` before
+removing the installation. Post-job actions can therefore resolve their
+temporary directory after every private source-bootstrap cache and binary
+has been deleted. This teardown does not preserve a pre-bootstrap custom
+temporary-directory selection.
+
 Default release installation and routing remain unchanged. Repository,
 specification, dependency review, CodeQL, artifact retention, release selectors
 and Required remain in force. Source bootstrap supports reviewed development
