@@ -20,6 +20,8 @@ func TestWorkflowRefusalBeforeExecutor(t *testing.T) {
 		{"malformed trailing document", "jobs: {}\n---\n[\n", "decode workflow"},
 		{"duplicate key", "jobs: {}\njobs: {}\n", "duplicate key"},
 		{"unknown alias", "jobs: *missing\n", "decode workflow"},
+		{"finite visit limit", "ordinary: [" + strings.Repeat("x,", 99_997) + "x]\n", "structure limit"},
+		{"finite depth limit", "ordinary: " + strings.Repeat("[", 99) + "x" + strings.Repeat("]", 99) + "\n", "structure limit"},
 		{"recursive mapping", "ordinary: &recursive {next: *recursive}\njobs: {}\n", "structure limit"},
 		{"nested structure", "ordinary: " + strings.Repeat("[", 101) + "value" + strings.Repeat("]", 101) + "\njobs: {}\n", "structure limit"},
 		{"non scalar action", "jobs: {test: {steps: [{uses: [ordinary]}]}}\n", "immutable SHA"},
@@ -46,6 +48,32 @@ func TestWorkflowRefusalBeforeExecutor(t *testing.T) {
 			}
 			if calls != 0 || output.Len() != 0 {
 				t.Fatalf("refusal allowed effects: executor=%d output=%q", calls, output.String())
+			}
+		})
+	}
+}
+
+func TestWorkflowStructureExactLimits(t *testing.T) {
+	for _, test := range []struct {
+		name, content string
+	}{
+		{"visits", "ordinary: [" + strings.Repeat("x,", 99_996) + "x]\n"},
+		{"depth", "ordinary: " + strings.Repeat("[", 98) + "x" + strings.Repeat("]", 98) + "\n"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := t.TempDir()
+			workflowRefusalWrite(t, root, ".github/workflows/ci.yml", test.content)
+			calls := 0
+			var output bytes.Buffer
+			runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(context.Context, Command) error {
+				calls++
+				return nil
+			})}
+			if err := runner.Workflows(t.Context()); err != nil {
+				t.Fatalf("inclusive structure limit refused: %v", err)
+			}
+			if calls != 1 || output.String() != "workflow contract passed\n" {
+				t.Fatalf("admission effects = %d/%q", calls, output.String())
 			}
 		})
 	}
