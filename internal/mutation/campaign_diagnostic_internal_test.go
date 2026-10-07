@@ -1,9 +1,61 @@
 package mutation
 
 import (
+	"encoding/json"
+	"errors"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
+
+func TestCaptureFailedDiagnosticRejectsUnsupportedContent(t *testing.T) {
+	for _, test := range []struct {
+		name   string
+		change func(*report)
+		raw    string
+	}{
+		{name: "unknown type", change: func(value *report) { value.Files[0].Mutations[0].Type = "UNRECOGNIZED" }},
+		{name: "unknown status", change: func(value *report) { value.Files[0].Mutations[0].Status = "UNRECOGNIZED" }},
+		{name: "unknown source", change: func(value *report) { value.Files[0].FileName = "other.go" }},
+		{name: "test source", change: func(value *report) { value.Files[0].FileName = "source_test.go" }},
+		{name: "absolute source", change: func(value *report) { value.Files[0].FileName = "/source.go" }},
+		{name: "parent source", change: func(value *report) { value.Files[0].FileName = "../source.go" }},
+		{name: "invalid coordinate", change: func(value *report) { value.Files[0].Mutations[0].Line = 0 }},
+		{name: "absent files", change: func(value *report) { value.Files = nil }},
+		{name: "malformed", raw: `{"files":`},
+		{name: "duplicate key", raw: `{"files":[],"files":[]}`},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			campaign, _ := campaignFixture(t)
+			if err := campaign.prepareDirectories(); err != nil {
+				t.Fatal(err)
+			}
+			value := report{Files: []reportFile{{FileName: "source.go", Mutations: []mutation{{Type: "INVERT_LOGICAL", Status: "LIVED", Line: 3, Column: 1}}}}}
+			if test.change != nil {
+				test.change(&value)
+			}
+			data, err := json.Marshal(value)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if test.raw != "" {
+				data = []byte(test.raw)
+			}
+			reportPath := filepath.Join(campaign.Workspace, "report.json")
+			if err := os.WriteFile(reportPath, data, 0o600); err != nil {
+				t.Fatal(err)
+			}
+			path, err := campaign.captureFailedDiagnostic(".", "sha256:"+strings.Repeat("a", 64), reportPath)
+			if path != "" || !errors.Is(err, ErrInvalid) {
+				t.Fatalf("capture() = %q, %v", path, err)
+			}
+			if _, err := os.Stat(filepath.Join(campaign.MutationRoot, "failed-reports")); !errors.Is(err, os.ErrNotExist) {
+				t.Fatalf("refused diagnostic published: %v", err)
+			}
+		})
+	}
+}
 
 func TestEquivalentSelectionEqualUsesOwnerIdentity(t *testing.T) {
 	base := ordinaryEquivalentSelection()

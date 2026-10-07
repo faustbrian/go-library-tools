@@ -161,11 +161,64 @@ func TestCampaignAcceptsOnlyExactReviewedEfficacyExit(t *testing.T) {
 	if err := campaign.Run(context.Background()); err == nil || !strings.Contains(err.Error(), "mutation tool failed") {
 		t.Fatalf("Run(non-efficacy exit) error = %v", err)
 	}
-	if !strings.Contains(output.String(), `"LIVED" "source.go" "A" 3:1`) {
+	if !strings.Contains(output.String(), "failed report could not be captured") || strings.Contains(output.String(), `"LIVED" "source.go" "A" 3:1`) {
 		t.Fatalf("Run(non-efficacy exit) diagnostic = %q", output.String())
 	}
 	if _, err := os.Stat(filepath.Join(campaign.MutationRoot, "reports")); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("failed native report was published: %v", err)
+	}
+}
+
+func TestCampaignPreservesFailedDiagnosticWithoutPassingEvidence(t *testing.T) {
+	campaign, process := campaignFixture(t)
+	native := `{"go_module":"PRIVATE_DIAGNOSTIC_MARKER","elapsed_time":"PRIVATE_DIAGNOSTIC_MARKER","mutator_statistics":{"note":"PRIVATE_DIAGNOSTIC_MARKER"},"files":[{"file_name":"source.go","mutations":[{"type":"INVERT_BITWISE","status":"TIMED OUT","line":3,"column":1}]}],"mutants_killed":0,"mutants_lived":0,"mutants_not_covered":0,"mutants_not_viable":0,"mutants_total":0,"mutations_coverage":0,"test_efficacy":0}`
+	process.report = &native
+	if err := campaign.Run(context.Background()); !errors.Is(err, ErrInvalid) {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if err := os.RemoveAll(campaign.Workspace); err != nil {
+		t.Fatal(err)
+	}
+	paths, err := filepath.Glob(filepath.Join(campaign.MutationRoot, "failed-reports", "*.json"))
+	if err != nil || len(paths) != 1 {
+		t.Fatalf("persistent failed diagnostics = %d, %v", len(paths), err)
+	}
+	data, err := os.ReadFile(paths[0])
+	if err != nil {
+		t.Fatal(err)
+	}
+	var projected map[string]json.RawMessage
+	if err := json.Unmarshal(data, &projected); err != nil {
+		t.Fatal(err)
+	}
+	for _, omitted := range []string{"go_module", "elapsed_time", "mutator_statistics"} {
+		if _, exists := projected[omitted]; exists {
+			t.Fatalf("optional metadata %s persisted", omitted)
+		}
+	}
+	if strings.Contains(string(data), "PRIVATE_DIAGNOSTIC_MARKER") || !strings.Contains(string(data), "TIMED OUT") || string(projected["mutants_total"]) != "0" {
+		t.Fatal("diagnostic metadata omission or native values changed")
+	}
+	if _, err := os.Stat(filepath.Join(campaign.MutationRoot, "reports")); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("failed report became passing evidence: %v", err)
+	}
+	if err := campaign.Run(context.Background()); !errors.Is(err, ErrInvalid) || process.mutations != 2 {
+		t.Fatalf("failed diagnostic was reused: mutations=%d error=%v", process.mutations, err)
+	}
+}
+
+func TestCampaignCapturesNonEfficacyFailure(t *testing.T) {
+	campaign, process := campaignFixture(t)
+	native := `{"files":[{"file_name":"source.go","mutations":[{"type":"INVERT_LOGICAL","status":"LIVED","line":3,"column":1}]}]}`
+	process.report, process.fail = &native, "other-exit"
+	err := campaign.Run(context.Background())
+	var exit exitCoder
+	if !errors.As(err, &exit) || exit.ExitCode() != 11 {
+		t.Fatalf("process failure was changed: %v", err)
+	}
+	paths, err := filepath.Glob(filepath.Join(campaign.MutationRoot, "failed-reports", "*.json"))
+	if err != nil || len(paths) != 1 {
+		t.Fatalf("persistent process-failure diagnostics = %d, %v", len(paths), err)
 	}
 }
 

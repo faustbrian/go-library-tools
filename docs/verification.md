@@ -102,6 +102,16 @@ survivors lacking review, uncovered, timed-out, not-viable, missing, or stale
 results still fail. A reviewed equivalence may be limited to a stated public
 contract domain rather than byte-for-byte internal behavior. Failed campaigns
 emit bounded coordinate diagnostics without publishing passing evidence.
+Admitted failed-report projections persist in the mutation evidence directory's
+`failed-reports` sibling, outside disposable campaign workspaces. They retain
+native coordinates, statuses and numeric aggregate field presence, but omit
+module, elapsed-time and statistics metadata. Filenames must identify a direct
+production Go source in the selected package; mutation types and statuses must
+match the pinned producer. Projection content identity does not identify raw
+native bytes or certify complete accounting: native totals can omit timed-out
+mutants. Failed projections never satisfy evidence reuse or a passing gate.
+Missing or refused reports emit only a static capture diagnostic and preserve
+the original campaign failure. Cancellation and task cleanup remain unchanged.
 
 Evidence is keyed by complete behavior-affecting content and verifier identity,
 not Git history. It is persisted atomically when available. Code, tests,

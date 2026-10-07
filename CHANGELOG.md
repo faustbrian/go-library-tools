@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Preserve bounded failed mutation diagnostics outside disposable campaign
+  workspaces. Retain admitted coordinates and native numeric counters, omit
+  optional metadata, and keep failed attempts separate from passing evidence.
+
 - Keep verifier-owned Go module caches writable from creation so an
   interrupted child cannot leave read-only directories that prevent task
   cleanup. Preserve checksum-pinned downloads and scoped cache ownership.

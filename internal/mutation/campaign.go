@@ -340,8 +340,8 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 		return err
 	}
 	if processErr != nil && (review == nil || !isEfficacyThresholdExit(processErr)) {
-		reportFailedMutationCoordinates(output, reportPath)
-		return fmt.Errorf("mutation tool failed for %s %s: %w", campaign.Policy.ModuleDirectory, target, processErr)
+		failure := fmt.Errorf("mutation tool failed for %s %s: %w", campaign.Policy.ModuleDirectory, target, processErr)
+		return campaign.failedDiagnostic(output, packageDirectory, input, reportPath, failure)
 	}
 	// #nosec G304 -- reportPath is a fixed filename inside the task-owned mutation workspace
 	report, err := os.ReadFile(reportPath)
@@ -356,8 +356,7 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 	// validation already proves every reviewed coordinate is an accounted LIVED.
 	_, err = ValidateReportWithReview(bytes.NewReader(report), review)
 	if err != nil {
-		reportFailedMutationCoordinates(output, reportPath)
-		return err
+		return campaign.failedDiagnostic(output, packageDirectory, input, reportPath, err)
 	}
 	_, currentInput, currentSource, err := campaign.packageInputAndSource(ctx, packageDirectory)
 	if err != nil {

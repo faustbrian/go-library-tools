@@ -67,42 +67,58 @@ func storeReportWithReview(files reportFileSystem, root, inputDigest string, rep
 		return "", false, ReportResult{}, nil, err
 	}
 	directory := filepath.Join(root, "reports")
-	if err := prepareReportDirectories(files, root, directory); err != nil {
+	destination := filepath.Join(directory, strings.TrimPrefix(inputDigest, "sha256:")+".json")
+	path, reused, stored, err := publishReport(files, root, directory, destination, report, func(existing []byte) bool {
+		existingResult, err := ValidateReportWithReview(bytes.NewReader(existing), review)
+		if err != nil || existingResult.Digest != result.Digest {
+			return false
+		}
+		result = existingResult
+		return true
+	})
+	if err != nil {
 		return "", false, ReportResult{}, nil, err
 	}
-	destination := filepath.Join(directory, strings.TrimPrefix(inputDigest, "sha256:")+".json")
+	return path, reused, result, stored, nil
+}
+
+// publishReport retains one atomic persistence owner. Callers admit content
+// and destinations; the match predicate controls immutable-content reuse.
+func publishReport(files reportFileSystem, root, directory, destination string, data []byte, matches func([]byte) bool) (string, bool, []byte, error) {
+	if err := prepareReportDirectories(files, root, directory); err != nil {
+		return "", false, nil, err
+	}
 	temporary, err := files.CreateTemp(directory, ".report-*")
 	if err != nil {
-		return "", false, ReportResult{}, nil, fmt.Errorf("create temporary mutation report: %w", err)
+		return "", false, nil, fmt.Errorf("create temporary mutation report: %w", err)
 	}
 	if temporary == nil {
-		return "", false, ReportResult{}, nil, fmt.Errorf("%w: create temporary mutation report returned no file", ErrInvalid)
+		return "", false, nil, fmt.Errorf("%w: create temporary mutation report returned no file", ErrInvalid)
 	}
 	temporaryPath := temporary.Name()
 	defer func() { _ = files.Remove(temporaryPath) }()
-	if _, err = temporary.Write(report); err == nil {
+	if _, err = temporary.Write(data); err == nil {
 		err = temporary.Sync()
 	}
 	if closeErr := temporary.Close(); err == nil {
 		err = closeErr
 	}
 	if err != nil {
-		return "", false, ReportResult{}, nil, fmt.Errorf("write mutation report: %w", err)
+		return "", false, nil, fmt.Errorf("write mutation report: %w", err)
 	}
 	if err := files.Link(temporaryPath, destination); err == nil {
-		return destination, false, result, report, nil
+		return destination, false, data, nil
 	} else if !errors.Is(err, os.ErrExist) {
-		return "", false, ReportResult{}, nil, fmt.Errorf("publish mutation report: %w", err)
+		return "", false, nil, fmt.Errorf("publish mutation report: %w", err)
 	}
 	existing, err := files.ReadFile(destination)
 	if err != nil {
-		return "", false, ReportResult{}, nil, fmt.Errorf("read existing mutation report: %w", err)
+		return "", false, nil, fmt.Errorf("read existing mutation report: %w", err)
 	}
-	existingResult, err := ValidateReportWithReview(bytes.NewReader(existing), review)
-	if err != nil || existingResult.Digest != result.Digest {
-		return "", false, ReportResult{}, nil, fmt.Errorf("%w: mutation report already exists with different content", ErrInvalid)
+	if !matches(existing) {
+		return "", false, nil, fmt.Errorf("%w: mutation report already exists with different content", ErrInvalid)
 	}
-	return destination, true, existingResult, existing, nil
+	return destination, true, existing, nil
 }
 
 func prepareReportDirectories(files reportFileSystem, root, destination string) error {
