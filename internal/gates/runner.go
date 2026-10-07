@@ -73,7 +73,7 @@ description = "Historical APIDIFF_VERSION assignments in exact retired Makefiles
 condition = "AND"
 targetRules = ["generic-api-key"]
 regexTarget = "line"
-regexes = ['''^\n?APIDIFF_VERSION[ \t]*:=[ \t]*v0\.0\.0-[0-9]{14}-[0-9a-f]{12}[ \t]*$''']
+regexes = ['''^\n?APIDIFF_VERSION[ \t]*[?:]=[ \t]*v0\.0\.0-[0-9]{14}-[0-9a-f]{12}[ \t]*$''']
 paths = ['''^(?:\.golib/package\.mk|Makefile)$''']
 
 [[allowlists]]

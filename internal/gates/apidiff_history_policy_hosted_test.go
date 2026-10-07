@@ -45,8 +45,13 @@ func TestHistoricalAPIDiffPolicyPinnedScannerHosted(t *testing.T) {
 	}{
 		{"root tool identity", "Makefile", "APIDIFF_VERSION := " + version + "\n", 0},
 		{"legacy tool identity", ".golib/package.mk", "APIDIFF_VERSION := " + version + " \t\n", 0},
+		{"root default tool identity", "Makefile", "APIDIFF_VERSION ?= " + version + "\n", 0},
+		{"legacy default tool identity", ".golib/package.mk", "APIDIFF_VERSION ?= " + version + " \t\n", 0},
 		{"other assignment", "Makefile", "ACCESS_TOKEN := " + version + "\n", 1},
 		{"legacy other assignment", ".golib/package.mk", "ACCESS_TOKEN := " + version + "\n", 1},
+		{"default other assignment", "Makefile", "ACCESS_TOKEN ?= " + version + "\n", 1},
+		{"default other path", "nested/Makefile", "APIDIFF_VERSION ?= " + version + "\n", 1},
+		{"default mixed assignments", "Makefile", "APIDIFF_VERSION ?= " + version + "\nACCESS_TOKEN := " + version + "\n", 1},
 		{"other path", "nested/Makefile", "APIDIFF_VERSION := " + version + "\n", 1},
 		{"mixed assignments", "Makefile", "APIDIFF_VERSION := " + version + "\nACCESS_TOKEN := " + version + "\n", 1},
 	} {
