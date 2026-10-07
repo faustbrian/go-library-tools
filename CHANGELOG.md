@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Verify finite workflow alias-depth, merged-setting lookup and empty-owner
+  action refusal regressions before recursive fixtures, with bounded hosted
+  sensitivity checks. Production traversal and release thresholds are unchanged.
+
 ## 2.0.0 - 2026-10-01
 
 ### Security

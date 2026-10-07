@@ -57,6 +57,75 @@ jobs:
           cache: false
       - name: Run fast local CI
         run: make local-ci
+      - name: Verify finite workflow traversal regressions when affected
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${BASE_SHA}" ]] && git cat-file -e "${BASE_SHA}^{commit}" &&
+            git diff --quiet "${BASE_SHA}" HEAD -- internal/gates/workflows.go \
+              internal/gates/aaa_workflow_finite_preflight_internal_test.go .github/workflows/ci.yml; then
+            exit 0
+          fi
+          original="internal/gates/workflows.go"
+          backup_complete=0
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-workflow-finite.XXXXXX")"
+          cleanup() {
+            local failed=0
+            if [[ "${backup_complete}" -eq 1 ]] && ! cp "${task}/workflows.go" "${original}"; then
+              failed=1
+            fi
+            if ! chmod -R u+w "${task}"; then
+              failed=1
+            fi
+            if ! find "${task}" -depth -delete; then
+              failed=1
+            fi
+            return "${failed}"
+          }
+          trap 'status=$?; if ! cleanup; then status=1; fi; exit "${status}"' EXIT
+          cp "${original}" "${task}/workflows.go"
+          backup_complete=1
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" GOWORK=off
+          export GOMAXPROCS=2
+          go test -p 1 ./internal/gates -run '^TestWorkflowFinite' -count=1 -timeout=30s
+          for mutation in alias-depth alias-stop lookup-alias-depth lookup-sequence-depth lookup-mapping-depth merge-stop empty-owner; do
+            cp "${task}/workflows.go" "${original}"
+            python3 - "${mutation}" <<'PY'
+          import pathlib
+          import sys
+          path = pathlib.Path("internal/gates/workflows.go")
+          replacements = {
+              "alias-depth": ("node: current.node.Alias, path: current.path, depth: current.depth + 1", "node: current.node.Alias, path: current.path, depth: current.depth - 1"),
+              "alias-stop": ("node: current.node.Alias, path: current.path, depth: current.depth + 1})\n\t\t\tcontinue", "node: current.node.Alias, path: current.path, depth: current.depth + 1})\n\t\t\tbreak"),
+              "lookup-alias-depth": ("return workflowMappingValue(node.Alias, key, depth+1)", "return workflowMappingValue(node.Alias, key, depth-1)"),
+              "lookup-sequence-depth": ("workflowMappingValue(candidate, key, depth+1)", "workflowMappingValue(candidate, key, depth-1)"),
+              "lookup-mapping-depth": ("workflowMappingValue(merged, key, depth+1)", "workflowMappingValue(merged, key, depth-1)"),
+              "merge-stop": ('if node.Content[index].Value != "<<" {\n\t\t\tcontinue', 'if node.Content[index].Value != "<<" {\n\t\t\tbreak'),
+              "empty-owner": ("return at > 0 && immutableWorkflowRef", "return at >= 0 && immutableWorkflowRef"),
+          }
+          old, new = replacements[sys.argv[1]]
+          source = path.read_text()
+          if source.count(old) != 1:
+              raise SystemExit("counterfactual source anchor is not unique")
+          path.write_text(source.replace(old, new, 1))
+          PY
+            if go test -p 1 ./internal/gates -run '^TestWorkflowFinite' -count=1 -timeout=30s >"${task}/result" 2>&1; then
+              echo "finite workflow regression missed ${mutation}"
+              exit 1
+            fi
+            case "${mutation}" in
+              lookup-*-depth) expected='lookup crossed the recursion allowance' ;;
+              merge-stop) expected='finite admission' ;;
+              *) expected='finite refusal' ;;
+            esac
+            grep -q -- '--- FAIL: TestWorkflowFinite' "${task}/result"
+            grep -q -- "${expected}" "${task}/result"
+            echo "finite workflow regression detects ${mutation}"
+          done
+          cp "${task}/workflows.go" "${original}"
+          git diff --exit-code -- "${original}"
       - name: Verify finite process termination regression when affected
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
