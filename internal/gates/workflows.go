@@ -26,6 +26,7 @@ const (
 var immutableWorkflowRef = regexp.MustCompile(`^[0-9a-f]{40}$`)
 var immutableWorkflowImage = regexp.MustCompile(`^docker://[^@\s]+@sha256:[0-9a-f]{64}$`)
 var immutableContainerImage = regexp.MustCompile(`^[^@\s]+@sha256:[0-9a-f]{64}$`)
+var staticMatrixImageReference = regexp.MustCompile(`^\$\{\{\s*matrix\.([A-Za-z_][A-Za-z0-9_]*)\s*\}\}$`)
 
 type boundedWorkflowBuffer struct {
 	data     bytes.Buffer
@@ -289,11 +290,11 @@ func inspectWorkflowNode(document *yaml.Node, findings *[]string) error {
 					*findings = append(*findings, "remote actions require immutable SHA references")
 				}
 			case "container":
-				if workflowJobPath(current.path) && resolved.Kind == yaml.ScalarNode && !immutableContainerImage.MatchString(resolved.Value) {
+				if workflowJobPath(current.path) && resolved.Kind == yaml.ScalarNode && !workflowPinnedContainerImage(document, current.path, resolved) {
 					*findings = append(*findings, "job container images require immutable digest references")
 				}
 			case "image":
-				if workflowContainerImagePath(current.path) && (resolved.Kind != yaml.ScalarNode || !immutableContainerImage.MatchString(resolved.Value)) {
+				if workflowContainerImagePath(current.path) && !workflowPinnedContainerImage(document, current.path, resolved) {
 					*findings = append(*findings, "container images require immutable digest references")
 				}
 			}
@@ -302,6 +303,72 @@ func inspectWorkflowNode(document *yaml.Node, findings *[]string) error {
 				childPath = current.path
 			}
 			stack = append(stack, item{node: value, path: childPath, depth: current.depth + 1})
+		}
+	}
+	return nil
+}
+
+// Matrix images are admitted only for a finite include-only domain owned by
+// this job. Only explicit mapping entries are inspected: recursive merge
+// resolution must not run ahead of the full traversal's structural quotas.
+// General expressions, axes and partial includes remain refused.
+func workflowPinnedContainerImage(document *yaml.Node, path []string, image *yaml.Node) bool {
+	if image.Kind != yaml.ScalarNode {
+		return false
+	}
+	if immutableContainerImage.MatchString(image.Value) {
+		return true
+	}
+	match := staticMatrixImageReference.FindStringSubmatch(image.Value)
+	if match == nil || len(path) < 2 || path[0] != "jobs" {
+		return false
+	}
+	root := document
+	if root.Kind == yaml.DocumentNode {
+		if len(root.Content) != 1 {
+			return false
+		}
+		root = root.Content[0]
+	}
+	jobs := explicitWorkflowMappingValue(root, "jobs")
+	job := explicitWorkflowMappingValue(jobs, path[1])
+	strategy := explicitWorkflowMappingValue(job, "strategy")
+	matrix := explicitWorkflowMappingValue(strategy, "matrix")
+	if matrix == nil {
+		return false
+	}
+	matrix = resolveWorkflowAlias(matrix)
+	if matrix.Kind != yaml.MappingNode || len(matrix.Content) != 2 || matrix.Content[0].Value != "include" {
+		return false
+	}
+	include := resolveWorkflowAlias(matrix.Content[1])
+	if include.Kind != yaml.SequenceNode || len(include.Content) == 0 || len(include.Content) > 256 {
+		return false
+	}
+	for _, row := range include.Content {
+		value := explicitWorkflowMappingValue(row, match[1])
+		if value == nil {
+			return false
+		}
+		value = resolveWorkflowAlias(value)
+		if value.Kind != yaml.ScalarNode || strings.Contains(value.Value, "${{") || !immutableContainerImage.MatchString(value.Value) {
+			return false
+		}
+	}
+	return true
+}
+
+func explicitWorkflowMappingValue(node *yaml.Node, key string) *yaml.Node {
+	if node == nil {
+		return nil
+	}
+	node = resolveWorkflowAlias(node)
+	if node.Kind != yaml.MappingNode {
+		return nil
+	}
+	for index := 0; index+1 < len(node.Content); index += 2 {
+		if node.Content[index].Value == key {
+			return node.Content[index+1]
 		}
 	}
 	return nil

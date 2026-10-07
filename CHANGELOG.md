@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Admit digest-pinned service and container images selected by a same-job,
+  finite include-only matrix with explicit image fields. Refuse dynamic
+  expressions, incomplete entries and recursive merge lookup; retain strict
+  image pinning, traversal limits and checkout credential controls.
+
 - Select published State Machine v2 in the maintained compatibility consumer,
   exercising finite runner admission, cancellation, compilation allowances,
   redacted diagnostics and caller-owned persistence requirements. Preserve
