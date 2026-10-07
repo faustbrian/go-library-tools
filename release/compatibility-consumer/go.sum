@@ -410,8 +410,8 @@ github.com/faustbrian/go-service v1.1.2 h1:8gKlxhILZzn1gQg5edVzRomlqLLaa07e2nC9d
 github.com/faustbrian/go-service v1.1.2/go.mod h1:ivGR4lBgV5wiUS/06bI806R+LUZkoknk53VPn5Tn6pw=
 github.com/faustbrian/go-settings/v2 v2.0.0 h1:ajtYH8WG4Dn5cq6dVrR9H5IZJ7cZzQJLbi88vGN5+yk=
 github.com/faustbrian/go-settings/v2 v2.0.0/go.mod h1:v9/iM/WIkv26PbkNS1XcY4crvElWIFqmNfuAc/Vl3SU=
-github.com/faustbrian/go-state-machine v1.0.0 h1:4wX293ijoWF5HcBAMyAZL+7zilfhe8XAYOeGRr8bLvU=
-github.com/faustbrian/go-state-machine v1.0.0/go.mod h1:8YocqriHNQog36xVfS/aAVgFcAuNneNHQXrw/jYN6R0=
+github.com/faustbrian/go-state-machine/v2 v2.0.0 h1:NNjQ7z21s62Tm5Dc2sNw8JMZgB7QOSIimXSmsH0z0Z8=
+github.com/faustbrian/go-state-machine/v2 v2.0.0/go.mod h1:BoiwO8OAljAqDRKzpaZKtJd1gIwNjNsQwcbMhdzd4nw=
 github.com/faustbrian/go-tabular v1.0.0 h1:k+M86Fr01/426Z4bJW2vSnizx5KXK+jxiCNsNcJ8IpE=
 github.com/faustbrian/go-tabular v1.0.0/go.mod h1:XNM1SxRtn0LeasyOh+xJ3iUpjhLcZkTA9ohqJTOM1gw=
 github.com/faustbrian/go-tabular/v2 v2.0.0 h1:WV/ZAUgVMF+hhDlNwXiHKNIsZH/yhdsQyfyy8rGOb/I=

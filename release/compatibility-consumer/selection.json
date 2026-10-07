@@ -3,6 +3,21 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-state-machine",
+      "module_path": "github.com/faustbrian/go-state-machine/v2",
+      "version": "v2.0.0",
+      "source_revision": "65b942580100bc6a47daeb8cd158645cf62f694f",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-state-machine/v2",
+        "github.com/faustbrian/go-state-machine/v2/diagram",
+        "github.com/faustbrian/go-state-machine/v2/memory",
+        "github.com/faustbrian/go-state-machine/v2/outbox",
+        "github.com/faustbrian/go-state-machine/v2/postgres",
+        "github.com/faustbrian/go-state-machine/v2/runner",
+        "github.com/faustbrian/go-state-machine/v2/statemachinetest"
+      ]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-postgres",
       "module_path": "github.com/faustbrian/go-postgres/v2",
       "version": "v2.0.0",

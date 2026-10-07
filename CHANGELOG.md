@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Select published State Machine v2 in the maintained compatibility consumer,
+  exercising finite runner admission, cancellation, compilation allowances,
+  redacted diagnostics and caller-owned persistence requirements. Preserve
+  the immutable historical cohort.
+
 - Select published PostgreSQL v2 in the maintained compatibility consumer and
   exercise explicit configuration resolution, private errors and borrowed
   service-adapter lifecycle ownership. Preserve the published v1 cohort.

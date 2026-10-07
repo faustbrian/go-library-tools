@@ -139,7 +139,7 @@ require (
 	github.com/faustbrian/go-sequencer/v2 v2.0.0
 	github.com/faustbrian/go-service v1.1.2
 	github.com/faustbrian/go-settings/v2 v2.0.0
-	github.com/faustbrian/go-state-machine v1.0.0
+	github.com/faustbrian/go-state-machine/v2 v2.0.0
 	github.com/faustbrian/go-tabular v1.0.0
 	github.com/faustbrian/go-tabular/v2 v2.0.0
 	github.com/faustbrian/go-telemetry v1.2.0
