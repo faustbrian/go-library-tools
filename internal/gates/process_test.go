@@ -150,6 +150,7 @@ func TestProcessExecutorStopsOverflowingOriginalProcessGroup(t *testing.T) {
 		}
 	})
 	heartbeat := filepath.Join(t.TempDir(), "heartbeat")
+	naturalExit := filepath.Join(t.TempDir(), "natural-exit")
 	stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
@@ -157,9 +158,17 @@ func TestProcessExecutorStopsOverflowingOriginalProcessGroup(t *testing.T) {
 	err = created.Run(ctx, Command{
 		boundedScanner: true,
 		Name:           os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
-		Env:    map[string]string{"GO_WANT_HELPER": "1", "HELPER_SPAWN_DESCENDANT": "1", "HELPER_HEARTBEAT": heartbeat},
+		Env: map[string]string{
+			"GO_WANT_HELPER": "1", "HELPER_SPAWN_DESCENDANT": "1", "HELPER_HEARTBEAT": heartbeat,
+			"HELPER_FINITE_LIFETIME": "1", "HELPER_NATURAL_EXIT": naturalExit,
+		},
 		Stdout: stdout, Stderr: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
 	})
+	if _, statErr := os.Stat(naturalExit); statErr == nil {
+		t.Fatal("original-group helper reached its natural-exit marker")
+	} else if !errors.Is(statErr, fs.ErrNotExist) {
+		t.Fatal(statErr)
+	}
 	if err == nil || !stdout.didOverflow() || time.Since(started) > 5*time.Second {
 		t.Fatalf("Run() = %v, overflow %v, duration %v", err, stdout.didOverflow(), time.Since(started))
 	}
@@ -205,13 +214,18 @@ func TestProcessExecutorPreservesCancellationCause(t *testing.T) {
 		}
 	})
 	heartbeat := filepath.Join(t.TempDir(), "heartbeat")
+	naturalExit := filepath.Join(t.TempDir(), "natural-exit")
 	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 	done := make(chan error, 1)
 	go func() {
 		done <- created.Run(ctx, Command{
 			boundedScanner: true,
 			Name:           os.Args[0], Args: []string{"-test.run=TestProcessHelper", "--"},
-			Env:    map[string]string{"GO_WANT_HELPER": "1", "HELPER_WAIT": "1", "HELPER_HEARTBEAT": heartbeat},
+			Env: map[string]string{
+				"GO_WANT_HELPER": "1", "HELPER_WAIT": "1", "HELPER_HEARTBEAT": heartbeat,
+				"HELPER_FINITE_LIFETIME": "1", "HELPER_NATURAL_EXIT": naturalExit,
+			},
 			Stdout: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
 			Stderr: &boundedProcessOutput{limit: maximumSecurityProcessOutput},
 		})
@@ -233,6 +247,11 @@ func TestProcessExecutorPreservesCancellationCause(t *testing.T) {
 	case runErr := <-done:
 		if !errors.Is(runErr, context.Canceled) {
 			t.Fatalf("Run() error = %v, want context cancellation", runErr)
+		}
+		if _, statErr := os.Stat(naturalExit); statErr == nil {
+			t.Fatal("canceled helper reached its natural-exit marker")
+		} else if !errors.Is(statErr, fs.ErrNotExist) {
+			t.Fatal(statErr)
 		}
 	case <-time.After(5 * time.Second):
 		t.Fatal("Run() did not return after cancellation")
@@ -315,11 +334,23 @@ func TestProcessHelper(t *testing.T) {
 		}
 		os.Exit(0)
 	}
+	// A failed termination must not leave test-owned helpers running or holding
+	// the executor's output pipes. Natural exit is a separate failure oracle.
+	deadline := time.Now().Add(2 * time.Second)
+	finishFiniteHelper := func() {
+		if os.Getenv("HELPER_FINITE_LIFETIME") == "1" && time.Now().After(deadline) {
+			if err := os.WriteFile(os.Getenv("HELPER_NATURAL_EXIT"), []byte("complete"), 0o600); err != nil {
+				os.Exit(24)
+			}
+			os.Exit(0)
+		}
+	}
 	if os.Getenv("HELPER_STREAM") == "1" {
 		_ = os.WriteFile(os.Getenv("HELPER_HEARTBEAT"), []byte("alive"), 0o600)
 		payload := bytes.Repeat([]byte("sensitive-output"), (maximumSecurityProcessOutput/16)+1)
 		_, _ = os.Stdout.Write(payload[:maximumSecurityProcessOutput+1])
 		for {
+			finishFiniteHelper()
 			_ = os.WriteFile(os.Getenv("HELPER_HEARTBEAT"), []byte("alive"), 0o600)
 			_, _ = os.Stdout.Write([]byte("sensitive-output"))
 			time.Sleep(10 * time.Millisecond)
@@ -327,6 +358,7 @@ func TestProcessHelper(t *testing.T) {
 	}
 	if os.Getenv("HELPER_WAIT") == "1" {
 		for {
+			finishFiniteHelper()
 			_ = os.WriteFile(os.Getenv("HELPER_HEARTBEAT"), []byte("alive"), 0o600)
 			time.Sleep(10 * time.Millisecond)
 		}

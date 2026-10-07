@@ -22,6 +22,14 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Cover exhausted history-write budgets when the destination has failed.
+  Bound hosted process helpers independently of the termination path, and
+  distinguish real cancellation from their natural exit.
+
+- Record an unsupported-platform termination predicate as unreachable for
+  admitted production callers, preserving source/tool binding and native
+  status accounting without accepting active Unix termination mutations.
+
 - Refuse malformed statistic value types in report-projection regression
   coverage, including partial decoding that leaves populated numeric pointers.
 

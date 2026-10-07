@@ -57,6 +57,63 @@ jobs:
           cache: false
       - name: Run fast local CI
         run: make local-ci
+      - name: Verify finite process termination regression when affected
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          set -euo pipefail
+          if [[ -n "${BASE_SHA}" ]] && git cat-file -e "${BASE_SHA}^{commit}" &&
+            git diff --quiet "${BASE_SHA}" HEAD -- internal/gates/process_unix.go \
+              internal/gates/process_test.go internal/gates/process_unix_internal_test.go \
+              .github/workflows/ci.yml; then
+            exit 0
+          fi
+          original="internal/gates/process_unix.go"
+          backup_complete=0
+          cleanup() {
+            local failed=0
+            if [[ "${backup_complete}" -eq 1 ]] && ! cp "${task}/process_unix.go" "${original}"; then
+              failed=1
+            fi
+            if ! chmod -R u+w "${task}"; then
+              failed=1
+            fi
+            if ! find "${task}" -depth -delete; then
+              failed=1
+            fi
+            return "${failed}"
+          }
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-finite-termination.XXXXXX")"
+          trap 'status=$?; if ! cleanup; then status=1; fi; exit "${status}"' EXIT
+          cp "${original}" "${task}/process_unix.go"
+          backup_complete=1
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp"
+          export GOWORK=off GOMAXPROCS=2
+          go test -p=1 ./internal/gates \
+            -run '^Test(ProcessExecutorStopsOverflowingOriginalProcessGroup|ProcessExecutorPreservesCancellationCause|HostedProcessTerminationWithoutStartedProcess)$' \
+            -count=1 -timeout=30s
+          grep -Fxq $'\t_ = syscall.Kill(-process.Process.Pid, syscall.SIGKILL)' "${original}"
+          sed -i 's/syscall.Kill(-process.Process.Pid, syscall.SIGKILL)/syscall.Kill(+process.Process.Pid, syscall.SIGKILL)/' "${original}"
+          set +e
+          go test -p=1 ./internal/gates -run '^TestProcessExecutorStopsOverflowingOriginalProcessGroup$' \
+            -count=1 -timeout=30s >"${task}/sign-result" 2>&1
+          status=$?
+          set -e
+          test "${status}" -eq 1
+          grep -Fq 'original-group helper reached its natural-exit marker' "${task}/sign-result"
+          cp "${task}/process_unix.go" "${original}"
+          grep -Fxq $'\tif process.Process == nil {' "${original}"
+          sed -i 's/if process.Process == nil {/if process.Process != nil {/' "${original}"
+          set +e
+          go test -p=1 ./internal/gates -run '^TestHostedProcessTerminationWithoutStartedProcess$' \
+            -count=1 -timeout=30s >"${task}/nil-result" 2>&1
+          status=$?
+          set -e
+          test "${status}" -eq 1
+          grep -Fq 'invalid memory address or nil pointer dereference' "${task}/nil-result"
+          cp "${task}/process_unix.go" "${original}"
+          git diff --exit-code -- "${original}"
       - name: Verify historical public tool identities when affected
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
