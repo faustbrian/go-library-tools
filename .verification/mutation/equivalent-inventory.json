@@ -51,6 +51,79 @@
           "reason": "Owner faustbrian; date 2026-10-06; expiry 2026-11-05 or any bound source/verifier, path admission or supported filepath semantics change. Pinned Gremlins v0.6.0 changes continue to break. The sole production caller cleans the resolved path and passes filepath.Rel's canonical relative result, which contains no empty separator components. The only empty component is the single empty string created when validateComponents normalizes relative dot to empty. In that one-iteration case both continue and break finish without dispatching metadata inspection. All nonempty-component cases execute unchanged. Arbitrary private inputs with repeated or leading separators are excluded because the production caller cannot create them. No other docscheck mutant is accepted; the five viable admission/selection mutations remain subject to ordinary regression tests. Native run37524076041 remains failed, with original LIVED/TIMED OUT statuses preserved; fresh matching-source qualification remains required."
         }
       ]
+    },
+    {
+      "module_directory": ".",
+      "package_directory": "internal/gates",
+      "source_digest": "fa19d2c4a91e9e2f9f393aea4c9bfb7cad472de6b94e7b4de8e2b0f049eb2951",
+      "gremlins_version": "v0.6.0",
+      "gremlins_verifier_sha256": "c28707fd4ce35dd228260de564107c1fb7726e42d4e9ea2bf9e988083e1f3b5b",
+      "mutations": [
+        {
+          "file_name": "gosec_reporting.go",
+          "type": "INVERT_LOGICAL",
+          "line": 18,
+          "column": 20,
+          "contract_domain": "Gosec failure projection reached through securityTool after its completed executor and unchanged report-capture overflow guards; identical bounded sanitized projection or refusal",
+          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, report-capture policy or production caller change. Pinned Gremlins v0.6.0 changes the first || to &&. The sole production caller retains at most 4194304 report bytes and calls projection only when neither stream overflowed, so its excessive-size predicate is always false. Empty input still fails uniqueGosecJSON; nonempty admitted input takes the same remaining guards. Oversized valid JSON distinguishes direct private-helper calls but cannot reach this caller and is excluded. Native failure37531787285 remains failed with its original LIVED coordinate; fresh matching-source qualification remains required. No other coordinate is accepted."
+        },
+        {
+          "file_name": "gosec_reporting.go",
+          "type": "INVERT_LOGICAL",
+          "line": 31,
+          "column": 66,
+          "contract_domain": "All byte inputs to gosecFailureMetadata under the unchanged JSON RawMessage decoding and subsequent required-field decoders; identical sanitized projection or refusal",
+          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, required-field decoding or supported JSON semantics change. Pinned Gremlins v0.6.0 changes the Errors-nil || Issues-nil predicate to &&. If both are missing, both versions refuse at this guard. If exactly one is missing, the mutant reaches the unchanged json.Unmarshal of that nil RawMessage at line52, which returns an error and the same unusable classification before projection. Present JSON null is not a nil RawMessage and follows unchanged behavior. Other decode failures and missing Stats remain guarded. Native failure37531787285 remains failed with its original LIVED coordinate; fresh matching-source qualification remains required."
+        },
+        {
+          "file_name": "gosec_reporting.go",
+          "type": "INVERT_LOGICAL",
+          "line": 176,
+          "column": 19,
+          "contract_domain": "Object-key tokens produced by the unchanged encoding/json Decoder.Token traversal in uniqueGosecJSON; identical grammar, duplicate-key, depth and trailing-document refusal",
+          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, token traversal or supported JSON Token semantics change. Pinned Gremlins v0.6.0 changes the first || to &&. At this object-key position a successful Token returns a string; malformed, truncated or non-string key input returns nil plus an error. Therefore err!=nil and !ok have equal truth values, making their conjunction and disjunction equal. The distinct duplicate-key predicate at176:26 is not accepted. Go1.27.1 encoding/json/stream.go448-469 and tokenError preserve nil-on-error; arbitrary injected token producers are excluded because this helper constructs the concrete decoder itself. Native failure37531787285 remains failed; fresh matching-source qualification remains required."
+        },
+        {
+          "file_name": "gosec_reporting.go",
+          "type": "INVERT_LOGICAL",
+          "line": 186,
+          "column": 21,
+          "contract_domain": "Closing tokens produced by the unchanged encoding/json Decoder.Token traversal after Decoder.More is false; identical uniqueGosecJSON result for all input bytes",
+          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, traversal or supported JSON Token semantics change. Pinned Gremlins v0.6.0 changes outer && to ||. After this traversal's More loop, a successful Token is the properly matched closing delimiter; an erroneous Token is nil and cannot satisfy either closing comparison. The error-free predicate and matching-close predicate therefore agree. Empty object/array closes satisfy both; mismatched delimiters, truncation and EOF satisfy neither. Go1.27.1 encoding/json/stream.go374-376,398-425,492,497-499 supplies matching and nil-error guarantees; the final EOF check still refuses trailing documents. Native failure37531787285 remains failed; fresh matching-source qualification remains required."
+        },
+        {
+          "file_name": "gosec_reporting.go",
+          "type": "INVERT_LOGICAL",
+          "line": 186,
+          "column": 43,
+          "contract_domain": "Concrete encoding/json matched closing delimiters in uniqueGosecJSON's object-or-array traversal; identical grammar and projection admission for all input bytes",
+          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, traversal or supported JSON Token semantics change. Pinned Gremlins v0.6.0 changes the object branch's && to ||. Under the unchanged outer err==nil guard, an object traversal returns } and an array traversal returns ]; the decoder rejects successful mismatched closing tokens. Thus delimiter=={ and end==} agree, and their conjunction/disjunction are equal. The unchanged array branch and final EOF check retain their behavior. Malformed or missing closes remain rejected by the outer error guard. Go1.27.1 encoding/json/stream.go374-376,398-425 establishes matching. Native failure37531787285 remains failed; fresh matching-source qualification remains required."
+        },
+        {
+          "file_name": "gosec_reporting.go",
+          "type": "INVERT_LOGICAL",
+          "line": 186,
+          "column": 91,
+          "contract_domain": "Concrete encoding/json matched closing delimiters in uniqueGosecJSON's object-or-array traversal; identical grammar and projection admission for all input bytes",
+          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, traversal or supported JSON Token semantics change. Pinned Gremlins v0.6.0 changes the array branch's && to ||. Under the unchanged outer err==nil guard, an array traversal returns ] and an object traversal returns }; the decoder rejects successful mismatched closing tokens. Thus delimiter==[ and end==] agree, and their conjunction/disjunction are equal. The unchanged object branch and final EOF check retain their behavior. Malformed or missing closes remain rejected by the outer error guard. Go1.27.1 encoding/json/stream.go374-376,398-425 establishes matching. Native failure37531787285 remains failed; fresh matching-source qualification remains required."
+        },
+        {
+          "file_name": "runner.go",
+          "type": "INVERT_LOGICAL",
+          "line": 302,
+          "column": 21,
+          "contract_domain": "Finding metadata through securityTool's sole completed-executor Gitleaks classification caller with its initialized metadata and unchanged stream-overflow exclusion; identical bounded sanitized locations",
+          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, executor completion contract, metadata initialization or classification caller change. Pinned Gremlins v0.6.0 changes || to &&. securityTool initializes nonnil metadata at1102 and calls findingMetadata at1119 only after completed execution with neither stream overflowed. Both compared predicates are false whenever this caller reaches the helper. Direct nil-metadata or overflowing private-helper calls, reflection-based mutation and executor writes after returning are excluded; those violate the stated producer/completed-execution domain and can distinguish the mutation. Native failure37531787285 remains failed with its original LIVED coordinate; fresh matching-source qualification remains required."
+        },
+        {
+          "file_name": "runner.go",
+          "type": "INVERT_LOOPCTRL",
+          "line": 1180,
+          "column": 4,
+          "contract_domain": "Coverage mode selection for Runner policies validated by config.Load and supplied by the production CLI; identical selected mode, verification result and report",
+          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, coverage-policy producer, uniqueness validation or selection change. Pinned Gremlins v0.6.0 changes break to continue. config.Load validates unique coverage module entries at config.go247-258; production CLI loads that policy before constructing Runner. After the unique matching entry sets mode, remaining entries cannot match the same module and cannot alter it. Missing matches keep the same exact default; first/last positions preserve the same result. Contradictory duplicate hand-built Runner policies are excluded because the supported producer rejects them before execution. Native failure37531787285 remains failed with its original LIVED coordinate; fresh matching-source qualification remains required."
+        }
+      ]
     }
   ]
 }

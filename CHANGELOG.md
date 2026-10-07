@@ -22,6 +22,11 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Record eight source/verifier-bound gate mutants as equivalent only for
+  concrete JSON decoder invariants and admitted production callers. Preserve
+  native statuses, fail-closed source/tool binding and every other mutation
+  requirement; these records do not certify release qualification.
+
 - Adopt published Localized v5 with International v4, HTTP Client v2 and
   Wire v3 in the maintained compatibility consumer. Preserve historical
   Localized selections and cover canonical/retained nominal composition,
