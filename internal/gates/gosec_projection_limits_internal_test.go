@@ -8,10 +8,10 @@ import (
 	"testing"
 )
 
-func projectionReport(t *testing.T, root string, finding, loading bool) map[string]any {
+func projectionReport(t *testing.T, root string, finding bool) map[string]any {
 	t.Helper()
 	var report map[string]any
-	if err := json.Unmarshal(ordinaryGosecReport(root, finding, loading), &report); err != nil {
+	if err := json.Unmarshal(ordinaryGosecReport(root, finding, true), &report); err != nil {
 		t.Fatal(err)
 	}
 	return report
@@ -39,8 +39,12 @@ func TestGosecProjectionStatisticBoundaries(t *testing.T) {
 		} {
 			t.Run(field+"/"+test.name, func(t *testing.T) {
 				root := t.TempDir()
-				report := projectionReport(t, root, false, true)
-				report["Stats"].(map[string]any)[field] = test.value
+				report := projectionReport(t, root, false)
+				stats, ok := report["Stats"].(map[string]any)
+				if !ok {
+					t.Fatal("fixture statistics must be an object")
+				}
+				stats[field] = test.value
 				want := "gosec-tool-or-report-failure"
 				if test.valid {
 					want = "gosec-loading-failure findings=0 loading_packages=1 loading_errors=1"
@@ -58,9 +62,20 @@ func TestGosecProjectionLoadingEntryBoundaries(t *testing.T) {
 		for _, value := range []int{-1, 0, 100_000_000, 100_000_001} {
 			t.Run(fmt.Sprintf("%s/%d", field, value), func(t *testing.T) {
 				root := t.TempDir()
-				report := projectionReport(t, root, false, true)
-				entries := report["Golang errors"].(map[string]any)[filepath.Join(root, "loading.go")].([]any)
-				entries[0].(map[string]any)[field] = value
+				report := projectionReport(t, root, false)
+				loading, ok := report["Golang errors"].(map[string]any)
+				if !ok {
+					t.Fatal("fixture loading errors must be an object")
+				}
+				entries, ok := loading[filepath.Join(root, "loading.go")].([]any)
+				if !ok || len(entries) != 1 {
+					t.Fatal("fixture loading errors must contain one entry")
+				}
+				entry, ok := entries[0].(map[string]any)
+				if !ok {
+					t.Fatal("fixture loading entry must be an object")
+				}
+				entry[field] = value
 				want := "gosec-tool-or-report-failure"
 				if value == 0 || value == 100_000_000 {
 					want = "gosec-loading-failure findings=0 loading_packages=1 loading_errors=1"
@@ -74,7 +89,7 @@ func TestGosecProjectionLoadingEntryBoundaries(t *testing.T) {
 	for _, field := range []string{"Golang errors", "Issues", "Stats"} {
 		t.Run("missing "+field, func(t *testing.T) {
 			root := t.TempDir()
-			report := projectionReport(t, root, true, true)
+			report := projectionReport(t, root, true)
 			delete(report, field)
 			if got := projectReport(t, report, root); got != "gosec-tool-or-report-failure" {
 				t.Fatalf("incomplete report projection = %q", got)
@@ -99,7 +114,7 @@ func TestGosecProjectionLoadingCountBoundaries(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			root := t.TempDir()
-			report := projectionReport(t, root, false, true)
+			report := projectionReport(t, root, false)
 			loading := map[string]any{}
 			for pkg := range test.packages {
 				entries := make([]any, test.entries)
