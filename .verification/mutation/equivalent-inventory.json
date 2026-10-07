@@ -106,6 +106,14 @@
           "column": 4,
           "contract_domain": "Coverage mode selection for Runner policies validated by config.Load and supplied by the production CLI; identical selected mode, verification result and report",
           "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, coverage-policy producer, uniqueness validation or selection change. Pinned Gremlins v0.6.0 changes break to continue. config.Load validates unique coverage module entries at config.go247-258; production CLI loads that policy before constructing Runner. After the unique matching entry sets mode, remaining entries cannot match the same module and cannot alter it. Missing matches keep the same exact default; first/last positions preserve the same result. Contradictory duplicate hand-built Runner policies are excluded because the supported producer rejects them before execution. Native failure37531787285 remains failed with its original LIVED coordinate; fresh matching-source qualification remains required."
+        },
+        {
+          "file_name": "process_other.go",
+          "type": "CONDITIONALS_NEGATION",
+          "line": 15,
+          "column": 21,
+          "contract_domain": "Production bounded-scanner startup and termination through processExecutor.runBounded and unchanged platform admission; identical preparation refusal or original-group termination",
+          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, platform build selection, preparation or termination caller change. Pinned Gremlins v0.6.0 changes Process!=nil to Process==nil. This file is excluded from Linux/Darwin builds. On other platforms its configureProcessGroup always returns unsupported; the sole production runBounded caller returns that error before process.Start and before creating the monitor which invokes terminateProcessGroup. Therefore this changed helper is never called by admitted production execution on any platform. Test-only injected preparation, direct helper calls and arbitrary hand-built process commands are outside this producer/lifecycle domain and can distinguish or panic under the mutant. This does not accept the active Unix predicates or sign changes; those retain hosted observable regression requirements. Native failure37531787285 and its original status remain unchanged; fresh matching-source qualification is required, and newly detected coordinates must reject obsolete reviews."
         }
       ]
     }
