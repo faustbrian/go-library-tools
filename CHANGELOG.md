@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Rebind the ten independently reviewed equivalent-mutant records to the
+  current unit-first verifier and actual package sources. Retain their narrow
+  caller domains, historical attribution and native statuses; fresh release
+  qualification is still required.
+
 - Select only unit tests in the integration-mode mutation preflight, so a
   detected regression returns before a later example can hide it behind a
   timeout. Ordinary baselines and the full follow-up retain examples and fuzz
