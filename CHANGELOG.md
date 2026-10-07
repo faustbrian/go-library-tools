@@ -4,21 +4,31 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
-### Fixed
+## 2.0.0 - 2026-10-01
 
-- Allow maintained compatibility consumers to add a published module major
-  alongside an already-selected replacement without dropping that replacement
-  or relaxing family, duplicate, remote-tag or public-proxy validation.
+### Security
 
-- Apply metadata assurance to documentation/license-only source-bootstrap pull
-  requests without relaxing runtime checks for development tooling-pin changes,
-  source changes, pushes, scheduled runs or release rehearsals.
-  Preserve repository history/current-tree secret scanning with the standalone
-  `golib secrets check` route to the existing bounded scanner owner.
+- Select root-only coverage evidence acceptance while retaining instrumented
+  package execution and every other release gate. Strengthen finite scanner
+  metadata refusal, relative-path projection, sticky invalidation and template
+  creation failure tests; counts alone do not certify security or readiness.
 
-- Accept ordinary zero tar-record padding during archive validation, charging
-  the entire stream to expansion limits while retaining compressed limits,
-  gzip integrity checks and rejection of nonzero trailing content.
+- Increase the bounded sanitized Gosec location projection from 32 to 64,
+  retaining complete finding counts and validation of every issue beyond the
+  projection cap. Output still contains only hashed module-relative identities,
+  validated rules and coordinates, never source, details or raw paths.
+
+- Classify pinned Gosec failures from bounded private JSON as completed findings,
+  package-loading failures, or unusable tool/report failures. Report only fixed
+  counts, validated rule identities, coordinates and hashed module-relative file
+  identities; retain strict suppressions, package selection and native failure.
+
+- Admit Markdown as regular, size-bounded repository files before reading,
+  retaining the inclusive 4 MiB and 4096-document limits. Documentation walks
+  now use bounded batches and reject more than 100,000 enumerated entries or
+  depth 128, including non-Markdown entries. Local and full documentation checks
+  carry caller cancellation through traversal, reads and validation while
+  preserving local-link rules and requiring a trusted, stable filesystem.
 
 ### Added
 
@@ -75,31 +85,129 @@ All notable changes to this project are documented in this file.
   rejects missing, wholly unexecuted, or invalid package evidence; counts alone
   do not certify behavioral adequacy or release readiness.
 
-### Security
 
-- Select root-only coverage evidence acceptance while retaining instrumented
-  package execution and every other release gate. Strengthen finite scanner
-  metadata refusal, relative-path projection, sticky invalidation and template
-  creation failure tests; counts alone do not certify security or readiness.
+- Added a versioned ecosystem threat model, vulnerability process, validated
+  risk register and per-module scanner/release-verdict contract.
+- Added bounded bootstrap archive validation and owned GitHub Actions security
+  analysis to the public CLI contract.
+- Added an independent Draft 2020-12 differential check for security-record
+  validation decisions.
+- Allow exact source- and verifier-bound equivalent-mutant reviews in native
+  mutation campaigns while retaining raw `LIVED` reports, strict default kills,
+  and separate bounded failure diagnostics.
+- Recorded verified root-module scanner results with a blocked release verdict
+  and retained the open fleet-enforcement risk under the v2 module identity.
 
-- Increase the bounded sanitized Gosec location projection from 32 to 64,
-  retaining complete finding counts and validation of every issue beyond the
-  projection cap. Output still contains only hashed module-relative identities,
-  validated rules and coordinates, never source, details or raw paths.
+### Changed
 
-- Classify pinned Gosec failures from bounded private JSON as completed findings,
-  package-loading failures, or unusable tool/report failures. Report only fixed
-  counts, validated rule identities, coordinates and hashed module-relative file
-  identities; retain strict suppressions, package selection and native failure.
+- Admit empty regular files at a zero bounded-read allowance, retaining path,
+  identity and one-byte look-ahead checks. Mutation source reads now delegate
+  zero-byte enforcement to that owner: zero per-file refusals remain size
+  errors, while zero aggregate refusals with a positive per-file allowance are
+  consistently aggregate errors, replacing growth-timing-dependent diagnostics.
+  Positive-limit errors and positive-only streaming-open contracts are unchanged.
+- Adopt published Idempotency v2.0.1 in the maintained compatibility consumer
+  and exercise a finite in-memory acquire, complete, and replay composition,
+  preserving its v1 selection, frozen cohorts, and unrelated versions.
+- Adopt published OpenRPC v2.0.0 in the maintained compatibility consumer,
+  with a finite builder, bounded semantic-validation, and exact canonical
+  output assertion, preserving frozen cohorts and unrelated selections.
+- Adopt published Log v2.0.0 in the maintained compatibility consumer and
+  exercise ordinary default message replacement, attribute omission, and
+  explicit trusted event composition, without changing frozen cohorts or
+  unrelated selections.
+- Adopt Money v2.0.0 and canonical Knapsack money objective v3.0.0 in the
+  maintained compatibility consumer, preserving frozen cohorts and unrelated
+  selections. Its existing hosted consumer job also runs a finite exact-total
+  and copied-input composition assertion; this is not security certification.
+- Adopt Event Sourcing, Postgres, and the Outbox, Kafka, OTel, and Queue
+  adapters at v2.0.0 in the maintained compatibility consumer through their
+  official `/v2` entrypoints, preserving published cohorts and unrelated pins.
+- Adopt API Query, International, Validation, and Localized v2.0.0 in the
+  maintained compatibility consumer through their official `/v2` entrypoints,
+  preserving published compatibility cohorts and unrelated selections.
+- Keep gitleaks ignore-directory creation failures categorical by default,
+  preserving original filesystem causes for explicit inspection without printing
+  private paths. Existing bundle-open cause discard and joined cleanup errors
+  remain unchanged; custom cleanup diagnostics remain caller-owned.
+- Refuse symbolic and other nonregular Go sources during security suppression
+  preflight before opening them, retaining bounded reads for regular sources.
+- Run API snapshot and compatibility commands with the repository's target
+  Go toolchain rather than each module's declared compatibility minimum.
+  Modules retain their independent minimum-version declarations.
+- Add Schema Registry v2.0.0 and both provider v2.0.0 modules to the
+  maintained compatibility consumer alongside their v1 selections,
+  preserving published compatibility cohorts.
+- Resolve mutation package import paths from module-relative source directories,
+  including adapters whose declared package names differ from their directories.
+  The corrected verifier has a new identity; historical evidence remains bound
+  to its original verifier rather than being relabeled as corrected execution.
+  Approved historical imports remain reusable only when all selected production
+  declarations prove identical package resolution against the exact source.
+- Refresh the bootstrap action's immutable source pin while preserving
+  validation before extraction and the independently pinned setup action.
+- Refresh the setup action's immutable source pin while preserving the
+  manifest-selected CLI and setup-before-bootstrap validation order.
+- Expand exact-coverage failure diagnostics to at most 512 sanitized source
+  coordinates so ordinary release gaps remain visible without publishing raw
+  profiles or changing coverage thresholds.
+- Show bounded uncovered source blocks when exact coverage fails, preserving
+  the failing-package error, coverage thresholds, and task-profile cleanup.
+- Added Opening Hours v2.0.1 and all fifteen public packages to the maintained
+  compatibility consumer alongside v1.1.0, preserving published cohorts.
+- Adopted Queue v1.1.2 and Queue Control Plane v2.0.1 in the maintained
+  compatibility consumer while preserving published compatibility cohorts
+  and retained legacy adapter selections.
+- Adopted Service v1.1.2 and all five public packages in the maintained
+  compatibility consumer while preserving published compatibility cohorts.
+- Adopted Prompts v1.1.2 and both supported terminal imports in the maintained
+  compatibility consumer without changing published compatibility cohorts.
 
-- Admit Markdown as regular, size-bounded repository files before reading,
-  retaining the inclusive 4 MiB and 4096-document limits. Documentation walks
-  now use bounded batches and reject more than 100,000 enumerated entries or
-  depth 128, including non-Markdown entries. Local and full documentation checks
-  carry caller cancellation through traversal, reads and validation while
-  preserving local-link rules and requiring a trusted, stable filesystem.
+
+- Changed the Go module and command import path to
+  `github.com/faustbrian/go-library-tools/v2` for the breaking v2 release;
+  repository and reusable-workflow coordinates remain unchanged.
+- Made release validation reject a stable version whose semantic major does
+  not match the module path major.
+- Bound release tags to the unique root-manifest version and the exact current
+  `main` commit, and kept publication blocked until revision-specific security
+  evidence and the fleet risk disposition are present.
+- Made security-record validation enforce the published JSON schemas and reject
+  ambiguous duplicate object keys while accepting equivalent numeric schema
+  version representations.
+- Made security-enabled ordinary checks run pinned govulncheck, standalone
+  gosec, centrally governed go-analysis rules, full-history secret scanning,
+  license checks, and SBOM generation while keeping NilAway advisory.
+- Suppressed scanner-controlled output, enforced independent bounded streams,
+  terminated overflowing scanners' original process groups, and replaced
+  archive and SBOM payloads with stable repository-owned diagnostic classes.
+- Made bounded scanner execution fail before process start on platforms where
+  original-process-group termination is unavailable. Detached processes remain
+  outside that boundary; scanner controls are not hostile-executable isolation.
+- Dereferenced bounded YAML aliases before applying workflow permission,
+  action, checkout, and container-image security rules.
+- Required canonical lowercase module directories and import paths, with root
+  modules bound to the declared repository namespace, before manifests can
+  reach schema validation or downstream consumers.
+- Prevented repository-owned gitleaks configuration, ignore files, and inline
+  allowances from widening the shared secret-scanning policy.
 
 ### Fixed
+
+- Allow maintained compatibility consumers to add a published module major
+  alongside an already-selected replacement without dropping that replacement
+  or relaxing family, duplicate, remote-tag or public-proxy validation.
+
+- Apply metadata assurance to documentation/license-only source-bootstrap pull
+  requests without relaxing runtime checks for development tooling-pin changes,
+  source changes, pushes, scheduled runs or release rehearsals.
+  Preserve repository history/current-tree secret scanning with the standalone
+  `golib secrets check` route to the existing bounded scanner owner.
+
+- Accept ordinary zero tar-record padding during archive validation, charging
+  the entire stream to expansion limits while retaining compressed limits,
+  gzip integrity checks and rejection of nonzero trailing content.
+
 
 - Restore a stable temporary directory before deleting source-bootstrap
   resources so CodeQL post-job actions retain valid temporary storage.
@@ -229,118 +337,6 @@ All notable changes to this project are documented in this file.
   success. These checks require a trusted, stable caller filesystem: stat/open is
   not atomic, and in-flight filesystem operations are not forcibly interrupted.
 
-### Changed
-
-- Admit empty regular files at a zero bounded-read allowance, retaining path,
-  identity and one-byte look-ahead checks. Mutation source reads now delegate
-  zero-byte enforcement to that owner: zero per-file refusals remain size
-  errors, while zero aggregate refusals with a positive per-file allowance are
-  consistently aggregate errors, replacing growth-timing-dependent diagnostics.
-  Positive-limit errors and positive-only streaming-open contracts are unchanged.
-- Adopt published Idempotency v2.0.1 in the maintained compatibility consumer
-  and exercise a finite in-memory acquire, complete, and replay composition,
-  preserving its v1 selection, frozen cohorts, and unrelated versions.
-- Adopt published OpenRPC v2.0.0 in the maintained compatibility consumer,
-  with a finite builder, bounded semantic-validation, and exact canonical
-  output assertion, preserving frozen cohorts and unrelated selections.
-- Adopt published Log v2.0.0 in the maintained compatibility consumer and
-  exercise ordinary default message replacement, attribute omission, and
-  explicit trusted event composition, without changing frozen cohorts or
-  unrelated selections.
-- Adopt Money v2.0.0 and canonical Knapsack money objective v3.0.0 in the
-  maintained compatibility consumer, preserving frozen cohorts and unrelated
-  selections. Its existing hosted consumer job also runs a finite exact-total
-  and copied-input composition assertion; this is not security certification.
-- Adopt Event Sourcing, Postgres, and the Outbox, Kafka, OTel, and Queue
-  adapters at v2.0.0 in the maintained compatibility consumer through their
-  official `/v2` entrypoints, preserving published cohorts and unrelated pins.
-- Adopt API Query, International, Validation, and Localized v2.0.0 in the
-  maintained compatibility consumer through their official `/v2` entrypoints,
-  preserving published compatibility cohorts and unrelated selections.
-- Keep gitleaks ignore-directory creation failures categorical by default,
-  preserving original filesystem causes for explicit inspection without printing
-  private paths. Existing bundle-open cause discard and joined cleanup errors
-  remain unchanged; custom cleanup diagnostics remain caller-owned.
-- Refuse symbolic and other nonregular Go sources during security suppression
-  preflight before opening them, retaining bounded reads for regular sources.
-- Run API snapshot and compatibility commands with the repository's target
-  Go toolchain rather than each module's declared compatibility minimum.
-  Modules retain their independent minimum-version declarations.
-- Add Schema Registry v2.0.0 and both provider v2.0.0 modules to the
-  maintained compatibility consumer alongside their v1 selections,
-  preserving published compatibility cohorts.
-- Resolve mutation package import paths from module-relative source directories,
-  including adapters whose declared package names differ from their directories.
-  The corrected verifier has a new identity; historical evidence remains bound
-  to its original verifier rather than being relabeled as corrected execution.
-  Approved historical imports remain reusable only when all selected production
-  declarations prove identical package resolution against the exact source.
-- Refresh the bootstrap action's immutable source pin while preserving
-  validation before extraction and the independently pinned setup action.
-- Refresh the setup action's immutable source pin while preserving the
-  manifest-selected CLI and setup-before-bootstrap validation order.
-- Expand exact-coverage failure diagnostics to at most 512 sanitized source
-  coordinates so ordinary release gaps remain visible without publishing raw
-  profiles or changing coverage thresholds.
-- Show bounded uncovered source blocks when exact coverage fails, preserving
-  the failing-package error, coverage thresholds, and task-profile cleanup.
-- Added Opening Hours v2.0.1 and all fifteen public packages to the maintained
-  compatibility consumer alongside v1.1.0, preserving published cohorts.
-- Adopted Queue v1.1.2 and Queue Control Plane v2.0.1 in the maintained
-  compatibility consumer while preserving published compatibility cohorts
-  and retained legacy adapter selections.
-- Adopted Service v1.1.2 and all five public packages in the maintained
-  compatibility consumer while preserving published compatibility cohorts.
-- Adopted Prompts v1.1.2 and both supported terminal imports in the maintained
-  compatibility consumer without changing published compatibility cohorts.
-
-## 2.0.0 - 2026-10-01
-
-### Added
-
-- Added a versioned ecosystem threat model, vulnerability process, validated
-  risk register and per-module scanner/release-verdict contract.
-- Added bounded bootstrap archive validation and owned GitHub Actions security
-  analysis to the public CLI contract.
-- Added an independent Draft 2020-12 differential check for security-record
-  validation decisions.
-- Allow exact source- and verifier-bound equivalent-mutant reviews in native
-  mutation campaigns while retaining raw `LIVED` reports, strict default kills,
-  and separate bounded failure diagnostics.
-- Recorded verified root-module scanner results with a blocked release verdict
-  and retained the open fleet-enforcement risk under the v2 module identity.
-
-### Changed
-
-- Changed the Go module and command import path to
-  `github.com/faustbrian/go-library-tools/v2` for the breaking v2 release;
-  repository and reusable-workflow coordinates remain unchanged.
-- Made release validation reject a stable version whose semantic major does
-  not match the module path major.
-- Bound release tags to the unique root-manifest version and the exact current
-  `main` commit, and kept publication blocked until revision-specific security
-  evidence and the fleet risk disposition are present.
-- Made security-record validation enforce the published JSON schemas and reject
-  ambiguous duplicate object keys while accepting equivalent numeric schema
-  version representations.
-- Made security-enabled ordinary checks run pinned govulncheck, standalone
-  gosec, centrally governed go-analysis rules, full-history secret scanning,
-  license checks, and SBOM generation while keeping NilAway advisory.
-- Suppressed scanner-controlled output, enforced independent bounded streams,
-  terminated overflowing scanners' original process groups, and replaced
-  archive and SBOM payloads with stable repository-owned diagnostic classes.
-- Made bounded scanner execution fail before process start on platforms where
-  original-process-group termination is unavailable. Detached processes remain
-  outside that boundary; scanner controls are not hostile-executable isolation.
-- Dereferenced bounded YAML aliases before applying workflow permission,
-  action, checkout, and container-image security rules.
-- Required canonical lowercase module directories and import paths, with root
-  modules bound to the declared repository namespace, before manifests can
-  reach schema validation or downstream consumers.
-- Prevented repository-owned gitleaks configuration, ignore files, and inline
-  allowances from widening the shared secret-scanning policy.
-
-### Fixed
 
 - Point the deprecated Outbox Kafka adapter's adoption guidance to its immutable
   migration guide and describe the catalogued Migrations v1 ledger accurately,
