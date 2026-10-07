@@ -194,6 +194,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Recognize historical default-assignment `APIDIFF_VERSION` metadata in
+  exact legacy Makefiles as public tool identities. Retain rule, key, path,
+  pseudo-version and whole-line constraints for secret scanning.
+
 - Allow maintained compatibility consumers to add a published module major
   alongside an already-selected replacement without dropping that replacement
   or relaxing family, duplicate, remote-tag or public-proxy validation.
