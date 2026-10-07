@@ -50,8 +50,11 @@ diff --git a/internal/engine/executor.go b/internal/engine/executor.go
 +	pkg string,
 +	integrationMode, includeBuildTags bool,
 +) []string {
-@@ -221 +247 @@ func (m *mutantExecutor) getTestArgs(pkg string) []string {
+@@ -221 +247,4 @@ func (m *mutantExecutor) getTestArgs(pkg string) []string {
 -	if m.buildTags != "" {
++	if m.integrationMode && !integrationMode {
++		args = append(args, "-run", "^Test")
++	}
 +	if includeBuildTags && m.buildTags != "" {
 @@ -231 +257 @@ func (m *mutantExecutor) getTestArgs(pkg string) []string {
 -		args = append(args, fmt.Sprintf("-cpu %d", m.testCPU))
@@ -59,3 +62,134 @@ diff --git a/internal/engine/executor.go b/internal/engine/executor.go
 @@ -235 +261 @@ func (m *mutantExecutor) getTestArgs(pkg string) []string {
 -	if m.integrationMode {
 +	if integrationMode {
+diff --git a/internal/engine/unit_first_arguments_internal_test.go b/internal/engine/unit_first_arguments_internal_test.go
+new file mode 100644
+--- /dev/null
++++ b/internal/engine/unit_first_arguments_internal_test.go
+@@ -0,0 +1,40 @@
++package engine
++
++import (
++	"slices"
++	"testing"
++	"time"
++)
++
++func TestUnitFirstArgumentsPreserveFullFollowup(t *testing.T) {
++	for _, test := range []struct {
++		name                                string
++		integration, phaseIntegration, tags bool
++		want                                []string
++	}{
++		{"unit first", true, false, false, []string{"test", "-run", "^Test", "-timeout", "3s", "-failfast", "-cpu", "1", "example.test/schema"}},
++		{"full followup", true, true, true, []string{"test", "-tags", "integration", "-timeout", "3s", "-failfast", "-cpu", "1", "./..."}},
++		{"ordinary package", false, false, true, []string{"test", "-tags", "integration", "-timeout", "3s", "-failfast", "-cpu", "1", "example.test/schema"}},
++	} {
++		t.Run(test.name, func(t *testing.T) {
++			executor := mutantExecutor{
++				integrationMode:   test.integration,
++				buildTags:         "integration",
++				testExecutionTime: time.Second,
++				testCPU:           1,
++			}
++			got := executor.getTestArgsFor("example.test/schema", test.phaseIntegration, test.tags)
++			if !slices.Equal(got, test.want) {
++				t.Fatalf("unit-first/full-phase execution arguments = %q; want %q", got, test.want)
++			}
++		})
++	}
++}
++
++func TestOrdinaryFollowupDoesNotSelectOnlyTests(t *testing.T) {
++	executor := mutantExecutor{integrationMode: true, testExecutionTime: time.Second}
++	arguments := executor.getTestArgs("example.test/schema")
++	if slices.Contains(arguments, "-run") || arguments[len(arguments)-1] != "./..." {
++		t.Fatalf("full mutation phase lost examples or fuzz seeds: %q", arguments)
++	}
++}
+diff --git a/internal/engine/unit_first_execution_internal_test.go b/internal/engine/unit_first_execution_internal_test.go
+new file mode 100644
+--- /dev/null
++++ b/internal/engine/unit_first_execution_internal_test.go
+@@ -0,0 +1,81 @@
++package engine
++
++import (
++	"fmt"
++	"os"
++	"os/exec"
++	"path/filepath"
++	"testing"
++	"time"
++
++	"github.com/go-gremlins/gremlins/internal/engine/workdir"
++	"github.com/go-gremlins/gremlins/internal/mutator"
++)
++
++type unitPhaseMutant struct {
++	mutator.Mutator
++	directory string
++}
++
++func (m unitPhaseMutant) Workdir() string { return m.directory }
++
++type unitPhaseWorkdir struct {
++	workdir.Dealer
++	directory string
++}
++
++func (d unitPhaseWorkdir) WorkDir() string { return d.directory }
++
++func TestHostedUnitFirstFailureAndExampleFollowup(t *testing.T) {
++	if os.Getenv("CI") != "true" {
++		t.Skip("actual verifier subprocess execution is hosted-only")
++	}
++	for _, test := range []struct {
++		name, testBody, exampleOutput string
++		status                        mutator.Status
++		exampleRuns                   bool
++	}{
++		{"unit failure", `t.Fatal("finite regression")`, "okay", mutator.Killed, false},
++		{"example failure", "", "different", mutator.Killed, true},
++		{"complete survivor", "", "okay", mutator.Lived, true},
++	} {
++		t.Run(test.name, func(t *testing.T) {
++			directory := t.TempDir()
++			marker := filepath.Join(directory, "example-ran")
++			fixture := fmt.Sprintf(`package finite
++import ("fmt"; "os"; "testing")
++func TestFinite(t *testing.T) { %s }
++func Example() {
++ if err := os.WriteFile(%q, []byte("ran"), 0600); err != nil { panic(err) }
++ fmt.Println(%q)
++ // Output: okay
++}
++`, test.testBody, marker, test.exampleOutput)
++			for name, data := range map[string]string{
++				"go.mod":         "module example.test/finite\n\ngo 1.27.0\n",
++				"finite_test.go": fixture,
++			} {
++				if err := os.WriteFile(filepath.Join(directory, name), []byte(data), 0600); err != nil {
++					t.Fatal(err)
++				}
++			}
++			executor := mutantExecutor{
++				mutant:            unitPhaseMutant{directory: directory},
++				wdDealer:          unitPhaseWorkdir{directory: directory},
++				integrationMode:   true,
++				execContext:       exec.CommandContext,
++				testExecutionTime: 30 * time.Second,
++			}
++			if status := executor.runTests(directory, "."); status != test.status {
++				t.Fatalf("finite executor outcome = %v; want %v", status, test.status)
++			}
++			_, err := os.Stat(marker)
++			if test.exampleRuns && err != nil {
++				t.Fatal("full phase omitted example execution")
++			}
++			if !test.exampleRuns && !os.IsNotExist(err) {
++				t.Fatal("unit failure continued into examples")
++			}
++		})
++	}
++}

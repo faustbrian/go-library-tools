@@ -6,6 +6,12 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Select only unit tests in the integration-mode mutation preflight, so a
+  detected regression returns before a later example can hide it behind a
+  timeout. Ordinary baselines and the full follow-up retain examples and fuzz
+  seeds. The embedded verifier identity changes; prior reports retain their
+  original identities and equivalent-mutant records require a fresh binding.
+
 - Verify finite workflow alias-depth, merged-setting lookup and empty-owner
   action refusal regressions before recursive fixtures, with bounded hosted
   sensitivity checks. Production traversal and release thresholds are unchanged.

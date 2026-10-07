@@ -7,7 +7,7 @@ import (
 )
 
 func TestLegacyVerifierIdentityIsReproducible(t *testing.T) {
-	if got := mutation.LegacyVerifierDigest(); got != "c28707fd4ce35dd228260de564107c1fb7726e42d4e9ea2bf9e988083e1f3b5b" {
+	if got := mutation.LegacyVerifierDigest(); got != "390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104" {
 		t.Fatalf("LegacyVerifierDigest() = %s", got)
 	}
 	assets := mutation.VerifierAssets()
@@ -19,7 +19,7 @@ func TestLegacyVerifierIdentityIsReproducible(t *testing.T) {
 		t.Fatal("VerifierAssets() omitted the mutation command")
 	}
 	command[0] = 'x'
-	if mutation.LegacyVerifierDigest() != "c28707fd4ce35dd228260de564107c1fb7726e42d4e9ea2bf9e988083e1f3b5b" {
+	if mutation.LegacyVerifierDigest() != "390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104" {
 		t.Fatal("VerifierAssets() exposed mutable embedded state")
 	}
 }
