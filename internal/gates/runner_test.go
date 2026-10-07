@@ -563,7 +563,7 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		!strings.Contains(executor.secretConfig, `'''^internal/gates/api\.go$'''`) ||
 		!strings.Contains(executor.secretConfig, `paths = ['''^\.golib/versions\.env$''']`) ||
 		!strings.Contains(executor.secretConfig, `regexTarget = "line"`) ||
-		!strings.Contains(executor.secretConfig, `paths = ['''^(?:\.golib/package\.mk|Makefile)$''']`) ||
+		!strings.Contains(executor.secretConfig, `paths = ['''^(?:\.golib/package\.mk|verification/package\.mk|Makefile)$''']`) ||
 		!strings.Contains(executor.secretConfig, `regexes = ['''^\n?APIDIFF_VERSION[ \t]*[?:]=[ \t]*v0\.0\.0-[0-9]{14}-[0-9a-f]{12}[ \t]*$''']`) ||
 		!strings.Contains(executor.secretConfig, `targetRules = ["stripe-access-token"]`) ||
 		!strings.Contains(executor.secretConfig, `regexTarget = "secret"`) ||
