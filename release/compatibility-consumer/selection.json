@@ -264,8 +264,8 @@
     {
       "from_module_path": "github.com/faustbrian/go-queue",
       "module_path": "github.com/faustbrian/go-queue",
-      "version": "v1.1.2",
-      "source_revision": "2173052b630557f345d02ec6961594218d47a316",
+      "version": "v1.1.3",
+      "source_revision": "376b2ea5c2bd25ace6af4374e464852203df1f8c",
       "primary_entry_packages": [
         "github.com/faustbrian/go-queue",
         "github.com/faustbrian/go-queue/adapters/redisstream",
@@ -331,6 +331,40 @@
     }
   ],
   "additions": [
+    {
+      "alongside_module_path": "github.com/faustbrian/go-authentication",
+      "module_path": "github.com/faustbrian/go-authentication/v2",
+      "version": "v2.0.0",
+      "source_revision": "4f39a3bbd5828693e11996fba2e5175ea5be5fa6",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-authentication/v2",
+        "github.com/faustbrian/go-authentication/v2/adapters/http",
+        "github.com/faustbrian/go-authentication/v2/apikey"
+      ]
+    },
+    {
+      "alongside_module_path": "github.com/faustbrian/go-queue-control-plane",
+      "module_path": "github.com/faustbrian/go-queue-control-plane/v3",
+      "version": "v3.0.0",
+      "source_revision": "f8ee66a645b7ed4770a1f5c8c5124594cd98e2d2",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-queue-control-plane/v3",
+        "github.com/faustbrian/go-queue-control-plane/v3/adapters/kubernetes",
+        "github.com/faustbrian/go-queue-control-plane/v3/alerts",
+        "github.com/faustbrian/go-queue-control-plane/v3/apihttp",
+        "github.com/faustbrian/go-queue-control-plane/v3/authz",
+        "github.com/faustbrian/go-queue-control-plane/v3/cli",
+        "github.com/faustbrian/go-queue-control-plane/v3/client",
+        "github.com/faustbrian/go-queue-control-plane/v3/control",
+        "github.com/faustbrian/go-queue-control-plane/v3/dataplane",
+        "github.com/faustbrian/go-queue-control-plane/v3/fleet",
+        "github.com/faustbrian/go-queue-control-plane/v3/history",
+        "github.com/faustbrian/go-queue-control-plane/v3/kubernetes",
+        "github.com/faustbrian/go-queue-control-plane/v3/postgres",
+        "github.com/faustbrian/go-queue-control-plane/v3/server",
+        "github.com/faustbrian/go-queue-control-plane/v3/ui"
+      ]
+    },
     {
       "alongside_module_path": "github.com/faustbrian/go-http-client",
       "module_path": "github.com/faustbrian/go-http-client/v2",

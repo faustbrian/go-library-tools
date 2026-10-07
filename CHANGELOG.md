@@ -22,6 +22,12 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Adopt published Queue Control Plane v3 and Authentication v2 alongside
+  historical majors in the maintained compatibility consumer, selecting its
+  required Queue v1.1.3 dependency. Cover typed
+  static-key administrative access, anonymous and rejected credentials,
+  principal identity, cross-tenant denial and actor mismatch.
+
 - Cover exhausted history-write budgets when the destination has failed.
   Bound hosted process helpers independently of the termination path, and
   distinguish real cancellation from their natural exit.

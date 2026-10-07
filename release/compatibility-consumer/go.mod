@@ -15,6 +15,7 @@ require (
 	github.com/faustbrian/go-authentication/adapters/otel v1.0.0
 	github.com/faustbrian/go-authentication/jwt v1.1.0
 	github.com/faustbrian/go-authentication/oidc v1.0.0
+	github.com/faustbrian/go-authentication/v2 v2.0.0
 	github.com/faustbrian/go-authorization v1.1.0
 	github.com/faustbrian/go-authorization/v3 v3.0.0
 	github.com/faustbrian/go-barcode v1.0.0
@@ -104,9 +105,10 @@ require (
 	github.com/faustbrian/go-password/v2 v2.0.0
 	github.com/faustbrian/go-postgres v1.1.0
 	github.com/faustbrian/go-prompts v1.1.2
-	github.com/faustbrian/go-queue v1.1.2
+	github.com/faustbrian/go-queue v1.1.3
 	github.com/faustbrian/go-queue-control-plane v1.1.0
 	github.com/faustbrian/go-queue-control-plane/v2 v2.0.1
+	github.com/faustbrian/go-queue-control-plane/v3 v3.0.0
 	github.com/faustbrian/go-queue/adapters/rabbitmq v1.0.0
 	github.com/faustbrian/go-queue/adapters/service v1.0.1
 	github.com/faustbrian/go-rabbitmq-queues v1.1.0
@@ -162,7 +164,7 @@ require (
 
 require (
 	github.com/BurntSushi/toml v1.6.0 // indirect
-	github.com/appleboy/com v1.2.0 // indirect
+	github.com/appleboy/com v1.2.2 // indirect
 	github.com/aws/aws-msk-iam-sasl-signer-go v1.0.4 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.43.4 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.32.35 // indirect
