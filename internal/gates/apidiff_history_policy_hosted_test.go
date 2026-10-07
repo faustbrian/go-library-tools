@@ -89,7 +89,7 @@ func TestHistoricalAPIDiffPolicyPinnedScannerHosted(t *testing.T) {
 					"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion, arguments...)
 				if test.findings == 0 {
 					if err != nil {
-						t.Fatal("exact public tool identity remains a scanner finding or scanner failed")
+						t.Fatalf("public tool identity failed in %s mode: %v", mode, err)
 					}
 				} else if err == nil || !strings.Contains(err.Error(), "secret-findings") || strings.Count(err.Error(), "secret-location ") != test.findings || strings.Count(err.Error(), " "+ruleHash+" ") != test.findings {
 					t.Fatal("non-allowlisted assignment did not retain the exact expected finding count")
