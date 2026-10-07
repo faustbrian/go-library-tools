@@ -103,7 +103,7 @@ require (
 	github.com/faustbrian/go-opening-hours/v4 v4.0.0
 	github.com/faustbrian/go-openrpc/v2 v2.0.0
 	github.com/faustbrian/go-password/v2 v2.0.0
-	github.com/faustbrian/go-postgres v1.1.0
+	github.com/faustbrian/go-postgres/v2 v2.0.0
 	github.com/faustbrian/go-prompts v1.1.2
 	github.com/faustbrian/go-queue v1.1.3
 	github.com/faustbrian/go-queue-control-plane v1.1.0
@@ -197,6 +197,7 @@ require (
 	github.com/ericlevine/zxinggo v0.1.0 // indirect
 	github.com/faustbrian/go-event-sourcing v1.0.0 // indirect
 	github.com/faustbrian/go-international v1.1.0 // indirect
+	github.com/faustbrian/go-postgres v1.1.0 // indirect
 	github.com/faustbrian/go-telemetry/v2 v2.0.0 // indirect
 	github.com/faustbrian/go-tenancy v1.1.0 // indirect
 	github.com/faustbrian/go-validation v1.1.0 // indirect

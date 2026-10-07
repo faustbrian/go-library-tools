@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Select published PostgreSQL v2 in the maintained compatibility consumer and
+  exercise explicit configuration resolution, private errors and borrowed
+  service-adapter lifecycle ownership. Preserve the published v1 cohort.
+
 - Preserve bounded failed mutation diagnostics outside disposable campaign
   workspaces. Retain admitted coordinates and native numeric counters, omit
   optional metadata, and keep failed attempts separate from passing evidence.

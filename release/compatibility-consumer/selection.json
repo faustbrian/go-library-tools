@@ -3,6 +3,16 @@
   "base_set_id": "golib-compat-v1-20260912.2",
   "replacements": [
     {
+      "from_module_path": "github.com/faustbrian/go-postgres",
+      "module_path": "github.com/faustbrian/go-postgres/v2",
+      "version": "v2.0.0",
+      "source_revision": "331fcb61a05c11241a9df36d6f57d875e74d93e0",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-postgres/v2",
+        "github.com/faustbrian/go-postgres/v2/adapters/service"
+      ]
+    },
+    {
       "from_module_path": "github.com/faustbrian/go-clock",
       "module_path": "github.com/faustbrian/go-clock",
       "version": "v1.2.0",

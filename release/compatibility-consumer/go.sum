@@ -338,6 +338,8 @@ github.com/faustbrian/go-password/v2 v2.0.0 h1:xEquWDSC9CIeDVDwcZJDQKdhbtEcVIxKE
 github.com/faustbrian/go-password/v2 v2.0.0/go.mod h1:Tqc83xc8RVAsi6JAW3dkKM1OFVos7cfayeNHBbWstsA=
 github.com/faustbrian/go-postgres v1.1.0 h1:pmwcyg8FI7RipoN20/SPayi+S52kP1Li0I6G9xx2UoU=
 github.com/faustbrian/go-postgres v1.1.0/go.mod h1:JqvxgJpOHAktIHUzt+h3mLJ7J43Bbb22FsspPulLcjs=
+github.com/faustbrian/go-postgres/v2 v2.0.0 h1:XMOENT+Hf0T59+aEu2dr/lox29bDIdI3aGRBldIFj1A=
+github.com/faustbrian/go-postgres/v2 v2.0.0/go.mod h1:lDNbEm0YoVFWsJgd57flhAMbvw6u3fwn6ZvS3QS7oiQ=
 github.com/faustbrian/go-prompts v1.1.2 h1:nX2dM0mGDfqJFGXa6DdI2YS3jS9ueyHSTR/2RlRFUcw=
 github.com/faustbrian/go-prompts v1.1.2/go.mod h1:hSGsd0tOhE2kYUj53p0V9NUaW1R9SPdBEBlo5e0wj2A=
 github.com/faustbrian/go-queue v1.1.3 h1:DSqGkrnkYuOTwtXlNIvwwuZyG2SUZwKttxlFo57MMXY=
