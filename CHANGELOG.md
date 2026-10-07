@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Recognize anchored public APIDIFF_VERSION assignments in the retired
+  verification Makefile during history scanning. Retain exact path, rule,
+  assignment and immutable pseudo-version constraints for this allowance.
+
 - Admit digest-pinned service and container images selected by a same-job,
   finite include-only matrix with explicit image fields. Refuse dynamic
   expressions, incomplete entries and recursive merge lookup; retain strict

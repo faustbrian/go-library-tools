@@ -74,7 +74,7 @@ condition = "AND"
 targetRules = ["generic-api-key"]
 regexTarget = "line"
 regexes = ['''^\n?APIDIFF_VERSION[ \t]*[?:]=[ \t]*v0\.0\.0-[0-9]{14}-[0-9a-f]{12}[ \t]*$''']
-paths = ['''^(?:\.golib/package\.mk|Makefile)$''']
+paths = ['''^(?:\.golib/package\.mk|verification/package\.mk|Makefile)$''']
 
 [[allowlists]]
 description = "Exact synthetic Stripe token used by hostile inventory identity tests."
