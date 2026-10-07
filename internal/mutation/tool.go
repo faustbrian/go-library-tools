@@ -124,8 +124,10 @@ func BuildVerifier(ctx context.Context, workspace string, process Process) (Tool
 
 func toolEnvironment(workspace string) (map[string]string, error) {
 	environment := map[string]string{
-		"GOWORK":     "off",
-		"GOFLAGS":    "",
+		"GOWORK": "off",
+		// Task-owned module directories must remain removable even when a
+		// verifier child is interrupted before its cleanup callbacks run.
+		"GOFLAGS":    "-modcacherw",
 		"GOCACHE":    filepath.Join(workspace, "go-build"),
 		"GOMODCACHE": filepath.Join(workspace, "go-mod"),
 		"GOTMPDIR":   filepath.Join(workspace, "go-tmp"),

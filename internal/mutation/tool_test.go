@@ -70,7 +70,7 @@ func TestBuildVerifierUsesPinnedSourceAndAssets(t *testing.T) {
 			if environment["GOWORK"] != "off" {
 				t.Fatalf("GOWORK = %q", environment["GOWORK"])
 			}
-			if flags, exists := environment["GOFLAGS"]; !exists || flags != "" {
+			if flags, exists := environment["GOFLAGS"]; !exists || flags != "-modcacherw" {
 				t.Fatalf("GOFLAGS = %q, exists = %t", flags, exists)
 			}
 		}

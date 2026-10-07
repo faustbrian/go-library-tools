@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Keep verifier-owned Go module caches writable from creation so an
+  interrupted child cannot leave read-only directories that prevent task
+  cleanup. Preserve checksum-pinned downloads and scoped cache ownership.
+
 - Rebind the ten independently reviewed equivalent-mutant records to the
   current unit-first verifier and actual package sources. Retain their narrow
   caller domains, historical attribution and native statuses; fresh release

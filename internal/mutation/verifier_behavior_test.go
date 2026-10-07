@@ -31,7 +31,7 @@ func TestPatchedVerifierResolvesPackageDirectories(t *testing.T) {
 	process := func(ctx context.Context, name string, args []string, directory string, environment map[string]string, stdout, stderr io.Writer) error {
 		if name == "go" {
 			environment["GOMAXPROCS"] = "2"
-			environment["GOFLAGS"] = "-p=1"
+			environment["GOFLAGS"] = "-p=1 -modcacherw"
 			environment["GOTOOLCHAIN"] = "local"
 		}
 		return integrationProcess(ctx, name, args, directory, environment, stdout, stderr)
@@ -88,6 +88,7 @@ func TestPatchedVerifierRenewsTimeoutForEachIntegrationPhase(t *testing.T) {
 
 	cache := filepath.Join(workspace, "execution")
 	environment := map[string]string{
+		"GOFLAGS":    "-modcacherw",
 		"GOCACHE":    filepath.Join(cache, "build"),
 		"GOMODCACHE": filepath.Join(cache, "mod"),
 		"GOTMPDIR":   filepath.Join(cache, "tmp"),
