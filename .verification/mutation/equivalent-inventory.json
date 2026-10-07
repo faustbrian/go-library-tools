@@ -62,22 +62,6 @@
         {
           "file_name": "gosec_reporting.go",
           "type": "INVERT_LOGICAL",
-          "line": 18,
-          "column": 20,
-          "contract_domain": "Gosec failure projection reached through securityTool after its completed executor and unchanged report-capture overflow guards; identical bounded sanitized projection or refusal",
-          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, report-capture policy or production caller change. Pinned Gremlins v0.6.0 changes the first || to &&. The sole production caller retains at most 4194304 report bytes and calls projection only when neither stream overflowed, so its excessive-size predicate is always false. Empty input still fails uniqueGosecJSON; nonempty admitted input takes the same remaining guards. Oversized valid JSON distinguishes direct private-helper calls but cannot reach this caller and is excluded. Native failure37531787285 remains failed with its original LIVED coordinate; fresh matching-source qualification remains required. No other coordinate is accepted."
-        },
-        {
-          "file_name": "gosec_reporting.go",
-          "type": "INVERT_LOGICAL",
-          "line": 31,
-          "column": 66,
-          "contract_domain": "All byte inputs to gosecFailureMetadata under the unchanged JSON RawMessage decoding and subsequent required-field decoders; identical sanitized projection or refusal",
-          "reason": "Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, required-field decoding or supported JSON semantics change. Pinned Gremlins v0.6.0 changes the Errors-nil || Issues-nil predicate to &&. If both are missing, both versions refuse at this guard. If exactly one is missing, the mutant reaches the unchanged json.Unmarshal of that nil RawMessage at line52, which returns an error and the same unusable classification before projection. Present JSON null is not a nil RawMessage and follows unchanged behavior. Other decode failures and missing Stats remain guarded. Native failure37531787285 remains failed with its original LIVED coordinate; fresh matching-source qualification remains required."
-        },
-        {
-          "file_name": "gosec_reporting.go",
-          "type": "INVERT_LOGICAL",
           "line": 176,
           "column": 19,
           "contract_domain": "Object-key tokens produced by the unchanged encoding/json Decoder.Token traversal in uniqueGosecJSON; identical grammar, duplicate-key, depth and trailing-document refusal",

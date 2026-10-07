@@ -22,7 +22,10 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
-- Record eight source/verifier-bound gate mutants as equivalent only for
+- Refuse malformed statistic value types in report-projection regression
+  coverage, including partial decoding that leaves populated numeric pointers.
+
+- Record six source/verifier-bound gate mutants as equivalent only for
   concrete JSON decoder invariants and admitted production callers. Preserve
   native statuses, fail-closed source/tool binding and every other mutation
   requirement; these records do not certify release qualification.
