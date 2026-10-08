@@ -6,6 +6,7 @@ import (
 	_ "embed"
 	"encoding/json"
 	"io"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -45,18 +46,21 @@ func TestHostedNativeCLISingleMutationDiagnostic(t *testing.T) {
 	// Neither the shared baseline nor the mutant full-suite followup may invoke
 	// this opt-in diagnostic recursively. Ordinary test selection is unchanged.
 	t.Setenv("GOLIB_NATIVE_CLI_DIAGNOSTIC", "")
+	ctx, cancel := context.WithTimeout(t.Context(), 25*time.Minute)
+	defer cancel()
+	defer func() { t.Logf("native-cli outer_deadline_exceeded=%t", ctx.Err() == context.DeadlineExceeded) }()
 	root, err := filepath.Abs(filepath.Join("..", ".."))
 	if err != nil {
 		t.Fatal("resolve diagnostic source root")
 	}
-	identity := exec.Command("git", "rev-parse", "HEAD")
+	identity := exec.CommandContext(ctx, "git", "rev-parse", "HEAD")
 	identity.Dir = root
 	commit, err := identity.Output()
 	if err != nil {
 		t.Fatal("resolve immutable diagnostic source identity")
 	}
 	t.Logf("native-cli source=%s verifier=%s historical_cache_equivalence=false", strings.TrimSpace(string(commit)), LegacyVerifierDigest())
-	clean := exec.Command("git", "diff", "--quiet", "HEAD", "--")
+	clean := exec.CommandContext(ctx, "git", "diff", "--quiet", "HEAD", "--")
 	clean.Dir = root
 	if err := clean.Run(); err != nil {
 		t.Fatal("diagnostic requires unchanged committed source inputs")
@@ -86,9 +90,6 @@ func TestHostedNativeCLISingleMutationDiagnostic(t *testing.T) {
 			t.Error("diagnostic workspace cleanup permission repair failed")
 		}
 	})
-	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Minute)
-	defer cancel()
-	defer func() { t.Logf("native-cli outer_deadline_exceeded=%t", ctx.Err() == context.DeadlineExceeded) }()
 	execution := map[string]string{"GOWORK": "off", "GOFLAGS": os.Getenv("GOFLAGS")}
 	for _, key := range []string{"GOCACHE", "GOMODCACHE", "GOTMPDIR"} {
 		if value := os.Getenv(key); value != "" && filepath.IsAbs(value) {
@@ -157,9 +158,7 @@ func nativeDiagnosticProcess(ctx context.Context, name string, args []string, di
 			values[key] = value
 		}
 	}
-	for key, value := range environment {
-		values[key] = value
-	}
+	maps.Copy(values, environment)
 	keys := make([]string, 0, len(values))
 	for key := range values {
 		keys = append(keys, key)
