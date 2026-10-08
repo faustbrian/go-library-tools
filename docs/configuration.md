@@ -66,6 +66,17 @@ exactly `5.9`; unsupported versions fail configuration validation rather than
 silently selecting a different shell. Node is owned by the documentation tool
 chain and therefore is not repeated as repository policy.
 
+`mutation.max_workers` optionally lowers the native campaign worker ceiling.
+Omission, null, or zero retains automatic admission: four workers normally and one
+for modules using Testcontainers. Values one through four cap that policy;
+they never increase the service-module ceiling. Negative values and values
+above four are rejected. Use one for process-heavy suites whose independent
+full-suite executions would otherwise compete for the same machine resources.
+This changes scheduling only, not phase deadlines, discovery, test selection,
+required mutation efficacy, or equivalent-mutant accounting. Older tool
+releases do not understand this optional field; add it only when using a tool
+version that supports it. Existing configurations need no migration.
+
 `mutation.imports` assigns at most one approved legacy checkpoint archive and
 migration ledger to a module. The files remain repository-owned under
 `.verification`; before mutation verification, `golib` validates and imports

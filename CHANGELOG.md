@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Add an optional `mutation.max_workers` ceiling for process-heavy native
+  campaigns. Existing configurations retain automatic admission; the Tools
+  repository selects one worker without relaxing mutation acceptance.
 - Add an explicitly selected hosted CLI mutation diagnostic that observes the
   retained native execution coordinate, phase deadlines and exact rollback.
   Diagnostic results do not replace campaign or release qualification.
