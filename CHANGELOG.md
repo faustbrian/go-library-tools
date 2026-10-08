@@ -15,6 +15,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Update release SBOM generation to Anchore v0.24.3 and its default Syft
+  v1.54.0 scanner, retaining SPDX output names and attested asset publication.
+
 - Advance the maintained consumer's Excelize revision to include the upstream
   pivot-cache field-index fix, preserving the existing Tabular XLSX cohort.
 
