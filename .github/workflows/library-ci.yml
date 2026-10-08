@@ -360,7 +360,7 @@ jobs:
         with:
           source_bootstrap: 'true'
           tooling_sha: ${{ inputs.tooling_sha }}
-      - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@7e4cd2983099490e7f350724044b86835cc5d342
+      - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@712163686bea3c3ad465acdca026b4b7bf5f0b0b
         if: inputs.public_dependencies != true
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
@@ -460,7 +460,7 @@ jobs:
         with:
           source_bootstrap: 'true'
           tooling_sha: ${{ inputs.tooling_sha }}
-      - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@7e4cd2983099490e7f350724044b86835cc5d342
+      - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@712163686bea3c3ad465acdca026b4b7bf5f0b0b
         if: inputs.public_dependencies != true
         with:
           bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}
