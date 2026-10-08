@@ -65,7 +65,20 @@ version and the resulting consumer files without modifying the published base
 set or projecting new `known_good_compatibility_sets` membership. This
 current consumer is not evidence that the changed versions belong to the frozen
 verified cohort; its blank imports establish composition-only compilation, not
-runtime security certification. Query, International and Localized select
+runtime security certification.
+
+Outbox selects public `/v2` v2.0.0 alongside its historical root and four
+canonical adapter families. Event Sourcing's Outbox adapter `/v3` v3.0.0 and
+Webhook `/v3` v3.0.0 compose through the same actual Outbox v2 envelope.
+Ordinary tests check event round trips and identity refusal, webhook routing,
+copied input ownership and encoding limits; these are not database, broker,
+live HTTP or full security qualification. The frozen compatibility set and
+historical selections remain unchanged.
+The current selection records the required Event Sourcing core v2.0.1,
+Postgres adapter v2.0.2 and Idempotency v1.2.0 dependency floors. JSON Schema
+v2, already used by the OpenAPI v2 composition test, is selected explicitly.
+
+Query, International and Localized select
 their published v3.0.0 identities together, while Validation retains v2.0.0.
 Money selects published `/v2` v2.0.0 together with canonical Knapsack
 `objective/money/v3` v3.0.0; root Knapsack and Measurement retain `/v2`.

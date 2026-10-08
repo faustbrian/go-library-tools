@@ -12,6 +12,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Exercise public Outbox v2, Event Sourcing Outbox adapter v3 and Webhook v3
+  alongside historical consumer selections, including nominal envelope
+  composition, copied delivery ownership and bounded encoding refusal.
 - Exercise published OpenAPI v2 alongside the historical v1 cohort, covering
   semantic round trips, bounded parsing, authorization label refusal and
   public JSON Schema v2 Unicode/type composition.

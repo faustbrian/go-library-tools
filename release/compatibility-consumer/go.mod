@@ -52,9 +52,10 @@ require (
 	github.com/faustbrian/go-event-sourcing/adapters/kafka/v2 v2.0.0
 	github.com/faustbrian/go-event-sourcing/adapters/otel/v2 v2.0.0
 	github.com/faustbrian/go-event-sourcing/adapters/outbox/v2 v2.0.0
+	github.com/faustbrian/go-event-sourcing/adapters/outbox/v3 v3.0.0
 	github.com/faustbrian/go-event-sourcing/adapters/queue/v2 v2.0.0
-	github.com/faustbrian/go-event-sourcing/postgres/v2 v2.0.0
-	github.com/faustbrian/go-event-sourcing/v2 v2.0.0
+	github.com/faustbrian/go-event-sourcing/postgres/v2 v2.0.2
+	github.com/faustbrian/go-event-sourcing/v2 v2.0.1
 	github.com/faustbrian/go-external-sort v1.0.0
 	github.com/faustbrian/go-fault-injection/v2 v2.0.0
 	github.com/faustbrian/go-feature-flags/v2 v2.0.0
@@ -65,13 +66,14 @@ require (
 	github.com/faustbrian/go-http-client/v2 v2.0.0
 	github.com/faustbrian/go-http-middleware/v2 v2.0.0
 	github.com/faustbrian/go-http-signature v1.0.0
-	github.com/faustbrian/go-idempotency v1.1.0
+	github.com/faustbrian/go-idempotency v1.2.0
 	github.com/faustbrian/go-idempotency/v2 v2.0.1
 	github.com/faustbrian/go-identifier v1.0.0
 	github.com/faustbrian/go-identifier/v2 v2.0.0
 	github.com/faustbrian/go-international/v3 v3.0.0
 	github.com/faustbrian/go-international/v4 v4.0.0
 	github.com/faustbrian/go-json-schema v1.0.0
+	github.com/faustbrian/go-json-schema/v2 v2.0.0
 	github.com/faustbrian/go-jsonapi v1.0.0
 	github.com/faustbrian/go-jsonapi/v2 v2.0.0
 	github.com/faustbrian/go-jsonrpc v1.0.0
@@ -149,12 +151,18 @@ require (
 	github.com/faustbrian/go-tenancy/v2 v2.0.0
 	github.com/faustbrian/go-transactional-outbox v1.0.0
 	github.com/faustbrian/go-transactional-outbox/adapters/kafka v1.0.0
+	github.com/faustbrian/go-transactional-outbox/adapters/kafka/v2 v2.0.0
 	github.com/faustbrian/go-transactional-outbox/adapters/otel v1.0.0
+	github.com/faustbrian/go-transactional-outbox/adapters/otel/v2 v2.0.0
 	github.com/faustbrian/go-transactional-outbox/adapters/queue v1.0.0
+	github.com/faustbrian/go-transactional-outbox/adapters/queue/v2 v2.0.0
 	github.com/faustbrian/go-transactional-outbox/adapters/rabbitstream v1.0.1
+	github.com/faustbrian/go-transactional-outbox/adapters/rabbitstream/v2 v2.0.0
+	github.com/faustbrian/go-transactional-outbox/v2 v2.0.0
 	github.com/faustbrian/go-validation/v2 v2.0.0
 	github.com/faustbrian/go-verkle-tree v1.0.0
 	github.com/faustbrian/go-webhook v1.0.0
+	github.com/faustbrian/go-webhook/v3 v3.0.0
 	github.com/faustbrian/go-wire v1.0.1
 	github.com/faustbrian/go-wire/v3 v3.0.0
 	github.com/faustbrian/go-workflow v1.0.0
@@ -194,7 +202,7 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/deszhou/jcs v1.0.0 // indirect
 	github.com/dlclark/regexp2 v1.12.0 // indirect
-	github.com/dlclark/regexp2/v2 v2.5.1 // indirect
+	github.com/dlclark/regexp2/v2 v2.8.2 // indirect
 	github.com/dunglas/httpsfv v1.1.0 // indirect
 	github.com/ericlevine/zxinggo v0.1.0 // indirect
 	github.com/faustbrian/go-event-sourcing v1.0.0 // indirect
@@ -218,7 +226,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/jpillora/backoff v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.19.2 // indirect
+	github.com/klauspost/compress v1.20.0 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.4 // indirect
 	github.com/lestrrat-go/dsig v1.2.1 // indirect
 	github.com/lestrrat-go/dsig-secp256k1 v1.0.0 // indirect
