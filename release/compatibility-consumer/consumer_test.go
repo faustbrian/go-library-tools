@@ -390,5 +390,12 @@ import (
 	_ "github.com/faustbrian/go-workflow/v2"
 	_ "github.com/faustbrian/go-workflow/v2/postgres"
 	_ "github.com/faustbrian/go-wsdl"
+	_ "github.com/faustbrian/go-wsdl/v2"
+	_ "github.com/faustbrian/go-wsdl/v2/builder"
+	_ "github.com/faustbrian/go-wsdl/v2/codegen"
+	_ "github.com/faustbrian/go-wsdl/v2/compile"
+	_ "github.com/faustbrian/go-wsdl/v2/compose"
+	_ "github.com/faustbrian/go-wsdl/v2/diff"
+	_ "github.com/faustbrian/go-wsdl/v2/resolve"
 	_ "github.com/faustbrian/go-xsd"
 )

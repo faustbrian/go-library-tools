@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Exercise published WSDL v2 alongside the historical v1 consumer cohort,
+  covering bounded parsing, semantic round trips, default-error privacy,
+  cancellation and compiler reuse with public Wire v3.
+
 - Recognize anchored public APIDIFF_VERSION assignments in the retired
   verification Makefile during history scanning. Retain exact path, rule,
   assignment and immutable pseudo-version constraints for this allowance.

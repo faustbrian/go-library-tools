@@ -456,6 +456,8 @@ github.com/faustbrian/go-workflow/v2 v2.0.0 h1:CtOrh9dzEAbdwYW16sV6Ym+8cTsDHdHKC
 github.com/faustbrian/go-workflow/v2 v2.0.0/go.mod h1:OBe1zV1pU5blFgN063hNK8V/XKPR+wA/tDqScqBhytU=
 github.com/faustbrian/go-wsdl v1.0.0 h1:PB3FeDXgL5COzqCVjM6l3KBG48PlGR9QKw5Ku0+oIJw=
 github.com/faustbrian/go-wsdl v1.0.0/go.mod h1:oLYGzkMrpTTfYRudT6LMv8hCgcWQwb21OFHOGOSleTg=
+github.com/faustbrian/go-wsdl/v2 v2.0.0 h1:TjJK+bPqeAYaCYXvLYe1TgyOZsAPJ8rxuWQV7k92rEQ=
+github.com/faustbrian/go-wsdl/v2 v2.0.0/go.mod h1:ZtM1Q+EzuIZRmfOYDsXnrhFfor6swInXis9r58uysLo=
 github.com/faustbrian/go-xsd v1.0.0 h1:BT9PtbTpTGt8/s0ACq4aFLsEn2ETAjPgQtSu3nSSrkI=
 github.com/faustbrian/go-xsd v1.0.0/go.mod h1:q6DdYQdAPq3juU28b0AMz+Xnw9TA22Te5s7yQzW6f5s=
 github.com/felixge/httpsnoop v1.1.0 h1:3YtUj32ZZkqZtt3sZZsClsymw/QDuVfpNhoA31zeORc=

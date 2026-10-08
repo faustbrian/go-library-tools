@@ -357,6 +357,21 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-wsdl",
+      "module_path": "github.com/faustbrian/go-wsdl/v2",
+      "version": "v2.0.0",
+      "source_revision": "41121a3fb925d102c60b9cfd49e36e63c92507bd",
+      "primary_entry_packages": [
+        "github.com/faustbrian/go-wsdl/v2",
+        "github.com/faustbrian/go-wsdl/v2/builder",
+        "github.com/faustbrian/go-wsdl/v2/codegen",
+        "github.com/faustbrian/go-wsdl/v2/compile",
+        "github.com/faustbrian/go-wsdl/v2/compose",
+        "github.com/faustbrian/go-wsdl/v2/diff",
+        "github.com/faustbrian/go-wsdl/v2/resolve"
+      ]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-authentication",
       "module_path": "github.com/faustbrian/go-authentication/v2",
       "version": "v2.0.0",

@@ -313,6 +313,7 @@ jobs:
               release/compatibility-consumer/qcp3_composition_test.go \
               release/compatibility-consumer/postgres2_composition_test.go \
               release/compatibility-consumer/state_machine2_composition_test.go \
+              release/compatibility-consumer/wsdl2_composition_test.go \
               release/compatibility-consumer/selection.json \
               tools/compatibility/generate.py; then
             echo 'required=true' >>"${GITHUB_OUTPUT}"
@@ -363,6 +364,7 @@ jobs:
             release/compatibility-consumer/qcp3_composition_test.go \
             release/compatibility-consumer/postgres2_composition_test.go \
             release/compatibility-consumer/state_machine2_composition_test.go \
+            release/compatibility-consumer/wsdl2_composition_test.go \
             release/compatibility-consumer/workflow_composition_test.go "${task}/consumer/"
           cd "${task}/consumer"
           export GOCACHE="${task}/cache"
