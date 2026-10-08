@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Exercise published OpenAPI v2 alongside the historical v1 cohort, covering
+  semantic round trips, bounded parsing, authorization label refusal and
+  public JSON Schema v2 Unicode/type composition.
+
 - Exercise published WSDL v2 alongside the historical v1 consumer cohort,
   covering bounded parsing, semantic round trips, default-error privacy,
   cancellation and compiler reuse with public Wire v3.

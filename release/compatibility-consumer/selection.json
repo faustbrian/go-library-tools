@@ -357,6 +357,13 @@
   ],
   "additions": [
     {
+      "alongside_module_path": "github.com/faustbrian/go-openapi",
+      "module_path": "github.com/faustbrian/go-openapi/v2",
+      "version": "v2.0.0",
+      "source_revision": "c61435574558a6d98bdc44d057309962e84fe6ff",
+      "primary_entry_packages": ["github.com/faustbrian/go-openapi/v2"]
+    },
+    {
       "alongside_module_path": "github.com/faustbrian/go-wsdl",
       "module_path": "github.com/faustbrian/go-wsdl/v2",
       "version": "v2.0.0",

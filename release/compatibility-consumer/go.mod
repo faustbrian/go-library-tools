@@ -97,6 +97,7 @@ require (
 	github.com/faustbrian/go-migrations/v2 v2.0.0
 	github.com/faustbrian/go-money/v2 v2.0.0
 	github.com/faustbrian/go-openapi v1.0.0
+	github.com/faustbrian/go-openapi/v2 v2.0.0
 	github.com/faustbrian/go-opening-hours v1.1.0
 	github.com/faustbrian/go-opening-hours/v2 v2.0.1
 	github.com/faustbrian/go-opening-hours/v3 v3.0.0

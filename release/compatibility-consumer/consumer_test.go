@@ -222,6 +222,7 @@ import (
 	_ "github.com/faustbrian/go-money/v2/format"
 	_ "github.com/faustbrian/go-money/v2/moneytest"
 	_ "github.com/faustbrian/go-openapi"
+	_ "github.com/faustbrian/go-openapi/v2"
 	_ "github.com/faustbrian/go-opening-hours"
 	_ "github.com/faustbrian/go-opening-hours/v2"
 	_ "github.com/faustbrian/go-opening-hours/v2/adapters/calendar"
