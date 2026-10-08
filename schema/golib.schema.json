@@ -52,6 +52,13 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
+        "max_workers": {
+          "type": ["integer", "null"],
+          "minimum": 0,
+          "maximum": 4,
+          "default": 0,
+          "description": "Optional lower worker ceiling; zero preserves automatic admission."
+        },
         "root": {
           "$ref": "#/$defs/repositoryPath",
           "default": ".verification/mutation"

@@ -59,8 +59,25 @@ type Evidence struct {
 
 // Mutation identifies repository-owned reports, checkpoints, and reviews.
 type Mutation struct {
-	Root    string           `json:"root" yaml:"root,omitempty"`
-	Imports []MutationImport `json:"imports,omitempty" yaml:"imports,omitempty"`
+	Root       string           `json:"root" yaml:"root,omitempty"`
+	MaxWorkers MutationWorkers  `json:"max_workers,omitempty" yaml:"max_workers,omitempty"`
+	Imports    []MutationImport `json:"imports,omitempty" yaml:"imports,omitempty"`
+}
+
+// MutationWorkers preserves integer-only worker admission in YAML as in JSON.
+type MutationWorkers int
+
+// UnmarshalYAML rejects floating-point and string coercion before admission.
+func (workers *MutationWorkers) UnmarshalYAML(node *yaml.Node) error {
+	if node.Kind != yaml.ScalarNode || node.Tag != "!!int" {
+		return fmt.Errorf("%w: mutation.max_workers must be an integer", ErrInvalid)
+	}
+	var value int
+	if err := node.Decode(&value); err != nil {
+		return err
+	}
+	*workers = MutationWorkers(value)
+	return nil
 }
 
 // MutationImport identifies one repository-owned approved legacy checkpoint
@@ -226,6 +243,9 @@ func (value Config) validate() error {
 	}
 	if value.Runtimes.Zsh != "" && value.Runtimes.Zsh != "5.9" {
 		return fmt.Errorf("%w: runtimes.zsh supports only 5.9", ErrInvalid)
+	}
+	if value.Mutation.MaxWorkers < 0 || value.Mutation.MaxWorkers > 4 {
+		return fmt.Errorf("%w: mutation.max_workers must be between 0 and 4", ErrInvalid)
 	}
 	seen := make(map[string]struct{}, len(value.Operations))
 	mutationImports := make(map[string]struct{}, len(value.Mutation.Imports))

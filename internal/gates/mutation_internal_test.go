@@ -573,6 +573,63 @@ func TestRunMutationPropagatesPreparationFailures(t *testing.T) {
 	}
 }
 
+func TestMutationRepositoryWorkerCapReachesCampaign(t *testing.T) {
+	for _, test := range []struct {
+		name       string
+		cap        string
+		containers bool
+		want       int
+	}{
+		{name: "omitted", want: 4},
+		{name: "automatic", cap: "0", want: 4},
+		{name: "null default", cap: "null", want: 4},
+		{name: "serialized", cap: "1", want: 1},
+		{name: "bounded", cap: "3", want: 3},
+		{name: "maximum", cap: "4", want: 4},
+		{name: "service ceiling", cap: "4", containers: true, want: 1},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root := t.TempDir()
+			writeValidMutationSetup(t, root)
+			moduleFile := "module example\n"
+			if test.containers {
+				moduleFile += "require github.com/testcontainers/testcontainers-go v0.0.0\n"
+			}
+			writeMutationFixture(t, root, ".", moduleFile)
+			policyText := "schema_version: 1\ntool_version: v1.0.0\n"
+			if test.cap != "" {
+				policyText += "mutation:\n  max_workers: " + test.cap + "\n"
+			}
+			if err := os.WriteFile(filepath.Join(root, ".golib.yaml"), []byte(policyText), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			policy, err := config.Load(root)
+			if err != nil {
+				t.Fatalf("load repository worker admission: %v", err)
+			}
+			var observed mutation.Campaign
+			runner := Runner{
+				Root: root,
+				Catalog: inventory.Inventory{Repository: "example", Modules: []inventory.Module{{
+					Directory: ".", ModulePath: "example", GoVersion: "1.27.0", Gates: map[string]bool{"mutation": true},
+					Packages: []inventory.Package{{Directory: ".", CoverageRequired: true}},
+				}}},
+				Policy: policy, Executor: runtimeExecutor(filepath.Join(root, ".task")),
+				mutationCampaign: func(_ context.Context, campaign mutation.Campaign) error {
+					observed = campaign
+					return nil
+				},
+			}
+			if err := runner.Mutation(context.Background(), []string{"."}); err != nil {
+				t.Fatal(err)
+			}
+			if observed.Policy.Workers != test.want {
+				t.Fatalf("admitted campaign workers = %d, want %d", observed.Policy.Workers, test.want)
+			}
+		})
+	}
+}
+
 func TestMutationWorkerPolicyAndDefaultCampaign(t *testing.T) {
 	root := t.TempDir()
 	writeValidMutationSetup(t, root)
