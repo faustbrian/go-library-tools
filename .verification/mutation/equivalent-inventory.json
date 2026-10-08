@@ -60,6 +60,22 @@
       "gremlins_verifier_sha256": "390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104",
       "mutations": [
         {
+          "file_name": "local_actions.go",
+          "type": "CONDITIONALS_BOUNDARY",
+          "line": 57,
+          "column": 20,
+          "contract_domain": "Parser-owned bounded workflow/local-action graphs produced by inspectWorkflowDocument's YAML decoder; identical key/value traversal and security-policy effects",
+          "reason": "Owner Tools runtime maintainer; reviewer /root/knapsack_placement_final_review; review date 2026-10-08 UTC; expiry 2026-11-07 or earlier bound source, verifier, operator or producer-domain change. Independently reviewed at commit a5caa5e17f35762e6d2439bd1d7cf02ead02457c and reproduced gates source d96184c94aa3a321b982310723648725117180489421eecf3474ce1447d4c51e. Pinned Gremlins v0.6.0 changes i+1 < len(node.Content) to <=. Production graphs originate exclusively from inspectWorkflowDocument's YAML decoder, including recursively loaded local descriptors. Mapping contents contain key/value pairs and therefore have even length; i starts at zero and advances by two, so i+1 is odd and cannot equal that length. Both predicates traverse identical pairs with identical effects after unchanged structural admission bounds. Manually constructed odd-length nodes and concurrent node mutation are excluded from this producer domain. No other mapping, traversal or quota mutant is accepted. Actual native run37835736142 logged this coordinate LIVED before runner shutdown and remains failed with no qualification artifact; this disposition does not infer native success."
+        },
+        {
+          "file_name": "mutation.go",
+          "type": "CONDITIONALS_BOUNDARY",
+          "line": 343,
+          "column": 74,
+          "contract_domain": "Mutation worker selection through Runner.mutationWorkers with constructor-validated policy; identical returned worker count and downstream campaign execution",
+          "reason": "Owner Tools runtime maintainer; reviewer /root/knapsack_placement_final_review; review date 2026-10-08 UTC; expiry 2026-11-07 or earlier bound source, verifier, operator or producer-domain change. Independently reviewed at commit a5caa5e17f35762e6d2439bd1d7cf02ead02457c and reproduced gates source d96184c94aa3a321b982310723648725117180489421eecf3474ce1447d4c51e. Pinned Gremlins v0.6.0 changes maximum < 4 to maximum <= 4. Only maximum==4 changes the selected branch: the mutant returns int(4), while the original immediately returns literal4. There are no intervening calls or effects, so worker count and campaign behavior are identical. The earlier Testcontainers one-worker return is unchanged; validated policy admits only0..4. This does not waive any other worker predicate. Actual native run37835736142 logged this coordinate LIVED before runner shutdown and remains failed with no qualification artifact; this disposition does not infer native success."
+        },
+        {
           "file_name": "gosec_reporting.go",
           "type": "INVERT_LOGICAL",
           "line": 176,
