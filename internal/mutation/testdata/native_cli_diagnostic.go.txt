@@ -1,0 +1,141 @@
+package engine
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"go/token"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"slices"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/go-gremlins/gremlins/internal/configuration"
+	"github.com/go-gremlins/gremlins/internal/diff"
+	"github.com/go-gremlins/gremlins/internal/engine/workdir"
+	"github.com/go-gremlins/gremlins/internal/engine/workerpool"
+	"github.com/go-gremlins/gremlins/internal/gomodule"
+	"github.com/go-gremlins/gremlins/internal/mutator"
+)
+
+var diagnosticOutputMutex sync.Mutex
+
+func diagnosticEmit(event map[string]any) {
+	diagnosticOutputMutex.Lock()
+	defer diagnosticOutputMutex.Unlock()
+	_ = json.NewEncoder(os.Stdout).Encode(event)
+}
+
+func diagnosticPhase(args []string) string {
+	if slices.Contains(args, "^Test") {
+		return "unit"
+	}
+	return "full"
+}
+
+func diagnosticObservedRun(cmd *exec.Cmd, ctx context.Context) (func(), error) {
+	started := time.Now()
+	deadline, hasDeadline := ctx.Deadline()
+	diagnosticEmit(map[string]any{"event": "run_enter", "phase": diagnosticPhase(cmd.Args), "has_deadline": hasDeadline, "remaining_ms": time.Until(deadline).Milliseconds()})
+	release, err := run(cmd)
+	exitCode := -1
+	if cmd.ProcessState != nil {
+		exitCode = cmd.ProcessState.ExitCode()
+	}
+	diagnosticEmit(map[string]any{"event": "run_return", "phase": diagnosticPhase(cmd.Args), "elapsed_ms": time.Since(started).Milliseconds(), "process_started": cmd.Process != nil, "wait_returned": cmd.ProcessState != nil, "exit_code": exitCode, "deadline_exceeded": ctx.Err() == context.DeadlineExceeded, "error": err != nil})
+	return release, err
+}
+
+func TestNativeCLISingleMutation(t *testing.T) {
+	root := os.Getenv("GOLIB_NATIVE_SOURCE_ROOT")
+	budget, err := time.ParseDuration(os.Getenv("GOLIB_NATIVE_PHASE_BUDGET"))
+	if err != nil || budget <= 0 || !filepath.IsAbs(root) {
+		t.Fatal("invalid native diagnostic inputs")
+	}
+	for _, key := range []string{"GOCACHE", "GOMODCACHE", "GOTMPDIR", "GOFLAGS", "GOWORK"} {
+		t.Setenv(key, os.Getenv("GOLIB_NATIVE_EXEC_"+key))
+	}
+	t.Setenv("GOLIB_NATIVE_CLI_DIAGNOSTIC", "")
+	mod, err := gomodule.Init(root)
+	if err != nil {
+		t.Fatal("native module discovery failed")
+	}
+	mod.CallingDir = "internal/cli"
+	original, err := os.ReadFile(filepath.Join(root, mod.CallingDir, "cli.go"))
+	if err != nil {
+		t.Fatal("native source acquisition failed")
+	}
+	lines := bytes.Split(original, []byte("\n"))
+	if len(lines) < 138 || !bytes.Contains(lines[137], []byte("256 << 20")) {
+		t.Fatal("native mutation source expression changed")
+	}
+	configuration.Reset()
+	defer configuration.Reset()
+	configuration.Set(configuration.UnleashIntegrationMode, true)
+	configuration.Set(configuration.UnleashTimeoutCoefficientKey, 1)
+	configuration.Set(configuration.UnleashTestCPUKey, 1)
+	configuration.Set(configuration.UnleashTagsKey, "")
+	configuration.Set(configuration.UnleashDryRunKey, false)
+	configuration.Set(configuration.MutantTypeEnabledKey(mutator.InvertBitwise), true)
+	changes, err := diff.New(mod.Root)
+	if err != nil {
+		t.Fatal("native no-diff discovery failed")
+	}
+	stream := make(chan mutator.Mutator)
+	engine := Engine{module: mod, fs: os.DirFS(filepath.Join(root, mod.CallingDir)), codeData: CodeData{Diff: changes}, mutantStream: stream}
+	go func() {
+		engine.runOnFile("cli.go")
+		close(stream)
+	}()
+	var selected mutator.Mutator
+	count := 0
+	for candidate := range stream {
+		position := candidate.Position()
+		if candidate.Type() == mutator.InvertBitwise && position.Filename == "cli.go" && position.Line == 138 && position.Column == 25 {
+			selected = candidate
+			count++
+		}
+	}
+	if count != 1 || selected.Status() != mutator.Runnable || selected.(*TokenMutator).tokenNode.Tok() != token.SHL {
+		t.Fatal("native exact runnable shift discovery was not unique")
+	}
+	workingRoot := t.TempDir()
+	wd := workdir.NewCachedDealer(workingRoot, root)
+	defer wd.Clean()
+	observed := func(ctx context.Context, name string, args ...string) *exec.Cmd {
+		cmd := exec.CommandContext(ctx, name, args...)
+		cancel := cmd.Cancel
+		cmd.Cancel = func() error {
+			diagnosticEmit(map[string]any{"event": "cancel", "phase": diagnosticPhase(args), "deadline_exceeded": ctx.Err() == context.DeadlineExceeded})
+			return cancel()
+		}
+		return cmd
+	}
+	dealer := NewExecutorDealer(mod, wd, budget, WithExecContext(observed))
+	output := make(chan mutator.Mutator, 1)
+	var wait sync.WaitGroup
+	wait.Add(1)
+	dealer.NewExecutor(selected, output, &wait).Start(workerpool.NewWorker(0, "diagnostic"))
+	wait.Wait()
+	var result mutator.Mutator
+	select {
+	case result = <-output:
+	default:
+		t.Fatal("native executor returned without a mutation result")
+	}
+	if len(output) != 0 {
+		t.Fatal("native executor emitted extra mutation results")
+	}
+	copyRoot, err := wd.Get("diagnostic-0")
+	if err != nil {
+		t.Fatal("native workdir lookup failed")
+	}
+	restored, err := os.ReadFile(filepath.Join(copyRoot, mod.CallingDir, "cli.go"))
+	if err != nil || !bytes.Equal(restored, original) {
+		t.Fatal("native mutation rollback did not restore exact source")
+	}
+	diagnosticEmit(map[string]any{"event": "result", "status": result.Status().String(), "rollback_exact": true, "phase_budget_ms": budget.Milliseconds(), "qualification": false})
+}

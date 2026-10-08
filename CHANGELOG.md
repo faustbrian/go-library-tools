@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add an explicitly selected hosted CLI mutation diagnostic that observes the
+  retained native execution coordinate, phase deadlines and exact rollback.
+  Diagnostic results do not replace campaign or release qualification.
+
 ### Changed
 
 - Exercise published OpenAPI v2 alongside the historical v1 cohort, covering

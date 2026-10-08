@@ -1,5 +1,22 @@
 # Reusable Workflows
 
+## Tools-only native CLI diagnostic
+
+Tools' own `ci.yml` accepts the optional manual input `native_cli_diagnostic`.
+It selects one retained `internal/cli/cli.go:138:25` `INVERT_BITWISE` mutation
+through the pinned engine's normal AST discovery and executor. The diagnostic
+uses the existing shared-coverage baseline and phase-budget calculation,
+preserves native command/cancellation behavior, observes bounded scalar phase
+results, and checks exact source rollback in a disposable copy. It runs only
+on hosted runners; ordinary tests skip its opt-in subprocess path.
+
+This is an investigation result, not a campaign, historical-cache reproduction,
+equivalence waiver or release pass. A timeout remains a timeout. The manually
+selected job must succeed for that workflow's Required check to succeed; no
+consumer workflow or production verifier asset is changed by this diagnostic.
+
+## Consumer workflows
+
 Consumer CI calls `library-ci.yml` at an immutable commit SHA. The same SHA is
 passed as `tooling_sha` for the isolated tooling checkout. By default the setup action
 is pinned to `562f083a6d7eb499eed8d464e5f3e1a1b58902d0`; the bootstrap

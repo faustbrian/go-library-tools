@@ -8,6 +8,11 @@ on:
     - cron: '17 3 * * *'
   workflow_dispatch:
     inputs:
+      native_cli_diagnostic:
+        description: Diagnose the single retained CLI mutation without qualifying a release
+        required: false
+        type: boolean
+        default: false
       release_rehearsal:
         description: Run the complete pre-tag release dry-run
         required: false
@@ -483,10 +488,36 @@ jobs:
           include-hidden-files: true
           retention-days: 30
 
+  native-cli-diagnostic:
+    name: Native CLI diagnostic
+    if: github.event_name == 'workflow_dispatch' && inputs.native_cli_diagnostic
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .go-version
+          cache: false
+      - name: Observe actual CLI mutant execution and rollback
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-native-cli-diagnostic.XXXXXX")"
+          cleanup() {
+            chmod -R u+w "${task}" && find "${task}" -depth -delete
+          }
+          trap 'status=$?; if ! cleanup; then status=1; fi; exit "${status}"' EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" GOWORK=off
+          export GOLIB_NATIVE_CLI_DIAGNOSTIC=1
+          go test -p 1 ./internal/mutation -run '^TestHostedNativeCLISingleMutationDiagnostic$' -count=1 -timeout=27m -v
+
   required:
     name: Required
     if: always()
-    needs: [dependency-review, quality, compatibility-consumer-scope, compatibility-consumer, milestone, codeql, release-rehearsal]
+    needs: [dependency-review, quality, compatibility-consumer-scope, compatibility-consumer, milestone, codeql, release-rehearsal, native-cli-diagnostic]
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -498,6 +529,8 @@ jobs:
           MILESTONE_RESULT: ${{ needs.milestone.result }}
           CODEQL_RESULT: ${{ needs.codeql.result }}
           RELEASE_REHEARSAL_RESULT: ${{ needs.release-rehearsal.result }}
+          NATIVE_CLI_DIAGNOSTIC_RESULT: ${{ needs.native-cli-diagnostic.result }}
+          NATIVE_CLI_DIAGNOSTIC_SELECTED: ${{ github.event_name == 'workflow_dispatch' && inputs.native_cli_diagnostic }}
         run: |
           test "${QUALITY_RESULT}" = success
           test "${COMPATIBILITY_SCOPE_RESULT}" = success -o "${COMPATIBILITY_SCOPE_RESULT}" = skipped
@@ -506,3 +539,8 @@ jobs:
           test "${CODEQL_RESULT}" = success
           test "${DEPENDENCY_REVIEW_RESULT}" = success -o "${DEPENDENCY_REVIEW_RESULT}" = skipped
           test "${RELEASE_REHEARSAL_RESULT}" = success -o "${RELEASE_REHEARSAL_RESULT}" = skipped
+          if [[ "${NATIVE_CLI_DIAGNOSTIC_SELECTED}" == true ]]; then
+            test "${NATIVE_CLI_DIAGNOSTIC_RESULT}" = success
+          else
+            test "${NATIVE_CLI_DIAGNOSTIC_RESULT}" = skipped
+          fi
