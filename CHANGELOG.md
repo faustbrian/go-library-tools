@@ -12,6 +12,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Advance the maintained consumer's Excelize revision to include the upstream
+  pivot-cache field-index fix, preserving the existing Tabular XLSX cohort.
+
 - Select upstream Excelize's patched public revision in the maintained
   compatibility consumer and exercise ordinary XLSX decoding through both
   retained Tabular major versions without changing the frozen cohort.
