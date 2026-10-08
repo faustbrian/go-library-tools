@@ -106,6 +106,14 @@ func TestHostedNativeCLISingleMutationDiagnostic(t *testing.T) {
 		t.Fatal("native diagnostic shared coverage baseline failed")
 	}
 	t.Logf("native-cli shared_phase_budget=%s", state.coverageElapsed)
+	// Match runPackage's cache separation: baseline compilation must not warm
+	// the mutant subprocess cache. This does not recreate campaign history.
+	execution = maps.Clone(execution)
+	execution["GOCACHE"] = filepath.Join(workspace, "mutation-cache", packageSlug("internal/cli"))
+	if err := os.MkdirAll(execution["GOCACHE"], 0o700); err != nil {
+		t.Fatal("create native diagnostic package mutation cache")
+	}
+	t.Log("native-cli cache_mode=separate-package-cache campaign_history_equivalence=false")
 	verified := false
 	process := func(ctx context.Context, name string, args []string, directory string, environment map[string]string, stdout, stderr io.Writer) error {
 		if name == "go" && len(args) > 0 && args[0] == "build" {

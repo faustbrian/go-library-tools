@@ -12,6 +12,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Use a separate package build cache in the selected hosted CLI diagnostic,
+  matching campaign baseline/cache separation without claiming identical
+  campaign history or changing native deadlines and release qualification.
+
 - Exercise public Outbox v2, Event Sourcing Outbox adapter v3 and Webhook v3
   alongside historical consumer selections, including nominal envelope
   composition, copied delivery ownership and bounded encoding refusal.
