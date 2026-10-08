@@ -340,6 +340,9 @@ func (runner Runner) mutationWorkers(module inventory.Module) (int, error) {
 	if bytes.Contains(moduleFile, []byte("github.com/testcontainers/testcontainers-go")) {
 		return 1, nil
 	}
+	if maximum := runner.Policy.Mutation.MaxWorkers; maximum > 0 && maximum < 4 {
+		return int(maximum), nil
+	}
 	return 4, nil
 }
 

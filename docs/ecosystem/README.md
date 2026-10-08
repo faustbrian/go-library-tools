@@ -68,7 +68,7 @@ verified cohort; its blank imports establish composition-only compilation, not
 runtime security certification.
 
 The maintained consumer selects Excelize
-`v2.11.1-0.20260930021559-01a9ff32fb3c`, an upstream public revision containing
+`v2.11.1-0.20261003002531-6258dcebc4e2`, an upstream public revision containing
 the fixes for the reported dependency advisories, instead of the vulnerable
 v2.11.0 stable tag. Ordinary XLSX rows and end-of-input are exercised through
 both retained Tabular v1 and v2 wrappers. This is dependency compatibility

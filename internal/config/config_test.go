@@ -34,6 +34,18 @@ func TestLoadAppliesStableDefaults(t *testing.T) {
 	}
 }
 
+func TestLoadRejectsMutationWorkerCapsOutsideAdmissionRange(t *testing.T) {
+	for _, cap := range []string{"-1", "5", "64", "1.5", "many", "\"1\"", "true", "[]", "{}"} {
+		t.Run(cap, func(t *testing.T) {
+			root := t.TempDir()
+			write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v1.0.0\nmutation:\n  max_workers: "+cap+"\n")
+			if _, err := config.Load(root); err == nil {
+				t.Fatal("invalid mutation worker admission accepted")
+			}
+		})
+	}
+}
+
 func TestLoadAcceptsReleaseChecksumPin(t *testing.T) {
 	root := t.TempDir()
 	digest := strings.Repeat("a", 64)
