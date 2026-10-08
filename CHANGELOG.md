@@ -12,6 +12,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Select upstream Excelize's patched public revision in the maintained
+  compatibility consumer and exercise ordinary XLSX decoding through both
+  retained Tabular major versions without changing the frozen cohort.
+
 - Use a separate package build cache in the selected hosted CLI diagnostic,
   matching campaign baseline/cache separation without claiming identical
   campaign history or changing native deadlines and release qualification.

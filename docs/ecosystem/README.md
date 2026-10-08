@@ -67,6 +67,14 @@ current consumer is not evidence that the changed versions belong to the frozen
 verified cohort; its blank imports establish composition-only compilation, not
 runtime security certification.
 
+The maintained consumer selects Excelize
+`v2.11.1-0.20260915055537-22f76f9acb94`, an upstream public revision containing
+the fixes for the reported dependency advisories, instead of the vulnerable
+v2.11.0 stable tag. Ordinary XLSX rows and end-of-input are exercised through
+both retained Tabular v1 and v2 wrappers. This is dependency compatibility
+evidence, not comprehensive spreadsheet security certification or a change to
+the frozen cohort's external-version record.
+
 Outbox selects public `/v2` v2.0.0 alongside its historical root and four
 canonical adapter families. Event Sourcing's Outbox adapter `/v3` v3.0.0 and
 Webhook `/v3` v3.0.0 compose through the same actual Outbox v2 envelope.
