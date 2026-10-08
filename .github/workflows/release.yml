@@ -130,7 +130,7 @@ jobs:
             --mtime='UTC 1970-01-01' --gzip --create \
             --file="dist/golib_${release}_${GOOS}_${GOARCH}.tar.gz" \
             --directory="${directory}" golib LICENSE
-      - uses: anchore/sbom-action@3ad7283483fc7af8ff2b4ea19663c2d5ca935e26 # v0.24.2
+      - uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
         with:
           path: dist/stage
           format: spdx-json
