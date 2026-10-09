@@ -55,7 +55,7 @@
     {
       "module_directory": ".",
       "package_directory": "internal/gates",
-      "source_digest": "d96184c94aa3a321b982310723648725117180489421eecf3474ce1447d4c51e",
+      "source_digest": "d7abeae804daf8d458c132f750f48baa756622ef063770ae463a4d0297dece8c",
       "gremlins_version": "v0.6.0",
       "gremlins_verifier_sha256": "390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104",
       "mutations": [
@@ -110,7 +110,7 @@
         {
           "file_name": "runner.go",
           "type": "INVERT_LOOPCTRL",
-          "line": 1180,
+          "line": 1196,
           "column": 4,
           "contract_domain": "Coverage mode selection for Runner policies validated by config.Load and supplied by the production CLI; identical selected mode, verification result and report",
           "reason": "Fresh binding reviewer /root/ecma_v2_integrated_final_review; date 2026-10-07; expiry 2026-11-05 or any bound source/verifier or stated producer-domain change. Independent assessment at source57f79a2 confirmed this coordinate and its original domain proof; the unit-first selector changes execution selection, not mutator semantics, and retains unrestricted survivor follow-up. Current source includes only the narrow APIDIFF assignment allowlist delta since the prior gates binding; this coordinate and its producer premises are unchanged. Historical review retained: Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, coverage-policy producer, uniqueness validation or selection change. Pinned Gremlins v0.6.0 changes break to continue. config.Load validates unique coverage module entries at config.go247-258; production CLI loads that policy before constructing Runner. After the unique matching entry sets mode, remaining entries cannot match the same module and cannot alter it. Missing matches keep the same exact default; first/last positions preserve the same result. Contradictory duplicate hand-built Runner policies are excluded because the supported producer rejects them before execution. Native failure37531787285 remains failed with its original LIVED coordinate; fresh matching-source qualification remains required. Fresh applicability independently revalidated by /root/knapsack_placement_final_review on 2026-10-08 at source5489072f3edf966872e7bcfd17a9cea72fe82bb9: all seven predicates, coordinates and current supported producer domains remain unchanged. Current source includes campaign worker admission as well as intervening tooling changes; earlier current-source descriptions are historical, not a complete description of this revision. Preserve original review dates, expiry, verifier and exclusion domains. Stored d51f9828 was already stale at parent7b95ff23, whose independently reproduced source identity is6267560448c55eef9f6ca792be42e04c3f320d138893f7117ab2c9141b1834be. No native pass is inferred: rehearsal37826979615 remains failed before this package campaign."
