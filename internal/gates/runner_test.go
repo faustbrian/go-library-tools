@@ -89,8 +89,10 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact --exit-code=42 --report-format=template --report-path=- --report-template <generated-gitleaks-metadata-template>",
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
 		"go list -json=Dir ./...",
-		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -fmt=json -nosec-require-rules -nosec-require-justification ./",
-		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
+		"go build -mod=mod -o <gosec> github.com/securego/gosec/v2/cmd/gosec",
+		"<gosec> -fmt=json -nosec-require-rules -nosec-require-justification ./",
+		"go build -mod=mod -o <golib-analysis> github.com/faustbrian/go-analysis/cmd/golib-analysis",
+		"<golib-analysis> check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 		"gofmt -l -- example.go",
@@ -548,8 +550,10 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		"go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <generated-gitleaks-config> --ignore-gitleaks-allow --gitleaks-ignore-path <gitleaks-ignore-root> --no-banner --redact --exit-code=42 --report-format=template --report-path=- --report-template <generated-gitleaks-metadata-template>",
 		"go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
 		"go list -json=Dir ./...",
-		"go run github.com/securego/gosec/v2/cmd/gosec@v2.29.0 -fmt=json -nosec-require-rules -nosec-require-justification ./",
-		"go run github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0 check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
+		"go build -mod=mod -o <gosec> github.com/securego/gosec/v2/cmd/gosec",
+		"<gosec> -fmt=json -nosec-require-rules -nosec-require-justification ./",
+		"go build -mod=mod -o <golib-analysis> github.com/faustbrian/go-analysis/cmd/golib-analysis",
+		"<golib-analysis> check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/acme/example",
 		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 		"gofmt -l -- example.go",
@@ -700,12 +704,14 @@ func TestCheckStopsAtAnalyzerAndSecurityFailures(t *testing.T) {
 		{"staticcheck analysis", map[string]bool{"lint": true}, 5},
 		{"vulnerability", map[string]bool{"security": true}, 7},
 		{"package discovery", map[string]bool{"security": true}, 8},
-		{"gosec", map[string]bool{"security": true}, 9},
-		{"owned analysis", map[string]bool{"security": true}, 10},
+		{"gosec build", map[string]bool{"security": true}, 9},
+		{"gosec analysis", map[string]bool{"security": true}, 10},
+		{"owned analysis build", map[string]bool{"security": true}, 11},
+		{"owned analysis execution", map[string]bool{"security": true}, 12},
 		{"secrets history", map[string]bool{"security": true}, 5},
 		{"secrets tree", map[string]bool{"security": true}, 6},
-		{"licenses", map[string]bool{"security": true}, 11},
-		{"SBOM", map[string]bool{"security": true}, 12},
+		{"licenses", map[string]bool{"security": true}, 13},
+		{"SBOM", map[string]bool{"security": true}, 14},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -911,11 +917,12 @@ func successfulLinks(context.Context, string) error    { return nil }
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
 	arguments := slices.Clone(command.Args)
 	name := command.Name
-	if filepath.Base(name) == "staticcheck" {
-		name = "<staticcheck>"
+	switch filepath.Base(name) {
+	case "staticcheck", "gosec", "golib-analysis":
+		name = "<" + filepath.Base(name) + ">"
 	}
-	if name == "go" && len(arguments) == 5 && arguments[0] == "build" && arguments[4] == "honnef.co/go/tools/cmd/staticcheck" {
-		arguments[3] = "<staticcheck>"
+	if name == "go" && len(arguments) == 5 && arguments[0] == "build" {
+		arguments[3] = "<" + filepath.Base(arguments[3]) + ">"
 	}
 	if command.Name == "git" && len(arguments) >= 3 && (arguments[2] == "for-each-ref" || arguments[2] == "cat-file") {
 		arguments[1] = "<repository-root>"
@@ -960,7 +967,7 @@ func (executor *recordingExecutor) Run(_ context.Context, command gates.Command)
 			arguments[index+1] = "<generated-gitleaks-config>"
 		}
 	}
-	if slices.Contains(arguments, "github.com/faustbrian/go-analysis/cmd/golib-analysis@v1.0.0") {
+	if name == "<golib-analysis>" {
 		for index, argument := range arguments {
 			if argument != "-config" || index+1 >= len(arguments) {
 				continue

@@ -83,11 +83,19 @@ tag-collision decision as the copied release contract without rerunning gates.
 
 Shared lint execution pins `golangci-lint` `v2.14.0`. Its updated importer
 reads Go 1.27.2 export data that `v2.13.1` cannot decode, while retaining the
-complete configured lint policy. Standalone Staticcheck retains released source
-`v0.8.1`, built with `golang.org/x/tools v0.50.0` in a task-owned tool module
-to read the same export data. Analysis still uses the selected application
-module and its check configuration; the tool graph never edits application
-manifests. Build and analysis failures remain mandatory gate failures.
+complete configured lint policy. Staticcheck `v0.8.1`, Gosec `v2.29.0`, and
+owned security analysis `v1.0.0` retain their released analyzer source while
+sharing a task-owned tool-build boundary with `golang.org/x/tools v0.50.0`.
+Analysis still uses the selected application module and its configuration;
+tool-build flags and dependencies never alter application manifests. Build
+diagnostics are bounded and private. Gosec finding and loading classifications
+require a completed typed exit status and a validated bounded report, not
+Go-wrapper stderr text. Empty Go-selected source fails before scanner execution.
+Build and analysis failures remain mandatory; NilAway remains advisory.
+
+Other pinned analyzers retain their existing invocation when real patched-Go
+loading controls establish compatibility; an older declared importer alone
+does not justify changing a tool that does not consume incompatible exports.
 
 ## `go-clock`
 

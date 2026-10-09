@@ -320,14 +320,15 @@ func (info apiFileInfo) IsDir() bool   { return info.directory }
 func (apiFileInfo) Sys() any           { return nil }
 
 type workspaceExecutor struct {
-	directory            string
-	run                  func(context.Context, Command) error
-	emptySourceInventory bool
+	directory               string
+	run                     func(context.Context, Command) error
+	emptySourceInventory    bool
+	emptyGoPackageInventory bool
 }
 
 func (executor workspaceExecutor) Run(ctx context.Context, command Command) error {
 	err := executor.run(ctx, command)
-	if output, ok := command.Stdout.(*goPackageOutput); ok && err == nil && output.Len() == 0 {
+	if output, ok := command.Stdout.(*goPackageOutput); ok && !executor.emptyGoPackageInventory && err == nil && output.Len() == 0 {
 		_, err = fmt.Fprintf(output, "{\"Dir\":%q}\n", command.Dir)
 	}
 	// Most gate tests deliberately double the Git/scanner command boundary.

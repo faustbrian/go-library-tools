@@ -20,9 +20,11 @@ All notable changes to this project are documented in this file.
 - Build and verify tooling with Go 1.27.2 and golangci-lint v2.14.0 to apply
   standard-library security fixes and preserve analyzer compatibility, without
   raising the module language minimum or rewriting historical cohort evidence.
-- Build standalone Staticcheck v0.8.1 with the compatible x/tools v0.50.0
-  importer in a disposable tool-only module, preserving check selection and
-  failing closed without changing application dependency graphs.
+- Build Staticcheck v0.8.1, Gosec v2.29.0, and owned security analysis v1.0.0
+  through one isolated tool-build owner with the compatible x/tools v0.50.0
+  importer, preserving analyzer policies and application dependency graphs.
+  Keep build diagnostics private and bounded, classify direct Gosec failures
+  from typed exit status and validated reports.
 
 - Update release SBOM generation to Anchore v0.24.3 and its default Syft
   v1.54.0 scanner, retaining SPDX output names and attested asset publication.

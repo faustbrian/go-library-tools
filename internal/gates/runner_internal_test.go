@@ -97,7 +97,7 @@ func TestSecurityOrchestrationConfigFailureStopsLaterEffects(t *testing.T) {
 	files := &fakeSecretConfigFiles{createErr: failure}
 	runner := Runner{Root: t.TempDir(), secretConfigFiles: files,
 		Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
-			commands = append(commands, strings.Join(command.Args, " "))
+			commands = append(commands, strings.Join(append([]string{command.Name}, command.Args...), " "))
 			return nil
 		}},
 	}
@@ -105,7 +105,7 @@ func TestSecurityOrchestrationConfigFailureStopsLaterEffects(t *testing.T) {
 	if !errors.Is(err, failure) || !strings.Contains(err.Error(), "create temporary analysis config") {
 		t.Fatalf("analysis configuration failure = %v", err)
 	}
-	if len(commands) != 3 || !strings.Contains(commands[0], "govulncheck@") || !strings.HasPrefix(commands[1], "list ") || !strings.Contains(commands[2], "gosec@") || files.removed != "" {
+	if len(commands) != 4 || !strings.Contains(commands[0], "govulncheck@") || !strings.HasPrefix(commands[1], "go list ") || !strings.Contains(commands[2], "build -mod=mod") || !strings.Contains(commands[3], "gosec") || files.removed != "" {
 		t.Fatalf("configuration failure allowed later effects: commands=%v, removed=%q", commands, files.removed)
 	}
 }
