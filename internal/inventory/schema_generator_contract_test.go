@@ -24,7 +24,7 @@ func TestSchemaGeneratorProducesBothSchemasSuccessfully(t *testing.T) {
 		t.Fatal(err)
 	}
 	write(t, filepath.Join(working, "schema_generate_main.go"), string(source))
-	var schemas []string
+	schemas := make([]string, 0, 2)
 	for _, name := range []string{"modules.schema.json", "modules-v3.schema.json"} {
 		content, err := os.ReadFile(filepath.Join("..", "..", "schema", name))
 		if err != nil {
