@@ -3,6 +3,72 @@
   "packages": [
     {
       "module_directory": ".",
+      "package_directory": "internal/mutation",
+      "source_digest": "4dc6356afb48b06299d6d8ee9d5e1464c921dac2ae273f378680f7725004fbdc",
+      "gremlins_version": "v0.6.0",
+      "gremlins_verifier_sha256": "390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104",
+      "mutations": [
+        {
+          "file_name": "verifier_compatibility.go",
+          "type": "INCREMENT_DECREMENT",
+          "line": 85,
+          "column": 8,
+          "contract_domain": "Historical package-path compatibility through bounded production source enumeration; identical admission, refusal, source identity and evidence applicability",
+          "reason": "Owner faustbrian; independent classification /root/tools_native_survivor_classification at3e556cc12ddbeefd759247a9ffae54c2d8b7bb40; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/entry-limit/observer change. Pinned Gremlins v0.6.0 changes files++ to files--. The local counter starts at zero, is changed once per admitted production file, and is observed only as files==0 after enumeration. Entry admission bounds its magnitude below integer overflow. Both variants equal zero exactly when no production file was observed. Neither counter is returned or incorporated in the manifest, parser, path comparison or applicability proof. This does not accept source-byte accounting, traversal or admission mutants. Native37935670458 remains failed; complete final-diff review and fresh matching-source native qualification remain required."
+        },
+        {
+          "file_name": "campaign.go",
+          "type": "INVERT_LOOPCTRL",
+          "line": 471,
+          "column": 4,
+          "contract_domain": "Campaign production packageInputsForVerifiers callers with one current verifier or current and one admitted historical verifier; identical collected inputs and errors",
+          "reason": "Owner faustbrian; independent classification /root/tools_native_survivor_classification at3e556cc12ddbeefd759247a9ffae54c2d8b7bb40; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/caller-domain change. Pinned Gremlins v0.6.0 changes duplicate-verifier continue to break. Every production call supplies either one verifier or two: current then checkpoint verifier. A duplicate can occur only at the last position of the two-element list. Both continue and break therefore finish without additional input collection; the same post-loop source-identity check still executes. Non-duplicate lists are unchanged. Arbitrary internal calls with three or more IDs are excluded; introducing such a production caller invalidates this disposition. No import-loop mutant is accepted. Native37935670458 remains failed; complete final-diff review and fresh matching-source native qualification remain required."
+        }
+      ]
+    },
+    {
+      "module_directory": ".",
+      "package_directory": "internal/inventory",
+      "source_digest": "2c0779398745c9264ce42a5d7b2df67eebe942326e75567546d3bd6c91bd08d2",
+      "gremlins_version": "v0.6.0",
+      "gremlins_verifier_sha256": "390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104",
+      "mutations": [
+        {
+          "file_name": "inventory.go",
+          "type": "INVERT_LOGICAL",
+          "line": 438,
+          "column": 52,
+          "contract_domain": "Complete valid JSON manifest envelopes passed through validateModuleIdentities and public Load/LoadSnapshot; identical sanitized directory/import-path refusal, admission and returned inventory/snapshot",
+          "reason": "Owner go-library-tools maintainers; independent classification /root/tools_native_survivor_classification at2aa9127965071619652280d64cdfac32c1f49cc2; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator or caller-domain change. Pinned Gremlins v0.6.0 changes err!=nil || value==empty to conjunction. RawMessage fields originate from successful JSON envelope decoding, so their individual JSON values are complete and valid. Type failures decoding into the initially empty string leave it empty; both predicates refuse them. Successful null or empty-string decoding can change the helper boolean, but both callers independently refuse the resulting empty directory or import path before any observable schema/filesystem effects, with the same sanitized error and zero inventory/nil snapshot. Direct helper boolean observations, arbitrary malformed RawMessages and new callers are excluded. Native37910768730 remains failed; this narrow disposition does not accept the seven viable survivors or infer fresh qualification. Complete final-diff review is required before delivery."
+        },
+        {
+          "file_name": "inventory.go",
+          "type": "INVERT_LOGICAL",
+          "line": 453,
+          "column": 39,
+          "contract_domain": "POSIX module-directory strings admitted through complete-manifest identity validation and validModuleDirectory's unchanged subsequent lowercase ASCII character policy; identical public admission/refusal",
+          "reason": "Owner go-library-tools maintainers; independent classification /root/tools_native_survivor_classification at2aa9127965071619652280d64cdfac32c1f49cc2; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator or directory-admission change. Pinned Gremlins v0.6.0 changes the first disjunction to conjunction. A backslash still fails the unchanged character allowlist. An absolute path is invalid under fs.ValidPath; an unclean path contains empty/dot/dot-dot components or is empty and is independently refused by fs.ValidPath. Unchanged remaining predicates therefore refuse all changed branch cases before admission. Invalid UTF-8 and non-ASCII characters are independently refused by the character allowlist. All admitted directories and sanitized errors remain identical. No path-policy removal or other coordinate is accepted. Native37910768730 remains failed; fresh qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "inventory.go",
+          "type": "INVERT_LOGICAL",
+          "line": 453,
+          "column": 64,
+          "contract_domain": "POSIX module-directory strings admitted through complete-manifest identity validation and validModuleDirectory's unchanged subsequent lowercase ASCII character policy; identical public admission/refusal",
+          "reason": "Owner go-library-tools maintainers; independent classification /root/tools_native_survivor_classification at2aa9127965071619652280d64cdfac32c1f49cc2; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator or directory-admission change. Pinned Gremlins v0.6.0 changes the second disjunction to conjunction. Absolute paths and cleaning mismatches are independently invalid under fs.ValidPath: the latter contain empty/dot/dot-dot components or are empty. The unchanged final invalid-path predicate refuses these cases even when the mutated conjunction changes. Backslashes, invalid UTF-8 and non-ASCII characters remain refused by the unchanged character allowlist. Every admitted directory and sanitized refusal is unchanged. No other directory or quota mutant is accepted. Native37910768730 remains failed; fresh qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "inventory.go",
+          "type": "INVERT_LOGICAL",
+          "line": 453,
+          "column": 102,
+          "contract_domain": "POSIX module-directory strings admitted through complete-manifest identity validation and validModuleDirectory's unchanged subsequent lowercase ASCII character policy; identical public admission/refusal",
+          "reason": "Owner go-library-tools maintainers; independent classification /root/tools_native_survivor_classification at2aa9127965071619652280d64cdfac32c1f49cc2; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator or directory-admission change. Pinned Gremlins v0.6.0 changes the final disjunction to conjunction. An invalid fs.ValidPath string has an absolute/unclean form or invalid UTF-8. Absolute/unclean forms satisfy the unchanged preceding absolute/cleaning predicates, preserving refusal under conjunction; invalid UTF-8 is independently refused by the unchanged lowercase ASCII allowlist. Backslashes are likewise refused by that allowlist even when fs.ValidPath accepts them. Both forms admit exactly the same supported directories and produce identical sanitized errors. No other survivor is accepted. Native37910768730 remains failed; fresh qualification and complete final-diff review remain required."
+        }
+      ]
+    },
+    {
+      "module_directory": ".",
       "package_directory": "internal/cli",
       "source_digest": "8bf9b1b1c61d30f72e7ea352ca94458797ac0f2cc97c9255e7f52bcb7e2eb3c9",
       "gremlins_version": "v0.6.0",
@@ -109,14 +175,6 @@
         },
         {
           "file_name": "runner.go",
-          "type": "INVERT_LOGICAL",
-          "line": 302,
-          "column": 21,
-          "contract_domain": "Finding metadata through securityTool's sole completed-executor Gitleaks classification caller with its initialized metadata and unchanged stream-overflow exclusion; identical bounded sanitized locations",
-          "reason": "Current applicability independently revalidated by /root/tools_binding_applicability on 2026-10-09 at e5bce6cf7eea0d5f6745f344ebcf80fe248a047a, Gates source d7abeae804daf8d458c132f750f48baa756622ef063770ae463a4d0297dece8c. The compiler-tool isolation changes preserve this stated producer domain. Existing expiry and exclusions remain unchanged. Fresh native current-source qualification remains required; historical reviews and native statuses below are retained as history. Fresh binding reviewer /root/ecma_v2_integrated_final_review; date 2026-10-07; expiry 2026-11-05 or any bound source/verifier or stated producer-domain change. Independent assessment at source57f79a2 confirmed this coordinate and its original domain proof; the unit-first selector changes execution selection, not mutator semantics, and retains unrestricted survivor follow-up. Current source includes only the narrow APIDIFF assignment allowlist delta since the prior gates binding; this coordinate and its producer premises are unchanged. Historical review retained: Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, executor completion contract, metadata initialization or classification caller change. Pinned Gremlins v0.6.0 changes || to &&. securityTool initializes nonnil metadata at1102 and calls findingMetadata at1119 only after completed execution with neither stream overflowed. Both compared predicates are false whenever this caller reaches the helper. Direct nil-metadata or overflowing private-helper calls, reflection-based mutation and executor writes after returning are excluded; those violate the stated producer/completed-execution domain and can distinguish the mutation. Native failure37531787285 remains failed with its original LIVED coordinate; fresh matching-source qualification remains required. Fresh applicability independently revalidated by /root/knapsack_placement_final_review on 2026-10-08 at source5489072f3edf966872e7bcfd17a9cea72fe82bb9: all seven predicates, coordinates and current supported producer domains remain unchanged. Current source includes campaign worker admission as well as intervening tooling changes; earlier current-source descriptions are historical, not a complete description of this revision. Preserve original review dates, expiry, verifier and exclusion domains. Stored d51f9828 was already stale at parent7b95ff23, whose independently reproduced source identity is6267560448c55eef9f6ca792be42e04c3f320d138893f7117ab2c9141b1834be. No native pass is inferred: rehearsal37826979615 remains failed before this package campaign."
-        },
-        {
-          "file_name": "runner.go",
           "type": "INVERT_LOOPCTRL",
           "line": 1196,
           "column": 4,
@@ -130,6 +188,78 @@
           "column": 21,
           "contract_domain": "Production bounded-scanner startup and termination through processExecutor.runBounded and unchanged platform admission; identical preparation refusal or original-group termination",
           "reason": "Current applicability independently revalidated by /root/tools_binding_applicability on 2026-10-09 at e5bce6cf7eea0d5f6745f344ebcf80fe248a047a, Gates source d7abeae804daf8d458c132f750f48baa756622ef063770ae463a4d0297dece8c. The compiler-tool isolation changes preserve this stated producer domain. Existing expiry and exclusions remain unchanged. Fresh native current-source qualification remains required; historical reviews and native statuses below are retained as history. Fresh binding reviewer /root/ecma_v2_integrated_final_review; date 2026-10-07; expiry 2026-11-05 or any bound source/verifier or stated producer-domain change. Independent assessment at source57f79a2 confirmed this coordinate and its original domain proof; the unit-first selector changes execution selection, not mutator semantics, and retains unrestricted survivor follow-up. Current source includes only the narrow APIDIFF assignment allowlist delta since the prior gates binding; this coordinate and its producer premises are unchanged. Historical review retained: Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, platform build selection, preparation or termination caller change. Pinned Gremlins v0.6.0 changes Process!=nil to Process==nil. This file is excluded from Linux/Darwin builds. On other platforms its configureProcessGroup always returns unsupported; the sole production runBounded caller returns that error before process.Start and before creating the monitor which invokes terminateProcessGroup. Therefore this changed helper is never called by admitted production execution on any platform. Test-only injected preparation, direct helper calls and arbitrary hand-built process commands are outside this producer/lifecycle domain and can distinguish or panic under the mutant. This does not accept the active Unix predicates or sign changes; those retain hosted observable regression requirements. Native failure37531787285 and its original status remain unchanged; fresh matching-source qualification is required, and newly detected coordinates must reject obsolete reviews. Fresh applicability independently revalidated by /root/knapsack_placement_final_review on 2026-10-08 at source5489072f3edf966872e7bcfd17a9cea72fe82bb9: all seven predicates, coordinates and current supported producer domains remain unchanged. Current source includes campaign worker admission as well as intervening tooling changes; earlier current-source descriptions are historical, not a complete description of this revision. Preserve original review dates, expiry, verifier and exclusion domains. Stored d51f9828 was already stale at parent7b95ff23, whose independently reproduced source identity is6267560448c55eef9f6ca792be42e04c3f320d138893f7117ab2c9141b1834be. No native pass is inferred: rehearsal37826979615 remains failed before this package campaign."
+        },
+        {
+          "file_name": "workflows.go",
+          "type": "CONDITIONALS_BOUNDARY",
+          "line": 272,
+          "column": 27,
+          "contract_domain": "Concrete YAML-decoded mapping pairs inspected by inspectWorkflowDocument; identical traversal, quota refusal and security-policy effects",
+          "reason": "Owner faustbrian; independent supported-domain classification /root/tools_native_survivor_classification at021778190a025d493cea7e3cf3b725bd99ccf554; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/parser-domain change. Pinned Gremlins v0.6.0 changes index+1 < len(Content) to <=. Decoded mappings contain even key/value pair counts; index begins at zero and advances by two, so index+1 is odd and cannot equal Content length. Both predicates visit the same pairs and produce identical security effects. Hand-built odd nodes and concurrent node modification are outside this concrete decoder producer. No self-assignment or quota mutant is accepted. Native37885449489 remains failed; this disposition does not infer fresh native qualification. Complete final-diff review is required before delivery."
+        },
+        {
+          "file_name": "workflows.go",
+          "type": "CONDITIONALS_BOUNDARY",
+          "line": 369,
+          "column": 26,
+          "contract_domain": "Explicit matrix/job lookup within concrete YAML-decoded mapping pairs admitted by workflow inspection; identical lookup and policy result",
+          "reason": "Owner faustbrian; independent supported-domain classification /root/tools_native_survivor_classification at021778190a025d493cea7e3cf3b725bd99ccf554; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/parser-domain change. Pinned Gremlins v0.6.0 changes index+1 < len(Content) to <=. Decoded mapping Content is even, index starts at zero and advances by two, and index+1 remains odd, so equality is unreachable. The same explicit keys are visited with the same matrix admission result. Hand-built odd nodes and concurrent modification are excluded. The viable index+=2 to index=2 mutant is not accepted and requires bounded behavioral tests. Native37885449489 remains failed; fresh native qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "workflows.go",
+          "type": "CONDITIONALS_BOUNDARY",
+          "line": 450,
+          "column": 26,
+          "contract_domain": "Explicit setting lookup on concrete YAML-decoded mapping pairs during workflow inspection; identical selected setting and security-policy result",
+          "reason": "Owner faustbrian; independent supported-domain classification /root/tools_native_survivor_classification at021778190a025d493cea7e3cf3b725bd99ccf554; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/parser-domain change. Pinned Gremlins v0.6.0 changes index+1 < len(Content) to <=. Concrete decoded mappings have even Content length, while index starts at zero and increments by two, making index+1 odd. Equality is unreachable and both forms search identical explicit pairs. Arbitrary odd hand-built nodes and concurrent modification are excluded. No self-assignment traversal mutant is accepted. Native37885449489 remains failed; fresh native qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "workflows.go",
+          "type": "CONDITIONALS_BOUNDARY",
+          "line": 455,
+          "column": 26,
+          "contract_domain": "Merge-key lookup on concrete YAML-decoded mapping pairs during workflow inspection; identical merge selection and security-policy result",
+          "reason": "Owner faustbrian; independent supported-domain classification /root/tools_native_survivor_classification at021778190a025d493cea7e3cf3b725bd99ccf554; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/parser-domain change. Pinned Gremlins v0.6.0 changes index+1 < len(Content) to <=. Concrete decoded mapping Content is even; index starts at zero and advances by two, so index+1 is odd and cannot equal the length. Identical merge pairs are visited. Hand-built odd nodes and concurrent modification are excluded. The viable self-assignment loop mutant remains failed until native tests prove its detection. Native37885449489 remains failed; fresh native qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "workflows.go",
+          "type": "CONDITIONALS_BOUNDARY",
+          "line": 492,
+          "column": 28,
+          "contract_domain": "Event lookup within concrete YAML-decoded mapping pairs used by inspectWorkflowDocument; identical event detection and validation effects",
+          "reason": "Owner faustbrian; independent supported-domain classification /root/tools_native_survivor_classification at021778190a025d493cea7e3cf3b725bd99ccf554; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/parser-domain change. Pinned Gremlins v0.6.0 changes index+1 < len(Content) to <=. Decoded event mappings have even Content length and an even pair index, so index+1 is odd and equality is unreachable. Both forms visit identical event keys. Hand-built odd nodes and concurrent modification are excluded. Event counter and self-assignment mutants are not accepted. Native37885449489 remains failed; fresh native qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "workflows.go",
+          "type": "INVERT_LOGICAL",
+          "line": 480,
+          "column": 37,
+          "contract_domain": "Alias nodes produced by the concrete YAML decoder and consumed by inspectWorkflowDocument event traversal; identical alias expansion and policy result",
+          "reason": "Owner faustbrian; independent supported-domain classification /root/tools_native_survivor_classification at021778190a025d493cea7e3cf3b725bd99ccf554; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/parser-domain change. Pinned Gremlins v0.6.0 changes Kind==AliasNode && Alias!=nil to ||. The concrete decoder supplies a nonnil anchor target to each successfully decoded alias and leaves Alias nil for all nonalias nodes; unknown anchors fail decoding. These predicates have equal truth values in the supported producer, giving identical expansion or traversal. Hand-built malformed nodes and concurrent mutation are excluded. Recursive aliases still require bounded traversal and their visited-counter mutant is not accepted. Native37885449489 remains failed; fresh native qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "workflows.go",
+          "type": "INVERT_LOOPCTRL",
+          "line": 466,
+          "column": 4,
+          "contract_domain": "Missing setting lookup after a merge sequence in duplicate-key-validated YAML workflow mappings; identical nil result and subsequent security refusal",
+          "reason": "Owner faustbrian; independent supported-domain classification /root/tools_native_survivor_classification at021778190a025d493cea7e3cf3b725bd99ccf554; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/parser-domain change. Pinned Gremlins v0.6.0 changes continue to break after every merge-sequence candidate misses the requested key. Explicit keys were exhaustively searched before this loop. Supported duplicate-key-validated mappings contain at most one << entry, so no later pair can supply another merge. Continuing scans nonmerge pairs and returns nil; breaking returns the same nil without effects. Raw hand-built or parser-only duplicate-merge nodes bypassing production validation are excluded. Native37885449489 remains failed; fresh native qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "workflows.go",
+          "type": "CONDITIONALS_BOUNDARY",
+          "line": 477,
+          "column": 46,
+          "contract_domain": "Event lookup invoked by the enclosing bounded inspectWorkflowDocument traversal; identical descriptor refusal or admission before external validator effects",
+          "reason": "Owner faustbrian; independent supported-domain classification /root/tools_native_survivor_classification at021778190a025d493cea7e3cf3b725bd99ccf554; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/traversal-domain change. Pinned Gremlins v0.6.0 changes visited<100000 to <=100000 and permits one extra event-node visit. Any event distinguishable only at that additional visit requires more than100000 reachable visits within the event subtree. The unchanged enclosing traversal must visit that subtree and refuses the whole descriptor at its structural quota before validator effects, including when helper event detection differs. Restrict this equivalence to the production enclosing traversal; arbitrary direct helper calls are excluded. The decrement/infinite traversal mutant is not accepted. Native37885449489 remains failed; fresh native qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "runner.go",
+          "type": "INVERT_LOGICAL",
+          "line": 302,
+          "column": 21,
+          "contract_domain": "Finding metadata through securityTool's sole completed-executor Gitleaks classification caller with its initialized metadata and unchanged stream-overflow exclusion; identical bounded sanitized locations",
+          "reason": "Current applicability independently revalidated by /root/tools_binding_applicability on 2026-10-09 at e5bce6cf7eea0d5f6745f344ebcf80fe248a047a, Gates source d7abeae804daf8d458c132f750f48baa756622ef063770ae463a4d0297dece8c. The compiler-tool isolation changes preserve this stated producer domain. Existing expiry and exclusions remain unchanged. Fresh native current-source qualification remains required; historical reviews and native statuses below are retained as history. Fresh binding reviewer /root/ecma_v2_integrated_final_review; date 2026-10-07; expiry 2026-11-05 or any bound source/verifier or stated producer-domain change. Independent assessment at source57f79a2 confirmed this coordinate and its original domain proof; the unit-first selector changes execution selection, not mutator semantics, and retains unrestricted survivor follow-up. Current source includes only the narrow APIDIFF assignment allowlist delta since the prior gates binding; this coordinate and its producer premises are unchanged. Historical review retained: Owner faustbrian; date 2026-10-07; expiry 2026-11-06 or any bound source/verifier, executor completion contract, metadata initialization or classification caller change. Pinned Gremlins v0.6.0 changes || to &&. securityTool initializes nonnil metadata at1102 and calls findingMetadata at1119 only after completed execution with neither stream overflowed. Both compared predicates are false whenever this caller reaches the helper. Direct nil-metadata or overflowing private-helper calls, reflection-based mutation and executor writes after returning are excluded; those violate the stated producer/completed-execution domain and can distinguish the mutation. Native failure37531787285 remains failed with its original LIVED coordinate; fresh matching-source qualification remains required. Fresh applicability independently revalidated by /root/knapsack_placement_final_review on 2026-10-08 at source5489072f3edf966872e7bcfd17a9cea72fe82bb9: all seven predicates, coordinates and current supported producer domains remain unchanged. Current source includes campaign worker admission as well as intervening tooling changes; earlier current-source descriptions are historical, not a complete description of this revision. Preserve original review dates, expiry, verifier and exclusion domains. Stored d51f9828 was already stale at parent7b95ff23, whose independently reproduced source identity is6267560448c55eef9f6ca792be42e04c3f320d138893f7117ab2c9141b1834be. No native pass is inferred: rehearsal37826979615 remains failed before this package campaign."
         }
       ]
     }

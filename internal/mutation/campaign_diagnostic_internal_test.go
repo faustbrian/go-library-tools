@@ -22,6 +22,8 @@ func TestCaptureFailedDiagnosticRejectsUnsupportedContent(t *testing.T) {
 		{name: "absolute source", change: func(value *report) { value.Files[0].FileName = "/source.go" }},
 		{name: "parent source", change: func(value *report) { value.Files[0].FileName = "../source.go" }},
 		{name: "invalid coordinate", change: func(value *report) { value.Files[0].Mutations[0].Line = 0 }},
+		{name: "zero column", change: func(value *report) { value.Files[0].Mutations[0].Column = 0 }},
+		{name: "non-Go source", change: func(value *report) { value.Files[0].FileName = "ordinary.txt" }},
 		{name: "absent files", change: func(value *report) { value.Files = nil }},
 		{name: "malformed", raw: `{"files":`},
 		{name: "duplicate key", raw: `{"files":[],"files":[]}`},
@@ -29,6 +31,9 @@ func TestCaptureFailedDiagnosticRejectsUnsupportedContent(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			campaign, _ := campaignFixture(t)
 			if err := campaign.prepareDirectories(); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(campaign.Root, "ordinary.txt"), []byte("ordinary"), 0o600); err != nil {
 				t.Fatal(err)
 			}
 			value := report{Files: []reportFile{{FileName: "source.go", Mutations: []mutation{{Type: "INVERT_LOGICAL", Status: "LIVED", Line: 3, Column: 1}}}}}
@@ -54,6 +59,27 @@ func TestCaptureFailedDiagnosticRejectsUnsupportedContent(t *testing.T) {
 				t.Fatalf("refused diagnostic published: %v", err)
 			}
 		})
+	}
+}
+
+func TestCaptureFailedDiagnosticRejectsMalformedInputIdentity(t *testing.T) {
+	for _, input := range []string{strings.Repeat("a", 64), "sha256:bad"} {
+		campaign, _ := campaignFixture(t)
+		if err := campaign.prepareDirectories(); err != nil {
+			t.Fatal(err)
+		}
+		reportPath := filepath.Join(campaign.Workspace, "report.json")
+		data := `{"files":[{"file_name":"source.go","mutations":[{"type":"INVERT_LOGICAL","status":"LIVED","line":3,"column":1}]}]}`
+		if err := os.WriteFile(reportPath, []byte(data), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		path, err := campaign.captureFailedDiagnostic(".", input, reportPath)
+		if path != "" || !errors.Is(err, ErrInvalid) {
+			t.Fatalf("malformed input capture = %q, %v; want refusal", path, err)
+		}
+		if _, err := os.Stat(filepath.Join(campaign.MutationRoot, "failed-reports")); !errors.Is(err, os.ErrNotExist) {
+			t.Fatalf("malformed identity published a diagnostic: %v", err)
+		}
 	}
 }
 

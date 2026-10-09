@@ -84,6 +84,9 @@ func TestCampaignExecutesPersistsAndReusesPackageEvidence(t *testing.T) {
 	if process.mutations != 2 || strings.Count(output.String(), "reused content-identical") != 2 {
 		t.Fatalf("reused campaign mutations/output = %d, %q", process.mutations, output.String())
 	}
+	if strings.Count(output.String(), "mutation evidence (1 mutants)") != 2 || strings.Contains(output.String(), "reviewed equivalent") {
+		t.Fatalf("ordinary reused accounting = %q; want native counts without equivalent claims", output.String())
+	}
 }
 
 func TestCampaignAcceptsOnlyExactReviewedEfficacyExit(t *testing.T) {
@@ -139,6 +142,9 @@ func TestCampaignAcceptsOnlyExactReviewedEfficacyExit(t *testing.T) {
 	output.Reset()
 	if err := campaign.Run(context.Background()); err != nil || process.mutations != 1 || !strings.Contains(output.String(), "reused content-identical") {
 		t.Fatalf("Run(reuse) = %v, mutations = %d, output = %q", err, process.mutations, output.String())
+	}
+	if !strings.Contains(output.String(), "reused content-identical mutation evidence (0 killed, 1 reviewed equivalent)") {
+		t.Fatalf("reviewed reused accounting = %q; want exact native killed/equivalent counts", output.String())
 	}
 	updated, err := ParseEquivalentInventory(strings.NewReader(strings.Replace(selected, "Both boundary forms", "The two boundary forms", 1)))
 	if err != nil {

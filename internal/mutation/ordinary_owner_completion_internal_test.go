@@ -1,6 +1,7 @@
 package mutation
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
@@ -55,5 +56,15 @@ func TestOrdinaryMutationOutputCapacityPreservesCompleteness(t *testing.T) {
 	written, err = output.Write([]byte("x"))
 	if err != nil || written != 1 || output.buffer.Len() != capacity || output.buffer.String() != complete || !output.overflow || output.confirmsNoResults() {
 		t.Fatal("one extra acknowledged byte must preserve retained bytes but invalidate completeness")
+	}
+}
+
+func TestOrdinaryMutationOutputZeroWriteAtCapacityCannotCertifyCompleteness(t *testing.T) {
+	var output boundedMutationOutput
+	if written, err := output.Write(bytes.Repeat([]byte("a"), maximumMutationToolOutput)); err != nil || written != maximumMutationToolOutput {
+		t.Fatalf("capacity write = %d, %v", written, err)
+	}
+	if written, err := output.Write(nil); err != nil || written != 0 || !output.overflow || output.confirmsNoResults() {
+		t.Fatalf("zero write at capacity = %d, %v, overflow %v; want retained incomplete state", written, err, output.overflow)
 	}
 }

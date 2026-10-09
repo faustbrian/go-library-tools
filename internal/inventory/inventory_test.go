@@ -330,6 +330,7 @@ func TestLoadValidatesEveryModuleIdentityAndAcceptsCanonicalNestedModules(t *tes
 			}{
 				{"second directory", `"directory":"nested/module"`, `"directory":"sk_test_0123456789abcdefghijklmnopqrstuv"`, "invalid module directory"},
 				{"second module path", `"module_path":"github.com/faustbrian/example/nested"`, `"module_path":"github.com/faustbrian/example/SOURCE_SENTINEL_DO_NOT_RETAIN_7f3a9c21"`, "invalid module path"},
+				{"dot component", `"module_path":"github.com/faustbrian/example/nested"`, `"module_path":"github.com/faustbrian/example/nested/.."`, "invalid module path"},
 			} {
 				t.Run(test.name, func(t *testing.T) {
 					hostile := strings.Replace(baseline, test.old, test.replacement, 1)
@@ -370,10 +371,46 @@ func TestLoadBoundsModuleCardinalityAcrossSupportedSchemas(t *testing.T) {
 			}
 			write(t, filepath.Join(root, directory, "go.mod"), "module "+modulePath+"\n\ngo 1.27.0\n")
 			modules = append(modules, identityModule(version, directory, modulePath))
+			if len(modules) == inventory.MaximumModules {
+				write(t, filepath.Join(root, "modules.json"), identityManifest(version, modules...))
+				catalog, err := inventory.Load(root, policy)
+				if err != nil || len(catalog.Modules) != inventory.MaximumModules {
+					t.Fatalf("schema%d exact maximum modules: count=%d, error=%v", version, len(catalog.Modules), err)
+				}
+			}
 		}
 		write(t, filepath.Join(root, "modules.json"), identityManifest(version, modules...))
 		if _, err := inventory.Load(root, policy); err == nil || !strings.Contains(err.Error(), "cardinality") {
 			t.Fatalf("schema%d excessive modules: %v", version, err)
+		}
+	}
+}
+
+func TestLoadMajorRootIdentityMustBelongToRepository(t *testing.T) {
+	policy := config.Config{Manifests: config.Manifests{Modules: "modules.json", Packages: "packages.json"}}
+	for _, version := range []int{1, 2, 3} {
+		for _, test := range []struct {
+			name, modulePath string
+			valid            bool
+		}{
+			{"owned major", "github.com/faustbrian/example/v2", true},
+			{"foreign major", "github.com/faustbrian/example-other/v2", false},
+		} {
+			t.Run(fmt.Sprintf("v%d/%s", version, test.name), func(t *testing.T) {
+				root := fixture(t)
+				write(t, filepath.Join(root, "go.mod"), "module "+test.modulePath+"\n\ngo 1.27.0\n")
+				write(t, filepath.Join(root, "modules.json"), identityManifest(version, identityModule(version, ".", test.modulePath)))
+				catalog, snapshot, err := inventory.LoadSnapshot(root, policy)
+				if test.valid {
+					if err != nil || len(catalog.Modules) != 1 || catalog.Modules[0].ModulePath != test.modulePath || snapshot == nil {
+						t.Fatalf("owned major admission = %#v, %q, %v", catalog, snapshot, err)
+					}
+					return
+				}
+				if err == nil || err.Error() != "invalid module path" || catalog.Repository != "" || catalog.Modules != nil || snapshot != nil {
+					t.Fatalf("foreign major admission = %#v, %q, %v; want sanitized refusal", catalog, snapshot, err)
+				}
+			})
 		}
 	}
 }

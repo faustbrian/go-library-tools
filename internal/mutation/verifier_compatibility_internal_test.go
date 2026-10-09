@@ -2,7 +2,9 @@ package mutation
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -61,6 +63,62 @@ func TestHistoricalVerifierImportPreservesProvenanceOnlyWhenPackagePathUnchanged
 				}
 			})
 		}
+	}
+}
+
+func TestHistoricalImportContinuesAfterIncompatiblePackage(t *testing.T) {
+	const verifier = "9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108"
+	campaign, process := campaignFixture(t)
+	campaign.Policy.Packages = []string{"adapter", "zgood"}
+	campaign.Process = func(ctx context.Context, name string, args []string, directory string, environment map[string]string, stdout, stderr io.Writer) error {
+		if name == "go" && len(args) > 1 && args[0] == "list" && args[len(args)-1] == "./zgood" {
+			return json.NewEncoder(stdout).Encode(listedPackage{
+				Dir: filepath.Join(campaign.Root, "zgood"), ImportPath: "example/zgood", GoFiles: []string{"source.go"},
+				Module: &listedModule{Path: "example", Main: true, GoVersion: "1.27.0"},
+			})
+		}
+		return process.run(ctx, name, args, directory, environment, stdout, stderr)
+	}
+	checkpoints := make([]Checkpoint, 0, 2)
+	var ledger MigrationLedger
+	currentInputs := make(map[string]string)
+	for index, test := range []struct{ directory, filename, declaration string }{
+		{"adapter", "adapter.go", "temporalwire"},
+		{"zgood", "source.go", "zgood"},
+	} {
+		directory := filepath.Join(campaign.Root, test.directory)
+		if err := os.Mkdir(directory, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(directory, test.filename), []byte("package "+test.declaration+"\nfunc Value() int { return 1 }\n"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		inputs, err := campaign.packageInputsForVerifiers(context.Background(), test.directory, LegacyVerifierDigest(), verifier)
+		if err != nil {
+			t.Fatal(err)
+		}
+		currentInputs[test.directory] = inputs[LegacyVerifierDigest()].current
+		checkpoint, approval := approvedImportFixture(t, inputs[verifier].current)
+		checkpoint.Package, checkpoint.VerifierDigest = test.directory, verifier
+		approval.VerifierMigrationReview.GremlinsVerifierSHA256 = verifier
+		approval.VerifierMigrations[0].Package, approval.VerifierMigrations[0].GremlinsVerifierSHA256 = test.directory, verifier
+		approval.Entries[0].Package, approval.Entries[0].GremlinsVerifierSHA256 = test.directory, verifier
+		checkpoints = append(checkpoints, checkpoint)
+		if index == 0 {
+			ledger = approval
+		} else {
+			ledger.VerifierMigrations = append(ledger.VerifierMigrations, approval.VerifierMigrations...)
+			ledger.Entries = append(ledger.Entries, approval.Entries...)
+		}
+	}
+	if err := campaign.Import(context.Background(), checkpoints, ledger); !errors.Is(err, ErrInputChanged) {
+		t.Fatalf("mixed historical import = %v; want incompatibility reported", err)
+	}
+	if _, err := evidence.Load(campaign.EvidenceRoot, "mutation", currentInputs["adapter"]); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("incompatible checkpoint became passing evidence: %v", err)
+	}
+	if reused, result, err := Reuse(campaign.EvidenceRoot, campaign.MutationRoot, "example", ".", "zgood", currentInputs["zgood"]); err != nil || !reused || result.Killed != 1 || result.Mutants != 1 {
+		t.Fatalf("later compatible checkpoint = %v, %#v, %v; want exact retained evidence", reused, result, err)
 	}
 }
 

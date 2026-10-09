@@ -2,6 +2,7 @@ package mutation
 
 import (
 	"errors"
+	"fmt"
 	"math"
 	"os"
 	"path/filepath"
@@ -25,6 +26,30 @@ func TestOrdinarySourceDirectoryAdmission(t *testing.T) {
 	entries, err = readSourceEntries(root, 2)
 	if err != nil || len(entries) != 2 || entries[0].Name() != "a.go" || entries[1].Name() != "b.go" {
 		t.Fatalf("exact directory allowance = %#v, %v; want sorted admitted entries", entries, err)
+	}
+}
+
+func TestOrdinarySourceDirectoryAdmissionAcrossBatches(t *testing.T) {
+	root := t.TempDir()
+	const count = 129
+	for index := range count {
+		name := fmt.Sprintf("source-%03d.go", index)
+		if err := os.WriteFile(filepath.Join(root, name), nil, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	entries, err := readSourceEntries(root, count-1)
+	if !errors.Is(err, errSourceEntryLimit) || entries != nil {
+		t.Fatalf("cross-batch excess = %d entries, %v; want nil entries and entry-limit refusal", len(entries), err)
+	}
+	entries, err = readSourceEntries(root, count)
+	if err != nil || len(entries) != count {
+		t.Fatalf("cross-batch exact allowance = %d entries, %v; want all %d entries", len(entries), err, count)
+	}
+	for index, entry := range entries {
+		if want := fmt.Sprintf("source-%03d.go", index); entry.Name() != want {
+			t.Fatalf("cross-batch entry %d = %q; want sorted, complete entry %q", index, entry.Name(), want)
+		}
 	}
 }
 
@@ -254,6 +279,38 @@ func TestOrdinarySourceDigestFiniteAllowances(t *testing.T) {
 		if !errors.Is(err, ErrInvalid) || got != "" {
 			t.Fatalf("below source allowance = %s, %v; want no identity and ErrInvalid", got, err)
 		}
+	}
+}
+
+func TestOrdinarySourceDigestCumulativeUnequalFiles(t *testing.T) {
+	root := t.TempDir()
+	total := int64(0)
+	maximumFile := int64(0)
+	for _, file := range []struct{ name, content string }{
+		{"a.go", "package example\n"},
+		{"b.go", "package example\n// b\n"},
+		{"c.go", "package example\n// longer c\n"},
+	} {
+		if err := os.WriteFile(filepath.Join(root, file.name), []byte(file.content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		size := int64(len(file.content))
+		total += size
+		maximumFile = max(maximumFile, size)
+	}
+	limits := sourceReadLimits{entries: 3, file: maximumFile, total: total - 1}
+	got, err := sourceDigestWithLimits(operatingSourceFiles{}, root, ".", ".", limits)
+	if got != "" || !errors.Is(err, ErrInvalid) || !errors.Is(err, errSourceTotalLimit) {
+		t.Fatalf("cumulative source allowance = %q, %v; want no identity and aggregate refusal", got, err)
+	}
+	limits.total = total
+	want, err := SourceDigest(root, ".", ".")
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err = sourceDigestWithLimits(operatingSourceFiles{}, root, ".", ".", limits)
+	if err != nil || got != want {
+		t.Fatalf("exact cumulative allowance = %q, %v; want admitted identity %q", got, err, want)
 	}
 }
 
