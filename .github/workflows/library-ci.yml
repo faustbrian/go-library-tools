@@ -151,9 +151,9 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap != true
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@14a365e423d6fa50fc2bf78d439d48a098723d3e
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap == true
         with:
           source_bootstrap: 'true'
@@ -247,9 +247,9 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap != true
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@14a365e423d6fa50fc2bf78d439d48a098723d3e
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap == true
         with:
           source_bootstrap: 'true'
@@ -353,9 +353,9 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap != true
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@14a365e423d6fa50fc2bf78d439d48a098723d3e
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap == true
         with:
           source_bootstrap: 'true'
@@ -453,9 +453,9 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap != true
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@14a365e423d6fa50fc2bf78d439d48a098723d3e
+      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap == true
         with:
           source_bootstrap: 'true'
