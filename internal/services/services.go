@@ -231,8 +231,11 @@ func (manager Manager) start(ctx context.Context, lease *Lease, service definiti
 	if service.name == "nsq" {
 		arguments = append(arguments, "/nsqd", "--broadcast-address=127.0.0.1")
 	}
-	if err := manager.Process(ctx, "docker", arguments, nil, io.Discard, io.Discard); err != nil {
-		return fmt.Errorf("start %s: %w", service.name, err)
+	// Generic fixtures use only these fixed credentials; Streams owns its
+	// separate generated credential set and diagnostic boundary.
+	diagnostic := newBoundedDiagnosticWriter("golib", "guest")
+	if err := manager.Process(ctx, "docker", arguments, nil, io.Discard, &diagnostic); err != nil {
+		return fmt.Errorf("start %s: %w", service.name, serviceProcessError(err, &diagnostic))
 	}
 	lease.containers = append(lease.containers, name)
 	imageIdentity, err := manager.imageIdentity(ctx, name, service.image)
@@ -510,6 +513,9 @@ func (writer *boundedDiagnosticWriter) String() string {
 		return character
 	}, result)
 	result = strings.TrimSpace(result)
+	if result == "" {
+		return ""
+	}
 	limit := maximumServiceDiagnostic
 	if writer.truncated || len(result) > limit {
 		writer.truncated = true

@@ -10,6 +10,12 @@ credentials, and files. Readiness is bounded and deterministic. Environment is
 exposed only to the selected module gate, and cleanup removes only exact owned
 resources on success or failure.
 
+Generic container-start failures retain Docker's diagnostic stderr tail,
+bounded to 4 KiB including a truncation marker. Known fixture credentials are
+redacted and terminal control text is normalized; stdout remains discarded.
+Empty stderr preserves the original failure. This diagnostic does not change
+readiness, cleanup, or required-gate acceptance.
+
 Fixtures are intentionally not exposed as detached `services start` and
 `services stop` commands. `golib check` starts the selected module's declared
 fixtures in-process, passes their environment only to that gate, and closes the
