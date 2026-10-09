@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Refresh the exact Gates equivalent-mutant binding after compiler-tool
+  changes, including the moved coverage-loop coordinate. Retain its narrow
+  reviewed domains and historical reports; require fresh native qualification.
+
 - Align released and source-bootstrap setup actions on one immutable revision,
   preserving installation before archive validation in shared CI jobs.
 
