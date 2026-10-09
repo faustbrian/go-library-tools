@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"path/filepath"
 	"slices"
 	"strings"
 	"testing"
@@ -17,7 +18,7 @@ func inertDiscovery(t *testing.T, root string, directories []string) ([]string, 
 	t.Helper()
 	stop := errors.New("inert selected scanner boundary")
 	var selected []string
-	runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
+	runner := Runner{Executor: workspaceExecutor{directory: t.TempDir(), emptyGoPackageInventory: true, run: func(_ context.Context, command Command) error {
 		if slices.Contains(command.Args, "list") {
 			for _, directory := range directories {
 				if err := json.NewEncoder(command.Stdout).Encode(map[string]string{"Dir": directory}); err != nil {
@@ -25,15 +26,15 @@ func inertDiscovery(t *testing.T, root string, directories []string) ([]string, 
 				}
 			}
 		}
-		if slices.Contains(command.Args, "github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion) {
-			if len(command.Args) < 5 {
+		if filepath.Base(command.Name) == "gosec" {
+			if len(command.Args) < 3 {
 				t.Fatal("structured scanner arguments missing")
 			}
-			selected = append([]string(nil), command.Args[5:]...)
+			selected = append([]string(nil), command.Args[3:]...)
 			return stop
 		}
 		return nil
-	})}
+	}}}
 	err := runner.runSecurity(t.Context(), io.Discard, root, inventory.Module{Directory: "."})
 	return selected, err, stop
 }

@@ -65,14 +65,14 @@ func TestAPIModulePinsRepositoryGoToolchain(t *testing.T) {
 	var commands []Command
 	runner := Runner{
 		Root:    "/repo",
-		Catalog: inventory.Inventory{GoVersion: "1.27.0"},
+		Catalog: inventory.Inventory{GoVersion: "1.27.2"},
 		Executor: workspaceExecutor{directory: "/task", run: func(_ context.Context, command Command) error {
 			commands = append(commands, command)
 			return nil
 		}},
 		apiFiles: files,
 	}
-	module := inventory.Module{Directory: ".", ModulePath: "example", GoVersion: "1.26.6"}
+	module := inventory.Module{Directory: ".", ModulePath: "example", GoVersion: "1.27.0"}
 	if err := runner.apiModule(context.Background(), io.Discard, module, false); err != nil {
 		t.Fatalf("apiModule() error = %v", err)
 	}
@@ -80,8 +80,8 @@ func TestAPIModulePinsRepositoryGoToolchain(t *testing.T) {
 		t.Fatalf("API command count = %d, want 2", len(commands))
 	}
 	for index, command := range commands {
-		if got := command.Env["GOTOOLCHAIN"]; got != "go1.27.0" {
-			t.Errorf("command %d GOTOOLCHAIN = %q, want repository target go1.27.0", index, got)
+		if got := command.Env["GOTOOLCHAIN"]; got != "go1.27.2" {
+			t.Errorf("command %d GOTOOLCHAIN = %q, want repository target go1.27.2", index, got)
 		}
 		if got := command.Env["GOWORK"]; got != "off" {
 			t.Errorf("command %d GOWORK = %q, want off", index, got)
@@ -213,9 +213,9 @@ func TestGoDocAPISnapshotReportsGenerationFailures(t *testing.T) {
 
 func TestGoDocAPISnapshotPinsRepositoryGoToolchain(t *testing.T) {
 	file := &fakeNamedFile{name: "snapshot"}
-	runner := Runner{Catalog: inventory.Inventory{GoVersion: "1.27.0"}, Executor: executorFunction(func(_ context.Context, command Command) error {
-		if got := command.Env["GOTOOLCHAIN"]; got != "go1.27.0" {
-			t.Fatalf("GOTOOLCHAIN = %q, want repository target go1.27.0", got)
+	runner := Runner{Catalog: inventory.Inventory{GoVersion: "1.27.2"}, Executor: executorFunction(func(_ context.Context, command Command) error {
+		if got := command.Env["GOTOOLCHAIN"]; got != "go1.27.2" {
+			t.Fatalf("GOTOOLCHAIN = %q, want repository target go1.27.2", got)
 		}
 		if got := command.Env["GOWORK"]; got != "off" {
 			t.Fatalf("GOWORK = %q, want off", got)
@@ -223,7 +223,7 @@ func TestGoDocAPISnapshotPinsRepositoryGoToolchain(t *testing.T) {
 		_, _ = io.WriteString(command.Stdout, "API")
 		return nil
 	})}
-	module := inventory.Module{Directory: ".", ModulePath: "example", GoVersion: "1.26.6"}
+	module := inventory.Module{Directory: ".", ModulePath: "example", GoVersion: "1.27.0"}
 	if _, err := runner.generateAPISnapshot(context.Background(), "/repo", file, file.name, module,
 		config.APIBaseline{Mode: "go-doc", Packages: []string{"."}}); err != nil {
 		t.Fatalf("generateAPISnapshot() error = %v", err)
@@ -320,14 +320,15 @@ func (info apiFileInfo) IsDir() bool   { return info.directory }
 func (apiFileInfo) Sys() any           { return nil }
 
 type workspaceExecutor struct {
-	directory            string
-	run                  func(context.Context, Command) error
-	emptySourceInventory bool
+	directory               string
+	run                     func(context.Context, Command) error
+	emptySourceInventory    bool
+	emptyGoPackageInventory bool
 }
 
 func (executor workspaceExecutor) Run(ctx context.Context, command Command) error {
 	err := executor.run(ctx, command)
-	if output, ok := command.Stdout.(*goPackageOutput); ok && err == nil && output.Len() == 0 {
+	if output, ok := command.Stdout.(*goPackageOutput); ok && !executor.emptyGoPackageInventory && err == nil && output.Len() == 0 {
 		_, err = fmt.Fprintf(output, "{\"Dir\":%q}\n", command.Dir)
 	}
 	// Most gate tests deliberately double the Git/scanner command boundary.

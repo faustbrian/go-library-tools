@@ -1140,6 +1140,16 @@ func (executor releaseSelectionExecutor) Run(_ context.Context, command gates.Co
 		}
 		return nil
 	}
+	if command.Name == "go" && len(command.Args) == 5 &&
+		slices.Equal(command.Args[:3], []string{"build", "-mod=mod", "-o"}) &&
+		filepath.Dir(command.Args[3]) == command.Dir && filepath.Dir(command.Dir) == executor.directory &&
+		slices.Contains([]string{"github.com/securego/gosec/v2/cmd/gosec", "github.com/faustbrian/go-analysis/cmd/golib-analysis"}, command.Args[4]) {
+		return nil
+	}
+	if filepath.Dir(filepath.Dir(command.Name)) == executor.directory &&
+		slices.Contains([]string{"gosec", "golib-analysis"}, filepath.Base(command.Name)) {
+		return nil
+	}
 	if command.Name == "git" && len(command.Args) == 3 && command.Args[0] == "tag" && command.Args[1] == "--list" {
 		*executor.tagQueries = append(*executor.tagQueries, command.Args[2])
 		if executor.existingTag != "" && command.Args[2] == executor.existingTag {
