@@ -142,3 +142,39 @@ func TestAdmitModulesPreservesScannerVerdictAndResidualConsistency(t *testing.T)
 		})
 	}
 }
+
+func TestAdmitModulesInspectsOwnedRisksAcrossForeignEntries(t *testing.T) {
+	var decoded matrix
+	if err := json.Unmarshal(testPassingMatrix(), &decoded); err != nil {
+		t.Fatal(err)
+	}
+	digest := strings.Repeat("a", 64)
+	foreign := risk{ID: "SEC-2", Module: "github.com/acme/other", Severity: "low", Status: "open"}
+	for _, test := range []struct {
+		name, category string
+		owned          risk
+		residual       []string
+	}{
+		{"unresolved owned high", "passing verdict has unresolved critical or high risk",
+			risk{ID: "SEC-1", Module: "github.com/acme/example", Severity: "high", Status: "open"}, nil},
+		{"wrong owned evidence", "resolved risk requires exact security matrix evidence",
+			risk{ID: "SEC-1", Module: "github.com/acme/example", Severity: "medium", Status: "accepted",
+				Evidence: "sha256:" + strings.Repeat("b", 64) + ":security-matrix.json"}, []string{"SEC-1"}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			value := decoded.Modules[0]
+			value.Verdict.ResidualRisks = test.residual
+			registry := map[string]risk{foreign.ID: foreign, test.owned.ID: test.owned}
+			// Correct admission refuses on every map order. Repeated traversals
+			// exercise foreign-first starts without relying on map insertion order.
+			for attempt := range 256 {
+				if err := admitModules([]moduleRecord{value}, registry, digest); err == nil || err.Error() != test.category {
+					t.Fatalf("attempt %d: owned refusal=%v, want %q", attempt, err, test.category)
+				}
+			}
+			if len(registry) != 2 || registry[foreign.ID] != foreign || registry[test.owned.ID] != test.owned {
+				t.Fatal("module admission changed owned or foreign risk records")
+			}
+		})
+	}
+}
