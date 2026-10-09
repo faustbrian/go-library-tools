@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strings"
 	"testing"
 
 	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
@@ -58,17 +59,17 @@ func TestGosecSelectedPackagesHosted(t *testing.T) {
 	report := &goPackageOutput{}
 	report.limit = maximumSecurityProcessOutput
 	runner := Runner{Root: root, Executor: workspaceExecutor{directory: executorWorkspace(executor), run: func(ctx context.Context, command Command) error {
-		if slices.Contains(command.Args, "list") {
+		if slices.Contains(command.Args, "list") || (len(command.Args) > 0 && command.Args[0] == "build" && strings.HasSuffix(command.Args[len(command.Args)-1], "/gosec")) {
 			return executor.Run(ctx, command)
 		}
-		if slices.Contains(command.Args, tool) {
+		if filepath.Base(command.Name) == "gosec" {
 			if !slices.Contains(command.Args, "-fmt=json") {
 				t.Fatal("production Gosec does not request structured output")
 			}
 			command.Stdout = report
 			return executor.Run(ctx, command)
 		}
-		if slices.Contains(command.Args, "github.com/faustbrian/go-analysis/cmd/golib-analysis@"+goAnalysisVersion) {
+		if filepath.Base(command.Name) == "golib-analysis" || slices.Contains(command.Args, "github.com/faustbrian/go-analysis/cmd/golib-analysis") {
 			return stop
 		}
 		return nil

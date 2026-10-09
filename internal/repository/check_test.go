@@ -17,16 +17,22 @@ import (
 )
 
 func TestCheckAcceptsStandaloneAndMultiModuleRepositories(t *testing.T) {
-	root, catalog := fixture(t)
-	if err := repository.Check(root, catalog); err != nil {
-		t.Fatalf("Check() error = %v", err)
-	}
-	nested := inventory.Module{Directory: "nested", ModulePath: "example/nested", GoVersion: "1.27.0"}
-	write(t, filepath.Join(root, "nested", "go.mod"), "module example/nested\n\ngo 1.27.0\n")
-	write(t, filepath.Join(root, "go.work"), "go 1.27.0\n\nuse (\n\t.\n\t./nested\n)\n")
-	catalog.Modules = append(catalog.Modules, nested)
-	if err := repository.Check(root, catalog); err != nil {
-		t.Fatalf("Check() multi-module error = %v", err)
+	for _, runtimeVersion := range []string{"1.27.0", "1.27.2"} {
+		t.Run(runtimeVersion, func(t *testing.T) {
+			root, catalog := fixture(t)
+			catalog.GoVersion = runtimeVersion
+			write(t, filepath.Join(root, ".go-version"), runtimeVersion+"\n")
+			if err := repository.Check(root, catalog); err != nil {
+				t.Fatalf("Check() error = %v", err)
+			}
+			nested := inventory.Module{Directory: "nested", ModulePath: "example/nested", GoVersion: "1.27.0"}
+			write(t, filepath.Join(root, "nested", "go.mod"), "module example/nested\n\ngo 1.27.0\n")
+			write(t, filepath.Join(root, "go.work"), "go "+runtimeVersion+"\n\nuse (\n\t.\n\t./nested\n)\n")
+			catalog.Modules = append(catalog.Modules, nested)
+			if err := repository.Check(root, catalog); err != nil {
+				t.Fatalf("Check() multi-module error = %v", err)
+			}
+		})
 	}
 }
 

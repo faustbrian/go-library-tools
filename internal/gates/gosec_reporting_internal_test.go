@@ -31,7 +31,10 @@ func TestGosecFailureReportsOnlyValidatedMetadata(t *testing.T) {
 			failure := errors.New("inert process failure")
 			var announced strings.Builder
 			var captured *sourceInventoryOutput
-			runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
+			runner := Runner{Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+				if len(command.Args) > 0 && command.Args[0] == "build" {
+					return nil
+				}
 				captured, _ = command.Stdout.(*sourceInventoryOutput)
 				if !slices.Contains(command.Args, "-fmt=json") {
 					t.Error("Gosec report format is not explicit")
@@ -39,8 +42,8 @@ func TestGosecFailureReportsOnlyValidatedMetadata(t *testing.T) {
 				_, _ = command.Stdout.Write(report[:len(report)/2])
 				_, _ = command.Stdout.Write(report[len(report)/2:])
 				_, _ = io.WriteString(command.Stderr, "private diagnostic\nexit status 1\n")
-				return failure
-			})}
+				return compilerScannerExit{error: failure, code: 1}
+			}}}
 			err := runner.securityTool(t.Context(), &announced, ".", "gosec", root,
 				"github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion,
 				"-nosec-require-rules", "-nosec-require-justification", "./")
@@ -206,7 +209,10 @@ func TestGosecFailurePreservesProcessBoundaries(t *testing.T) {
 			ctx, cancel := context.WithCancel(t.Context())
 			defer cancel()
 			failure := errors.New("inert process failure")
-			runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
+			runner := Runner{Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+				if len(command.Args) > 0 && command.Args[0] == "build" {
+					return nil
+				}
 				_, _ = command.Stdout.Write(ordinaryGosecReport(root, true, false))
 				if test.overflow {
 					_, _ = io.WriteString(command.Stdout, strings.Repeat("x", maximumSecurityProcessOutput))
@@ -223,8 +229,11 @@ func TestGosecFailurePreservesProcessBoundaries(t *testing.T) {
 				if test.success {
 					return nil
 				}
+				if test.terminal {
+					return compilerScannerExit{error: failure, code: 1}
+				}
 				return failure
-			})}
+			}}}
 			tool := "github.com/securego/gosec/v2/cmd/gosec@" + gosecVersion
 			if test.otherTool {
 				tool = "example.invalid/ordinary@v1.0.0"

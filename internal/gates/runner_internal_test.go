@@ -97,7 +97,7 @@ func TestSecurityOrchestrationConfigFailureStopsLaterEffects(t *testing.T) {
 	files := &fakeSecretConfigFiles{createErr: failure}
 	runner := Runner{Root: t.TempDir(), secretConfigFiles: files,
 		Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
-			commands = append(commands, strings.Join(command.Args, " "))
+			commands = append(commands, strings.Join(append([]string{command.Name}, command.Args...), " "))
 			return nil
 		}},
 	}
@@ -105,7 +105,7 @@ func TestSecurityOrchestrationConfigFailureStopsLaterEffects(t *testing.T) {
 	if !errors.Is(err, failure) || !strings.Contains(err.Error(), "create temporary analysis config") {
 		t.Fatalf("analysis configuration failure = %v", err)
 	}
-	if len(commands) != 3 || !strings.Contains(commands[0], "govulncheck@") || !strings.HasPrefix(commands[1], "list ") || !strings.Contains(commands[2], "gosec@") || files.removed != "" {
+	if len(commands) != 4 || !strings.Contains(commands[0], "govulncheck@") || !strings.HasPrefix(commands[1], "go list ") || !strings.Contains(commands[2], "build -mod=mod") || !strings.Contains(commands[3], "gosec") || files.removed != "" {
 		t.Fatalf("configuration failure allowed later effects: commands=%v, removed=%q", commands, files.removed)
 	}
 }
@@ -645,8 +645,9 @@ func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
 				if strings.Contains(joined, "govulncheck") {
 					vulnerabilities++
 				}
-				for _, tool := range []string{"govulncheck", "gosec/v2", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
-					if strings.Contains(joined, tool) {
+				for _, tool := range []string{"govulncheck", "gosec", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
+					if filepath.Base(command.Name) == tool ||
+						(command.Name == "go" && len(command.Args) > 0 && command.Args[0] == "run" && strings.Contains(joined, tool)) {
 						scans[tool]++
 						if scannedModules[command.Dir] == nil {
 							scannedModules[command.Dir] = map[string]int{}
@@ -663,7 +664,7 @@ func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
 					if history != 1 || current != 1 {
 						return errors.New("repository code ran before exact-source scans")
 					}
-					for _, tool := range []string{"govulncheck", "gosec/v2", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
+					for _, tool := range []string{"govulncheck", "gosec", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
 						if scans[tool] != 2 {
 							return errors.New("repository code ran before all selected modules' static security scans")
 						}

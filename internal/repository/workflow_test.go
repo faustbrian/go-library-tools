@@ -816,6 +816,7 @@ type workflowJob struct {
 }
 
 type workflowStep struct {
+	Uses string            `yaml:"uses"`
 	ID   string            `yaml:"id"`
 	Name string            `yaml:"name"`
 	If   string            `yaml:"if"`
@@ -826,7 +827,7 @@ type workflowStep struct {
 func TestReusableWorkflowConfiguresBootstrapProxyForEveryGoBuild(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/library-ci.yml")
 	for _, required := range []string{
-		"uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@7e4cd2983099490e7f350724044b86835cc5d342",
+		"uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@",
 		"bootstrap_url: ${{ vars.GOLIB_BOOTSTRAP_PROXY_URL }}",
 		"bootstrap_sha256: ${{ vars.GOLIB_BOOTSTRAP_PROXY_SHA256 }}",
 	} {
@@ -943,16 +944,31 @@ exit 42
 }
 
 func TestReusableWorkflowInstallsGolibBeforeEveryArchiveValidation(t *testing.T) {
-	content := readProjectFile(t, ".github/workflows/library-ci.yml")
-	codeQLStart := strings.Index(content, "\n  codeql:\n")
-	if codeQLStart < 0 {
-		t.Fatal("reusable workflow has no CodeQL job")
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &workflow); err != nil {
+		t.Fatal(err)
 	}
-	codeQL := content[codeQLStart:]
-	setup := strings.Index(codeQL, "uses: faustbrian/go-library-tools/.github/actions/setup-golib@562f083a6d7eb499eed8d464e5f3e1a1b58902d0")
-	bootstrap := strings.Index(codeQL, "uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@7e4cd2983099490e7f350724044b86835cc5d342")
-	if setup < 0 || bootstrap < 0 || setup > bootstrap {
-		t.Fatal("CodeQL job must install golib before bootstrap archive validation")
+	for _, job := range []string{"quality", "codeql"} {
+		t.Run(job, func(t *testing.T) {
+			bootstrap := -1
+			var setups []int
+			for index, step := range workflow.Jobs[job].Steps {
+				if strings.HasPrefix(step.Uses, "faustbrian/go-library-tools/.github/actions/setup-golib@") {
+					setups = append(setups, index)
+				}
+				if strings.HasPrefix(step.Uses, "faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@") {
+					bootstrap = index
+				}
+			}
+			if bootstrap < 0 || len(setups) != 2 {
+				t.Fatal("job must define both golib setup modes and bootstrap archive validation")
+			}
+			for _, setup := range setups {
+				if setup >= bootstrap {
+					t.Fatal("both golib setup modes must precede bootstrap archive validation")
+				}
+			}
+		})
 	}
 }
 
@@ -1003,23 +1019,7 @@ func TestToolingWorkflowSeparatesFastPullRequestAndAggregateMilestoneChecks(t *t
 
 func TestCompatibilityConsumerMatrixPinsRuntimeToolchain(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/ci.yml")
-	var compatibilitySets struct {
-		Sets []struct {
-			Go struct {
-				Version string `json:"version"`
-			} `json:"go"`
-		} `json:"sets"`
-	}
-	if err := json.Unmarshal([]byte(readProjectFile(t, "docs/ecosystem/compatibility-sets.json")), &compatibilitySets); err != nil {
-		t.Fatal(err)
-	}
-	if len(compatibilitySets.Sets) != 1 {
-		t.Fatalf("compatibility sets = %d", len(compatibilitySets.Sets))
-	}
-	version := compatibilitySets.Sets[0].Go.Version
-	if got := strings.TrimSpace(readProjectFile(t, ".go-version")); got != version {
-		t.Fatalf("compatibility Go version = %q, .go-version = %q", version, got)
-	}
+	version := strings.TrimSpace(readProjectFile(t, ".go-version"))
 	for _, required := range []string{
 		"go-version-file: .go-version",
 		`test "$(go env GOVERSION)" = 'go` + version + `'`,

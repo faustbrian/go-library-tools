@@ -19,8 +19,8 @@ consumer workflow or production verifier asset is changed by this diagnostic.
 
 Consumer CI calls `library-ci.yml` at an immutable commit SHA. The same SHA is
 passed as `tooling_sha` for the isolated tooling checkout. By default the setup action
-is pinned to `562f083a6d7eb499eed8d464e5f3e1a1b58902d0`; the bootstrap
-action is pinned to `7e4cd2983099490e7f350724044b86835cc5d342`.
+is pinned to `e8c0c51cc517dfede5475858bb417f0e7a21f39d`; the bootstrap
+action is pinned to `712163686bea3c3ad465acdca026b4b7bf5f0b0b`.
 By default, `tooling_sha` does not select those executable actions. A nearby
 comment records the corresponding tooling release.
 
@@ -103,7 +103,7 @@ exact-version verification.
 
 Reusable callers may explicitly set `source_bootstrap: true`, default false.
 All four setup sites then use the immutable remote setup action at
-`14a365e423d6fa50fc2bf78d439d48a098723d3e`, passing the same `tooling_sha`
+`e8c0c51cc517dfede5475858bb417f0e7a21f39d`, passing the same `tooling_sha`
 used for their fixed tooling checkout. Documentation/license-only pull requests
 use the ordinary metadata assurance tier, including in source-bootstrap mode.
 Metadata-only source-bootstrap jobs still scan repository history and the
@@ -149,6 +149,9 @@ public Go proxy may define both `GOLIB_BOOTSTRAP_PROXY_URL` and
 an immutable HTTPS archive containing a file-based Go module proxy, and the
 checksum must be its lowercase SHA-256 digest. The reusable workflow verifies
 the archive before extraction and exposes it to both quality and CodeQL builds.
+The pinned source fallback accepts bounded ordinary zero-record tar padding;
+an installed archive-capable `golib` remains the validator and is not upgraded
+by this action pin.
 Defining only one variable, using a mutable or non-HTTPS URL, or providing an
 invalid checksum fails closed. These variables bootstrap historical module
 identity only; they do not replace normal dependency resolution or permit a
@@ -209,6 +212,11 @@ pull request per changed consumer. Apply mode requires the separately managed
 fine-grained `GOLIB_ROLLOUT_TOKEN`; the repository-scoped workflow token cannot
 write to sibling repositories. The workflow changes only `.golib.yaml` and the
 thin CI caller and never force-pushes an existing rollout branch.
+
+Own tooling builds and CI select Go 1.27.2 from `.go-version`; the module
+language floor remains Go 1.27.0. Runtime or CI changes select the existing
+native compatibility-consumer matrix without republishing the historical
+Go 1.27.0 compatibility cohort or relabeling its observations.
 
 This repository bootstraps its own CI from source so the first release does not
 depend on itself. Consumer workflows use released binaries by default;

@@ -15,6 +15,20 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Align released and source-bootstrap setup actions on one immutable revision,
+  preserving installation before archive validation in shared CI jobs.
+
+- Adopt the bootstrap-proxy action source with bounded zero-record tar-padding
+  support for legacy installed tooling, retaining installed-validator authority.
+- Build and verify tooling with Go 1.27.2 and golangci-lint v2.14.0 to apply
+  standard-library security fixes and preserve analyzer compatibility, without
+  raising the module language minimum or rewriting historical cohort evidence.
+- Build Staticcheck v0.8.1, Gosec v2.29.0, and owned security analysis v1.0.0
+  through one isolated tool-build owner with the compatible x/tools v0.50.0
+  importer, preserving analyzer policies and application dependency graphs.
+  Keep build diagnostics private and bounded, classify direct Gosec failures
+  from typed exit status and validated reports.
+
 - Update release SBOM generation to Anchore v0.24.3 and its default Syft
   v1.54.0 scanner, retaining SPDX output names and attested asset publication.
 

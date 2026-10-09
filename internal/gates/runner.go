@@ -196,7 +196,7 @@ rules:
 )
 
 const (
-	golangCILintVersion = "v2.13.1"
+	golangCILintVersion = "v2.14.0"
 	staticcheckVersion  = "v0.8.1"
 	nilAwayVersion      = "v0.0.0-20260720194628-9fd1b8d7bac8"
 	govulncheckVersion  = "v1.6.0"
@@ -1066,6 +1066,9 @@ func validateNativeSecurityDirective(arguments string) error {
 }
 
 func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
+	if tool == "honnef.co/go/tools/cmd/staticcheck@"+staticcheckVersion {
+		return runner.staticcheck(ctx, output, module, gate, directory, args...)
+	}
 	arguments := append([]string{"run", tool}, args...)
 	return runner.command(ctx, output, module, gate, directory, arguments...)
 }
@@ -1086,48 +1089,61 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 	}
 	arguments := append([]string{"run", tool}, args...)
 	return announce(output, module, gate, func() error {
-		stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
-		stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
-		var stdoutWriter io.Writer = stdout
-		var report *sourceInventoryOutput
-		if gosec {
-			report = &sourceInventoryOutput{}
-			report.limit = maximumSecurityProcessOutput
-			stdout = &report.boundedProcessOutput
-			stdoutWriter = report
-			defer func() { clear(report.data.Bytes()); report.data.Reset() }()
-			stderr.terminalLine = "exit status 1"
-		}
-		if gitleaks {
-			stdout.metadata = &secretMetadata{}
-			// Go run reports the child status as its final stderr line while itself
-			// returning status 1. Gitleaks reserves 42 here for completed findings;
-			// its setup and scanning errors still use status 1.
-			stderr.terminalLine = "exit status 42"
-		}
-		err := runner.Executor.Run(ctx, Command{
-			Name: "go", Args: arguments, Dir: directory, Env: map[string]string{"GOWORK": "off"}, boundedScanner: true,
-			Stdout: stdoutWriter, Stderr: stderr,
-		})
-		var overflow error
-		if stdout.didOverflow() || stderr.didOverflow() {
-			overflow = fmt.Errorf("security scanner output exceeded %d bytes", maximumSecurityProcessOutput)
-		}
-		if err != nil || overflow != nil {
-			var classification error
-			if err != nil && overflow == nil && ctx.Err() == nil && gitleaks && stderr.matchedTerminalLine() {
-				classification = errors.New("secret-findings" + stdout.findingMetadata())
+		scan := func(binary string) error {
+			stdout := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+			stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
+			var stdoutWriter io.Writer = stdout
+			var report *sourceInventoryOutput
+			if gosec {
+				report = &sourceInventoryOutput{}
+				report.limit = maximumSecurityProcessOutput
+				stdout = &report.boundedProcessOutput
+				stdoutWriter = report
+				defer func() { clear(report.data.Bytes()); report.data.Reset() }()
 			}
-			if err != nil && overflow == nil && ctx.Err() == nil && gosec {
-				metadata := "gosec-tool-or-report-failure"
-				if stderr.matchedTerminalLine() {
-					metadata = gosecFailureMetadata(report.data.Bytes(), directory)
+			if gitleaks {
+				stdout.metadata = &secretMetadata{}
+				// Go run reports the child status as its final stderr line while itself
+				// returning status 1. Gitleaks reserves 42 here for completed findings;
+				// its setup and scanning errors still use status 1.
+				stderr.terminalLine = "exit status 42"
+			}
+			name, scannerArguments := "go", arguments
+			if binary != "" {
+				name, scannerArguments = binary, args
+			}
+			err := runner.Executor.Run(ctx, Command{
+				Name: name, Args: scannerArguments, Dir: directory, Env: map[string]string{"GOWORK": "off"}, boundedScanner: true,
+				Stdout: stdoutWriter, Stderr: stderr,
+			})
+			var overflow error
+			if stdout.didOverflow() || stderr.didOverflow() {
+				overflow = fmt.Errorf("security scanner output exceeded %d bytes", maximumSecurityProcessOutput)
+			}
+			if err != nil || overflow != nil {
+				var classification error
+				if err != nil && overflow == nil && ctx.Err() == nil && gitleaks && stderr.matchedTerminalLine() {
+					classification = errors.New("secret-findings" + stdout.findingMetadata())
 				}
-				classification = errors.New(metadata)
+				if err != nil && overflow == nil && ctx.Err() == nil && gosec {
+					metadata := "gosec-tool-or-report-failure"
+					var status interface{ ExitCode() int }
+					if errors.As(err, &status) && status.ExitCode() == 1 {
+						metadata = gosecFailureMetadata(report.data.Bytes(), directory)
+					}
+					classification = errors.New(metadata)
+				}
+				return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err, classification))
 			}
-			return fmt.Errorf("%s %s: %w", module, gate, errors.Join(overflow, err, classification))
+			return nil
 		}
-		return nil
+		if tool, ok := securityCompilerTool(tool); ok {
+			if err := runner.withCompilerTool(ctx, tool, scan); err != nil {
+				return fmt.Errorf("%s %s: %w", module, gate, err)
+			}
+			return nil
+		}
+		return scan("")
 	})
 }
 

@@ -35,7 +35,7 @@ func TestGosecReceivesGoSelectedDirectories(t *testing.T) {
 	root := t.TempDir()
 	stop := errors.New("inert gosec boundary")
 	var selected []string
-	runner := Runner{Root: root, Executor: executorFunction(func(_ context.Context, command Command) error {
+	runner := Runner{Root: root, Executor: workspaceExecutor{directory: t.TempDir(), emptyGoPackageInventory: true, run: func(_ context.Context, command Command) error {
 		if slices.Contains(command.Args, "list") {
 			if !slices.Equal(command.Args, []string{"list", "-json=Dir", "./..."}) || command.Env["GOWORK"] != "off" || !command.boundedScanner || command.Stdout == nil || command.Stderr == nil {
 				t.Fatal("discovery is not the bounded, workspace-independent ordinary Go selection")
@@ -46,15 +46,15 @@ func TestGosecReceivesGoSelectedDirectories(t *testing.T) {
 				}
 			}
 		}
-		if slices.Contains(command.Args, "github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion) {
-			if !slices.Equal(command.Args[:5], []string{"run", "github.com/securego/gosec/v2/cmd/gosec@" + gosecVersion, "-fmt=json", "-nosec-require-rules", "-nosec-require-justification"}) {
+		if filepath.Base(command.Name) == "gosec" {
+			if !slices.Equal(command.Args[:3], []string{"-fmt=json", "-nosec-require-rules", "-nosec-require-justification"}) {
 				t.Fatal("structured reporting changed strict scanner flags")
 			}
-			selected = command.Args[5:]
+			selected = command.Args[3:]
 			return stop
 		}
 		return nil
-	})}
+	}}}
 	// No package manifest is supplied: newly added and test-support source must
 	// come from ordinary Go selection, not a stale production inventory.
 	err := runner.runSecurity(t.Context(), io.Discard, root, inventory.Module{Directory: "."})
@@ -70,7 +70,7 @@ func TestGosecDiscoveryFailsClosed(t *testing.T) {
 			ctx, cancel := context.WithCancel(t.Context())
 			defer cancel()
 			var scanner bool
-			runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
+			runner := Runner{Executor: workspaceExecutor{directory: t.TempDir(), emptyGoPackageInventory: true, run: func(_ context.Context, command Command) error {
 				if slices.Contains(command.Args, "list") {
 					text := `{"Dir":` + string(mustSelectionJSON(t, root)) + `}`
 					switch name {
@@ -99,12 +99,12 @@ func TestGosecDiscoveryFailsClosed(t *testing.T) {
 					}
 					_, _ = io.WriteString(command.Stdout, text)
 				}
-				if slices.Contains(command.Args, "github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion) {
+				if filepath.Base(command.Name) == "gosec" {
 					scanner = true
 					return errors.New("inert scanner")
 				}
 				return nil
-			})}
+			}}}
 			err := runner.runSecurity(ctx, io.Discard, root, inventory.Module{Directory: "."})
 			if err == nil || scanner || strings.Contains(err.Error(), "private discovery detail") {
 				t.Fatalf("failed closed = %v, error = %v", !scanner, err)
@@ -141,7 +141,7 @@ func TestGosecOrdinaryGoSelectionIncludesNewAndSupportPackages(t *testing.T) {
 	}
 	stop := errors.New("inert gosec boundary")
 	var selected []string
-	runner := Runner{Executor: executorFunction(func(ctx context.Context, command Command) error {
+	runner := Runner{Executor: workspaceExecutor{directory: t.TempDir(), emptyGoPackageInventory: true, run: func(ctx context.Context, command Command) error {
 		if slices.Contains(command.Args, "list") {
 			// #nosec G204 -- executable and arguments are the ordinary Go selection from the production gate under test
 			process := exec.CommandContext(ctx, command.Name, command.Args...)
@@ -149,12 +149,12 @@ func TestGosecOrdinaryGoSelectionIncludesNewAndSupportPackages(t *testing.T) {
 			process.Env = append(os.Environ(), "GOWORK=off")
 			return process.Run()
 		}
-		if slices.Contains(command.Args, "github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion) {
-			selected = command.Args[5:]
+		if filepath.Base(command.Name) == "gosec" {
+			selected = command.Args[3:]
 			return stop
 		}
 		return nil
-	})}
+	}}}
 	err := runner.runSecurity(t.Context(), io.Discard, root, inventory.Module{Directory: "."})
 	if !errors.Is(err, stop) || !slices.Equal(selected, []string{"./", "./newpackage", "./testsupport"}) {
 		t.Fatalf("selected = %q, error = %v", selected, err)
