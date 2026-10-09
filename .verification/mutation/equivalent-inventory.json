@@ -3,6 +3,47 @@
   "packages": [
     {
       "module_directory": ".",
+      "package_directory": "internal/inventory",
+      "source_digest": "2c0779398745c9264ce42a5d7b2df67eebe942326e75567546d3bd6c91bd08d2",
+      "gremlins_version": "v0.6.0",
+      "gremlins_verifier_sha256": "390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104",
+      "mutations": [
+        {
+          "file_name": "inventory.go",
+          "type": "INVERT_LOGICAL",
+          "line": 438,
+          "column": 52,
+          "contract_domain": "Complete valid JSON manifest envelopes passed through validateModuleIdentities and public Load/LoadSnapshot; identical sanitized directory/import-path refusal, admission and returned inventory/snapshot",
+          "reason": "Owner go-library-tools maintainers; independent classification /root/tools_native_survivor_classification at2aa9127965071619652280d64cdfac32c1f49cc2; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator or caller-domain change. Pinned Gremlins v0.6.0 changes err!=nil || value==empty to conjunction. RawMessage fields originate from successful JSON envelope decoding, so their individual JSON values are complete and valid. Type failures decoding into the initially empty string leave it empty; both predicates refuse them. Successful null or empty-string decoding can change the helper boolean, but both callers independently refuse the resulting empty directory or import path before any observable schema/filesystem effects, with the same sanitized error and zero inventory/nil snapshot. Direct helper boolean observations, arbitrary malformed RawMessages and new callers are excluded. Native37910768730 remains failed; this narrow disposition does not accept the seven viable survivors or infer fresh qualification. Complete final-diff review is required before delivery."
+        },
+        {
+          "file_name": "inventory.go",
+          "type": "INVERT_LOGICAL",
+          "line": 453,
+          "column": 39,
+          "contract_domain": "POSIX module-directory strings admitted through complete-manifest identity validation and validModuleDirectory's unchanged subsequent lowercase ASCII character policy; identical public admission/refusal",
+          "reason": "Owner go-library-tools maintainers; independent classification /root/tools_native_survivor_classification at2aa9127965071619652280d64cdfac32c1f49cc2; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator or directory-admission change. Pinned Gremlins v0.6.0 changes the first disjunction to conjunction. A backslash still fails the unchanged character allowlist. An absolute path is invalid under fs.ValidPath; an unclean path contains empty/dot/dot-dot components or is empty and is independently refused by fs.ValidPath. Unchanged remaining predicates therefore refuse all changed branch cases before admission. Invalid UTF-8 and non-ASCII characters are independently refused by the character allowlist. All admitted directories and sanitized errors remain identical. No path-policy removal or other coordinate is accepted. Native37910768730 remains failed; fresh qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "inventory.go",
+          "type": "INVERT_LOGICAL",
+          "line": 453,
+          "column": 64,
+          "contract_domain": "POSIX module-directory strings admitted through complete-manifest identity validation and validModuleDirectory's unchanged subsequent lowercase ASCII character policy; identical public admission/refusal",
+          "reason": "Owner go-library-tools maintainers; independent classification /root/tools_native_survivor_classification at2aa9127965071619652280d64cdfac32c1f49cc2; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator or directory-admission change. Pinned Gremlins v0.6.0 changes the second disjunction to conjunction. Absolute paths and cleaning mismatches are independently invalid under fs.ValidPath: the latter contain empty/dot/dot-dot components or are empty. The unchanged final invalid-path predicate refuses these cases even when the mutated conjunction changes. Backslashes, invalid UTF-8 and non-ASCII characters remain refused by the unchanged character allowlist. Every admitted directory and sanitized refusal is unchanged. No other directory or quota mutant is accepted. Native37910768730 remains failed; fresh qualification and complete final-diff review remain required."
+        },
+        {
+          "file_name": "inventory.go",
+          "type": "INVERT_LOGICAL",
+          "line": 453,
+          "column": 102,
+          "contract_domain": "POSIX module-directory strings admitted through complete-manifest identity validation and validModuleDirectory's unchanged subsequent lowercase ASCII character policy; identical public admission/refusal",
+          "reason": "Owner go-library-tools maintainers; independent classification /root/tools_native_survivor_classification at2aa9127965071619652280d64cdfac32c1f49cc2; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator or directory-admission change. Pinned Gremlins v0.6.0 changes the final disjunction to conjunction. An invalid fs.ValidPath string has an absolute/unclean form or invalid UTF-8. Absolute/unclean forms satisfy the unchanged preceding absolute/cleaning predicates, preserving refusal under conjunction; invalid UTF-8 is independently refused by the unchanged lowercase ASCII allowlist. Backslashes are likewise refused by that allowlist even when fs.ValidPath accepts them. Both forms admit exactly the same supported directories and produce identical sanitized errors. No other survivor is accepted. Native37910768730 remains failed; fresh qualification and complete final-diff review remain required."
+        }
+      ]
+    },
+    {
+      "module_directory": ".",
       "package_directory": "internal/cli",
       "source_digest": "8bf9b1b1c61d30f72e7ea352ca94458797ac0f2cc97c9255e7f52bcb7e2eb3c9",
       "gremlins_version": "v0.6.0",
