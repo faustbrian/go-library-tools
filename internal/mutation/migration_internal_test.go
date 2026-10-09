@@ -144,6 +144,21 @@ func TestApproveRejectsEachMalformedRequestedIdentity(t *testing.T) {
 	}
 }
 
+func TestMigrationAlternativeSelectionContinuesPastEmptyAndDuplicate(t *testing.T) {
+	ledger := validMigrationLedger()
+	checkpoint := validMigrationCheckpoint()
+	current, approved, verifier := strings.Repeat("f", 64), strings.Repeat("b", 64), strings.Repeat("c", 64)
+	for _, alternatives := range [][]string{{"", approved}, {current, approved}} {
+		if err := ledger.approveCandidates(checkpoint, current, alternatives, verifier); err != nil {
+			t.Fatalf("later approved alternative after empty/duplicate = %v; want exact approval", err)
+		}
+	}
+	err := ledger.approveCandidates(checkpoint, current, []string{"bad", approved}, verifier)
+	if !errors.Is(err, ErrUnapproved) || err.Error() != "unapproved mutation evidence migration: requested identity is malformed" {
+		t.Fatalf("malformed alternative before approved identity = %v; want categorical upfront refusal", err)
+	}
+}
+
 func TestMigrationApprovalRejectsMismatches(t *testing.T) {
 	ledger := validMigrationLedger()
 	checkpoint := validMigrationCheckpoint()

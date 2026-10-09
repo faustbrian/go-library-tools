@@ -3,6 +3,31 @@
   "packages": [
     {
       "module_directory": ".",
+      "package_directory": "internal/mutation",
+      "source_digest": "4dc6356afb48b06299d6d8ee9d5e1464c921dac2ae273f378680f7725004fbdc",
+      "gremlins_version": "v0.6.0",
+      "gremlins_verifier_sha256": "390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104",
+      "mutations": [
+        {
+          "file_name": "verifier_compatibility.go",
+          "type": "INCREMENT_DECREMENT",
+          "line": 85,
+          "column": 8,
+          "contract_domain": "Historical package-path compatibility through bounded production source enumeration; identical admission, refusal, source identity and evidence applicability",
+          "reason": "Owner faustbrian; independent classification /root/tools_native_survivor_classification at3e556cc12ddbeefd759247a9ffae54c2d8b7bb40; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/entry-limit/observer change. Pinned Gremlins v0.6.0 changes files++ to files--. The local counter starts at zero, is changed once per admitted production file, and is observed only as files==0 after enumeration. Entry admission bounds its magnitude below integer overflow. Both variants equal zero exactly when no production file was observed. Neither counter is returned or incorporated in the manifest, parser, path comparison or applicability proof. This does not accept source-byte accounting, traversal or admission mutants. Native37935670458 remains failed; complete final-diff review and fresh matching-source native qualification remain required."
+        },
+        {
+          "file_name": "campaign.go",
+          "type": "INVERT_LOOPCTRL",
+          "line": 471,
+          "column": 4,
+          "contract_domain": "Campaign production packageInputsForVerifiers callers with one current verifier or current and one admitted historical verifier; identical collected inputs and errors",
+          "reason": "Owner faustbrian; independent classification /root/tools_native_survivor_classification at3e556cc12ddbeefd759247a9ffae54c2d8b7bb40; date2026-10-09; expiry2026-11-08 or earlier bound source/verifier/operator/caller-domain change. Pinned Gremlins v0.6.0 changes duplicate-verifier continue to break. Every production call supplies either one verifier or two: current then checkpoint verifier. A duplicate can occur only at the last position of the two-element list. Both continue and break therefore finish without additional input collection; the same post-loop source-identity check still executes. Non-duplicate lists are unchanged. Arbitrary internal calls with three or more IDs are excluded; introducing such a production caller invalidates this disposition. No import-loop mutant is accepted. Native37935670458 remains failed; complete final-diff review and fresh matching-source native qualification remain required."
+        }
+      ]
+    },
+    {
+      "module_directory": ".",
       "package_directory": "internal/inventory",
       "source_digest": "2c0779398745c9264ce42a5d7b2df67eebe942326e75567546d3bd6c91bd08d2",
       "gremlins_version": "v0.6.0",

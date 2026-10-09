@@ -70,3 +70,30 @@ func TestEquivalentInventoryRejectsStaleAndAmbiguousReview(t *testing.T) {
 		t.Fatalf("unbounded contract domain error = %v", err)
 	}
 }
+
+func TestReportAccountingZeroMutantsAndExactTolerance(t *testing.T) {
+	zero := `{"files":[],"mutants_killed":0,"mutants_lived":0,"mutants_not_covered":0,"mutants_not_viable":0,"mutants_total":0,"mutations_coverage":100,"test_efficacy":100}`
+	if result, err := mutation.ValidateReport(strings.NewReader(zero)); err != nil || result.Mutants != 0 || result.Killed != 0 || result.Equivalent != 0 {
+		t.Fatalf("complete zero accounting = %#v, %v; want admitted empty report", result, err)
+	}
+	invalidZero := strings.Replace(zero, `"test_efficacy":100`, `"test_efficacy":0`, 1)
+	if _, err := mutation.ValidateReport(strings.NewReader(invalidZero)); !errors.Is(err, mutation.ErrInvalid) {
+		t.Fatalf("incorrect zero efficacy = %v; want ErrInvalid", err)
+	}
+	value, err := mutation.ParseEquivalentInventory(strings.NewReader(reviewedEquivalent))
+	if err != nil {
+		t.Fatal(err)
+	}
+	review, err := value.Review(".", ".", strings.Repeat("a", 64), "v0.6.0", strings.Repeat("b", 64))
+	if err != nil || review == nil {
+		t.Fatalf("review selection = %#v, %v", review, err)
+	}
+	exact := strings.Replace(livedEquivalentReport, `"test_efficacy":0`, `"test_efficacy":1e-9`, 1)
+	if result, err := mutation.ValidateReportWithReview(strings.NewReader(exact), review); err != nil || result.Equivalent != 1 || result.Mutants != 1 || result.Killed != 0 {
+		t.Fatalf("exact efficacy tolerance = %#v, %v; want reviewed accounting", result, err)
+	}
+	above := strings.Replace(livedEquivalentReport, `"test_efficacy":0`, `"test_efficacy":2e-9`, 1)
+	if _, err := mutation.ValidateReportWithReview(strings.NewReader(above), review); !errors.Is(err, mutation.ErrInvalid) {
+		t.Fatalf("above efficacy tolerance = %v; want ErrInvalid", err)
+	}
+}
