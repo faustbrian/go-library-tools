@@ -269,7 +269,7 @@ jobs:
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod"
           export GOTMPDIR="${task}/tmp" TMPDIR="${task}/tmp"
-          test "$(go env GOVERSION)" = go1.27.0
+          test "$(go env GOVERSION)" = go1.27.2
           go test -p=1 ./internal/gates \
             -run '^TestEthereumTrieFixturePolicyHosted$' -count=1 -timeout=15m
 
@@ -309,6 +309,7 @@ jobs:
           echo "publication_required=${publication_required}" >>"${GITHUB_OUTPUT}"
           if [[ "${publication_required}" == true ]] ||
             ! git diff --quiet "${BASE_SHA}" HEAD -- \
+              .go-version modules.json .github/workflows/ci.yml \
               release/compatibility-consumer/go.mod \
               release/compatibility-consumer/go.sum \
               release/compatibility-consumer/consumer_test.go \
@@ -384,7 +385,7 @@ jobs:
           export GOPROXY='https://proxy.golang.org'
           export GOSUMDB='sum.golang.org'
           export GOWORK='off'
-          test "$(go env GOVERSION)" = 'go1.27.0'
+          test "$(go env GOVERSION)" = 'go1.27.2'
           test "$(go env GOOS)/$(go env GOARCH)" = '${{ matrix.goos }}/${{ matrix.goarch }}'
           # Keep TLS and SumDB verification while avoiding failed HTTP/2 streams.
           GODEBUG=http2client=0 go mod tidy

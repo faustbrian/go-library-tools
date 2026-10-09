@@ -61,6 +61,13 @@
     "Toxiproxy",
     "Valkey",
     "vendorcomposition",
-    "YAML"
+    "YAML",
+    "Excelize",
+    "GONOPROXY",
+    "GONOSUMDB",
+    "GOPRIVATE",
+    "GOPROXY",
+    "GOSUMDB",
+    "worktree"
   ]
 }

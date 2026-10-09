@@ -55,9 +55,11 @@ Consumers composing independently released Golib modules should start at the
 
 ## Compatibility
 
-The required Go version is recorded in [`.go-version`](.go-version). Released
-minor versions preserve documented CLI, configuration, workflow, and evidence
-contracts according to [DEPRECATION.md](DEPRECATION.md).
+Tooling builds and CI use Go 1.27.2, recorded in [`.go-version`](.go-version),
+while the module language minimum remains Go 1.27.0. Rebuild existing binaries
+with the patched toolchain to receive its standard-library security fixes.
+Released minor versions preserve documented CLI, configuration, workflow, and
+evidence contracts according to [DEPRECATION.md](DEPRECATION.md).
 
 ## License
 

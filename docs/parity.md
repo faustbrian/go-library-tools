@@ -81,9 +81,13 @@ Release-decision checks hide copied tooling again so standalone validation sees
 the final repository shape; current representative tags then exercise the same
 tag-collision decision as the copied release contract without rerunning gates.
 
-Shared lint execution pins `golangci-lint` `v2.13.1`. That release bundles
-Staticcheck `v0.8.0`, avoiding the Go 1.27 analyzer panic in the older
-`golangci-lint` `v2.12.2` tool graph while preserving the complete lint policy.
+Shared lint execution pins `golangci-lint` `v2.14.0`. Its updated importer
+reads Go 1.27.2 export data that `v2.13.1` cannot decode, while retaining the
+complete configured lint policy. Standalone Staticcheck retains released source
+`v0.8.1`, built with `golang.org/x/tools v0.50.0` in a task-owned tool module
+to read the same export data. Analysis still uses the selected application
+module and its check configuration; the tool graph never edits application
+manifests. Build and analysis failures remain mandatory gate failures.
 
 ## `go-clock`
 

@@ -196,7 +196,7 @@ rules:
 )
 
 const (
-	golangCILintVersion = "v2.13.1"
+	golangCILintVersion = "v2.14.0"
 	staticcheckVersion  = "v0.8.1"
 	nilAwayVersion      = "v0.0.0-20260720194628-9fd1b8d7bac8"
 	govulncheckVersion  = "v1.6.0"
@@ -1066,6 +1066,9 @@ func validateNativeSecurityDirective(arguments string) error {
 }
 
 func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) error {
+	if tool == "honnef.co/go/tools/cmd/staticcheck@"+staticcheckVersion {
+		return runner.staticcheck(ctx, output, module, gate, directory, args...)
+	}
 	arguments := append([]string{"run", tool}, args...)
 	return runner.command(ctx, output, module, gate, directory, arguments...)
 }

@@ -40,8 +40,9 @@ func TestCheckRunsStandardGatesInDeterministicOrder(t *testing.T) {
 		"go vet ./...",
 		"go test ./... -count=1 -timeout=20m",
 		"go test -race ./... -count=1 -timeout=20m",
-		"go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1 run --allow-parallel-runners --timeout=10m ./...",
-		"go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...",
+		"go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --allow-parallel-runners --timeout=10m ./...",
+		"go build -mod=mod -o <staticcheck> honnef.co/go/tools/cmd/staticcheck",
+		"<staticcheck> ./...",
 		"go run go.uber.org/nilaway/cmd/nilaway@v0.0.0-20260720194628-9fd1b8d7bac8 -include-pkgs=example ./...",
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
@@ -96,8 +97,9 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 		"go mod tidy -diff",
 		"go vet ./...",
 		"go test ./... -count=1 -timeout=20m",
-		"go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.1 run --allow-parallel-runners --timeout=10m ./...",
-		"go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...",
+		"go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0 run --allow-parallel-runners --timeout=10m ./...",
+		"go build -mod=mod -o <staticcheck> honnef.co/go/tools/cmd/staticcheck",
+		"<staticcheck> ./...",
 	}
 	if !reflect.DeepEqual(executor.commands, want) {
 		t.Fatalf("commands = %#v, want %#v", executor.commands, want)
@@ -676,7 +678,7 @@ func TestCheckDoesNotWidenLicenseIgnoreBeyondRepositoryOwnership(t *testing.T) {
 }
 
 func TestCheckTreatsNilAwayAsAdvisory(t *testing.T) {
-	executor := &recordingExecutor{failureAt: 5, failure: errors.New("finding")}
+	executor := &recordingExecutor{failureAt: 6, failure: errors.New("finding"), task: t.TempDir()}
 	var output bytes.Buffer
 	runner := gates.Runner{Root: fixture(t), Catalog: inventory.Inventory{Modules: []inventory.Module{{Directory: ".", Gates: map[string]bool{"lint": true}}}}, Executor: executor, Output: &output}
 	if err := runner.Check(context.Background(), []string{"."}); err != nil {
@@ -694,7 +696,8 @@ func TestCheckStopsAtAnalyzerAndSecurityFailures(t *testing.T) {
 		failureAt int
 	}{
 		{"lint", map[string]bool{"lint": true}, 3},
-		{"staticcheck", map[string]bool{"lint": true}, 4},
+		{"staticcheck build", map[string]bool{"lint": true}, 4},
+		{"staticcheck analysis", map[string]bool{"lint": true}, 5},
 		{"vulnerability", map[string]bool{"security": true}, 7},
 		{"package discovery", map[string]bool{"security": true}, 8},
 		{"gosec", map[string]bool{"security": true}, 9},
@@ -907,6 +910,13 @@ func successfulLinks(context.Context, string) error    { return nil }
 
 func (executor *recordingExecutor) Run(_ context.Context, command gates.Command) error {
 	arguments := slices.Clone(command.Args)
+	name := command.Name
+	if filepath.Base(name) == "staticcheck" {
+		name = "<staticcheck>"
+	}
+	if name == "go" && len(arguments) == 5 && arguments[0] == "build" && arguments[4] == "honnef.co/go/tools/cmd/staticcheck" {
+		arguments[3] = "<staticcheck>"
+	}
 	if command.Name == "git" && len(arguments) >= 3 && (arguments[2] == "for-each-ref" || arguments[2] == "cat-file") {
 		arguments[1] = "<repository-root>"
 		value := "refs/heads/main\n"
@@ -964,7 +974,7 @@ func (executor *recordingExecutor) Run(_ context.Context, command gates.Command)
 			arguments[index+1] = "<generated-analysis-config>"
 		}
 	}
-	executor.commands = append(executor.commands, strings.Join(append([]string{command.Name}, arguments...), " "))
+	executor.commands = append(executor.commands, strings.Join(append([]string{name}, arguments...), " "))
 	if command.Name == "go" && slices.Equal(command.Args, []string{"list", "-json=Dir", "./..."}) {
 		encoded, err := json.Marshal(map[string]string{"Dir": command.Dir})
 		if err != nil {
