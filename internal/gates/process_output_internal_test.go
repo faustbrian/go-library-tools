@@ -1,6 +1,30 @@
 package gates
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
+
+func TestBoundedProcessOutputMetadataRequiresCompleteBoundedStream(t *testing.T) {
+	location := strings.Repeat("a", 64) + " " + strings.Repeat("b", 64) + " 12 -"
+	output := &boundedProcessOutput{limit: len(location) + 1, metadata: &secretMetadata{}}
+	if _, err := output.Write([]byte(location + "\n")); err != nil {
+		t.Fatal(err)
+	}
+	if got := output.findingMetadata(); got != "\nsecret-location "+location {
+		t.Fatal("complete bounded stream lost its safe location metadata")
+	}
+	if _, err := output.Write([]byte("x")); err != nil {
+		t.Fatal(err)
+	}
+	if !output.didOverflow() || output.findingMetadata() != "" {
+		t.Fatal("overflowing stream presented incomplete location metadata")
+	}
+	withoutMetadata := &boundedProcessOutput{limit: 1}
+	if withoutMetadata.findingMetadata() != "" {
+		t.Fatal("stream without a metadata collector produced findings")
+	}
+}
 
 func TestBoundedProcessOutputNotifiesOnceOutsideLock(t *testing.T) {
 	output := &boundedProcessOutput{limit: 3}

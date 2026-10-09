@@ -11,9 +11,25 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
+
+// Finite discovery must finish at EOF, rather than waiting for cancellation.
+// The executor only writes an in-memory JSON object; it never starts Go.
+func TestGosecDiscoveryCompletesAtEOF(t *testing.T) {
+	root := t.TempDir()
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
+	defer cancel()
+	runner := Runner{Executor: executorFunction(func(_ context.Context, command Command) error {
+		return json.NewEncoder(command.Stdout).Encode(map[string]string{"Dir": root})
+	})}
+	selected, err := runner.gosecPackages(ctx, root)
+	if err != nil || !slices.Equal(selected, []string{"./"}) {
+		t.Fatalf("finite discovery did not complete successfully: selected=%q error=%v", selected, err)
+	}
+}
 
 func TestGosecReceivesGoSelectedDirectories(t *testing.T) {
 	root := t.TempDir()
