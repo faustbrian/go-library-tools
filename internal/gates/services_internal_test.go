@@ -193,6 +193,29 @@ func TestDefaultServiceStarterUsesExecutorWithoutDockerInTests(t *testing.T) {
 	}
 }
 
+func TestDefaultServiceStarterPropagatesStartupDiagnostic(t *testing.T) {
+	for _, service := range []string{"nats", "postgresql"} {
+		cause := errors.New("docker exited 125")
+		var output bytes.Buffer
+		runner := Runner{Output: &output, Executor: executorFunction(func(_ context.Context, command Command) error {
+			if command.Name != "docker" || command.Args[0] != "run" {
+				t.Fatal("startup failure continued to a gate command")
+			}
+			_, _ = io.WriteString(command.Stderr, "decisive startup failure")
+			return cause
+		})}
+		called := false
+		err := runner.withModuleServices(context.Background(), inventory.Module{Directory: "adapter", RequiredServices: []string{service}}, func(Runner) error {
+			called = true
+			return nil
+		})
+		if !errors.Is(err, cause) || called || output.Len() != 0 ||
+			!strings.Contains(err.Error(), "start services for adapter: start "+service+": docker exited 125: decisive startup failure") {
+			t.Fatal("module wrapper lost startup diagnostic or ran module work")
+		}
+	}
+}
+
 func TestDefaultServiceStarterLoadsModuleOwnedOpenSearchPolicy(t *testing.T) {
 	root := t.TempDir()
 	moduleRoot := filepath.Join(root, "adapter")
