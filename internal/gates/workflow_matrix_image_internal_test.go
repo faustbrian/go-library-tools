@@ -21,6 +21,7 @@ func TestWorkflowStaticMatrixImages(t *testing.T) {
 		{"empty include", "matrix: {include: []}", "services: {db: {image: '${{ matrix.image }}'}}", false},
 		{"dynamic matrix", "matrix: '${{ fromJSON(needs.prepare.outputs.matrix) }}'", "services: {db: {image: '${{ matrix.image }}'}}", false},
 		{"partial include over axes", "matrix: {version: ['14', '18'], include: [{version: '14', image: '" + image + "'}]}", "services: {db: {image: '${{ matrix.image }}'}}", false},
+		{"include before additional axis", "matrix: {include: [{image: '" + image + "'}], version: ['18']}", "container: '${{ matrix.image }}'", false},
 		{"nested expression", "matrix: {include: [{image: '${{ vars.IMAGE }}'}]}", "services: {db: {image: '${{ matrix.image }}'}}", false},
 		{"expression with digest suffix", "matrix: {include: [{image: '${{vars.IMAGE}}@sha256:0123456789012345678901234567890123456789012345678901234567890123'}]}", "services: {db: {image: '${{ matrix.image }}'}}", false},
 		{"unknown field", "matrix: {include: [{image: '" + image + "'}]}", "services: {db: {image: '${{ matrix.other }}'}}", false},

@@ -12,6 +12,9 @@ import (
 // Finite boundary checks precede recursive fixtures so a traversal regression
 // can fail on a small admitted graph instead of exhausting a campaign timeout.
 func TestWorkflowFiniteAliasAndActionPreflight(t *testing.T) {
+	if workflowPreflightOwnedChild(t) {
+		return
+	}
 	const checkout = "actions/checkout@0123456789012345678901234567890123456789"
 	for _, test := range []struct{ name, content, reason string }{
 		{"exact alias depth", "leaf: &leaf ordinary\nordinary: " + strings.Repeat("[", 97) + "*leaf" + strings.Repeat("]", 97) + "\njobs: {}\n", ""},
@@ -45,6 +48,9 @@ func TestWorkflowFiniteAliasAndActionPreflight(t *testing.T) {
 // These are finite parser-owned merge graphs. The lookup is tested before
 // whole-document inspection can mask its independent recursion allowance.
 func TestWorkflowFiniteMergeLookupPreflight(t *testing.T) {
+	if workflowPreflightOwnedChild(t) {
+		return
+	}
 	for _, shape := range []struct{ name, prefix, suffix string }{
 		{"mapping", "{<<: ", "}"},
 		{"sequence", "{<<: [", "]}"},
