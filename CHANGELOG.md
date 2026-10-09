@@ -15,6 +15,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Withdraw an obsolete Gates equivalent-mutant allowance now covered by
+  native tests, retaining exact survivor accounting and strict refusal gates.
+
 - Record bounded, argument-free runner and owned-process observations during
   release rehearsals without changing release verdicts or required gates.
 
