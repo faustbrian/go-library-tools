@@ -15,6 +15,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Preserve bounded, fixture-credential-redacted Docker startup diagnostics
+  for generic required services without changing failure or cleanup behavior.
+
 - Align released and source-bootstrap setup actions on one immutable revision,
   preserving installation before archive validation in shared CI jobs.
 
