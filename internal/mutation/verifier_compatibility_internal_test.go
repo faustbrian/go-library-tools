@@ -79,7 +79,7 @@ func TestHistoricalImportContinuesAfterIncompatiblePackage(t *testing.T) {
 		}
 		return process.run(ctx, name, args, directory, environment, stdout, stderr)
 	}
-	var checkpoints []Checkpoint
+	checkpoints := make([]Checkpoint, 0, 2)
 	var ledger MigrationLedger
 	currentInputs := make(map[string]string)
 	for index, test := range []struct{ directory, filename, declaration string }{
