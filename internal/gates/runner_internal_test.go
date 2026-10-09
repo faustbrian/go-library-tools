@@ -645,8 +645,9 @@ func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
 				if strings.Contains(joined, "govulncheck") {
 					vulnerabilities++
 				}
-				for _, tool := range []string{"govulncheck", "gosec/v2", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
-					if strings.Contains(joined, tool) {
+				for _, tool := range []string{"govulncheck", "gosec", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
+					if filepath.Base(command.Name) == tool ||
+						(command.Name == "go" && len(command.Args) > 0 && command.Args[0] == "run" && strings.Contains(joined, tool)) {
 						scans[tool]++
 						if scannedModules[command.Dir] == nil {
 							scannedModules[command.Dir] = map[string]int{}
@@ -663,7 +664,7 @@ func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
 					if history != 1 || current != 1 {
 						return errors.New("repository code ran before exact-source scans")
 					}
-					for _, tool := range []string{"govulncheck", "gosec/v2", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
+					for _, tool := range []string{"govulncheck", "gosec", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
 						if scans[tool] != 2 {
 							return errors.New("repository code ran before all selected modules' static security scans")
 						}
