@@ -22,6 +22,27 @@ func TestStreamingOpenRefusesNonpositiveBudgetBeforeAcquisition(t *testing.T) {
 	}
 }
 
+func TestStreamingOpenRefusesChangedRegularIdentity(t *testing.T) {
+	expected := ordinaryLifecycleMetadata(t)
+	changed := ordinaryLifecycleMetadata(t)
+	if os.SameFile(expected, changed) || !changed.Mode().IsRegular() {
+		t.Fatal("fixture must be a distinct regular file")
+	}
+	owned := &lifecycleFile{reader: strings.NewReader("abc"), info: changed}
+	opened, err := openContext(context.Background(), "ordinary", 3,
+		func(string) (os.FileInfo, error) { return expected, nil },
+		func(string) (file, error) { return owned, nil })
+	if opened != nil {
+		defer opened.Close()
+	}
+	if opened != nil || !errors.Is(err, ErrUnsafePath) {
+		t.Fatal("changed regular identity published a reader or lost unsafe-path refusal")
+	}
+	if owned.statCalls != 1 || owned.closeCalls != 1 || owned.readCalls != 0 {
+		t.Fatal("changed identity dispatched reads or leaked/double-closed its handle")
+	}
+}
+
 func TestStreamingOpenCancellationCheckpointsReleaseOwnership(t *testing.T) {
 	info := ordinaryLifecycleMetadata(t)
 	for _, stage := range []string{"metadata", "open", "opened metadata"} {
