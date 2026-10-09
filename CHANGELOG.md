@@ -15,6 +15,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Align released and source-bootstrap setup actions on one immutable revision,
+  preserving installation before archive validation in shared CI jobs.
+
 - Adopt the bootstrap-proxy action source with bounded zero-record tar-padding
   support for legacy installed tooling, retaining installed-validator authority.
 - Build and verify tooling with Go 1.27.2 and golangci-lint v2.14.0 to apply

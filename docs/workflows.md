@@ -19,7 +19,7 @@ consumer workflow or production verifier asset is changed by this diagnostic.
 
 Consumer CI calls `library-ci.yml` at an immutable commit SHA. The same SHA is
 passed as `tooling_sha` for the isolated tooling checkout. By default the setup action
-is pinned to `562f083a6d7eb499eed8d464e5f3e1a1b58902d0`; the bootstrap
+is pinned to `e8c0c51cc517dfede5475858bb417f0e7a21f39d`; the bootstrap
 action is pinned to `712163686bea3c3ad465acdca026b4b7bf5f0b0b`.
 By default, `tooling_sha` does not select those executable actions. A nearby
 comment records the corresponding tooling release.
@@ -103,7 +103,7 @@ exact-version verification.
 
 Reusable callers may explicitly set `source_bootstrap: true`, default false.
 All four setup sites then use the immutable remote setup action at
-`14a365e423d6fa50fc2bf78d439d48a098723d3e`, passing the same `tooling_sha`
+`e8c0c51cc517dfede5475858bb417f0e7a21f39d`, passing the same `tooling_sha`
 used for their fixed tooling checkout. Documentation/license-only pull requests
 use the ordinary metadata assurance tier, including in source-bootstrap mode.
 Metadata-only source-bootstrap jobs still scan repository history and the
