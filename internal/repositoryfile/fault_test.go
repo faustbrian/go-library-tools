@@ -81,6 +81,9 @@ type fakeFile struct {
 }
 
 func (fake *fakeFile) Read([]byte) (int, error) {
+	if fake.readErr == nil {
+		return 0, io.EOF
+	}
 	return 0, fake.readErr
 }
 
