@@ -15,6 +15,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Record bounded, argument-free runner and owned-process observations during
+  release rehearsals without changing release verdicts or required gates.
+
 - Refresh the exact Gates equivalent-mutant binding after compiler-tool
   changes, including the moved coverage-loop coordinate. Retain its narrow
   reviewed domains and historical reports; require fresh native qualification.

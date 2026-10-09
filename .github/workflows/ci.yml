@@ -474,15 +474,36 @@ jobs:
         run: |
           set -euo pipefail
           task="$(mktemp -d "${RUNNER_TEMP}/golib-release-rehearsal.XXXXXX")"
-          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          observer=""
+          cleanup() {
+            result="${1:-$?}"
+            trap - EXIT
+            if [[ -n "${observer}" ]] && jobs -pr | grep -qx "${observer}"; then
+              kill "${observer}" 2>/dev/null || true
+            fi
+            if [[ -n "${observer}" ]]; then
+              wait "${observer}" 2>/dev/null || true
+            fi
+            chmod -R u+w "${task}" 2>/dev/null || true
+            find "${task}" -depth -delete || { [[ "${result}" -ne 0 ]] || result=1; }
+            exit "${result}"
+          }
+          trap 'cleanup' EXIT
+          trap 'exit 143' TERM
+          trap 'exit 130' INT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          python3 -u .github/scripts/observe-runner.py "$$" &
+          observer=$!
+          result=0
           if [[ -n "${RELEASE_MODULE}" ]]; then
             GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
-              go run ./cmd/golib release dry-run --module "${RELEASE_MODULE}"
+              go run ./cmd/golib release dry-run --module "${RELEASE_MODULE}" || result=$?
           else
             GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
-              go run ./cmd/golib release dry-run
+              go run ./cmd/golib release dry-run || result=$?
           fi
+          printf '{"event":"release-child-exit","exit_code":%d}\n' "${result}"
+          cleanup "${result}"
       - name: Upload release evidence
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
