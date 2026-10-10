@@ -1088,7 +1088,7 @@ func gitleaksRepository(t *testing.T, files map[string]string) (string, string) 
 	for _, arguments := range [][]string{
 		{"init", "-q"},
 		{"add", "."},
-		{"-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "fixture"},
+		{"-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "test: capture scanner fixture"},
 	} {
 		// #nosec G204 -- the executable and arguments are fixed test-owned Git operations.
 		command := exec.CommandContext(t.Context(), "git", arguments...)

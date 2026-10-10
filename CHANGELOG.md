@@ -15,6 +15,11 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Recognize only the exact public API Query v1 baseline assertion and
+  deterministic Capability interoperability token in centrally owned secret
+  scanning. Retain exact detector, path and complete-line constraints;
+  changed bytes, other paths and adjacent credentials remain findings.
+
 - Build isolated compiler-dependent analyzers with the patched tooling Go
   compiler without changing the consumer analysis toolchain.
 
