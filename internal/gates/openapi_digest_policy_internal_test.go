@@ -141,7 +141,7 @@ func TestOpenAPIDecisionDigestPolicyIntegration(t *testing.T) {
 		if err := os.WriteFile(filepath.Join(root, "CHANGELOG.md"), []byte(lines[0]+"\n"), 0o600); err != nil {
 			t.Fatal(err)
 		}
-		for _, args := range [][]string{{"add", "CHANGELOG.md"}, {"-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "remove fixture credential"}} {
+		for _, args := range [][]string{{"add", "CHANGELOG.md"}, {"-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "test: remove fixture credential"}} {
 			// #nosec G204 -- fixed Git operations in an ordinary test-owned fixture.
 			command := exec.CommandContext(t.Context(), "git", args...)
 			command.Dir = root

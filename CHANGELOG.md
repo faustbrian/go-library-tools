@@ -18,6 +18,15 @@ All notable changes to this project are documented in this file.
 - Classify exact documented GitHub REST API example lines as public without
   exempting imported specifications or altered credential findings.
 
+- Keep ordinary source-bootstrap CI on the same bounded security and package
+  checks as installed tooling, rather than implicitly selecting aggregate
+  evidence gates. Explicit release rehearsals retain their full checks.
+
+- Recognize only the exact public API Query v1 baseline assertion and
+  deterministic Capability interoperability token in centrally owned secret
+  scanning. Retain exact detector, path and complete-line constraints;
+  changed bytes, other paths and adjacent credentials remain findings.
+
 - Recognize 14 independently verified public OpenAPI decision checksum lines
   without suppressing other paths, altered records or credential findings.
 

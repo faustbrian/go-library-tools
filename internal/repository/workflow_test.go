@@ -3,6 +3,7 @@ package repository_test
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -750,6 +751,7 @@ if [ "$1" = "--help" ]; then
 	exit 0
 fi
 printf '%s\n' "$*" >>"$INVOCATIONS"
+exit "${GOLIB_ROUTING_FIXTURE_STATUS:-0}"
 `
 	if err := os.WriteFile(filepath.Join(golibBin, "golib"), []byte(stub), 0o700); err != nil {
 		t.Fatal(err)
@@ -765,7 +767,7 @@ printf '%s\n' "$*" >>"$INVOCATIONS"
 		{name: "v1.5 tool", legacy: "true", want: "check --all"},
 		{name: "local capable tool", legacy: "false", want: "check --local --all"},
 		{name: "source legacy tool", legacy: "true", want: "check --all", sourceBootstrap: true},
-		{name: "source local capable tool", legacy: "false", want: "check --all", sourceBootstrap: true},
+		{name: "source local capable tool", legacy: "false", want: "check --local --all", sourceBootstrap: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if err := os.WriteFile(invocations, nil, 0o600); err != nil {
@@ -788,6 +790,12 @@ printf '%s\n' "$*" >>"$INVOCATIONS"
 			}
 			if got := strings.TrimSpace(string(contents)); got != test.want {
 				t.Fatalf("golib invocation = %q, want %q", got, test.want)
+			}
+			failed := exec.CommandContext(t.Context(), "bash", "-euo", "pipefail", "-c", contract.Run)
+			failed.Env = append(append([]string(nil), command.Env...), "GOLIB_ROUTING_FIXTURE_STATUS=7")
+			var failure *exec.ExitError
+			if !errors.As(failed.Run(), &failure) || failure.ExitCode() != 7 {
+				t.Fatal("module contract did not preserve failed gate exit status")
 			}
 		})
 	}

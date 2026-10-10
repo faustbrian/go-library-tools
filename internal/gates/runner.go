@@ -50,6 +50,22 @@ description = "The immutable CI tooling checkout is verified separately."
 paths = ['''^\.golib-tooling(?:/|$)''']
 
 [[allowlists]]
+description = "Exact public API Query v1 baseline assertion, independently recomputed from the released Git blob."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^\.verification/cohesion/api-query-v1-oracle/verify\.go$''']
+regexes = ['''^\n?	validateRelease(?:)Artifact\(ctx, ro(?:)ot, releaseCommi(?:)t, packet\.Releas(?:)e\.APIBaseline, "(?:)ec28983aeaa00eed(?:)bfa61d2a6c5eeb67(?:)fc6c3185", 25021(?:), "b8eac53159059(?:)9de50da2ed042591(?:)db7edf07c6a438e9(?:)00085aca53ed6354(?:)fc5"\)$''']
+
+[[allowlists]]
+description = "Exact deterministic public Capability interoperability token signed with the published test key."
+condition = "AND"
+targetRules = ["jwt"]
+regexTarget = "line"
+paths = ['''^testdata/v1-hmac\.token$''']
+regexes = ['''^\n?cap1\.eyJ2IjoxLCJ(?:)0eXAiOiJjYXBhYml(?:)saXR5IiwiYWxnIjo(?:)iaG1hYy1zaGEyNTY(?:)iLCJraWQiOiJpbnR(?:)lcm9wIn0\.eyJ2Ijo(?:)xLCJpc3MiOiJpbnR(?:)lcm9wIiwiYXVkIjp(?:)bInNlcnZpY2UiXSw(?:)iYmVhcmVyIjp0cnV(?:)lLCJyZXNvdXJjZSI(?:)6Im9iamVjdHMvNDI(?:)iLCJvcGVyYXRpb24(?:)iOiJyZWFkIiwiaWF(?:)0IjoxNzg2Mjc2ODA(?:)wLCJuYmYiOjE3ODY(?:)yNzY4MDAsImV4cCI(?:)6MTc4NjI3Njg2MCw(?:)iaWQiOiJpbnRlcm9(?:)wLWNhcGFiaWxpdHk(?:)ifQ\.Iwj0h9OnGkC0(?:)P1Hrw2L9dweW8Wvs(?:)C0md1z65DmNlXTQ$''']
+
+[[allowlists]]
 description = "Pinned apidiff versions in exact compatibility rehearsal Makefiles are tool identities."
 condition = "AND"
 targetRules = ["generic-api-key"]
