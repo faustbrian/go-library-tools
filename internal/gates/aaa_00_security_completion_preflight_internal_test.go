@@ -28,6 +28,36 @@ func TestGosecDiscoveryCompletesAtEOF(t *testing.T) {
 	}
 }
 
+// Scalar event admission/refusal must fail finitely before recursive graphs:
+// an inverted event equality otherwise can reach a larger fixture first.
+func TestWorkflowScalarEventPreflight(t *testing.T) {
+	for _, test := range []struct{ event, reason string }{
+		{"push", ""},
+		{"pull_request_target", "pull_request_target"},
+	} {
+		t.Run(test.event, func(t *testing.T) {
+			root := t.TempDir()
+			workflowRefusalWrite(t, root, ".github/workflows/ci.yml", "on: "+test.event+"\njobs: {}\n")
+			calls := 0
+			var output bytes.Buffer
+			runner := Runner{Root: root, Output: &output, Executor: executorFunction(func(context.Context, Command) error {
+				calls++
+				return nil
+			})}
+			err := runner.Workflows(t.Context())
+			if test.reason != "" {
+				if err == nil || !strings.Contains(err.Error(), test.reason) || calls != 0 || output.Len() != 0 {
+					t.Fatalf("scalar event refusal = %v, calls=%d, output=%q", err, calls, output.String())
+				}
+				return
+			}
+			if err != nil || calls != 1 || output.String() != "workflow contract passed\n" {
+				t.Fatalf("scalar event admission = %v, calls=%d, output=%q", err, calls, output.String())
+			}
+		})
+	}
+}
+
 // Native traversal variants can loop without consulting context. Keep the
 // earliest observable scenarios in hosted, owned children before direct tests.
 func TestWorkflowSecurityCompletionPreflightHosted(t *testing.T) {
