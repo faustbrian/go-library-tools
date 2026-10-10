@@ -190,6 +190,12 @@ the checked fixture reproduces exactly. These are public test inputs, not
 application signing credentials. The allowance does not cover other keys or
 future vector versions.
 
+The scanner also recognizes the two complete historical public decoded-pattern
+source lines at `internal/gates/runner.go` under the same detector restriction.
+This preserves immutable Git history without exempting other policy source,
+changed lines or neighboring credential assignments. New source literals are
+fragmented while the generated scanner patterns retain their exact bytes.
+
 Two exact Verkle source-checksum records in `specification/sources.json`
 were recomputed from public `crate-crypto/go-eth-kzg` revision
 `01d14404df5f295f5afb3cf6ca8839382a7243b7`: `api.go` and
