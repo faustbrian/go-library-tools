@@ -229,8 +229,7 @@ func TestGitHubPublicExamplesPolicyIntegration(t *testing.T) {
 			hostile = append(hostile, line[:offset]+string(replacement)+line[offset+1:])
 			changed = append(changed, githubSpecLocation{item.rule, len(compactLines) + len(hostile)})
 			// Exact public bytes are not exempt in a different named field/assignment.
-			if colon := strings.Index(line, ": "); item.rule == "generic-api-key" && colon >= 0 {
-				payload := line[colon+2:]
+			if _, payload, found := strings.Cut(line, ": "); item.rule == "generic-api-key" && found {
 				hostile = append(hostile, `  "new_api_key": `+payload, `api_key = `+payload)
 			}
 			if item.rule == "generic-api-key" {
@@ -280,7 +279,7 @@ func TestGitHubPublicExamplesPolicyIntegration(t *testing.T) {
 	t.Run("path near misses", func(t *testing.T) {
 		files := map[string]string{"nested/" + githubPublicSpecPath: compact, githubPublicSpecPath + ".bak": compact}
 		root, config := gitleaksRepository(t, files)
-		var want []string
+		want := make([]string, 0, len(files)*len(compactOracle))
 		for path := range files {
 			want = append(want, identities(path, compactOracle)...)
 		}
@@ -347,5 +346,4 @@ func TestGitHubPublicExamplesPolicyIntegration(t *testing.T) {
 			})
 		}
 	})
-
 }
