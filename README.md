@@ -10,9 +10,16 @@ current published release until the major tag is created. Consumer
 repositories must use checksum-verified release binaries and immutable workflow
 references.
 
-The v2 command supports Darwin and Linux on amd64 and arm64. Its bounded
-security scanners terminate their original process group and fail before
-process start on other platforms. This is not a hostile executable sandbox.
+The supported v2 release targets are Darwin and Linux on amd64 and arm64.
+Its bounded security scanners terminate their original process group; on
+operating systems other than Darwin and Linux, they fail before process
+start. This is not a hostile executable sandbox.
+
+Manifest admission allows at most 64 modules. Both declared module paths
+and relative module directories accept only lowercase ASCII letters, digits,
+hyphens, periods and slashes; uppercase names and underscores are not
+accepted in either field. Repositories outside these bounds cannot adopt v2
+unchanged.
 
 The v2 Go module and command path is
 `github.com/faustbrian/go-library-tools/v2`. After the `v2.0.0` tag is

@@ -483,7 +483,7 @@ All notable changes to this project are documented in this file.
 - Bound Git history and every filesystem entry before source snapshots, cap
   bundle writes, and scan repository secrets once before module execution.
 - Keep module security and release selection attributable in one reusable CI
-  invocation, with a backward-compatible 64-module cardinality bound.
+  invocation, with an explicit 64-module cardinality bound.
 - Limit scanner termination claims to the original Darwin/Linux process group;
   explicitly require external isolation for arbitrary untrusted repository code.
 
@@ -507,6 +507,16 @@ All notable changes to this project are documented in this file.
 
 ### Migration
 
+- Review declared module paths, directories and counts before adopting v2.
+  Manifest admission is limited to 64 modules. Both module paths and relative
+  module directories accept only lowercase ASCII letters, digits, hyphens,
+  periods and slashes. Previously accepted directories such as `adapters/HTTP`
+  and `adapters/http_client` are refused even with a lowercase module path;
+  affected repositories cannot adopt v2 unchanged.
+- The former portable-Go platform expectation no longer applies to bounded
+  security scans. The supported release targets are Darwin and Linux on
+  amd64 or arm64. Bounded scanner processes refuse operating systems other
+  than Darwin or Linux, including Windows, before process start.
 - Install v2 with
   `go install github.com/faustbrian/go-library-tools/v2/cmd/golib@v2.0.0`.
   Keep GitHub Actions checkout and reusable-workflow references on
