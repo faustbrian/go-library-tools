@@ -116,10 +116,14 @@ done
 
 command_arguments=("$@")
 versioned_tool=0
+preserve_tool_directory=0
 if [[ "${command_arguments[0]:-}" == run ]]; then
     for argument in "${command_arguments[@]:1}"; do
         if [[ "${argument}" == *@* ]]; then
             versioned_tool=1
+            case "${argument}" in
+                github.com/zricethezav/gitleaks/v8@*) preserve_tool_directory=1 ;;
+            esac
             break
         fi
     done
@@ -274,7 +278,8 @@ elif [[ -n "${active_modfile}" ]] &&
     fi
 fi
 
-if [[ "${versioned_tool}" -eq 1 ]]; then
+if [[ "${versioned_tool}" -eq 1 && -n "${alternate_mod}" &&
+    "${preserve_tool_directory}" -eq 0 ]]; then
     effective_modfile=''
     for flag in ${GOFLAGS:-}; do
         case "${flag}" in
@@ -307,6 +312,22 @@ if [[ "${versioned_tool}" -eq 1 ]]; then
         run "-exec=${GOLIB_REHEARSAL_TOOL_RUNNER:?}"
         "${command_arguments[@]:1}"
     )
+elif [[ "${versioned_tool}" -eq 1 ]]; then
+    # Filesystem scanners must keep their supplied history/current-tree target,
+    # including a detached target that has no consumer module. Versioned tool
+    # builds cannot inherit an alternate consumer module file.
+    updated_flags=''
+    for flag in ${GOFLAGS:-}; do
+        case "${flag}" in -modfile=*) continue ;; esac
+        updated_flags="${updated_flags:+${updated_flags} }${flag}"
+    done
+    export GOFLAGS="${updated_flags}"
+    filtered_arguments=()
+    for argument in "${command_arguments[@]}"; do
+        case "${argument}" in -modfile=*) continue ;; esac
+        filtered_arguments+=("${argument}")
+    done
+    command_arguments=("${filtered_arguments[@]}")
 fi
 
 if [[ -n "${execution_modfile}" || -n "${tool_source}" ]]; then

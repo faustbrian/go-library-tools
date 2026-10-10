@@ -15,6 +15,13 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Build isolated compiler-dependent analyzers with the patched tooling Go
+  compiler without changing the consumer analysis toolchain.
+
+- Preserve detached Git-history and current-tree targets when rehearsal
+  dependency isolation launches secret scanners, while retaining isolated
+  consumer snapshots for module analyzers.
+
 - Withdraw an obsolete Gates equivalent-mutant allowance now covered by
   native tests, retaining exact survivor accounting and strict refusal gates.
 

@@ -387,6 +387,125 @@ func waitForRehearsalFile(t *testing.T, path string) {
 	}
 }
 
+func TestDependencyWrapperPreservesDetachedScannerTargets(t *testing.T) {
+	root := t.TempDir()
+	source := filepath.Join(root, "source")
+	task := filepath.Join(root, "task")
+	fakeBin := filepath.Join(root, "bin")
+	writeRehearsalFile(t, filepath.Join(source, "modules.json"), `{"modules":[{"directory":"."}]}`)
+	writeRehearsalFile(t, filepath.Join(source, "go.mod"), "module github.com/faustbrian/go-example\n\ngo 1.26.6\n")
+	writeExecutable(t, filepath.Join(fakeBin, "go"), `#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == mod && "${2:-}" == edit ]]; then
+	printf '%s\n' '{"Module":{"Path":"github.com/faustbrian/go-example"}}'
+	exit 0
+fi
+if [[ "${1:-}" == mod && "${2:-}" == tidy ]]; then exit 0; fi
+if [[ "${1:-}" == run ]]; then
+	shift
+	exec_wrapper=''
+	case "${1:-}" in -exec=*) exec_wrapper="${1#-exec=}"; shift ;; esac
+	if [[ "${1:-}" == github.com/zricethezav/gitleaks/v8@v8.30.1 ]]; then
+		shift
+		if [[ -n "${exec_wrapper}" ]]; then
+			exec "${exec_wrapper}" "${REHEARSAL_SCANNER}" "$@"
+		fi
+		exec "${REHEARSAL_SCANNER}" "$@"
+	fi
+fi
+printf 'unexpected fake go invocation: %s\n' "$*" >&2
+exit 1
+`)
+	writeExecutable(t, filepath.Join(fakeBin, "scanner"), `#!/usr/bin/env bash
+set -euo pipefail
+[[ "${GO111MODULE:-}" == on ]]
+case "${GOFLAGS:-}" in *-modfile=*) exit 43 ;; esac
+[[ "${2:-}" == . ]]
+pwd -P >"${REHEARSAL_SCANNER_DIRECTORY}"
+case "${1:-}" in
+	git) git show "${REHEARSAL_HISTORY_REVISION}:marker.txt" ;;
+	dir) cat marker.txt ;;
+	fail) exit 42 ;;
+	*) exit 1 ;;
+esac
+`)
+	commitRehearsalFixture(t, source)
+	writeRehearsalFile(t, filepath.Join(source, "marker.txt"), "historical scanner target\n")
+	git := func(arguments ...string) string {
+		t.Helper()
+		command := exec.CommandContext(t.Context(), "git", arguments...)
+		command.Dir = source
+		output, err := command.CombinedOutput()
+		if err != nil {
+			t.Fatalf("git %v: %v\n%s", arguments, err, output)
+		}
+		return strings.TrimSpace(string(output))
+	}
+	git("add", "marker.txt")
+	git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "add historical marker")
+	revision := git("rev-parse", "HEAD")
+	git("rm", "--quiet", "marker.txt")
+	git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "remove current marker")
+	history := filepath.Join(root, "history")
+	git("clone", "--quiet", "--bare", source, history)
+	current := filepath.Join(root, "current")
+	currentModule := filepath.Join(root, "current-module")
+	thirdParty := filepath.Join(root, "third-party")
+	for _, directory := range []string{current, currentModule, thirdParty} {
+		writeRehearsalFile(t, filepath.Join(directory, "marker.txt"), "current scanner target\n")
+	}
+	writeRehearsalFile(t, filepath.Join(currentModule, "go.mod"), "module github.com/faustbrian/go-example\n\ngo 1.26.6\n")
+	writeRehearsalFile(t, filepath.Join(thirdParty, "go.mod"), "module example.com/unowned\n\ngo 1.26.6\n")
+	environment := filepath.Join(root, "environment")
+	prepare := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task, environment, filepath.Join(root, "path"))
+	prepare.Dir = source
+	prepare.Env = append(os.Environ(), "PATH="+fakeBin+":"+os.Getenv("PATH"))
+	if output, err := prepare.CombinedOutput(); err != nil {
+		t.Fatalf("prepare dependencies: %v\n%s", err, output)
+	}
+	for _, scenario := range []struct {
+		name, directory, mode, want string
+		exit                        int
+	}{
+		{"history", history, "git", "historical scanner target\n", 0},
+		{"current", current, "dir", "current scanner target\n", 0},
+		{"current-module", currentModule, "dir", "current scanner target\n", 0},
+		{"unowned-module", thirdParty, "dir", "current scanner target\n", 0},
+		{"scanner-failure", current, "fail", "", 42},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			capture := filepath.Join(root, scenario.name+".directory")
+			command := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "run", "github.com/zricethezav/gitleaks/v8@v8.30.1", scenario.mode, ".")
+			command.Dir = scenario.directory
+			command.Env = append(os.Environ(), readEnvironment(t, environment)...)
+			command.Env = append(command.Env,
+				"GOFLAGS=-p=2 -modfile="+filepath.Join(task, "modules", "0.mod"),
+				"REHEARSAL_SCANNER="+filepath.Join(fakeBin, "scanner"),
+				"REHEARSAL_SCANNER_DIRECTORY="+capture,
+				"REHEARSAL_HISTORY_REVISION="+revision,
+			)
+			output, err := command.CombinedOutput()
+			if scenario.exit != 0 {
+				var exitError *exec.ExitError
+				if !errors.As(err, &exitError) || exitError.ExitCode() != scenario.exit {
+					t.Fatalf("scanner exit = %v, want %d\n%s", err, scenario.exit, output)
+				}
+			} else if err != nil {
+				t.Fatalf("scan detached target: %v\n%s", err, output)
+			}
+			if string(output) != scenario.want {
+				t.Fatalf("scanner target output = %q, want %q", output, scenario.want)
+			}
+			if got := strings.TrimSpace(readRehearsalFile(t, capture)); got != canonicalRehearsalPath(t, scenario.directory) {
+				t.Fatalf("scanner directory = %q, want original target %q", got, scenario.directory)
+			}
+		})
+	}
+	if entries, err := os.ReadDir(filepath.Join(task, "execution")); err != nil || len(entries) != 0 {
+		t.Fatalf("unexpected detached scanner execution resources: %v, %v", entries, err)
+	}
+}
+
 func TestDependencyPreparationAcceptsNoOwnedDependencies(t *testing.T) {
 	root := t.TempDir()
 	task := filepath.Join(root, "task")
