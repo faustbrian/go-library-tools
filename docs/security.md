@@ -179,6 +179,31 @@ The tool executes repository tests and approved external analyzers. A repository
 maintainer must therefore treat gate execution as code execution and must not
 run untrusted pull-request code with secrets or write-capable credentials.
 
+### Immutable public Password and GitHub metadata
+
+The central policy recognizes only complete public lines at their exact paths
+and the `generic-api-key` detector. Password decision records were independently
+recomputed from the decision registers at commits
+`481f9392d0abeed878e7379cb0732b8a4521ceae` and
+`828d92419da8ef8bfe558e0fab21b4913a8a0f6b`. Its historical
+`tools/versions.env` allowance covers one exact APIDIFF module identity from
+`c79001812c419c28b2445cc23ae1bd3985b7b6c7`, not arbitrary version-shaped
+assignments or that entire file.
+
+The GitHub `temp_clone_token` example comes from the public `descriptions-next`
+artifact at `417c4fb368fc6a7162ce5f3eeeddce1a9a217747`. The independently
+downloaded artifact matches the historical OpenAPI fixture and source manifest
+SHA-256 `9d85f3a842c0215768f30f83ac7d1595430236fc51ce9c84e344b991a9f6b3da`.
+Only its exact example lines under
+`specification/independent/github-rest-api/api.github.com.2022-11-28.json`
+are recognized; no token class or upstream directory is exempted.
+
+Pinned scanner regressions exercise both Git history and the current tree.
+Altered values, different paths, and adjacent or same-line credential
+assignments must remain findings. The central policy owner must review any
+new immutable record before extending these allowances; public provenance
+does not automatically make a future token or changed artifact acceptable.
+
 Bootstrap proxy archives are size-bounded during download and validated for
 entry count, expanded bytes, path confinement, entry type, and unsafe modes
 after digest verification and before extraction. Rejections expose only stable

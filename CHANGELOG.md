@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Recognize exact public Password decision records, its historical APIDIFF
+  tool identity and pinned GitHub OpenAPI examples without accepting altered
+  values, other paths or neighboring credential assignments.
+
 - Keep ordinary source-bootstrap CI on the same bounded security and package
   checks as installed tooling, rather than implicitly selecting aggregate
   evidence gates. Explicit release rehearsals retain their full checks.
