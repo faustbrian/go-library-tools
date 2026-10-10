@@ -3,6 +3,7 @@ package repository_test
 import (
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -791,9 +792,9 @@ exit "${GOLIB_ROUTING_FIXTURE_STATUS:-0}"
 				t.Fatalf("golib invocation = %q, want %q", got, test.want)
 			}
 			failed := exec.CommandContext(t.Context(), "bash", "-euo", "pipefail", "-c", contract.Run)
-			failed.Env = append(command.Env, "GOLIB_ROUTING_FIXTURE_STATUS=7")
-			failure, ok := failed.Run().(*exec.ExitError)
-			if !ok || failure.ExitCode() != 7 {
+			failed.Env = append(append([]string(nil), command.Env...), "GOLIB_ROUTING_FIXTURE_STATUS=7")
+			var failure *exec.ExitError
+			if !errors.As(failed.Run(), &failure) || failure.ExitCode() != 7 {
 				t.Fatal("module contract did not preserve failed gate exit status")
 			}
 		})
