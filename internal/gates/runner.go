@@ -46,6 +46,52 @@ const (
 useDefault = true
 
 [[allowlists]]
+description = "Exact public Password decision checksum records independently recomputed from immutable decision registers."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^CHANGELOG\.md$''']
+regexes = [
+  '''^\n?  PASSWORD-DEC-0(?:)06 sha256:2aa164(?:)80aefc694ed42f78(?:)109e6347c3fd6610(?:)5fee868362aef58c(?:)087368bf83;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)07 sha256:23b884(?:)6b5751879f08ba17(?:)02f0fa3625b5d5cb(?:)b6e9d9fe46536f4b(?:)bb25270d42\.$''',
+  '''^\n?  PASSWORD-DEC-0(?:)01 sha256:81d693(?:)f05f84c603efdb62(?:)9d9249e13e134def(?:)4e645afffd12e50b(?:)1e7233823c;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)02 sha256:d0aff4(?:)5bb407811912bc21(?:)be738605732adbd6(?:)04decc339b449bd2(?:)5fdf125ddf;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)03 sha256:abb7d2(?:)b09fe08461078fbe(?:)be88637d317ef52b(?:)5ffc035fa3072950(?:)717978f24f;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)04 sha256:35d8b7(?:)5df3f64f7a8d45e3(?:)8c763ebc7e110953(?:)b0542d3c03cd230c(?:)2d1194e83e;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)05 sha256:ed3cb3(?:)293b84a79a7cd068(?:)92599874eaf56b4f(?:)91071e8537df71fc(?:)93794a7104;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)06 sha256:d02071(?:)7a693732de00655a(?:)0a0c4359626feacc(?:)6f71d130acbd2180(?:)0e3979a748;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)07 sha256:e3dcde(?:)e13b077e6effd51a(?:)4b6dd9d00c0b3a37(?:)3826aaa0ee305495(?:)e4088a5def\.$''',
+  '''^\n?  PASSWORD-DEC-0(?:)01 sha256:ba44cc(?:)58be46506940728e(?:)9d6edfcfc165f84c(?:)201ac01efe709b49(?:)49a211cd92;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)02 sha256:9d9202(?:)7d805ca587dcce98(?:)75bb0af09d2d9913(?:)ad883bee56e17340(?:)7d7a6b6362;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)03 sha256:ea20f1(?:)c77cbbb8f8b5ca43(?:)a23c217ae77e142e(?:)ed42ee4db1f636be(?:)1fc949ab45;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)04 sha256:3526e9(?:)549c855d048fec5c(?:)31220d1c3085331e(?:)ef128437c1d3bc1a(?:)1e682daf9d;$''',
+  '''^\n?  PASSWORD-DEC-0(?:)05 sha256:695d18(?:)94768e03f3a3d599(?:)4e432d9eac0248b9(?:)81bc3493c0931ce9(?:)ba19996d84;$''',
+]
+
+[[allowlists]]
+description = "Exact historical Password APIDIFF tool version is a public module identity."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^tools/versions\.env$''']
+regexes = [
+  '''^\n?APIDIFF_VERSION=(?:)v0\.0\.0-202607182(?:)01538-764159d718(?:)ef$''',
+]
+
+[[allowlists]]
+description = "Exact temp-clone-token examples in the pinned public GitHub OpenAPI artifact."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^specification/independent/github-rest-api/api\.github\.com\.2022-11-28\.json$''']
+regexes = [
+  '''^\n?              "t(?:)emp_clone_token"(?:): "ABTLWHOULUVAX(?:)GTRYU7OC2876QJ2O(?:)",$''',
+  '''^\n?                (?:)"temp_clone_toke(?:)n": "ABTLWHOULUV(?:)AXGTRYU7OC2876QJ(?:)2O",$''',
+  '''^\n?            "tem(?:)p_clone_token": (?:)"ABTLWHOULUVAXGT(?:)RYU7OC2876QJ2O",$''',
+  '''^\n?          "temp_(?:)clone_token": "A(?:)BTLWHOULUVAXGTRY(?:)U7OC2876QJ2O",$''',
+]
+
+[[allowlists]]
 description = "The immutable CI tooling checkout is verified separately."
 paths = ['''^\.golib-tooling(?:/|$)''']
 
