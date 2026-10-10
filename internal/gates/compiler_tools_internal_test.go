@@ -2,6 +2,7 @@ package gates
 
 import (
 	"context"
+	"debug/buildinfo"
 	"errors"
 	"io"
 	"os"
@@ -12,6 +13,80 @@ import (
 
 	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
+
+func TestCompilerToolBuildUnderOlderConsumerGo(t *testing.T) {
+	consumerGo := os.Getenv("GOLIB_COMPILER_CONSUMER_GO")
+	if consumerGo == "" {
+		t.Skip("opt-in older consumer compiler control")
+	}
+	if !filepath.IsAbs(consumerGo) {
+		t.Fatal("consumer compiler must be an absolute executable path")
+	}
+	t.Setenv("PATH", filepath.Dir(consumerGo)+string(os.PathListSeparator)+os.Getenv("PATH"))
+	t.Setenv("GOTOOLCHAIN", "local")
+	version, err := exec.CommandContext(t.Context(), consumerGo, "version").Output()
+	if err != nil || !strings.Contains(string(version), "go1.26.6 ") {
+		t.Fatal("control requires the actual Go 1.26.6 consumer compiler")
+	}
+	root := t.TempDir()
+	probeDirectory := filepath.Join(root, "bin")
+	if err := os.Mkdir(probeDirectory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	probe := "#!/bin/sh\nprintf '%s\\n' \"${GOTOOLCHAIN:-}\" >> \"${GOLIB_COMPILER_TOOLCHAIN_CAPTURE}\"\nexec \"${GOLIB_COMPILER_CONSUMER_GO}\" \"$@\"\n"
+	if err := os.WriteFile(filepath.Join(probeDirectory, "go"), []byte(probe), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	capture := filepath.Join(root, "compiler-selection")
+	t.Setenv("GOLIB_COMPILER_TOOLCHAIN_CAPTURE", capture)
+	t.Setenv("PATH", probeDirectory+string(os.PathListSeparator)+os.Getenv("PATH"))
+	manifest := "module example.invalid/older-consumer\n\ngo 1.26.6\n"
+	for name, data := range map[string]string{
+		"go.mod":     manifest,
+		"control.go": "package control\nimport \"sync/atomic\"\nfunc Value() int64 { var v atomic.Int64; return v.Load() }\n",
+	} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(data), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	executor, cleanup, err := NewProcessExecutor(root, io.Discard, io.Discard)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := cleanup(); err != nil {
+			t.Error(err)
+		}
+	})
+	runner := Runner{Root: root, Executor: executor}
+	tool, ok := securityCompilerTool("github.com/securego/gosec/v2/cmd/gosec@" + gosecVersion)
+	if !ok {
+		t.Fatal("missing Gosec compiler tool")
+	}
+	err = runner.withCompilerTool(t.Context(), tool, func(binary string) error {
+		info, err := buildinfo.ReadFile(binary)
+		if err != nil || info.GoVersion != "go1.27.2" {
+			t.Fatal("isolated analyzer was not built with the patched tooling compiler")
+		}
+		if os.Getenv("GOTOOLCHAIN") != "local" {
+			t.Fatal("tool build changed consumer compiler selection")
+		}
+		return executor.Run(t.Context(), Command{Name: binary, Args: []string{"-fmt=json", "./..."}, Dir: root, Stdout: io.Discard, Stderr: io.Discard})
+	})
+	if err != nil {
+		t.Fatalf("build and analyze under older consumer compiler: %v", err)
+	}
+	selections, err := os.ReadFile(capture)
+	if err != nil || !strings.HasPrefix(string(selections), "go1.27.2\n") || !strings.Contains(string(selections), "\nlocal\n") {
+		t.Fatal("build and consumer loading did not use their distinct compiler selections")
+	}
+	if data, err := os.ReadFile(filepath.Join(root, "go.mod")); err != nil || string(data) != manifest {
+		t.Fatal("tool build changed the consumer manifest")
+	}
+	if _, err := os.Stat(filepath.Join(root, "go.sum")); !os.IsNotExist(err) {
+		t.Fatal("tool build created consumer dependency sums")
+	}
+}
 
 // CC-04: exercise the production scanner owner, not an independently built
 // tool, so a compatible test-only graph cannot hide broken gate wiring.
@@ -151,6 +226,7 @@ func TestOwnedAnalysisCompatibleGraphIntegration(t *testing.T) {
 // CC-02/CC-09: one common lifecycle contract for all rebuilt tools. The
 // executor is inert; these are not local process-control tests.
 func TestCompilerToolsPreserveIsolationFailureAndPrivacy(t *testing.T) {
+	t.Setenv("GOTOOLCHAIN", "local")
 	tools := make([]compilerTool, 0, 3)
 	tools = append(tools, staticcheckCompilerTool)
 	for _, identity := range []string{"github.com/securego/gosec/v2/cmd/gosec@" + gosecVersion, "github.com/faustbrian/go-analysis/cmd/golib-analysis@" + goAnalysisVersion} {
@@ -172,6 +248,9 @@ func TestCompilerToolsPreserveIsolationFailureAndPrivacy(t *testing.T) {
 					stages = append(stages, "build")
 					if command.Name != "go" || command.Dir == target || !strings.HasPrefix(command.Dir, task+string(filepath.Separator)) || command.Env["GOWORK"] != "off" || command.Env["GOFLAGS"] != "" || !command.boundedScanner {
 						t.Fatal("tool construction lost isolation or bounded output")
+					}
+					if command.Env["GOTOOLCHAIN"] != "go1.27.2" {
+						t.Fatal("tool build inherited the consumer compiler instead of the patched tooling compiler")
 					}
 					manifest, err := os.ReadFile(filepath.Join(command.Dir, "go.mod"))
 					if err != nil || !strings.Contains(string(manifest), tool.module+" "+tool.version) || !strings.Contains(string(manifest), "golang.org/x/tools v0.50.0") {
@@ -195,6 +274,9 @@ func TestCompilerToolsPreserveIsolationFailureAndPrivacy(t *testing.T) {
 				runner := Runner{Executor: executor}
 				err := runner.withCompilerTool(ctx, tool, func(binary string) error {
 					stages = append(stages, "analysis")
+					if os.Getenv("GOTOOLCHAIN") != "local" {
+						t.Fatal("tool build changed the consumer analysis compiler")
+					}
 					if filepath.Base(binary) != tool.name || !strings.HasPrefix(binary, task+string(filepath.Separator)) {
 						t.Fatal("analysis escaped owned binary")
 					}

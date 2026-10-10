@@ -63,7 +63,7 @@ func (runner Runner) withCompilerTool(ctx context.Context, tool compilerTool, an
 	stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 	err = runner.Executor.Run(ctx, Command{
 		Name: "go", Args: []string{"build", "-mod=mod", "-o", binary, tool.command},
-		Dir: root, Env: map[string]string{"GOWORK": "off", "GOFLAGS": ""},
+		Dir: root, Env: map[string]string{"GOWORK": "off", "GOFLAGS": "", "GOTOOLCHAIN": "go1.27.2"},
 		boundedScanner: true, Stdout: stdout, Stderr: stderr,
 	})
 	var overflow error
