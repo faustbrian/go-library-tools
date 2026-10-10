@@ -15,6 +15,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Recognize 14 independently verified public OpenAPI decision checksum lines
+  without suppressing other paths, altered records or credential findings.
+
 - Build isolated compiler-dependent analyzers with the patched tooling Go
   compiler without changing the consumer analysis toolchain.
 
