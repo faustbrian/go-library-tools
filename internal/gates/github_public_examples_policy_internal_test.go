@@ -340,8 +340,18 @@ func TestGitHubPublicExamplesPolicyIntegration(t *testing.T) {
 				}()
 				runner := Runner{Root: root, Executor: executor, Output: &output}
 				err = runner.Secrets(t.Context())
-				if (err != nil) != hostile || (hostile && !strings.Contains(output.String(), "secret-findings")) || strings.Contains(output.String(), token) {
-					t.Fatal("shared secret gate status or private diagnostic differs")
+				if (err != nil) != hostile {
+					t.Fatal("shared secret gate returned incorrect success status")
+				}
+				diagnostic := output.String()
+				if err != nil {
+					if !strings.Contains(err.Error(), "secret-findings") {
+						t.Fatal("shared secret gate did not classify completed findings")
+					}
+					diagnostic += err.Error()
+				}
+				if strings.Contains(diagnostic, token) {
+					t.Fatal("shared secret gate leaked fixture credential")
 				}
 			})
 		}
