@@ -28,14 +28,17 @@ func TestGosecDiscoveryCompletesAtEOF(t *testing.T) {
 	}
 }
 
-// Scalar event admission/refusal must fail finitely before recursive graphs:
-// an inverted event equality otherwise can reach a larger fixture first.
+// Scalar event admission/refusal precedes recursive graphs. Hosted runs own a
+// bounded child because local-action traversal variants can otherwise spin.
 func TestWorkflowScalarEventPreflight(t *testing.T) {
 	for _, test := range []struct{ event, reason string }{
 		{"push", ""},
 		{"pull_request_target", "pull_request_target"},
 	} {
 		t.Run(test.event, func(t *testing.T) {
+			if workflowPreflightOwnedChild(t) {
+				return
+			}
 			root := t.TempDir()
 			workflowRefusalWrite(t, root, ".github/workflows/ci.yml", "on: "+test.event+"\njobs: {}\n")
 			calls := 0
