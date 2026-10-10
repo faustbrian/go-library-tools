@@ -184,6 +184,29 @@ regexes = [
   '''^\n?- JSONAPI-DEC-009 sha256:47736a06(?:)49bf48e1(?:)9fed8cc7(?:)5bb8308a(?:)c1790699(?:)487a4e40(?:)55a8e2a4(?:)d486ec2b$''',
   '''^\n?- JSONAPI-DEC-010 sha256:c7a9604e(?:)5ef3e66a(?:)7576826b(?:)8ab08b6e(?:)58d5de1b(?:)d4d95451(?:)84b4ff0c(?:)66d8c2fa$''',
 ]
+[[allowlists]]
+description = "Exact public OpenAPI decision ID and SHA-256 records, independently recomputed from immutable decision registers."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^CHANGELOG\.md$''']
+regexes = [
+  '''^\n?- OPENAPI-DEC-001 sha256:945adbbd(?:)c8784d07(?:)8c0c92f1(?:)8e25f093(?:)35b55c60(?:)f4dabc6c(?:)4cd892c4(?:)edf8e227$''',
+  '''^\n?- OPENAPI-DEC-002 sha256:7a6781bc(?:)ac02f255(?:)55164496(?:)9f0b5331(?:)0bddcb9c(?:)417eaaf7(?:)062ecb0e(?:)b421a193$''',
+  '''^\n?- OPENAPI-DEC-003 sha256:13253357(?:)9e14d96e(?:)ccffbf6c(?:)9456d1a9(?:)e36d895e(?:)ffb2b977(?:)d4deffdf(?:)a7e11e22$''',
+  '''^\n?- OPENAPI-DEC-004 sha256:3412d17f(?:)04d660ca(?:)df876062(?:)ff3f6775(?:)31a6e928(?:)d81ebf6e(?:)98926f74(?:)ef9a5525$''',
+  '''^\n?- OPENAPI-DEC-005 sha256:457129d9(?:)ab2d52e9(?:)0b4f2dff(?:)335b8cc3(?:)d0faeee8(?:)dc104f0e(?:)78820ab8(?:)b7d0b2da$''',
+  '''^\n?- OPENAPI-DEC-006 sha256:e0f1f7cd(?:)1e4806a3(?:)0399749f(?:)079f3700(?:)530c70f8(?:)ef8bf86e(?:)6ef92924(?:)57154b70$''',
+  '''^\n?- OPENAPI-DEC-007 sha256:514cb998(?:)9d61158b(?:)fb863b95(?:)37ae21a2(?:)f8a8682c(?:)e5baf327(?:)4b220ab5(?:)00a9fbed$''',
+  '''^\n?- OPENAPI-DEC-008 sha256:cc10809f(?:)406b1233(?:)6deb5353(?:)7ad9146b(?:)a71ac98c(?:)6962779c(?:)229dc203(?:)c501e018$''',
+  '''^\n?- OPENAPI-DEC-009 sha256:962eee67(?:)6c2080c6(?:)558e03d5(?:)3fe08911(?:)ab6cc2e9(?:)de353428(?:)f7f4cef6(?:)659bc300$''',
+  '''^\n?- OPENAPI-DEC-010 sha256:192a09d2(?:)7fcf47ca(?:)576b13c5(?:)37c30266(?:)880ca429(?:)8db996e4(?:)00c41f3f(?:)fbec96af$''',
+  '''^\n?- OPENAPI-DEC-001 sha256:5c40c0ec(?:)0ffe030e(?:)87f09461(?:)57b1670d(?:)d6e681ca(?:)fbd45833(?:)86df6698(?:)94d39882$''',
+  '''^\n?- OPENAPI-DEC-004 sha256:c38e2c7b(?:)778c8636(?:)f4ed8c9b(?:)7231a104(?:)9cfac298(?:)59a655b5(?:)c7011d44(?:)159bd1e9$''',
+  '''^\n?- OPENAPI-DEC-006 sha256:df83163c(?:)b3d52899(?:)abcdfcfc(?:)d95245e3(?:)ea9914b4(?:)1401ef55(?:)2eb6dc88(?:)12ded7bb$''',
+  '''^\n?- OPENAPI-DEC-010 sha256:cfd3ed8d(?:)4b897ba3(?:)9715ecd0(?:)61f875b6(?:)d5da62eb(?:)87aab1a0(?:)17de8e9f(?:)79fb37a7$''',
+]
+
 `
 	analysisSecurityPolicy = `version: 1
 rules:

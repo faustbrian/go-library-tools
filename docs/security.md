@@ -100,6 +100,16 @@ bound, not repository or commit bound: an identical public line is recognized
 elsewhere, but another ID, checksum, path, surrounding text, rule or credential
 assignment remains scanned. Owner: library maintainer; review condition:
 changed decision provenance, scanner matching semantics or exception scope.
+The OpenAPI metadata exception likewise requires the generic-api-key detector,
+root `CHANGELOG.md`, and one of 14 exact public decision-ID/SHA-256 lines.
+Their checksums were independently recomputed from decision registers at
+`09771cf1e03bbdb684cca77785cbc7ee1ee2e9a1` and
+`92dcffd42c0dbd6d27c526e5cf33ea7f9b8591f1` and matched their history.
+Only the scanner's optional leading newline is admitted. Changed pairs,
+paths, surrounding text, credential assignments and other detectors remain
+findings. Owner and review conditions are the same as for JSONAPI metadata;
+this classification does not waive other findings in OpenAPI history.
+
 Scanner-controlled stdout and stderr are suppressed and independently limited
 to 4 MiB. Gitleaks uses a distinct findings exit status; only the exact final
 Go-wrapper status line is recognized, without retaining scanner text. Completed
