@@ -207,6 +207,96 @@ regexes = [
   '''^\n?- OPENAPI-DEC-010 sha256:cfd3ed8d(?:)4b897ba3(?:)9715ecd0(?:)61f875b6(?:)d5da62eb(?:)87aab1a0(?:)17de8e9f(?:)79fb37a7$''',
 ]
 
+
+[[allowlists]]
+description = "Exact public GitHub REST API example lines from immutable official specification."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^specification/independent/github-rest-api/api\.github\.com\.2022-11-28\.json$''']
+regexes = [
+  '''^\n?        (?:)    "key(?:)": "2Sg8(?:)iYjAxxmI(?:)2LvUXpJj(?:)kYrMxURP(?:)c8r\+dB7T(?:)Jyvv1234(?:)",$''',
+  '''^\n?        (?:)        (?:)    "acc(?:)ess_toke(?:)n": "e72(?:)e16c7e42(?:)f292c691(?:)2e7710c8(?:)38347ae1(?:)78b4a"$''',
+  '''^\n?        (?:)  "webho(?:)ok_secre(?:)t": "e34(?:)01541283(?:)14309424(?:)b7c8e903(?:)25147d99(?:)fdafa",$''',
+  '''^\n?        (?:)  "key":(?:) "2Sg8iY(?:)jAxxmI2L(?:)vUXpJjkY(?:)rMxURPc8(?:)r\+dB7TJy(?:)vv1234"$''',
+  '''^\n?        (?:)  "temp_(?:)clone_to(?:)ken": "A(?:)BTLWHOUL(?:)UVAXGTRY(?:)U7OC2876(?:)QJ2O",$''',
+  '''^\n?        (?:)  "key":(?:) "2Sg8iY(?:)jAxxmI2L(?:)vUXpJjkY(?:)rMxURPc8(?:)r\+dB7TJy(?:)vv1234",$''',
+  '''^\n?        (?:)        (?:)    "key(?:)": "2Sg8(?:)iYjAxxmI(?:)2LvUXpJj(?:)kYrMxURP(?:)c8r\+dB7T(?:)Jyvv1234(?:)"$''',
+  '''^\n?        (?:)  "hashe(?:)d_token"(?:): "25f94(?:)a2a5c7fb(?:)af499c66(?:)5bc73d67(?:)c1c87e49(?:)6da89851(?:)31633ee0(?:)a95819db(?:)2e8",$''',
+  '''^\n?        (?:)        (?:)    "key(?:)": "2Sg8(?:)iYjAxxmI(?:)2LvUXpJj(?:)kYrMxURP(?:)c8r\+dB7T(?:)Jyvv1234(?:)",$''',
+  '''^\n?        (?:)  "clien(?:)t_secret(?:)": "1726(?:)be163809(?:)5a19edd1(?:)34c77bde(?:)3aa2ece1(?:)e5d8",$''',
+  '''^\n?        (?:)      "t(?:)emp_clon(?:)e_token"(?:): "ABTLW(?:)HOULUVAX(?:)GTRYU7OC(?:)2876QJ2O(?:)",$''',
+  '''^\n?        (?:)        (?:)"temp_cl(?:)one_toke(?:)n": "ABT(?:)LWHOULUV(?:)AXGTRYU7(?:)OC2876QJ(?:)2O",$''',
+  '''^\n?        (?:)  "token(?:)": "AABF(?:)3JGZDX3P(?:)5PMEXLND(?:)6TS6FCWO(?:)6",$''',
+  '''^\n?        (?:)    "tem(?:)p_clone_(?:)token": (?:)"ABTLWHO(?:)ULUVAXGT(?:)RYU7OC28(?:)76QJ2O",$''',
+  '''^\n?        (?:)    "key(?:)": "2Sg8(?:)iYjAxxmI(?:)2LvUXpJj(?:)kYrMxURP(?:)c8r\+dB7T(?:)Jy931234(?:)",$''',
+  '''^\n?        (?:)        (?:)    "acc(?:)ess_toke(?:)n": "e72(?:)e16c7e42(?:)f292c691(?:)2e7710c8(?:)38347ae1(?:)78b4a",$''',
+  '''^\n?        (?:)  "token(?:)": "LLBF(?:)3JGZDX3P(?:)5PMEXLND(?:)6TS6FCWO(?:)6",$''',
+  '''^\n?        (?:)  "token(?:)": "ghs_(?:)16C7e42F(?:)292c6912(?:)E7710c83(?:)8347Ae17(?:)8B4a",$''',
+  '''^\n?        (?:)  "token(?:)": "ghu_(?:)16C7e42F(?:)292c6912(?:)E7710c83(?:)8347Ae17(?:)8B4a",$''',
+]
+
+[[allowlists]]
+description = "Exact public GitHub REST API example lines from immutable official specification."
+condition = "AND"
+targetRules = ["github-app-token"]
+regexTarget = "line"
+paths = ['''^specification/independent/github-rest-api/api\.github\.com\.2022-11-28\.json$''']
+regexes = [
+  '''^\n?        (?:)  "token(?:)": "ghs_(?:)16C7e42F(?:)292c6912(?:)E7710c83(?:)8347Ae17(?:)8B4a",$''',
+  '''^\n?        (?:)  "token(?:)": "ghu_(?:)16C7e42F(?:)292c6912(?:)E7710c83(?:)8347Ae17(?:)8B4a",$''',
+  '''^\n?        (?:)        (?:)      "g(?:)hu_12345(?:)67890abc(?:)def12345(?:)67890abc(?:)def12345(?:)678",$''',
+]
+
+[[allowlists]]
+description = "Exact public GitHub REST API example lines from immutable official specification."
+condition = "AND"
+targetRules = ["github-oauth"]
+regexTarget = "line"
+paths = ['''^specification/independent/github-rest-api/api\.github\.com\.2022-11-28\.json$''']
+regexes = [
+  '''^\n?        (?:)        (?:)      "g(?:)ho_12345(?:)67890abc(?:)def12345(?:)67890abc(?:)def12345(?:)678",$''',
+]
+
+[[allowlists]]
+description = "Exact public GitHub REST API example lines from immutable official specification."
+condition = "AND"
+targetRules = ["github-pat"]
+regexTarget = "line"
+paths = ['''^specification/independent/github-rest-api/api\.github\.com\.2022-11-28\.json$''']
+regexes = [
+  '''^\n?        (?:)        (?:)      "g(?:)hp_12345(?:)67890abc(?:)def12345(?:)67890abc(?:)def12345(?:)678",$''',
+]
+
+[[allowlists]]
+description = "Exact public GitHub REST API example lines from immutable official specification."
+condition = "AND"
+targetRules = ["github-refresh-token"]
+regexTarget = "line"
+paths = ['''^specification/independent/github-rest-api/api\.github\.com\.2022-11-28\.json$''']
+regexes = [
+  '''^\n?        (?:)        (?:)      "g(?:)hr_12345(?:)67890abc(?:)def12345(?:)67890abc(?:)def12345(?:)67890abc(?:)def12345(?:)67890abc(?:)def12345(?:)67890ab"$''',
+]
+
+[[allowlists]]
+description = "Exact public GitHub REST API example lines from immutable official specification."
+condition = "AND"
+targetRules = ["jwt"]
+regexTarget = "line"
+paths = ['''^specification/independent/github-rest-api/api\.github\.com\.2022-11-28\.json$''']
+regexes = [
+  '''^\n?        (?:)        (?:)    "oid(?:)c_token"(?:): "eyJ0e(?:)XAiOiJKV(?:)1QiLCJhb(?:)GciOiJSU(?:)zI1NiIsI(?:)ng1dCI6I(?:)lV2R1h4S(?:)UhlY0JFc(?:)1JCdEtte(?:)mUxUEhfU(?:)ERiVSIsI(?:)mtpZCI6I(?:)jUyRjE5N(?:)0M0ODFER(?:)TcwMTEyQ(?:)zQ0MUI0Q(?:)TlCMzdCN(?:)TNDN0ZDR(?:)jBEQjUif(?:)Q\.eyJqdG(?:)kiOiJhMW(?:)IwNGNjNy(?:)0zNzZiLT(?:)Q1N2QtOT(?:)MzNS05NT(?:)Y5YmVjZD(?:)ExYTIiLC(?:)JzdWIiOi(?:)JyZXBvOn(?:)BhcGVyLX(?:)NwYS9taW(?:)55aTplbn(?:)Zpcm9ubW(?:)VudDpQcm(?:)9kdWN0aW(?:)9uIiwiYX(?:)VkIjoiaH(?:)R0cHM6Ly(?:)9naXRodW(?:)IuY29tL3(?:)BhcGVyLX(?:)NwYSIsIn(?:)JlZiI6In(?:)JlZnMvaG(?:)VhZHMvbW(?:)FpbiIsIn(?:)NoYSI6Im(?:)EyODU1MW(?:)JmODdiZD(?:)k3NTFiMz(?:)diMmM0Yj(?:)M3M2MxZj(?:)U3NjFmYW(?:)M2MjYiLC(?:)JyZXBvc2(?:)l0b3J5Ij(?:)oicGFwZX(?:)Itc3BhL2(?:)1pbnlpIi(?:)wicmVwb3(?:)NpdG9yeV(?:)9vd25lci(?:)I6InBhcG(?:)VyLXNwYS(?:)IsInJ1bl(?:)9pZCI6Ij(?:)E1NDY0NT(?:)kzNjQiLC(?:)JydW5fbn(?:)VtYmVyIj(?:)oiMzQiLC(?:)JydW5fYX(?:)R0ZW1wdC(?:)I6IjYiLC(?:)JhY3Rvci(?:)I6IllpTX(?:)lzdHkiLC(?:)J3b3JrZm(?:)xvdyI6Ik(?:)NJIiwiaG(?:)VhZF9yZW(?:)YiOiIiLC(?:)JiYXNlX3(?:)JlZiI6Ii(?:)IsImV2ZW(?:)50X25hbW(?:)UiOiJwdX(?:)NoIiwicm(?:)VmX3R5cG(?:)UiOiJicm(?:)FuY2giLC(?:)JlbnZpcm(?:)9ubWVudC(?:)I6IlByb2(?:)R1Y3Rpb2(?:)4iLCJqb2(?:)Jfd29ya2(?:)Zsb3dfcm(?:)VmIjoicG(?:)FwZXItc3(?:)BhL21pbn(?:)lpLy5naX(?:)RodWIvd2(?:)9ya2Zsb3(?:)dzL2JsYW(?:)5rLnltbE(?:)ByZWZzL2(?:)hlYWRzL2(?:)1haW4iLC(?:)Jpc3MiOi(?:)JodHRwcz(?:)ovL3Rva2(?:)VuLmFjdG(?:)lvbnMuZ2(?:)l0aHVidX(?:)NlcmNvbn(?:)RlbnQuY2(?:)9tIiwibm(?:)JmIjoxNj(?:)M5MDAwOD(?:)U2LCJleH(?:)AiOjE2Mz(?:)kwMDE3NT(?:)YsImlhdC(?:)I6MTYzOT(?:)AwMTQ1Nn(?:)0\.VP8Wic(?:)tbQECKoz(?:)E2SgvKb2(?:)FqJ9hisW(?:)soMkYRTq(?:)fBrQfZTC(?:)Xi5IcFEd(?:)gDMB2X7a(?:)99C2DeUu(?:)TvHh9RMK(?:)XLL2a0zg(?:)3-Sd7YrO(?:)7a2ll2kN(?:)lnvyIypc(?:)N6AeIc7B(?:)xHsTTnZN(?:)9Ud_xmEs(?:)TrSRGOEK(?:)mzCFkULQ(?:)6N4zlVD0(?:)sidypmXl(?:)MemmWEcv(?:)_ZHqhioE(?:)I_VMp5vw(?:)XQurketW(?:)H7qX4oDg(?:)G4okyYtP(?:)rv5RQHbf(?:)QcVo9iza(?:)PJ_jnsDd(?:)0CBA0QOx(?:)9InjPidt(?:)IkMYQLyU(?:)gJy33HLJ(?:)y86EFNUn(?:)Af8UhBQu(?:)Qi5mAsEp(?:)EzBBuKpG(?:)3PDiPtYC(?:)HOk64JZk(?:)ZGd5mR88(?:)8a5sbHRi(?:)aF8hm8YA(?:)"$''',
+]
+
+[[allowlists]]
+description = "Exact public GitHub REST API example lines from immutable official specification."
+condition = "AND"
+targetRules = ["private-key"]
+regexTarget = "line"
+paths = ['''^specification/independent/github-rest-api/api\.github\.com\.2022-11-28\.json$''']
+regexes = [
+  '''^\n?        (?:)  "pem":(?:) "-----B(?:)EGIN RSA(?:) PRIVATE(?:) KEY----(?:)-\\nMIIEo(?:)wIBAAKCA(?:)QEAuEPzO(?:)UE\+kiEH1(?:)WLiMeByt(?:)TEF856j0(?:)hOVcSUSU(?:)kZxKvqcz(?:)kWM\\n9vo(?:)1gDyC7ZX(?:)hdH9fKh3(?:)2aapba3R(?:)Ssp4ke\+g(?:)iSmYTk2m(?:)GR538ShS(?:)Dxh0OgpJ(?:)mjiKP\\nX(?:)0Bj4j5sF(?:)qfXuCtl9(?:)SkH4iuei(?:)vv4R53kt(?:)qM\+n6hk9(?:)8l6hRwC3(?:)9GVIblAh(?:)2lEM4L/\\(?:)n6WvYwuQ(?:)XPMM5OG2(?:)Ryh2tDZ1(?:)WS5RKfgq(?:)\+9ksNJ5Q(?:)9UtqtqHk(?:)O\+E63N5O(?:)K9sbzpUU(?:)m\\noNaOl(?:)3udTlZD3(?:)A8iqwMPV(?:)xH4SxgAT(?:)BPAc\+bmj(?:)k6BMJ0qI(?:)zDcVGTrq(?:)rzUiywCT(?:)Lma\\nszd(?:)k8GjzXtP(?:)DmuBgNn\+(?:)o6s02qVG(?:)pyydgEuq(?:)mTQIDAQA(?:)BAoIBACL(?:)6AvkjQVV(?:)Ln8kJ\\nd(?:)BYznJJ4M(?:)8ECo\+YEg(?:)aFwgAHOD(?:)T0zRQCCg(?:)zd\+Vxl4Y(?:)wHmKV2Lr(?:)\+y2s0drZ(?:)t8GvYva\\(?:)nKOK8NYY(?:)Zyi15Ilw(?:)FyRXmvvy(?:)kF1UBpSX(?:)luYFDH7K(?:)aVroWMgR(?:)reHcIys5(?:)LqVSIb6B(?:)o\\ngDmK0(?:)yBLPp8qR(?:)29s2b7Sc(?:)ZRtLaqGJ(?:)iX\+j55rN(?:)zrZwxHkx(?:)FHyG9OG\+(?:)u9IsBElc(?:)KCP\\nkYC(?:)VE8ZdYex(?:)fnKOZbgn(?:)2kZB9qu0(?:)T/Mdvki8(?:)yk3I2bI6(?:)xYO24oQm(?:)hnT36qnq(?:)WoCBX\\nN(?:)uCNsBQgp(?:)YZeZET8m(?:)EAUmo9d\+(?:)ABmIHIvS(?:)s005agK8(?:)xRaP4\+6j(?:)Ygy6Wwoe(?:)jJRF5yd\\(?:)nNBuF7aE(?:)CgYEA50n(?:)Z4FiZYV0(?:)vcJDxFYe(?:)Y3kYOvVu(?:)Kn8OyW\+2(?:)rg7JIQTr(?:)emIjv8Fk(?:)E\\nZnwuF(?:)9ZRxgqLx(?:)UIfKKfzp(?:)/5l5Lryc(?:)Noj2YKfH(?:)KnRejxRW(?:)XqG\+ZETf(?:)xxlmlRns(?:)0QG\\nJ4\+(?:)BYL0Coan(?:)DSeA4fuy(?:)n4Bv7cy/(?:)03TDhfg/(?:)Uq0Aeg\+h(?:)hcPE/vx3(?:)ebPsCgYE(?:)Ay/Pv\\ne(?:)DLssOSde(?:)yIxf0Brt(?:)ocg6aPXI(?:)VaLdus\+b(?:)XmLg77rJ(?:)IFytAZmT(?:)TW8SkkSc(?:)zWtucI3\\(?:)nFI1I6se(?:)i/8FdPzA(?:)l62/JDdl(?:)f7Wd9K7J(?:)IotY4TzT(?:)7Tm7QU7x(?:)pfLLYIP1(?:)bOFjN81r(?:)k\\n77oOD(?:)4LsXcosB(?:)/U6s1blP(?:)JMZ6AlO2(?:)EKs10UuR(?:)1cCgYBip(?:)zuJ2ADEa(?:)Oz9RLWwi(?:)0AH\\nPza(?:)2Sj\+c2ep(?:)QD9ZivD7(?:)Zo/Sid3Z(?:)wvGeGF13(?:)JyR7kLEd(?:)mAkgsHUd(?:)u1rI7mAo(?:)lXMaB\\n1(?:)pdrsHure(?:)eLxGbRM6(?:)za3tzMXW(?:)v1Il7FQW(?:)oPC8ZwXv(?:)MOR1VQDv(?:)4nzq7vbb(?:)A8z8c\+c\\(?:)n57\+8tAL(?:)QHOTDOgQ(?:)IzwK61QK(?:)BgERGVc0(?:)EJy4Uag\+(?:)VY8J4m1Z(?:)QKBluqo7(?:)TfP6DQ7O(?:)8\\nM5MX7(?:)3maB/7yA(?:)X8pVO39R(?:)jrhJlYAC(?:)RZNMbK\+v(?:)/ckEQYdJ(?:)SSKmGCVe(?:)0JrGYDuP(?:)tic\\nI9\+(?:)IGfSorf7(?:)KHPoMmMN(?:)6bPYQ7Gj(?:)h7a\+\+tgR(?:)FTMEc895(?:)6Hnt4xGa(?:)hy9NcglN(?:)tBpVN\\n6(?:)G8jAoGBA(?:)MCh028pd(?:)zJa/xeBH(?:)LLaVB2sc(?:)0Fe7993W(?:)lsPmnVE7(?:)79dAz7qM(?:)scOtXJK\\(?:)nfgtrilt(?:)LSSD6rTA(?:)9hUAsL/X(?:)62rY0wdX(?:)uNdijjBb(?:)/qvrx7CA(?:)V6i37NK1(?:)CjABNjsf(?:)G\\nZM372(?:)Ac6zc1Eq(?:)Srid2IjE(?:)T1YqyIW2(?:)KGLI1R2x(?:)bQc98UGl(?:)t48OdWu\\(?:)n-----EN(?:)D RSA PR(?:)IVATE KE(?:)Y-----\\n(?:)"$''',
+]
 `
 	analysisSecurityPolicy = `version: 1
 rules:

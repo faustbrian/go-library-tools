@@ -15,6 +15,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Classify exact documented GitHub REST API example lines as public without
+  exempting imported specifications or altered credential findings.
+
 - Recognize 14 independently verified public OpenAPI decision checksum lines
   without suppressing other paths, altered records or credential findings.
 
