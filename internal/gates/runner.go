@@ -46,6 +46,32 @@ const (
 useDefault = true
 
 [[allowlists]]
+description = "Exact independently regenerated public Webhook v1 interoperability records."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^testdata/vectors/v1\.json$''']
+regexes = [
+  '''^\n?      "key_mater(?:)ial_base64url": (?:)"Y3Jvc3MtbGFuZ3V(?:)hZ2UtdGVzdC1rZXk(?:)",$''',
+  '''^\n?      "canonical(?:)_base64url": "d2(?:)ViaG9vay12MQphbG(?:)dvcml0aG06c2hhMj(?:)U2CnRpbWVzdGFtcD(?:)oxNzAwMDAwMDAwCm(?:)5vbmNlOmNIbDBhRz(?:)l1TFdacGVIUjFjbV(?:)V0Ym05dVkyVQprZX(?:)ktaWQ6YVc1MFpYSn(?:)ZjQzFyWlhrCm1ldG(?:)hvZDpwb3N0CnBhdG(?:)g6TDJodmIydHpMeV(?:)V5Um05eVpHVnljdw(?:)pxdWVyeTpZVDB5Sm(?:)1FOU1TWmlQWFIzYn(?:)labGJYQjBlVDAKaG(?:)9zdDpjbVZqWldsMl(?:)pYSXVaWGhoYlhCc1(?:)pUbzBORE0KY29udG(?:)VudC10eXBlOllYQn(?:)diR2xqWVhScGIyNH(?:)Zhbk52YmcKaWRlbX(?:)BvdGVuY3kta2V5Ol(?:)pYWmxiblF0YVc1MF(?:)pYSnZjQzB4CmJvZH(?:)ktc2hhMjU2OmFrZk(?:)RHM3Q4TzVvZHZKWU(?:)dhZlJuVE9DSXlQeW(?:)Rtazktbjh3X2FvSD(?:)N1R3cKbWV0YWRhdG(?:)E6WkVkV2RWbFhOVE(?:)E5V1ZkT2RGcFJDbV(?:)JYTlhCWk1qbHJXbE(?:)U5WXpJMWRtUXlNV2(?:)hpYVVScGJVbE4K",$''',
+  '''^\n?      "canonical(?:)_base64url": "d2(?:)ViaG9vay12MQphbG(?:)dvcml0aG06c2hhNT(?:)EyCnRpbWVzdGFtcD(?:)oxNzAwMDAwMDAwCm(?:)5vbmNlOmNIbDBhRz(?:)l1TFdacGVIUjFjbV(?:)V0Ym05dVkyVQprZX(?:)ktaWQ6YVc1MFpYSn(?:)ZjQzFyWlhrCm1ldG(?:)hvZDpwb3N0CnBhdG(?:)g6TDJodmIydHpMeV(?:)V5Um05eVpHVnljdw(?:)pxdWVyeTpZVDB5Sm(?:)1FOU1TWmlQWFIzYn(?:)labGJYQjBlVDAKaG(?:)9zdDpjbVZqWldsMl(?:)pYSXVaWGhoYlhCc1(?:)pUbzBORE0KY29udG(?:)VudC10eXBlOllYQn(?:)diR2xqWVhScGIyNH(?:)Zhbk52YmcKaWRlbX(?:)BvdGVuY3kta2V5Ol(?:)pYWmxiblF0YVc1MF(?:)pYSnZjQzB4CmJvZH(?:)ktc2hhMjU2OmFrZk(?:)RHM3Q4TzVvZHZKWU(?:)dhZlJuVE9DSXlQeW(?:)Rtazktbjh3X2FvSD(?:)N1R3cKbWV0YWRhdG(?:)E6WkVkV2RWbFhOVE(?:)E5V1ZkT2RGcFJDbV(?:)JYTlhCWk1qbHJXbE(?:)U5WXpJMWRtUXlNV2(?:)hpYVVScGJVbE4K",$''',
+  '''^\n?      "canonical_base64url": "webhook-v1\nalgorithm:sha256\ntimestamp:1700000000\nnonce:cHl0aG9uLWZpeHR1cmUtbm9uY2U\nkey-id:aW50ZXJvcC1rZXk\nmethod:post\npath:L2hvb2tzLyUyRm9yZGVycw\nquery:YT0yJmE9MSZiPXR3byZlbXB0eT0\nhost:cmVjZWl2ZXIuZXhhbXBsZTo0NDM\ncontent-type:YXBwbGljYXRpb24vanNvbg\nidempotency-key:ZXZlbnQtaW50ZXJvcC0x\nbody-sha256:akfDG3t8O5odvJYGafRnTOCIyPydmk9-n8w_aoH3uGw\nmetadata:ZEdWdVlXNTA9WVdOdFpRCmRXNXBZMjlrWlE9YzI1dmQyMWhiaURpbUlN\n",$''',
+  '''^\n?      "canonical_base64url": "webhook-v1\nalgorithm:sha512\ntimestamp:1700000000\nnonce:cHl0aG9uLWZpeHR1cmUtbm9uY2U\nkey-id:aW50ZXJvcC1rZXk\nmethod:post\npath:L2hvb2tzLyUyRm9yZGVycw\nquery:YT0yJmE9MSZiPXR3byZlbXB0eT0\nhost:cmVjZWl2ZXIuZXhhbXBsZTo0NDM\ncontent-type:YXBwbGljYXRpb24vanNvbg\nidempotency-key:ZXZlbnQtaW50ZXJvcC0x\nbody-sha256:akfDG3t8O5odvJYGafRnTOCIyPydmk9-n8w_aoH3uGw\nmetadata:ZEdWdVlXNTA9WVdOdFpRCmRXNXBZMjlrWlE9YzI1dmQyMWhiaURpbUlN\n",$''',
+]
+
+[[allowlists]]
+description = "Exact Verkle source checksums recomputed from the pinned public upstream revision."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^specification/sources\.json$''']
+regexes = [
+  '''^\n?        "api\.go"(?:): "dac8a950e16df(?:)2bed91979615b917(?:)e236b701930b0a76(?:)44fd72ebf0c38d46(?:)7b0",$''',
+  '''^\n?        "api_eip(?:)7594\.go": "ba5f2(?:)a0739cb66f87f095(?:)ceb150fab1b6e4de(?:)1cbb3c32200ebd18(?:)a781fe2360d",$''',
+]
+
+
+[[allowlists]]
 description = "Exact public Password decision checksum records independently recomputed from immutable decision registers."
 condition = "AND"
 targetRules = ["generic-api-key"]

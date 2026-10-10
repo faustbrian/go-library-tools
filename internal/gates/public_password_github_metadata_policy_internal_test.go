@@ -39,13 +39,27 @@ func TestPublicPasswordAndGitHubMetadataPinnedScanner(t *testing.T) {
 		strings.Join([]string{"            \"tem", "p_clone_token\": ", "\"ABTLWHOULUVAXGT", "RYU7OC2876QJ2O\","}, ""),
 		strings.Join([]string{"          \"temp_", "clone_token\": \"A", "BTLWHOULUVAXGTRY", "U7OC2876QJ2O\","}, ""),
 	}
+	webhook := []string{
+		strings.Join([]string{"      \"key_mater", "ial_base64url\": ", "\"Y3Jvc3MtbGFuZ3V", "hZ2UtdGVzdC1rZXk", "\","}, ""),
+		strings.Join([]string{"      \"canonical", "_base64url\": \"d2", "ViaG9vay12MQphbG", "dvcml0aG06c2hhMj", "U2CnRpbWVzdGFtcD", "oxNzAwMDAwMDAwCm", "5vbmNlOmNIbDBhRz", "l1TFdacGVIUjFjbV", "V0Ym05dVkyVQprZX", "ktaWQ6YVc1MFpYSn", "ZjQzFyWlhrCm1ldG", "hvZDpwb3N0CnBhdG", "g6TDJodmIydHpMeV", "V5Um05eVpHVnljdw", "pxdWVyeTpZVDB5Sm", "1FOU1TWmlQWFIzYn", "labGJYQjBlVDAKaG", "9zdDpjbVZqWldsMl", "pYSXVaWGhoYlhCc1", "pUbzBORE0KY29udG", "VudC10eXBlOllYQn", "diR2xqWVhScGIyNH", "Zhbk52YmcKaWRlbX", "BvdGVuY3kta2V5Ol", "pYWmxiblF0YVc1MF", "pYSnZjQzB4CmJvZH", "ktc2hhMjU2OmFrZk", "RHM3Q4TzVvZHZKWU", "dhZlJuVE9DSXlQeW", "Rtazktbjh3X2FvSD", "N1R3cKbWV0YWRhdG", "E6WkVkV2RWbFhOVE", "E5V1ZkT2RGcFJDbV", "JYTlhCWk1qbHJXbE", "U5WXpJMWRtUXlNV2", "hpYVVScGJVbE4K\","}, ""),
+		strings.Join([]string{"      \"canonical", "_base64url\": \"d2", "ViaG9vay12MQphbG", "dvcml0aG06c2hhNT", "EyCnRpbWVzdGFtcD", "oxNzAwMDAwMDAwCm", "5vbmNlOmNIbDBhRz", "l1TFdacGVIUjFjbV", "V0Ym05dVkyVQprZX", "ktaWQ6YVc1MFpYSn", "ZjQzFyWlhrCm1ldG", "hvZDpwb3N0CnBhdG", "g6TDJodmIydHpMeV", "V5Um05eVpHVnljdw", "pxdWVyeTpZVDB5Sm", "1FOU1TWmlQWFIzYn", "labGJYQjBlVDAKaG", "9zdDpjbVZqWldsMl", "pYSXVaWGhoYlhCc1", "pUbzBORE0KY29udG", "VudC10eXBlOllYQn", "diR2xqWVhScGIyNH", "Zhbk52YmcKaWRlbX", "BvdGVuY3kta2V5Ol", "pYWmxiblF0YVc1MF", "pYSnZjQzB4CmJvZH", "ktc2hhMjU2OmFrZk", "RHM3Q4TzVvZHZKWU", "dhZlJuVE9DSXlQeW", "Rtazktbjh3X2FvSD", "N1R3cKbWV0YWRhdG", "E6WkVkV2RWbFhOVE", "E5V1ZkT2RGcFJDbV", "JYTlhCWk1qbHJXbE", "U5WXpJMWRtUXlNV2", "hpYVVScGJVbE4K\","}, ""),
+	}
+	verkle := []string{
+		strings.Join([]string{"        \"api.go\"", ": \"dac8a950e16df", "2bed91979615b917", "e236b701930b0a76", "44fd72ebf0c38d46", "7b0\","}, ""),
+		strings.Join([]string{"        \"api_eip", "7594.go\": \"ba5f2", "a0739cb66f87f095", "ceb150fab1b6e4de", "1cbb3c32200ebd18", "a781fe2360d\","}, ""),
+	}
 	for _, fixture := range []struct{ name, path, content string }{
+		{"public Webhook vectors", "testdata/vectors/v1.json", strings.Join(webhook, "\n")},
+		{"public Verkle source checksums", "specification/sources.json", strings.Join(verkle, "\n")},
 		{"password decisions", "CHANGELOG.md", strings.Join(password, "\n")},
 		{"public tool version", "tools/versions.env", "APIDIFF_VERSION=" + strings.Join([]string{"v0.0.0", "20260718201538", "764159d718ef"}, "-")},
 		{"upstream GitHub examples", "specification/independent/github-rest-api/api.github.com.2022-11-28.json", strings.Join(examples, "\n")},
 	} {
 		t.Run(fixture.name, func(t *testing.T) {
 			changed := regexp.MustCompile(`[A-Za-z0-9_-]{20,}`).ReplaceAllStringFunc(fixture.content, func(value string) string {
+				if value == "key_material_base64url" || value == "canonical_base64url" {
+					return value
+				}
 				replacement := byte('a')
 				if value[len(value)-1] == replacement {
 					replacement = 'b'
@@ -75,6 +89,9 @@ func TestPublicPasswordAndGitHubMetadataPinnedScanner(t *testing.T) {
 								t.Fatalf("%s lost non-allowlisted findings", mode)
 							}
 						} else if err != nil || len(findings) != 0 {
+							for _, finding := range findings {
+								t.Logf("unexpected public-record detector: %s", finding.RuleID)
+							}
 							t.Fatalf("%s rejected immutable public records (findings=%d)", mode, len(findings))
 						}
 					}
