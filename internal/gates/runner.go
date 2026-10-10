@@ -46,6 +46,43 @@ const (
 useDefault = true
 
 [[allowlists]]
+description = "Exact independently regenerated public Webhook v1 interoperability records."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^testdata/vectors/v1\.json$''']
+regexes = [
+  '''^\n?      "key_mater(?:)ial_base64url": (?:)"Y3Jvc3MtbGFuZ3V(?:)hZ2UtdGVzdC1rZXk(?:)",$''',
+  '''^\n?      "canonical(?:)_base64url": "d2(?:)ViaG9vay12MQphbG(?:)dvcml0aG06c2hhMj(?:)U2CnRpbWVzdGFtcD(?:)oxNzAwMDAwMDAwCm(?:)5vbmNlOmNIbDBhRz(?:)l1TFdacGVIUjFjbV(?:)V0Ym05dVkyVQprZX(?:)ktaWQ6YVc1MFpYSn(?:)ZjQzFyWlhrCm1ldG(?:)hvZDpwb3N0CnBhdG(?:)g6TDJodmIydHpMeV(?:)V5Um05eVpHVnljdw(?:)pxdWVyeTpZVDB5Sm(?:)1FOU1TWmlQWFIzYn(?:)labGJYQjBlVDAKaG(?:)9zdDpjbVZqWldsMl(?:)pYSXVaWGhoYlhCc1(?:)pUbzBORE0KY29udG(?:)VudC10eXBlOllYQn(?:)diR2xqWVhScGIyNH(?:)Zhbk52YmcKaWRlbX(?:)BvdGVuY3kta2V5Ol(?:)pYWmxiblF0YVc1MF(?:)pYSnZjQzB4CmJvZH(?:)ktc2hhMjU2OmFrZk(?:)RHM3Q4TzVvZHZKWU(?:)dhZlJuVE9DSXlQeW(?:)Rtazktbjh3X2FvSD(?:)N1R3cKbWV0YWRhdG(?:)E6WkVkV2RWbFhOVE(?:)E5V1ZkT2RGcFJDbV(?:)JYTlhCWk1qbHJXbE(?:)U5WXpJMWRtUXlNV2(?:)hpYVVScGJVbE4K",$''',
+  '''^\n?      "canonical(?:)_base64url": "d2(?:)ViaG9vay12MQphbG(?:)dvcml0aG06c2hhNT(?:)EyCnRpbWVzdGFtcD(?:)oxNzAwMDAwMDAwCm(?:)5vbmNlOmNIbDBhRz(?:)l1TFdacGVIUjFjbV(?:)V0Ym05dVkyVQprZX(?:)ktaWQ6YVc1MFpYSn(?:)ZjQzFyWlhrCm1ldG(?:)hvZDpwb3N0CnBhdG(?:)g6TDJodmIydHpMeV(?:)V5Um05eVpHVnljdw(?:)pxdWVyeTpZVDB5Sm(?:)1FOU1TWmlQWFIzYn(?:)labGJYQjBlVDAKaG(?:)9zdDpjbVZqWldsMl(?:)pYSXVaWGhoYlhCc1(?:)pUbzBORE0KY29udG(?:)VudC10eXBlOllYQn(?:)diR2xqWVhScGIyNH(?:)Zhbk52YmcKaWRlbX(?:)BvdGVuY3kta2V5Ol(?:)pYWmxiblF0YVc1MF(?:)pYSnZjQzB4CmJvZH(?:)ktc2hhMjU2OmFrZk(?:)RHM3Q4TzVvZHZKWU(?:)dhZlJuVE9DSXlQeW(?:)Rtazktbjh3X2FvSD(?:)N1R3cKbWV0YWRhdG(?:)E6WkVkV2RWbFhOVE(?:)E5V1ZkT2RGcFJDbV(?:)JYTlhCWk1qbHJXbE(?:)U5WXpJMWRtUXlNV2(?:)hpYVVScGJVbE4K",$''',
+  '''^\n?      "` + `canonical_base64` + `url": "webhook-v` + `1\nalgorithm:sha` + `256\ntimestamp:1` + `700000000\nnonce` + `:cHl0aG9uLWZpeHR` + `1cmUtbm9uY2U\nke` + `y-id:aW50ZXJvcC1` + `rZXk\nmethod:pos` + `t\npath:L2hvb2tz` + `LyUyRm9yZGVycw\n` + `query:YT0yJmE9MS` + `ZiPXR3byZlbXB0eT` + `0\nhost:cmVjZWl2` + `ZXIuZXhhbXBsZTo0` + `NDM\ncontent-typ` + `e:YXBwbGljYXRpb2` + `4vanNvbg\nidempo` + `tency-key:ZXZlbn` + `QtaW50ZXJvcC0x\n` + `body-sha256:akfD` + `G3t8O5odvJYGafRn` + `TOCIyPydmk9-n8w_` + `aoH3uGw\nmetadat` + `a:ZEdWdVlXNTA9WV` + `dOdFpRCmRXNXBZMj` + `lrWlE9YzI1dmQyMW` + `hiaURpbUlN\n",$'` + `'',
+  '''^\n?      "` + `canonical_base64` + `url": "webhook-v` + `1\nalgorithm:sha` + `512\ntimestamp:1` + `700000000\nnonce` + `:cHl0aG9uLWZpeHR` + `1cmUtbm9uY2U\nke` + `y-id:aW50ZXJvcC1` + `rZXk\nmethod:pos` + `t\npath:L2hvb2tz` + `LyUyRm9yZGVycw\n` + `query:YT0yJmE9MS` + `ZiPXR3byZlbXB0eT` + `0\nhost:cmVjZWl2` + `ZXIuZXhhbXBsZTo0` + `NDM\ncontent-typ` + `e:YXBwbGljYXRpb2` + `4vanNvbg\nidempo` + `tency-key:ZXZlbn` + `QtaW50ZXJvcC0x\n` + `body-sha256:akfD` + `G3t8O5odvJYGafRn` + `TOCIyPydmk9-n8w_` + `aoH3uGw\nmetadat` + `a:ZEdWdVlXNTA9WV` + `dOdFpRCmRXNXBZMj` + `lrWlE9YzI1dmQyMW` + `hiaURpbUlN\n",$'` + `'',
+]
+
+[[allowlists]]
+description = "Exact historical public canonical-message policy literals."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^internal/gates/runner\.go$''']
+regexes = [
+  '''^\n?  \x27\` + `x27\x27\^\\n\?  ` + `    "canonical_b` + `ase64url": "webh` + `ook-v1\\nalgorit` + `hm:sha256\\ntime` + `stamp:1700000000` + `\\nnonce:cHl0aG9` + `uLWZpeHR1cmUtbm9` + `uY2U\\nkey-id:aW` + `50ZXJvcC1rZXk\\n` + `method:post\\npa` + `th:L2hvb2tzLyUyR` + `m9yZGVycw\\nquer` + `y:YT0yJmE9MSZiPX` + `R3byZlbXB0eT0\\n` + `host:cmVjZWl2ZXI` + `uZXhhbXBsZTo0NDM` + `\\ncontent-type:` + `YXBwbGljYXRpb24v` + `anNvbg\\nidempot` + `ency-key:ZXZlbnQ` + `taW50ZXJvcC0x\\n` + `body-sha256:akfD` + `G3t8O5odvJYGafRn` + `TOCIyPydmk9-n8w_` + `aoH3uGw\\nmetada` + `ta:ZEdWdVlXNTA9W` + `VdOdFpRCmRXNXBZM` + `jlrWlE9YzI1dmQyM` + `WhiaURpbUlN\\n",` + `\$\x27\x27\x27,$` + `''',
+  '''^\n?  \x27\` + `x27\x27\^\\n\?  ` + `    "canonical_b` + `ase64url": "webh` + `ook-v1\\nalgorit` + `hm:sha512\\ntime` + `stamp:1700000000` + `\\nnonce:cHl0aG9` + `uLWZpeHR1cmUtbm9` + `uY2U\\nkey-id:aW` + `50ZXJvcC1rZXk\\n` + `method:post\\npa` + `th:L2hvb2tzLyUyR` + `m9yZGVycw\\nquer` + `y:YT0yJmE9MSZiPX` + `R3byZlbXB0eT0\\n` + `host:cmVjZWl2ZXI` + `uZXhhbXBsZTo0NDM` + `\\ncontent-type:` + `YXBwbGljYXRpb24v` + `anNvbg\\nidempot` + `ency-key:ZXZlbnQ` + `taW50ZXJvcC0x\\n` + `body-sha256:akfD` + `G3t8O5odvJYGafRn` + `TOCIyPydmk9-n8w_` + `aoH3uGw\\nmetada` + `ta:ZEdWdVlXNTA9W` + `VdOdFpRCmRXNXBZM` + `jlrWlE9YzI1dmQyM` + `WhiaURpbUlN\\n",` + `\$\x27\x27\x27,$` + `''',
+]
+
+[[allowlists]]
+description = "Exact Verkle source checksums recomputed from the pinned public upstream revision."
+condition = "AND"
+targetRules = ["generic-api-key"]
+regexTarget = "line"
+paths = ['''^specification/sources\.json$''']
+regexes = [
+  '''^\n?        "api\.go"(?:): "dac8a950e16df(?:)2bed91979615b917(?:)e236b701930b0a76(?:)44fd72ebf0c38d46(?:)7b0",$''',
+  '''^\n?        "api_eip(?:)7594\.go": "ba5f2(?:)a0739cb66f87f095(?:)ceb150fab1b6e4de(?:)1cbb3c32200ebd18(?:)a781fe2360d",$''',
+]
+
+
+[[allowlists]]
 description = "Exact public Password decision checksum records independently recomputed from immutable decision registers."
 condition = "AND"
 targetRules = ["generic-api-key"]

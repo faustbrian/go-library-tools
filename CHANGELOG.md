@@ -18,6 +18,10 @@ All notable changes to this project are documented in this file.
 - Classify exact documented GitHub REST API example lines as public without
   exempting imported specifications or altered credential findings.
 
+- Recognize exact independently reproduced public Webhook v1 records and
+  pinned Verkle source checksums without accepting changed values, other
+  paths or neighboring credentials.
+
 - Recognize exact public Password decision records, its historical APIDIFF
   tool identity and pinned GitHub OpenAPI examples without accepting altered
   values, other paths or neighboring credential assignments.

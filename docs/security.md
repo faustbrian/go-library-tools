@@ -200,6 +200,29 @@ run untrusted pull-request code with secrets or write-capable credentials.
 
 ### Immutable public Password and GitHub metadata
 
+The same exact-detector/path/line policy recognizes the independently generated
+Webhook v1 test-key and canonical-message records, including the scanner's
+decoded canonical-message lines, at
+`testdata/vectors/v1.json`. Its Python standard-library generator at
+`525998a52d79a0ddc8827719a9f759e418f98674` matches the current generator, and
+the checked fixture reproduces exactly. These are public test inputs, not
+application signing credentials. The allowance does not cover other keys or
+future vector versions.
+
+The scanner also recognizes the two complete historical public decoded-pattern
+source lines at `internal/gates/runner.go` under the same detector restriction.
+This preserves immutable Git history without exempting other policy source,
+changed lines or neighboring credential assignments. New source literals are
+fragmented while the generated scanner patterns retain their exact bytes.
+
+Two exact Verkle source-checksum records in `specification/sources.json`
+were recomputed from public `crate-crypto/go-eth-kzg` revision
+`01d14404df5f295f5afb3cf6ca8839382a7243b7`: `api.go` and
+`api_eip7594.go`. Only those complete immutable lines are recognized, not
+arbitrary hashes, manifests or source directories. This scanner disposition
+does not approve the candidate cryptographic backend or remove its documented
+experimental production blockers.
+
 The central policy recognizes only complete public lines at their exact paths
 and the `generic-api-key` detector. Password decision records were independently
 recomputed from the decision registers at commits
