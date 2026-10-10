@@ -503,7 +503,7 @@ func (campaign Campaign) prepareExecution(ctx context.Context, state *campaignSt
 		return nil
 	}
 	state.coverageProfile = filepath.Join(campaign.Workspace, "integration.coverage")
-	arguments := []string{"test", "-count=1", "-timeout=20m", "-cover", "-coverpkg=./...", "-coverprofile=" + state.coverageProfile}
+	arguments := []string{"test", "-count=1", "-cpu=1", "-timeout=20m", "-cover", "-coverpkg=./...", "-coverprofile=" + state.coverageProfile}
 	arguments = appendTagArgument(arguments, campaign.Policy.TestTags)
 	arguments = append(arguments, "./...")
 	started := time.Now()

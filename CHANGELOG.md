@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Measure mutation deadline calibration with the same single-CPU test runtime
+  used by native mutant phases, retaining strict status admission and the
+  existing timeout margin.
+
 - Classify exact documented GitHub REST API example lines as public without
   exempting imported specifications or altered credential findings.
 
