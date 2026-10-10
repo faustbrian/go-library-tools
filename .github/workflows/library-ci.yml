@@ -373,12 +373,8 @@ jobs:
             'GOPRIVATE=' 'GONOPROXY=' 'GONOSUMDB=' >>"${GITHUB_ENV}"
       - name: Run repository module contracts
         if: inputs.release_dry_run != true
-        env:
-          SOURCE_BOOTSTRAP: ${{ inputs.source_bootstrap }}
         run: |
-          if [[ "${SOURCE_BOOTSTRAP}" == true ]]; then
-            golib check --all
-          elif golib --help | grep -Fq 'golib check [--local]'; then
+          if golib --help | grep -Fq 'golib check [--local]'; then
             golib check --local --all
           else
             golib check --all

@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Keep ordinary source-bootstrap CI on the same bounded security and package
+  checks as installed tooling, rather than implicitly selecting aggregate
+  evidence gates. Explicit release rehearsals retain their full checks.
+
 - Recognize only the exact public API Query v1 baseline assertion and
   deterministic Capability interoperability token in centrally owned secret
   scanning. Retain exact detector, path and complete-line constraints;
