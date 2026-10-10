@@ -20,6 +20,9 @@ All notable changes to this project are documented in this file.
   scanning. Retain exact detector, path and complete-line constraints;
   changed bytes, other paths and adjacent credentials remain findings.
 
+- Recognize 14 independently verified public OpenAPI decision checksum lines
+  without suppressing other paths, altered records or credential findings.
+
 - Build isolated compiler-dependent analyzers with the patched tooling Go
   compiler without changing the consumer analysis toolchain.
 
