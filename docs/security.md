@@ -110,6 +110,25 @@ paths, surrounding text, credential assignments and other detectors remain
 findings. Owner and review conditions are the same as for JSONAPI metadata;
 this classification does not waive other findings in OpenAPI history.
 
+The imported GitHub REST API specification exception is limited to 27 exact
+public source-line/detector tuples at
+`specification/independent/github-rest-api/api.github.com.2022-11-28.json`.
+The authoritative source is `github/rest-api-description` commit
+`417c4fb368fc6a7162ce5f3eeeddce1a9a217747`, Git blob
+`ab010b7fadb028153e1e36583c6c50f5608ccc46`, independently matched to the
+supplier import and classified as documented example values. Seven detector
+identities account for 75 primary findings in the complete public document.
+Two already verified app-token lines also need exact generic-key tuples,
+which become visible only after their primary detector classifies them public.
+Admission requires the exact detector, path and complete source line, with
+only the scanner's optional leading newline; it is not a whole-file or
+commit exemption. Altered fields, values, framing, other paths and adjacent
+credentials remain scanned. Identical known public bytes remain public
+across commits; semantic JSON-pointer parsing is not a runtime condition.
+Owner: library maintainer; review on changed source provenance, scanner
+matching semantics or exception scope. Other supplier-history findings and
+vulnerability checks are not waived by this classification.
+
 Scanner-controlled stdout and stderr are suppressed and independently limited
 to 4 MiB. Gitleaks uses a distinct findings exit status; only the exact final
 Go-wrapper status line is recognized, without retaining scanner text. Completed

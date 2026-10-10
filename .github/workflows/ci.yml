@@ -264,7 +264,8 @@ jobs:
               internal/gates/jsonapi_digest_policy_hosted_test.go \
               internal/gates/public_password_github_metadata_policy_internal_test.go \
               internal/gates/public_policy_source_history_internal_test.go \
-              internal/gates/openapi_digest_policy_internal_test.go .github/workflows/ci.yml; then
+              internal/gates/openapi_digest_policy_internal_test.go \
+              internal/gates/github_public_examples_policy_internal_test.go .github/workflows/ci.yml; then
             exit 0
           fi
           test "${GITHUB_ACTIONS}" = true
@@ -275,7 +276,7 @@ jobs:
           export GOTMPDIR="${task}/tmp" TMPDIR="${task}/tmp"
           test "$(go env GOVERSION)" = go1.27.2
           go test -p=1 ./internal/gates \
-            -run '^(TestEthereumTrieFixturePolicyHosted|TestJSONAPIDecisionDigestPolicyHosted|TestOpenAPIDecisionDigestPolicyIntegration|TestPublicPasswordAndGitHubMetadataPinnedScanner|TestPublicPolicySourceHistoryPinnedScanner)$' -count=1 -timeout=15m
+            -run '^(TestEthereumTrieFixturePolicyHosted|TestJSONAPIDecisionDigestPolicyHosted|TestOpenAPIDecisionDigestPolicyIntegration|TestGitHubPublicExamplesPolicyIntegration|TestPublicPasswordAndGitHubMetadataPinnedScanner|TestPublicPolicySourceHistoryPinnedScanner)$' -count=1 -timeout=15m
 
   compatibility-consumer-scope:
     name: Compatibility consumer scope

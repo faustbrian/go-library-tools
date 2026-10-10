@@ -15,6 +15,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Classify exact documented GitHub REST API example lines as public without
+  exempting imported specifications or altered credential findings.
+
 - Verify public policy-source provenance and retain changed-record, path,
   framing and neighboring-credential findings in history and current-tree
   scans, including foreign-ref and untracked inputs through the shared gate.
