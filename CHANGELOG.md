@@ -15,6 +15,16 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Withdraw an obsolete Gates equivalent-mutant allowance now covered by
+  native tests, retaining exact survivor accounting and strict refusal gates.
+
+- Record bounded, argument-free runner and owned-process observations during
+  release rehearsals without changing release verdicts or required gates.
+
+- Refresh the exact Gates equivalent-mutant binding after compiler-tool
+  changes, including the moved coverage-loop coordinate. Retain its narrow
+  reviewed domains and historical reports; require fresh native qualification.
+
 - Preserve bounded, fixture-credential-redacted Docker startup diagnostics
   for generic required services without changing failure or cleanup behavior.
 
