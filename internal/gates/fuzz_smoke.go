@@ -40,6 +40,7 @@ type fuzzPackage struct {
 	Imports            []string `json:"Imports"`
 	TestImports        []string `json:"TestImports"`
 	XTestImports       []string `json:"XTestImports"`
+	CgoFiles           []string `json:"CgoFiles"`
 	CFiles             []string `json:"CFiles"`
 	CXXFiles           []string `json:"CXXFiles"`
 	MFiles             []string `json:"MFiles"`
@@ -303,7 +304,14 @@ func (runner Runner) fuzzTargetAffected(ctx context.Context, module inventory.Mo
 				}
 			}
 		}
-		queue = append(queue, pkg.Imports...)
+		for _, dependency := range pkg.Imports {
+			// Cgo source imports the pseudo-package C, which go list does not
+			// emit as a Go dependency. Do not relax real or test import checks.
+			if dependency == "C" && len(pkg.CgoFiles) > 0 {
+				continue
+			}
+			queue = append(queue, dependency)
+		}
 		// Only the selected package's tests are built. Dependencies' own tests
 		// appear in go list metadata but are not part of this fuzz binary.
 		if current == target {

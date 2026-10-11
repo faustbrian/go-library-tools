@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -72,6 +74,97 @@ func TestFuzzSmokeSelectsRuntimeAndTestDependencyInputs(t *testing.T) {
 	for _, change := range []string{"README.md", ".golib.yaml"} {
 		if _, err := runner.fuzzTargetAffected(t.Context(), module, "example/parser", graph, []string{change}); err == nil {
 			t.Fatal("missing dependency was silently omitted")
+		}
+	}
+}
+
+func TestFuzzSmokeCgoPseudoImportAndMissingDependencies(t *testing.T) {
+	root := t.TempDir()
+	module := inventory.Module{Directory: ".", ModulePath: "example"}
+	runner := Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}}}
+	for _, scenario := range []struct {
+		name, change                 string
+		cgo, testImport, missingReal bool
+		wantAffected, wantError      bool
+	}{
+		{name: "cgo source", change: "parser/parser.go", cgo: true, wantAffected: true},
+		{name: "real dependency after C", change: "helper/value.go", cgo: true, wantAffected: true},
+		{name: "unrelated prose", change: "README.md", cgo: true},
+		{name: "C without cgo source", change: "README.md", wantError: true},
+		{name: "missing real dependency", change: "parser/parser.go", cgo: true, missingReal: true, wantError: true},
+		{name: "unsupported test C import", change: "README.md", cgo: true, testImport: true, wantError: true},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			imports := []string{"C", "example/helper"}
+			if scenario.testImport {
+				imports = imports[1:]
+			}
+			if scenario.missingReal {
+				imports = append(imports, "example/missing")
+			}
+			metadata := map[string]any{"ImportPath": "example/parser", "Dir": filepath.Join(root, "parser"), "Imports": imports}
+			if scenario.cgo {
+				metadata["CgoFiles"] = []string{"parser.go"}
+			}
+			if scenario.testImport {
+				metadata["TestImports"] = []string{"C"}
+			}
+			data, err := json.Marshal(metadata)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var parser fuzzPackage
+			if err := json.Unmarshal(data, &parser); err != nil {
+				t.Fatal(err)
+			}
+			graph := map[string]fuzzPackage{
+				"example/parser": parser,
+				"example/helper": {ImportPath: "example/helper", Dir: filepath.Join(root, "helper")},
+			}
+			affected, err := runner.fuzzTargetAffected(t.Context(), module, "example/parser", graph, []string{scenario.change})
+			if (err != nil) != scenario.wantError || (!scenario.wantError && affected != scenario.wantAffected) {
+				t.Fatalf("affected = %v, error = %v; want affected %v, error %v", affected, err, scenario.wantAffected, scenario.wantError)
+			}
+		})
+	}
+}
+
+func TestFuzzSmokeNativeCgoGraph(t *testing.T) {
+	root := t.TempDir()
+	for name, content := range map[string]string{
+		"go.mod":    "module example\n\ngo 1.27.0\n",
+		"parser.go": "package parser\nimport \"C\"\nfunc Parse() {}\n",
+	} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	module := inventory.Module{Directory: ".", ModulePath: "example"}
+	runner := Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}},
+		Executor: executorFunction(func(ctx context.Context, command Command) error {
+			process := exec.CommandContext(ctx, command.Name, command.Args...)
+			process.Dir = command.Dir
+			// Discovery only: no Linux test binary is built or executed.
+			process.Env = append(os.Environ(), "GOOS=linux", "GOARCH=amd64", "CGO_ENABLED=1", "GOWORK=off")
+			process.Stdout, process.Stderr = command.Stdout, command.Stderr
+			return process.Run()
+		})}
+	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
+	defer cancel()
+	graph, err := runner.fuzzPackageGraph(ctx, module, []string{"."})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !slices.Contains(graph["example"].Imports, "C") {
+		t.Fatal("native cgo discovery did not exercise the pseudo-import")
+	}
+	for _, scenario := range []struct {
+		change string
+		want   bool
+	}{{"parser.go", true}, {"README.md", false}} {
+		affected, err := runner.fuzzTargetAffected(ctx, module, "example", graph, []string{scenario.change})
+		if err != nil || affected != scenario.want {
+			t.Fatalf("native cgo selection = %v, error = %v, want %v", affected, err, scenario.want)
 		}
 	}
 }
