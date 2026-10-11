@@ -1,0 +1,111 @@
+name: Selected library assurance
+
+on:
+  workflow_call:
+    inputs:
+      tooling_sha:
+        description: Immutable source of this reusable workflow and selected native runner
+        required: true
+        type: string
+      fuzz_target:
+        description: Explicit declared target for a manual diagnostic; empty on schedules
+        required: false
+        default: ''
+        type: string
+      module:
+        description: Exact inventory module directory for the selected in-process risk
+        required: false
+        default: '.'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: selected-library-assurance-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  assurance:
+    name: Selected native fuzz risk
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Refuse ordinary events and unknown scope
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          OWNER_REF: ${{ github.ref }}
+          OWNER_REPOSITORY: ${{ github.repository }}
+          TOOLING_SHA: ${{ inputs.tooling_sha }}
+        run: |
+          set -euo pipefail
+          [[ "${OWNER_REF}" == refs/heads/main ]]
+          case "${EVENT_NAME}" in schedule|workflow_dispatch) ;; *) exit 1 ;; esac
+          case "${OWNER_REPOSITORY}" in
+            faustbrian/go-clock|faustbrian/go-concurrency-limit|faustbrian/go-http-client) ;;
+            *) exit 1 ;;
+          esac
+          [[ "${TOOLING_SHA}" =~ ^[0-9a-f]{40}$ ]]
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: faustbrian/go-library-tools
+          ref: ${{ inputs.tooling_sha }}
+          path: .golib-tooling
+          persist-credentials: false
+      - name: Verify immutable runner source and declared release
+        env:
+          TOOLING_SHA: ${{ inputs.tooling_sha }}
+        run: |
+          set -euo pipefail
+          test "$(git -C .golib-tooling rev-parse HEAD)" = "${TOOLING_SHA}"
+          version="$(awk '$1 == "tool_version:" {print $2}' .golib.yaml)"
+          [[ "${version}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+          printf 'ASSURANCE_TOOL_VERSION=%s\n' "${version}" >>"${GITHUB_ENV}"
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .go-version
+          cache: false
+      - name: Install the verified public CLI without a source build
+        timeout-minutes: 3
+        uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
+        with:
+          source_bootstrap: 'false'
+      - name: Execute selected native assurance
+        timeout-minutes: 6
+        env:
+          ASSURANCE_TARGET: ${{ inputs.fuzz_target }}
+          ASSURANCE_MODULE: ${{ inputs.module }}
+        run: python3 .golib-tooling/tools/selected-assurance.py
+      - name: Retain bounded native failure corpus
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: selected-assurance-${{ github.repository_id }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/golib-assurance-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Remove selected job resources
+        if: always()
+        env:
+          FAILURE_CORPUS: ${{ runner.temp }}/golib-assurance-failure-${{ github.run_id }}-${{ github.run_attempt }}
+          ASSURANCE_CACHE: ${{ runner.temp }}/golib-selected-assurance-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          targets=("${FAILURE_CORPUS}" "${ASSURANCE_CACHE}" "${GITHUB_WORKSPACE}/.golib-tooling")
+          if [[ -n "${ASSURANCE_TOOL_VERSION:-}" ]]; then
+            [[ "${ASSURANCE_TOOL_VERSION}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+            targets+=("${RUNNER_TEMP}/golib-${ASSURANCE_TOOL_VERSION}" "${RUNNER_TEMP}/golib-bin")
+          fi
+          for target in "${targets[@]}"; do
+            if [[ -d "${target}" && ! -L "${target}" ]]; then
+              find "${target}" -type d -exec chmod u+w {} +
+              find "${target}" -depth -delete
+            elif [[ -e "${target}" || -L "${target}" ]]; then
+              echo 'unexpected selected job resource' >&2
+              exit 1
+            fi
+          done

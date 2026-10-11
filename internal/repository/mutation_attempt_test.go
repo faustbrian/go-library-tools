@@ -27,10 +27,13 @@ func TestMutationAssuranceScheduledAttemptDecision(t *testing.T) {
 	for _, test := range []struct {
 		name, event, changed, priorResult, marker, history string
 		setupFailure, apiFailure, missingGit               bool
+		escapeLog, missingEscapeCapability                 bool
 		wantRun, wantFailure                               bool
 	}{
 		{name: "unchanged successful attempt", wantRun: false},
 		{name: "unchanged exhausted attempt", priorResult: "failure", wantRun: false},
+		{name: "escaped native logs retain exhausted attempt", priorResult: "failure", escapeLog: true, wantRun: false},
+		{name: "missing captured escape capability refuses", escapeLog: true, missingEscapeCapability: true, wantFailure: true},
 		{name: "prose does not restart", changed: "README.md", wantRun: false},
 		{name: "historical output does not restart", changed: ".verification/mutation/reports/old.json", wantRun: false},
 		{name: "source changes", changed: "internal/config/config.go", wantRun: true},
@@ -98,13 +101,17 @@ func TestMutationAssuranceScheduledAttemptDecision(t *testing.T) {
 			if marker == "" {
 				marker = "package=internal/config image=ubuntu24/20261004.1 arch=X64 go=go1.27.2"
 			}
-			writeFile(t, root, "logs.txt", "2026-10-11T15:05:08Z golib-mutation-inputs "+marker+"\n")
+			writeFile(t, root, "logs.txt", "\x1b[0m unrelated native output\x1b[0m\n2026-10-11T15:05:08Z golib-mutation-inputs "+marker+"\n")
 			writeExecutable(t, filepath.Join(root, "bin", "gh"), `#!/usr/bin/env bash
 set -euo pipefail
 [[ "$API_FAILURE" != true ]] || exit 1
 case "$*" in
   *'/jobs?filter=latest&per_page=100') cat jobs.json ;;
-  *'/jobs/71/logs') cat logs.txt ;;
+  *'/jobs/71/logs')
+    if [[ "$ESCAPE_LOG" == true ]]; then
+      [[ "$*" == *'--allow-escape-sequences'* && "$MISSING_ESCAPE_CAPABILITY" != true ]] || exit 64
+    fi
+    cat logs.txt ;;
   *'/workflows/mutation-assurance.yml/runs?per_page=100') cat history.json ;;
   *) exit 64 ;;
 esac
@@ -122,7 +129,8 @@ esac
 			command.Env = append(slices.Clone(gitEnv), "PATH="+filepath.Join(root, "bin")+string(os.PathListSeparator)+os.Getenv("PATH"),
 				"EVENT_NAME="+event, "SELECTED_PACKAGE=internal/config", "GITHUB_SHA="+head,
 				"GITHUB_REPOSITORY=faustbrian/go-library-tools", "GITHUB_RUN_ID=74", "GITHUB_OUTPUT="+output, "GITHUB_STEP_SUMMARY="+summary,
-				"ImageOS=ubuntu24", "ImageVersion=20261004.1", "RUNNER_ARCH=X64", fmt.Sprintf("API_FAILURE=%t", test.apiFailure))
+				"ImageOS=ubuntu24", "ImageVersion=20261004.1", "RUNNER_ARCH=X64", fmt.Sprintf("API_FAILURE=%t", test.apiFailure),
+				fmt.Sprintf("ESCAPE_LOG=%t", test.escapeLog), fmt.Sprintf("MISSING_ESCAPE_CAPABILITY=%t", test.missingEscapeCapability))
 			data, err := command.CombinedOutput()
 			if (err != nil) != test.wantFailure {
 				t.Fatalf("attempt decision failure = %v, want %t: %q", err, test.wantFailure, data)

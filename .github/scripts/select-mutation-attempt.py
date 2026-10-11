@@ -50,7 +50,12 @@ def capture(arguments, limit=1024 * 1024):
 
 
 def api(path, limit=1024 * 1024):
-    return capture(["gh", "api", path], limit)
+    arguments = ["gh", "api"]
+    # Native job output may contain ANSI escapes. Permit them only in bounded
+    # in-memory log capture, never terminal output or JSON API responses.
+    if path.endswith("/logs"):
+        arguments.append("--allow-escape-sequences")
+    return capture(arguments + [path], limit)
 
 
 def positive(value):

@@ -4,6 +4,16 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Add a separate bounded weekly fuzz-risk rotation and explicit main-only
+  diagnostics using current repository declarations; retain ordinary fast CI
+  and explicit full assurance without a new CLI or library release.
+- Read escaped native mutation job logs only through bounded capture so an
+  unchanged prior failed attempt remains attributable, not passing assurance.
+- Qualify changed compatibility-consumer scenarios independently while shared
+  dependency, toolchain and publication changes retain full consumer coverage.
+
 ## 2.1.3 - 2026-10-11
 
 ### Fixed
