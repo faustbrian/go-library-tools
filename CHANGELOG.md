@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## Unreleased
+## 2.1.0 - 2026-10-11
 
 ### Added
 
@@ -112,6 +112,14 @@ All notable changes to this project are documented in this file.
   full-campaign fallback. Apply documentation and matched-pin routing to main
   and source bootstrap, reject PR release rehearsals, and fail closed on
   missing comparison commits, classifications, and mandatory job results.
+
+### Fixed
+
+- Recognize Go's cgo pseudo-import during affected fuzz target discovery while
+  retaining refusal of genuine missing production and test dependencies.
+
+- Keep verifier fixtures and Go-list metadata compatible with the pinned
+  Go 1.27 analyzer stack without weakening checks or assertions.
 
 ## 2.0.1 - 2026-10-11
 
