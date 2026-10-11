@@ -89,10 +89,16 @@ Core commands:
   module security flags. It selects configured single-package typed Go
   fuzz targets through actual production/test imports, testdata, and embed
   inputs; module dependency or target configuration changes widen selection.
-  Discovery and execution share the local executor. Smoke uses two workers,
-  two seconds of fuzzing per target, a two-minute shared discovery/build/execution
-  deadline per target, a 15-second native test timeout and a three-minute total
-  discovery/execution deadline, with at most 32 selected
+  Preparation and execution share the native repository cache session, never
+  verifier caches. A separate five-minute preparation ceiling covers the causal
+  graph and compile-only instrumented binaries, once per selected package/tags/race
+  context; preparation runs no test or fuzz functions. Then a three-minute total
+  ceiling covers service readiness, binary target discovery and active execution.
+  Smoke uses two workers, two seconds of fuzzing per target, a two-minute wall
+  deadline per compilation or target, and a 15-second native test timeout.
+  Preparation and execution durations are reported separately; together they may
+  consume up to eight minutes after ordinary local checks, excluding the existing
+  separately bounded service cleanup, with at most 32 selected
   targets from 128 configured candidates. Missing, ambiguous, invalid or
   oversized evidence and failed targets fail the check. Earlier caller deadlines
   remain in effect. This is not a campaign,

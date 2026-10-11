@@ -138,10 +138,19 @@ fuzz-capable tooling is rejected before checks, without a full-scan fallback.
 PR/main checks add short active fuzz smoke only for configured typed targets
 affected through their current Go production/test/embed dependencies. They retain
 saved fuzz regressions in ordinary tests and do not start mutation campaigns.
-Smoke has a three-minute total ceiling. Each target shares a two-minute wall
-deadline for discovery, cold instrumented compilation and execution, with two
-seconds of fuzz work and a 15-second native test timeout. Earlier caller deadlines
-remain in effect; invalid selection or an exceeded budget fails honestly.
+Smoke first allows at most five minutes for causal graph discovery and compile-only
+instrumented preparation, with one binary per selected package/tags/race context.
+No tests or fuzz functions execute during preparation. A separate, unchanged
+three-minute ceiling then covers service readiness, binary target discovery and
+active execution, with two seconds of fuzz work, two workers and a 15-second native
+test timeout. Each compilation or target is also bounded to two minutes. Both
+phase durations are reported; the combined preparation/execution ceiling is eight
+minutes after ordinary local checks, within the job ceiling. Existing service lease
+cleanup retains its separate 30-second timeout after success or failure. Earlier
+caller deadlines remain in effect;
+invalid selection or an exceeded budget fails honestly. Prepared binaries and fuzz
+cache directories are task-owned and removed on success, failure or cancellation;
+the native repository cache session remains isolated from verifier caches.
 Scheduled/manual local checks do not implicitly select this smoke or a full
 campaign. See [CLI](cli.md) for limits and evidence boundaries.
 

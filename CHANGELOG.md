@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Prepare instrumented fuzz binaries once per selected package context within
+  a separate five-minute ceiling, without running tests. Retain three-minute
+  active execution, earlier caller deadlines and bounded cleanup; report both
+  phase durations so cold compilation does not consume the active budget.
 - Isolate pinned verifier compilation from repository-controlled caches in
   ordinary and borrowed sessions. Preserve bounded native repository cache
   reuse and remove owned invocation resources on success and failure.

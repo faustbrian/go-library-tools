@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"os"
 	"path"
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"runtime"
 	"slices"
 	"strings"
 	"time"
@@ -19,10 +21,8 @@ import (
 )
 
 const (
-	fuzzSmokeTotalBudget = 3 * time.Minute
-	// Go's first active fuzz run compiles instrumented dependencies even when
-	// ordinary tests are cached. Admission includes that cold build, not just
-	// the two-second campaign; the total smoke deadline still takes precedence.
+	fuzzSmokePreparationBudget   = 5 * time.Minute
+	fuzzSmokeTotalBudget         = 3 * time.Minute
 	fuzzSmokeStepBudget          = 2 * time.Minute
 	fuzzSmokeMaximumCandidates   = 128
 	fuzzSmokeMaximumTargets      = 32
@@ -31,8 +31,16 @@ const (
 )
 
 type fuzzSmokeTarget struct {
-	module inventory.Module
-	step   config.Step
+	module           inventory.Module
+	step             config.Step
+	packageDirectory string
+	compilerBin      string
+}
+
+type preparedFuzzSmoke struct {
+	binary, directory, cache, compilerBin string
+	names                                 string
+	listed                                bool
 }
 
 type fuzzPackage struct {
@@ -68,7 +76,7 @@ type fuzzPackage struct {
 // adds bounded smoke for configured fuzz targets affected by committed
 // base-to-HEAD inputs. All phases share this Runner's executor; dirty-work
 // certification is not implied.
-func (runner Runner) LocalChanges(ctx context.Context, selection []string, base string) error {
+func (runner Runner) LocalChanges(ctx context.Context, selection []string, base string) (result error) {
 	secretContext, cancel := context.WithTimeout(ctx, changedSecretBudget)
 	defer cancel()
 	changes, err := runner.committedChanges(secretContext, base)
@@ -97,7 +105,14 @@ func (runner Runner) LocalChanges(ctx context.Context, selection []string, base 
 	if output == nil {
 		output = io.Discard
 	}
-	smokeContext, cancel := context.WithTimeout(ctx, fuzzSmokeTotalBudget)
+	preparationStarted := time.Now()
+	preparationComplete := false
+	defer func() {
+		if !preparationComplete {
+			_, _ = fmt.Fprintf(output, "fuzz-smoke preparation: %s (5m ceiling; execution not started)\n", time.Since(preparationStarted).Round(time.Millisecond))
+		}
+	}()
+	smokeContext, cancel := context.WithTimeout(ctx, fuzzSmokePreparationBudget)
 	defer cancel()
 	policyChanges, err := runner.changedFuzzPolicy(smokeContext, changes)
 	if err != nil {
@@ -143,13 +158,57 @@ func (runner Runner) LocalChanges(ctx context.Context, selection []string, base 
 			affected = affected || policyChanges[fuzzPolicyIdentity(module.Directory, step)]
 			if affected && !selectedIdentities[identity] {
 				selectedIdentities[identity] = true
-				targets = append(targets, fuzzSmokeTarget{module, step})
+				compilerBin := ""
+				if nativeRuntime, exists := graph["runtime"]; exists {
+					compilerBin = filepath.Join(filepath.Dir(filepath.Dir(nativeRuntime.Dir)), "bin")
+				}
+				targets = append(targets, fuzzSmokeTarget{module: module, step: step, packageDirectory: graph[importPath].Dir, compilerBin: compilerBin})
 				if len(targets) > fuzzSmokeMaximumTargets {
 					return errors.New("fuzz smoke target limit exceeded; review the affected target scope")
 				}
 			}
 		}
 	}
+	if len(targets) == 0 {
+		return smokeContext.Err()
+	}
+	workspace, ok := runner.Executor.(taskWorkspace)
+	if !ok || !filepath.IsAbs(workspace.TemporaryDirectory()) {
+		return errors.New("fuzz smoke requires an owned temporary workspace")
+	}
+	scratch, err := os.MkdirTemp(workspace.TemporaryDirectory(), "fuzz-smoke-")
+	if err != nil {
+		return errors.New("fuzz smoke temporary workspace cannot be created")
+	}
+	defer func() {
+		if err := os.RemoveAll(scratch); err != nil {
+			result = errors.Join(result, errors.New("fuzz smoke temporary workspace cleanup failed"))
+		}
+	}()
+	prepared := make(map[string]*preparedFuzzSmoke)
+	for _, target := range targets {
+		identity := fuzzSmokeContextIdentity(target.module, target.step)
+		if prepared[identity] != nil {
+			continue
+		}
+		binary, err := runner.prepareFuzzSmoke(smokeContext, target, scratch)
+		if err != nil {
+			return err
+		}
+		prepared[identity] = binary
+	}
+	if err := smokeContext.Err(); err != nil {
+		return err
+	}
+	cancel()
+	preparationComplete = true
+	_, _ = fmt.Fprintf(output, "fuzz-smoke preparation: %d instrumented contexts for %d selected targets in %s (5m ceiling)\n", len(prepared), len(targets), time.Since(preparationStarted).Round(time.Millisecond))
+	smokeContext, cancel = context.WithTimeout(ctx, fuzzSmokeTotalBudget)
+	defer cancel()
+	executionStarted := time.Now()
+	defer func() {
+		_, _ = fmt.Fprintf(output, "fuzz-smoke execution and cleanup: %s (3m execution ceiling)\n", time.Since(executionStarted).Round(time.Millisecond))
+	}()
 	for _, module := range modules {
 		var selected []config.Step
 		for _, target := range targets {
@@ -162,7 +221,7 @@ func (runner Runner) LocalChanges(ctx context.Context, selection []string, base 
 		}
 		if err := runner.withModuleServices(smokeContext, module, func(scoped Runner) error {
 			for _, step := range selected {
-				if err := scoped.fuzzSmokeStep(smokeContext, module, step); err != nil {
+				if err := scoped.fuzzSmokeStep(smokeContext, prepared[fuzzSmokeContextIdentity(module, step)], step); err != nil {
 					return err
 				}
 			}
@@ -479,30 +538,70 @@ func fuzzSourceInput(name string, includeTests bool) bool {
 	}
 }
 
-func (runner Runner) fuzzSmokeStep(ctx context.Context, module inventory.Module, step config.Step) error {
+func fuzzSmokeContextIdentity(module inventory.Module, step config.Step) string {
+	return module.Directory + "\x00" + path.Clean(step.Packages[0]) + "\x00" + strings.Join(module.TestTags, ",") + fmt.Sprintf("\x00%t", step.Race)
+}
+
+// Compile once per native package context, without running TestMain, seeds or
+// fuzz functions. The selected graph is also the authority for the runtime cwd
+// and compiler PATH that cmd/go normally supplies to its test subprocess.
+func (runner Runner) prepareFuzzSmoke(ctx context.Context, target fuzzSmokeTarget, scratch string) (*preparedFuzzSmoke, error) {
 	ctx, cancel := context.WithTimeout(ctx, fuzzSmokeStepBudget)
 	defer cancel()
-	step.Budget, step.Timeout, step.Count = "2s", "15s", 1
-	command, err := operationCommand(filepath.Join(runner.Root, module.Directory), module, step)
-	if err != nil {
-		return errors.New("fuzz smoke command is invalid")
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
-	list := command
-	list.Args = []string{"test"}
-	if len(module.TestTags) > 0 {
-		list.Args = append(list.Args, "-tags="+strings.Join(module.TestTags, ","))
-	}
-	list.Args = append(list.Args, step.Packages[0], "-run=^$", "-list="+step.Fuzz, "-count=1", "-timeout=15s", "-p=1")
-	names, err := runner.fuzzCommand(ctx, list, maximumSecurityProcessOutput)
+	directory, err := os.MkdirTemp(scratch, "context-")
 	if err != nil {
-		return err
+		return nil, errors.New("fuzz smoke compilation workspace cannot be created")
+	}
+	prepared := &preparedFuzzSmoke{binary: filepath.Join(directory, "smoke.test.exe"), directory: target.packageDirectory, cache: filepath.Join(directory, "corpus"), compilerBin: target.compilerBin}
+	if err := os.Mkdir(prepared.cache, 0o700); err != nil {
+		return nil, errors.New("fuzz smoke corpus workspace cannot be created")
+	}
+	args := []string{"test", "-c", "-fuzz=^Fuzz", "-o", prepared.binary, "-p=1"}
+	if target.step.Race {
+		args = append(args, "-race")
+	}
+	if len(target.module.TestTags) > 0 {
+		args = append(args, "-tags="+strings.Join(target.module.TestTags, ","))
+	}
+	args = append(args, target.step.Packages[0])
+	_, err = runner.fuzzCommand(ctx, Command{cacheClass: nativeRepositoryCache, Name: "go", Args: args, Dir: filepath.Join(runner.Root, target.module.Directory), Env: map[string]string{"GOWORK": "off"}}, maximumSecurityProcessOutput)
+	if err != nil {
+		return nil, err
+	}
+	info, err := os.Lstat(prepared.binary)
+	if err != nil || !info.Mode().IsRegular() || (runtime.GOOS != "windows" && info.Mode()&0o111 == 0) || !filepath.IsAbs(prepared.directory) {
+		return nil, errors.New("fuzz smoke compiled binary or package directory is invalid")
+	}
+	return prepared, nil
+}
+
+func (prepared *preparedFuzzSmoke) command(args ...string) Command {
+	env := map[string]string{"GOWORK": "off", "PWD": prepared.directory}
+	if prepared.compilerBin != "" {
+		env["PATH"] = prepared.compilerBin + string(os.PathListSeparator) + os.Getenv("PATH")
+	}
+	return Command{cacheClass: nativeRepositoryCache, Name: prepared.binary, Args: args, Dir: prepared.directory, Env: env}
+}
+
+func (runner Runner) fuzzSmokeStep(ctx context.Context, prepared *preparedFuzzSmoke, step config.Step) error {
+	ctx, cancel := context.WithTimeout(ctx, fuzzSmokeStepBudget)
+	defer cancel()
+	if !prepared.listed {
+		names, err := runner.fuzzCommand(ctx, prepared.command("-test.run=^$", "-test.list=^Fuzz", "-test.count=1", "-test.timeout=15s", "-test.paniconexit0"), maximumSecurityProcessOutput)
+		if err != nil {
+			return err
+		}
+		prepared.names, prepared.listed = names, true
 	}
 	selector, err := regexp.Compile(step.Fuzz)
 	if err != nil {
 		return errors.New("fuzz smoke target selector is invalid")
 	}
 	matches := 0
-	for line := range strings.SplitSeq(names, "\n") {
+	for line := range strings.SplitSeq(prepared.names, "\n") {
 		if strings.HasPrefix(line, "Fuzz") && selector.MatchString(line) {
 			matches++
 		}
@@ -510,8 +609,7 @@ func (runner Runner) fuzzSmokeStep(ctx context.Context, module inventory.Module,
 	if matches != 1 {
 		return errors.New("fuzz smoke target must resolve to exactly one test")
 	}
-	command.Args = append(command.Args, "-parallel=2", "-p=1")
-	_, err = runner.fuzzCommand(ctx, command, maximumSecurityProcessOutput)
+	_, err = runner.fuzzCommand(ctx, prepared.command("-test.run=^$", "-test.fuzz="+step.Fuzz, "-test.fuzztime=2s", "-test.timeout=15s", "-test.count=1", "-test.parallel=2", "-test.fuzzcachedir="+prepared.cache, "-test.paniconexit0"), maximumSecurityProcessOutput)
 	return err
 }
 

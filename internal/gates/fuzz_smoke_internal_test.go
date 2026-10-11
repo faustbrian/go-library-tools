@@ -310,7 +310,6 @@ func TestFuzzSmokeRejectsIncompletePackageDiscovery(t *testing.T) {
 }
 
 func TestFuzzSmokeRefusesMissingAmbiguousAndFailedTargets(t *testing.T) {
-	module := inventory.Module{Directory: "."}
 	step := config.Step{Type: "go-test", Packages: []string{"./parser"}, Fuzz: "^FuzzParse$", Budget: "10m", Timeout: "20m", Count: 100}
 	for _, scenario := range []struct {
 		name, listed string
@@ -329,12 +328,12 @@ func TestFuzzSmokeRefusesMissingAmbiguousAndFailedTargets(t *testing.T) {
 				if !exists || time.Until(deadline) > 2*time.Minute || time.Until(deadline) < 90*time.Second {
 					t.Fatal("target wall budget is unbounded or cannot admit the observed cold compilation")
 				}
-				if slices.Contains(command.Args, "-list=^FuzzParse$") {
+				if slices.Contains(command.Args, "-test.list=^Fuzz") {
 					_, _ = io.WriteString(command.Stdout, scenario.listed)
 					return nil
 				}
 				active++
-				for _, expected := range []string{"-fuzztime=2s", "-timeout=15s", "-count=1", "-parallel=2", "-p=1"} {
+				for _, expected := range []string{"-test.fuzztime=2s", "-test.timeout=15s", "-test.count=1", "-test.parallel=2", "-test.paniconexit0"} {
 					if !slices.Contains(command.Args, expected) {
 						t.Errorf("missing smoke control %s", expected)
 					}
@@ -344,7 +343,7 @@ func TestFuzzSmokeRefusesMissingAmbiguousAndFailedTargets(t *testing.T) {
 				}
 				return nil
 			})}
-			err := runner.fuzzSmokeStep(t.Context(), module, step)
+			err := runner.fuzzSmokeStep(t.Context(), &preparedFuzzSmoke{binary: "fixture", directory: runner.Root, cache: t.TempDir()}, step)
 			if (err != nil) != scenario.wantError || (err != nil && strings.Contains(err.Error(), "private-marker")) {
 				t.Fatalf("target outcome = %v", err)
 			}
@@ -355,17 +354,14 @@ func TestFuzzSmokeRefusesMissingAmbiguousAndFailedTargets(t *testing.T) {
 	}
 }
 
-func TestFuzzSmokeAdmitsColdCompilationWithoutExtendingRuntime(t *testing.T) {
-	// A real Linux cache consumer used its first minute compiling instrumented
-	// external-test dependencies, then needed 20s more on the partial cache.
-	// Check the executor's offered deadline without sleeping through that build.
+func TestFuzzSmokeBoundsPreparedRuntime(t *testing.T) {
 	executions := 0
 	runner := Runner{Root: t.TempDir(), Executor: executorFunction(func(ctx context.Context, command Command) error {
 		deadline, exists := ctx.Deadline()
 		if !exists || time.Until(deadline) > 2*time.Minute {
-			t.Fatal("cold admission has no bounded target deadline")
+			t.Fatal("prepared execution has no bounded target deadline")
 		}
-		if slices.Contains(command.Args, "-list=^FuzzParse$") {
+		if slices.Contains(command.Args, "-test.list=^Fuzz") {
 			_, _ = io.WriteString(command.Stdout, "FuzzParse\n")
 			return nil
 		}
@@ -373,7 +369,7 @@ func TestFuzzSmokeAdmitsColdCompilationWithoutExtendingRuntime(t *testing.T) {
 		if time.Until(deadline) < 80*time.Second {
 			return context.DeadlineExceeded
 		}
-		for _, expected := range []string{"-fuzztime=2s", "-timeout=15s", "-count=1", "-parallel=2", "-p=1"} {
+		for _, expected := range []string{"-test.fuzztime=2s", "-test.timeout=15s", "-test.count=1", "-test.parallel=2"} {
 			if !slices.Contains(command.Args, expected) {
 				t.Errorf("missing smoke runtime control %s", expected)
 			}
@@ -381,8 +377,8 @@ func TestFuzzSmokeAdmitsColdCompilationWithoutExtendingRuntime(t *testing.T) {
 		return nil
 	})}
 	step := config.Step{Type: "go-test", Packages: []string{"."}, Fuzz: "^FuzzParse$", Budget: "10m", Timeout: "20m", Count: 100}
-	if err := runner.fuzzSmokeStep(t.Context(), inventory.Module{Directory: "."}, step); err != nil || executions != 1 {
-		t.Fatalf("observed cold compilation refused: %v, executions = %d", err, executions)
+	if err := runner.fuzzSmokeStep(t.Context(), &preparedFuzzSmoke{binary: "fixture", directory: runner.Root, cache: t.TempDir()}, step); err != nil || executions != 1 {
+		t.Fatalf("prepared execution refused: %v, executions = %d", err, executions)
 	}
 }
 
@@ -396,7 +392,7 @@ func TestFuzzSmokeNeverExtendsEarlierParentDeadline(t *testing.T) {
 		if !exists || !deadline.Equal(parentDeadline) {
 			t.Fatal("target extended the total/parent deadline")
 		}
-		if slices.Contains(command.Args, "-list=^FuzzParse$") {
+		if slices.Contains(command.Args, "-test.list=^Fuzz") {
 			_, _ = io.WriteString(command.Stdout, "FuzzParse\n")
 			return nil
 		}
@@ -404,12 +400,13 @@ func TestFuzzSmokeNeverExtendsEarlierParentDeadline(t *testing.T) {
 		return context.DeadlineExceeded
 	})}
 	step := config.Step{Type: "go-test", Packages: []string{"."}, Fuzz: "^FuzzParse$"}
-	err := runner.fuzzSmokeStep(ctx, inventory.Module{Directory: "."}, step)
+	prepared := &preparedFuzzSmoke{binary: "fixture", directory: runner.Root, cache: t.TempDir()}
+	err := runner.fuzzSmokeStep(ctx, prepared, step)
 	if !errors.Is(err, context.DeadlineExceeded) || executions != 1 {
 		t.Fatalf("expired target outcome = %v, executions = %d", err, executions)
 	}
 	cancel()
-	if err := runner.fuzzSmokeStep(ctx, inventory.Module{Directory: "."}, step); !errors.Is(err, context.Canceled) || executions != 1 {
+	if err := runner.fuzzSmokeStep(ctx, prepared, step); !errors.Is(err, context.Canceled) || executions != 1 {
 		t.Fatalf("cancelled target outcome = %v, executions = %d", err, executions)
 	}
 }
@@ -432,7 +429,7 @@ func TestFuzzSmokeTotalTargetBudgetFailsBeforeExecution(t *testing.T) {
 		}
 		if command.Name == "go" && slices.Contains(command.Args, "list") {
 			deadline, ok := ctx.Deadline()
-			if !ok || time.Until(deadline) > fuzzSmokeTotalBudget {
+			if !ok || time.Until(deadline) > fuzzSmokePreparationBudget {
 				t.Fatal("missing total smoke budget")
 			}
 			return json.NewEncoder(command.Stdout).Encode(fuzzPackage{ImportPath: "example", Dir: root})
@@ -446,5 +443,257 @@ func TestFuzzSmokeTotalTargetBudgetFailsBeforeExecution(t *testing.T) {
 	}}
 	if err := runner.LocalChanges(t.Context(), []string{"."}, strings.Repeat("a", 40)); err == nil || !strings.Contains(err.Error(), "target limit") {
 		t.Fatalf("oversized smoke plan = %v", err)
+	}
+}
+
+func TestFuzzSmokePreparesSelectedContextsBeforeActiveBudget(t *testing.T) {
+	root, scratch := localCoverageFixture(t, "# Fixture\n"), t.TempDir()
+	module := inventory.Module{Directory: ".", ModulePath: "example"}
+	runner := Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}}, Output: &bytes.Buffer{},
+		Policy: config.Config{Operations: []config.Operation{{Module: ".", Gate: "fuzz", Steps: []config.Step{
+			{Type: "go-test", Packages: []string{"."}, Fuzz: "^FuzzOne$", Budget: "10m", Timeout: "20m", Count: 100},
+			{Type: "go-test", Packages: []string{"."}, Fuzz: "^FuzzTwo$", Budget: "10m", Timeout: "20m", Count: 100},
+			{Type: "go-test", Packages: []string{"./unrelated"}, Fuzz: "^FuzzOther$", Budget: "10m", Timeout: "20m", Count: 100},
+		}}}}}
+	graphs, compiled, listed, active := 0, 0, 0, 0
+	var binary string
+	runner.Executor = workspaceExecutor{directory: scratch, run: func(ctx context.Context, command Command) error {
+		if command.Name == "git" && slices.Contains(command.Args, "rev-parse") {
+			_, _ = io.WriteString(command.Stdout, strings.Repeat("b", 40)+"\n")
+		}
+		if command.Name == "git" && slices.Contains(command.Args, "diff") {
+			_, _ = io.WriteString(command.Stdout, "example.go\x00")
+		}
+		if command.Name == "go" && slices.Contains(command.Args, "list") {
+			graphs++
+			deadline, ok := ctx.Deadline()
+			if !ok || time.Until(deadline) <= 4*time.Minute || time.Until(deadline) > 5*time.Minute {
+				t.Error("cold graph discovery consumed the three-minute active budget")
+			}
+			for _, pkg := range []fuzzPackage{{ImportPath: "example", Dir: root}, {ImportPath: "example/unrelated", Dir: filepath.Join(root, "unrelated")}} {
+				if err := json.NewEncoder(command.Stdout).Encode(pkg); err != nil {
+					return err
+				}
+			}
+		}
+		if command.Name == "go" && slices.Contains(command.Args, "-c") {
+			compiled++
+			index := slices.Index(command.Args, "-o")
+			if index < 0 || index+1 >= len(command.Args) {
+				t.Fatal("compile output is not owned")
+			}
+			binary = command.Args[index+1]
+			if !slices.Contains(command.Args, "-fuzz=^Fuzz") || command.cacheClass != nativeRepositoryCache || !strings.HasPrefix(binary, scratch+string(filepath.Separator)) {
+				t.Error("preparation is not owned native instrumented compilation")
+			}
+			return os.WriteFile(binary, []byte("prepared fixture"), 0o700)
+		}
+		if command.Name == binary && binary != "" {
+			deadline, ok := ctx.Deadline()
+			if !ok || time.Until(deadline) > 3*time.Minute {
+				t.Error("prepared runtime is not bounded")
+			}
+			if command.Dir != root || command.cacheClass != nativeRepositoryCache {
+				t.Error("native package execution identity changed")
+			}
+			if slices.Contains(command.Args, "-test.list=^Fuzz") {
+				listed++
+				_, _ = io.WriteString(command.Stdout, "FuzzOne\nFuzzTwo\n")
+				return nil
+			}
+			active++
+			for _, flag := range []string{"-test.fuzztime=2s", "-test.timeout=15s", "-test.count=1", "-test.parallel=2", "-test.run=^$", "-test.paniconexit0"} {
+				if !slices.Contains(command.Args, flag) {
+					t.Errorf("runtime lost %s", flag)
+				}
+			}
+			if !slices.ContainsFunc(command.Args, func(flag string) bool {
+				return strings.HasPrefix(flag, "-test.fuzzcachedir="+scratch+string(filepath.Separator))
+			}) {
+				t.Error("fuzz cache is not owned")
+			}
+		}
+		// Allow the old producer to finish, so RED identifies the absent cold
+		// phase rather than a fixture error or an invented native failure.
+		if slices.ContainsFunc(command.Args, func(flag string) bool { return strings.HasPrefix(flag, "-list=") }) {
+			_, _ = io.WriteString(command.Stdout, "FuzzOne\nFuzzTwo\n")
+		}
+		return nil
+	}}
+	if err := runner.LocalChanges(t.Context(), []string{"."}, strings.Repeat("a", 40)); err != nil {
+		t.Fatal(err)
+	}
+	if graphs != 1 || compiled != 1 || listed != 1 || active != 2 {
+		t.Fatalf("actual selected preparation/execution: graphs=%d compiled=%d listed=%d active=%d", graphs, compiled, listed, active)
+	}
+	if _, err := os.Stat(filepath.Dir(binary)); !errors.Is(err, os.ErrNotExist) {
+		t.Fatal("prepared binary or corpus scratch survived")
+	}
+}
+
+func TestFuzzSmokeNativePreparationDoesNotRunTestsAndPreservesPackageContext(t *testing.T) {
+	root, scratch := t.TempDir(), t.TempDir()
+	for name, content := range map[string]string{
+		"go.mod":      "module example\n\ngo 1.27.0\n",
+		"fixture.txt": "owned fixture",
+		"fixture_test.go": `package fixture
+import ("os"; "testing")
+func TestMain(m *testing.M) {
+ if err := os.WriteFile("main-ran", []byte("executed"), 0600); err != nil { panic(err) }
+ os.Exit(m.Run())
+}
+func FuzzPackageContext(f *testing.F) {
+ f.Add("seed")
+ f.Fuzz(func(t *testing.T, value string) {
+  cwd, err := os.Getwd(); if err != nil || os.Getenv("PWD") != cwd { t.Fatal("lost package PWD") }
+  data, err := os.ReadFile("fixture.txt"); if err != nil || string(data) != "owned fixture" { t.Fatal("lost package cwd") }
+  if err := os.WriteFile("fuzz-ran", []byte("executed"), 0600); err != nil { t.Fatal(err) }
+ })
+}
+`,
+	} {
+		if err := os.WriteFile(filepath.Join(root, name), []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	runner := Runner{Root: root, Executor: workspaceExecutor{directory: scratch, run: func(ctx context.Context, command Command) error {
+		if command.cacheClass != nativeRepositoryCache {
+			t.Fatal("native compilation or execution lost its runtime cache class")
+		}
+		process := exec.CommandContext(ctx, command.Name, command.Args...)
+		process.Dir, process.Stdout, process.Stderr = command.Dir, command.Stdout, command.Stderr
+		var diagnostics bytes.Buffer
+		process.Stderr = io.MultiWriter(command.Stderr, &diagnostics)
+		process.Env = os.Environ()
+		for key, value := range command.Env {
+			process.Env = append(process.Env, key+"="+value)
+		}
+		if err := process.Run(); err != nil {
+			t.Logf("trusted native fixture %v: %s", command.Args, diagnostics.String())
+			return err
+		}
+		return nil
+	}}}
+	ctx, cancel := context.WithTimeout(t.Context(), 2*time.Minute)
+	defer cancel()
+	module := inventory.Module{Directory: ".", ModulePath: "example"}
+	graph, err := runner.fuzzPackageGraph(ctx, module, []string{"."})
+	if err != nil {
+		t.Fatal(err)
+	}
+	step := config.Step{Type: "go-test", Packages: []string{"."}, Fuzz: "^FuzzPackageContext$"}
+	prepared, err := runner.prepareFuzzSmoke(ctx, fuzzSmokeTarget{module: module, step: step, packageDirectory: graph["example"].Dir, compilerBin: filepath.Join(filepath.Dir(filepath.Dir(graph["runtime"].Dir)), "bin")}, scratch)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, marker := range []string{"main-ran", "fuzz-ran"} {
+		if _, err := os.Stat(filepath.Join(root, marker)); !errors.Is(err, os.ErrNotExist) {
+			t.Fatal("compile-only preparation executed repository tests")
+		}
+	}
+	if err := runner.fuzzSmokeStep(ctx, prepared, step); err != nil {
+		t.Fatal(err)
+	}
+	for _, marker := range []string{"main-ran", "fuzz-ran"} {
+		if _, err := os.Stat(filepath.Join(root, marker)); err != nil {
+			t.Fatalf("native prepared execution did not exercise %s: %v", marker, err)
+		}
+	}
+}
+
+func TestFuzzSmokePreparationFailureCancellationAndServiceCleanup(t *testing.T) {
+	for _, scenario := range []string{"compile failure", "missing binary", "symlink binary", "cancel preparation", "cancel execution", "runtime failure", "success"} {
+		t.Run(scenario, func(t *testing.T) {
+			root, scratch := localCoverageFixture(t, "# Fixture\n"), t.TempDir()
+			module := inventory.Module{Directory: ".", ModulePath: "example", TestTags: []string{"integration"}, RequiredServices: []string{"postgresql"}}
+			runner := Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}}, Output: &bytes.Buffer{},
+				Policy: config.Config{Operations: []config.Operation{{Module: ".", Gate: "fuzz", Steps: []config.Step{
+					{Type: "go-test", Packages: []string{"."}, Fuzz: "^FuzzOne$"},
+					{Type: "go-test", Packages: []string{"."}, Fuzz: "^FuzzTwo$", Race: true},
+				}}}}}
+			ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
+			defer cancel()
+			parentDeadline, _ := ctx.Deadline()
+			var leases []*fakeServiceLease
+			runner.startServices = func(commandContext context.Context, _ []string) (serviceLease, error) {
+				deadline, _ := commandContext.Deadline()
+				if !deadline.Equal(parentDeadline) {
+					t.Fatal("service phase extended caller deadline")
+				}
+				lease := &fakeServiceLease{environment: map[string]string{"POSTGRES_URL": "postgres://fixture"}}
+				leases = append(leases, lease)
+				return lease, nil
+			}
+			compiled, active := 0, 0
+			runner.Executor = workspaceExecutor{directory: scratch, run: func(commandContext context.Context, command Command) error {
+				if command.Name == "git" && slices.Contains(command.Args, "rev-parse") {
+					_, _ = io.WriteString(command.Stdout, strings.Repeat("b", 40)+"\n")
+				}
+				if command.Name == "git" && slices.Contains(command.Args, "diff") {
+					_, _ = io.WriteString(command.Stdout, "example.go\x00")
+				}
+				if command.Name == "go" && slices.Contains(command.Args, "list") {
+					return json.NewEncoder(command.Stdout).Encode(fuzzPackage{ImportPath: "example", Dir: root})
+				}
+				if command.Name == "go" && slices.Contains(command.Args, "-c") {
+					compiled++
+					deadline, _ := commandContext.Deadline()
+					if !deadline.Equal(parentDeadline) || command.Env["POSTGRES_URL"] != "" || !slices.Contains(command.Args, "-tags=integration") || (compiled == 2) != slices.Contains(command.Args, "-race") {
+						t.Fatal("compilation changed deadline, services, tags or race identity")
+					}
+					binary := command.Args[slices.Index(command.Args, "-o")+1]
+					switch scenario {
+					case "compile failure":
+						return errors.New("private-marker")
+					case "missing binary":
+						return nil
+					case "symlink binary":
+						return os.Symlink(filepath.Join(root, "example.go"), binary)
+					case "cancel preparation":
+						cancel()
+						return commandContext.Err()
+					}
+					return os.WriteFile(binary, []byte("fixture"), 0o700)
+				}
+				if strings.HasPrefix(command.Name, scratch+string(filepath.Separator)) {
+					deadline, _ := commandContext.Deadline()
+					if !deadline.Equal(parentDeadline) || command.Env["POSTGRES_URL"] != "postgres://fixture" {
+						t.Fatal("prepared execution lost service scope or extended caller deadline")
+					}
+					if scenario == "cancel execution" {
+						cancel()
+						return commandContext.Err()
+					}
+					if slices.Contains(command.Args, "-test.list=^Fuzz") {
+						_, _ = io.WriteString(command.Stdout, "FuzzOne\nFuzzTwo\n")
+						return nil
+					}
+					active++
+					if scenario == "runtime failure" {
+						return errors.New("private-marker")
+					}
+				}
+				return nil
+			}}
+			err := runner.LocalChanges(ctx, []string{"."}, strings.Repeat("a", 40))
+			if (err == nil) != (scenario == "success") || (err != nil && strings.Contains(err.Error(), "private-marker")) {
+				t.Fatalf("phase outcome = %v", err)
+			}
+			if strings.HasPrefix(scenario, "cancel") && !errors.Is(err, context.Canceled) {
+				t.Fatalf("cancellation lost its identity: %v", err)
+			}
+			if scenario == "success" && (compiled != 2 || active != 2) {
+				t.Fatalf("race-specific binary contexts merged: compiled=%d active=%d", compiled, active)
+			}
+			for _, lease := range leases {
+				if lease.closes != 1 {
+					t.Fatal("service lease survived a phase outcome")
+				}
+			}
+			entries, err := os.ReadDir(scratch)
+			if err != nil || len(entries) != 0 {
+				t.Fatal("preparation binary or corpus scratch survived a phase outcome")
+			}
+		})
 	}
 }
