@@ -1694,7 +1694,7 @@ func TestReleaseWorkflowRequiresAuthenticatedDependencyReviewRefs(t *testing.T) 
 	}
 	for _, test := range []struct {
 		name, native, base, head string
-		wantSuccess             bool
+		wantSuccess              bool
 	}{
 		{name: "authenticated immutable refs", native: "true", base: strings.Repeat("a", 40), head: strings.Repeat("b", 40), wantSuccess: true},
 		{name: "missing identity outputs"},
