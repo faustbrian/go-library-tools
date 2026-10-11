@@ -197,8 +197,15 @@ func packageMirrorFixture(t *testing.T, version int) (string, map[string]any, []
 		t.Fatal(err)
 	}
 	modules := make([]map[string]any, 0, 3)
-	for index, raw := range document["modules"].([]any) {
-		module := raw.(map[string]any)
+	entries, ok := document["modules"].([]any)
+	if !ok {
+		t.Fatal("fixture modules is not an array")
+	}
+	for index, raw := range entries {
+		module, ok := raw.(map[string]any)
+		if !ok {
+			t.Fatal("fixture module is not an object")
+		}
 		module["packages"] = []inventory.Package{}
 		switch index {
 		case 0:

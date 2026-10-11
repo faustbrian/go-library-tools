@@ -86,8 +86,8 @@ func TestChangedSecretsSnapshotKeepsIntermediateHistoryAndOnlyChangedTree(t *tes
 					modes = append(modes, "history")
 					var options string
 					for _, argument := range command.Args {
-						if strings.HasPrefix(argument, "--log-opts=") {
-							options = strings.TrimPrefix(argument, "--log-opts=")
+						if value, ok := strings.CutPrefix(argument, "--log-opts="); ok {
+							options = value
 						}
 					}
 					args := append([]string{"log", "-p", "-U0"}, strings.Fields(options)...)
@@ -228,7 +228,7 @@ func TestChangedSecretsDeadlineAndCancellationPrecedeSources(t *testing.T) {
 			cancel()
 		}
 		called := false
-		runner := Runner{Executor: executorFunction(func(ctx context.Context, command Command) error {
+		runner := Runner{Executor: executorFunction(func(ctx context.Context, _ Command) error {
 			called = true
 			if deadline, ok := ctx.Deadline(); !ok || time.Until(deadline) > changedSecretBudget {
 				t.Fatal("range selection has no finite budget")

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"go/format"
 	"io"
@@ -122,7 +123,7 @@ func TestExecuteChangedLocalFuzzPreservesLegacyAndStopsOnLocalFailure(t *testing
 						t.Fatal("legacy, invalid input or failed local check started discovery")
 					}
 					if scenario.failure && command.Name == "gofmt" {
-						return fmt.Errorf("fixture local failure")
+						return errors.New("fixture local failure")
 					}
 					return nil
 				}), func() error { return nil }, nil

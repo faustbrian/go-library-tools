@@ -304,7 +304,15 @@ func TestExecuteInventoryExpandsCanonicalPackagesWithoutMirror(t *testing.T) {
 	if err := json.Unmarshal(data, &document); err != nil {
 		t.Fatal(err)
 	}
-	delete(document["modules"].([]any)[0].(map[string]any), "packages")
+	modules, ok := document["modules"].([]any)
+	if !ok || len(modules) == 0 {
+		t.Fatal("fixture modules is not a nonempty array")
+	}
+	module, ok := modules[0].(map[string]any)
+	if !ok {
+		t.Fatal("fixture module is not an object")
+	}
+	delete(module, "packages")
 	encoded, err := json.Marshal(document)
 	if err != nil {
 		t.Fatal(err)

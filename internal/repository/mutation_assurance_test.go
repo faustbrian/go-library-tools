@@ -47,15 +47,15 @@ func TestMutationAssuranceConfinesAndBoundsNativeOutput(t *testing.T) {
 		fail    bool
 	}{
 		{name: "missing output"},
-		{name: "flat native JSON", prepare: func(t *testing.T, root, outside string) {
+		{name: "flat native JSON", prepare: func(t *testing.T, root, _ string) {
 			for _, path := range []string{".verification/by-input/mutation/input.json", ".verification/mutation/reports/report.json", ".verification/mutation/failed-reports/failure.json"} {
 				writeFile(t, root, path, "{}\n")
 			}
 		}},
-		{name: "non JSON", fail: true, prepare: func(t *testing.T, root, outside string) {
+		{name: "non JSON", fail: true, prepare: func(t *testing.T, root, _ string) {
 			writeFile(t, root, ".verification/mutation/reports/native.log", "not an admitted projection")
 		}},
-		{name: "nested output", fail: true, prepare: func(t *testing.T, root, outside string) {
+		{name: "nested output", fail: true, prepare: func(t *testing.T, root, _ string) {
 			writeFile(t, root, ".verification/mutation/reports/nested/output.json", "{}")
 		}},
 		{name: "linked output", fail: true, prepare: func(t *testing.T, root, outside string) {
@@ -73,12 +73,12 @@ func TestMutationAssuranceConfinesAndBoundsNativeOutput(t *testing.T) {
 				t.Fatal(err)
 			}
 		}},
-		{name: "too many files", fail: true, prepare: func(t *testing.T, root, outside string) {
+		{name: "too many files", fail: true, prepare: func(t *testing.T, root, _ string) {
 			for i := range 2049 {
 				writeFile(t, root, fmt.Sprintf(".verification/mutation/reports/%04d.json", i), "{}")
 			}
 		}},
-		{name: "oversized logical output", fail: true, prepare: func(t *testing.T, root, outside string) {
+		{name: "oversized logical output", fail: true, prepare: func(t *testing.T, root, _ string) {
 			writeFile(t, root, ".verification/mutation/reports/report.json", "{}")
 			if err := os.Truncate(filepath.Join(root, ".verification/mutation/reports/report.json"), 32*1024*1024+1); err != nil {
 				t.Fatal(err)

@@ -3,7 +3,6 @@ package gates
 import (
 	"context"
 	"errors"
-	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -50,7 +49,7 @@ func affectedRunner(t *testing.T, changes string) Runner {
 }
 
 func selectedDirectories(modules []inventory.Module) []string {
-	var directories []string
+	directories := make([]string, 0, len(modules))
 	for _, module := range modules {
 		directories = append(directories, module.Directory)
 	}
@@ -167,12 +166,12 @@ func TestChangedModulesGitCommandsDisableContentExecution(t *testing.T) {
 	runner := affectedRunner(t, "adapter/source.go\x00")
 	runner.Executor = executorFunction(func(_ context.Context, command Command) error {
 		if command.Name != "git" || !command.boundedScanner || !slices.Contains(command.Args, "--no-replace-objects") || !slices.Contains(command.Args, "core.fsmonitor=false") {
-			return fmt.Errorf("Git trust options absent")
+			return errors.New("Git trust options absent")
 		}
 		if slices.Contains(command.Args, "diff") {
 			for _, option := range []string{"--no-ext-diff", "--no-textconv", "--no-renames", "-z"} {
 				if !slices.Contains(command.Args, option) {
-					return fmt.Errorf("Git diff option absent")
+					return errors.New("Git diff option absent")
 				}
 			}
 			_, err := io.WriteString(command.Stdout, "adapter/source.go\x00")

@@ -30,7 +30,9 @@ func TestFuzzSmokeSelectsRuntimeAndTestDependencyInputs(t *testing.T) {
 		"example/helper":             {ImportPath: "example/helper", Dir: filepath.Join(root, "helper"), Imports: []string{"example/parser"}, TestImports: []string{"unused/dependency/tests"}, TestEmbedFiles: []string{"test-only.json"}, TestEmbedPatterns: []string{"testing/*.json"}},
 		"example/testhelper":         {ImportPath: "example/testhelper", Dir: filepath.Join(root, "testhelper")},
 		"example/externaltesthelper": {ImportPath: "example/externaltesthelper", Dir: filepath.Join(root, "externaltesthelper")},
-		"example/adapter":            {ImportPath: "example/adapter", Dir: filepath.Join(root, "adapter"), Module: &struct{ Path string }{Path: "example/adapter"}},
+		"example/adapter": {ImportPath: "example/adapter", Dir: filepath.Join(root, "adapter"), Module: &struct {
+			Path string `json:"Path"`
+		}{Path: "example/adapter"}},
 	}
 	for _, scenario := range []struct {
 		name, input string
@@ -205,7 +207,7 @@ func TestFuzzSmokeTotalTargetBudgetFailsBeforeExecution(t *testing.T) {
 	root := localCoverageFixture(t, "# Fixture\n")
 	module := inventory.Module{Directory: ".", ModulePath: "example"}
 	operation := config.Operation{Module: ".", Gate: "fuzz"}
-	for i := 0; i < fuzzSmokeMaximumTargets+1; i++ {
+	for i := range fuzzSmokeMaximumTargets + 1 {
 		operation.Steps = append(operation.Steps, config.Step{Type: "go-test", Packages: []string{"."}, Fuzz: "Fuzz" + strings.Repeat("X", i+1)})
 	}
 	runner := Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}},

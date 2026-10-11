@@ -35,29 +35,31 @@ type fuzzSmokeTarget struct {
 }
 
 type fuzzPackage struct {
-	ImportPath         string
-	Dir                string
-	Imports            []string
-	TestImports        []string
-	XTestImports       []string
-	CFiles             []string
-	CXXFiles           []string
-	MFiles             []string
-	HFiles             []string
-	FFiles             []string
-	SFiles             []string
-	SwigFiles          []string
-	SwigCXXFiles       []string
-	SysoFiles          []string
-	EmbedFiles         []string
-	TestEmbedFiles     []string
-	XTestEmbedFiles    []string
-	EmbedPatterns      []string
-	TestEmbedPatterns  []string
-	XTestEmbedPatterns []string
-	Module             *struct{ Path string }
-	Error              json.RawMessage
-	DepsErrors         []json.RawMessage
+	ImportPath         string   `json:"ImportPath"`
+	Dir                string   `json:"Dir"`
+	Imports            []string `json:"Imports"`
+	TestImports        []string `json:"TestImports"`
+	XTestImports       []string `json:"XTestImports"`
+	CFiles             []string `json:"CFiles"`
+	CXXFiles           []string `json:"CXXFiles"`
+	MFiles             []string `json:"MFiles"`
+	HFiles             []string `json:"HFiles"`
+	FFiles             []string `json:"FFiles"`
+	SFiles             []string `json:"SFiles"`
+	SwigFiles          []string `json:"SwigFiles"`
+	SwigCXXFiles       []string `json:"SwigCXXFiles"`
+	SysoFiles          []string `json:"SysoFiles"`
+	EmbedFiles         []string `json:"EmbedFiles"`
+	TestEmbedFiles     []string `json:"TestEmbedFiles"`
+	XTestEmbedFiles    []string `json:"XTestEmbedFiles"`
+	EmbedPatterns      []string `json:"EmbedPatterns"`
+	TestEmbedPatterns  []string `json:"TestEmbedPatterns"`
+	XTestEmbedPatterns []string `json:"XTestEmbedPatterns"`
+	Module             *struct {
+		Path string `json:"Path"`
+	} `json:"Module"`
+	Error      json.RawMessage   `json:"Error"`
+	DepsErrors []json.RawMessage `json:"DepsErrors"`
 }
 
 // LocalChanges scans changed secrets before ordinary local verification and

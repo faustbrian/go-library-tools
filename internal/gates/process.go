@@ -71,9 +71,7 @@ func NewProcessExecutorWithTaskCache(repositoryRoot, cacheRoot string, stdout, s
 	if err != nil {
 		return nil, nil, err
 	}
-	for name, directory := range directories {
-		executor.environment[name] = directory
-	}
+	maps.Copy(executor.environment, directories)
 	return executor, cleanup, nil
 }
 

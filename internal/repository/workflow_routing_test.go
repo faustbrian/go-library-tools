@@ -2,6 +2,7 @@ package repository_test
 
 import (
 	"errors"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -157,7 +158,7 @@ esac
 			output, err := command.CombinedOutput()
 			code := 0
 			if err != nil {
-				if failure, ok := err.(*exec.ExitError); ok {
+				if failure, ok := errors.AsType[*exec.ExitError](err); ok {
 					code = failure.ExitCode()
 				} else {
 					t.Fatal(err)
@@ -230,9 +231,7 @@ func TestReusableRequiredGateRejectsMissingAndSkippedMandatoryResults(t *testing
 				"DEPENDENCY_REVIEW_RESULT": "success", "PREPARE_RESULT": "success",
 				"CONTRACT_RESULT": "success", "QUALITY_RESULT": "success", "CODEQL_RESULT": "success",
 			}
-			for key, value := range test.overrides {
-				environment[key] = value
-			}
+			maps.Copy(environment, test.overrides)
 			command := exec.CommandContext(t.Context(), "bash", "-c", script)
 			command.Env = os.Environ()
 			for key, value := range environment {

@@ -74,7 +74,7 @@ func TestExecuteAffectedInventoryUsesCommittedModuleAndConsumers(t *testing.T) {
 	if err := json.Unmarshal(stdout.Bytes(), &catalog); err != nil {
 		t.Fatal(err)
 	}
-	var directories []string
+	directories := make([]string, 0, len(catalog.Modules))
 	for _, module := range catalog.Modules {
 		directories = append(directories, module.Directory)
 	}
@@ -149,7 +149,7 @@ func TestExecuteAffectedInventoryHandlesActualRenameAndMissingBase(t *testing.T)
 	if err := json.Unmarshal(stdout.Bytes(), &catalog); err != nil {
 		t.Fatal(err)
 	}
-	var directories []string
+	directories := make([]string, 0, len(catalog.Modules))
 	for _, module := range catalog.Modules {
 		directories = append(directories, module.Directory)
 	}

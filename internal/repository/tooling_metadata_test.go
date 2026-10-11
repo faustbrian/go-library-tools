@@ -124,15 +124,16 @@ func TestToolingMetadataClassifierUsesActualGitAndFailsClosed(t *testing.T) {
 					base = strings.TrimSpace(runGit(t, root, "rev-parse", "HEAD"))
 				}
 				if scenario.path != "" {
-					if scenario.remove {
+					switch {
+					case scenario.remove:
 						if err := os.Remove(filepath.Join(root, scenario.path)); err != nil {
 							t.Fatal(err)
 						}
-					} else if scenario.name == "symlink Markdown" {
+					case scenario.name == "symlink Markdown":
 						if err := os.Symlink("README.md", filepath.Join(root, scenario.path)); err != nil {
 							t.Fatal(err)
 						}
-					} else {
+					default:
 						write(t, filepath.Join(root, scenario.path), "changed fixture\n")
 						if scenario.name == "executable Markdown" {
 							if err := os.Chmod(filepath.Join(root, scenario.path), 0o700); err != nil {

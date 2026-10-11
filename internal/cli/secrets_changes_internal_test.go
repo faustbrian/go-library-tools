@@ -18,7 +18,7 @@ func TestExecuteChangedSecretsRangeAndFailure(t *testing.T) {
 			root, workspace := internalFixture(t), t.TempDir()
 			base, head := strings.Repeat("a", 40), strings.Repeat("b", 40)
 			var scannedRange string
-			executor := changedSecretsExecutor{directory: workspace, run: func(ctx context.Context, command gates.Command) error {
+			executor := changedSecretsExecutor{directory: workspace, run: func(_ context.Context, command gates.Command) error {
 				if command.Name == "git" {
 					switch {
 					case slices.Contains(command.Args, "rev-parse"):
@@ -36,8 +36,8 @@ func TestExecuteChangedSecretsRangeAndFailure(t *testing.T) {
 					return errors.New("unexpected runtime execution")
 				}
 				for _, argument := range command.Args {
-					if strings.HasPrefix(argument, "--log-opts=") {
-						scannedRange = strings.TrimPrefix(argument, "--log-opts=")
+					if value, ok := strings.CutPrefix(argument, "--log-opts="); ok {
+						scannedRange = value
 					}
 				}
 				if fail {

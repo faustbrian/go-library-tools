@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"maps"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -71,7 +72,10 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 			}
 			writeSet := func() {
 				t.Helper()
-				evidence := item["evidence"].(map[string]any)
+				evidence, ok := item["evidence"].(map[string]any)
+				if !ok {
+					t.Fatal("fixture evidence is not an object")
+				}
 				delete(evidence, "content_sha256")
 				canonical, err := json.Marshal(item)
 				if err != nil {
@@ -189,9 +193,7 @@ func TestToolingRequiredGateHonorsApplicableJobs(t *testing.T) {
 				"CODEQL_RESULT": "success", "RELEASE_REHEARSAL_SELECTED": "false", "RELEASE_REHEARSAL_RESULT": "skipped",
 				"NATIVE_CLI_DIAGNOSTIC_SELECTED": "false", "NATIVE_CLI_DIAGNOSTIC_RESULT": "skipped",
 			}
-			for key, value := range scenario.overrides {
-				environment[key] = value
-			}
+			maps.Copy(environment, scenario.overrides)
 			// Match the hosted default Bash errexit contract, not an interactive shell.
 			command := exec.CommandContext(t.Context(), "bash", "-e", "-c", script)
 			command.Env = os.Environ()
