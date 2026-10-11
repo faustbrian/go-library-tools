@@ -86,7 +86,7 @@ jobs:
           path: source
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: source/.go-version
+          go-version-file: tooling/rehearsals/.go-version
           cache: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -99,7 +99,8 @@ jobs:
         working-directory: source
         run: |
           ../tooling/rehearsals/prepare-dependencies.sh \
-            "${RUNNER_TEMP}/legacy-dependencies" "${GITHUB_ENV}" "${GITHUB_PATH}"
+            "${RUNNER_TEMP}/legacy-dependencies" "${GITHUB_ENV}" "${GITHUB_PATH}" \
+            ../tooling/rehearsals/execution-profile.json
       - name: Restore mutation checkpoints
         working-directory: source
         run: |
@@ -197,7 +198,7 @@ jobs:
           path: source
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: source/.go-version
+          go-version-file: tooling/rehearsals/.go-version
           cache: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -220,7 +221,8 @@ jobs:
         working-directory: source
         run: |
           ../tooling/rehearsals/prepare-dependencies.sh \
-            "${RUNNER_TEMP}/shared-dependencies" "${GITHUB_ENV}" "${GITHUB_PATH}"
+            "${RUNNER_TEMP}/shared-dependencies" "${GITHUB_ENV}" "${GITHUB_PATH}" \
+            ../tooling/rehearsals/execution-profile.json
       - name: Apply rehearsal policy
         working-directory: source
         env:
@@ -341,7 +343,7 @@ jobs:
           path: source
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
-          go-version-file: source/.go-version
+          go-version-file: tooling/rehearsals/.go-version
           cache: false
       - name: Build source CLI
         working-directory: tooling
@@ -360,7 +362,8 @@ jobs:
         working-directory: source
         run: |
           ../tooling/rehearsals/prepare-dependencies.sh \
-            "${RUNNER_TEMP}/performance-dependencies" "${GITHUB_ENV}" "${GITHUB_PATH}"
+            "${RUNNER_TEMP}/performance-dependencies" "${GITHUB_ENV}" "${GITHUB_PATH}" \
+            ../tooling/rehearsals/execution-profile.json
       - name: Apply shared rehearsal policy
         if: matrix.implementation == 'shared'
         working-directory: source

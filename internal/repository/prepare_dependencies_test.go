@@ -716,7 +716,7 @@ func commitRehearsalFixture(t *testing.T, root string) {
 	} else if !errors.Is(err, os.ErrNotExist) {
 		t.Fatal(err)
 	}
-	command := exec.CommandContext(t.Context(), "git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "fixture")
+	command := exec.CommandContext(t.Context(), "git", "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "test(rehearsal): establish source fixture\n\nCapture immutable source for dependency preparation.\n\nImpact: none")
 	command.Dir = root
 	if output, err := command.CombinedOutput(); err != nil {
 		t.Fatalf("commit fixture: %v\n%s", err, output)
@@ -790,4 +790,134 @@ func readRehearsalFile(t *testing.T, path string) string {
 		t.Fatal(err)
 	}
 	return string(content)
+}
+
+func TestDependencyPreparationPatchedProfilePreservesSourceAndTidyDrift(t *testing.T) {
+	realGo, err := exec.LookPath("go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, drift := range []bool{false, true} {
+		t.Run(map[bool]string{false: "clean", true: "unrelated-drift"}[drift], func(t *testing.T) {
+			root := t.TempDir()
+			task := filepath.Join(root, "task")
+			bin := filepath.Join(root, "bin")
+			activeMod := filepath.Join(root, "active.mod")
+			original := "module github.com/faustbrian/go-example\n\ngo 1.26.6\n\nrequire golang.org/x/net v0.58.0\n"
+			writeRehearsalFile(t, filepath.Join(root, "modules.json"), `{"modules":[{"directory":"."}]}`)
+			writeRehearsalFile(t, filepath.Join(root, "go.mod"), original)
+			profile := filepath.Join(root, "profile.json")
+			writeRehearsalFile(t, profile, `{"dependency_overrides":{"golang.org/x/net":"v0.60.0"}}`)
+			writeRehearsalFile(t, activeMod, original+"\nreplace github.com/faustbrian/go-local => /owned/replacement\n")
+			writeExecutable(t, filepath.Join(bin, "go"), `#!/usr/bin/env bash
+set -euo pipefail
+if [[ "${1:-}" == mod && "${2:-}" == edit ]]; then
+ exec env GOTOOLCHAIN=local "${REHEARSAL_ACTUAL_GO}" "$@"
+fi
+if [[ "${1:-}" == env && "${2:-}" == GOTOOLCHAIN ]]; then
+ printf '%s\n' "${GOTOOLCHAIN:-}"
+ exit 0
+fi
+modfile=''
+for flag in ${GOFLAGS:-}; do
+ case "${flag}" in -modfile=*) modfile="${flag#-modfile=}" ;; esac
+done
+if [[ "${1:-}" == run ]]; then
+ printf '%s\n' "${GOTOOLCHAIN:-}" >"${REHEARSAL_BUILD_COMPILER}"
+ runner=''
+ for arg in "$@"; do
+  case "${arg}" in -exec=*) runner="${arg#-exec=}" ;; esac
+ done
+ "${runner}" "${REHEARSAL_PROFILE_TOOL}"
+ exit 0
+fi
+if [[ "${1:-}" == get ]]; then
+ exec env GOTOOLCHAIN=local "${REHEARSAL_ACTUAL_GO}" mod edit -require=golang.org/x/net@v0.60.0
+fi
+if [[ "${1:-}" == mod && "${2:-}" == download ]]; then exit 0; fi
+if [[ "${1:-}" == mod && "${2:-}" == tidy ]]; then
+ if [[ "${REHEARSAL_DRIFT}" == true ]]; then
+  printf '\nrequire example.com/extra v1.0.0\n' >>"${modfile}"
+ fi
+ exit 0
+fi
+printf 'unexpected fake go invocation\n' >&2
+exit 1
+`)
+			commitRehearsalFixture(t, root)
+			command := exec.CommandContext(t.Context(), "bash", dependencyPreparationScript(t), task,
+				filepath.Join(root, "environment"), filepath.Join(root, "path"), profile)
+			command.Dir = root
+			command.Env = append(os.Environ(), "PATH="+bin+":"+os.Getenv("PATH"),
+				"REHEARSAL_ACTUAL_GO="+realGo, "REHEARSAL_DRIFT="+map[bool]string{false: "false", true: "true"}[drift])
+			if output, err := command.CombinedOutput(); err != nil {
+				t.Fatalf("prepare patched profile: %v\n%s", err, output)
+			}
+			if got := readRehearsalFile(t, filepath.Join(root, "go.mod")); got != original {
+				t.Fatal("tracked source changed")
+			}
+			prepared := readRehearsalFile(t, filepath.Join(task, "modules", "0.mod"))
+			if !strings.Contains(prepared, "golang.org/x/net v0.60.0") || strings.Contains(prepared, "v0.58.0") || strings.Contains(prepared, "example.com/extra") {
+				t.Fatalf("effective profile lost patch or hid tidy drift: %s", prepared)
+			}
+			compiler := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "env", "GOTOOLCHAIN")
+			compiler.Dir = root
+			compiler.Env = append(command.Env, "GOLIB_REHEARSAL_REAL_GO="+filepath.Join(bin, "go"),
+				"GOLIB_REHEARSAL_PATCHED_PROFILE=1", "GOLIB_REHEARSAL_MODULE_MAP="+filepath.Join(task, "modules.tsv"),
+				"GOLIB_REHEARSAL_EXECUTION_DIRECTORY="+filepath.Join(task, "execution"), "GOTOOLCHAIN=go1.26.6")
+			if output, err := compiler.CombinedOutput(); err != nil || strings.TrimSpace(string(output)) != "go1.26.9" {
+				t.Fatalf("catalog compiler escaped patched profile: %v %s", err, output)
+			}
+			foreign := filepath.Join(root, "tool-module")
+			writeRehearsalFile(t, filepath.Join(foreign, "go.mod"), "module example.com/tool\n\ngo 1.27.0\n")
+			compiler = exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "env", "GOTOOLCHAIN")
+			compiler.Dir = foreign
+			compiler.Env = append(command.Env, "GOLIB_REHEARSAL_REAL_GO="+filepath.Join(bin, "go"),
+				"GOLIB_REHEARSAL_PATCHED_PROFILE=1", "GOLIB_REHEARSAL_MODULE_MAP="+filepath.Join(task, "modules.tsv"),
+				"GOLIB_REHEARSAL_EXECUTION_DIRECTORY="+filepath.Join(task, "execution"), "GOTOOLCHAIN=go1.27.2")
+			if output, err := compiler.CombinedOutput(); err != nil || strings.TrimSpace(string(output)) != "go1.27.2" {
+				t.Fatalf("consumer profile changed foreign tool compiler: %v %s", err, output)
+			}
+			tool := filepath.Join(bin, "profile-tool")
+			writeExecutable(t, tool, `#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "${GOTOOLCHAIN:-}" >"${REHEARSAL_ANALYSIS_COMPILER}"
+cp go.mod "${REHEARSAL_SNAPSHOT_MODFILE}"
+`)
+			versioned := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "run", "example.com/tool@v1.0.0")
+			versioned.Dir = root
+			versioned.Env = append(command.Env, readEnvironment(t, filepath.Join(root, "environment"))...)
+			versioned.Env = append(versioned.Env, "REHEARSAL_PROFILE_TOOL="+tool,
+				"REHEARSAL_BUILD_COMPILER="+filepath.Join(root, "build-compiler"),
+				"REHEARSAL_ANALYSIS_COMPILER="+filepath.Join(root, "analysis-compiler"),
+				"REHEARSAL_SNAPSHOT_MODFILE="+filepath.Join(root, "snapshot.mod"), "GOTOOLCHAIN=go1.27.2")
+			if output, err := versioned.CombinedOutput(); err != nil {
+				t.Fatalf("versioned tool: %v %s", err, output)
+			}
+			if got := strings.TrimSpace(readRehearsalFile(t, filepath.Join(root, "build-compiler"))); got != "go1.27.2" {
+				t.Fatalf("tool build compiler = %s", got)
+			}
+			if got := strings.TrimSpace(readRehearsalFile(t, filepath.Join(root, "analysis-compiler"))); got != "go1.26.9" {
+				t.Fatalf("analysis compiler = %s", got)
+			}
+			if got := readRehearsalFile(t, filepath.Join(root, "snapshot.mod")); !strings.Contains(got, "golang.org/x/net v0.60.0") {
+				t.Fatal("snapshot lost patched dependency")
+			}
+			for _, args := range [][]string{{"mod", "edit", "-json"}, {"mod", "edit", "-json", "-modfile=" + filepath.Join(task, "modules", "0.mod")}, {"mod", "edit", "-json", "-modfile=" + activeMod}} {
+				wrapper := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), args...)
+				wrapper.Dir = root
+				wrapper.Env = append(command.Env, "GOLIB_REHEARSAL_REAL_GO="+filepath.Join(bin, "go"),
+					"GOLIB_REHEARSAL_PATCHED_PROFILE=1",
+					"GOLIB_REHEARSAL_MODULE_MAP="+filepath.Join(task, "modules.tsv"),
+					"GOLIB_REHEARSAL_EXECUTION_DIRECTORY="+filepath.Join(task, "execution"))
+				output, err := wrapper.CombinedOutput()
+				if args[len(args)-1] == "-modfile="+activeMod && !bytes.Contains(output, []byte(`"Path": "/owned/replacement"`)) {
+					t.Fatal("gate-owned replacement lost")
+				}
+				if err != nil || !bytes.Contains(output, []byte(`"Version": "v0.60.0"`)) {
+					t.Fatalf("wrapper selected unpatched input: %v\n%s", err, output)
+				}
+			}
+		})
+	}
 }

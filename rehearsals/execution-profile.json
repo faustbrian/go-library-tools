@@ -1,0 +1,5 @@
+{
+  "dependency_overrides": {
+    "golang.org/x/net": "v0.60.0"
+  }
+}

@@ -1053,7 +1053,7 @@ func TestParityWorkflowDoesNotModifyRepresentativeSource(t *testing.T) {
 	}
 }
 
-func TestSharedParityUsesRepresentativeGoVersionForConsumerGates(t *testing.T) {
+func TestSharedParityUsesPatchedGoVersionForConsumerGates(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/parity-rehearsal.yml")
 	sharedStart := strings.Index(content, "  shared:\n")
 	if sharedStart < 0 {
@@ -1067,10 +1067,10 @@ func TestSharedParityUsesRepresentativeGoVersionForConsumerGates(t *testing.T) {
 	if count := strings.Count(shared, "uses: actions/setup-go@"); count != 1 {
 		t.Fatalf("shared parity setup-go steps = %d, want 1", count)
 	}
-	setup := strings.Index(shared, "go-version-file: source/.go-version")
+	setup := strings.Index(shared, "go-version-file: tooling/rehearsals/.go-version")
 	build := strings.Index(shared, "name: Build source CLI")
 	if setup < 0 || build < 0 || setup > build {
-		t.Fatal("shared parity must select the representative Go version before building the source CLI")
+		t.Fatal("shared parity must select the patched consumer Go version before building the source CLI")
 	}
 	if !strings.Contains(shared[build:], "GOTOOLCHAIN=auto") {
 		t.Fatal("source CLI build does not opt into its required automatic Go toolchain")
