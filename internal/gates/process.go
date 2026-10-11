@@ -170,6 +170,9 @@ func appendCacheDirectories(sets ...map[string]string) []string {
 // no caller session was requested. Unknown producers cannot borrow a session.
 func (executor *processExecutor) commandEnvironment(command Command) []string {
 	protected := maps.Clone(executor.environment)
+	// GOBIN selects an install output, not reusable compiler evidence. Keep the
+	// owned default while allowing a caller to choose its owned output directory.
+	delete(protected, "GOBIN")
 	if command.cacheClass != verifierCache {
 		maps.Copy(protected, executor.runtimeCaches)
 		if command.cacheClass == nativeRepositoryCache {
@@ -179,7 +182,7 @@ func (executor *processExecutor) commandEnvironment(command Command) []string {
 			protected["GOCACHE"] = command.runtimeBuildCache
 		}
 	}
-	return mergeEnvironment(os.Environ(), command.Env, protected)
+	return mergeEnvironment(os.Environ(), executor.environment, command.Env, protected)
 }
 
 func (executor *processExecutor) TemporaryDirectory() string { return executor.task }

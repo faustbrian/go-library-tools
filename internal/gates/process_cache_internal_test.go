@@ -25,6 +25,7 @@ type processCacheProbe struct {
 	Session     string `json:"session"`
 	Lint        string `json:"lint"`
 	LintBackend string `json:"lint_backend"`
+	Output      string `json:"output"`
 	Poisoned    bool   `json:"poisoned"`
 }
 
@@ -38,6 +39,7 @@ func TestProcessCacheProbe(_ *testing.T) {
 		Build: os.Getenv("GOCACHE"), Modules: os.Getenv("GOMODCACHE"),
 		Backend: os.Getenv("GOCACHEPROG"), Session: os.Getenv("GOLIB_TASK_CACHE_ROOT"),
 		Lint: os.Getenv("GOLANGCI_LINT_CACHE"), LintBackend: os.Getenv("GOLANGCI_LINT_CACHEPROG"),
+		Output: os.Getenv("GOBIN"),
 	}
 	for _, directory := range []string{probe.Build, probe.Modules} {
 		marker := filepath.Join(directory, "repository-poison")
@@ -93,6 +95,7 @@ func TestTaskCacheKeepsVerifiersPrivateAfterRepositoryExecution(t *testing.T) {
 					t.Setenv("GOLIB_CACHE_PROBE_BINARY", os.Args[0])
 					t.Setenv("GOLIB_TASK_CACHE_ROOT", session)
 					t.Setenv("GOCACHEPROG", "unused-external-cache-backend")
+					t.Setenv("GOBIN", filepath.Join(repository, "ambient-bin"))
 					var created Executor
 					var cleanup func() error
 					var err error
@@ -113,6 +116,10 @@ func TestTaskCacheKeepsVerifiersPrivateAfterRepositoryExecution(t *testing.T) {
 						}
 					})
 					executor := checkedProcessCacheExecutor(t, created)
+					binaryOutput := filepath.Join(executor.TemporaryDirectory(), "selected-bin")
+					if err := os.Mkdir(binaryOutput, 0o700); err != nil {
+						t.Fatal(err)
+					}
 					// A successful finite capture needs no process-control effects.
 					executor.prepareBoundedProcess = func(*exec.Cmd) error { return nil }
 					for _, bounded := range []bool{false, true} {
@@ -124,6 +131,9 @@ func TestTaskCacheKeepsVerifiersPrivateAfterRepositoryExecution(t *testing.T) {
 						}
 						runtime.boundedScanner = bounded
 						runtimeProbe := runProcessCacheProbe(t, executor, runtime, true, failure)
+						if runtimeProbe.Output != executor.environment["GOBIN"] {
+							t.Error("unrequested binary output escaped owned scratch")
+						}
 						if borrowed && (runtimeProbe.Build != filepath.Join(session, "cache") || runtimeProbe.Modules != filepath.Join(session, "mod")) {
 							t.Fatal("native repository test did not borrow the caller session")
 						}
@@ -131,7 +141,11 @@ func TestTaskCacheKeepsVerifiersPrivateAfterRepositoryExecution(t *testing.T) {
 						verifier.boundedScanner = bounded
 						// Command-level cache overrides must not cross the trust boundary.
 						verifier.Env = map[string]string{"GOCACHE": runtimeProbe.Build, "GOMODCACHE": runtimeProbe.Modules, "GOCACHEPROG": "command-controlled-backend", "GOLIB_TASK_CACHE_ROOT": session, "GOLANGCI_LINT_CACHE": runtimeProbe.Lint, "GOLANGCI_LINT_CACHEPROG": "command-controlled-lint-backend"}
+						verifier.Env["GOBIN"] = binaryOutput
 						probe := runProcessCacheProbe(t, executor, verifier, false, failure)
+						if probe.Output != binaryOutput {
+							t.Error("verifier ignored its caller-owned binary output directory")
+						}
 						if probe.Backend != "" || probe.Session != "" || probe.LintBackend != "" {
 							t.Error("verifier inherited an external cache backend or nested cache opt-in")
 						}
