@@ -20,7 +20,7 @@ define with_go_task
 endef
 
 run_go = $(call with_go_task,go $(1))
-run_golib = $(call with_go_task,export GOLIB_TASK_CACHE_ROOT="$$task"; go build -o "$$task/golib" ./cmd/golib; $(1))
+run_golib = $(call with_go_task,mkdir -m 700 "$$task/verifier-cache" "$$task/verifier-mod" "$$task/verifier-tmp"; export GOLIB_TASK_CACHE_ROOT="$$task"; go build -o "$$task/golib" ./cmd/golib; $(1))
 metadata_contract = "$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check; "$$task/golib" security validate --directory docs/ecosystem/security
 
 build:

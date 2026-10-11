@@ -28,6 +28,22 @@ by walking upward to `.golib.yaml`; failure to find it exits with status 1.
 Invalid command syntax exits with status 2. Failed validation or gates exit
 with status 1. Success exits with status 0.
 
+Adjacent commands may opt into one caller-owned bounded cache session through
+`GOLIB_TASK_CACHE_ROOT`. The canonical private temporary directory must be named
+`golib-cache-session.*` and contain mode-0700 `cache` and `mod` directories for
+explicit native repository compilation. Adding all three mode-0700 siblings
+`verifier-cache`, `verifier-mod` and `verifier-tmp` separately reuses trusted
+verifier compilation across invocations. Partial, symlinked or non-private
+compartments fail closed; legacy sessions without those siblings retain fresh
+invocation-private verifier caches. Unknown repository commands cannot borrow
+either compartment. Cache identities, external cache backends and nested session
+opt-ins are sealed after command overrides; lint results, output binaries and
+reports remain invocation/pass-owned. The caller must remove the complete
+session on success, failure and cancellation. This separates cooperative command
+producers, not arbitrary processes through an OS sandbox, and never substitutes
+cached results for current-source checks. Tools' `local-check`, `local-ci` and
+`metadata-ci` Make routes create and clean this session automatically.
+
 Core commands:
 
 - `golib --version` prints `dev` for source builds or the immutable release.

@@ -26,6 +26,7 @@ type processCacheProbe struct {
 	Lint        string `json:"lint"`
 	LintBackend string `json:"lint_backend"`
 	Output      string `json:"output"`
+	Temporary   string `json:"temporary"`
 	Poisoned    bool   `json:"poisoned"`
 }
 
@@ -39,7 +40,8 @@ func TestProcessCacheProbe(_ *testing.T) {
 		Build: os.Getenv("GOCACHE"), Modules: os.Getenv("GOMODCACHE"),
 		Backend: os.Getenv("GOCACHEPROG"), Session: os.Getenv("GOLIB_TASK_CACHE_ROOT"),
 		Lint: os.Getenv("GOLANGCI_LINT_CACHE"), LintBackend: os.Getenv("GOLANGCI_LINT_CACHEPROG"),
-		Output: os.Getenv("GOBIN"),
+		Output:    os.Getenv("GOBIN"),
+		Temporary: os.Getenv("GOTMPDIR"),
 	}
 	for _, directory := range []string{probe.Build, probe.Modules} {
 		marker := filepath.Join(directory, "repository-poison")
@@ -355,11 +357,7 @@ func TestMutationBuildAndCampaignKeepDistinctCacheIdentities(t *testing.T) {
 // Real repository tests can modify extracted module-cache source. The pinned
 // compiler-tool producer must rebuild from the canonical proxy, not that cache.
 func TestCompilerToolRejectsRepositoryPoisonedModuleCache(t *testing.T) {
-	for _, borrowed := range []bool{false, true} {
-		mode := "default"
-		if borrowed {
-			mode = "borrowed"
-		}
+	for _, mode := range []string{"default", "borrowed", "verifier session"} {
 		t.Run(mode, func(t *testing.T) {
 			root, proxy := t.TempDir(), t.TempDir()
 			const module = "example.invalid/cache-verifier"
@@ -391,8 +389,16 @@ func TestRepositoryPoisonsModuleCache(t *testing.T) {
 			var created Executor
 			var cleanup func() error
 			var err error
-			if borrowed {
-				created, cleanup, err = NewProcessExecutorWithTaskCache(root, processCacheSession(t), io.Discard, io.Discard)
+			if mode != "default" {
+				session := processCacheSession(t)
+				if mode == "verifier session" {
+					for _, name := range []string{"verifier-cache", "verifier-mod", "verifier-tmp"} {
+						if err := os.Mkdir(filepath.Join(session, name), 0o700); err != nil {
+							t.Fatal(err)
+						}
+					}
+				}
+				created, cleanup, err = NewProcessExecutorWithTaskCache(root, session, io.Discard, io.Discard)
 			} else {
 				created, cleanup, err = NewProcessExecutor(root, io.Discard, io.Discard)
 			}
@@ -523,4 +529,167 @@ func processCacheSession(t *testing.T) string {
 		}
 	}
 	return root
+}
+
+func TestTaskVerifierSessionReusesOnlyTrustedCachesAcrossExecutors(t *testing.T) {
+	for _, failure := range []bool{false, true} {
+		t.Run(map[bool]string{false: "success", true: "failure"}[failure], func(t *testing.T) {
+			repository, session := t.TempDir(), processCacheSession(t)
+			for _, name := range []string{"verifier-cache", "verifier-mod", "verifier-tmp"} {
+				if err := os.Mkdir(filepath.Join(session, name), 0o700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			bin := t.TempDir()
+			if err := os.WriteFile(filepath.Join(bin, "go"), []byte("#!/bin/sh\nexec \"$GOLIB_CACHE_PROBE_BINARY\" -test.run='^TestProcessCacheProbe$'\n"), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+			t.Setenv("GOLIB_CACHE_PROBE_BINARY", os.Args[0])
+			t.Setenv("GOCACHEPROG", "ambient-backend")
+			t.Setenv("GOLANGCI_LINT_CACHEPROG", "ambient-lint-backend")
+			t.Setenv("GOLIB_TASK_CACHE_ROOT", session)
+			var previous processCacheProbe
+			for invocation := range 2 {
+				created, cleanup, err := NewProcessExecutorWithTaskCache(repository, session, io.Discard, io.Discard)
+				if err != nil {
+					t.Fatal(err)
+				}
+				t.Cleanup(func() {
+					if err := cleanup(); err != nil && !errors.Is(err, os.ErrNotExist) {
+						t.Error(err)
+					}
+				})
+				executor := checkedProcessCacheExecutor(t, created)
+				executor.prepareBoundedProcess = func(*exec.Cmd) error { return nil }
+				for _, bounded := range []bool{false, true} {
+					runtime := Command{Name: "go", cacheClass: nativeRepositoryCache, boundedScanner: bounded}
+					runtime.Env = map[string]string{"GOCACHE": filepath.Join(session, "verifier-cache"), "GOMODCACHE": filepath.Join(session, "verifier-mod"), "GOTMPDIR": filepath.Join(session, "verifier-tmp")}
+					poison := runProcessCacheProbe(t, executor, runtime, true, failure)
+					unknown := runProcessCacheProbe(t, executor, Command{Name: "go", Env: runtime.Env, boundedScanner: bounded}, true, failure)
+					verifier := processCacheVerifierCommand(t)
+					verifier.boundedScanner = bounded
+					verifier.Env = map[string]string{"GOCACHE": poison.Build, "GOMODCACHE": unknown.Modules, "GOTMPDIR": poison.Temporary, "GOCACHEPROG": "hostile", "GOLANGCI_LINT_CACHEPROG": "hostile", "GOLIB_TASK_CACHE_ROOT": session}
+					verifier.Env["GOBIN"] = filepath.Join(executor.task, "selected-output")
+					probe := runProcessCacheProbe(t, executor, verifier, false, failure)
+					if probe.Build != filepath.Join(session, "verifier-cache") || probe.Modules != filepath.Join(session, "verifier-mod") || probe.Temporary != filepath.Join(session, "verifier-tmp") {
+						t.Error("verifier did not reuse its private caller-session compartment")
+					}
+					if probe.Poisoned || probe.Backend != "" || probe.LintBackend != "" || probe.Session != "" || probe.Build == poison.Build || probe.Modules == unknown.Modules || probe.Temporary == poison.Temporary {
+						t.Error("repository caches or hostile overrides contaminated verifier")
+					}
+					if filepath.Dir(probe.Lint) != executor.task || filepath.Dir(probe.Output) != executor.task {
+						t.Error("lint results or output binaries escaped invocation ownership")
+					}
+					if probe.Output != verifier.Env["GOBIN"] {
+						t.Error("legitimate install-output override was sealed")
+					}
+					if invocation > 0 && !bounded && (probe.Build != previous.Build || probe.Modules != previous.Modules || probe.Temporary != previous.Temporary || probe.Lint == previous.Lint || probe.Output == previous.Output) {
+						t.Error("adjacent executor did not retain only compilation inputs")
+					}
+					previous = probe
+				}
+				if err := cleanup(); err != nil {
+					t.Fatal(err)
+				}
+				if _, err := os.Stat(executor.task); !errors.Is(err, os.ErrNotExist) {
+					t.Fatal("invocation scratch remains")
+				}
+				for _, name := range []string{"verifier-cache", "verifier-mod", "verifier-tmp"} {
+					if _, err := os.Stat(filepath.Join(session, name)); err != nil {
+						t.Fatal("caller compartment removed")
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestTaskVerifierSessionRejectsPartialOrUnsafeDirectories(t *testing.T) {
+	for _, scenario := range []string{"partial", "shared", "symlink"} {
+		t.Run(scenario, func(t *testing.T) {
+			root, session := t.TempDir(), processCacheSession(t)
+			for _, name := range []string{"verifier-cache", "verifier-mod", "verifier-tmp"} {
+				if scenario == "partial" && name == "verifier-tmp" {
+					continue
+				}
+				if err := os.Mkdir(filepath.Join(session, name), 0o700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if scenario == "shared" {
+				if err := os.Chmod(filepath.Join(session, "verifier-mod"), 0o755); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if scenario == "symlink" {
+				if err := os.Remove(filepath.Join(session, "verifier-tmp")); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Symlink(t.TempDir(), filepath.Join(session, "verifier-tmp")); err != nil {
+					t.Fatal(err)
+				}
+			}
+			_, cleanup, err := NewProcessExecutorWithTaskCache(root, session, io.Discard, io.Discard)
+			if cleanup != nil {
+				if err := cleanup(); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if err == nil {
+				t.Fatal("unsafe verifier session admitted")
+			}
+		})
+	}
+}
+
+func TestTaskVerifierSessionsRemainDistinctAndCanceledCallsCleanScratch(t *testing.T) {
+	root := t.TempDir()
+	var previous map[string]string
+	for range 2 {
+		session := processCacheSession(t)
+		for _, name := range []string{"verifier-cache", "verifier-mod", "verifier-tmp"} {
+			if err := os.Mkdir(filepath.Join(session, name), 0o700); err != nil {
+				t.Fatal(err)
+			}
+		}
+		created, cleanup, err := NewProcessExecutorWithTaskCache(root, session, io.Discard, io.Discard)
+		if err != nil {
+			t.Fatal(err)
+		}
+		executor := checkedProcessCacheExecutor(t, created)
+		t.Cleanup(func() {
+			if _, err := os.Stat(executor.task); err == nil {
+				if err := cleanup(); err != nil {
+					t.Error(err)
+				}
+			}
+		})
+		command := processCacheVerifierCommand(t)
+		actual := make(map[string]string)
+		for _, entry := range executor.commandEnvironment(command) {
+			name, value, ok := strings.Cut(entry, "=")
+			if ok {
+				actual[name] = value
+			}
+		}
+		for _, name := range []string{"GOCACHE", "GOMODCACHE", "GOTMPDIR"} {
+			if previous != nil && actual[name] == previous[name] {
+				t.Fatal("different sessions shared verifier identity")
+			}
+		}
+		ctx, cancel := context.WithCancel(t.Context())
+		cancel()
+		command.boundedScanner = true
+		if err := executor.Run(ctx, command); !errors.Is(err, context.Canceled) {
+			t.Fatalf("pre-canceled verifier executed: %v", err)
+		}
+		if err := cleanup(); err != nil {
+			t.Fatal(err)
+		}
+		if _, err := os.Stat(executor.task); !errors.Is(err, os.ErrNotExist) {
+			t.Fatal("canceled scratch remains")
+		}
+		previous = actual
+	}
 }

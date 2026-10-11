@@ -15,13 +15,14 @@ import (
 )
 
 type processExecutor struct {
-	environment           map[string]string
-	runtimeCaches         map[string]string
-	borrowedCaches        map[string]string
-	stdout                io.Writer
-	stderr                io.Writer
-	task                  string
-	prepareBoundedProcess func(*exec.Cmd) error
+	environment            map[string]string
+	runtimeCaches          map[string]string
+	borrowedCaches         map[string]string
+	borrowedVerifierCaches map[string]string
+	stdout                 io.Writer
+	stderr                 io.Writer
+	task                   string
+	prepareBoundedProcess  func(*exec.Cmd) error
 }
 
 type taskFileSystem interface {
@@ -63,9 +64,11 @@ func NewProcessExecutor(repositoryRoot string, stdout, stderr io.Writer) (Execut
 // NewProcessExecutorWithTaskCache borrows only compilation caches from a
 // caller-owned bounded session. Its cleanup removes only invocation scratch;
 // the caller must remove the session after use. Only explicitly classified
-// native repository commands borrow it; verifier caches remain invocation-owned.
+// native repository commands borrow cache/mod. Optional verifier-cache,
+// verifier-mod and verifier-tmp directories are borrowed only by classified
+// verifiers; absent those directories, verifiers remain invocation-owned.
 func NewProcessExecutorWithTaskCache(repositoryRoot, cacheRoot string, stdout, stderr io.Writer) (Executor, func() error, error) {
-	directories, err := taskCacheDirectories(repositoryRoot, cacheRoot)
+	directories, verifierDirectories, err := taskCacheDirectories(repositoryRoot, cacheRoot)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -74,40 +77,62 @@ func NewProcessExecutorWithTaskCache(repositoryRoot, cacheRoot string, stdout, s
 		return nil, nil, err
 	}
 	executor.borrowedCaches = directories
+	executor.borrowedVerifierCaches = verifierDirectories
 	return executor, cleanup, nil
 }
 
-func taskCacheDirectories(repositoryRoot, root string) (map[string]string, error) {
+func taskCacheDirectories(repositoryRoot, root string) (map[string]string, map[string]string, error) {
 	invalid := errors.New("task cache requires a private, canonical temporary session with existing private cache directories")
 	if len(root) > 4096 || !filepath.IsAbs(root) || filepath.Clean(root) != root || !strings.HasPrefix(filepath.Base(root), "golib-cache-session.") {
-		return nil, invalid
+		return nil, nil, invalid
 	}
 	canonical, err := filepath.EvalSymlinks(root)
 	if err != nil || canonical != root {
-		return nil, invalid
+		return nil, nil, invalid
 	}
 	temporary, err := filepath.EvalSymlinks(os.TempDir())
 	if err != nil || filepath.Dir(root) != temporary {
-		return nil, invalid
+		return nil, nil, invalid
 	}
 	repository, err := filepath.EvalSymlinks(repositoryRoot)
 	if err != nil {
-		return nil, invalid
+		return nil, nil, invalid
 	}
 	for _, pair := range [][2]string{{repository, root}, {root, repository}} {
 		relative, err := filepath.Rel(pair[0], pair[1])
 		if err != nil || relative == "." || relative != ".." && !strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
-			return nil, invalid
+			return nil, nil, invalid
 		}
 	}
 	directories := map[string]string{"GOCACHE": filepath.Join(root, "cache"), "GOMODCACHE": filepath.Join(root, "mod")}
 	for _, path := range []string{root, directories["GOCACHE"], directories["GOMODCACHE"]} {
 		info, err := os.Lstat(path)
 		if err != nil || !info.IsDir() || info.Mode().Perm() != 0o700 {
-			return nil, invalid
+			return nil, nil, invalid
 		}
 	}
-	return directories, nil
+	verifierDirectories := map[string]string{
+		"GOCACHE":    filepath.Join(root, "verifier-cache"),
+		"GOMODCACHE": filepath.Join(root, "verifier-mod"),
+		"GOTMPDIR":   filepath.Join(root, "verifier-tmp"),
+	}
+	present := 0
+	for _, path := range verifierDirectories {
+		info, err := os.Lstat(path)
+		if errors.Is(err, os.ErrNotExist) {
+			continue
+		}
+		if err != nil || !info.IsDir() || info.Mode().Perm() != 0o700 {
+			return nil, nil, invalid
+		}
+		present++
+	}
+	if present == 0 {
+		verifierDirectories = nil
+	} else if present != len(verifierDirectories) {
+		return nil, nil, invalid
+	}
+	return directories, verifierDirectories, nil
 }
 
 func newProcessExecutor(repositoryRoot string, stdout, stderr io.Writer, files taskFileSystem) (*processExecutor, func() error, error) {
@@ -173,7 +198,9 @@ func (executor *processExecutor) commandEnvironment(command Command) []string {
 	// GOBIN selects an install output, not reusable compiler evidence. Keep the
 	// owned default while allowing a caller to choose its owned output directory.
 	delete(protected, "GOBIN")
-	if command.cacheClass != verifierCache {
+	if command.cacheClass == verifierCache {
+		maps.Copy(protected, executor.borrowedVerifierCaches)
+	} else {
 		maps.Copy(protected, executor.runtimeCaches)
 		if command.cacheClass == nativeRepositoryCache {
 			maps.Copy(protected, executor.borrowedCaches)

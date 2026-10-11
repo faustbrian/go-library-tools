@@ -20,6 +20,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Reuse trusted verifier compilation across adjacent local commands through
+  optional private session compartments. Keep native and unknown commands,
+  lint results and output binaries separate, preserve legacy sessions, and
+  remove the caller-owned session on every exit.
 - Add a separate bounded weekly fuzz-risk rotation and explicit main-only
   diagnostics using current repository declarations; retain ordinary fast CI
   and explicit full assurance without a new CLI or library release.

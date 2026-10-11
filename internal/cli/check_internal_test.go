@@ -756,10 +756,24 @@ func TestExecuteRoutesWorkflowChecks(t *testing.T) {
 }
 
 func TestExecuteContextBorrowsExplicitTaskCachesAndCleansOnlyScratch(t *testing.T) {
-	for _, status := range []string{"0", "23"} {
-		t.Run(status, func(t *testing.T) {
+	for _, scenario := range []struct {
+		name, status string
+		verifier     bool
+	}{
+		{"legacy success", "0", false}, {"legacy failure", "23", false},
+		{"verifier success", "0", true}, {"verifier failure", "23", true},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			status := scenario.status
 			root := internalFixture(t)
 			cacheRoot := taskCacheFixture(t)
+			if scenario.verifier {
+				for _, name := range []string{"verifier-cache", "verifier-mod", "verifier-tmp"} {
+					if err := os.Mkdir(filepath.Join(cacheRoot, name), 0o700); err != nil {
+						t.Fatal(err)
+					}
+				}
+			}
 			bin, log := t.TempDir(), filepath.Join(t.TempDir(), "cache-environment")
 			program := "#!/bin/sh\nprintf '%s\\t%s\\t%s\\t%s\\n' \"$GOCACHE\" \"$GOMODCACHE\" \"$GOTMPDIR\" \"$GOBIN\" >> \"$CACHE_ENVIRONMENT_LOG\"\nexit \"$CACHE_TEST_STATUS\"\n"
 			if err := os.WriteFile(filepath.Join(bin, "go"), []byte(program), 0o700); err != nil {
@@ -787,11 +801,20 @@ func TestExecuteContextBorrowsExplicitTaskCachesAndCleansOnlyScratch(t *testing.
 			var previousVerifierCache string
 			for _, line := range lines {
 				paths := strings.Split(line, "\t")
-				if len(paths) != 4 || paths[0] == filepath.Join(cacheRoot, "cache") || paths[1] == filepath.Join(cacheRoot, "mod") || paths[0] == previousVerifierCache {
+				if len(paths) != 4 || paths[0] == filepath.Join(cacheRoot, "cache") || paths[1] == filepath.Join(cacheRoot, "mod") || (!scenario.verifier && paths[0] == previousVerifierCache) {
 					t.Fatalf("workflow verifier did not retain fresh private caches: %q", line)
 				}
 				previousVerifierCache = paths[0]
-				for _, scratch := range paths {
+				for index, scratch := range paths {
+					if scenario.verifier && index < 3 {
+						if scratch != filepath.Join(cacheRoot, []string{"verifier-cache", "verifier-mod", "verifier-tmp"}[index]) {
+							t.Fatal("verifier did not use caller compartment")
+						}
+						if _, err := os.Stat(scratch); err != nil {
+							t.Fatal("caller compartment removed")
+						}
+						continue
+					}
 					if strings.HasPrefix(scratch, cacheRoot+string(filepath.Separator)) {
 						t.Fatal("invocation scratch is not private")
 					}

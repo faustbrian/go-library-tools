@@ -151,6 +151,15 @@ caller deadlines remain in effect;
 invalid selection or an exceeded budget fails honestly. Prepared binaries and fuzz
 cache directories are task-owned and removed on success, failure or cancellation;
 the native repository cache session remains isolated from verifier caches.
+Tools' local Make routes also create a separate optional verifier compilation
+compartment in that caller-owned session, so adjacent CLI invocations reuse
+trusted build/module inputs and temporary storage without reusing lint results,
+reports or output binaries. Legacy sessions retain invocation-private verifier
+caches. Native tests/fuzz and unknown repository commands cannot receive the
+verifier compartment through cache-environment overrides. This is cooperative
+producer isolation, not an OS sandbox or a hosted cross-job cache. The caller
+cleans the entire bounded session on every exit; current-source verification
+still executes. See [CLI](cli.md) for directory admission and ownership.
 Scheduled/manual local checks do not implicitly select this smoke or a full
 campaign. See [CLI](cli.md) for limits and evidence boundaries.
 
