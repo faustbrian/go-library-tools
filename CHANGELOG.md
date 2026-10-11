@@ -43,6 +43,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Build explicit source bootstrap once per reusable CI run and share the bounded,
+  checksum-bound binary only with that run's dependent jobs.
+
 - Reuse explicit parent-owned temporary compilation caches in local Makefile
   sessions, retaining private executor scratch and verifying metadata/workflows
   before the final runtime check.

@@ -177,9 +177,21 @@ default false route retains the existing release checksum, attestation and
 exact-version verification.
 
 Reusable callers may explicitly set `source_bootstrap: true`, default false.
-All four setup sites then use the immutable remote setup action at
+Prepare builds once with the immutable remote setup action at
 `e8c0c51cc517dfede5475858bb417f0e7a21f39d`, passing the same `tooling_sha`
-used for their fixed tooling checkout. Documentation/license-only pull requests
+used for its fixed tooling checkout. Before any library-controlled execution,
+it binds the binary checksum and uploads only that binary, capped at 64 MiB,
+with one-day retention. Dependent jobs use `tools/reuse-source-golib.sh`
+from their exact tooling checkout and the pinned download action to reuse that
+immutable artifact ID from
+the same workflow run. There is no cross-run lookup, download token or cached
+PR binary in privileged release workflows. Missing identities, unexpected
+payloads, checksum mismatch or failed `dev` validation fail without rebuilding
+or falling back to another run. Each job retains its own installation and
+scratch cleanup. Adopt the workflow and supporting tooling together; this
+source-reuse script is not present in older tooling. Actual transfer latency and
+hosted cancellation cleanup need hosted qualification, not just local fixtures.
+Documentation/license-only pull requests
 use the ordinary metadata assurance tier, including in source-bootstrap mode.
 Metadata-only PR/main jobs use `golib secrets check --base-sha <commit>` to
 scan all new commits plus changed current files, including documentation.

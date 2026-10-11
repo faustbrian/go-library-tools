@@ -840,6 +840,7 @@ type workflowStep struct {
 	Name string            `yaml:"name"`
 	If   string            `yaml:"if"`
 	Env  map[string]string `yaml:"env"`
+	With map[string]string `yaml:"with"`
 	Run  string            `yaml:"run"`
 }
 
@@ -972,7 +973,7 @@ func TestReusableWorkflowInstallsGolibBeforeEveryArchiveValidation(t *testing.T)
 			bootstrap := -1
 			var setups []int
 			for index, step := range workflow.Jobs[job].Steps {
-				if strings.HasPrefix(step.Uses, "faustbrian/go-library-tools/.github/actions/setup-golib@") {
+				if strings.HasPrefix(step.Uses, "faustbrian/go-library-tools/.github/actions/setup-golib@") || step.Name == "Validate and install source verifier" {
 					setups = append(setups, index)
 				}
 				if strings.HasPrefix(step.Uses, "faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@") {

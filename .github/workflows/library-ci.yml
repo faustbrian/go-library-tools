@@ -61,6 +61,8 @@ jobs:
       deno: ${{ steps.modules.outputs.deno }}
       zsh: ${{ steps.modules.outputs.zsh }}
       runtime: ${{ steps.scope.outputs.runtime }}
+      source_artifact_id: ${{ steps.source-artifact.outputs.artifact-id }}
+      source_binary_sha256: ${{ steps.source-binary.outputs.sha256 }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -161,11 +163,42 @@ jobs:
           persist-credentials: false
       - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap != true
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
+      - id: source-setup
+        uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap == true
         with:
           source_bootstrap: 'true'
           tooling_sha: ${{ inputs.tooling_sha }}
+      - id: source-binary
+        name: Bind source verifier binary
+        if: inputs.source_bootstrap == true
+        run: |
+          set -euo pipefail
+          root="${GOLIB_SOURCE_INSTALL_ROOT}"
+          case "${root}" in
+            "${RUNNER_TEMP}"/golib-source-install.*/*) echo 'unexpected source installation' >&2; exit 1 ;;
+            "${RUNNER_TEMP}"/golib-source-install.*) ;;
+            *) echo 'unexpected source installation' >&2; exit 1 ;;
+          esac
+          [[ ! -L "${root}" && ! -L "${root}/bin" && -f "${root}/bin/golib" && ! -L "${root}/bin/golib" ]]
+          size="$(wc -c <"${root}/bin/golib" | tr -d ' ')"
+          [[ "${size}" -gt 0 && "${size}" -le 67108864 ]] || { echo 'source verifier exceeds binary budget' >&2; exit 1; }
+          sha256="$(shasum -a 256 "${root}/bin/golib" | cut -d ' ' -f 1)"
+          {
+            echo "sha256=${sha256}"
+            echo "path=${root}/bin/golib"
+            echo "name=$(basename "${root}")"
+          } >>"${GITHUB_OUTPUT}"
+      - id: source-artifact
+        name: Share same-run source verifier
+        if: inputs.source_bootstrap == true
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: ${{ steps.source-binary.outputs.name }}
+          path: ${{ steps.source-binary.outputs.path }}
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 1
       - name: Select public dependency authority
         if: inputs.public_dependencies == true
         run: |
@@ -267,11 +300,26 @@ jobs:
           persist-credentials: false
       - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap != true
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
+      - name: Prepare same-run source installation
         if: inputs.source_bootstrap == true
+        env:
+          TOOLING_SHA: ${{ inputs.tooling_sha }}
+          ARTIFACT_ID: ${{ needs.prepare.outputs.source_artifact_id }}
+          BINARY_SHA256: ${{ needs.prepare.outputs.source_binary_sha256 }}
+        run: bash .golib-tooling/tools/reuse-source-golib.sh prepare
+      - name: Download same-run source verifier
+        if: inputs.source_bootstrap == true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          source_bootstrap: 'true'
-          tooling_sha: ${{ inputs.tooling_sha }}
+          artifact-ids: ${{ needs.prepare.outputs.source_artifact_id }}
+          path: ${{ env.GOLIB_SOURCE_INSTALL_ROOT }}/bin
+          merge-multiple: true
+          digest-mismatch: error
+      - name: Validate and install source verifier
+        if: inputs.source_bootstrap == true
+        env:
+          BINARY_SHA256: ${{ needs.prepare.outputs.source_binary_sha256 }}
+        run: bash .golib-tooling/tools/reuse-source-golib.sh install
       - name: Select public dependency authority
         if: inputs.public_dependencies == true
         run: |
@@ -397,11 +445,26 @@ jobs:
           persist-credentials: false
       - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap != true
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
+      - name: Prepare same-run source installation
         if: inputs.source_bootstrap == true
+        env:
+          TOOLING_SHA: ${{ inputs.tooling_sha }}
+          ARTIFACT_ID: ${{ needs.prepare.outputs.source_artifact_id }}
+          BINARY_SHA256: ${{ needs.prepare.outputs.source_binary_sha256 }}
+        run: bash .golib-tooling/tools/reuse-source-golib.sh prepare
+      - name: Download same-run source verifier
+        if: inputs.source_bootstrap == true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          source_bootstrap: 'true'
-          tooling_sha: ${{ inputs.tooling_sha }}
+          artifact-ids: ${{ needs.prepare.outputs.source_artifact_id }}
+          path: ${{ env.GOLIB_SOURCE_INSTALL_ROOT }}/bin
+          merge-multiple: true
+          digest-mismatch: error
+      - name: Validate and install source verifier
+        if: inputs.source_bootstrap == true
+        env:
+          BINARY_SHA256: ${{ needs.prepare.outputs.source_binary_sha256 }}
+        run: bash .golib-tooling/tools/reuse-source-golib.sh install
       - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@712163686bea3c3ad465acdca026b4b7bf5f0b0b
         if: inputs.public_dependencies != true
         with:
@@ -526,11 +589,26 @@ jobs:
           persist-credentials: false
       - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
         if: inputs.source_bootstrap != true
-      - uses: faustbrian/go-library-tools/.github/actions/setup-golib@e8c0c51cc517dfede5475858bb417f0e7a21f39d
+      - name: Prepare same-run source installation
         if: inputs.source_bootstrap == true
+        env:
+          TOOLING_SHA: ${{ inputs.tooling_sha }}
+          ARTIFACT_ID: ${{ needs.prepare.outputs.source_artifact_id }}
+          BINARY_SHA256: ${{ needs.prepare.outputs.source_binary_sha256 }}
+        run: bash .golib-tooling/tools/reuse-source-golib.sh prepare
+      - name: Download same-run source verifier
+        if: inputs.source_bootstrap == true
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          source_bootstrap: 'true'
-          tooling_sha: ${{ inputs.tooling_sha }}
+          artifact-ids: ${{ needs.prepare.outputs.source_artifact_id }}
+          path: ${{ env.GOLIB_SOURCE_INSTALL_ROOT }}/bin
+          merge-multiple: true
+          digest-mismatch: error
+      - name: Validate and install source verifier
+        if: inputs.source_bootstrap == true
+        env:
+          BINARY_SHA256: ${{ needs.prepare.outputs.source_binary_sha256 }}
+        run: bash .golib-tooling/tools/reuse-source-golib.sh install
       - uses: faustbrian/go-library-tools/.github/actions/setup-bootstrap-proxy@712163686bea3c3ad465acdca026b4b7bf5f0b0b
         if: inputs.public_dependencies != true
         with:
