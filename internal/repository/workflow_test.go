@@ -1023,8 +1023,7 @@ func TestToolingWorkflowSeparatesFastPullRequestAndAggregateMilestoneChecks(t *t
 		t.Fatal("milestone job repeats the successful local contract")
 	}
 	makefile := readProjectFile(t, "Makefile")
-	if !strings.Contains(makefile, "local-ci:\n\t$(call run_go,run ./cmd/golib check --local)") ||
-		!strings.Contains(makefile, "milestone-check: consumers compatibility") {
+	if !strings.Contains(makefile, "milestone-check: consumers compatibility") {
 		t.Fatal("Makefile does not keep bounded local and aggregate checks separate")
 	}
 	for _, retired := range []string{"forward-oracle", "tools/provenance", "Upload verification evidence"} {

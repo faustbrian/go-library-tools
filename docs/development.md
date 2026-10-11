@@ -5,6 +5,12 @@ Use the Go version in `.go-version`. Every Go command must receive disposable
 
 Run focused package tests and static analysis while editing with
 `make check-packages PACKAGES='./internal/example ./internal/other'`.
+Its test and vet commands share one disposable cache session. `make local-check`
+and `make local-ci` each build the CLI once and reuse it for adjacent checks;
+their build-session directories are removed on success or failure. Each CLI
+invocation retains its existing executor-owned isolation. No shared global
+cache or persistent local binary is introduced.
+
 `make local-check` validates repository-owned configuration, inventory,
 cohesion, and workflow invariants; `make local-ci` adds the complete Go test and
 vet, formatting, tidy, safety, lint, local-link, and applicable API checks used

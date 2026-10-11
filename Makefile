@@ -9,14 +9,18 @@ COMPATIBILITY_MODULE_COUNT ?=
 COMPATIBILITY_VERSION_OVERRIDES ?=
 COMPATIBILITY_GO_MOD ?=
 
-define run_go
+define with_go_task
 	set -euo pipefail; \
 	task="$$(mktemp -d "$${TMPDIR:-/tmp}/go-library-tools-make.XXXXXX")"; \
 	task="$$(cd "$$task" && pwd -P)"; \
 	trap 'chmod -R u+w "$$task" 2>/dev/null || true; find "$$task" -depth -delete' EXIT; \
 	mkdir -p "$$task/cache" "$$task/mod" "$$task/tmp"; \
-	GOCACHE="$$task/cache" GOMODCACHE="$$task/mod" GOTMPDIR="$$task/tmp" go $(1)
+	export GOCACHE="$$task/cache" GOMODCACHE="$$task/mod" GOTMPDIR="$$task/tmp"; \
+	$(1)
 endef
+
+run_go = $(call with_go_task,go $(1))
+run_golib = $(call with_go_task,go build -o "$$task/golib" ./cmd/golib; $(1))
 
 build:
 	$(call run_go,build ./cmd/golib)
@@ -52,8 +56,7 @@ workflows:
 
 check-packages:
 	@test -n "$(strip $(PACKAGES))" || { echo 'PACKAGES is required, for example PACKAGES=./internal/inventory' >&2; exit 2; }
-	$(call run_go,test $(PACKAGES))
-	$(call run_go,vet $(PACKAGES))
+	$(call with_go_task,go test $(PACKAGES); go vet $(PACKAGES))
 
 security-differential:
 	@set -euo pipefail; \
@@ -64,12 +67,11 @@ security-differential:
 	UV_CACHE_DIR="$$task/uv" UV_NO_PROGRESS=1 UV_PYTHON_PREFERENCE=only-system TMPDIR="$$task/tmp" \
 		uv run --no-project --with jsonschema==4.17.3 python tools/securitydocs/differential.py "$(CURDIR)" "$$task/golib"
 
-local-check: config repository-check cohesion workflows
+local-check:
+	$(call run_golib,"$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check)
 
 local-ci:
-	$(call run_go,run ./cmd/golib check --local)
-	$(call run_go,run ./cmd/golib security validate --directory docs/ecosystem/security)
-	$(MAKE) local-check
+	$(call run_golib,"$$task/golib" check --local; "$$task/golib" security validate --directory docs/ecosystem/security; "$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check)
 
 milestone-check: consumers compatibility
 

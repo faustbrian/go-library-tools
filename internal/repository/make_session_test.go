@@ -1,0 +1,84 @@
+package repository_test
+
+import (
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+func TestMakeReusesDisposableSessionAndCleansFailures(t *testing.T) {
+	for _, test := range []struct {
+		name, target, failure string
+		want                  []string
+	}{
+		{"package tests and vet", "check-packages", "", []string{"go test ./internal/example", "go vet ./internal/example"}},
+		{"package test failure", "check-packages", "test ./internal/example", []string{"go test ./internal/example"}},
+		{"package vet failure", "check-packages", "vet ./internal/example", []string{"go test ./internal/example", "go vet ./internal/example"}},
+		{"local checks", "local-check", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}},
+		{"CLI build failure", "local-ci", "build", []string{"go build"}},
+		{"local CI", "local-ci", "", []string{"go build", "golib check --local", "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}},
+		{"local CI failure", "local-ci", "cohesion check", []string{"go build", "golib check --local", "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check"}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			repository := t.TempDir()
+			writeRehearsalFile(t, filepath.Join(repository, "Makefile"), readProjectFile(t, "Makefile"))
+			bin := t.TempDir()
+			log := filepath.Join(t.TempDir(), "commands")
+			cli := filepath.Join(bin, "golib-fixture")
+			writeExecutable(t, cli, `#!/usr/bin/env bash
+set -euo pipefail
+printf 'golib %s\t%s\t%s\t%s\n' "$*" "$GOCACHE" "$GOMODCACHE" "$GOTMPDIR" >>"$GOLIB_MAKE_FIXTURE_LOG"
+if test "$*" = "$GOLIB_MAKE_FIXTURE_FAILURE"; then exit 23; fi
+`)
+			writeExecutable(t, filepath.Join(bin, "go"), `#!/usr/bin/env bash
+set -euo pipefail
+if test "$1" = build; then
+  printf 'go build\t%s\t%s\t%s\n' "$GOCACHE" "$GOMODCACHE" "$GOTMPDIR" >>"$GOLIB_MAKE_FIXTURE_LOG"
+  if test "$GOLIB_MAKE_FIXTURE_FAILURE" = build; then exit 23; fi
+  test "$2" = -o
+  cp "$GOLIB_MAKE_FIXTURE_BIN" "$3"
+else
+  printf 'go %s\t%s\t%s\t%s\n' "$*" "$GOCACHE" "$GOMODCACHE" "$GOTMPDIR" >>"$GOLIB_MAKE_FIXTURE_LOG"
+  if test "$*" = "$GOLIB_MAKE_FIXTURE_FAILURE"; then exit 23; fi
+fi
+`)
+			command := exec.CommandContext(t.Context(), "make", test.target, "PACKAGES=./internal/example")
+			command.Dir = repository
+			command.Env = append(os.Environ(), "PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
+				"GOLIB_MAKE_FIXTURE_LOG="+log, "GOLIB_MAKE_FIXTURE_BIN="+cli,
+				"GOLIB_MAKE_FIXTURE_FAILURE="+test.failure)
+			output, err := command.CombinedOutput()
+			if (err != nil) != (test.failure != "") {
+				t.Fatalf("make error = %v, output = %s", err, output)
+			}
+			contents, err := os.ReadFile(log)
+			if err != nil {
+				t.Fatalf("command log: %v; make output = %s", err, output)
+			}
+			lines := strings.Split(strings.TrimSpace(string(contents)), "\n")
+			if len(lines) != len(test.want) {
+				t.Fatalf("commands = %q, want %q", lines, test.want)
+			}
+			var session []string
+			for index, line := range lines {
+				fields := strings.Split(line, "\t")
+				if len(fields) != 4 || fields[0] != test.want[index] {
+					t.Fatalf("command = %q, want %q", line, test.want[index])
+				}
+				if session == nil {
+					session = fields[1:]
+				}
+				for cacheIndex, directory := range fields[1:] {
+					if directory != session[cacheIndex] {
+						t.Fatalf("adjacent checks did not reuse their session: %q != %q", directory, session[cacheIndex])
+					}
+					if _, err := os.Stat(directory); !os.IsNotExist(err) {
+						t.Fatalf("disposable cache remains: %q, error = %v", directory, err)
+					}
+				}
+			}
+		})
+	}
+}

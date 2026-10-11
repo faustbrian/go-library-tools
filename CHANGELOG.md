@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Reuse one disposable Makefile cache session for adjacent package tests and
+  vet, and build the CLI once per local check or CI session. Preserve failure
+  propagation, cleanup, and executor-owned isolation.
+
 - Require bounded module checks in ordinary shared CI without a legacy
   full-campaign fallback. Apply documentation and matched-pin routing to main
   and source bootstrap, reject PR release rehearsals, and fail closed on
