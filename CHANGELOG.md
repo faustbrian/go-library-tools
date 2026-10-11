@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Include owning-repository checks for changed shared fixture modules even
+  when script consumers have no Go import edge.
+
 - Add committed-range secret scanning with `golib secrets check --base-sha`.
   Ordinary local and metadata CI checks scan new history and changed files;
   explicit full integrity scans retain all-history and all-tree coverage.

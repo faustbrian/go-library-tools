@@ -38,7 +38,8 @@ Ordinary PR and main runtime changes select their committed base-to-HEAD module
 owners through `golib inventory --json --base-sha <commit>`. The longest nested
 module owns a changed path; declared relationships and actual owned `go.mod`
 requirements/local replacements include repository-local reverse consumers.
-Shared/unknown paths and an empty diff select all modules. Missing or invalid
+Shared fixture modules, shared/unknown paths and an empty diff select all
+modules. Fixture consumers can be scripts rather than Go import edges. Missing or invalid
 Git input fails closed. Schedules, manual checks and explicit release rehearsals
 retain their whole-repository or explicit release selection.
 

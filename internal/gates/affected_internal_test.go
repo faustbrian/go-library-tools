@@ -100,6 +100,21 @@ func TestChangedModulesIncludesDeclaredAndLocalReplacementConsumers(t *testing.T
 	}
 }
 
+func TestChangedModulesFixtureInputsWidenToRepository(t *testing.T) {
+	for _, name := range []string{"adapter/sample/value.go", "adapter/advisory.yml", "adapter/go.mod"} {
+		t.Run(name, func(t *testing.T) {
+			runner := affectedRunner(t, name+"\x00")
+			// A script-consumed fixture has no Go requirement edge to its root
+			// consumer. Kind identifies this shared input without a new manifest.
+			runner.Catalog.Modules[1].Kind = "fixture"
+			modules, err := runner.ChangedModules(t.Context(), strings.Repeat("a", 40))
+			if err != nil || !slices.Equal(selectedDirectories(modules), selectedDirectories(runner.Catalog.Modules)) {
+				t.Fatalf("fixture selection = %v, error = %v", selectedDirectories(modules), err)
+			}
+		})
+	}
+}
+
 func TestChangedModulesFailsClosedWithoutRawDiagnostics(t *testing.T) {
 	for _, scenario := range []string{"missing Git base", "malformed paths", "oversized output", "invalid module", "cancellation", "invalid base"} {
 		t.Run(scenario, func(t *testing.T) {

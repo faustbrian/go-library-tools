@@ -14,8 +14,9 @@ import (
 )
 
 // ChangedModules selects the module owners and repository-local consumers of
-// committed changes between an immutable base and HEAD. Unknown shared inputs
-// and an empty diff select every module; missing Git evidence is an error.
+// committed changes between an immutable base and HEAD. Shared fixture inputs,
+// unknown shared inputs and an empty diff select every module; missing Git
+// evidence is an error.
 // It does not certify uncommitted or untracked changes.
 func (runner Runner) ChangedModules(ctx context.Context, base string) ([]inventory.Module, error) {
 	if len(runner.Catalog.Modules) == 0 || len(runner.Catalog.Modules) > inventory.MaximumModules {
@@ -57,7 +58,12 @@ func (runner Runner) ChangedModules(ctx context.Context, base string) ([]invento
 				}
 			}
 		}
-		if owner == "" {
+		// Fixture modules can be consumed by corpus scripts or runtime loaders
+		// rather than a Go import edge. Their owning repository is the safe scope.
+		sharedFixture := slices.ContainsFunc(runner.Catalog.Modules, func(module inventory.Module) bool {
+			return module.Directory == owner && module.Kind == "fixture"
+		})
+		if owner == "" || sharedFixture {
 			all = true
 		} else {
 			selected[owner] = true
