@@ -121,9 +121,18 @@ func TestExecuteChangedLocalFuzzPolicyUsesMaterialInputs(t *testing.T) {
 			git("-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "commit", "--quiet", "-m", "policy")
 			var selected []string
 			localChecks, secretScans, sessions, cleaned := 0, 0, 0, 0
+			fuzz := cliFuzzFixture{root: root, workspace: t.TempDir()}
 			factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
 				sessions++
-				return changedSecretsExecutor{directory: t.TempDir(), run: func(ctx context.Context, command gates.Command) error {
+				return changedSecretsExecutor{directory: fuzz.workspace, run: func(ctx context.Context, command gates.Command) error {
+					if handled, err := fuzz.run(ctx, t, command); handled {
+						for _, argument := range command.Args {
+							if selector, ok := strings.CutPrefix(argument, "-test.fuzz="); ok {
+								selected = append(selected, selector)
+							}
+						}
+						return err
+					}
 					if command.Name == "git" {
 						process := exec.CommandContext(ctx, "git", command.Args...)
 						process.Dir, process.Stdin, process.Stdout, process.Stderr = command.Dir, command.Stdin, command.Stdout, command.Stderr
@@ -149,14 +158,9 @@ func TestExecuteChangedLocalFuzzPolicyUsesMaterialInputs(t *testing.T) {
 						return nil
 					}
 					if command.Name == "go" {
-						for _, argument := range command.Args {
-							if selector, ok := strings.CutPrefix(argument, "-list="); ok {
-								_, err := io.WriteString(command.Stdout, strings.Trim(selector, "^$")+"\n")
-								return err
-							}
-							if selector, ok := strings.CutPrefix(argument, "-fuzz="); ok {
-								selected = append(selected, selector)
-							}
+						if slices.Contains(command.Args, "-list=^TestContract$") {
+							_, err := io.WriteString(command.Stdout, "TestContract\n")
+							return err
 						}
 						if command.Stdout != nil && slices.Contains(command.Args, "-m") {
 							_, err := io.WriteString(command.Stdout, "example\n")
@@ -174,6 +178,15 @@ func TestExecuteChangedLocalFuzzPolicyUsesMaterialInputs(t *testing.T) {
 			if !slices.Equal(selected, scenario.want) {
 				t.Fatalf("active targets=%v, want=%v", selected, scenario.want)
 			}
+			if len(fuzz.compiled) != len(scenario.want) || fuzz.listed != len(scenario.want) {
+				t.Fatalf("compile/discovery contexts=%d/%d, want=%d", len(fuzz.compiled), fuzz.listed, len(scenario.want))
+			}
+			for _, command := range fuzz.compiled {
+				if slices.Contains(command.Args, "-tags=fixture") != (scenario.name == "catalog runtime input") {
+					t.Fatalf("compile lost material catalog tags: %v", command.Args)
+				}
+			}
+			fuzz.assertCleaned(t)
 			if sessions != 1 || cleaned != 1 || localChecks == 0 || secretScans == 0 {
 				t.Fatalf("mandatory checks/single-session cleanup missing: local=%d secret=%d sessions=%d/%d", localChecks, secretScans, sessions, cleaned)
 			}
