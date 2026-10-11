@@ -134,6 +134,47 @@ func TestCompatibilityConsumerCancellationStopsChildAndCleansResources(t *testin
 	}
 }
 
+const compatibilityConsumerPIDPublication = `    ready=root/'child.pid.tmp'
+    ready.write_text(str(os.getpid()))
+    ready.replace(root/'child.pid')
+`
+
+// Exercise the cancellation fixture's readiness boundary without delivering
+// signals or starting a long-lived child. File existence must imply a complete
+// PID, including the interval between opening and committing the payload.
+func TestCompatibilityConsumerPIDReadinessRequiresCommittedPayload(t *testing.T) {
+	root := t.TempDir()
+	script := `import os,pathlib
+root=pathlib.Path(os.environ['PROBE_ROOT'])
+original=pathlib.Path.write_text
+def observe(path,data,*args,**kwargs):
+    if path.name in ('child.pid','child.pid.tmp'):
+        with path.open('w') as stream:
+            if (root/'child.pid').exists():
+                raise AssertionError('child.pid became visible before its PID payload was committed')
+            return stream.write(data)
+    return original(path,data,*args,**kwargs)
+pathlib.Path.write_text=observe
+if True:
+` + compatibilityConsumerPIDPublication
+	command := exec.CommandContext(t.Context(), "python3", "-c", script)
+	command.Env = append(os.Environ(), "PROBE_ROOT="+root)
+	if output, err := command.CombinedOutput(); err != nil {
+		t.Fatalf("PID readiness publication failed: %v: %s", err, output)
+	}
+	data, err := os.ReadFile(filepath.Join(root, "child.pid"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var pid int
+	if _, err := fmt.Sscanf(string(data), "%d", &pid); err != nil || pid <= 0 {
+		t.Fatalf("published readiness did not contain a complete PID: %q / %v", data, err)
+	}
+	if _, err := os.Stat(filepath.Join(root, "child.pid.tmp")); !os.IsNotExist(err) {
+		t.Fatalf("staging file remains: %v", err)
+	}
+}
+
 func testCompatibilityConsumerCancellation(t *testing.T, admission bool) {
 	t.Helper()
 	root := t.TempDir()
@@ -155,7 +196,7 @@ elif arguments[0]=='test':
         (root/'child-stopped').write_text('terminated')
         sys.exit(143)
     signal.signal(signal.SIGTERM,stop)
-    (root/'child.pid').write_text(str(os.getpid()))
+`+compatibilityConsumerPIDPublication+`
     time.sleep(30)
 else: sys.exit(64)
 `)
