@@ -481,18 +481,22 @@ func TestReusableWorkflowSelectsRuntimeWorkFromChangedPaths(t *testing.T) {
 		{name: "structured documentation metadata", event: "pull_request", dryRun: "false", path: "docs/ecosystem/compatibility-sets.json", want: "true"},
 		{name: "source renamed to documentation", event: "pull_request", dryRun: "false", path: "docs/baseline.md", want: "true", rename: true},
 		{name: "source", event: "pull_request", dryRun: "false", path: "internal/example/example.go", want: "true"},
-		{name: "release rehearsal", event: "pull_request", dryRun: "true", path: "AGENTS.md", want: "true"},
-		{name: "main push", event: "push", dryRun: "false", path: "AGENTS.md", want: "true"},
+		{name: "release rehearsal", event: "workflow_dispatch", dryRun: "true", path: "AGENTS.md", want: "true"},
+		{name: "main push", event: "push", dryRun: "false", path: "AGENTS.md", want: "false"},
+		{name: "main source push", event: "push", dryRun: "false", path: "internal/example/example.go", want: "true"},
+		{name: "main matched pins", event: "push", dryRun: "false", path: ".github/workflows/ci.yml", want: "false", pinMode: "matched"},
 		{name: "source bootstrap documentation", event: "pull_request", dryRun: "false", path: "docs/usage.md", want: "false", sourceBootstrap: true},
 		{name: "source bootstrap license", event: "pull_request", dryRun: "false", path: "LICENSE", want: "false", sourceBootstrap: true},
 		{name: "source bootstrap source", event: "pull_request", dryRun: "false", path: "internal/example/example.go", want: "true", sourceBootstrap: true},
 		{name: "source bootstrap structured metadata", event: "pull_request", dryRun: "false", path: "docs/config.json", want: "true", sourceBootstrap: true},
 		{name: "source bootstrap renamed source", event: "pull_request", dryRun: "false", path: "docs/baseline.md", want: "true", rename: true, sourceBootstrap: true},
-		{name: "source bootstrap release rehearsal", event: "pull_request", dryRun: "true", path: "docs/usage.md", want: "true", sourceBootstrap: true},
-		{name: "source bootstrap push", event: "push", dryRun: "false", path: "docs/usage.md", want: "true", sourceBootstrap: true},
+		{name: "source bootstrap release rehearsal", event: "workflow_dispatch", dryRun: "true", path: "docs/usage.md", want: "true", sourceBootstrap: true},
+		{name: "source bootstrap push", event: "push", dryRun: "false", path: "docs/usage.md", want: "false", sourceBootstrap: true},
 		{name: "source bootstrap scheduled", event: "schedule", dryRun: "false", path: "docs/usage.md", want: "true", sourceBootstrap: true},
 		{name: "source bootstrap manual", event: "workflow_dispatch", dryRun: "false", path: "docs/usage.md", want: "true", sourceBootstrap: true},
-		{name: "source bootstrap matched pins", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "true", pinMode: "matched", sourceBootstrap: true},
+		{name: "source bootstrap matched pins", event: "pull_request", dryRun: "false", path: ".github/workflows/ci.yml", want: "false", pinMode: "matched", sourceBootstrap: true},
+		{name: "source bootstrap main matched pins", event: "push", dryRun: "false", path: ".github/workflows/ci.yml", want: "false", pinMode: "matched", sourceBootstrap: true},
+		{name: "newline source path", event: "pull_request", dryRun: "false", path: "internal/example/new\nsource.go", want: "true"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			repository = t.TempDir()
@@ -540,10 +544,6 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 			ordinaryContract = true
 			if step.If != "inputs.release_dry_run != true" {
 				t.Fatalf("ordinary module contract guard = %q", step.If)
-			}
-			if !strings.Contains(step.Run, `golib check --local --all`) ||
-				!strings.Contains(step.Run, `golib check --all`) {
-				t.Fatalf("ordinary module contract lacks mixed-version routing: %q", step.Run)
 			}
 		}
 	}
@@ -762,11 +762,12 @@ exit "${GOLIB_ROUTING_FIXTURE_STATUS:-0}"
 		legacy          string
 		want            string
 		sourceBootstrap bool
+		wantError       bool
 	}{
-		{name: "v1.4 tool", legacy: "true", want: "check --all"},
-		{name: "v1.5 tool", legacy: "true", want: "check --all"},
+		{name: "v1.4 tool", legacy: "true", wantError: true},
+		{name: "v1.5 tool", legacy: "true", wantError: true},
 		{name: "local capable tool", legacy: "false", want: "check --local --all"},
-		{name: "source legacy tool", legacy: "true", want: "check --all", sourceBootstrap: true},
+		{name: "source legacy tool", legacy: "true", wantError: true, sourceBootstrap: true},
 		{name: "source local capable tool", legacy: "false", want: "check --local --all", sourceBootstrap: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -781,7 +782,12 @@ exit "${GOLIB_ROUTING_FIXTURE_STATUS:-0}"
 				"MODULE_DIRECTORY=nested",
 				"SOURCE_BOOTSTRAP="+strconv.FormatBool(test.sourceBootstrap),
 			)
-			if combined, err := command.CombinedOutput(); err != nil {
+			combined, err := command.CombinedOutput()
+			if test.wantError {
+				if err == nil || !strings.Contains(string(combined), "bounded check --local") {
+					t.Fatalf("unsupported verifier should fail without a campaign: error = %v, output = %q", err, combined)
+				}
+			} else if err != nil {
 				t.Fatalf("module contract error = %v, output = %q", err, combined)
 			}
 			contents, err := os.ReadFile(invocations)
@@ -790,6 +796,9 @@ exit "${GOLIB_ROUTING_FIXTURE_STATUS:-0}"
 			}
 			if got := strings.TrimSpace(string(contents)); got != test.want {
 				t.Fatalf("golib invocation = %q, want %q", got, test.want)
+			}
+			if test.wantError {
+				return
 			}
 			failed := exec.CommandContext(t.Context(), "bash", "-euo", "pipefail", "-c", contract.Run)
 			failed.Env = append(append([]string(nil), command.Env...), "GOLIB_ROUTING_FIXTURE_STATUS=7")

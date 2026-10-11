@@ -15,6 +15,11 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Require bounded module checks in ordinary shared CI without a legacy
+  full-campaign fallback. Apply documentation and matched-pin routing to main
+  and source bootstrap, reject PR release rehearsals, and fail closed on
+  missing comparison commits, classifications, and mandatory job results.
+
 - Apply Go 1.26.9 and x/net v0.60.0 equally to frozen copied/shared rehearsal
   execution profiles, without rewriting representative source or weakening
   security checks. Original vulnerable profiles remain unqualified.

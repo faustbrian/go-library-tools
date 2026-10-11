@@ -23,6 +23,19 @@ a module does not by itself prevent an otherwise verified release.
 Docker fixture behavior is unit-tested behind process boundaries; use
 designated CI or an explicit manual environment for real service rehearsals.
 
+The reusable library workflow requires a verifier with `check --local`. A
+legacy verifier without that capability fails with an adoption diagnostic;
+it never falls back to `check --all` and a mutation campaign. Keep existing
+workflow pins until adopting a qualified capable release or explicitly select
+`source_bootstrap: true` with an immutable reviewed Tools commit. Bootstrap
+does not change the assurance tier.
+
+Documentation-only and exactly paired reusable-workflow/tooling SHA changes
+use the metadata route on both pull requests and main pushes. Source removal,
+renames, unmatched pins, and substantive workflow changes retain runtime
+checks. Missing comparison commits fail classification rather than produce
+green. Release rehearsals must be explicitly dispatched, not selected by a PR.
+
 Keep CLI, configuration, workflow, evidence, and fixture contracts backward
 compatible within a major release. Update tests, documentation, schema, and
 changelog together.

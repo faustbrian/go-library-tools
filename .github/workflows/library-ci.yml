@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       source_bootstrap:
-        description: Use this exact tooling checkout as an honest development verifier and run the full ordinary contract
+        description: Use this exact tooling checkout as an immutable development verifier for the selected proportional checks
         required: false
         default: false
         type: boolean
@@ -69,12 +69,17 @@ jobs:
       - id: scope
         name: Select proportional assurance tier
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
           EVENT_NAME: ${{ github.event_name }}
           RELEASE_DRY_RUN: ${{ inputs.release_dry_run }}
-          SOURCE_BOOTSTRAP: ${{ inputs.source_bootstrap }}
         run: |
           set -euo pipefail
+          if [[ "${EVENT_NAME}" == pull_request && "${RELEASE_DRY_RUN}" == true ]]; then
+            echo 'release rehearsal is not a pull-request check; dispatch it explicitly after integration' >&2
+            exit 1
+          fi
+          task="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/golib-change-scope.XXXXXX")"
+          trap 'find "${task}" -depth -delete' EXIT
           reusable_pin_only() {
             local path="$1"
             local line payload direction
@@ -82,6 +87,7 @@ jobs:
             local old_uses_count=0 new_uses_count=0 old_input_count=0 new_input_count=0
             local uses_pattern='^[[:space:]]*uses:[[:space:]]+faustbrian/go-library-tools/\.github/workflows/library-ci\.yml@([0-9a-f]{40})([[:space:]]+#[[:space:]]*v[0-9]+\.[0-9]+\.[0-9]+([[:space:]]+[^[:cntrl:]]*)?)?[[:space:]]*$'
             local input_pattern='^[[:space:]]*tooling_sha:[[:space:]]+([0-9a-f]{40})[[:space:]]*$'
+            git diff --no-ext-diff --unified=0 "${BASE_SHA}" HEAD -- "${path}" >"${task}/pin.diff" || return 1
             while IFS= read -r line; do
               case "${line}" in
                 ---*|+++*|@@*) continue ;;
@@ -111,27 +117,29 @@ jobs:
                   return 1
                   ;;
               esac
-            done < <(git diff --no-ext-diff --unified=0 "${BASE_SHA}" HEAD -- "${path}")
+            done <"${task}/pin.diff"
             [[ "${old_uses_count}" -eq 1 && "${new_uses_count}" -eq 1 &&
               "${old_input_count}" -eq 1 && "${new_input_count}" -eq 1 &&
               "${old_uses}" == "${old_input}" && "${new_uses}" == "${new_input}" ]]
           }
           runtime=true
-          if [[ "${EVENT_NAME}" == pull_request && "${RELEASE_DRY_RUN}" != true ]]; then
+          if [[ ( "${EVENT_NAME}" == pull_request || "${EVENT_NAME}" == push ) && "${RELEASE_DRY_RUN}" != true ]]; then
+            [[ "${BASE_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo 'change classification requires an immutable base commit' >&2; exit 1; }
+            git cat-file -e "${BASE_SHA}^{commit}"
+            git diff --no-ext-diff --no-renames --name-only -z "${BASE_SHA}" HEAD >"${task}/paths"
             runtime=false
             changed=false
-            while IFS= read -r path; do
+            while IFS= read -r -d '' path; do
               [[ -n "${path}" ]] || continue
               changed=true
               case "${path}" in
                 *.md|LICENSE|LICENSE.*|NOTICE|NOTICE.*) ;;
                 .github/workflows/ci.yml)
-                  [[ "${SOURCE_BOOTSTRAP}" != true ]] || { runtime=true; break; }
                   reusable_pin_only "${path}" || { runtime=true; break; }
                   ;;
                 *) runtime=true; break ;;
               esac
-            done < <(git diff --no-renames --name-only "${BASE_SHA}" HEAD)
+            done <"${task}/paths"
             [[ "${changed}" == true ]] || runtime=true
           fi
           echo "runtime=${runtime}" >>"${GITHUB_OUTPUT}"
@@ -264,8 +272,8 @@ jobs:
       - run: golib workflows check
       - run: golib cohesion check
       - run: golib specification check
-      - name: Scan metadata-only bootstrap changes for secrets
-        if: inputs.source_bootstrap == true && needs.prepare.outputs.runtime == 'false'
+      - name: Scan metadata-only changes for secrets
+        if: needs.prepare.outputs.runtime == 'false'
         run: golib secrets check
       - name: Monitor upstream specification drift
         if: github.event_name == 'schedule'
@@ -374,11 +382,13 @@ jobs:
       - name: Run repository module contracts
         if: inputs.release_dry_run != true
         run: |
-          if golib --help | grep -Fq 'golib check [--local]'; then
-            golib check --local --all
-          else
-            golib check --all
+          set -euo pipefail
+          golib_help="$(golib --help)"
+          if ! grep -Fq 'golib check [--local]' <<<"${golib_help}"; then
+            echo 'this workflow requires bounded check --local; select a qualified capable release or explicit immutable source_bootstrap' >&2
+            exit 1
           fi
+          golib check --local --all
       - name: Run release rehearsal
         if: inputs.release_dry_run == true
         env:
@@ -525,15 +535,23 @@ jobs:
           QUALITY_RESULT: ${{ needs.quality.result }}
           CODEQL_RESULT: ${{ needs.codeql.result }}
           RUNTIME: ${{ needs.prepare.outputs.runtime }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          [[ "${PREPARE_RESULT}" == success ]]
-          [[ "${CONTRACT_RESULT}" == success ]]
+          test "${PREPARE_RESULT}" = success
+          test "${CONTRACT_RESULT}" = success
           if [[ "${RUNTIME}" == true ]]; then
-            [[ "${QUALITY_RESULT}" == success ]]
-            [[ "${CODEQL_RESULT}" == success ]]
+            test "${QUALITY_RESULT}" = success
+            test "${CODEQL_RESULT}" = success
+          elif [[ "${RUNTIME}" == false ]]; then
+            test "${QUALITY_RESULT}" = skipped
+            test "${CODEQL_RESULT}" = skipped
           else
-            [[ "${QUALITY_RESULT}" == skipped ]]
-            [[ "${CODEQL_RESULT}" == skipped ]]
+            echo 'missing or invalid change classification' >&2
+            exit 1
           fi
-          [[ "${DEPENDENCY_REVIEW_RESULT}" == success || "${DEPENDENCY_REVIEW_RESULT}" == skipped ]]
+          if [[ "${EVENT_NAME}" == pull_request ]]; then
+            test "${DEPENDENCY_REVIEW_RESULT}" = success
+          else
+            test "${DEPENDENCY_REVIEW_RESULT}" = skipped
+          fi
