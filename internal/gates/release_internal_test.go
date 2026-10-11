@@ -139,7 +139,7 @@ func TestReleaseCandidateInstallsV2CommandFromLocalProxy(t *testing.T) {
 		t.Fatal(err)
 	}
 	positive := Command{
-		Name: "go", Args: []string{"install", "github.com/faustbrian/go-library-tools/v2/cmd/golib@v2.0.0"},
+		Name: "go", Args: []string{"install", "github.com/faustbrian/go-library-tools/v2/cmd/golib@v" + candidate.Version},
 		Dir: workspace, Env: map[string]string{
 			"GOBIN": positiveBin, "GOPROXY": "file://" + proxy, "GOSUMDB": "off", "GOWORK": "off",
 		},
@@ -157,7 +157,7 @@ func TestReleaseCandidateInstallsV2CommandFromLocalProxy(t *testing.T) {
 		t.Fatal(err)
 	}
 	negative := positive
-	negative.Args = []string{"install", "github.com/faustbrian/go-library-tools/cmd/golib@v2.0.0"}
+	negative.Args = []string{"install", "github.com/faustbrian/go-library-tools/cmd/golib@v" + candidate.Version}
 	negative.Env = map[string]string{
 		"GOBIN": negativeBin, "GOPROXY": "file://" + proxy, "GOSUMDB": "off", "GOWORK": "off",
 	}
