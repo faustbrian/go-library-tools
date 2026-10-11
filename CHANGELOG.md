@@ -46,6 +46,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Keep Tools' quick-fix and non-default checks in GolangCI-Lint while
+  standalone Staticcheck owns the overlapping analysis once.
+
 - Apply Tools' documentation fast path to PRs and main pushes, preserving local
   structure and changed-secret checks without unrelated runtime or query builds.
   Keep executable/symlinked prose and legal-filename source collisions on the

@@ -200,9 +200,10 @@ func packageMirrorFixture(t *testing.T, version int) (string, map[string]any, []
 	for index, raw := range document["modules"].([]any) {
 		module := raw.(map[string]any)
 		module["packages"] = []inventory.Package{}
-		if index == 0 {
+		switch index {
+		case 0:
 			module["packages"] = canonical[:2]
-		} else if index == 1 {
+		case 1:
 			module["packages"] = canonical[2:]
 		}
 		modules = append(modules, module)

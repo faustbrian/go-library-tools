@@ -43,6 +43,12 @@ linters:
     - wastedassign
     - whitespace
   settings:
+    staticcheck:
+      # Retain quick fixes and rules excluded by standalone's default selection.
+      checks:
+        - QF*
+        - SA9003
+        - ST1023
     errcheck:
       check-type-assertions: false
       check-blank: false

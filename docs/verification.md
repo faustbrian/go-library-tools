@@ -38,6 +38,16 @@ exercise its material risk. `make check-packages PACKAGES=...` is the focused
 developer entry point, `make local-check` validates repository-owned metadata,
 and `make check` remains the explicit complete all-enabled repository gate for
 release work or a risk-selected aggregate run.
+Tools' own GolangCI-Lint configuration retains Staticcheck's unique `QF*`
+quick-fix rules plus `SA9003` and `ST1023`, which the standalone CLI excludes
+by default. The local and full verifier gates still run standalone Staticcheck
+for its current correctness, simplification, style and unused-code checks.
+The combined stack avoids repeating the overlapping analysis without dropping
+either tool's unique rules. Other linters and the broader configured
+govet rules remain unchanged. `golangci-lint run` alone is not the combined
+stack: use `make local-ci` for normal verification. This repository-local
+configuration must not be copied to a pipeline without standalone Staticcheck
+or without inspecting its own rule settings and exclusions.
 Formatting and safety scans follow Go package discovery boundaries: they skip
 `testdata`, hidden, underscore-prefixed, vendored, and nested module
 directories. Repository namespace checks apply to releasable modules; fixture

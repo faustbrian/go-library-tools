@@ -704,11 +704,12 @@ func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
 				t.Fatal(err)
 			}
 			var err error
-			if caller == "check" {
+			switch caller {
+			case "check":
 				err = runner.Check(t.Context(), []string{".", "nested"})
-			} else if caller == "changed local" {
+			case "changed local":
 				err = runner.LocalChanges(t.Context(), []string{".", "nested"}, strings.Repeat("a", 40))
-			} else {
+			default:
 				err = runner.Local(t.Context(), []string{".", "nested"})
 			}
 			if err != nil {
