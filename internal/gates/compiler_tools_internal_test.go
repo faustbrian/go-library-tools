@@ -322,6 +322,94 @@ func TestCompilerToolsPreserveIsolationFailureAndPrivacy(t *testing.T) {
 	}
 }
 
+func TestSelectedSecurityPassReusesBuildsButNotScanResults(t *testing.T) {
+	for _, phase := range []string{"success", "build-failure", "scan-failure", "cancel"} {
+		t.Run(phase, func(t *testing.T) {
+			root, task := t.TempDir(), t.TempDir()
+			ctx, cancel := context.WithCancel(t.Context())
+			defer cancel()
+			failure := errors.New("independent execution failure")
+			builds := make(map[string]int)
+			scans := make(map[string][]string)
+			binaries := make(map[string]string)
+			modules := []inventory.Module{
+				{Directory: "first", ModulePath: "example.invalid/first", Gates: map[string]bool{"security": true}},
+				{Directory: "second", ModulePath: "example.invalid/second", Gates: map[string]bool{"security": true}},
+			}
+			executor := workspaceExecutor{directory: task, run: func(_ context.Context, command Command) error {
+				if command.Name == "go" && len(command.Args) > 0 && command.Args[0] == "build" {
+					name := filepath.Base(command.Args[3])
+					builds[name]++
+					if phase == "build-failure" {
+						return failure
+					}
+					return nil
+				}
+				if name := filepath.Base(command.Name); name == "gosec" || name == "golib-analysis" {
+					if prior := binaries[name]; prior != "" && prior != command.Name {
+						t.Fatalf("%s rebuilt between selected module scans", name)
+					}
+					binaries[name] = command.Name
+					scans[name] = append(scans[name], filepath.Base(command.Dir))
+					if _, err := os.Stat(filepath.Dir(command.Name)); err != nil {
+						t.Fatal("compiler workspace disappeared before analysis")
+					}
+					if filepath.Base(command.Dir) == "second" && name == "gosec" {
+						if phase == "scan-failure" {
+							return failure
+						}
+						if phase == "cancel" {
+							cancel()
+							return ctx.Err()
+						}
+					}
+				}
+				return nil
+			}}
+			runner := Runner{Root: root, Executor: executor, repositorySecretsScanned: true}
+			err := runner.scanSelectedSecurity(ctx, io.Discard, modules, false)
+			switch phase {
+			case "success":
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, name := range []string{"gosec", "golib-analysis"} {
+					if builds[name] != 1 || strings.Join(scans[name], ",") != "first,second" {
+						t.Fatalf("%s builds/scans = %d/%v; want one build and both fresh scans", name, builds[name], scans[name])
+					}
+				}
+			case "cancel":
+				if !errors.Is(err, context.Canceled) {
+					t.Fatalf("cancellation lost: %v", err)
+				}
+			default:
+				if !errors.Is(err, failure) {
+					t.Fatalf("failure lost: %v", err)
+				}
+			}
+			entries, err := os.ReadDir(task)
+			if err != nil || len(entries) != 0 {
+				t.Fatalf("compiler artifacts remain after pass: %v, %v", entries, err)
+			}
+			if phase == "success" {
+				clear(binaries)
+				if err := runner.scanSelectedSecurity(ctx, io.Discard, modules, false); err != nil {
+					t.Fatal(err)
+				}
+				for _, name := range []string{"gosec", "golib-analysis"} {
+					if builds[name] != 2 || len(scans[name]) != 4 {
+						t.Fatalf("%s reused a prior pass or skipped scans: %d/%v", name, builds[name], scans[name])
+					}
+				}
+				entries, err = os.ReadDir(task)
+				if err != nil || len(entries) != 0 {
+					t.Fatalf("repeated pass leaked compiler artifacts: %v, %v", entries, err)
+				}
+			}
+		})
+	}
+}
+
 type compilerScannerExit struct {
 	error
 	code int

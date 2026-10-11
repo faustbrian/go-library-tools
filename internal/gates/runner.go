@@ -557,6 +557,7 @@ type Runner struct {
 	securitySourceLimits     *securitySourceLimits
 	secretChanges            *secretChangeRange
 	repositorySecretsScanned bool
+	compilerToolBinaries     map[compilerTool]string
 }
 
 type namedWriteCloser interface {
@@ -1035,10 +1036,21 @@ func (runner Runner) runSecurityScans(ctx context.Context, output io.Writer, dir
 	return nil
 }
 
-func (runner *Runner) scanSelectedSecurity(ctx context.Context, output io.Writer, modules []inventory.Module, includeSBOM bool) error {
+func (runner *Runner) scanSelectedSecurity(ctx context.Context, output io.Writer, modules []inventory.Module, includeSBOM bool) (result error) {
 	// Finish every selected source/graph scan before any repository-controlled
 	// test can mutate inputs for another module. Runtime service scopes remain
 	// owned by the later per-module execution pass.
+	// Reuse only successful pinned compiler builds within this sequential pass,
+	// never scanner results or binaries from another invocation or job.
+	runner.compilerToolBinaries = make(map[compilerTool]string)
+	defer func() {
+		for _, binary := range runner.compilerToolBinaries {
+			if err := os.RemoveAll(filepath.Dir(binary)); err != nil {
+				result = errors.Join(result, fmt.Errorf("compiler tool cleanup: %w", err))
+			}
+		}
+		runner.compilerToolBinaries = nil
+	}()
 	for _, module := range modules {
 		if !runner.repositorySecretsScanned && module.Gates["security"] {
 			if err := runner.runRepositorySecrets(ctx, output, module.Directory); err != nil {

@@ -43,6 +43,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Reuse pinned analyzer builds within a selected multi-module security pass,
+  keeping every module scan fresh and removing builds before runtime tests.
+
 - Limit ordinary reusable runtime quality to 30 minutes while retaining the
   existing longer ceiling only for explicitly selected release rehearsals.
 

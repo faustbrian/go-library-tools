@@ -33,7 +33,9 @@ func securityCompilerTool(identity string) (compilerTool, bool) {
 	}
 }
 
-// withCompilerTool owns a single invocation's build graph and executable.
+// withCompilerTool owns the build graph and executable. A selected security
+// pass can retain a successful build until its pass-owned cleanup; standalone
+// invocations remove their artifacts immediately.
 // The caller retains its existing analysis arguments, output policy and errors.
 func (runner Runner) withCompilerTool(ctx context.Context, tool compilerTool, analyze func(string) error) (result error) {
 	if err := ctx.Err(); err != nil {
@@ -43,11 +45,18 @@ func (runner Runner) withCompilerTool(ctx context.Context, tool compilerTool, an
 	if !ok || !filepath.IsAbs(workspace.TemporaryDirectory()) {
 		return errors.New("task-owned workspace required")
 	}
+	if binary, exists := runner.compilerToolBinaries[tool]; exists {
+		return analyze(binary)
+	}
 	root, err := os.MkdirTemp(workspace.TemporaryDirectory(), tool.name+"-")
 	if err != nil {
 		return fmt.Errorf("prepare compiler tool: %w", err)
 	}
+	retained := false
 	defer func() {
+		if retained {
+			return
+		}
 		if err := os.RemoveAll(root); err != nil {
 			result = errors.Join(result, fmt.Errorf("compiler tool cleanup: %w", err))
 		}
@@ -75,6 +84,10 @@ func (runner Runner) withCompilerTool(ctx context.Context, tool compilerTool, an
 	}
 	if err := ctx.Err(); err != nil {
 		return err
+	}
+	if runner.compilerToolBinaries != nil {
+		runner.compilerToolBinaries[tool] = binary
+		retained = true
 	}
 	return analyze(binary)
 }

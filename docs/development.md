@@ -31,6 +31,12 @@ checks; executable examples need their relevant compile/tests.
 Ordinary local checks retain security and license validation but skip throwaway
 SBOM generation. Full generator validation and retained release SBOM artifacts
 remain at their explicit boundaries.
+Multi-module selected security checks build each pinned compiler-backed analyzer
+once per sequential source-scan pass. Every selected module is still scanned
+afresh with its own graph and arguments; findings and scan results are not cached.
+The successful builds are private to that pass and removed on success or failure
+before repository-controlled tests begin. Separate invocations rebuild; no
+persisted or cross-job analyzer binary cache is used.
 
 Release validation requires the ordinary tests, documentation, lint, and
 security gates. Coverage, race, and mutation remain available when the changed
