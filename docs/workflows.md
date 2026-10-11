@@ -58,6 +58,16 @@ There is no PR/push trigger and no dependency from Required. The owner is
 survivor as a production bug. This is partial assurance, not a full-module or
 release qualification.
 
+Before an automatic campaign, authenticated bounded run/job/log history and
+immutable Git inputs identify whether the same package actually ran with the
+same hosted image, architecture and toolchain. Source, tests, fixtures,
+dependencies, verifier assets and execution policy invalidate reuse; ordinary
+prose and historical mutation output do not. An unchanged completed or failed
+attempt is linked in the summary instead of automatically repeated. This is
+not passing assurance: survivors, timeouts and other unresolved findings stay
+unresolved. Manual dispatch is the explicit retry. Missing/ambiguous history,
+unavailable source, live predecessors and exhausted lookup bounds fail closed.
+
 The job has a 30-minute ceiling; campaign execution has the CLI's 20-minute
 budget and one worker. Module baselines and native integration tests still run.
 Build, capability, campaign and output-admission failures fail the job. Native
@@ -66,7 +76,12 @@ native input validation still determines whether a record is reusable. Restore
 must not change committed evidence. Only flat JSON output is retained, bounded
 to 2,048 files and 32 MiB, with no symlinked ancestors or entries. Cache paths
 exclude binaries and equivalence-policy files. Native diagnostics are retained
-as artifacts for 14 days; the cache provider controls cache eviction. Private
+as artifacts for 14 days only when that run produced new or changed admitted
+JSON; historical files are not uploaded again. Timeout diagnostics remain in
+the attributed native log/summary when no new JSON exists; they are not partial
+checkpoints. The temporary before/after comparison and staged artifact copies
+are removed after upload, including failure paths. The cache provider controls
+cache eviction. Private
 build/module caches are removed after the command, including failures. Hosted
 timing and useful campaign completion must be measured before widening scope.
 

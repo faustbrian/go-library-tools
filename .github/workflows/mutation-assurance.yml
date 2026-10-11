@@ -16,6 +16,7 @@ on:
           - internal/repositoryfile
 
 permissions:
+  actions: read
   contents: read
 
 concurrency:
@@ -63,12 +64,22 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: .go-version
           cache: false
+      - id: attempt
+        name: Decide scheduled attempt
+        timeout-minutes: 3
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          SELECTED_PACKAGE: ${{ steps.scope.outputs.package }}
+        run: python3 .github/scripts/select-mutation-attempt.py
       - id: cache
         name: Restore main-only native checkpoints
+        if: steps.attempt.outputs.run == 'true'
         uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         timeout-minutes: 3
         env:
@@ -81,20 +92,24 @@ jobs:
           restore-keys: tools-main-mutation-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.scope.outputs.package }}-
       - id: restored
         name: Validate restored native output
+        if: steps.attempt.outputs.run == 'true'
         run: |
           set -euo pipefail
           git diff --quiet -- .verification/by-input/mutation .verification/mutation/reports || {
             echo 'restored cache changed committed mutation evidence' >&2
             exit 1
           }
-          python3 .github/scripts/check-mutation-output.py
+          python3 .github/scripts/check-mutation-output.py --snapshot "${RUNNER_TEMP}/golib-mutation-output-before.json"
       - id: campaign
         name: Run bounded package campaign
+        if: steps.attempt.outputs.run == 'true'
         env:
           SELECTED_PACKAGE: ${{ steps.scope.outputs.package }}
         run: |
           set -euo pipefail
           task="$(mktemp -d "${RUNNER_TEMP}/golib-mutation-assurance.XXXXXX")"
+          # Invoked through the EXIT trap, including failed builds/campaigns.
+          # shellcheck disable=SC2329
           cleanup() {
             result=$?
             trap - EXIT
@@ -112,11 +127,18 @@ jobs:
               echo 'selected-package mutation capability missing' >&2
               result=1
             else
+              go_version="$(go env GOVERSION)"
+              # Image identity is supplied by GitHub's hosted runner.
+              # shellcheck disable=SC2154
+              printf 'golib-mutation-inputs package=%s image=%s/%s arch=%s go=%s\n' \
+                "${SELECTED_PACKAGE}" "${ImageOS}" "${ImageVersion}" "${RUNNER_ARCH}" "${go_version}"
               "${task}/golib" mutation --module . --package "${SELECTED_PACKAGE}" || result=$?
             fi
           fi
           {
             printf '## Selected mutation assurance\n\nOwner: faustbrian\n\n'
+            # Backticks format Markdown; they are intentionally literal.
+            # shellcheck disable=SC2016
             printf 'Scope: `%s`; one worker, 20-minute execution budget. Campaign result: exit %s.\n\n' "${SELECTED_PACKAGE}" "${result}"
             printf 'Final job status also includes cleanup and output-admission failures.\n\n'
             printf 'Partial assurance only; no full-module or release verdict. Triage failures against the selected contract; a survivor is not automatically a production bug.\n'
@@ -125,9 +147,14 @@ jobs:
       - id: output
         name: Bound retained native output
         if: always() && steps.restored.outcome == 'success'
-        run: python3 .github/scripts/check-mutation-output.py
+        run: |
+          set -euo pipefail
+          fresh="$(mktemp -d "${RUNNER_TEMP}/golib-mutation-diagnostics.XXXXXX")"
+          printf 'GOLIB_MUTATION_DIAGNOSTICS=%s\n' "${fresh}" >>"${GITHUB_ENV}"
+          python3 .github/scripts/check-mutation-output.py \
+            --fresh "${RUNNER_TEMP}/golib-mutation-output-before.json" "${fresh}" >>"${GITHUB_OUTPUT}"
       - name: Save reusable main-only checkpoints
-        if: success() && steps.cache.outputs.cache-hit != 'true'
+        if: success() && steps.output.outputs.fresh == 'true' && steps.cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         timeout-minutes: 3
         with:
@@ -136,15 +163,30 @@ jobs:
             .verification/mutation/reports
           key: ${{ steps.cache.outputs.cache-primary-key }}
       - name: Retain bounded native diagnostics
-        if: always() && steps.output.outcome == 'success'
+        if: always() && steps.output.outcome == 'success' && steps.output.outputs.fresh == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         timeout-minutes: 3
         with:
           name: selected-mutation-${{ steps.scope.outputs.package == 'internal/config' && 'config' || steps.scope.outputs.package == 'internal/inventory' && 'inventory' || 'repositoryfile' }}
-          path: |
-            .verification/by-input/mutation
-            .verification/mutation/reports
-            .verification/mutation/failed-reports
+          path: ${{ env.GOLIB_MUTATION_DIAGNOSTICS }}
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
+      - name: Remove task-owned diagnostics
+        if: always()
+        run: |
+          set -euo pipefail
+          if [[ -n "${GOLIB_MUTATION_DIAGNOSTICS:-}" ]]; then
+            case "${GOLIB_MUTATION_DIAGNOSTICS}" in
+              "${RUNNER_TEMP}"/golib-mutation-diagnostics.*) ;;
+              *) echo 'unexpected diagnostic workspace' >&2; exit 1 ;;
+            esac
+            [[ -d "${GOLIB_MUTATION_DIAGNOSTICS}" && ! -L "${GOLIB_MUTATION_DIAGNOSTICS}" ]]
+            chmod -R u+w "${GOLIB_MUTATION_DIAGNOSTICS}"
+            find "${GOLIB_MUTATION_DIAGNOSTICS}" -depth -delete
+          fi
+          baseline="${RUNNER_TEMP}/golib-mutation-output-before.json"
+          if [[ -e "${baseline}" || -L "${baseline}" ]]; then
+            [[ -f "${baseline}" && ! -L "${baseline}" ]]
+            rm -- "${baseline}"
+          fi

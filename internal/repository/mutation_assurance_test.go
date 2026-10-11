@@ -130,7 +130,7 @@ func TestMutationAssuranceRefusesCacheReplacementOfCommittedEvidence(t *testing.
 				writeFile(t, root, path, "{\"source\":\"cache replacement\"}\n")
 			}
 			command := exec.CommandContext(t.Context(), "bash", "-c", script)
-			command.Dir, command.Env = root, gitEnv
+			command.Dir, command.Env = root, append(gitEnv, "RUNNER_TEMP="+root)
 			data, err := command.CombinedOutput()
 			if (err != nil) != changed {
 				t.Fatalf("restored evidence admission = %v, output %q", err, data)
@@ -210,6 +210,7 @@ set -euo pipefail
 [[ "$GOCACHE" == "$RUNNER_TEMP"/golib-mutation-assurance.*/cache ]]
 [[ "$GOMODCACHE" == "$RUNNER_TEMP"/golib-mutation-assurance.*/mod ]]
 [[ "$GOTMPDIR" == "$RUNNER_TEMP"/golib-mutation-assurance.*/tmp ]]
+if [[ "$1" == env && "$2" == GOVERSION ]]; then printf '%s\n' go1.27.2; exit 0; fi
 if [[ "$BUILD_STATUS" != 0 ]]; then exit "$BUILD_STATUS"; fi
 while [[ $# -gt 0 ]]; do
   if [[ "$1" == -o ]]; then cp "$CLI_FIXTURE" "$2"; exit 0; fi
@@ -224,7 +225,8 @@ exit 64
 			command.Dir = task
 			command.Env = append(os.Environ(), "PATH="+task+string(os.PathListSeparator)+os.Getenv("PATH"), "RUNNER_TEMP="+task, "GITHUB_STEP_SUMMARY="+summary,
 				"SELECTED_PACKAGE=internal/config", "CAMPAIGN_LOG="+log, "CLI_FIXTURE="+cli, "CAPABLE="+test.capable,
-				"BUILD_STATUS="+test.buildStatus, "CAMPAIGN_STATUS="+test.campaignStatus)
+				"BUILD_STATUS="+test.buildStatus, "CAMPAIGN_STATUS="+test.campaignStatus,
+				"ImageOS=ubuntu24", "ImageVersion=20261004.1", "RUNNER_ARCH=X64")
 			data, err := command.CombinedOutput()
 			code := 0
 			if err != nil {
