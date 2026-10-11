@@ -1469,6 +1469,7 @@ func TestReleaseWorkflowVerifiesRealTagAgainstCurrentMainAndSecurityEvidence(t *
 // This exercises the hosted verification shell, not a transcription of its
 // policy. Git identity/ancestry are real; only GitHub and Go are external seams.
 func TestReleaseWorkflowUsesExactNativeEvidenceWithoutRecordsOnlyCommit(t *testing.T) {
+	const cacheQualification = "test -p=1 -tags=verifierintegration ./internal/gates -run ^TestTaskVerifier(SessionReusesPinnedToolCompilation|SessionsRemainDistinctAndCanceledCallsCleanScratch)$ -count=1 -timeout=4m -json"
 	var workflow workflowDocument
 	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/release.yml")), &workflow); err != nil {
 		t.Fatal(err)
@@ -1518,6 +1519,15 @@ func TestReleaseWorkflowUsesExactNativeEvidenceWithoutRecordsOnlyCommit(t *testi
 		{name: "authenticated PR base SHA missing", defect: "missing-pr-base-sha"},
 		{name: "full release secret scan fails", defect: "secrets-fail"},
 		{name: "existing security validator refuses disposition", defect: "security-fail"},
+		{name: "cache qualification command fails", defect: "cache-command-fail"},
+		{name: "cache compilation pass missing", defect: "cache-missing-first"},
+		{name: "cache isolation pass missing", defect: "cache-missing-second"},
+		{name: "cache qualification result failed", defect: "cache-failed-result"},
+		{name: "cache qualification result skipped", defect: "cache-skipped-result"},
+		{name: "cache qualification test identity wrong", defect: "cache-wrong-test"},
+		{name: "cache compilation pass duplicated", defect: "cache-duplicate-first"},
+		{name: "cache isolation pass duplicated", defect: "cache-duplicate-second"},
+		{name: "cache qualification JSON malformed", defect: "cache-malformed-result"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			work := filepath.Join(t.TempDir(), "work")
@@ -1603,16 +1613,38 @@ case "${GOCACHE:-}|${GOMODCACHE:-}|${GOTMPDIR:-}" in
   *) echo 'unowned Go fixture cache' >&2; exit 93 ;;
 esac
 printf '%s\n' "$*" >>"${GO_CALLS}"
+printf '%s|%s|%s\n' "$GOCACHE" "$GOMODCACHE" "$GOTMPDIR" >>"${GO_CACHE_CALLS}"
 case "$*" in
   'run ./cmd/golib security validate --directory docs/ecosystem/security')
     [[ "${DEFECT}" != security-fail ]] || exit 42 ;;
   'run ./cmd/golib secrets check')
     [[ "${DEFECT}" != secrets-fail ]] || exit 42 ;;
   'run ./cmd/golib release check') ;;
+  '`+cacheQualification+`')
+    [[ "${GOMAXPROCS:-}" == 2 && "${GOFLAGS:-}" == -p=1 ]] || { echo 'unbounded cache fixture command' >&2; exit 94; }
+    [[ "${DEFECT}" != cache-command-fail ]] || exit 42
+    if [[ "${DEFECT}" == cache-malformed-result ]]; then printf '{malformed\n'; exit 0; fi
+    emit_result() {
+      printf '{"Action":"%s","Package":"github.com/faustbrian/go-library-tools/v2/internal/gates","Test":"%s"}\n' "$1" "$2"
+    }
+    first=TestTaskVerifierSessionReusesPinnedToolCompilation
+    second=TestTaskVerifierSessionsRemainDistinctAndCanceledCallsCleanScratch
+    [[ "${DEFECT}" == cache-missing-first ]] || emit_result pass "$first"
+    case "${DEFECT}" in
+      cache-missing-second) ;;
+      cache-failed-result) emit_result fail "$second" ;;
+      cache-skipped-result) emit_result skip "$second" ;;
+      cache-wrong-test) emit_result pass TestAnotherCacheContract ;;
+      *) emit_result pass "$second" ;;
+    esac
+    if [[ "${DEFECT}" == cache-duplicate-first ]]; then emit_result pass "$first"; fi
+    if [[ "${DEFECT}" == cache-duplicate-second ]]; then emit_result pass "$second"; fi
+    ;;
   *) echo 'unexpected Go fixture command' >&2; exit 92 ;;
 esac
 `)
 			calls := filepath.Join(t.TempDir(), "go-calls")
+			cacheCalls := filepath.Join(t.TempDir(), "cache-calls")
 			githubSHA, tag := sha, "v2.1.0"
 			if test.defect == "wrong-source" {
 				githubSHA = historical
@@ -1626,9 +1658,9 @@ esac
 			command.Dir = work
 			command.Env = append(os.Environ(), "PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
 				"GITHUB_REF_NAME="+tag, "GITHUB_SHA="+githubSHA, "GITHUB_REPOSITORY=faustbrian/go-library-tools",
-				"GITHUB_TOKEN=test", "GITHUB_OUTPUT="+githubOutput, "RUNNER_TEMP="+runner, "GO_CALLS="+calls, "GH_FIXTURES="+fixtures, "DEFECT="+test.defect)
+				"GITHUB_TOKEN=test", "GITHUB_OUTPUT="+githubOutput, "RUNNER_TEMP="+runner, "GO_CALLS="+calls, "GO_CACHE_CALLS="+cacheCalls, "GH_FIXTURES="+fixtures, "DEFECT="+test.defect)
 			output, err := command.CombinedOutput()
-			if strings.Contains(string(output), "unexpected gh request") || strings.Contains(string(output), "unexpected Go fixture command") || strings.Contains(string(output), "unauthenticated fixture request") || strings.Contains(string(output), "unowned Go fixture cache") {
+			if strings.Contains(string(output), "unexpected gh request") || strings.Contains(string(output), "unexpected Go fixture command") || strings.Contains(string(output), "unauthenticated fixture request") || strings.Contains(string(output), "unowned Go fixture cache") || strings.Contains(string(output), "unbounded cache fixture command") {
 				t.Fatalf("external fixture contract mismatch: %s", output)
 			}
 			if (err == nil) != test.wantSuccess {
@@ -1648,6 +1680,28 @@ esac
 						t.Fatalf("native release must validate disposition, scan full secrets once and retain release checks: %q", data)
 					}
 				}
+				if strings.Count(string(data), cacheQualification+"\n") != 1 || len(strings.Split(strings.TrimSpace(string(data)), "\n")) != 4 {
+					t.Fatalf("native release did not execute exactly one bounded cache qualification: %q", data)
+				}
+			}
+			if strings.HasPrefix(test.defect, "cache-") {
+				data, err := os.ReadFile(calls)
+				if err != nil || strings.Count(string(data), cacheQualification+"\n") != 1 || strings.Contains(string(data), "run ./cmd/golib release check") {
+					t.Fatalf("cache refusal did not stop publication qualification: %q / %v", data, err)
+				}
+				if refs, err := os.ReadFile(githubOutput); err == nil || !os.IsNotExist(err) || len(refs) != 0 {
+					t.Fatalf("cache refusal published dependency review refs: %q / %v", refs, err)
+				}
+			}
+			if data, err := os.ReadFile(cacheCalls); err == nil {
+				identities := strings.Split(strings.TrimSpace(string(data)), "\n")
+				for _, identity := range identities {
+					if identity != identities[0] {
+						t.Fatal("release Go commands did not reuse one owned cache session")
+					}
+				}
+			} else if !os.IsNotExist(err) {
+				t.Fatal(err)
 			}
 			for path, before := range map[string][]byte{"risk-register.json": risks, "security-matrix.json": matrix} {
 				after, err := os.ReadFile(filepath.Join(work, "docs/ecosystem/security", path))

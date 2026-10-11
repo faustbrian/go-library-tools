@@ -40,6 +40,10 @@ All notable changes to this project are documented in this file.
   lint results and output binaries separate, preserve legacy sessions, and
   remove the caller-owned session on every exit.
   ([d19f417e9f](https://github.com/faustbrian/go-library-tools/commit/d19f417e9f))
+- Qualify pinned-verifier cold/warm reuse and cancellation cleanup once at the
+  read-only CLI release boundary; require both named test results and refuse
+  failed or incomplete qualification without widening ordinary PR checks.
+  ([0b33e6c676](https://github.com/faustbrian/go-library-tools/commit/0b33e6c676))
 - Add a separate bounded weekly fuzz-risk rotation and explicit main-only
   diagnostics using current repository declarations; retain ordinary fast CI
   and explicit full assurance without forcing a new CLI or library release.
