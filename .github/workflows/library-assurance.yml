@@ -39,13 +39,26 @@ jobs:
           TOOLING_SHA: ${{ inputs.tooling_sha }}
         run: |
           set -euo pipefail
-          [[ "${OWNER_REF}" == refs/heads/main ]]
+          [[ "${OWNER_REF}" == refs/heads/main ]] || exit 1
           case "${EVENT_NAME}" in schedule|workflow_dispatch) ;; *) exit 1 ;; esac
           case "${OWNER_REPOSITORY}" in
-            faustbrian/go-clock|faustbrian/go-concurrency-limit|faustbrian/go-http-client) ;;
+            faustbrian/go-clock|faustbrian/go-concurrency-limit|faustbrian/go-http-client|\
+            faustbrian/go-config|faustbrian/go-filesystem|faustbrian/go-http-middleware|faustbrian/go-http-signature|\
+            faustbrian/go-keyphrase|faustbrian/go-log|faustbrian/go-password|faustbrian/go-prompts|\
+            faustbrian/go-secret-envelope|faustbrian/go-telemetry|faustbrian/go-webhook|\
+            faustbrian/go-merkle-patricia-trie|faustbrian/go-merkle-tree|faustbrian/go-verkle-tree|\
+            faustbrian/go-analysis|faustbrian/go-barcode|faustbrian/go-cloudevents|faustbrian/go-correlation|\
+            faustbrian/go-international|faustbrian/go-json-schema|faustbrian/go-jsonapi|faustbrian/go-jsonrpc|\
+            faustbrian/go-openapi|faustbrian/go-openrpc|faustbrian/go-rabbitmq-queues|faustbrian/go-router|\
+            faustbrian/go-rule-engine|faustbrian/go-tabular|faustbrian/go-validation|faustbrian/go-wire|\
+            faustbrian/go-wsdl|faustbrian/go-xsd|faustbrian/go-adaptive-throttle|faustbrian/go-bulkhead|\
+            faustbrian/go-circuit-breaker|faustbrian/go-external-sort|faustbrian/go-fault-injection|\
+            faustbrian/go-hedge|faustbrian/go-knapsack|faustbrian/go-money|faustbrian/go-resilience|\
+            faustbrian/go-retry|faustbrian/go-semaphore|faustbrian/go-identifier|faustbrian/go-math|\
+            faustbrian/go-measurement|faustbrian/go-geo) ;;
             *) exit 1 ;;
           esac
-          [[ "${TOOLING_SHA}" =~ ^[0-9a-f]{40}$ ]]
+          [[ "${TOOLING_SHA}" =~ ^[0-9a-f]{40}$ ]] || exit 1
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.sha }}

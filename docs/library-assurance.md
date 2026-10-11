@@ -8,6 +8,17 @@ refresh, owner full operations, or release qualification.
 
 ## Pilot ownership and cadence
 
+The reusable guard admits the 50 mapped wholly in-process library owners so
+rollout does not require another central Tools edit for each small caller batch.
+Admission is eligibility, not a schedule or qualification claim: only the three
+pilots below currently have delivered and hosted-qualified callers. Each new
+caller needs an owner-selected cadence, exact producer pin and relevant native
+qualification before it counts as adopted. The 33 service/tag/executable or
+nested-contract owners retain their full/manual routes. Low-risk owners may
+retain seeds/advisory plus manual exploration rather than automatic campaigns.
+Duplicate target names in Geo, Retry, Validation, Verkle and Wire still refuse
+until package identity is resolved; eligibility does not waive that guard.
+
 | Owner | Weekly UTC slot | Selected risk and native package |
 | --- | --- | --- |
 | Clock | Monday 03:41 | Manual clock lifecycle, duration and callback cancellation/work limits; `./manual` |
