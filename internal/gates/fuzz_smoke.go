@@ -57,19 +57,30 @@ type fuzzPackage struct {
 	DepsErrors         []json.RawMessage
 }
 
-// LocalChanges retains ordinary local verification and adds a bounded smoke
-// for configured fuzz targets affected by committed base-to-HEAD inputs. Both
-// phases use this Runner's one executor; dirty-work certification is not implied.
+// LocalChanges scans changed secrets before ordinary local verification and
+// adds bounded smoke for configured fuzz targets affected by committed
+// base-to-HEAD inputs. All phases share this Runner's executor; dirty-work
+// certification is not implied.
 func (runner Runner) LocalChanges(ctx context.Context, selection []string, base string) error {
-	changes, err := runner.committedChanges(ctx, base)
+	secretContext, cancel := context.WithTimeout(ctx, changedSecretBudget)
+	defer cancel()
+	changes, err := runner.committedChanges(secretContext, base)
 	if err != nil {
-		return err
-	}
-	if err := runner.Local(ctx, selection); err != nil {
 		return err
 	}
 	modules, err := runner.selectModules(selection)
 	if err != nil {
+		return err
+	}
+	if err := runner.prepareSecretChanges(secretContext, base, changes); err != nil {
+		return err
+	}
+	if err := runner.Secrets(secretContext); err != nil {
+		return err
+	}
+	cancel()
+	runner.repositorySecretsScanned = true
+	if err := runner.Local(ctx, selection); err != nil {
 		return err
 	}
 	if len(changes) == 0 {

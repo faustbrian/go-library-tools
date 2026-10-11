@@ -23,6 +23,9 @@ func TestExecuteRepositorySecretsRejectsMalformedArguments(t *testing.T) {
 		{name: "wrong subcommand", args: []string{"secrets", "invalid"}},
 		{name: "empty subcommand", args: []string{"secrets", ""}},
 		{name: "extra argument", args: []string{"secrets", "check", "extra"}},
+		{name: "missing base", args: []string{"secrets", "check", "--base-sha"}},
+		{name: "empty base", args: []string{"secrets", "check", "--base-sha", ""}},
+		{name: "extra base argument", args: []string{"secrets", "check", "--base-sha", strings.Repeat("a", 40), "extra"}},
 		{name: "wrong subcommand and extra argument", args: []string{"secrets", "invalid", "extra"}},
 	} {
 		t.Run(test.name, func(t *testing.T) {

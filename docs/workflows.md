@@ -50,6 +50,8 @@ a qualified capable release or reviewed source bootstrap; older workflow pins
 are unchanged. Committed-change inventory is a CI scope selector, not proof of
 uncommitted or untracked local work; contributors should select modules explicitly
 or use `--all` for that work. Metadata-only documentation checks remain separate.
+Runtime and metadata PR/main routes require changed-secret capability; older
+fuzz-capable tooling is rejected before checks, without a full-scan fallback.
 
 PR/main checks add short active fuzz smoke only for configured typed targets
 affected through their current Go production/test/embed dependencies. They retain
@@ -150,9 +152,11 @@ All four setup sites then use the immutable remote setup action at
 `e8c0c51cc517dfede5475858bb417f0e7a21f39d`, passing the same `tooling_sha`
 used for their fixed tooling checkout. Documentation/license-only pull requests
 use the ordinary metadata assurance tier, including in source-bootstrap mode.
-Metadata-only jobs scan repository history and the current tree through
-`golib secrets check`, using the existing bounded scan policy in installed and
-source-bootstrap modes. Older tooling without this command fails closed;
+Metadata-only PR/main jobs use `golib secrets check --base-sha <commit>` to
+scan all new commits plus changed current files, including documentation.
+Schedule/manual integrity checks retain full `golib secrets check` coverage.
+Both routes retain bounded scan policy in installed and source-bootstrap modes.
+Older tooling without the applicable command fails closed;
 adopt the workflow and supporting tooling together.
 Exactly paired reusable-workflow and tooling-pin changes use metadata assurance
 in both installation modes, on pull requests and corresponding main pushes.

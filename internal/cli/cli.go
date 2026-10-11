@@ -35,7 +35,7 @@ Usage:
   golib --version
   golib archive validate --file <path>
   golib security validate --directory <path>
-  golib secrets check
+  golib secrets check [--base-sha <commit>]
   golib check [--local] [--all|--module <directory>]
   golib check --local --module <directory> [--module <directory> ...]
   golib check --local --base-sha <commit> [--all|--module <directory> ...]
@@ -148,11 +148,16 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		}
 		return publishValidationSuccess(ctx, stdout, stderr, "bootstrap archive valid\n")
 	case "secrets":
-		if len(args) != 2 || args[1] != "check" {
+		changed := len(args) == 4 && args[1] == "check" && args[2] == "--base-sha" && args[3] != ""
+		if !changed && (len(args) != 2 || args[1] != "check") {
 			return usage(stderr, "usage: golib secrets check")
 		}
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
-			return (gates.Runner{Root: root, Executor: executor, Output: stdout}).Secrets(ctx)
+			runner := gates.Runner{Root: root, Executor: executor, Output: stdout}
+			if changed {
+				return runner.SecretsChanges(ctx, args[3])
+			}
+			return runner.Secrets(ctx)
 		})
 	case "check":
 		local := len(args) > 1 && args[1] == "--local"

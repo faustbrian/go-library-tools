@@ -294,7 +294,21 @@ jobs:
           golib docs check --local
       - name: Scan metadata-only changes for secrets
         if: needs.prepare.outputs.runtime == 'false'
-        run: golib secrets check
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          if [[ "${EVENT_NAME}" == pull_request || "${EVENT_NAME}" == push ]]; then
+            golib_help="$(golib --help)"
+            if ! grep -Fq 'golib secrets check [--base-sha <commit>]' <<<"${golib_help}"; then
+              echo 'this workflow requires changed-content secret checks; adopt qualified capable tooling or explicit immutable source_bootstrap' >&2
+              exit 1
+            fi
+            golib secrets check --base-sha "${BASE_SHA:-}"
+          else
+            golib secrets check
+          fi
       - name: Monitor upstream specification drift
         if: github.event_name == 'schedule'
         run: golib specification check --online
@@ -428,6 +442,10 @@ jobs:
           if [[ "${EVENT_NAME:-}" == pull_request || "${EVENT_NAME:-}" == push ]]; then
             if ! grep -Fq 'golib check --local --base-sha <commit> [--all|--module <directory> ...]' <<<"${golib_help}"; then
               echo 'this workflow requires changed-target fuzz smoke; select a qualified capable release or explicit immutable source_bootstrap' >&2
+              exit 1
+            fi
+            if ! grep -Fq 'golib secrets check [--base-sha <commit>]' <<<"${golib_help}"; then
+              echo 'this workflow requires changed-content secret checks; select a qualified capable release or explicit immutable source_bootstrap' >&2
               exit 1
             fi
             arguments+=(--base-sha "${BASE_SHA:-}")

@@ -53,7 +53,7 @@ operations:
 	var fuzzCommands []gates.Command
 	factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
 		created++
-		return cliExecutorFunction(func(ctx context.Context, command gates.Command) error {
+		return changedLocalCLIExecutor(t, func(ctx context.Context, command gates.Command) error {
 			if command.Name == "git" && slices.Contains(command.Args, "diff") {
 				_, err := io.WriteString(command.Stdout, "helper/value.go\x00")
 				return err
@@ -114,7 +114,7 @@ func TestExecuteChangedLocalFuzzPreservesLegacyAndStopsOnLocalFailure(t *testing
 			root := internalFixture(t)
 			var stdout, stderr bytes.Buffer
 			factory := func(string, io.Writer, io.Writer) (gates.Executor, func() error, error) {
-				return cliExecutorFunction(func(_ context.Context, command gates.Command) error {
+				return changedLocalCLIExecutor(t, func(_ context.Context, command gates.Command) error {
 					if command.Name == "git" && slices.Contains(command.Args, "diff") {
 						_, _ = io.WriteString(command.Stdout, "example.go\x00")
 					}

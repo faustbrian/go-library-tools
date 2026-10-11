@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Add committed-range secret scanning with `golib secrets check --base-sha`.
+  Ordinary local and metadata CI checks scan new history and changed files;
+  explicit full integrity scans retain all-history and all-tree coverage.
+
 - Add bounded changed-input active fuzz smoke to local PR/main checks using
   configured typed targets and actual Go production/test/embed dependencies.
   Preserve explicit full campaigns and existing local command syntax.

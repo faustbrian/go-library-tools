@@ -122,13 +122,17 @@ func (runner Runner) ChangedModules(ctx context.Context, base string) ([]invento
 }
 
 func (runner Runner) committedChanges(ctx context.Context, base string) ([]string, error) {
+	return runner.committedChangesBetween(ctx, base, "HEAD")
+}
+
+func (runner Runner) committedChangesBetween(ctx context.Context, base, head string) ([]string, error) {
 	if len(base) != 40 || strings.IndexFunc(base, func(c rune) bool { return !strings.ContainsRune("0123456789abcdef", c) }) >= 0 {
 		return nil, errors.New("affected inventory requires a full lowercase Git commit SHA")
 	}
 	if _, err := runner.changeGit(ctx, "cat-file", "-e", base+"^{commit}"); err != nil {
 		return nil, err
 	}
-	diff, err := runner.changeGit(ctx, "diff", "--no-ext-diff", "--no-textconv", "--no-renames", "--name-only", "-z", base, "HEAD", "--")
+	diff, err := runner.changeGit(ctx, "diff", "--no-ext-diff", "--no-textconv", "--no-renames", "--name-only", "-z", base, head, "--")
 	if err != nil || diff == "" {
 		return nil, err
 	}

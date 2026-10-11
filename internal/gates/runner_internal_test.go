@@ -623,20 +623,34 @@ func TestCreateGitleaksSourcesHonorsCancellationBeforeCopy(t *testing.T) {
 }
 
 func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
-	for _, caller := range []string{"check", "local"} {
+	for _, caller := range []string{"check", "local", "changed local"} {
 		t.Run(caller, func(t *testing.T) {
 			root := t.TempDir()
+			beforeTests := []string{"govulncheck", "gosec", "golib-analysis", "go-licenses"}
+			if caller == "check" {
+				beforeTests = append(beforeTests, "cyclonedx-gomod")
+			}
 			var history, current, vulnerabilities, tests int
+			var changedHistory bool
 			scans := map[string]int{}
 			scannedModules := map[string]map[string]int{}
 			runner := Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{
 				{Directory: ".", ModulePath: "example", Gates: map[string]bool{"security": true, "tests": true}},
 				{Directory: "nested", ModulePath: "example/nested", Gates: map[string]bool{"security": true, "tests": true}},
 			}}, Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+				if caller == "changed local" && command.Name == "git" {
+					if slices.Contains(command.Args, "rev-parse") {
+						_, _ = io.WriteString(command.Stdout, strings.Repeat("b", 40)+"\n")
+					}
+					if slices.Contains(command.Args, "diff") {
+						_, _ = io.WriteString(command.Stdout, "revision.txt\x00")
+					}
+				}
 				joined := strings.Join(command.Args, " ")
 				if strings.Contains(joined, "gitleaks") {
 					if strings.Contains(joined, " git ") {
 						history++
+						changedHistory = strings.Contains(joined, strings.Repeat("a", 40)+".."+strings.Repeat("b", 40))
 					}
 					if strings.Contains(joined, " dir ") {
 						current++
@@ -664,7 +678,7 @@ func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
 					if history != 1 || current != 1 {
 						return errors.New("repository code ran before exact-source scans")
 					}
-					for _, tool := range []string{"govulncheck", "gosec", "golib-analysis", "go-licenses", "cyclonedx-gomod"} {
+					for _, tool := range beforeTests {
 						if scans[tool] != 2 {
 							return errors.New("repository code ran before all selected modules' static security scans")
 						}
@@ -692,6 +706,8 @@ func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
 			var err error
 			if caller == "check" {
 				err = runner.Check(t.Context(), []string{".", "nested"})
+			} else if caller == "changed local" {
+				err = runner.LocalChanges(t.Context(), []string{".", "nested"}, strings.Repeat("a", 40))
 			} else {
 				err = runner.Local(t.Context(), []string{".", "nested"})
 			}
@@ -700,6 +716,12 @@ func TestRepositorySecretScansRunOnceBeforeModuleCommands(t *testing.T) {
 			}
 			if history != 1 || current != 1 || vulnerabilities != 2 || tests != 2 {
 				t.Fatalf("scans history/current/module/tests = %d/%d/%d/%d", history, current, vulnerabilities, tests)
+			}
+			if caller != "check" && scans["cyclonedx-gomod"] != 0 {
+				t.Fatal("ordinary local checks generated a throwaway SBOM")
+			}
+			if changedHistory != (caller == "changed local") {
+				t.Fatal("local secret scan used the wrong integrity scope")
 			}
 			for tool, count := range scans {
 				if count != 2 {

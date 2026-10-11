@@ -2,6 +2,15 @@
 
 ## Security records and bootstrap archives
 
+`golib secrets check --base-sha <commit>` scans committed additions throughout
+the ancestor base-to-HEAD range, including intermediate and merge commits, and
+the current contents of changed files. This is the ordinary CI path, not
+certification of uncommitted/untracked work. Missing or non-ancestor bases fail;
+no full-scan fallback is used. A three-minute deadline bounds the changed scan,
+including snapshot construction and scanner compilation. Snapshot preparation
+still inventories bounded Git objects and bundles HEAD history, but does not
+copy unrelated current files.
+
 `golib secrets check` scans repository history and the current tree using the
 same bounded sources, pinned scanner and sanitized reporting as the standard
 security gate, without compiling modules or running runtime assurance. Scan
@@ -72,9 +81,12 @@ Core commands:
   toolchain selected for the repository rather than the CLI build toolchain.
   Configured mutation imports are materialized before mutation verification,
   using the same fail-closed behavior as `golib mutation`.
-- `golib check --local --base-sha COMMIT [--all|--module DIR ...]` adds active
+- `golib check --local --base-sha COMMIT [--all|--module DIR ...]` selects changed
+  secret history/files regardless of module security flags, before any
+  repository-controlled execution, and adds active
   fuzz smoke after deterministic local checks. The base must be a full lowercase
-  commit SHA available locally. It selects configured single-package typed Go
+  ancestor commit SHA available locally. Broader security scanners still follow
+  module security flags. It selects configured single-package typed Go
   fuzz targets through actual production/test imports, testdata, and embed
   inputs; module dependency or target configuration changes widen selection.
   Discovery and execution share the local executor. Smoke uses two workers,

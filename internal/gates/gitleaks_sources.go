@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -124,7 +125,11 @@ func (runner Runner) createGitleaksSourcesWithFiles(ctx context.Context, files g
 	if err := runner.preflightGitleaksHistory(ctx, limits); err != nil {
 		return gitleaksSources{}, nil, err
 	}
-	if err := inspectGitleaksCurrentTree(ctx, runner.Root, limits, nil); err != nil {
+	var selected map[string]bool
+	if runner.secretChanges != nil {
+		selected = runner.secretChanges.paths
+	}
+	if err := inspectGitleaksCurrentTreeSelected(ctx, runner.Root, limits, selected, nil); err != nil {
 		return gitleaksSources{}, nil, err
 	}
 	root, err := os.MkdirTemp(workspace.TemporaryDirectory(), "gitleaks-sources-")
@@ -153,7 +158,13 @@ func (runner Runner) createGitleaksSourcesWithFiles(ctx context.Context, files g
 	}
 	boundedBundle := &boundedSourceFile{file: bundle, limit: limits.bytes}
 	stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
-	err = runner.Executor.Run(ctx, Command{Name: "git", Args: []string{"-C", runner.Root, "bundle", "create", "-", "--all"}, Dir: workspace.TemporaryDirectory(), Stdout: boundedBundle, Stderr: stderr, boundedScanner: true})
+	bundleRef, fetchRef := "--all", "+refs/*:refs/golib-source/*"
+	bundleArguments := []string{"-C", runner.Root, "bundle", "create", "-"}
+	if runner.secretChanges != nil {
+		bundleRef, fetchRef = "HEAD", "HEAD:refs/golib-source/head"
+		bundleArguments = append([]string{"--no-replace-objects", "-c", "core.fsmonitor=false"}, bundleArguments...)
+	}
+	err = runner.Executor.Run(ctx, Command{Name: "git", Args: append(bundleArguments, bundleRef), Dir: workspace.TemporaryDirectory(), Stdout: boundedBundle, Stderr: stderr, boundedScanner: true})
 	closeErr := bundle.Close()
 	if err != nil || closeErr != nil || ctx.Err() != nil || boundedBundle.didOverflow() || stderr.didOverflow() {
 		return gitleaksSources{}, nil, errors.Join(sourceCommandError{class: "bounded history bundle creation failed", cause: err}, ctx.Err(), cleanup())
@@ -162,7 +173,7 @@ func (runner Runner) createGitleaksSourcesWithFiles(ctx context.Context, files g
 		{Name: "git", Args: []string{"init", "--quiet", "--", sources.history}, Dir: workspace.TemporaryDirectory()},
 		{Name: "git", Args: []string{
 			"-C", sources.history, "fetch", "--quiet", "--force", "--no-recurse-submodules",
-			historyBundle, "+refs/*:refs/golib-source/*",
+			historyBundle, fetchRef,
 		}, Dir: workspace.TemporaryDirectory()},
 	}
 	for _, command := range commands {
@@ -170,7 +181,14 @@ func (runner Runner) createGitleaksSourcesWithFiles(ctx context.Context, files g
 			return gitleaksSources{}, nil, errors.Join(fmt.Errorf("create gitleaks history snapshot: %w", err), cleanup())
 		}
 	}
-	if err := copyGitleaksCurrentTreeBounded(ctx, runner.Root, sources.current, limits); err != nil {
+	if runner.secretChanges != nil {
+		for _, commit := range []string{runner.secretChanges.base, runner.secretChanges.head} {
+			if err := runner.runGitleaksSourceCommand(ctx, Command{Name: "git", Args: []string{"-C", sources.history, "cat-file", "-e", commit + "^{commit}"}, Dir: workspace.TemporaryDirectory()}); err != nil {
+				return gitleaksSources{}, nil, errors.Join(err, cleanup())
+			}
+		}
+	}
+	if err := copyGitleaksCurrentTreeWithFilesSelected(ctx, runner.Root, sources.current, limits, defaultGitleaksCopyFiles(), selected); err != nil {
 		return gitleaksSources{}, nil, errors.Join(err, cleanup())
 	}
 	return sources, cleanup, nil
@@ -234,6 +252,23 @@ func inspectGitleaksCurrentTree(ctx context.Context, source string, limits secur
 // Keep metadata failure injection local to this operation: some filesystems
 // cache DirEntry.Info during ReadDir, even if the source subsequently disappears.
 func inspectGitleaksCurrentTreeWithMetadata(ctx context.Context, source string, limits securitySourceLimits, visit func(string, fs.DirEntry) error, metadata func(string, fs.DirEntry) (fs.FileInfo, error)) error {
+	return inspectGitleaksCurrentTreeSelectedWithMetadata(ctx, source, limits, nil, visit, metadata)
+}
+
+func inspectGitleaksCurrentTreeSelected(ctx context.Context, source string, limits securitySourceLimits, selected map[string]bool, visit func(string, fs.DirEntry) error) error {
+	return inspectGitleaksCurrentTreeSelectedWithMetadata(ctx, source, limits, selected, visit, func(_ string, entry fs.DirEntry) (fs.FileInfo, error) { return entry.Info() })
+}
+
+func inspectGitleaksCurrentTreeSelectedWithMetadata(ctx context.Context, source string, limits securitySourceLimits, selected map[string]bool, visit func(string, fs.DirEntry) error, metadata func(string, fs.DirEntry) (fs.FileInfo, error)) error {
+	ancestors := make(map[string]bool)
+	for name := range selected {
+		for parent := path.Dir(name); parent != "."; parent = path.Dir(parent) {
+			if err := ctx.Err(); err != nil {
+				return err
+			}
+			ancestors[parent] = true
+		}
+	}
 	entries := 0
 	var total int64
 	// The walker owns cancellation admission before each entry. Once admitted,
@@ -248,6 +283,15 @@ func inspectGitleaksCurrentTreeWithMetadata(ctx context.Context, source string, 
 		}
 		if relative == ".gitleaksignore" && !entry.IsDir() {
 			return nil
+		}
+		if selected != nil {
+			if entry.IsDir() {
+				if !ancestors[filepath.ToSlash(relative)] {
+					return filepath.SkipDir
+				}
+			} else if !selected[filepath.ToSlash(relative)] {
+				return nil
+			}
 		}
 		entries++
 		if entries > limits.entries {
@@ -273,13 +317,17 @@ func inspectGitleaksCurrentTreeWithMetadata(ctx context.Context, source string, 
 }
 
 func copyGitleaksCurrentTreeBounded(ctx context.Context, source, destination string, limits securitySourceLimits) error {
-	return copyGitleaksCurrentTreeWithFiles(ctx, source, destination, limits, gitleaksCopyFiles{
+	return copyGitleaksCurrentTreeWithFiles(ctx, source, destination, limits, defaultGitleaksCopyFiles())
+}
+
+func defaultGitleaksCopyFiles() gitleaksCopyFiles {
+	return gitleaksCopyFiles{
 		open: (*os.Root).Open,
 		create: func(root *os.Root, relative string) (*os.File, error) {
 			return root.OpenFile(relative, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o600)
 		},
 		close: (*os.File).Close,
-	})
+	}
 }
 
 // These operations stay local to a single copy, retaining real confined roots
@@ -291,11 +339,15 @@ type gitleaksCopyFiles struct {
 }
 
 func copyGitleaksCurrentTreeWithFiles(ctx context.Context, source, destination string, limits securitySourceLimits, files gitleaksCopyFiles) error {
+	return copyGitleaksCurrentTreeWithFilesSelected(ctx, source, destination, limits, files, nil)
+}
+
+func copyGitleaksCurrentTreeWithFilesSelected(ctx context.Context, source, destination string, limits securitySourceLimits, files gitleaksCopyFiles, selected map[string]bool) error {
 	openRoot := files.openRoot
 	if openRoot == nil {
 		openRoot = os.OpenRoot
 	}
-	if err := inspectGitleaksCurrentTree(ctx, source, limits, nil); err != nil {
+	if err := inspectGitleaksCurrentTreeSelected(ctx, source, limits, selected, nil); err != nil {
 		return err
 	}
 	if err := os.Mkdir(destination, 0o700); err != nil {
@@ -312,7 +364,7 @@ func copyGitleaksCurrentTreeWithFiles(ctx context.Context, source, destination s
 	}
 	defer targetRoot.Close()
 	var copied int64
-	err = inspectGitleaksCurrentTree(ctx, source, limits, func(relative string, entry fs.DirEntry) error {
+	err = inspectGitleaksCurrentTreeSelected(ctx, source, limits, selected, func(relative string, entry fs.DirEntry) error {
 		if entry.IsDir() {
 			return targetRoot.Mkdir(relative, 0o700)
 		}

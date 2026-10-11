@@ -555,6 +555,7 @@ type Runner struct {
 	documentationExtract     func(string, docscheck.LycheeRelease) ([]byte, error)
 	gitleaksSourceCleanup    func(string) error
 	securitySourceLimits     *securitySourceLimits
+	secretChanges            *secretChangeRange
 	repositorySecretsScanned bool
 }
 
@@ -1039,7 +1040,7 @@ func (runner *Runner) scanSelectedSecurity(ctx context.Context, output io.Writer
 	// test can mutate inputs for another module. Runtime service scopes remain
 	// owned by the later per-module execution pass.
 	for _, module := range modules {
-		if module.Gates["security"] {
+		if !runner.repositorySecretsScanned && module.Gates["security"] {
 			if err := runner.runRepositorySecrets(ctx, output, module.Directory); err != nil {
 				return err
 			}
@@ -1062,6 +1063,11 @@ func (runner *Runner) scanSelectedSecurity(ctx context.Context, output io.Writer
 }
 
 func (runner Runner) runRepositorySecrets(ctx context.Context, output io.Writer, attribution string) error {
+	if runner.secretChanges != nil {
+		var cancel context.CancelFunc
+		ctx, cancel = context.WithTimeout(ctx, changedSecretBudget)
+		defer cancel()
+	}
 	configPath, cleanupSecrets, err := runner.createGitleaksConfig()
 	if err != nil {
 		return err
@@ -1073,9 +1079,13 @@ func (runner Runner) runRepositorySecrets(ctx context.Context, output io.Writer,
 	if err != nil {
 		return errors.Join(err, cleanupSecrets())
 	}
+	logOptions := "--all"
+	if runner.secretChanges != nil {
+		logOptions = "--full-history --diff-merges=first-parent --no-renames --no-ext-diff --no-textconv " + runner.secretChanges.base + ".." + runner.secretChanges.head
+	}
 	if err := runner.securityTool(ctx, output, attribution, "secrets-history", sources.history,
 		"github.com/zricethezav/gitleaks/v8@"+gitleaksVersion,
-		"git", ".", "--config", configPath, "--log-opts=--all", "--ignore-gitleaks-allow",
+		"git", ".", "--config", configPath, "--log-opts="+logOptions, "--ignore-gitleaks-allow",
 		"--gitleaks-ignore-path", sources.ignoreRoot, "--no-banner", "--redact"); err != nil {
 		return errors.Join(err, cleanupSources(), cleanupSecrets())
 	}

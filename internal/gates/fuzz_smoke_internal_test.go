@@ -182,7 +182,10 @@ func TestFuzzSmokeTotalTargetBudgetFailsBeforeExecution(t *testing.T) {
 	}
 	runner := Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}},
 		Policy: config.Config{Operations: []config.Operation{operation}}, Output: &bytes.Buffer{}}
-	runner.Executor = executorFunction(func(ctx context.Context, command Command) error {
+	runner.Executor = workspaceExecutor{directory: t.TempDir(), run: func(ctx context.Context, command Command) error {
+		if command.Name == "git" && slices.Contains(command.Args, "rev-parse") {
+			_, _ = io.WriteString(command.Stdout, strings.Repeat("b", 40)+"\n")
+		}
 		if command.Name == "git" && slices.Contains(command.Args, "diff") {
 			_, _ = io.WriteString(command.Stdout, "example.go\x00")
 		}
@@ -199,7 +202,7 @@ func TestFuzzSmokeTotalTargetBudgetFailsBeforeExecution(t *testing.T) {
 			}
 		}
 		return nil
-	})
+	}}
 	if err := runner.LocalChanges(t.Context(), []string{"."}, strings.Repeat("a", 40)); err == nil || !strings.Contains(err.Error(), "target limit") {
 		t.Fatalf("oversized smoke plan = %v", err)
 	}
