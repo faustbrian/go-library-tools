@@ -8,6 +8,11 @@ on:
     - cron: '17 3 * * *'
   workflow_dispatch:
     inputs:
+      ecosystem_milestone:
+        description: Run aggregate catalog and compatibility milestone checks
+        required: false
+        type: boolean
+        default: false
       native_cli_diagnostic:
         description: Diagnose the single retained CLI mutation without qualifying a release
         required: false
@@ -301,15 +306,25 @@ jobs:
           trap 'find "${task}" -depth -delete' EXIT
           publication_required=false
           git show "${BASE_SHA}:docs/ecosystem/compatibility-sets.json" >"${task}/base.json"
+          if ! python3 tools/compatibility/generate.py check --offline >/dev/null 2>&1; then
+            echo 'compatibility catalog local validation failed; run the offline check locally' >&2
+            exit 1
+          fi
           if jq -e --slurpfile base "${task}/base.json" '
             any(.sets[];
               .publication_status == "published" and
-              (.set_id as $id |
+              (. as $current | .set_id as $id |
                 (($base[0].sets // []) |
                   map(select(.set_id == $id)) |
-                  (.[0].publication_status // "absent")) != "published"))
-          ' docs/ecosystem/compatibility-sets.json >/dev/null; then
+                  .[0]) != $current))
+          ' docs/ecosystem/compatibility-sets.json >/dev/null 2>&1; then
             publication_required=true
+          else
+            classification_status=$?
+            if test "${classification_status}" -ne 1; then
+              echo 'compatibility catalog classification failed' >&2
+              exit 1
+            fi
           fi
           echo "publication_required=${publication_required}" >>"${GITHUB_OUTPUT}"
           if [[ "${publication_required}" == true ]] ||
@@ -400,8 +415,8 @@ jobs:
     name: Aggregate milestone
     if: >-
       always() && needs.quality.result == 'success' &&
-      (github.event_name != 'pull_request' ||
-      needs.compatibility-consumer-scope.outputs.publication_required == 'true')
+      (needs.compatibility-consumer-scope.outputs.publication_required == 'true' ||
+      (github.event_name == 'workflow_dispatch' && inputs.ecosystem_milestone))
     needs: [quality, compatibility-consumer-scope]
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -553,25 +568,69 @@ jobs:
     timeout-minutes: 5
     steps:
       - env:
+          EVENT_NAME: ${{ github.event_name }}
           DEPENDENCY_REVIEW_RESULT: ${{ needs.dependency-review.result }}
           QUALITY_RESULT: ${{ needs.quality.result }}
           COMPATIBILITY_SCOPE_RESULT: ${{ needs.compatibility-consumer-scope.result }}
+          COMPATIBILITY_CONSUMER_REQUIRED: ${{ needs.compatibility-consumer-scope.outputs.required }}
+          PUBLICATION_REQUIRED: ${{ needs.compatibility-consumer-scope.outputs.publication_required }}
           COMPATIBILITY_CONSUMER_RESULT: ${{ needs.compatibility-consumer.result }}
           MILESTONE_RESULT: ${{ needs.milestone.result }}
+          MILESTONE_SELECTED: ${{ github.event_name == 'workflow_dispatch' && inputs.ecosystem_milestone }}
           CODEQL_RESULT: ${{ needs.codeql.result }}
           RELEASE_REHEARSAL_RESULT: ${{ needs.release-rehearsal.result }}
+          RELEASE_REHEARSAL_SELECTED: ${{ github.event_name == 'workflow_dispatch' && (inputs.release_rehearsal || inputs.release_module != '') }}
           NATIVE_CLI_DIAGNOSTIC_RESULT: ${{ needs.native-cli-diagnostic.result }}
           NATIVE_CLI_DIAGNOSTIC_SELECTED: ${{ github.event_name == 'workflow_dispatch' && inputs.native_cli_diagnostic }}
         run: |
+          set -euo pipefail
           test "${QUALITY_RESULT}" = success
-          test "${COMPATIBILITY_SCOPE_RESULT}" = success -o "${COMPATIBILITY_SCOPE_RESULT}" = skipped
-          test "${COMPATIBILITY_CONSUMER_RESULT}" = success -o "${COMPATIBILITY_CONSUMER_RESULT}" = skipped
-          test "${MILESTONE_RESULT}" = success -o "${MILESTONE_RESULT}" = skipped
           test "${CODEQL_RESULT}" = success
-          test "${DEPENDENCY_REVIEW_RESULT}" = success -o "${DEPENDENCY_REVIEW_RESULT}" = skipped
-          test "${RELEASE_REHEARSAL_RESULT}" = success -o "${RELEASE_REHEARSAL_RESULT}" = skipped
-          if [[ "${NATIVE_CLI_DIAGNOSTIC_SELECTED}" == true ]]; then
-            test "${NATIVE_CLI_DIAGNOSTIC_RESULT}" = success
+          milestone_required=false
+          case "${EVENT_NAME}" in
+            pull_request|push)
+              test "${COMPATIBILITY_SCOPE_RESULT}" = success
+              case "${COMPATIBILITY_CONSUMER_REQUIRED}" in
+                true) test "${COMPATIBILITY_CONSUMER_RESULT}" = success ;;
+                false) test "${COMPATIBILITY_CONSUMER_RESULT}" = skipped ;;
+                *) exit 1 ;;
+              esac
+              case "${PUBLICATION_REQUIRED}" in
+                true)
+                  test "${COMPATIBILITY_CONSUMER_REQUIRED}" = true
+                  milestone_required=true ;;
+                false) ;;
+                *) exit 1 ;;
+              esac
+              ;;
+            schedule|workflow_dispatch)
+              test "${COMPATIBILITY_SCOPE_RESULT}" = skipped
+              test "${COMPATIBILITY_CONSUMER_RESULT}" = skipped
+              ;;
+            *) exit 1 ;;
+          esac
+          if test "${EVENT_NAME}" = pull_request; then
+            test "${DEPENDENCY_REVIEW_RESULT}" = success
           else
-            test "${NATIVE_CLI_DIAGNOSTIC_RESULT}" = skipped
+            test "${DEPENDENCY_REVIEW_RESULT}" = skipped
           fi
+          case "${MILESTONE_SELECTED}" in
+            true) milestone_required=true ;;
+            false) ;;
+            *) exit 1 ;;
+          esac
+          if test "${milestone_required}" = true; then
+            test "${MILESTONE_RESULT}" = success
+          else
+            test "${MILESTONE_RESULT}" = skipped
+          fi
+          case "${RELEASE_REHEARSAL_SELECTED}" in
+            true) test "${RELEASE_REHEARSAL_RESULT}" = success ;;
+            false) test "${RELEASE_REHEARSAL_RESULT}" = skipped ;;
+            *) exit 1 ;;
+          esac
+          case "${NATIVE_CLI_DIAGNOSTIC_SELECTED}" in
+            true) test "${NATIVE_CLI_DIAGNOSTIC_RESULT}" = success ;;
+            false) test "${NATIVE_CLI_DIAGNOSTIC_RESULT}" = skipped ;;
+            *) exit 1 ;;
+          esac

@@ -373,7 +373,7 @@ def select_clean_consumer_set(value: dict) -> dict | None:
 
 def current_consumer_inputs(
     value: dict, catalog_modules: list[dict], selection: dict | None = None,
-    *, remote_tag_lookup=None, public_version_lookup=None,
+    *, remote_tag_lookup=None, public_version_lookup=None, verify_public=True,
 ) -> tuple[dict | None, list[dict]]:
     """Project a maintained consumer without changing published cohort evidence."""
     if selection is None:
@@ -438,10 +438,12 @@ def current_consumer_inputs(
             raise ValueError("current consumer entries must be unique imports within the module")
         catalog = by_path[old]
         repository = repository_identity(catalog)
-        if remote_tag_lookup(repository, expected_tag(catalog, version)) != revision:
-            raise ValueError("current consumer revision lacks matching remote tag")
-        if not public_version_lookup(new, version):
-            raise ValueError("current consumer version is unavailable from the public proxy")
+        tag = expected_tag(catalog, version)
+        if verify_public:
+            if remote_tag_lookup(repository, tag) != revision:
+                raise ValueError("current consumer revision lacks matching remote tag")
+            if not public_version_lookup(new, version):
+                raise ValueError("current consumer version is unavailable from the public proxy")
         selected[old].update({key: replacement[key] for key in (
             "module_path", "version", "source_revision"
         )})
@@ -488,10 +490,12 @@ def current_consumer_inputs(
             raise ValueError("current consumer entries must be unique imports within the module")
         catalog = by_path[old]
         repository = repository_identity(catalog)
-        if remote_tag_lookup(repository, expected_tag(catalog, version)) != revision:
-            raise ValueError("current consumer revision lacks matching remote tag")
-        if not public_version_lookup(new, version):
-            raise ValueError("current consumer version is unavailable from the public proxy")
+        tag = expected_tag(catalog, version)
+        if verify_public:
+            if remote_tag_lookup(repository, tag) != revision:
+                raise ValueError("current consumer revision lacks matching remote tag")
+            if not public_version_lookup(new, version):
+                raise ValueError("current consumer version is unavailable from the public proxy")
         item["modules"].append({key: addition[key] for key in (
             "module_path", "version", "source_revision"
         )})
@@ -734,6 +738,7 @@ def load(
     remote_tag_lookup=remote_tag_revision,
     public_version_lookup=public_module_version,
     allow_stale_unreleased=False,
+    verify_public=True,
 ) -> dict:
     value = json.loads(SOURCE.read_text())
     if value.get("format") != "golib-compatibility-sets-v1":
@@ -831,10 +836,11 @@ def load(
                     f"published module version is unavailable from the public proxy: {module['module_path']}"
                 )
 
-        with concurrent.futures.ThreadPoolExecutor(
-            max_workers=min(16, max(1, len(public_bindings)))
-        ) as executor:
-            list(executor.map(verify_public_binding, public_bindings))
+        if verify_public:
+            with concurrent.futures.ThreadPoolExecutor(
+                max_workers=min(16, max(1, len(public_bindings)))
+            ) as executor:
+                list(executor.map(verify_public_binding, public_bindings))
         if status == "unreleased" and not allow_stale_unreleased:
             validate_complete_roster(item, roster_catalogs)
         if item["publication_status"] == "unreleased" and "pending" not in observation:
@@ -916,7 +922,11 @@ def parse_args(arguments: list[str]) -> argparse.Namespace:
         description="Generate and validate Golib compatibility-set artifacts."
     )
     subparsers = parser.add_subparsers(dest="command")
-    subparsers.add_parser("check")
+    check = subparsers.add_parser("check")
+    check.add_argument(
+        "--offline", action="store_true",
+        help="validate local structure and generated artifacts without refreshing public bindings",
+    )
     candidate = subparsers.add_parser("candidate")
     candidate.add_argument("--set-id", required=True)
     candidate.add_argument("--observed-at", required=True)
@@ -1033,7 +1043,7 @@ def main(arguments: list[str] | None = None) -> int:
         project_catalogs(data, options.directory, write=options.write)
         print("projected compatibility-set catalog membership")
         return 0
-    data = load()
+    data = load(verify_public=not getattr(options, "offline", False))
     rendered = render(data)
     if OUTPUT.exists() and OUTPUT.read_text() != rendered:
         raise ValueError("compatibility-sets.md is stale; regenerate it")
@@ -1042,11 +1052,15 @@ def main(arguments: list[str] | None = None) -> int:
         validate_residuals(json.loads(RESIDUALS.read_text()), data)
     catalogs = load_catalog_modules()
     consumer_set, catalogs = current_consumer_inputs(
-        data, catalogs, load_current_consumer_selection()
+        data, catalogs, load_current_consumer_selection(),
+        verify_public=not getattr(options, "offline", False),
     )
     if consumer_set is not None:
         check_clean_consumer(consumer_set, catalogs)
-    print(f"validated {len(data['sets'])} compatibility set(s)")
+    if getattr(options, "offline", False):
+        print(f"validated local structure for {len(data['sets'])} compatibility set(s); public bindings not refreshed")
+    else:
+        print(f"validated {len(data['sets'])} compatibility set(s)")
     return 0
 
 

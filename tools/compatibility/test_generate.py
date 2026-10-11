@@ -192,6 +192,22 @@ class CompatibilitySetTest(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.load_published(revision)
 
+    def test_offline_check_retains_structure_without_refreshing_public_bindings(self):
+        self.write_catalogs([self.catalog_module()])
+        item = self.base_set("a" * 40)
+        self.write_set(item)
+        generate.project_catalogs(
+            {"sets": [item]}, self.ecosystem, write=True
+        )
+        with mock.patch.object(generate, "remote_tag_revision", side_effect=AssertionError("network lookup")), mock.patch.object(
+            generate, "public_module_version", side_effect=AssertionError("network lookup")
+        ):
+            self.assertEqual(generate.main(["check", "--offline"]), 0)
+            item["publication_status"] = "invalid"
+            self.write_set(item)
+            with self.assertRaisesRegex(ValueError, "publication status"):
+                generate.main(["check", "--offline"])
+
     def test_unreleased_draft_may_defer_local_public_binding(self):
         revision = "a" * 40
         self.write_catalogs([self.catalog_module()])
@@ -812,6 +828,12 @@ class CompatibilitySetTest(unittest.TestCase):
                 if repository == module["repository"] and tag == "adapters/foo/v2.0.0" else None,
             public_version_lookup=lambda path, version: path.endswith("/v2") and version == "v2.0.0",
         )
+        offline_current, offline_catalogs = generate.current_consumer_inputs(
+            value, [module], selection, verify_public=False,
+            remote_tag_lookup=lambda *_: self.fail("offline consumer refreshed a tag"),
+            public_version_lookup=lambda *_: self.fail("offline consumer refreshed the proxy"),
+        )
+        self.assertEqual((offline_current, offline_catalogs), (current, catalogs))
         go_mod, source = generate.render_clean_consumer(current, catalogs)
         self.assertIn(module["module_path"] + "/v2 v2.0.0", go_mod)
         self.assertIn('"' + module["module_path"] + '/v2"', source)

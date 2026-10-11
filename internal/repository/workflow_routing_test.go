@@ -24,6 +24,65 @@ func reusableStep(t *testing.T, job, id, name string) workflowStep {
 	return workflowStep{}
 }
 
+func TestReusableMetadataDocumentationFailsClosedWithoutCampaigns(t *testing.T) {
+	step := reusableStep(t, "repository-contract", "", "Validate metadata documentation locally")
+	if step.If != "needs.prepare.outputs.runtime == 'false'" {
+		t.Fatalf("metadata documentation condition = %q", step.If)
+	}
+	for _, scenario := range []struct {
+		name, helpStatus, docsStatus, capable string
+		wantCode                              int
+	}{
+		{"bounded docs", "0", "0", "true", 0},
+		{"broken documentation", "0", "19", "true", 19},
+		{"help failure", "17", "0", "true", 17},
+		{"old verifier", "0", "0", "false", 1},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			task := t.TempDir()
+			log := filepath.Join(task, "commands")
+			writeExecutable(t, filepath.Join(task, "golib"), `#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >>"$DOCS_LOG"
+case "$*" in
+  --help)
+    if test "$DOCS_CAPABLE" = true; then printf '%s\n' 'golib docs check --local'; fi
+    exit "$DOCS_HELP_STATUS" ;;
+  'docs check --local') exit "$DOCS_STATUS" ;;
+  *) exit 64 ;;
+esac
+`)
+			command := exec.CommandContext(t.Context(), "bash", "-c", step.Run)
+			command.Env = append(os.Environ(), "PATH="+task+string(os.PathListSeparator)+os.Getenv("PATH"),
+				"DOCS_LOG="+log, "DOCS_CAPABLE="+scenario.capable,
+				"DOCS_HELP_STATUS="+scenario.helpStatus, "DOCS_STATUS="+scenario.docsStatus)
+			output, err := command.CombinedOutput()
+			code := 0
+			if err != nil {
+				if failure, ok := err.(*exec.ExitError); ok {
+					code = failure.ExitCode()
+				} else {
+					t.Fatal(err)
+				}
+			}
+			if code != scenario.wantCode {
+				t.Fatalf("documentation exit = %d, want %d: %s", code, scenario.wantCode, output)
+			}
+			commands, err := os.ReadFile(log)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "--help\n"
+			if scenario.capable == "true" && scenario.helpStatus == "0" {
+				want += "docs check --local\n"
+			}
+			if string(commands) != want {
+				t.Fatalf("documentation commands = %q, want %q", commands, want)
+			}
+		})
+	}
+}
+
 func TestReusableScopeRefusesMissingGitEvidenceAndPRRehearsal(t *testing.T) {
 	script := reusableStep(t, "prepare", "scope", "").Run
 	for _, test := range []struct{ name, event, dryRun, base string }{

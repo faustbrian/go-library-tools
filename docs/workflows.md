@@ -1,5 +1,22 @@
 # Reusable Workflows
 
+## Tools-only aggregate milestones
+
+Tools' own CI runs `make milestone-check` only when a compatibility set is
+published, an already-published set changes, or a manual run selects
+`ecosystem_milestone: true`. Ordinary
+main pushes and scheduled runs retain their applicable local checks without
+automatically repeating the aggregate catalog campaign. Changed consumer inputs
+still select their separate compatibility-consumer qualification.
+PR/main classification retains the existing generator's offline structure and
+generated-artifact checks. `python3 tools/compatibility/generate.py check --offline`
+does not refresh remote tags or public proxy identities; full publication and
+explicit milestone qualification retain those checks.
+
+The final Required check demands success from every applicable job, including
+PR dependency review and explicitly selected milestones, rehearsals, and
+diagnostics. Skipped applicable work is a failure, not an assurance pass.
+
 ## Tools-only native CLI diagnostic
 
 Tools' own `ci.yml` accepts the optional manual input `native_cli_diagnostic`.
@@ -202,6 +219,11 @@ Pull-request runs review dependency changes before the final required job.
 Workflow syntax and expression validation are available locally through
 `golib workflows check`, run as part of the repository `make ci` contract, and
 execute in the reusable workflow's hosted repository-contract job.
+
+Metadata routing also runs `golib docs check --local`: bounded repository-local
+Markdown structure and link checks without network access or runtime commands.
+This capability is required when adopting this workflow revision. The existing
+full documentation command and runtime example checks remain separate.
 
 The final required job rejects missing or invalid classifications, failed or
 cancelled mandatory results, and applicable checks that were skipped. A job

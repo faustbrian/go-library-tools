@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Add network-free `golib docs check --local` using the bounded Markdown checker,
+  and require it on metadata CI before secret scanning. Existing full
+  documentation checks remain available.
+
 - Add an optional `mutation.max_workers` ceiling for process-heavy native
   campaigns. Existing configurations retain automatic admission; the Tools
   repository selects one worker without relaxing mutation acceptance.
@@ -14,6 +18,10 @@ All notable changes to this project are documented in this file.
   Diagnostic results do not replace campaign or release qualification.
 
 ### Changed
+
+- Select Tools aggregate milestones for new or changed published compatibility
+  sets and explicit manual runs. Keep offline catalog validation and require
+  success from applicable jobs rather than accepting skipped mandatory checks.
 
 - Skip throwaway SBOM generation in ordinary local and pull-request checks
   without removing security/license validation, explicit full generator checks,

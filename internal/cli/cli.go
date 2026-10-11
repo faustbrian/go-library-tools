@@ -17,6 +17,7 @@ import (
 	"github.com/faustbrian/go-library-tools/v2/internal/cohesion"
 	"github.com/faustbrian/go-library-tools/v2/internal/config"
 	"github.com/faustbrian/go-library-tools/v2/internal/consumers"
+	"github.com/faustbrian/go-library-tools/v2/internal/docscheck"
 	"github.com/faustbrian/go-library-tools/v2/internal/evidence"
 	"github.com/faustbrian/go-library-tools/v2/internal/gates"
 	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
@@ -53,6 +54,7 @@ Usage:
   golib api check
   golib api update
   golib docs check [--module <directory>]
+  golib docs check --local
 	golib services cycle [--module <directory>]
   golib release check [--all|--module <directory>]
   golib release dry-run [--all|--module <directory>]
@@ -287,6 +289,17 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Mutation(ctx, selection)
 		})
 	case "docs":
+		if len(args) == 3 && args[1] == "check" && args[2] == "--local" {
+			if err := docscheck.CheckContext(ctx, root); err != nil {
+				if ctx.Err() != nil {
+					return failure(stderr, ctx.Err())
+				}
+				// Link destinations and wrapped filesystem errors may contain private
+				// content. Keep the CI diagnostic independent of repository input.
+				return failure(stderr, errors.New("local documentation validation failed; inspect local Markdown links"))
+			}
+			return publishValidationSuccess(ctx, stdout, stderr, "local documentation valid\n")
+		}
 		if len(args) < 2 || args[1] != "check" {
 			return usage(stderr, "usage: golib docs check [--module <directory>]")
 		}

@@ -21,6 +21,12 @@ for releases or changes whose identified risks require it. Expensive mutation,
 race, fuzz, benchmark, and external-service checks are selected for those risks
 rather than imposed on every milestone.
 
+`golib docs check --local` validates repository Markdown structure and local
+links with the existing bounded checker, without runtime commands, network
+access, or spelling-tool installation. Metadata CI uses it before secret
+scanning. Existing `golib docs check` retains full configured documentation
+checks; executable examples need their relevant compile/tests.
+
 Ordinary local checks retain security and license validation but skip throwaway
 SBOM generation. Full generator validation and retained release SBOM artifacts
 remain at their explicit boundaries.
