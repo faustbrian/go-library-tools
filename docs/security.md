@@ -34,6 +34,11 @@ rendered in diagnostics. This gate proves that the current module graph can
 produce a valid SBOM; release workflows separately publish attestable SBOM
 artifacts.
 
+Ordinary `golib check --local` skips this throwaway generator validation while
+retaining all vulnerability, source, secret, and license scans. SBOM generation
+and publication stay at the relevant release boundary; the explicit full check
+still exercises the bounded generator.
+
 The versioned [ecosystem security contract](ecosystem/security/README.md)
 defines the shared threat model, vulnerability-management process, risk
 ownership, scanner-result matrix, and per-revision release verdict.
@@ -46,8 +51,9 @@ source, dependency, manifest, or workflow content changed in between.
 Security-enabled modules run pinned govulncheck, standalone gosec, a centrally
 owned go-analysis security policy, full-history gitleaks with a centrally owned
 configuration, a current-tree scan that includes existing generated artifacts, license
-checks, and SBOM generation during ordinary local/PR checks as well as the full
-gate. Repository-owned `.gitleaksignore` files are rejected before execution,
+checks during ordinary local/PR checks as well as the full gate. Only the full
+gate adds SBOM generator validation. Repository-owned `.gitleaksignore` files
+are rejected before execution,
 and inline `gitleaks:allow` directives are ignored by both scans. Source-level
 native gosec suppressions must name exact rules and include a reason, while
 `nolint:gosec` explanations must appear on the same comment line. A consumer
@@ -162,11 +168,13 @@ without secrets or write-capable credentials.
 History and current-source snapshots are acquired and scanned once per check
 invocation, before any repository tests or release consumer builds execute.
 The reusable workflow uses one invocation across selected modules, retaining
-module-attributed analyzers, licenses, and SBOMs. Standalone `--module` checks
+module-attributed analyzers and licenses. Full checks also validate SBOM
+generation. Standalone `--module` checks
 still perform both repository scans. Missing or failed source scans fail closed.
-All selected modules' vulnerability, gosec, owned-analysis, license, and SBOM
-scans also finish before repository execution; runtime service scopes remain
-module-owned and start afterward. Repository manifests are capped at 64 modules.
+All selected modules' vulnerability, gosec, owned-analysis, and license scans,
+plus SBOM validation when selected, finish before repository execution; runtime
+service scopes remain module-owned and start afterward. Repository manifests
+are capped at 64 modules.
 Before creating a snapshot, history is bounded to 10,000 refs, 100,000 objects
 (including unreachable objects),
 and 4 GiB of total uncompressed object bytes. Bundle output has an independent

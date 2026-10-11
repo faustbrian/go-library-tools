@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Skip throwaway SBOM generation in ordinary local and pull-request checks
+  without removing security/license validation, explicit full generator checks,
+  or retained release SBOMs.
+
 - Reuse one disposable Makefile cache session for adjacent package tests and
   vet, and build the CLI once per local check or CI session. Preserve failure
   propagation, cleanup, and executor-owned isolation.

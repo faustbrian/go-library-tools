@@ -625,7 +625,7 @@ func (runner Runner) Check(ctx context.Context, selection []string) error {
 	if err := runner.preflightSecurityPolicies(ctx, output, modules); err != nil {
 		return err
 	}
-	if err := runner.scanSelectedSecurity(ctx, output, modules); err != nil {
+	if err := runner.scanSelectedSecurity(ctx, output, modules, true); err != nil {
 		return err
 	}
 	return runner.checkModules(ctx, output, modules)
@@ -657,7 +657,7 @@ func (runner Runner) Local(ctx context.Context, selection []string) error {
 	if err := runner.preflightSecurityPolicies(ctx, output, modules); err != nil {
 		return err
 	}
-	if err := runner.scanSelectedSecurity(ctx, output, modules); err != nil {
+	if err := runner.scanSelectedSecurity(ctx, output, modules, false); err != nil {
 		return err
 	}
 	for _, module := range modules {
@@ -983,6 +983,13 @@ func (runner Runner) preflightSecurityPolicies(ctx context.Context, output io.Wr
 }
 
 func (runner Runner) runSecurity(ctx context.Context, output io.Writer, directory string, module inventory.Module) error {
+	if err := runner.runSecurityScans(ctx, output, directory, module); err != nil {
+		return err
+	}
+	return announce(output, module.Directory, "SBOM", func() error { return runner.runSBOM(ctx, directory) })
+}
+
+func (runner Runner) runSecurityScans(ctx context.Context, output io.Writer, directory string, module inventory.Module) error {
 	if err := runner.securityTool(ctx, output, module.Directory, "vulnerability", directory,
 		"golang.org/x/vuln/cmd/govulncheck@"+govulncheckVersion, "./..."); err != nil {
 		return err
@@ -1024,10 +1031,10 @@ func (runner Runner) runSecurity(ctx context.Context, output io.Writer, director
 		"check", "./...", "--ignore", licenseOwner); err != nil {
 		return err
 	}
-	return announce(output, module.Directory, "SBOM", func() error { return runner.runSBOM(ctx, directory) })
+	return nil
 }
 
-func (runner *Runner) scanSelectedSecurity(ctx context.Context, output io.Writer, modules []inventory.Module) error {
+func (runner *Runner) scanSelectedSecurity(ctx context.Context, output io.Writer, modules []inventory.Module, includeSBOM bool) error {
 	// Finish every selected source/graph scan before any repository-controlled
 	// test can mutate inputs for another module. Runtime service scopes remain
 	// owned by the later per-module execution pass.
@@ -1042,7 +1049,11 @@ func (runner *Runner) scanSelectedSecurity(ctx context.Context, output io.Writer
 	}
 	for _, module := range modules {
 		if module.Gates["security"] {
-			if err := runner.runSecurity(ctx, output, filepath.Join(runner.Root, module.Directory), module); err != nil {
+			scan := runner.runSecurityScans
+			if includeSBOM {
+				scan = runner.runSecurity
+			}
+			if err := scan(ctx, output, filepath.Join(runner.Root, module.Directory), module); err != nil {
 				return err
 			}
 		}

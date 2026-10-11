@@ -21,6 +21,10 @@ for releases or changes whose identified risks require it. Expensive mutation,
 race, fuzz, benchmark, and external-service checks are selected for those risks
 rather than imposed on every milestone.
 
+Ordinary local checks retain security and license validation but skip throwaway
+SBOM generation. Full generator validation and retained release SBOM artifacts
+remain at their explicit boundaries.
+
 Release validation requires the ordinary tests, documentation, lint, and
 security gates. Coverage, race, and mutation remain available when the changed
 behavior's risk classification selects them; disabling one of those gates for

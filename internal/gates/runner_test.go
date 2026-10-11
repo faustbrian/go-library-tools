@@ -94,7 +94,6 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 		"go build -mod=mod -o <golib-analysis> github.com/faustbrian/go-analysis/cmd/golib-analysis",
 		"<golib-analysis> check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore example",
-		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 		"gofmt -l -- example.go",
 		"go mod tidy -diff",
 		"go vet ./...",
@@ -111,7 +110,7 @@ func TestLocalRunsBoundedPullRequestContract(t *testing.T) {
 			t.Errorf("output does not include gate %q: %s", gate, output.String())
 		}
 	}
-	for _, gate := range []string{"coverage", "mutation", "race", "fuzz"} {
+	for _, gate := range []string{"coverage", "mutation", "race", "fuzz", "SBOM"} {
 		if strings.Contains(output.String(), "[.] "+gate+"\n") {
 			t.Errorf("bounded local output includes risk-selected gate %q: %s", gate, output.String())
 		}
