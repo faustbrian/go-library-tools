@@ -30,14 +30,21 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 	for _, scenario := range []struct {
 		name, invalid   string
 		publishedChange bool
+		changedPath     string
 	}{
-		{"unchanged publication", "", false},
-		{"changed published content", "", true},
-		{"malformed JSON", "{", false},
-		{"missing sets", `{}`, false},
-		{"empty sets", `{"sets":[]}`, false},
-		{"wrong sets type", `{"sets":{}}`, false},
-		{"invalid draft identity", `{"sets":[{"publication_status":"unreleased","set_id":"invalid"}]}`, false},
+		{"unchanged publication", "", false, ""},
+		{"changed published content", "", true, ""},
+		{"Tools manifest only", "", false, "modules.json"},
+		{"consumer dependency", "", false, "release/compatibility-consumer/go.mod"},
+		{"consumer checksums", "", false, "release/compatibility-consumer/go.sum"},
+		{"consumer source", "", false, "release/compatibility-consumer/consumer_test.go"},
+		{"consumer toolchain", "", false, ".go-version"},
+		{"consumer workflow", "", false, ".github/workflows/ci.yml"},
+		{"malformed JSON", "{", false, ""},
+		{"missing sets", `{}`, false, ""},
+		{"empty sets", `{"sets":[]}`, false, ""},
+		{"wrong sets type", `{"sets":{}}`, false, ""},
+		{"invalid draft identity", `{"sets":[{"publication_status":"unreleased","set_id":"invalid"}]}`, false, ""},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			root := t.TempDir()
@@ -78,8 +85,18 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 				write(t, filepath.Join(root, "docs/ecosystem/compatibility-sets.json"), string(encoded)+"\n")
 			}
 			writeSet()
+			if scenario.changedPath != "" {
+				initial := "fixture input\n"
+				if scenario.changedPath == "modules.json" {
+					initial = `{"modules":[{"directory":".","version":"2.0.0"}]}` + "\n"
+				}
+				write(t, filepath.Join(root, scenario.changedPath), initial)
+			}
 			runGit(t, root, "init", "-q")
 			runGit(t, root, "add", "tools/compatibility/generate.py", "docs/ecosystem")
+			if scenario.changedPath != "" {
+				runGit(t, root, "add", scenario.changedPath)
+			}
 			runGit(t, root, "-c", "core.hooksPath=/dev/null", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture")
 			base := strings.TrimSpace(runGit(t, root, "rev-parse", "HEAD"))
 			if scenario.invalid != "" {
@@ -87,6 +104,15 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 			} else if scenario.publishedChange {
 				item["caveats"] = []string{"changed fixture"}
 				writeSet()
+			}
+			if scenario.changedPath != "" {
+				updated := "changed fixture input\n"
+				if scenario.changedPath == "modules.json" {
+					updated = `{"modules":[{"directory":".","version":"2.1.0"}]}` + "\n"
+				}
+				write(t, filepath.Join(root, scenario.changedPath), updated)
+				runGit(t, root, "add", scenario.changedPath)
+				runGit(t, root, "-c", "core.hooksPath=/dev/null", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "changed input")
 			}
 			resultPath := filepath.Join(root, "github-output")
 			command := exec.CommandContext(t.Context(), "bash", "-e", "-c", script)
@@ -106,7 +132,8 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 			if err != nil {
 				t.Fatal(err)
 			}
-			want := fmt.Sprintf("publication_required=%t\nrequired=%t\n", scenario.publishedChange, scenario.publishedChange)
+			consumerRequired := scenario.publishedChange || (scenario.changedPath != "" && scenario.changedPath != "modules.json")
+			want := fmt.Sprintf("publication_required=%t\nrequired=%t\n", scenario.publishedChange, consumerRequired)
 			if string(result) != want {
 				t.Fatalf("scope = %q, want %q", result, want)
 			}

@@ -335,7 +335,7 @@ jobs:
           echo "publication_required=${publication_required}" >>"${GITHUB_OUTPUT}"
           if [[ "${publication_required}" == true ]] ||
             ! git diff --quiet "${BASE_SHA}" HEAD -- \
-              .go-version modules.json .github/workflows/ci.yml \
+              .go-version .github/workflows/ci.yml \
               release/compatibility-consumer/go.mod \
               release/compatibility-consumer/go.sum \
               release/compatibility-consumer/consumer_test.go \

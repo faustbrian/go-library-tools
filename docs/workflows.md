@@ -13,6 +13,21 @@ generated-artifact checks. `python3 tools/compatibility/generate.py check --offl
 does not refresh remote tags or public proxy identities; full publication and
 explicit milestone qualification retain those checks.
 
+The separate compatibility consumer imports published sibling-library modules,
+not Tools' internal APIs or root manifest. Root `modules.json` changes, including
+Tools version preparation, retain repository and catalog validation but do not
+select that unrelated three-platform consumer rebuild. Consumer source,
+dependency/selection files, its toolchain and workflow, generator changes and
+published compatibility-set changes retain their qualification triggers.
+
+Batch routine catalog and compatible tooling adoption weekly, or sooner for an
+explicit consumer requirement. A library release need not wait for that batch;
+its own public-consumer proof and directly affected owned compatibility remain
+the delivery boundary. Catalog/consumer-only maintenance does not require a
+Tools CLI/module tag or fleet repinning. Preserve published historical sets and
+their stated scope/caveats rather than treating each new library version as a
+promise to requalify every historical combination.
+
 The final Required check demands success from every applicable job, including
 PR dependency review and explicitly selected milestones, rehearsals, and
 diagnostics. Skipped applicable work is a failure, not an assurance pass.

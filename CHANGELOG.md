@@ -46,6 +46,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Keep Tools manifest/version preparation out of unrelated sibling-library
+  consumer qualification; retain actual consumer-input and publication triggers.
+
 - Build explicit source bootstrap once per reusable CI run and share the bounded,
   checksum-bound binary only with that run's dependent jobs.
 
