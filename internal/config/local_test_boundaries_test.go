@@ -26,6 +26,10 @@ func TestLocalTestBudgetPreservesAdmissionBoundaries(t *testing.T) {
 		{"255-byte selector", "local-test", 1, "^Test" + strings.Repeat("A", 249) + "$", false},
 		{"256-byte selector", "local-test", 1, "^Test" + strings.Repeat("A", 250) + "$", false},
 		{"257-byte selector", "local-test", 1, "^Test" + strings.Repeat("A", 251) + "$", true},
+		{"literal terminal dollar after repetition", "local-test", 1, `^Test.*\$`, true},
+		{"literal terminal dollar after group", "local-test", 1, `^Test(Alpha|Beta)\$`, true},
+		{"escaped dollar with end anchor", "local-test", 1, `^Test(Alpha|Beta)\$$`, false},
+		{"escaped dollar before repetition and end anchor", "local-test", 1, `^Test\$.*$`, false},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			operation := config.Operation{Module: ".", Gate: scenario.gate}
@@ -55,6 +59,40 @@ func TestLocalTestBudgetPreservesAdmissionBoundaries(t *testing.T) {
 			}
 			if err == nil && (len(loaded.Operations) != 1 || len(loaded.Operations[0].Steps) != scenario.steps || loaded.Operations[0].Steps[0].Run != scenario.selector) {
 				t.Fatal("loaded local-test operation changed")
+			}
+		})
+	}
+}
+
+func TestLocalTestBudgetAccumulatesDeadlinesWithoutOverflowAdmission(t *testing.T) {
+	for _, scenario := range []struct {
+		name     string
+		timeouts []string
+		want     time.Duration
+		invalid  bool
+	}{
+		{"one exact ceiling", []string{"3m"}, 3 * time.Minute, false},
+		{"combined exact ceiling", []string{"2m", "1m"}, 3 * time.Minute, false},
+		{"positive remaining budget exceeded", []string{"2m", "61s"}, 0, true},
+		{"no remaining budget", []string{"2m", "1m", "1ns"}, 0, true},
+		{"negative remaining budget cannot admit another step", []string{"181s", "1ns"}, 0, true},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			operation := config.Operation{Module: ".", Gate: "local-test"}
+			var policy strings.Builder
+			policy.WriteString("schema_version: 1\ntool_version: v2.0.0\noperations:\n  - module: .\n    gate: local-test\n    steps:\n")
+			for _, timeout := range scenario.timeouts {
+				operation.Steps = append(operation.Steps, config.Step{Type: "go-test", Packages: []string{"."}, Run: "^TestContract$", Count: 1, Timeout: timeout})
+				fmt.Fprintf(&policy, "      - type: go-test\n        packages: [.]\n        run: '^TestContract$'\n        count: 1\n        timeout: %s\n", timeout)
+			}
+			budget, err := operation.LocalTestBudget()
+			if (err != nil) != scenario.invalid || budget != scenario.want {
+				t.Fatalf("cumulative budget=%v, error=%v, want=%v refusal=%v", budget, err, scenario.want, scenario.invalid)
+			}
+			root := t.TempDir()
+			write(t, filepath.Join(root, ".golib.yaml"), policy.String())
+			if _, err := config.Load(root); (err != nil) != scenario.invalid {
+				t.Fatalf("loaded cumulative budget admission=%v", err)
 			}
 		})
 	}

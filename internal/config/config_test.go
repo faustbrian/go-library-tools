@@ -486,6 +486,43 @@ func TestLoadReportsMissingAndOversizedConfiguration(t *testing.T) {
 	}
 }
 
+func TestDecodeAcceptsExactMaximumSize(t *testing.T) {
+	const header = "schema_version: 1\ntool_version: v2.0.0\n"
+	for _, size := range []int{config.MaximumSize - 1, config.MaximumSize, config.MaximumSize + 1} {
+		data := []byte(header + "#" + strings.Repeat("x", size-len(header)-1))
+		got, err := config.Decode(data)
+		if size > config.MaximumSize {
+			if !errors.Is(err, config.ErrTooLarge) {
+				t.Fatalf("Decode(%d bytes) error=%v, want size refusal", size, err)
+			}
+		} else if err != nil || got.SchemaVersion != 1 || got.ToolVersion != "v2.0.0" {
+			t.Fatalf("Decode(%d bytes) identity=%d/%q, error=%v", size, got.SchemaVersion, got.ToolVersion, err)
+		}
+	}
+}
+
+func TestLoadRaceRefusesEachCampaignSelector(t *testing.T) {
+	for _, race := range []bool{false, true} {
+		for _, selector := range []struct{ field, value string }{
+			{"run", "^TestContract$"}, {"benchmark", "^BenchmarkContract$"}, {"fuzz", "^FuzzContract$"},
+		} {
+			t.Run(selector.field+map[bool]string{false: " nonrace", true: " race"}[race], func(t *testing.T) {
+				policy := "schema_version: 1\ntool_version: v2.0.0\noperations:\n  - module: .\n    gate: fuzz\n    steps:\n      - type: go-test\n        packages: [.]\n        " + selector.field + ": '" + selector.value + "'\n        race: " + map[bool]string{false: "false", true: "true"}[race] + "\n        timeout: 1m\n"
+				root := t.TempDir()
+				write(t, filepath.Join(root, ".golib.yaml"), policy)
+				got, err := config.Load(root)
+				refuse := race && selector.field != "run"
+				if (err != nil) != refuse {
+					t.Fatalf("race/campaign admission: %v, want refusal=%v", err, refuse)
+				}
+				if err == nil && (len(got.Operations) != 1 || len(got.Operations[0].Steps) != 1 || got.Operations[0].Steps[0].Race != race) {
+					t.Fatal("loaded race policy changed")
+				}
+			})
+		}
+	}
+}
+
 func write(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
