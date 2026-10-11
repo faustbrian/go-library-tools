@@ -9,6 +9,15 @@ automatically select an aggregate milestone. `make milestone-check` supplies
 consumer/compatibility validation only when that boundary is selected; shared
 ordinary quality uses the selected affected modules in one local session.
 
+Each verifier invocation owns private Go caches, scratch and GolangCI-Lint's
+result cache, overriding an ambient lint-cache directory. Adjacent commands in
+that invocation reuse the cache; cleanup removes it on success or failure.
+The executor disables inherited external lint-cache backends so results cannot
+escape that ownership boundary.
+Opting into a bounded local cache session borrows only its Go compilation/module
+caches. Lint results remain invocation-owned and are never written to the
+user-wide cache or retained across independent verifier invocations.
+
 Reusable CodeQL PR analysis compiles the same prepared changed owners and owned
 reverse consumers with their canonical build tags and a 30-minute job bound.
 Invalid, empty, duplicated or unknown selections fail before compilation; build

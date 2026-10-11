@@ -52,8 +52,8 @@ func (operatingTaskFileSystem) RemoveAll(path string) error {
 	return os.RemoveAll(path)
 }
 
-// NewProcessExecutor creates an executor whose Go caches and temporary files
-// are task-owned. The caller must invoke cleanup exactly once.
+// NewProcessExecutor creates an executor whose Go and lint caches and temporary
+// files are task-owned. The caller must invoke cleanup exactly once.
 func NewProcessExecutor(repositoryRoot string, stdout, stderr io.Writer) (Executor, func() error, error) {
 	return newProcessExecutor(repositoryRoot, stdout, stderr, operatingTaskFileSystem{})
 }
@@ -131,10 +131,11 @@ func newProcessExecutor(repositoryRoot string, stdout, stderr io.Writer, files t
 		return nil
 	}
 	directories := map[string]string{
-		"GOCACHE":    filepath.Join(task, "go-build"),
-		"GOMODCACHE": filepath.Join(task, "go-mod"),
-		"GOTMPDIR":   filepath.Join(task, "go-tmp"),
-		"GOBIN":      filepath.Join(task, "bin"),
+		"GOCACHE":             filepath.Join(task, "go-build"),
+		"GOMODCACHE":          filepath.Join(task, "go-mod"),
+		"GOTMPDIR":            filepath.Join(task, "go-tmp"),
+		"GOBIN":               filepath.Join(task, "bin"),
+		"GOLANGCI_LINT_CACHE": filepath.Join(task, "golangci-lint"),
 	}
 	for _, directory := range directories {
 		if err := files.MkdirAll(directory, 0o700); err != nil {
@@ -142,6 +143,8 @@ func newProcessExecutor(repositoryRoot string, stdout, stderr io.Writer, files t
 			return nil, nil, fmt.Errorf("create task directory: %w", err)
 		}
 	}
+	// An external lint-cache backend can retain results outside owned scratch.
+	directories["GOLANGCI_LINT_CACHEPROG"] = ""
 	return &processExecutor{environment: directories, stdout: stdout, stderr: stderr, task: task}, cleanup, nil
 }
 

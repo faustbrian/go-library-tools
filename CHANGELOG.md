@@ -46,6 +46,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Keep GolangCI-Lint result caches private to each verifier invocation and
+  remove them with owned scratch, including when borrowing session Go caches.
+  Disable inherited external lint-cache backends that bypass this ownership.
+
 - Keep Tools' quick-fix and non-default checks in GolangCI-Lint while
   standalone Staticcheck owns the overlapping analysis once.
 
