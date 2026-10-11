@@ -4,6 +4,8 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.1.1 - 2026-10-11
+
 ### Fixed
 
 - Follow Go's resolved test-binary dependency identities for affected fuzz
