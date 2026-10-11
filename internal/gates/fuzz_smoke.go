@@ -315,8 +315,15 @@ func (runner Runner) fuzzTargetAffected(ctx context.Context, module inventory.Mo
 		// Only the selected package's tests are built. Dependencies' own tests
 		// appear in go list metadata but are not part of this fuzz binary.
 		if current == target {
-			queue = append(queue, pkg.TestImports...)
-			queue = append(queue, pkg.XTestImports...)
+			if test, exists := graph[target+".test"]; exists {
+				// The test binary's resolved imports retain Go's exact rebuilt
+				// dependency identities. Canonical test metadata can name a
+				// dependency emitted only as a test-specific variant.
+				queue = append(queue, test.Imports...)
+			} else {
+				queue = append(queue, pkg.TestImports...)
+				queue = append(queue, pkg.XTestImports...)
+			}
 		}
 	}
 	return affected, nil

@@ -169,6 +169,93 @@ func TestFuzzSmokeNativeCgoGraph(t *testing.T) {
 	}
 }
 
+func TestFuzzSmokeUsesExactResolvedTestContext(t *testing.T) {
+	root := t.TempDir()
+	module := inventory.Module{Directory: ".", ModulePath: "example"}
+	runner := Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}}}
+	graph := map[string]fuzzPackage{
+		"example/parser": {ImportPath: "example/parser", Dir: filepath.Join(root, "parser"),
+			XTestImports: []string{"example/helper"}, TestEmbedPatterns: []string{"internal/*.json"}, XTestEmbedPatterns: []string{"external/*.json"}},
+		"example/parser.test": {ImportPath: "example/parser.test", Dir: filepath.Join(root, "parser"),
+			Imports: []string{"example/parser [example/parser.test]", "example/helper [example/parser.test]"}},
+		"example/parser [example/parser.test]": {ImportPath: "example/parser [example/parser.test]", Dir: filepath.Join(root, "parser")},
+		"example/helper [example/parser.test]": {ImportPath: "example/helper [example/parser.test]", Dir: filepath.Join(root, "helper"),
+			TestImports: []string{"missing/dependency/tests"}, TestEmbedPatterns: []string{"own-tests/*.json"}},
+		"example/helper [example/other.test]": {ImportPath: "example/helper [example/other.test]", Dir: filepath.Join(root, "helper"),
+			Imports: []string{"example/other-only"}},
+		"example/other-only": {ImportPath: "example/other-only", Dir: filepath.Join(root, "other-only")},
+	}
+	for _, scenario := range []struct {
+		change string
+		want   bool
+	}{
+		{"helper/helper.go", true}, {"parser/parser_test.go", true},
+		{"parser/internal/deleted.json", true}, {"parser/external/deleted.json", true},
+		{"helper/helper_test.go", false}, {"helper/own-tests/deleted.json", false},
+		{"other-only/value.go", false}, {"README.md", false},
+	} {
+		affected, err := runner.fuzzTargetAffected(t.Context(), module, "example/parser", graph, []string{scenario.change})
+		if err != nil || affected != scenario.want {
+			t.Fatalf("resolved test context for %q = %v, error = %v, want %v", scenario.change, affected, err, scenario.want)
+		}
+	}
+	delete(graph, "example/helper [example/parser.test]")
+	for _, change := range []string{"README.md", ".golib.yaml"} {
+		if _, err := runner.fuzzTargetAffected(t.Context(), module, "example/parser", graph, []string{change}); err == nil {
+			t.Fatal("missing exact dependency was replaced by another test context")
+		}
+	}
+}
+
+func TestFuzzSmokeNativeExternalTestDependencyVariant(t *testing.T) {
+	root := t.TempDir()
+	for name, content := range map[string]string{
+		"go.mod":           "module example\n\ngo 1.27.0\n",
+		"parser.go":        "package parser\nfunc Parse() {}\n",
+		"parser_test.go":   "package parser\nimport \"testing\"\nfunc TestParse(t *testing.T) { Parse() }\n",
+		"external_test.go": "package parser_test\nimport (\"testing\"; \"example/helper\")\nfunc TestExternal(t *testing.T) { helper.Parse() }\n",
+		"helper/helper.go": "package helper\nimport \"example\"\nfunc Parse() { parser.Parse() }\n",
+	} {
+		name := filepath.Join(root, name)
+		if err := os.MkdirAll(filepath.Dir(name), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(name, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	module := inventory.Module{Directory: ".", ModulePath: "example"}
+	runner := Runner{Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{module}},
+		Executor: executorFunction(func(ctx context.Context, command Command) error {
+			process := exec.CommandContext(ctx, command.Name, command.Args...)
+			process.Dir = command.Dir
+			process.Env = append(os.Environ(), "GOOS=linux", "GOARCH=amd64", "CGO_ENABLED=1", "GOWORK=off")
+			process.Stdout, process.Stderr = command.Stdout, command.Stderr
+			return process.Run()
+		})}
+	ctx, cancel := context.WithTimeout(t.Context(), time.Minute)
+	defer cancel()
+	graph, err := runner.fuzzPackageGraph(ctx, module, []string{"."})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, exists := graph["example/helper"]; exists {
+		t.Fatal("fixture unexpectedly emitted a standalone external-test dependency")
+	}
+	if _, exists := graph["example/helper [example.test]"]; !exists {
+		t.Fatal("fixture did not produce the external-test dependency variant")
+	}
+	for _, scenario := range []struct {
+		change string
+		want   bool
+	}{{"helper/helper.go", true}, {"helper/helper_test.go", false}, {"external_test.go", true}, {"README.md", false}} {
+		affected, err := runner.fuzzTargetAffected(ctx, module, "example", graph, []string{scenario.change})
+		if err != nil || affected != scenario.want {
+			t.Fatalf("test-variant selection for %q = %v, error = %v, want %v", scenario.change, affected, err, scenario.want)
+		}
+	}
+}
+
 func TestFuzzSmokeCommandBoundsAndFixedDiagnostics(t *testing.T) {
 	for _, scenario := range []struct {
 		name, output string

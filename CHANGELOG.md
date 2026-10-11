@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- Follow Go's resolved test-binary dependency identities for affected fuzz
+  selection, including external-test dependencies rebuilt for the target.
+  Preserve missing-dependency refusals and ignore dependencies' own tests.
+
 ## 2.1.0 - 2026-10-11
 
 ### Added
