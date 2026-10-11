@@ -144,8 +144,8 @@ func TestFuzzSmokeRefusesMissingAmbiguousAndFailedTargets(t *testing.T) {
 			active := 0
 			runner := Runner{Root: t.TempDir(), Executor: executorFunction(func(ctx context.Context, command Command) error {
 				deadline, exists := ctx.Deadline()
-				if !exists || time.Until(deadline) > fuzzSmokeStepBudget {
-					t.Fatal("target execution has no bounded wall budget")
+				if !exists || time.Until(deadline) > time.Minute || time.Until(deadline) < 30*time.Second {
+					t.Fatal("target wall budget is unbounded or cannot admit the observed cold compilation")
 				}
 				if slices.Contains(command.Args, "-list=^FuzzParse$") {
 					_, _ = io.WriteString(command.Stdout, scenario.listed)
@@ -170,6 +170,34 @@ func TestFuzzSmokeRefusesMissingAmbiguousAndFailedTargets(t *testing.T) {
 				t.Fatalf("active target invocations = %d", active)
 			}
 		})
+	}
+}
+
+func TestFuzzSmokeNeverExtendsEarlierParentDeadline(t *testing.T) {
+	ctx, cancel := context.WithTimeout(t.Context(), time.Second)
+	defer cancel()
+	parentDeadline, _ := ctx.Deadline()
+	executions := 0
+	runner := Runner{Root: t.TempDir(), Executor: executorFunction(func(commandContext context.Context, command Command) error {
+		deadline, exists := commandContext.Deadline()
+		if !exists || !deadline.Equal(parentDeadline) {
+			t.Fatal("target extended the total/parent deadline")
+		}
+		if slices.Contains(command.Args, "-list=^FuzzParse$") {
+			_, _ = io.WriteString(command.Stdout, "FuzzParse\n")
+			return nil
+		}
+		executions++
+		return context.DeadlineExceeded
+	})}
+	step := config.Step{Type: "go-test", Packages: []string{"."}, Fuzz: "^FuzzParse$"}
+	err := runner.fuzzSmokeStep(ctx, inventory.Module{Directory: "."}, step)
+	if !errors.Is(err, context.DeadlineExceeded) || executions != 1 {
+		t.Fatalf("expired target outcome = %v, executions = %d", err, executions)
+	}
+	cancel()
+	if err := runner.fuzzSmokeStep(ctx, inventory.Module{Directory: "."}, step); !errors.Is(err, context.Canceled) || executions != 1 {
+		t.Fatalf("cancelled target outcome = %v, executions = %d", err, executions)
 	}
 }
 

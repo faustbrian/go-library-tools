@@ -76,6 +76,7 @@ remove them afterward:
 (
   set -eu
   golib_task_root=$(mktemp -d "${TMPDIR:-/tmp}/golib-contributor.XXXXXX")
+  golib_task_root=$(cd "$golib_task_root" && pwd -P)
   trap 'chmod -R u+w "$golib_task_root" 2>/dev/null || true; find "$golib_task_root" -depth -delete' EXIT
   mkdir -p "$golib_task_root/cache" "$golib_task_root/mod" "$golib_task_root/tmp"
   export GOCACHE="$golib_task_root/cache" GOMODCACHE="$golib_task_root/mod"

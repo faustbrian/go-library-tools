@@ -46,6 +46,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Admit cold instrumented builds within bounded fuzz smoke without extending
+  the active campaign, test timeout or total smoke deadline.
+
 - Keep GolangCI-Lint result caches private to each verifier invocation and
   remove them with owned scratch, including when borrowing session Go caches.
   Disable inherited external lint-cache backends that bypass this ownership.

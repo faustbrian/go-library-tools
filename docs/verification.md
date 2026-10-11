@@ -47,6 +47,15 @@ exercise its material risk. `make check-packages PACKAGES=...` is the focused
 developer entry point, `make local-check` validates repository-owned metadata,
 and `make check` remains the explicit complete all-enabled repository gate for
 release work or a risk-selected aggregate run.
+Changed-input fuzz smoke permits one minute per target for discovery, cold
+instrumented compilation and execution, within a three-minute total smoke
+deadline. It still runs a two-second active campaign with a 15-second test
+timeout and two workers. Earlier caller deadlines take precedence; exhausted
+budgets, missing or ambiguous targets and native failures remain failures.
+This allowance avoids rejecting a healthy first fuzz run solely because ordinary
+test caches do not contain instrumented dependencies. It does not extend the
+active campaign or select unrelated targets.
+
 Tools' own GolangCI-Lint configuration retains Staticcheck's unique `QF*`
 quick-fix rules plus `SA9003` and `ST1023`, which the standalone CLI excludes
 by default. The local and full verifier gates still run standalone Staticcheck
