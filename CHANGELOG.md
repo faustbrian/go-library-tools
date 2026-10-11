@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Run one owner-selected mutation package weekly or by explicit main dispatch,
+  outside PR/push checks. Bound execution, native output and artifact retention;
+  reuse trusted-main checkpoints without replacing committed evidence.
+
 - Add an explicit one-package mutation command with one worker and a 20-minute
   execution bound, retaining reusable evidence and visible failures without
   importing entire legacy archives or claiming full-module qualification.

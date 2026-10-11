@@ -1,0 +1,150 @@
+name: Mutation assurance
+
+on:
+  schedule:
+    - cron: '43 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Select one owned risk; this is partial assurance, not release qualification
+        required: true
+        type: choice
+        default: internal/config
+        options:
+          - internal/config
+          - internal/inventory
+          - internal/repositoryfile
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tools-mutation-assurance-main
+  cancel-in-progress: false
+
+jobs:
+  mutation:
+    name: Selected mutation assurance
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      GOENV: 'off'
+      GOWORK: 'off'
+      GOTOOLCHAIN: local
+      GOMAXPROCS: '2'
+      GOMEMLIMIT: 2GiB
+      GOFLAGS: -p=1
+      GOPROXY: https://proxy.golang.org
+      GOSUMDB: sum.golang.org
+      GOPRIVATE: ''
+      GONOPROXY: ''
+      GONOSUMDB: ''
+    steps:
+      - id: scope
+        name: Select one owned risk
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          SOURCE_REF: ${{ github.ref }}
+          SELECTED_PACKAGE: ${{ inputs.package }}
+        run: |
+          set -euo pipefail
+          [[ "${SOURCE_REF}" == refs/heads/main ]] || { echo 'mutation assurance requires main' >&2; exit 1; }
+          case "${EVENT_NAME}" in
+            schedule) selected=internal/config ;;
+            workflow_dispatch) selected="${SELECTED_PACKAGE}" ;;
+            *) echo 'mutation assurance is scheduled or explicitly dispatched, never a PR/push check' >&2; exit 1 ;;
+          esac
+          case "${selected}" in
+            internal/config|internal/inventory|internal/repositoryfile) ;;
+            *) echo 'select one declared owner risk' >&2; exit 1 ;;
+          esac
+          printf 'package=%s\n' "${selected}" >>"${GITHUB_OUTPUT}"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: .go-version
+          cache: false
+      - id: cache
+        name: Restore main-only native checkpoints
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        timeout-minutes: 3
+        env:
+          SEGMENT_DOWNLOAD_TIMEOUT_MINS: '2'
+        with:
+          path: |
+            .verification/by-input/mutation
+            .verification/mutation/reports
+          key: tools-main-mutation-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.scope.outputs.package }}-${{ github.sha }}
+          restore-keys: tools-main-mutation-v1-${{ runner.os }}-${{ runner.arch }}-${{ steps.scope.outputs.package }}-
+      - id: restored
+        name: Validate restored native output
+        run: |
+          set -euo pipefail
+          git diff --quiet -- .verification/by-input/mutation .verification/mutation/reports || {
+            echo 'restored cache changed committed mutation evidence' >&2
+            exit 1
+          }
+          python3 .github/scripts/check-mutation-output.py
+      - id: campaign
+        name: Run bounded package campaign
+        env:
+          SELECTED_PACKAGE: ${{ steps.scope.outputs.package }}
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-mutation-assurance.XXXXXX")"
+          cleanup() {
+            result=$?
+            trap - EXIT
+            chmod -R u+w "${task}" || result=1
+            find "${task}" -depth -delete || result=1
+            exit "${result}"
+          }
+          trap cleanup EXIT
+          mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
+          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp"
+          result=0
+          go build -p=1 -mod=readonly -trimpath -buildvcs=false -o "${task}/golib" ./cmd/golib || result=$?
+          if [[ "${result}" == 0 ]]; then
+            if ! "${task}/golib" --help | grep -Fq 'golib mutation --module <directory> --package <directory>'; then
+              echo 'selected-package mutation capability missing' >&2
+              result=1
+            else
+              "${task}/golib" mutation --module . --package "${SELECTED_PACKAGE}" || result=$?
+            fi
+          fi
+          {
+            printf '## Selected mutation assurance\n\nOwner: faustbrian\n\n'
+            printf 'Scope: `%s`; one worker, 20-minute execution budget. Campaign result: exit %s.\n\n' "${SELECTED_PACKAGE}" "${result}"
+            printf 'Final job status also includes cleanup and output-admission failures.\n\n'
+            printf 'Partial assurance only; no full-module or release verdict. Triage failures against the selected contract; a survivor is not automatically a production bug.\n'
+          } >>"${GITHUB_STEP_SUMMARY}"
+          exit "${result}"
+      - id: output
+        name: Bound retained native output
+        if: always() && steps.restored.outcome == 'success'
+        run: python3 .github/scripts/check-mutation-output.py
+      - name: Save reusable main-only checkpoints
+        if: success() && steps.cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        timeout-minutes: 3
+        with:
+          path: |
+            .verification/by-input/mutation
+            .verification/mutation/reports
+          key: ${{ steps.cache.outputs.cache-primary-key }}
+      - name: Retain bounded native diagnostics
+        if: always() && steps.output.outcome == 'success'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        timeout-minutes: 3
+        with:
+          name: selected-mutation-${{ steps.scope.outputs.package == 'internal/config' && 'config' || steps.scope.outputs.package == 'internal/inventory' && 'inventory' || 'repositoryfile' }}
+          path: |
+            .verification/by-input/mutation
+            .verification/mutation/reports
+            .verification/mutation/failed-reports
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 14

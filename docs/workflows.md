@@ -32,6 +32,29 @@ equivalence waiver or release pass. A timeout remains a timeout. The manually
 selected job must succeed for that workflow's Required check to succeed; no
 consumer workflow or production verifier asset is changed by this diagnostic.
 
+## Tools-only selected mutation assurance
+
+`mutation-assurance.yml` runs one configuration-admission package weekly on
+main. A main-only manual dispatch can instead select `internal/config`,
+`internal/inventory` or `internal/repositoryfile`. These cover configuration
+admission, manifest admission and confined repository reads respectively.
+There is no PR/push trigger and no dependency from Required. The owner is
+`faustbrian`; inspect the selected-contract failure rather than treating every
+survivor as a production bug. This is partial assurance, not a full-module or
+release qualification.
+
+The job has a 30-minute ceiling; campaign execution has the CLI's 20-minute
+budget and one worker. Module baselines and native integration tests still run.
+Build, capability, campaign and output-admission failures fail the job. Native
+checkpoint/report caches are populated only by successful trusted-main runs;
+native input validation still determines whether a record is reusable. Restore
+must not change committed evidence. Only flat JSON output is retained, bounded
+to 2,048 files and 32 MiB, with no symlinked ancestors or entries. Cache paths
+exclude binaries and equivalence-policy files. Native diagnostics are retained
+as artifacts for 14 days; the cache provider controls cache eviction. Private
+build/module caches are removed after the command, including failures. Hosted
+timing and useful campaign completion must be measured before widening scope.
+
 ## Consumer workflows
 
 Ordinary PR and main runtime changes select their committed base-to-HEAD module
