@@ -2,7 +2,7 @@
 
 All notable changes to this project are documented in this file.
 
-## Unreleased
+## 2.2.0 - 2026-10-11
 
 ### Fixed
 
@@ -10,13 +10,28 @@ All notable changes to this project are documented in this file.
   retaining unique bare diagnostics and explicit package-qualified selection.
   Admit owned test-only fuzz packages without manufacturing production records;
   preserve duplicate, discovery and ownership refusals.
+  ([7f26524ee5](https://github.com/faustbrian/go-library-tools/commit/7f26524ee5))
 - Prepare instrumented fuzz binaries once per selected package context within
   a separate five-minute ceiling, without running tests. Retain three-minute
   active execution, earlier caller deadlines and bounded cleanup; report both
   phase durations so cold compilation does not consume the active budget.
+  ([684e9af062](https://github.com/faustbrian/go-library-tools/commit/684e9af062),
+  [432172b7a7](https://github.com/faustbrian/go-library-tools/commit/432172b7a7))
 - Isolate pinned verifier compilation from repository-controlled caches in
   ordinary and borrowed sessions. Preserve bounded native repository cache
   reuse and remove owned invocation resources on success and failure.
+  ([8dd36b0043](https://github.com/faustbrian/go-library-tools/commit/8dd36b0043),
+  [70a5d7da35](https://github.com/faustbrian/go-library-tools/commit/70a5d7da35))
+- Protect configuration size, whole-expression selectors, cumulative deadlines
+  and race admission with focused regressions; classify only two exact
+  parser-domain equivalents without relabelling native failures.
+  ([fe0ad708aa](https://github.com/faustbrian/go-library-tools/commit/fe0ad708aa),
+  [f47c25459b](https://github.com/faustbrian/go-library-tools/commit/f47c25459b))
+- Keep command-specific fixture environments independent and publish complete
+  cancellation readiness atomically, retaining real child-stop and cleanup
+  assertions.
+  ([65e0061f31](https://github.com/faustbrian/go-library-tools/commit/65e0061f31),
+  [82a2d51873](https://github.com/faustbrian/go-library-tools/commit/82a2d51873))
 
 ### Changed
 
@@ -24,13 +39,20 @@ All notable changes to this project are documented in this file.
   optional private session compartments. Keep native and unknown commands,
   lint results and output binaries separate, preserve legacy sessions, and
   remove the caller-owned session on every exit.
+  ([d19f417e9f](https://github.com/faustbrian/go-library-tools/commit/d19f417e9f))
 - Add a separate bounded weekly fuzz-risk rotation and explicit main-only
   diagnostics using current repository declarations; retain ordinary fast CI
-  and explicit full assurance without a new CLI or library release.
-- Read escaped native mutation job logs only through bounded capture so an
-  unchanged prior failed attempt remains attributable, not passing assurance.
+  and explicit full assurance without forcing a new CLI or library release.
+  Bound escaped native diagnostic capture and admit mapped in-process owners
+  without replacing their constrained or full assurance contracts.
+  ([df42d70bd9](https://github.com/faustbrian/go-library-tools/commit/df42d70bd9),
+  [03747a891a](https://github.com/faustbrian/go-library-tools/commit/03747a891a))
+- Reuse unchanged scheduled mutation attempts without converting prior failures
+  to passing assurance. Keep explicit retry and fresh-diagnostic attribution.
+  ([5d8de02c82](https://github.com/faustbrian/go-library-tools/commit/5d8de02c82))
 - Qualify changed compatibility-consumer scenarios independently while shared
   dependency, toolchain and publication changes retain full consumer coverage.
+  ([bf409692b0](https://github.com/faustbrian/go-library-tools/commit/bf409692b0))
 
 ## 2.1.3 - 2026-10-11
 

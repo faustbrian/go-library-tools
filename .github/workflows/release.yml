@@ -130,6 +130,19 @@ jobs:
             )] | length == 1
           ' docs/ecosystem/security/risk-register.json >/dev/null
           if [[ "$(sha256sum docs/ecosystem/security/security-matrix.json | awk '{print $1}')" != "${matrix_sha256}" ]]; then exit 1; fi
+          if [[ "${native}" == true ]]; then
+            GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
+              GOMAXPROCS=2 GOFLAGS=-p=1 \
+              go test -p=1 -tags=verifierintegration ./internal/gates \
+                -run '^TestTaskVerifier(SessionReusesPinnedToolCompilation|SessionsRemainDistinctAndCanceledCallsCleanScratch)$' \
+                -count=1 -timeout=4m -json >"${task}/cache-qualification.json"
+            for test in TestTaskVerifierSessionReusesPinnedToolCompilation \
+              TestTaskVerifierSessionsRemainDistinctAndCanceledCallsCleanScratch; do
+              jq -s -e --arg test "${test}" \
+                '[.[] | select(.Action == "pass" and .Test == $test)] | length == 1' \
+                "${task}/cache-qualification.json" >/dev/null
+            done
+          fi
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
             go run ./cmd/golib release check
           if [[ "${native}" == true ]]; then
