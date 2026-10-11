@@ -8,6 +8,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Revalidate source-bound Gates and mutation equivalence reviews and replace
+  the obsolete coverage-mode loop coordinate, retaining fail-closed identity
+  checks, raw survivor statuses and fresh native qualification.
+
 - Apply Go 1.26.9 and x/net v0.60.0 equally to frozen copied/shared rehearsal
   execution profiles, without rewriting representative source or weakening
   security checks. Original vulnerable profiles remain unqualified.
