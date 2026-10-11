@@ -1739,9 +1739,10 @@ func releaseNativeEvidence(t *testing.T, sha, prHead, other, defect string) stri
 	prRun := run(200, prHead, "pull_request")
 	prRun["head_branch"] = "feature/release"
 	prRun["pull_requests"] = []any{map[string]any{"number": 7, "head": map[string]any{"sha": prHead}, "base": map[string]any{"ref": "main"}}}
+	pullBase := map[string]any{"ref": "main", "sha": other, "repo": map[string]any{"full_name": "faustbrian/go-library-tools"}}
 	pull := map[string]any{"number": 7, "state": "closed", "merged": true, "merged_at": "2099-09-01T00:00:00Z", "merge_commit_sha": sha,
 		"head": map[string]any{"sha": prHead, "repo": map[string]any{"full_name": "faustbrian/go-library-tools"}},
-		"base": map[string]any{"ref": "main", "sha": other, "repo": map[string]any{"full_name": "faustbrian/go-library-tools"}}}
+		"base": pullBase}
 	jobs := []map[string]any{required, quality, codeql}
 	pulls := []map[string]any{pull}
 	prRuns := []any{prRun}
@@ -1788,11 +1789,11 @@ func releaseNativeEvidence(t *testing.T, sha, prHead, other, defect string) stri
 	case "wrong-pr-merge":
 		pull["merge_commit_sha"] = other
 	case "wrong-pr-base":
-		pull["base"].(map[string]any)["ref"] = "develop"
+		pullBase["ref"] = "develop"
 	case "invalid-pr-base-sha":
-		pull["base"].(map[string]any)["sha"] = "refs/heads/main"
+		pullBase["sha"] = "refs/heads/main"
 	case "missing-pr-base-sha":
-		delete(pull["base"].(map[string]any), "sha")
+		delete(pullBase, "sha")
 	case "empty-pr-association":
 		prRun["pull_requests"] = []any{}
 	case "wrong-dependency-head":
