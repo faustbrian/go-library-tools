@@ -105,7 +105,7 @@ fuzz-capable tooling is rejected before checks, without a full-scan fallback.
 PR/main checks add short active fuzz smoke only for configured typed targets
 affected through their current Go production/test/embed dependencies. They retain
 saved fuzz regressions in ordinary tests and do not start mutation campaigns.
-Smoke has a three-minute total ceiling. Each target shares a one-minute wall
+Smoke has a three-minute total ceiling. Each target shares a two-minute wall
 deadline for discovery, cold instrumented compilation and execution, with two
 seconds of fuzz work and a 15-second native test timeout. Earlier caller deadlines
 remain in effect; invalid selection or an exceeded budget fails honestly.

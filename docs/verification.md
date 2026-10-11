@@ -47,7 +47,7 @@ exercise its material risk. `make check-packages PACKAGES=...` is the focused
 developer entry point, `make local-check` validates repository-owned metadata,
 and `make check` remains the explicit complete all-enabled repository gate for
 release work or a risk-selected aggregate run.
-Changed-input fuzz smoke permits one minute per target for discovery, cold
+Changed-input fuzz smoke permits two minutes per target for discovery, cold
 instrumented compilation and execution, within a three-minute total smoke
 deadline. It still runs a two-second active campaign with a 15-second test
 timeout and two workers. Earlier caller deadlines take precedence; exhausted

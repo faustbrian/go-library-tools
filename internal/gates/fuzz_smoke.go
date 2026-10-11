@@ -22,7 +22,7 @@ const (
 	// Go's first active fuzz run compiles instrumented dependencies even when
 	// ordinary tests are cached. Admission includes that cold build, not just
 	// the two-second campaign; the total smoke deadline still takes precedence.
-	fuzzSmokeStepBudget          = time.Minute
+	fuzzSmokeStepBudget          = 2 * time.Minute
 	fuzzSmokeMaximumCandidates   = 128
 	fuzzSmokeMaximumTargets      = 32
 	fuzzSmokeMaximumPackageBytes = 16 << 20

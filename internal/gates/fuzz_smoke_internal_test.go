@@ -326,7 +326,7 @@ func TestFuzzSmokeRefusesMissingAmbiguousAndFailedTargets(t *testing.T) {
 			active := 0
 			runner := Runner{Root: t.TempDir(), Executor: executorFunction(func(ctx context.Context, command Command) error {
 				deadline, exists := ctx.Deadline()
-				if !exists || time.Until(deadline) > time.Minute || time.Until(deadline) < 30*time.Second {
+				if !exists || time.Until(deadline) > 2*time.Minute || time.Until(deadline) < 90*time.Second {
 					t.Fatal("target wall budget is unbounded or cannot admit the observed cold compilation")
 				}
 				if slices.Contains(command.Args, "-list=^FuzzParse$") {
@@ -352,6 +352,37 @@ func TestFuzzSmokeRefusesMissingAmbiguousAndFailedTargets(t *testing.T) {
 				t.Fatalf("active target invocations = %d", active)
 			}
 		})
+	}
+}
+
+func TestFuzzSmokeAdmitsColdCompilationWithoutExtendingRuntime(t *testing.T) {
+	// A real Linux cache consumer used its first minute compiling instrumented
+	// external-test dependencies, then needed 20s more on the partial cache.
+	// Check the executor's offered deadline without sleeping through that build.
+	executions := 0
+	runner := Runner{Root: t.TempDir(), Executor: executorFunction(func(ctx context.Context, command Command) error {
+		deadline, exists := ctx.Deadline()
+		if !exists || time.Until(deadline) > 2*time.Minute {
+			t.Fatal("cold admission has no bounded target deadline")
+		}
+		if slices.Contains(command.Args, "-list=^FuzzParse$") {
+			_, _ = io.WriteString(command.Stdout, "FuzzParse\n")
+			return nil
+		}
+		executions++
+		if time.Until(deadline) < 80*time.Second {
+			return context.DeadlineExceeded
+		}
+		for _, expected := range []string{"-fuzztime=2s", "-timeout=15s", "-count=1", "-parallel=2", "-p=1"} {
+			if !slices.Contains(command.Args, expected) {
+				t.Errorf("missing smoke runtime control %s", expected)
+			}
+		}
+		return nil
+	})}
+	step := config.Step{Type: "go-test", Packages: []string{"."}, Fuzz: "^FuzzParse$", Budget: "10m", Timeout: "20m", Count: 100}
+	if err := runner.fuzzSmokeStep(t.Context(), inventory.Module{Directory: "."}, step); err != nil || executions != 1 {
+		t.Fatalf("observed cold compilation refused: %v, executions = %d", err, executions)
 	}
 }
 

@@ -90,7 +90,7 @@ Core commands:
   fuzz targets through actual production/test imports, testdata, and embed
   inputs; module dependency or target configuration changes widen selection.
   Discovery and execution share the local executor. Smoke uses two workers,
-  two seconds of fuzzing per target, a one-minute shared discovery/build/execution
+  two seconds of fuzzing per target, a two-minute shared discovery/build/execution
   deadline per target, a 15-second native test timeout and a three-minute total
   discovery/execution deadline, with at most 32 selected
   targets from 128 configured candidates. Missing, ambiguous, invalid or
