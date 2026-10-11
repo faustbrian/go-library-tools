@@ -3,113 +3,113 @@
   "modules": [
     {
       "module": "github.com/faustbrian/go-library-tools/v2",
-      "revision": "339bb17f2e9522082e0d116bf5b78628b71c0773",
+      "revision": "b00be3b0fab4a99c4840abd71080aa04e418f701",
       "scanners": [
         {
           "name": "go-vet",
           "tool_version": "Go 1.27.2",
           "command": "go vet ./...",
           "status": "passed",
-          "completed_at": "2026-10-11T03:13:44Z",
-          "result": "Exact-source main Quality job executed and passed go-vet for 339bb17f2e9522082e0d116bf5b78628b71c0773; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38107320979/job/114375457753",
-          "result_sha256": "128164af6fdeffa32c2f1d9cba75ce3af955beee526033a7d11b6c3f26fc87bd"
+          "completed_at": "2026-10-11T08:10:14Z",
+          "result": "Exact-source main Quality job executed and passed go-vet for b00be3b0fab4a99c4840abd71080aa04e418f701; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123604590/job/114423236772",
+          "result_sha256": "b132671ca35ed997b98e0a55abcaa3c7c18ce58d0a2de1843d7319f6bdd05123"
         },
         {
           "name": "staticcheck",
           "tool_version": "v0.8.1 with golang.org/x/tools v0.50.0 importer",
           "command": "<task-owned compiled staticcheck v0.8.1> ./...",
           "status": "passed",
-          "completed_at": "2026-10-11T03:13:44Z",
-          "result": "Exact-source main Quality job executed and passed staticcheck for 339bb17f2e9522082e0d116bf5b78628b71c0773; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38107320979/job/114375457753",
-          "result_sha256": "128164af6fdeffa32c2f1d9cba75ce3af955beee526033a7d11b6c3f26fc87bd"
+          "completed_at": "2026-10-11T08:10:14Z",
+          "result": "Exact-source main Quality job executed and passed staticcheck for b00be3b0fab4a99c4840abd71080aa04e418f701; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123604590/job/114423236772",
+          "result_sha256": "b132671ca35ed997b98e0a55abcaa3c7c18ce58d0a2de1843d7319f6bdd05123"
         },
         {
           "name": "govulncheck",
           "tool_version": "v1.6.0",
           "command": "go run golang.org/x/vuln/cmd/govulncheck@v1.6.0 ./...",
           "status": "passed",
-          "completed_at": "2026-10-11T03:13:44Z",
-          "result": "Exact-source main Quality job executed and passed govulncheck for 339bb17f2e9522082e0d116bf5b78628b71c0773; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38107320979/job/114375457753",
-          "result_sha256": "128164af6fdeffa32c2f1d9cba75ce3af955beee526033a7d11b6c3f26fc87bd"
+          "completed_at": "2026-10-11T08:10:14Z",
+          "result": "Exact-source main Quality job executed and passed govulncheck for b00be3b0fab4a99c4840abd71080aa04e418f701; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123604590/job/114423236772",
+          "result_sha256": "b132671ca35ed997b98e0a55abcaa3c7c18ce58d0a2de1843d7319f6bdd05123"
         },
         {
           "name": "gosec",
           "tool_version": "v2.29.0 with golang.org/x/tools v0.50.0 importer",
           "command": "<task-owned compiled gosec v2.29.0> -fmt=json -nosec-require-rules -nosec-require-justification <owned non-fixture package directories>",
           "status": "passed",
-          "completed_at": "2026-10-11T03:13:44Z",
-          "result": "Exact-source main Quality job executed and passed gosec for 339bb17f2e9522082e0d116bf5b78628b71c0773; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38107320979/job/114375457753",
-          "result_sha256": "128164af6fdeffa32c2f1d9cba75ce3af955beee526033a7d11b6c3f26fc87bd"
+          "completed_at": "2026-10-11T08:10:14Z",
+          "result": "Exact-source main Quality job executed and passed gosec for b00be3b0fab4a99c4840abd71080aa04e418f701; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123604590/job/114423236772",
+          "result_sha256": "b132671ca35ed997b98e0a55abcaa3c7c18ce58d0a2de1843d7319f6bdd05123"
         },
         {
           "name": "owned-analysis",
           "tool_version": "v1.0.0 with golang.org/x/tools v0.50.0 importer",
           "command": "<task-owned compiled golib-analysis v1.0.0> check -config <task-owned central security policy> -root <module root> ./...",
           "status": "passed",
-          "completed_at": "2026-10-11T03:13:44Z",
-          "result": "Exact-source main Quality job executed and passed owned-analysis for 339bb17f2e9522082e0d116bf5b78628b71c0773; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38107320979/job/114375457753",
-          "result_sha256": "128164af6fdeffa32c2f1d9cba75ce3af955beee526033a7d11b6c3f26fc87bd"
+          "completed_at": "2026-10-11T08:10:14Z",
+          "result": "Exact-source main Quality job executed and passed owned-analysis for b00be3b0fab4a99c4840abd71080aa04e418f701; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123604590/job/114423236772",
+          "result_sha256": "b132671ca35ed997b98e0a55abcaa3c7c18ce58d0a2de1843d7319f6bdd05123"
         },
         {
           "name": "secret-history",
           "tool_version": "v8.30.1",
           "command": "go run github.com/zricethezav/gitleaks/v8@v8.30.1 git . --config <task-owned central policy> --log-opts=--all --ignore-gitleaks-allow --gitleaks-ignore-path <empty task-owned ignore root> --no-banner --redact --exit-code=42 --report-format=template --report-path=- --report-template <task-owned bounded metadata template>",
           "status": "passed",
-          "completed_at": "2026-10-11T03:13:44Z",
-          "result": "Exact-source main Quality job executed and passed secret-history for 339bb17f2e9522082e0d116bf5b78628b71c0773; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38107320979/job/114375457753",
-          "result_sha256": "128164af6fdeffa32c2f1d9cba75ce3af955beee526033a7d11b6c3f26fc87bd"
+          "completed_at": "2026-10-11T08:10:14Z",
+          "result": "Exact-source main Quality job executed and passed secret-history for b00be3b0fab4a99c4840abd71080aa04e418f701; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123604590/job/114423236772",
+          "result_sha256": "b132671ca35ed997b98e0a55abcaa3c7c18ce58d0a2de1843d7319f6bdd05123"
         },
         {
           "name": "secret-current-tree",
           "tool_version": "v8.30.1",
           "command": "go run github.com/zricethezav/gitleaks/v8@v8.30.1 dir . --config <task-owned central policy> --ignore-gitleaks-allow --gitleaks-ignore-path <empty task-owned ignore root> --no-banner --redact --exit-code=42 --report-format=template --report-path=- --report-template <task-owned bounded metadata template>",
           "status": "passed",
-          "completed_at": "2026-10-11T03:13:44Z",
-          "result": "Exact-source main Quality job executed and passed secret-current-tree for 339bb17f2e9522082e0d116bf5b78628b71c0773; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38107320979/job/114375457753",
-          "result_sha256": "128164af6fdeffa32c2f1d9cba75ce3af955beee526033a7d11b6c3f26fc87bd"
+          "completed_at": "2026-10-11T08:10:14Z",
+          "result": "Exact-source main Quality job executed and passed secret-current-tree for b00be3b0fab4a99c4840abd71080aa04e418f701; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123604590/job/114423236772",
+          "result_sha256": "b132671ca35ed997b98e0a55abcaa3c7c18ce58d0a2de1843d7319f6bdd05123"
         },
         {
           "name": "license",
           "tool_version": "v2.0.1",
           "command": "go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/faustbrian/go-library-tools",
           "status": "passed",
-          "completed_at": "2026-10-11T03:13:44Z",
-          "result": "Exact-source main Quality job executed and passed license for 339bb17f2e9522082e0d116bf5b78628b71c0773; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38107320979/job/114375457753",
-          "result_sha256": "128164af6fdeffa32c2f1d9cba75ce3af955beee526033a7d11b6c3f26fc87bd"
+          "completed_at": "2026-10-11T08:10:14Z",
+          "result": "Exact-source main Quality job executed and passed license for b00be3b0fab4a99c4840abd71080aa04e418f701; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123604590/job/114423236772",
+          "result_sha256": "b132671ca35ed997b98e0a55abcaa3c7c18ce58d0a2de1843d7319f6bdd05123"
         },
         {
           "name": "workflow-analysis",
-          "tool_version": "go-library-tools source 339bb17f2e9522082e0d116bf5b78628b71c0773",
+          "tool_version": "go-library-tools source b00be3b0fab4a99c4840abd71080aa04e418f701",
           "command": "go run ./cmd/golib workflows check",
           "status": "passed",
-          "completed_at": "2026-10-11T03:13:44Z",
-          "result": "Exact-source main Quality job executed and passed workflow-analysis for 339bb17f2e9522082e0d116bf5b78628b71c0773; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38107320979/job/114375457753",
-          "result_sha256": "128164af6fdeffa32c2f1d9cba75ce3af955beee526033a7d11b6c3f26fc87bd"
+          "completed_at": "2026-10-11T08:10:14Z",
+          "result": "Exact-source main Quality job executed and passed workflow-analysis for b00be3b0fab4a99c4840abd71080aa04e418f701; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123604590/job/114423236772",
+          "result_sha256": "b132671ca35ed997b98e0a55abcaa3c7c18ce58d0a2de1843d7319f6bdd05123"
         },
         {
           "name": "codeql",
           "tool_version": "github/codeql-action@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2; CodeQL CLI 2.27.2",
           "command": "GitHub CodeQL init/analyze for Go",
           "status": "passed",
-          "completed_at": "2026-10-11T03:08:03Z",
-          "result": "Exact-source main CodeQL job passed for 339bb17f2e9522082e0d116bf5b78628b71c0773; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38107320979/job/114375457707",
-          "result_sha256": "65a296726042f153e0ba93cc7c90a6a18fc7f9edd4e1ac0ff5355790e440d3be"
+          "completed_at": "2026-10-11T08:07:20Z",
+          "result": "Exact-source main CodeQL job passed for b00be3b0fab4a99c4840abd71080aa04e418f701; digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123604590/job/114423236992",
+          "result_sha256": "7103e009143b27456c0c0fcf49d86707aabb0079835421769eea38b4bff3165a"
         },
         {
           "name": "dependency-review",
           "tool_version": "actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294",
           "command": "GitHub dependency review with low-severity and license failures blocking",
           "status": "passed",
-          "completed_at": "2026-10-11T02:57:39Z",
-          "result": "PR #285 dependency review passed at c72a0d0a4e625ff3b5329ffb989126b706eb34c3, whose tree 5ba1fb652a9400326bbe9b16ca1684629863aae9 equals scanned main 339bb17f2e9522082e0d116bf5b78628b71c0773; this is PR evidence, not a push-job result. Digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38106822014/job/114373999561",
-          "result_sha256": "fcdaaef73f4d99cde4354a3ac62406ff71d5abccb4b119717abc5d5071a5df0a"
+          "completed_at": "2026-10-11T07:56:28Z",
+          "result": "PR #287 dependency review passed at e95abde07561c40815c870d005d72750116150c7, whose tree 096d7c88ca5dde016b135ea3fa88302e1f380a5e equals scanned main b00be3b0fab4a99c4840abd71080aa04e418f701; this is PR evidence, not a push-job result. Digest binds the retrieved raw job log: https://github.com/faustbrian/go-library-tools/actions/runs/38123061382/job/114421600300",
+          "result_sha256": "fce5a50d801fb425b4bcd41e0c9c35fc314ae4878883fbd57a1d0677510945f1"
         }
       ],
       "release_verdict": {
         "status": "pass",
         "owner": "go-library-tools maintainers",
-        "decided_at": "2026-10-11T03:15:32Z",
-        "rationale": "Security-scanner verdict only for immutable source 339bb17f2e9522082e0d116bf5b78628b71c0773: all governed scanners passed, with dependency review attributed to the content-identical PR #285 tree. Main CI 38107320979 passed. NilAway remains advisory. This does not establish a completed release rehearsal, full mutation or release-parity qualification, publication, public-consumer adoption, or an ecosystem milestone; absent module rows do not pass. SEC-FLEET-001 retains its existing bounded acceptance.",
+        "decided_at": "2026-10-11T08:14:32Z",
+        "rationale": "Security-scanner verdict only for immutable source b00be3b0fab4a99c4840abd71080aa04e418f701: all governed scanners passed, with dependency review attributed to the content-identical PR #287 tree. Main CI 38123604590 passed. NilAway remains advisory. This does not establish a completed release rehearsal, full mutation or release-parity qualification, publication, public-consumer adoption, or an ecosystem milestone; absent module rows do not pass. SEC-FLEET-001 retains its existing bounded acceptance.",
         "residual_risks": [
           "SEC-FLEET-001"
         ]
