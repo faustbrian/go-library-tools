@@ -568,7 +568,7 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.runtime == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: ${{ github.event_name == 'pull_request' && 30 || 120 }}
     permissions:
       contents: read
       security-events: write
@@ -623,22 +623,58 @@ jobs:
       - uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
         with:
           languages: go
+          build-mode: manual
           queries: security-extended,security-and-quality
-      - name: Build every module
+      - name: Build selected modules
+        env:
+          MODULE_MATRIX: ${{ needs.prepare.outputs.matrix }}
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_DRY_RUN: ${{ inputs.release_dry_run }}
         run: |
           set -euo pipefail
           task="$(mktemp -d "${RUNNER_TEMP}/golib-codeql.XXXXXX")"
           trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
-          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp"
-          jq -r '.modules[] | [.directory, ((.build_tags // []) | join(","))] | @tsv' modules.json |
+          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" GOWORK=off
+          inventory="$(golib inventory --json)"
+          if [[ "${EVENT_NAME}" == pull_request && "${RELEASE_DRY_RUN}" != true ]]; then
+            # Main/scheduled analysis stays complete: a partial PR database is
+            # not a replacement for repository-wide branch scanning coverage.
+            if [[ -z "${MODULE_MATRIX:-}" || "${#MODULE_MATRIX}" -gt 65536 ]]; then
+              echo 'invalid CodeQL module selection' >&2
+              exit 1
+            fi
+            if ! records="$(jq -er --argjson selected "${MODULE_MATRIX}" '
+              .modules as $modules |
+              if ($selected | type == "array" and length > 0 and length <= 64) and
+                 all($selected[]; type == "object" and
+                   (.directory | type == "string" and length > 0 and (test("[[:cntrl:]]") | not))) and
+                 ([$selected[].directory] | unique | length) == ($selected | length)
+              then
+                $selected[] | .directory as $directory |
+                [$modules[] | select(.directory == $directory)] as $matches |
+                if ($matches | length) == 1 then $matches[0]
+                else error("unknown CodeQL module") end
+              else error("invalid CodeQL module selection") end |
+              [.directory, ((.build_tags // []) | join(","))] | @tsv
+            ' <<<"${inventory}" 2>/dev/null)"; then
+              echo 'invalid CodeQL module selection' >&2
+              exit 1
+            fi
+          else
+            records="$(jq -er '
+              .modules | if type == "array" and length > 0 and length <= 64
+              then .[] else error("invalid CodeQL inventory") end |
+              [.directory, ((.build_tags // []) | join(","))] | @tsv
+            ' <<<"${inventory}")"
+          fi
           while IFS=$'\t' read -r module tags; do
             if [[ -n "${tags}" ]]; then
               (cd "${module}" && go build -tags="${tags}" ./...)
             else
               (cd "${module}" && go build ./...)
             fi
-          done
+          done <<<"${records}"
       - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
 
       - name: Remove source bootstrap workspace

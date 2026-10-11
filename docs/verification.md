@@ -9,6 +9,16 @@ automatically select an aggregate milestone. `make milestone-check` supplies
 consumer/compatibility validation only when that boundary is selected; shared
 ordinary quality uses the selected affected modules in one local session.
 
+Reusable CodeQL PR analysis compiles the same prepared changed owners and owned
+reverse consumers with their canonical build tags and a 30-minute job bound.
+Invalid, empty, duplicated or unknown selections fail before compilation; build
+failures remain failures. The manual builds ignore ambient Go workspaces and use
+one disposable compilation session. Main, scheduled and explicit assurance
+analysis still compiles the complete inventory: partial PR analysis does not
+replace repository-wide security coverage. Query suites and mandatory-result
+aggregation are unchanged. This routing reduces unrelated PR compilation, not
+the security requirements of the selected source and its consumers.
+
 Mutation, broad fuzzing, race, benchmark, external-service, release-rehearsal,
 and ecosystem-wide checks do not block a routine change unless they directly
 exercise its material risk. `make check-packages PACKAGES=...` is the focused

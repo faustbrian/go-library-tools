@@ -46,6 +46,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Limit reusable PR CodeQL compilation to the prepared affected module set,
+  retaining canonical build tags, failure propagation and full main/scheduled
+  analysis. Bound PR analysis to 30 minutes and ignore ambient Go workspaces.
+
 - Allow omitted module package mirrors to expand from canonical package data,
   retaining complete inventory output and strict explicit-mirror checks.
 
