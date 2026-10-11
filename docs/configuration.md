@@ -60,6 +60,43 @@ contract includes exported documentation. The API update command writes either
 format atomically. Checksum-only and Git-history scripts migrate to explicit
 baseline files; they do not remain executable hooks.
 
+For a named concurrency, lifecycle or integration risk, declare a separate
+`local-test` operation rather than adding the complete stress campaign to PRs:
+
+```yaml
+operations:
+  - module: .
+    gate: local-test
+    steps:
+      - type: go-test
+        packages: [.]  # One actual package, never ./...
+        run: '^TestCancellationReleasesPermit$'  # Use your owned test's name.
+        race: true
+        timeout: 90s
+```
+
+`golib check --local` and full checks both run these declared tests. Each step
+requires one explicit non-recursive package, an anchored top-level `Test`
+selector, one execution, and an explicit deadline. Discovery and execution share
+that deadline; a selector matching no tests fails. Put alternatives after the
+mandatory `Test` prefix, for example `^Test(Commit|Rollback)$`; anchors must cover
+the complete expression. At most eight steps are
+allowed per module, and local checks admit at most three minutes of combined
+step deadlines across selected modules. Shorten or split a genuinely broader
+campaign into scheduled assurance; do not silently omit its required regression.
+Existing module test tags and services still apply. Make, fuzz, benchmark and
+stress-repeat steps are not admitted on this route. Native command failures,
+timeouts and cancellation remain failures, not evidence of a passing risk check.
+Execution uses the existing owned process-group cancellation and caps each output
+stream at four MiB; overflowing output fails the check rather than growing logs
+without bound. Package selectors may not contain any Go `...` wildcard.
+
+The optional `race` field adds Go's race build to typed test steps; omission or
+false preserves existing behavior. It is not accepted for Make, fuzz or benchmark
+steps. Existing `test` operations and full race/stress campaigns remain unchanged
+and explicit. Older tooling does not understand these additions; adopt them only
+with capable qualified tooling. Repositories without them need no migration.
+
 `runtimes` declares exact non-Go executables used by repository tests. Deno is
 installed at the declared semantic version. The current zsh fixture supports
 exactly `5.9`; unsupported versions fail configuration validation rather than

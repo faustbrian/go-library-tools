@@ -354,8 +354,10 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 		if !exists {
 			return modules, fmt.Errorf("operations[%d] references unknown module %q", index, operation.Module)
 		}
-		enabled := operation.Gate == "interoperability" && len(module.InteroperabilityTools) > 0
-		if operation.Gate != "interoperability" {
+		// A local-test declaration is its own opt-in to a focused regression;
+		// it does not enable the module's legacy whole-suite test campaigns.
+		enabled := operation.Gate == "local-test" || (operation.Gate == "interoperability" && len(module.InteroperabilityTools) > 0)
+		if operation.Gate != "interoperability" && operation.Gate != "local-test" {
 			enabled = module.Gates[gateKeys[operation.Gate]]
 		}
 		if !enabled {

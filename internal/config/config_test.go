@@ -34,6 +34,40 @@ func TestLoadAppliesStableDefaults(t *testing.T) {
 	}
 }
 
+func TestLoadAdmitsOnlyBoundedLocalTestOperations(t *testing.T) {
+	for _, scenario := range []struct {
+		name, step  string
+		wantFailure bool
+	}{
+		{"focused race", "type: go-test\n        packages: [.]\n        run: '^TestContract$'\n        race: true\n        timeout: 3m", false},
+		{"focused integration", "type: go-test\n        packages: [./adapter]\n        run: '^Test(Commit|Rollback)$'\n        timeout: 1m", false},
+		{"whole module", "type: go-test\n        packages: [./...]\n        run: '^TestContract$'\n        timeout: 1m", true},
+		{"embedded wildcard", "type: go-test\n        packages: [./integration...]\n        run: '^TestContract$'\n        timeout: 1m", true},
+		{"multiple packages", "type: go-test\n        packages: [., ./adapter]\n        run: '^TestContract$'\n        timeout: 1m", true},
+		{"missing selector", "type: go-test\n        packages: [.]\n        timeout: 1m", true},
+		{"unanchored selector", "type: go-test\n        packages: [.]\n        run: Contract\n        timeout: 1m", true},
+		{"escaping alternative", "type: go-test\n        packages: [.]\n        run: '^TestContract$|^FuzzOther$'\n        timeout: 1m", true},
+		{"partially anchored alternative", "type: go-test\n        packages: [.]\n        run: '^TestContract|FuzzOther$'\n        timeout: 1m", true},
+		{"invalid regexp", "type: go-test\n        packages: [.]\n        run: '^Test($'\n        timeout: 1m", true},
+		{"subtest selector", "type: go-test\n        packages: [.]\n        run: '^TestContract/sub$'\n        timeout: 1m", true},
+		{"stress repetition", "type: go-test\n        packages: [.]\n        run: '^TestContract$'\n        count: 20\n        timeout: 1m", true},
+		{"missing deadline", "type: go-test\n        packages: [.]\n        run: '^TestContract$'", true},
+		{"excess deadline", "type: go-test\n        packages: [.]\n        run: '^TestContract$'\n        timeout: 181s", true},
+		{"fuzz", "type: go-test\n        packages: [.]\n        fuzz: '^FuzzContract$'\n        timeout: 1m", true},
+		{"benchmark", "type: go-test\n        packages: [.]\n        benchmark: '^BenchmarkContract$'\n        timeout: 1m", true},
+		{"make campaign", "type: make\n        makefile: verification/package.mk\n        target: stress\n        timeout: 1m", true},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			root := t.TempDir()
+			write(t, filepath.Join(root, ".golib.yaml"), "schema_version: 1\ntool_version: v2.0.0\noperations:\n  - module: .\n    gate: local-test\n    steps:\n      - "+scenario.step+"\n")
+			_, err := config.Load(root)
+			if (err != nil) != scenario.wantFailure {
+				t.Fatalf("focused operation admission: %v", err)
+			}
+		})
+	}
+}
+
 func TestLoadRejectsMutationWorkerCapsOutsideAdmissionRange(t *testing.T) {
 	for _, cap := range []string{"-1", "5", "64", "1.5", "many", "\"1\"", "true", "[]", "{}"} {
 		t.Run(cap, func(t *testing.T) {

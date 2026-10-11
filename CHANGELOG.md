@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Add typed bounded `local-test` risk regressions with optional race builds,
+  shared discovery/execution deadlines and failure on empty test selection.
+
 - Run one owner-selected mutation package weekly or by explicit main dispatch,
   outside PR/push checks. Bound execution, native output and artifact retention;
   reuse trusted-main checkpoints without replacing committed evidence.

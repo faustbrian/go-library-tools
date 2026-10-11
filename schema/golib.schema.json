@@ -122,7 +122,7 @@
         "properties": {
           "module": { "$ref": "#/$defs/repositoryPath" },
           "gate": {
-            "enum": ["api", "benchmark", "conformance", "docs", "fuzz", "interoperability", "test"]
+            "enum": ["api", "benchmark", "conformance", "docs", "fuzz", "interoperability", "test", "local-test"]
           },
           "steps": {
             "type": "array",
@@ -131,6 +131,40 @@
           }
         },
         "allOf": [
+          {
+            "if": {
+              "properties": { "gate": { "const": "local-test" } },
+              "required": ["gate"]
+            },
+            "then": {
+              "properties": {
+                "steps": {
+                  "maxItems": 8,
+                  "description": "Explicit focused tests; the CLI bounds combined parsed deadlines to three minutes across selected modules.",
+                  "items": {
+                    "required": ["packages", "run", "timeout"],
+                    "properties": {
+                      "type": { "const": "go-test" },
+                      "packages": {
+                        "minItems": 1,
+                        "maxItems": 1,
+                        "items": { "not": { "pattern": "\\.\\.\\." } }
+                      },
+                      "run": { "maxLength": 256, "pattern": "^\\^Test(?:[^|/\\^$]|\\([^/\\^$]*\\))*\\$$", "description": "Whole-expression anchors and mandatory Test prefix; group alternatives after Test. The CLI also validates the parsed expression." },
+                      "count": { "enum": [0, 1] }
+                    },
+                    "not": {
+                      "anyOf": [
+                        { "required": ["benchmark"] },
+                        { "required": ["fuzz"] },
+                        { "required": ["budget"] }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
           {
             "if": {
               "properties": { "gate": { "const": "test" } },
@@ -249,7 +283,7 @@
             "not": {
               "anyOf": [
                 { "pattern": "\\\\" },
-                { "pattern": "(?:^|/)\\.{1,2}(?:/|$)" },
+                { "pattern": "/\\.{1,2}(?:/|$)" },
                 { "pattern": "(?:^|/)\\.\\.\\./.+" }
               ]
             }
@@ -264,9 +298,25 @@
           "description": "Positive Go duration or iteration count ending in x; defaults to 100ms for benchmarks and 10000x for fuzzing."
         },
         "count": { "type": "integer", "minimum": 0, "default": 1 },
+        "race": { "type": ["boolean", "null"], "default": false },
         "timeout": { "type": "string", "default": "20m" }
       },
       "allOf": [
+        {
+          "if": {
+            "properties": { "race": { "const": true } },
+            "required": ["race"]
+          },
+          "then": {
+            "properties": { "type": { "const": "go-test" } },
+            "not": {
+              "anyOf": [
+                { "required": ["benchmark"] },
+                { "required": ["fuzz"] }
+              ]
+            }
+          }
+        },
         {
           "if": {
             "properties": { "type": { "const": "make" } },

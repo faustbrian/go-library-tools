@@ -74,6 +74,11 @@ a qualified capable release or reviewed source bootstrap; older workflow pins
 are unchanged. Committed-change inventory is a CI scope selector, not proof of
 uncommitted or untracked local work; contributors should select modules explicitly
 or use `--all` for that work. Metadata-only documentation checks remain separate.
+Owners with concurrency, lifecycle or integration risks add focused typed
+`local-test` operations to that same selected-module session. These retain named
+regressions and optional race builds without enabling old stress campaigns;
+their combined declared deadlines are capped at three minutes. See
+[configuration](configuration.md) for admission and zero-match failure behavior.
 Ordinary runtime quality has a 30-minute job ceiling, including setup; only an
 explicitly selected release rehearsal retains the six-hour ceiling. Exhausting a
 budget fails the applicable check and cannot satisfy Required. These ceilings are

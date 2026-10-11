@@ -7,6 +7,7 @@ import (
 	"io"
 	"path/filepath"
 	"regexp"
+	"regexp/syntax"
 	"strconv"
 	"strings"
 	"time"
@@ -19,6 +20,8 @@ const (
 	// MaximumSize bounds untrusted configuration input.
 	MaximumSize = 1 << 20
 	fileName    = ".golib.yaml"
+	// MaximumLocalTestBudget bounds declared fast risk checks per invocation.
+	MaximumLocalTestBudget = 3 * time.Minute
 )
 
 var (
@@ -138,6 +141,7 @@ type Step struct {
 	Fuzz      string   `json:"fuzz,omitempty" yaml:"fuzz,omitempty"`
 	Budget    string   `json:"budget,omitempty" yaml:"budget,omitempty"`
 	Count     int      `json:"count,omitempty" yaml:"count,omitempty"`
+	Race      bool     `json:"race,omitempty" yaml:"race,omitempty"`
 	Timeout   string   `json:"timeout" yaml:"timeout,omitempty"`
 }
 
@@ -356,13 +360,17 @@ func (operation Operation) validate() error {
 	}
 	allowedGates := map[string]bool{
 		"api": true, "benchmark": true, "conformance": true, "docs": true,
-		"fuzz": true, "interoperability": true, "test": true,
+		"fuzz": true, "interoperability": true, "test": true, "local-test": true,
 	}
 	if !allowedGates[operation.Gate] {
 		return fmt.Errorf("gate %q does not allow custom operations", operation.Gate)
 	}
 	if len(operation.Steps) == 0 {
 		return errors.New("steps must not be empty")
+	}
+	if operation.Gate == "local-test" {
+		_, err := operation.LocalTestBudget()
+		return err
 	}
 	for index, step := range operation.Steps {
 		if err := step.validate(); err != nil {
@@ -373,6 +381,42 @@ func (operation Operation) validate() error {
 		}
 	}
 	return nil
+}
+
+// LocalTestBudget validates an explicitly selected fast test operation and
+// returns its combined command deadlines. Legacy campaign gates are unchanged.
+func (operation Operation) LocalTestBudget() (time.Duration, error) {
+	if operation.Gate != "local-test" || len(operation.Steps) == 0 || len(operation.Steps) > 8 {
+		return 0, errors.New("local-test requires one through eight focused steps")
+	}
+	var budget time.Duration
+	for index, step := range operation.Steps {
+		if err := step.validate(); err != nil {
+			return 0, fmt.Errorf("steps[%d]: %w", index, err)
+		}
+		if step.Type != "go-test" || len(step.Packages) != 1 || strings.Contains(step.Packages[0], "...") || step.Count != 1 || step.Fuzz != "" || step.Benchmark != "" || step.Budget != "" {
+			return 0, errors.New("local-test requires one explicit package and one test execution; campaigns are not allowed")
+		}
+		if len(step.Run) > 256 || !strings.HasPrefix(step.Run, "^Test") || !strings.HasSuffix(step.Run, "$") || strings.Contains(step.Run, "/") {
+			return 0, errors.New("local-test requires an anchored top-level Test selector")
+		}
+		selector, err := syntax.Parse(step.Run, syntax.Perl)
+		if err != nil {
+			return 0, errors.New("local-test selector is invalid")
+		}
+		// Textual prefix/suffix checks alone permit a top-level alternative
+		// to escape Test scope. Require anchors around the entire expression
+		// and a mandatory literal Test prefix before any grouped alternatives.
+		if selector.Op != syntax.OpConcat || len(selector.Sub) < 3 || selector.Sub[0].Op != syntax.OpBeginText || selector.Sub[len(selector.Sub)-1].Op != syntax.OpEndText || selector.Sub[1].Op != syntax.OpLiteral || !strings.HasPrefix(string(selector.Sub[1].Rune), "Test") {
+			return 0, errors.New("local-test requires whole-expression anchors and a mandatory Test prefix; group alternatives after Test")
+		}
+		timeout, _ := time.ParseDuration(step.Timeout)
+		if timeout > MaximumLocalTestBudget-budget {
+			return 0, errors.New("local-test budget exceeds three minutes")
+		}
+		budget += timeout
+	}
+	return budget, nil
 }
 
 func (step Step) validate() error {
@@ -388,6 +432,9 @@ func (step Step) validate() error {
 	}
 	switch step.Type {
 	case "go-test":
+		if step.Race && (step.Benchmark != "" || step.Fuzz != "") {
+			return errors.New("race accepts only test run selectors")
+		}
 		if step.Makefile != "" {
 			return errors.New("go-test does not accept makefile")
 		}
@@ -417,6 +464,9 @@ func (step Step) validate() error {
 			}
 		}
 	case "make":
+		if step.Race {
+			return errors.New("make does not accept race")
+		}
 		if step.Makefile == "" {
 			return errors.New("makefile is required")
 		}

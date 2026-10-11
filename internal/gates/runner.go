@@ -421,8 +421,8 @@ const (
 
 // Command is one external process invocation without shell interpretation.
 type Command struct {
-	// boundedScanner is only set by owned pinned-scanner/source-acquisition
-	// callers. It does not claim containment of arbitrary repository code.
+	// boundedScanner is only set by owned scanner/source/test command callers.
+	// It does not claim containment of arbitrary repository code.
 	boundedScanner bool
 	Name           string
 	Args           []string
@@ -652,6 +652,9 @@ func (runner Runner) Local(ctx context.Context, selection []string) error {
 	if err != nil {
 		return err
 	}
+	if err := runner.preflightLocalTests(modules); err != nil {
+		return err
+	}
 	output := runner.Output
 	if output == nil {
 		output = io.Discard
@@ -784,6 +787,9 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 			}
 		}
 	}
+	if err := runner.runLocalTests(ctx, output, module); err != nil {
+		return err
+	}
 	if module.Gates["race"] {
 		args := testArguments(module.TestTags, true)
 		if err := runner.command(ctx, output, module.Directory, "race", directory, args...); err != nil {
@@ -889,6 +895,9 @@ func (runner Runner) checkModuleLocal(ctx context.Context, output io.Writer, mod
 		if err := runner.command(ctx, output, module.Directory, "test", directory, testArguments(module.TestTags, false)...); err != nil {
 			return err
 		}
+	}
+	if err := runner.runLocalTests(ctx, output, module); err != nil {
+		return err
 	}
 	if module.Gates["lint"] {
 		if err := runner.goTool(ctx, output, module.Directory, "lint", directory,
@@ -1486,6 +1495,9 @@ func operationCommand(directory string, module inventory.Module, step config.Ste
 	switch step.Type {
 	case "go-test":
 		args := []string{"test"}
+		if step.Race {
+			args = append(args, "-race")
+		}
 		if len(module.TestTags) > 0 {
 			args = append(args, "-tags="+strings.Join(module.TestTags, ","))
 		}

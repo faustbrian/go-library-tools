@@ -360,6 +360,10 @@ func (runner Runner) fuzzSmokeStep(ctx context.Context, module inventory.Module,
 }
 
 func (runner Runner) fuzzCommand(ctx context.Context, command Command, limit int) (string, error) {
+	return runner.capturedTestCommand(ctx, command, limit, "fuzz smoke command failed or exceeded its output budget")
+}
+
+func (runner Runner) capturedTestCommand(ctx context.Context, command Command, limit int, failureClass string) (string, error) {
 	if err := ctx.Err(); err != nil {
 		return "", err
 	}
@@ -367,7 +371,7 @@ func (runner Runner) fuzzCommand(ctx context.Context, command Command, limit int
 	stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 	command.Stdout, command.Stderr, command.boundedScanner = stdout, stderr, true
 	if err := runner.Executor.Run(ctx, command); err != nil || stdout.didOverflow() || stderr.didOverflow() {
-		return "", errors.Join(sourceCommandError{class: "fuzz smoke command failed or exceeded its output budget", cause: err}, ctx.Err())
+		return "", errors.Join(sourceCommandError{class: failureClass, cause: err}, ctx.Err())
 	}
 	return stdout.String(), ctx.Err()
 }
