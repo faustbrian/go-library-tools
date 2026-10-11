@@ -20,6 +20,24 @@ select that unrelated three-platform consumer rebuild. Consumer source,
 dependency/selection files, its toolchain and workflow, generator changes and
 published compatibility-set changes retain their qualification triggers.
 
+An edit to an existing independent consumer test file selects only that file
+(or the union of changed files), on the same three supported platforms. The
+disposable public-consumer module copies only those sources plus the existing
+`go.mod` and `go.sum`; it does not add the broad `consumer_test.go` import smoke
+to unrelated compositions. This is file-level qualification: editing the grouped
+`composition_test.go` still qualifies every composition and import in that file.
+Current helpers are file-local; a new shared helper requires full qualification.
+
+Shared module/checksum, toolchain, generator, workflow/runner/selector, selection
+and published-set inputs retain the full current three-platform set. New,
+deleted, renamed or unknown consumer inputs select the complete current set;
+unknown nested Go ownership fails closed instead of silently omitting sources.
+Invalid or unavailable immutable Git bases, missing/unsafe selected sources,
+public-resolution/toolchain/platform refusal and test failures remain fatal.
+Neither this routing nor a successful scenario-only run publishes a compatibility
+set or qualifies unrelated scenarios. Full publication retains its aggregate
+milestone boundary and no consumer maintenance requires a Tools module release.
+
 Batch routine catalog and compatible tooling adoption weekly, or sooner for an
 explicit consumer requirement. A library release need not wait for that batch;
 its own public-consumer proof and directly affected owned compatibility remain

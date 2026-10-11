@@ -1038,14 +1038,24 @@ func TestToolingWorkflowSeparatesFastPullRequestAndAggregateMilestoneChecks(t *t
 
 func TestCompatibilityConsumerMatrixPinsRuntimeToolchain(t *testing.T) {
 	content := readProjectFile(t, ".github/workflows/ci.yml")
+	runner := readProjectFile(t, ".github/scripts/run-compatibility-consumer.sh")
 	version := strings.TrimSpace(readProjectFile(t, ".go-version"))
 	for _, required := range []string{
 		"go-version-file: .go-version",
-		`test "$(go env GOVERSION)" = 'go` + version + `'`,
-		`test "$(go env GOOS)/$(go env GOARCH)" = '${{ matrix.goos }}/${{ matrix.goarch }}'`,
+		"run: bash .github/scripts/run-compatibility-consumer.sh",
+		"EXPECTED_GOOS: ${{ matrix.goos }}",
+		"EXPECTED_GOARCH: ${{ matrix.goarch }}",
 	} {
 		if !strings.Contains(content, required) {
 			t.Errorf("compatibility consumer matrix lacks %q", required)
+		}
+	}
+	for _, required := range []string{
+		`test "$(go env GOVERSION)" = go` + version,
+		`test "$(go env GOOS)/$(go env GOARCH)" = "${EXPECTED_GOOS}/${EXPECTED_GOARCH}"`,
+	} {
+		if !strings.Contains(runner, required) {
+			t.Errorf("compatibility consumer runner lacks %q", required)
 		}
 	}
 }

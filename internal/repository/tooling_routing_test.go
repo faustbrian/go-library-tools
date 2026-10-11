@@ -35,10 +35,12 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 	}{
 		{"unchanged publication", "", false, ""},
 		{"changed published content", "", true, ""},
+		{"deleted published content", "", false, ""},
 		{"Tools manifest only", "", false, "modules.json"},
 		{"consumer dependency", "", false, "release/compatibility-consumer/go.mod"},
 		{"consumer checksums", "", false, "release/compatibility-consumer/go.sum"},
 		{"consumer source", "", false, "release/compatibility-consumer/consumer_test.go"},
+		{"one composition", "", false, "release/compatibility-consumer/wsdl2_composition_test.go"},
 		{"consumer toolchain", "", false, ".go-version"},
 		{"consumer workflow", "", false, ".github/workflows/ci.yml"},
 		{"malformed JSON", "{", false, ""},
@@ -49,6 +51,12 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			root := t.TempDir()
+			for _, name := range []string{"go.mod", "go.sum", "consumer_test.go", "wsdl2_composition_test.go", "openapi2_composition_test.go"} {
+				write(t, filepath.Join(root, "release/compatibility-consumer", name), "fixture input\n")
+			}
+			if data, err := os.ReadFile(filepath.Join(projectRoot(t), ".github/scripts/select-compatibility-consumer.py")); err == nil {
+				write(t, filepath.Join(root, ".github/scripts/select-compatibility-consumer.py"), string(data))
+			}
 			write(t, filepath.Join(root, "tools/compatibility/generate.py"), readProjectFile(t, "tools/compatibility/generate.py"))
 			write(t, filepath.Join(root, "docs/ecosystem/design-language.md"), "# Fixture\n")
 			catalog := map[string]any{"modules": []any{map[string]any{
@@ -70,6 +78,7 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 				"evidence": map[string]any{"observation": "fixture public resolution"}, "caveats": []string{"fixture"},
 				"source_references": []string{"docs/ecosystem/design-language.md"},
 			}
+			includePriorPublished := scenario.name == "deleted published content"
 			writeSet := func() {
 				t.Helper()
 				evidence, ok := item["evidence"].(map[string]any)
@@ -82,7 +91,21 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 					t.Fatal(err)
 				}
 				evidence["content_sha256"] = fmt.Sprintf("sha256:%x", sha256.Sum256(canonical))
-				encoded, err := json.Marshal(map[string]any{"format": "golib-compatibility-sets-v1", "sets": []any{item}})
+				sets := []any{item}
+				if includePriorPublished {
+					prior := maps.Clone(item)
+					prior["set_id"] = "golib-compat-v1-20260909.2"
+					priorEvidence := maps.Clone(evidence)
+					delete(priorEvidence, "content_sha256")
+					prior["evidence"] = priorEvidence
+					canonical, err := json.Marshal(prior)
+					if err != nil {
+						t.Fatal(err)
+					}
+					priorEvidence["content_sha256"] = fmt.Sprintf("sha256:%x", sha256.Sum256(canonical))
+					sets = append(sets, prior)
+				}
+				encoded, err := json.Marshal(map[string]any{"format": "golib-compatibility-sets-v1", "sets": sets})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -97,16 +120,20 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 				write(t, filepath.Join(root, scenario.changedPath), initial)
 			}
 			runGit(t, root, "init", "-q")
-			runGit(t, root, "add", "tools/compatibility/generate.py", "docs/ecosystem")
+			runGit(t, root, "add", "tools/compatibility/generate.py", "docs/ecosystem", "release/compatibility-consumer")
 			if scenario.changedPath != "" {
 				runGit(t, root, "add", scenario.changedPath)
 			}
 			runGit(t, root, "-c", "core.hooksPath=/dev/null", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", "-c", "commit.gpgsign=false", "commit", "-qm", "fixture")
 			base := strings.TrimSpace(runGit(t, root, "rev-parse", "HEAD"))
-			if scenario.invalid != "" {
+			switch {
+			case scenario.invalid != "":
 				write(t, filepath.Join(root, "docs/ecosystem/compatibility-sets.json"), scenario.invalid)
-			} else if scenario.publishedChange {
+			case scenario.publishedChange:
 				item["caveats"] = []string{"changed fixture"}
+				writeSet()
+			case includePriorPublished:
+				includePriorPublished = false
 				writeSet()
 			}
 			if scenario.changedPath != "" {
@@ -136,10 +163,16 @@ func TestToolingScopeRejectsInvalidCatalogsAndQualifiesPublishedChanges(t *testi
 			if err != nil {
 				t.Fatal(err)
 			}
-			consumerRequired := scenario.publishedChange || (scenario.changedPath != "" && scenario.changedPath != "modules.json")
-			want := fmt.Sprintf("publication_required=%t\nrequired=%t\n", scenario.publishedChange, consumerRequired)
+			publicationRequired := scenario.publishedChange || scenario.name == "deleted published content"
+			consumerRequired := publicationRequired || (scenario.changedPath != "" && scenario.changedPath != "modules.json")
+			want := fmt.Sprintf("publication_required=%t\nrequired=%t\n", publicationRequired, consumerRequired)
 			if string(result) != want {
-				t.Fatalf("scope = %q, want %q", result, want)
+				if !strings.HasPrefix(string(result), want) {
+					t.Fatalf("scope = %q, want prefix %q", result, want)
+				}
+			}
+			if scenario.name == "one composition" && !strings.Contains(string(result), `files=["wsdl2_composition_test.go"]`+"\n") {
+				t.Fatalf("scenario-only scope must exclude unrelated compile inputs: %q", result)
 			}
 		})
 	}
@@ -175,6 +208,8 @@ func TestToolingRequiredGateHonorsApplicableJobs(t *testing.T) {
 		{"consumer classification missing", map[string]string{"COMPATIBILITY_CONSUMER_REQUIRED": ""}, false},
 		{"publication classification invalid", map[string]string{"PUBLICATION_REQUIRED": "unknown"}, false},
 		{"applicable consumer skipped", map[string]string{"COMPATIBILITY_CONSUMER_REQUIRED": "true"}, false},
+		{"applicable consumer cancelled", map[string]string{"COMPATIBILITY_CONSUMER_REQUIRED": "true", "COMPATIBILITY_CONSUMER_RESULT": "cancelled"}, false},
+		{"applicable consumer missing", map[string]string{"COMPATIBILITY_CONSUMER_REQUIRED": "true", "COMPATIBILITY_CONSUMER_RESULT": ""}, false},
 		{"publication milestone skipped", map[string]string{"PUBLICATION_REQUIRED": "true", "COMPATIBILITY_CONSUMER_REQUIRED": "true", "COMPATIBILITY_CONSUMER_RESULT": "success"}, false},
 		{"manual milestone skipped", map[string]string{"EVENT_NAME": "workflow_dispatch", "DEPENDENCY_REVIEW_RESULT": "skipped", "COMPATIBILITY_SCOPE_RESULT": "skipped", "MILESTONE_SELECTED": "true"}, false},
 		{"unexpected ordinary milestone", map[string]string{"MILESTONE_RESULT": "success"}, false},

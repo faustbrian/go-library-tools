@@ -346,6 +346,7 @@ jobs:
     outputs:
       required: ${{ steps.scope.outputs.required }}
       publication_required: ${{ steps.scope.outputs.publication_required }}
+      files: ${{ steps.scope.outputs.files }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -366,12 +367,18 @@ jobs:
             exit 1
           fi
           if jq -e --slurpfile base "${task}/base.json" '
-            any(.sets[];
+            .sets as $current_sets |
+            any($current_sets[];
               .publication_status == "published" and
               (. as $current | .set_id as $id |
                 (($base[0].sets // []) |
                   map(select(.set_id == $id)) |
-                  .[0]) != $current))
+                  .[0]) != $current)) or
+            any($base[0].sets[];
+              .publication_status == "published" and
+              (.set_id as $id |
+                any($current_sets[];
+                  .set_id == $id and .publication_status == "published") | not))
           ' docs/ecosystem/compatibility-sets.json >/dev/null 2>&1; then
             publication_required=true
           else
@@ -382,28 +389,7 @@ jobs:
             fi
           fi
           echo "publication_required=${publication_required}" >>"${GITHUB_OUTPUT}"
-          if [[ "${publication_required}" == true ]] ||
-            ! git diff --quiet "${BASE_SHA}" HEAD -- \
-              .go-version .github/workflows/ci.yml \
-              release/compatibility-consumer/go.mod \
-              release/compatibility-consumer/go.sum \
-              release/compatibility-consumer/consumer_test.go \
-              release/compatibility-consumer/composition_test.go \
-              release/compatibility-consumer/workflow_composition_test.go \
-              release/compatibility-consumer/wire3_composition_test.go \
-              release/compatibility-consumer/qcp3_composition_test.go \
-              release/compatibility-consumer/postgres2_composition_test.go \
-              release/compatibility-consumer/state_machine2_composition_test.go \
-              release/compatibility-consumer/wsdl2_composition_test.go \
-              release/compatibility-consumer/openapi2_composition_test.go \
-              release/compatibility-consumer/outbox2_composition_test.go \
-              release/compatibility-consumer/tabular_xlsx_composition_test.go \
-              release/compatibility-consumer/selection.json \
-              tools/compatibility/generate.py; then
-            echo 'required=true' >>"${GITHUB_OUTPUT}"
-          else
-            echo 'required=false' >>"${GITHUB_OUTPUT}"
-          fi
+          PUBLICATION_REQUIRED="${publication_required}" python3 .github/scripts/select-compatibility-consumer.py
 
   compatibility-consumer:
     name: Compatibility consumer (${{ matrix.platform }})
@@ -436,35 +422,11 @@ jobs:
           go-version-file: .go-version
           cache: false
       - name: Resolve and test the public compatibility consumer
-        run: |
-          set -euo pipefail
-          task="$(mktemp -d "${RUNNER_TEMP}/golib-compatibility-consumer.XXXXXX")"
-          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
-          mkdir -p "${task}/cache" "${task}/consumer" "${task}/mod" "${task}/tmp"
-          cp release/compatibility-consumer/go.mod \
-            release/compatibility-consumer/consumer_test.go \
-            release/compatibility-consumer/composition_test.go \
-            release/compatibility-consumer/wire3_composition_test.go \
-            release/compatibility-consumer/qcp3_composition_test.go \
-            release/compatibility-consumer/postgres2_composition_test.go \
-            release/compatibility-consumer/state_machine2_composition_test.go \
-            release/compatibility-consumer/wsdl2_composition_test.go \
-            release/compatibility-consumer/openapi2_composition_test.go \
-            release/compatibility-consumer/outbox2_composition_test.go \
-            release/compatibility-consumer/tabular_xlsx_composition_test.go \
-            release/compatibility-consumer/workflow_composition_test.go "${task}/consumer/"
-          cd "${task}/consumer"
-          export GOCACHE="${task}/cache"
-          export GOMODCACHE="${task}/mod"
-          export GOTMPDIR="${task}/tmp"
-          export GOPROXY='https://proxy.golang.org'
-          export GOSUMDB='sum.golang.org'
-          export GOWORK='off'
-          test "$(go env GOVERSION)" = 'go1.27.2'
-          test "$(go env GOOS)/$(go env GOARCH)" = '${{ matrix.goos }}/${{ matrix.goarch }}'
-          # Keep TLS and SumDB verification while avoiding failed HTTP/2 streams.
-          GODEBUG=http2client=0 go mod tidy
-          go test -mod=readonly -count=1 ./...
+        env:
+          SCENARIO_FILES: ${{ needs.compatibility-consumer-scope.outputs.files }}
+          EXPECTED_GOOS: ${{ matrix.goos }}
+          EXPECTED_GOARCH: ${{ matrix.goarch }}
+        run: bash .github/scripts/run-compatibility-consumer.sh
 
   milestone:
     name: Aggregate milestone
