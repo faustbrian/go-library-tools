@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# -ne 3 ]]; then
-    printf 'usage: %s <task-root> <environment-output> <path-output>\n' "$0" >&2
+if [[ $# -ne 3 && $# -ne 4 ]]; then
+    printf 'usage: %s <task-root> <environment-output> <path-output> [execution-profile]\n' "$0" >&2
     exit 2
 fi
 
@@ -15,6 +15,12 @@ module_map="${task_root}/modules.tsv"
 wrapper_directory="${task_root}/bin"
 source_archive="${task_root}/source.tar"
 root_alternate_mod=''
+execution_profile="${4:-}"
+if [[ -n "${execution_profile}" ]]; then
+    # This is a deliberately narrow security profile, not arbitrary graph edits.
+    jq -e '. == {dependency_overrides:{"golang.org/x/net":"v0.60.0"}}' \
+        "${execution_profile}" >/dev/null
+fi
 
 mkdir -p "${task_root}/cache" "${task_root}/mod" "${task_root}/tmp" \
     "${task_root}/modules" "${task_root}/execution" "${wrapper_directory}"
@@ -52,6 +58,19 @@ for index in "${!module_directories[@]}"; do
             -json -modfile="${alternate_mod}"
     )"
     module_path="$(jq -er '.Module.Path' <<<"${module_metadata}")"
+    if [[ -n "${execution_profile}" ]] &&
+        jq -e 'any(.Require[]?; .Path == "golang.org/x/net")' \
+            <<<"${module_metadata}" >/dev/null; then
+        (
+            cd "${module_root}"
+            GOWORK=off GOFLAGS="-modfile=${alternate_mod}" \
+                GOCACHE="${task_root}/cache" GOMODCACHE="${task_root}/mod" \
+                GOTMPDIR="${task_root}/tmp" "${real_go}" get \
+                golang.org/x/net@v0.60.0
+        )
+    fi
+    prepared_baseline="${task_root}/modules/${index}.baseline.mod"
+    cp "${alternate_mod}" "${prepared_baseline}"
     dependencies=()
     while IFS= read -r dependency; do
         dependencies+=("${dependency}")
@@ -77,8 +96,8 @@ for index in "${!module_directories[@]}"; do
     ); then
         exit 1
     fi
-    if ! cmp -s "${module_root}/go.mod" "${alternate_mod}"; then
-        cp "${module_root}/go.mod" "${alternate_mod}"
+    if ! cmp -s "${prepared_baseline}" "${alternate_mod}"; then
+        cp "${prepared_baseline}" "${alternate_mod}"
     fi
     printf '%s\t%s\t%s\n' "${module_path}" "${alternate_mod}" "${directory}" >>"${module_map}"
     if [[ "${directory}" == "." ]]; then
@@ -128,6 +147,16 @@ if [[ "${command_arguments[0]:-}" == run ]]; then
         fi
     done
 fi
+if [[ "${GOLIB_REHEARSAL_PATCHED_PROFILE:-0}" == 1 && -n "${alternate_mod}" ]]; then
+    if [[ "${versioned_tool}" -eq 0 ]]; then
+        export GOTOOLCHAIN=go1.26.9
+    elif [[ "${GOTOOLCHAIN:-}" == go1.26.6 ]]; then
+        # Catalog-owned API commands must not compile tools with the old pin.
+        # Independently selected tool compilers remain authoritative.
+        export GOTOOLCHAIN=go1.26.9+auto
+    fi
+fi
+
 explicit_modfile=''
 for argument in "${command_arguments[@]}"; do
     case "${argument}" in
@@ -232,10 +261,17 @@ if [[ -n "${alternate_mod}" ]]; then
                         "${alternate_sum}"
                 )
             } | LC_ALL=C sort -u >"${execution_sum}"
-            for dependency in "${local_dependencies[@]}"; do
+            for dependency in ${local_dependencies[@]+"${local_dependencies[@]}"}; do
                 GOWORK=off GOFLAGS="-modfile=${execution_modfile}" \
                     "${real_go}" mod download "${dependency}"
             done
+            if [[ "${GOLIB_REHEARSAL_PATCHED_PROFILE:-0}" == 1 ]] &&
+                GOWORK=off "${real_go}" mod edit -json \
+                    -modfile="${execution_modfile}" |
+                    jq -e 'any(.Require[]?; .Path == "golang.org/x/net")' >/dev/null; then
+                GOWORK=off GOFLAGS="-modfile=${execution_modfile}" \
+                    "${real_go}" get golang.org/x/net@v0.60.0
+            fi
             if [[ -n "${explicit_modfile}" ]]; then
                 for index in "${!command_arguments[@]}"; do
                     case "${command_arguments[${index}]}" in
@@ -347,6 +383,11 @@ set -euo pipefail
 export GOFLAGS="${GOLIB_REHEARSAL_CONSUMER_GOFLAGS:-}"
 export GO111MODULE=on
 export GOWORK=off
+if [[ "${GOLIB_REHEARSAL_PATCHED_PROFILE:-0}" == 1 ]]; then
+    # go run may put the tool compiler's GOROOT/bin ahead of PATH. Select the
+    # consumer compiler explicitly for package-loading descendants.
+    export GOTOOLCHAIN=go1.26.9
+fi
 unset GOLIB_REHEARSAL_CONSUMER_GOFLAGS
 cd "${GOLIB_REHEARSAL_TOOL_DIRECTORY:?}"
 exec "$@"
@@ -362,6 +403,9 @@ for flag in ${GOFLAGS:-}; do
     esac
 done
 {
+    if [[ -n "${execution_profile}" ]]; then
+        printf 'GOLIB_REHEARSAL_PATCHED_PROFILE=1\n'
+    fi
     printf 'GOLIB_REHEARSAL_REAL_GO=%s\n' "${real_go}"
     printf 'GOLIB_REHEARSAL_MODULE_MAP=%s\n' "${module_map}"
     printf 'GOLIB_REHEARSAL_EXECUTION_DIRECTORY=%s\n' "${task_root}/execution"

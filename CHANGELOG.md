@@ -15,6 +15,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Apply Go 1.26.9 and x/net v0.60.0 equally to frozen copied/shared rehearsal
+  execution profiles, without rewriting representative source or weakening
+  security checks. Original vulnerable profiles remain unqualified.
+
 - Measure mutation deadline calibration with the same single-CPU test runtime
   used by native mutant phases, retaining strict status admission and the
   existing timeout margin.

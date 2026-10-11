@@ -9,10 +9,12 @@ that the same service requirements are selected and that no task-owned
 container, network, volume, or fixture lock survives either run.
 
 Preparation hashes tracked consumer content without rewriting module files or
-dependency sums and fails if the repository state changes. Shared runs install
-the consumer's declared Go version once. Building `golib` may select the
+dependency sums and fails if the repository state changes. Both copied and
+shared runs install the explicit patched execution compiler from
+`rehearsals/.go-version` (Go 1.26.9), not the frozen Go 1.26.6 declaration.
+Building `golib` may select the
 tooling module's required compiler through Go's automatic toolchain mechanism,
-but consumer gates continue under the declared consumer version.
+but consumer gates continue under the same patched execution version.
 
 Some internal `v1.0.0` tags were intentionally replaced before public adoption,
 leaving historical checksums in the representative repositories. Rehearsals
@@ -54,9 +56,21 @@ Mutation campaigns use module-identity-scoped workspaces. Verifier source,
 coverage profiles, reports, and caches therefore cannot collide when one
 repository verifies multiple independently releasable modules.
 
-Shared rehearsals install the representative repository's declared Go version
-once. The source CLI build may use Go's automatic toolchain selection for its
-own module, but every consumer gate continues under the representative version.
+The same profile also applies to performance runs. `execution-profile.json`
+selects `golang.org/x/net v0.60.0` in alternate manifests for modules that
+already require it, including the upgrade's transitive graph changes. This
+profile leaves the frozen source, declared versions, module roster, and copied
+tooling intact. Preparation retains the patched baseline when tidy exposes
+unrelated manifest drift, so the tidy gate can still reject that drift.
+Gate-owned module-file copies receive the same upgrade without losing their
+owned replacements. The consumer wrapper rejects frozen catalog toolchain
+selection by explicitly selecting Go 1.26.9 for commands and scanner package loading, even
+when the scanner was built with a newer compiler. Analyzer builds retain
+their separate tooling compiler.
+Results describe the patched execution profile only: they do not qualify the
+original Go 1.26.6 / x/net v0.58.0 inputs. Changing this profile invalidates
+previous compatibility evidence for those effective inputs. Focused loading
+and vulnerability checks do not prove full mutation or performance parity.
 
 Mutation campaigns serialize package tests while retaining parallel mutant
 workers. This prevents test-level scheduler contention from deciding short
