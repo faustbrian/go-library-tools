@@ -4,14 +4,7 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
-### Added
-
-- Add an optional `mutation.max_workers` ceiling for process-heavy native
-  campaigns. Existing configurations retain automatic admission; the Tools
-  repository selects one worker without relaxing mutation acceptance.
-- Add an explicitly selected hosted CLI mutation diagnostic that observes the
-  retained native execution coordinate, phase deadlines and exact rollback.
-  Diagnostic results do not replace campaign or release qualification.
+## 2.0.1 - 2026-10-11
 
 ### Changed
 
@@ -57,99 +50,6 @@ All notable changes to this project are documented in this file.
   dependency isolation launches secret scanners, while retaining isolated
   consumer snapshots for module analyzers.
 
-- Withdraw an obsolete Gates equivalent-mutant allowance now covered by
-  native tests, retaining exact survivor accounting and strict refusal gates.
-
-- Record bounded, argument-free runner and owned-process observations during
-  release rehearsals without changing release verdicts or required gates.
-
-- Refresh the exact Gates equivalent-mutant binding after compiler-tool
-  changes, including the moved coverage-loop coordinate. Retain its narrow
-  reviewed domains and historical reports; require fresh native qualification.
-
-- Preserve bounded, fixture-credential-redacted Docker startup diagnostics
-  for generic required services without changing failure or cleanup behavior.
-
-- Align released and source-bootstrap setup actions on one immutable revision,
-  preserving installation before archive validation in shared CI jobs.
-
-- Adopt the bootstrap-proxy action source with bounded zero-record tar-padding
-  support for legacy installed tooling, retaining installed-validator authority.
-- Build and verify tooling with Go 1.27.2 and golangci-lint v2.14.0 to apply
-  standard-library security fixes and preserve analyzer compatibility, without
-  raising the module language minimum or rewriting historical cohort evidence.
-- Build Staticcheck v0.8.1, Gosec v2.29.0, and owned security analysis v1.0.0
-  through one isolated tool-build owner with the compatible x/tools v0.50.0
-  importer, preserving analyzer policies and application dependency graphs.
-  Keep build diagnostics private and bounded, classify direct Gosec failures
-  from typed exit status and validated reports.
-
-- Update release SBOM generation to Anchore v0.24.3 and its default Syft
-  v1.54.0 scanner, retaining SPDX output names and attested asset publication.
-
-- Advance the maintained consumer's Excelize revision to include the upstream
-  pivot-cache field-index fix, preserving the existing Tabular XLSX cohort.
-
-- Select upstream Excelize's patched public revision in the maintained
-  compatibility consumer and exercise ordinary XLSX decoding through both
-  retained Tabular major versions without changing the frozen cohort.
-
-- Use a separate package build cache in the selected hosted CLI diagnostic,
-  matching campaign baseline/cache separation without claiming identical
-  campaign history or changing native deadlines and release qualification.
-
-- Exercise public Outbox v2, Event Sourcing Outbox adapter v3 and Webhook v3
-  alongside historical consumer selections, including nominal envelope
-  composition, copied delivery ownership and bounded encoding refusal.
-- Exercise published OpenAPI v2 alongside the historical v1 cohort, covering
-  semantic round trips, bounded parsing, authorization label refusal and
-  public JSON Schema v2 Unicode/type composition.
-
-- Exercise published WSDL v2 alongside the historical v1 consumer cohort,
-  covering bounded parsing, semantic round trips, default-error privacy,
-  cancellation and compiler reuse with public Wire v3.
-
-- Recognize anchored public APIDIFF_VERSION assignments in the retired
-  verification Makefile during history scanning. Retain exact path, rule,
-  assignment and immutable pseudo-version constraints for this allowance.
-
-- Admit digest-pinned service and container images selected by a same-job,
-  finite include-only matrix with explicit image fields. Refuse dynamic
-  expressions, incomplete entries and recursive merge lookup; retain strict
-  image pinning, traversal limits and checkout credential controls.
-
-- Select published State Machine v2 in the maintained compatibility consumer,
-  exercising finite runner admission, cancellation, compilation allowances,
-  redacted diagnostics and caller-owned persistence requirements. Preserve
-  the immutable historical cohort.
-
-- Select published PostgreSQL v2 in the maintained compatibility consumer and
-  exercise explicit configuration resolution, private errors and borrowed
-  service-adapter lifecycle ownership. Preserve the published v1 cohort.
-
-- Preserve bounded failed mutation diagnostics outside disposable campaign
-  workspaces. Retain admitted coordinates and native numeric counters, omit
-  optional metadata, and keep failed attempts separate from passing evidence.
-
-- Keep verifier-owned Go module caches writable from creation so an
-  interrupted child cannot leave read-only directories that prevent task
-  cleanup. Preserve checksum-pinned downloads and scoped cache ownership.
-
-- Rebind the ten independently reviewed equivalent-mutant records to the
-  current unit-first verifier and actual package sources. Retain their narrow
-  caller domains, historical attribution and native statuses; fresh release
-  qualification is still required.
-
-- Select only unit tests in the integration-mode mutation preflight, so a
-  detected regression returns before a later example can hide it behind a
-  timeout. Ordinary baselines and the full follow-up retain examples and fuzz
-  seeds. The embedded verifier identity changes; prior reports retain their
-  original identities and equivalent-mutant records require a fresh binding.
-
-- Verify finite workflow alias-depth, merged-setting lookup and empty-owner
-  action refusal regressions before recursive fixtures, with bounded hosted
-  sensitivity checks. Production traversal and release thresholds are unchanged.
-
 ## 2.0.0 - 2026-10-01
 
 ### Security
@@ -177,6 +77,14 @@ All notable changes to this project are documented in this file.
   preserving local-link rules and requiring a trusted, stable filesystem.
 
 ### Added
+
+- Add an optional `mutation.max_workers` ceiling for process-heavy native
+  campaigns. Existing configurations retain automatic admission; the Tools
+  repository selects one worker without relaxing mutation acceptance.
+
+- Add an explicitly selected hosted CLI mutation diagnostic that observes the
+  retained native execution coordinate, phase deadlines and exact rollback.
+  Diagnostic results do not replace campaign or release qualification.
 
 - Adopt published Queue Control Plane v3 and Authentication v2 alongside
   historical majors in the maintained compatibility consumer, selecting its
@@ -245,6 +153,102 @@ All notable changes to this project are documented in this file.
   and retained the open fleet-enforcement risk under the v2 module identity.
 
 ### Changed
+
+- Withdraw an obsolete Gates equivalent-mutant allowance now covered by
+  native tests, retaining exact survivor accounting and strict refusal gates.
+
+- Record bounded, argument-free runner and owned-process observations during
+  release rehearsals without changing release verdicts or required gates.
+
+- Refresh the exact Gates equivalent-mutant binding after compiler-tool
+  changes, including the moved coverage-loop coordinate. Retain its narrow
+  reviewed domains and historical reports; require fresh native qualification.
+
+- Preserve bounded, fixture-credential-redacted Docker startup diagnostics
+  for generic required services without changing failure or cleanup behavior.
+
+- Align released and source-bootstrap setup actions on one immutable revision,
+  preserving installation before archive validation in shared CI jobs.
+
+- Adopt the bootstrap-proxy action source with bounded zero-record tar-padding
+  support for legacy installed tooling, retaining installed-validator authority.
+
+- Build and verify tooling with Go 1.27.2 and golangci-lint v2.14.0 to apply
+  standard-library security fixes and preserve analyzer compatibility, without
+  raising the module language minimum or rewriting historical cohort evidence.
+
+- Build Staticcheck v0.8.1, Gosec v2.29.0, and owned security analysis v1.0.0
+  through one isolated tool-build owner with the compatible x/tools v0.50.0
+  importer, preserving analyzer policies and application dependency graphs.
+  Keep build diagnostics private and bounded, classify direct Gosec failures
+  from typed exit status and validated reports.
+
+- Update release SBOM generation to Anchore v0.24.3 and its default Syft
+  v1.54.0 scanner, retaining SPDX output names and attested asset publication.
+
+- Advance the maintained consumer's Excelize revision to include the upstream
+  pivot-cache field-index fix, preserving the existing Tabular XLSX cohort.
+
+- Select upstream Excelize's patched public revision in the maintained
+  compatibility consumer and exercise ordinary XLSX decoding through both
+  retained Tabular major versions without changing the frozen cohort.
+
+- Use a separate package build cache in the selected hosted CLI diagnostic,
+  matching campaign baseline/cache separation without claiming identical
+  campaign history or changing native deadlines and release qualification.
+
+- Exercise public Outbox v2, Event Sourcing Outbox adapter v3 and Webhook v3
+  alongside historical consumer selections, including nominal envelope
+  composition, copied delivery ownership and bounded encoding refusal.
+
+- Exercise published OpenAPI v2 alongside the historical v1 cohort, covering
+  semantic round trips, bounded parsing, authorization label refusal and
+  public JSON Schema v2 Unicode/type composition.
+
+- Exercise published WSDL v2 alongside the historical v1 consumer cohort,
+  covering bounded parsing, semantic round trips, default-error privacy,
+  cancellation and compiler reuse with public Wire v3.
+
+- Recognize anchored public APIDIFF_VERSION assignments in the retired
+  verification Makefile during history scanning. Retain exact path, rule,
+  assignment and immutable pseudo-version constraints for this allowance.
+
+- Admit digest-pinned service and container images selected by a same-job,
+  finite include-only matrix with explicit image fields. Refuse dynamic
+  expressions, incomplete entries and recursive merge lookup; retain strict
+  image pinning, traversal limits and checkout credential controls.
+
+- Select published State Machine v2 in the maintained compatibility consumer,
+  exercising finite runner admission, cancellation, compilation allowances,
+  redacted diagnostics and caller-owned persistence requirements. Preserve
+  the immutable historical cohort.
+
+- Select published PostgreSQL v2 in the maintained compatibility consumer and
+  exercise explicit configuration resolution, private errors and borrowed
+  service-adapter lifecycle ownership. Preserve the published v1 cohort.
+
+- Preserve bounded failed mutation diagnostics outside disposable campaign
+  workspaces. Retain admitted coordinates and native numeric counters, omit
+  optional metadata, and keep failed attempts separate from passing evidence.
+
+- Keep verifier-owned Go module caches writable from creation so an
+  interrupted child cannot leave read-only directories that prevent task
+  cleanup. Preserve checksum-pinned downloads and scoped cache ownership.
+
+- Rebind the ten independently reviewed equivalent-mutant records to the
+  current unit-first verifier and actual package sources. Retain their narrow
+  caller domains, historical attribution and native statuses; fresh release
+  qualification is still required.
+
+- Select only unit tests in the integration-mode mutation preflight, so a
+  detected regression returns before a later example can hide it behind a
+  timeout. Ordinary baselines and the full follow-up retain examples and fuzz
+  seeds. The embedded verifier identity changes; prior reports retain their
+  original identities and equivalent-mutant records require a fresh binding.
+
+- Verify finite workflow alias-depth, merged-setting lookup and empty-owner
+  action refusal regressions before recursive fixtures, with bounded hosted
+  sensitivity checks. Production traversal and release thresholds are unchanged.
 
 - Admit empty regular files at a zero bounded-read allowance, retaining path,
   identity and one-byte look-ahead checks. Mutation source reads now delegate
