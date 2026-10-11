@@ -317,7 +317,7 @@ jobs:
             git diff --quiet "${BASE_SHA}" HEAD -- internal/gates/runner.go \
               internal/gates/gitleaks_policy.go internal/gates/policy/secrets.toml \
               internal/gates/embedded_policy_internal_test.go \
-              internal/gates/affected.go internal/gates/fuzz_smoke.go \
+              internal/gates/affected.go \
               internal/gates/gitleaks_sources.go internal/gates/secrets_changes.go \
               internal/gates/secrets_changes_internal_test.go \
               internal/gates/ethereum_trie_fixture_policy_internal_test.go \
