@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Identify selected fuzz assurance by its declared package and anchored target,
+  retaining unique bare diagnostics and explicit package-qualified selection.
+  Admit owned test-only fuzz packages without manufacturing production records;
+  preserve duplicate, discovery and ownership refusals.
 - Prepare instrumented fuzz binaries once per selected package context within
   a separate five-minute ceiling, without running tests. Retain three-minute
   active execution, earlier caller deadlines and bounded cleanup; report both

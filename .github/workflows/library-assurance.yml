@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       fuzz_target:
-        description: Explicit declared target for a manual diagnostic; empty on schedules
+        description: Unique declared selector or ./package::^FuzzName$ for a manual diagnostic; empty on schedules
         required: false
         default: ''
         type: string

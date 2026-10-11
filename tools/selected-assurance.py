@@ -127,6 +127,50 @@ def relative_path(value):
     return value.removeprefix("./")
 
 
+def native_package(value):
+    require(isinstance(value, str) and (value == "." or value.startswith("./")), "relative explicit native package")
+    package = relative_path(value)
+    return "." if package == "." else "./" + package
+
+
+def owned_package_directory(selected_module, package):
+    root = Path.cwd().resolve()
+    module = root / relative_path(selected_module)
+    current = root
+    for component in module.relative_to(root).parts:
+        current = current / component
+        require(not current.is_symlink(), "symbolic module directory")
+    require(module.is_dir() and module.resolve() == module, "owned module directory")
+    require((module / "go.mod").is_file() and not (module / "go.mod").is_symlink(), "owned native module")
+    directory = module / relative_path(package)
+    current = module
+    for component in directory.relative_to(module).parts:
+        current = current / component
+        require(not current.is_symlink(), "symbolic native package directory")
+        require(not (current / "go.mod").exists() and not (current / "go.mod").is_symlink(), "nested native module boundary")
+    require(directory.is_dir() and directory.resolve() == directory, "owned native package directory")
+    return directory
+
+
+def test_only_package(directory):
+    # Production inventory intentionally omits packages containing only tests.
+    # Admit only bounded, regular native test files at an already owned path;
+    # native discovery still has to prove the selected fuzz function exists.
+    tests = False
+    production = False
+    with os.scandir(directory) as entries:
+        for count, entry in enumerate(entries):
+            require(count < 4096 and len(entry.name) <= 256, "native package file inventory budget")
+            if not entry.name.endswith(".go"):
+                continue
+            require(not entry.is_symlink() and entry.is_file(follow_symlinks=False), "regular native package source")
+            if entry.name.endswith("_test.go"):
+                tests = True
+            else:
+                production = True
+    return tests and not production
+
+
 def targets_from(policy, inventory, repository, selected_module):
     require(isinstance(policy, dict) and isinstance(inventory, dict), "policy and inventory objects")
     require(inventory.get("repository") == "github.com/" + repository, "repository inventory identity")
@@ -162,16 +206,32 @@ def targets_from(policy, inventory, repository, selected_module):
             target = step.get("fuzz", "")
             packages = step.get("packages")
             require(step.get("type") == "go-test" and isinstance(packages, list) and len(packages) == 1, "one native fuzz package")
-            require(isinstance(packages[0], str) and (packages[0] == "." or packages[0].startswith("./")), "relative explicit native package")
-            package = relative_path(packages[0])
-            require(package in package_directories, "declared owned fuzz package")
+            package = native_package(packages[0])
+            directory = owned_package_directory(selected_module, package)
+            inventory_directory = str(Path(relative_path(selected_module)) / relative_path(package))
+            require(inventory_directory in package_directories or test_only_package(directory), "declared owned fuzz package")
             require(isinstance(target, str) and len(target) <= 128 and re.fullmatch(r"\^Fuzz[A-Za-z0-9_]+\$", target), "anchored single fuzz target")
-            require(target not in targets, "ambiguous fuzz target")
             race = step.get("race", False)
             require(type(race) is bool, "native race selection")
-            targets[target] = (packages[0], race)
+            identity = (package, target)
+            require(identity not in targets, "repeated package fuzz identity")
+            targets[identity] = race
+            require(len(targets) <= 32, "declared fuzz targets")
     require(0 < len(targets) <= 32, "declared fuzz targets")
     return targets
+
+
+def diagnostic_target(targets, selected):
+    require(isinstance(selected, str) and len(selected) <= 644, "explicit declared diagnostic target")
+    if "::" in selected:
+        parts = selected.split("::")
+        require(len(parts) == 2, "explicit declared diagnostic target")
+        identity = (native_package(parts[0]), parts[1])
+        require(identity in targets, "explicit declared diagnostic target")
+        return identity
+    matches = [identity for identity in targets if identity[1] == selected]
+    require(len(matches) == 1, "explicit declared diagnostic target must be unique")
+    return matches[0]
 
 
 def save_new_corpus(directory, before, destination):
@@ -231,13 +291,13 @@ def main():
             targets = targets_from(policy, inventory, repository, module)
             selected = os.environ.get("ASSURANCE_TARGET", "")
             if event == "workflow_dispatch":
-                require(selected in targets, "explicit declared diagnostic target")
-                target = selected
+                identity = diagnostic_target(targets, selected)
             else:
                 require(selected == "", "scheduled selector override")
                 week = (datetime.datetime.now(datetime.timezone.utc).date() - datetime.date(1970, 1, 5)).days // 7
-                target = sorted(targets)[week % len(targets)]
-            package, race = targets[target]
+                identity = sorted(targets)[week % len(targets)]
+            package, target = identity
+            race = targets[identity]
             module_path = Path(module)
             require(module_path.is_dir() and module_path.resolve().is_relative_to(Path.cwd()), "owned module directory")
             os.chdir(module_path)

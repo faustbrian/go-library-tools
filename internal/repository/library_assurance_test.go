@@ -46,6 +46,12 @@ with tempfile.TemporaryDirectory(prefix="golib-assurance-fixture-") as tmp, temp
         policy["operations"][0]["module"] = "integration/owned"
         inventory["modules"][0]["directory"] = "integration/owned"
         (root / "integration" / "owned").mkdir(parents=True)
+        inventory["modules"][0]["packages"][0]["directory"] = str(pathlib.Path("integration/owned") / package)
+    module_root = root / inventory["modules"][0]["directory"]
+    (module_root / "go.mod").write_text("module example\n\ngo 1.27.0\n")
+    package_root = module_root / package
+    package_root.mkdir(parents=True, exist_ok=True)
+    (package_root / "fixture.go").write_text("package fixture\n")
     (root / "policy.json").write_text(json.dumps(policy))
     if case == "json": (root / "policy.json").write_text("{malformed")
     (root / "inventory.json").write_text(json.dumps(inventory))
@@ -184,6 +190,13 @@ func TestLibraryAssuranceExecutesSelectedNativeRiskAndRefusesInvalidScope(t *tes
 				}
 			})
 		}
+	}
+}
+
+func TestLibraryAssurancePreservesPackageTargetIdentityAndOwnedTestOnlyPackages(t *testing.T) {
+	command := exec.CommandContext(t.Context(), "python3", "-B", filepath.Join(projectRoot(t), "tools/test_selected_assurance.py"))
+	if data, err := command.CombinedOutput(); err != nil {
+		t.Fatalf("actual assurance identity and ownership producer: %v: %s", err, data)
 	}
 }
 

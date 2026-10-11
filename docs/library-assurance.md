@@ -16,8 +16,9 @@ caller needs an owner-selected cadence, exact producer pin and relevant native
 qualification before it counts as adopted. The 33 service/tag/executable or
 nested-contract owners retain their full/manual routes. Low-risk owners may
 retain seeds/advisory plus manual exploration rather than automatic campaigns.
-Duplicate target names in Geo, Retry, Validation, Verkle and Wire still refuse
-until package identity is resolved; eligibility does not waive that guard.
+Repeated names in distinct packages, including Geo, Retry, Validation, Verkle
+and Wire, are separate declared identities. Eligibility still does not certify
+their native targets or schedule a caller.
 
 | Owner | Weekly UTC slot | Selected risk and native package |
 | --- | --- | --- |
@@ -25,18 +26,23 @@ until package identity is resolved; eligibility does not waive that guard.
 | Concurrency Limit | Wednesday 03:41 | Finite bounded limit histories and single permit outcomes; `.` |
 | HTTP Client | Friday 03:41 | URL/header/authentication validation, redirect credential boundaries, retry/error classification; `.` |
 
-Each slot rotates one current declared fuzz target, sorted by selector and
-indexed by UTC week. Unchanged source does not suppress a fresh stochastic
+Each slot rotates one current declared package/selector pair, sorted by package
+then selector and indexed by UTC week. Unchanged source does not suppress a fresh stochastic
 sample. Three, two and seven targets respectively retain their original full
 operations and budgets; this lane neither replaces nor certifies those full
 campaigns. HTTP tests retain their native loopback-only/no-public-network
 contract and leak checks. No broker, cloud, Docker or credential certification
 is implied by these in-process pilots.
 
-Manual diagnostics run only on main and require an exact declared selector,
-such as `^FuzzLifecycleSequences$`. Empty, unknown, malformed or ambiguous
-selectors fail; pull-request/push events and non-main refs fail before a
-campaign. Manual diagnostics are not release or full-contract substitutes.
+Manual diagnostics run only on main and require an exact declared identity.
+A bare selector such as `^FuzzLifecycleSequences$` remains valid only when it
+names one declared package. Use `./jsonwire::^FuzzDecode$` (or `.::^FuzzDecode$`
+for root) to distinguish the same selector in different packages. The combined
+input is resolved against declarations, never forwarded to Go. Empty, unknown,
+malformed or ambiguous selectors fail; repeated declarations of the same pair,
+including conflicting race settings, also fail. Pull-request/push events and
+non-main refs fail before a campaign. Manual diagnostics are not release or
+full-contract substitutes.
 
 ## Authority and bounds
 
@@ -60,6 +66,13 @@ Informational Go dependency entries in `external_runtime_dependencies` are
 retained; executable prerequisites come from the typed `runtimes` policy.
 An explicitly declared fuzz step's race setting is retained; otherwise this
 lane does not manufacture a race campaign. Native module resolution is read-only.
+Production package admission retains the inventory contract. A policy-declared
+test-only package, such as Barcode's root encoder fuzz harness, may be absent
+from production inventory only when bounded filesystem discovery finds regular
+native test files and no production Go files. This fallback refuses missing/empty
+directories, symbolic module/package/source paths and nested-module crossings; native discovery
+must still resolve exactly one selected target. No production package records or
+runtime qualification are manufactured for this exception.
 
 The job has a ten-minute deadline, including checkouts, installation, campaign,
 artifact handling and cleanup. Installation is capped at three minutes. One
