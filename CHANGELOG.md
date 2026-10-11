@@ -6,6 +6,11 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Add committed-change module selection through `golib inventory --json
+  --base-sha <commit>` and repeated local module selectors. Shared CI selects
+  changed module owners and their repository-local consumers in one check
+  session, widening unknown/shared changes to all modules.
+
 - Add network-free `golib docs check --local` using the bounded Markdown checker,
   and require it on metadata CI before secret scanning. Existing full
   documentation checks remain available.

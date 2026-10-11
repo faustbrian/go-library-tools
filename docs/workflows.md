@@ -34,6 +34,22 @@ consumer workflow or production verifier asset is changed by this diagnostic.
 
 ## Consumer workflows
 
+Ordinary PR and main runtime changes select their committed base-to-HEAD module
+owners through `golib inventory --json --base-sha <commit>`. The longest nested
+module owns a changed path; declared relationships and actual owned `go.mod`
+requirements/local replacements include repository-local reverse consumers.
+Shared/unknown paths and an empty diff select all modules. Missing or invalid
+Git input fails closed. Schedules, manual checks and explicit release rehearsals
+retain their whole-repository or explicit release selection.
+
+The quality job passes all selected directories to one
+`golib check --local --module <directory> [--module <directory> ...]` invocation,
+sharing its bounded executor session. These new capabilities require adopting
+a qualified capable release or reviewed source bootstrap; older workflow pins
+are unchanged. Committed-change inventory is a CI scope selector, not proof of
+uncommitted or untracked local work; contributors should select modules explicitly
+or use `--all` for that work. Metadata-only documentation checks remain separate.
+
 Consumer CI calls `library-ci.yml` at an immutable commit SHA. The same SHA is
 passed as `tooling_sha` for the isolated tooling checkout. By default the setup action
 is pinned to `e8c0c51cc517dfede5475858bb417f0e7a21f39d`; the bootstrap

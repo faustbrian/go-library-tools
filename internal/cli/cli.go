@@ -37,6 +37,7 @@ Usage:
   golib security validate --directory <path>
   golib secrets check
   golib check [--local] [--all|--module <directory>]
+  golib check --local --module <directory> [--module <directory> ...]
   golib cohesion check [--json]
   golib cohesion catalog <consumer|engineering> [--json]
   golib cohesion aggregate <generate|check> --inputs <file> --output <directory>
@@ -44,6 +45,7 @@ Usage:
   golib config validate
 	golib config show --json
   golib inventory [--json]
+  golib inventory --json --base-sha <commit>
 	golib consumers validate [--json]
   golib repository check
   golib specification check [--online]
@@ -158,6 +160,9 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 			selectionArguments = args[2:]
 		}
 		selection, usageError := moduleSelection(selectionArguments, catalog.Modules)
+		if local && len(selectionArguments) > 2 {
+			selection, usageError = repeatedModuleSelection(selectionArguments)
+		}
 		if usageError != nil {
 			return usage(stderr, "usage: golib check [--local] [--all|--module <directory>]")
 		}
@@ -215,6 +220,16 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 			return (gates.Runner{Root: root, Executor: executor, Output: stdout}).Workflows(ctx)
 		})
 	case "inventory":
+		if len(args) == 4 && args[1] == "--json" && args[2] == "--base-sha" {
+			return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
+				modules, err := (gates.Runner{Root: root, Catalog: catalog, Executor: executor}).ChangedModules(ctx, args[3])
+				if err != nil {
+					return err
+				}
+				catalog.Modules = modules
+				return json.NewEncoder(stdout).Encode(catalog)
+			})
+		}
 		if len(args) == 1 {
 			_, _ = fmt.Fprintf(stdout, "%s: %d module(s)\n", catalog.Repository, len(catalog.Modules))
 			return 0
@@ -712,6 +727,20 @@ func moduleSelection(args []string, modules []inventory.Module) ([]string, error
 		return []string{args[1]}, nil
 	}
 	return nil, errors.New("usage: golib check [--all|--module <directory>]")
+}
+
+func repeatedModuleSelection(args []string) ([]string, error) {
+	if len(args)%2 != 0 || len(args) > inventory.MaximumModules*2 {
+		return nil, errors.New("invalid module selection")
+	}
+	selection := make([]string, 0, len(args)/2)
+	for index := 0; index < len(args); index += 2 {
+		if args[index] != "--module" || args[index+1] == "" {
+			return nil, errors.New("invalid module selection")
+		}
+		selection = append(selection, args[index+1])
+	}
+	return selection, nil
 }
 
 func releaseModuleSelection(args []string) (string, error) {

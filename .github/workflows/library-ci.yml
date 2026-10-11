@@ -177,12 +177,22 @@ jobs:
         env:
           RELEASE_DRY_RUN: ${{ inputs.release_dry_run }}
           RELEASE_MODULE: ${{ inputs.release_module }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUNTIME: ${{ steps.scope.outputs.runtime }}
         run: |
           set -euo pipefail
           inventory="$(golib inventory --json)"
           configuration="$(golib config show --json)"
           release_module_capable=false
           golib_help="$(golib --help)"
+          if [[ "${RELEASE_DRY_RUN}" != true && "${RUNTIME:-}" == true && ( "${EVENT_NAME:-}" == pull_request || "${EVENT_NAME:-}" == push ) ]]; then
+            if ! grep -Fq 'golib inventory --json --base-sha <commit>' <<<"${golib_help}"; then
+              echo 'this workflow requires affected inventory; select a qualified capable release or explicit immutable source_bootstrap' >&2
+              exit 1
+            fi
+            inventory="$(golib inventory --json --base-sha "${BASE_SHA}")"
+          fi
           if grep -Fq 'golib release dry-run [--all|--module <directory>]' <<<"${golib_help}"; then
             release_module_capable=true
           fi
@@ -391,6 +401,8 @@ jobs:
             'GOPRIVATE=' 'GONOPROXY=' 'GONOSUMDB=' >>"${GITHUB_ENV}"
       - name: Run repository module contracts
         if: inputs.release_dry_run != true
+        env:
+          MODULE_MATRIX: ${{ needs.prepare.outputs.matrix }}
         run: |
           set -euo pipefail
           golib_help="$(golib --help)"
@@ -398,7 +410,23 @@ jobs:
             echo 'this workflow requires bounded check --local; select a qualified capable release or explicit immutable source_bootstrap' >&2
             exit 1
           fi
-          golib check --local --all
+          if ! grep -Fq 'golib check --local --module <directory> [--module <directory> ...]' <<<"${golib_help}"; then
+            echo 'this workflow requires repeated local module selection; select a qualified capable release or explicit immutable source_bootstrap' >&2
+            exit 1
+          fi
+          if ! directory_lines="$(jq -er '
+            if type == "array" and length > 0 and length <= 64 and
+               all(.[]; (.directory | type == "string" and length > 0 and (test("[[:cntrl:]]") | not)))
+            then .[].directory else error("invalid selected module matrix") end
+          ' <<<"${MODULE_MATRIX}" 2>/dev/null)"; then
+            echo 'invalid selected module matrix' >&2
+            exit 1
+          fi
+          arguments=(check --local)
+          while IFS= read -r directory; do
+            arguments+=(--module "${directory}")
+          done <<<"${directory_lines}"
+          golib "${arguments[@]}"
       - name: Run release rehearsal
         if: inputs.release_dry_run == true
         env:

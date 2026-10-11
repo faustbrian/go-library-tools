@@ -163,7 +163,7 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 		"golib workflows check",
 		"golib specification check",
 		"golib specification check --online",
-		"golib check --local --all",
+		"arguments=(check --local)",
 		"github/codeql-action/init@",
 		"github/codeql-action/analyze@",
 		"name: Required",
@@ -747,6 +747,7 @@ if [ "$1" = "--help" ]; then
 		printf '%s\n' 'golib check [--all|--module <directory>]'
 	else
 		printf '%s\n' 'golib check [--local] [--all|--module <directory>]'
+		printf '%s\n' 'golib check --local --module <directory> [--module <directory> ...]'
 	fi
 	exit 0
 fi
@@ -766,9 +767,9 @@ exit "${GOLIB_ROUTING_FIXTURE_STATUS:-0}"
 	}{
 		{name: "v1.4 tool", legacy: "true", wantError: true},
 		{name: "v1.5 tool", legacy: "true", wantError: true},
-		{name: "local capable tool", legacy: "false", want: "check --local --all"},
+		{name: "local capable tool", legacy: "false", want: "check --local --module ."},
 		{name: "source legacy tool", legacy: "true", wantError: true, sourceBootstrap: true},
-		{name: "source local capable tool", legacy: "false", want: "check --local --all", sourceBootstrap: true},
+		{name: "source local capable tool", legacy: "false", want: "check --local --module .", sourceBootstrap: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			if err := os.WriteFile(invocations, nil, 0o600); err != nil {
@@ -780,6 +781,7 @@ exit "${GOLIB_ROUTING_FIXTURE_STATUS:-0}"
 				"INVOCATIONS="+invocations,
 				"LEGACY="+test.legacy,
 				"MODULE_DIRECTORY=nested",
+				`MODULE_MATRIX=[{"directory":"."}]`,
 				"SOURCE_BOOTSTRAP="+strconv.FormatBool(test.sourceBootstrap),
 			)
 			combined, err := command.CombinedOutput()

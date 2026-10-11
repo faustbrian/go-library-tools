@@ -1,13 +1,111 @@
 package repository_test
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"go.yaml.in/yaml/v3"
 )
+
+func TestReusableAffectedModulesUseOneBoundedCheckSession(t *testing.T) {
+	step := reusableStep(t, "quality", "", "Run repository module contracts")
+	for _, scenario := range []struct {
+		name, matrix, capable string
+		want                  int
+		arguments             string
+	}{
+		{"selected consumers", `[{"directory":"adapter"},{"directory":"consumer"}]`, "true", 0, "check --local --module adapter --module consumer\n"},
+		{"empty selection", `[]`, "true", 1, ""},
+		{"invalid JSON", `{`, "true", 1, ""},
+		{"invalid directory", `[{"directory":"adapter\nother"}]`, "true", 1, ""},
+		{"missing capability", `[{"directory":"adapter"}]`, "false", 1, ""},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			task := t.TempDir()
+			log := filepath.Join(task, "commands")
+			writeExecutable(t, filepath.Join(task, "golib"), `#!/usr/bin/env bash
+set -euo pipefail
+if test "$1" = --help; then
+  printf '%s\n' 'golib check [--local] [--all|--module <directory>]'
+  if test "$CAPABLE" = true; then printf '%s\n' 'golib check --local --module <directory> [--module <directory> ...]'; fi
+else
+  printf '%s\n' "$*" >>"$CHECK_LOG"
+  exit "${CHECK_STATUS:-0}"
+fi
+`)
+			run := func(status string) (int, string) {
+				command := exec.CommandContext(t.Context(), "bash", "-c", step.Run)
+				command.Env = append(os.Environ(), "PATH="+task+string(os.PathListSeparator)+os.Getenv("PATH"), "CAPABLE="+scenario.capable, "MODULE_MATRIX="+scenario.matrix, "CHECK_LOG="+log, "CHECK_STATUS="+status)
+				output, err := command.CombinedOutput()
+				if err == nil {
+					return 0, string(output)
+				}
+				var failure *exec.ExitError
+				if !errors.As(err, &failure) {
+					t.Fatal(err)
+				}
+				return failure.ExitCode(), string(output)
+			}
+			if code, output := run("0"); code != scenario.want {
+				t.Fatalf("check code = %d, want %d: %s", code, scenario.want, output)
+			}
+			data, err := os.ReadFile(log)
+			if err != nil && !os.IsNotExist(err) {
+				t.Fatal(err)
+			}
+			if string(data) != scenario.arguments {
+				t.Fatalf("check invocations = %q, want %q", data, scenario.arguments)
+			}
+			if scenario.want == 0 {
+				if code, _ := run("23"); code != 23 {
+					t.Fatalf("lost check failure: %d", code)
+				}
+			}
+		})
+	}
+}
+
+func TestReusableModuleMatrixUsesAffectedInventoryForRuntimePushes(t *testing.T) {
+	step := reusableStep(t, "prepare", "modules", "")
+	task := t.TempDir()
+	log, output := filepath.Join(task, "commands"), filepath.Join(task, "output")
+	writeExecutable(t, filepath.Join(task, "golib"), `#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >>"$MATRIX_LOG"
+case "$*" in
+  '--help') printf '%s\n' 'golib inventory --json --base-sha <commit>' 'golib release dry-run [--all|--module <directory>]' ;;
+  'inventory --json') printf '%s\n' '{"modules":[{"directory":"."},{"directory":"adapter"},{"directory":"other"}]}' ;;
+  "inventory --json --base-sha $BASE_SHA") printf '%s\n' '{"modules":[{"directory":"adapter"}]}' ;;
+  'config show --json') printf '%s\n' '{"runtimes":{}}' ;;
+  *) exit 64 ;;
+esac
+`)
+	for _, event := range []string{"push", "pull_request"} {
+		command := exec.CommandContext(t.Context(), "bash", "-c", step.Run)
+		command.Env = append(os.Environ(), "PATH="+task+string(os.PathListSeparator)+os.Getenv("PATH"), "MATRIX_LOG="+log, "GITHUB_OUTPUT="+output, "EVENT_NAME="+event, "RUNTIME=true", "RELEASE_DRY_RUN=false", "RELEASE_MODULE=", "BASE_SHA="+strings.Repeat("a", 40))
+		if data, err := command.CombinedOutput(); err != nil {
+			t.Fatalf("matrix failed: %v, %s", err, data)
+		}
+	}
+	data, err := os.ReadFile(output)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(data), `"directory":"other"`) || !strings.Contains(string(data), `"directory":"adapter"`) {
+		t.Fatalf("matrix includes unrelated modules: %s", data)
+	}
+	data, err = os.ReadFile(log)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Count(string(data), "inventory --json --base-sha") != 2 {
+		t.Fatalf("push/PR inventory not narrowed: %s", data)
+	}
+}
 
 func reusableStep(t *testing.T, job, id, name string) workflowStep {
 	t.Helper()
