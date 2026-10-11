@@ -862,7 +862,8 @@ exit 1
 			}
 			compiler := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "env", "GOTOOLCHAIN")
 			compiler.Dir = root
-			compiler.Env = append(command.Env, "GOLIB_REHEARSAL_REAL_GO="+filepath.Join(bin, "go"),
+			compiler.Env = slices.Clone(command.Env)
+			compiler.Env = append(compiler.Env, "GOLIB_REHEARSAL_REAL_GO="+filepath.Join(bin, "go"),
 				"GOLIB_REHEARSAL_PATCHED_PROFILE=1", "GOLIB_REHEARSAL_MODULE_MAP="+filepath.Join(task, "modules.tsv"),
 				"GOLIB_REHEARSAL_EXECUTION_DIRECTORY="+filepath.Join(task, "execution"), "GOTOOLCHAIN=go1.26.6")
 			if output, err := compiler.CombinedOutput(); err != nil || strings.TrimSpace(string(output)) != "go1.26.9" {
@@ -872,7 +873,8 @@ exit 1
 			writeRehearsalFile(t, filepath.Join(foreign, "go.mod"), "module example.com/tool\n\ngo 1.27.0\n")
 			compiler = exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "env", "GOTOOLCHAIN")
 			compiler.Dir = foreign
-			compiler.Env = append(command.Env, "GOLIB_REHEARSAL_REAL_GO="+filepath.Join(bin, "go"),
+			compiler.Env = slices.Clone(command.Env)
+			compiler.Env = append(compiler.Env, "GOLIB_REHEARSAL_REAL_GO="+filepath.Join(bin, "go"),
 				"GOLIB_REHEARSAL_PATCHED_PROFILE=1", "GOLIB_REHEARSAL_MODULE_MAP="+filepath.Join(task, "modules.tsv"),
 				"GOLIB_REHEARSAL_EXECUTION_DIRECTORY="+filepath.Join(task, "execution"), "GOTOOLCHAIN=go1.27.2")
 			if output, err := compiler.CombinedOutput(); err != nil || strings.TrimSpace(string(output)) != "go1.27.2" {
@@ -886,7 +888,8 @@ cp go.mod "${REHEARSAL_SNAPSHOT_MODFILE}"
 `)
 			versioned := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), "run", "example.com/tool@v1.0.0")
 			versioned.Dir = root
-			versioned.Env = append(command.Env, readEnvironment(t, filepath.Join(root, "environment"))...)
+			versioned.Env = slices.Clone(command.Env)
+			versioned.Env = append(versioned.Env, readEnvironment(t, filepath.Join(root, "environment"))...)
 			versioned.Env = append(versioned.Env, "REHEARSAL_PROFILE_TOOL="+tool,
 				"REHEARSAL_BUILD_COMPILER="+filepath.Join(root, "build-compiler"),
 				"REHEARSAL_ANALYSIS_COMPILER="+filepath.Join(root, "analysis-compiler"),
@@ -906,7 +909,8 @@ cp go.mod "${REHEARSAL_SNAPSHOT_MODFILE}"
 			for _, args := range [][]string{{"mod", "edit", "-json"}, {"mod", "edit", "-json", "-modfile=" + filepath.Join(task, "modules", "0.mod")}, {"mod", "edit", "-json", "-modfile=" + activeMod}} {
 				wrapper := exec.CommandContext(t.Context(), filepath.Join(task, "bin", "go"), args...)
 				wrapper.Dir = root
-				wrapper.Env = append(command.Env, "GOLIB_REHEARSAL_REAL_GO="+filepath.Join(bin, "go"),
+				wrapper.Env = slices.Clone(command.Env)
+				wrapper.Env = append(wrapper.Env, "GOLIB_REHEARSAL_REAL_GO="+filepath.Join(bin, "go"),
 					"GOLIB_REHEARSAL_PATCHED_PROFILE=1",
 					"GOLIB_REHEARSAL_MODULE_MAP="+filepath.Join(task, "modules.tsv"),
 					"GOLIB_REHEARSAL_EXECUTION_DIRECTORY="+filepath.Join(task, "execution"))
