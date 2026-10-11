@@ -90,10 +90,12 @@ Core commands:
   fuzz targets through actual production/test imports, testdata, and embed
   inputs; module dependency or target configuration changes widen selection.
   Discovery and execution share the local executor. Smoke uses two workers,
-  two seconds of fuzzing per target, a 20-second target wall deadline and a
-  three-minute total discovery/execution deadline, with at most 32 selected
+  two seconds of fuzzing per target, a one-minute shared discovery/build/execution
+  deadline per target, a 15-second native test timeout and a three-minute total
+  discovery/execution deadline, with at most 32 selected
   targets from 128 configured candidates. Missing, ambiguous, invalid or
-  oversized evidence and failed targets fail the check. This is not a campaign,
+  oversized evidence and failed targets fail the check. Earlier caller deadlines
+  remain in effect. This is not a campaign,
   dirty-work certification or proof that published reverse consumers use
   unreleased dependency source. Ordinary local syntax remains unchanged.
 - `golib coverage [--module DIR]` collects production-package coverage with exact

@@ -105,10 +105,12 @@ fuzz-capable tooling is rejected before checks, without a full-scan fallback.
 PR/main checks add short active fuzz smoke only for configured typed targets
 affected through their current Go production/test/embed dependencies. They retain
 saved fuzz regressions in ordinary tests and do not start mutation campaigns.
-Smoke has a three-minute total ceiling, a 20-second per-target wall deadline and
-two seconds of fuzz work per target; invalid selection or an exceeded budget fails
-honestly. Scheduled/manual local checks do not implicitly select this smoke or a
-full campaign. See [CLI](cli.md) for limits and evidence boundaries.
+Smoke has a three-minute total ceiling. Each target shares a one-minute wall
+deadline for discovery, cold instrumented compilation and execution, with two
+seconds of fuzz work and a 15-second native test timeout. Earlier caller deadlines
+remain in effect; invalid selection or an exceeded budget fails honestly.
+Scheduled/manual local checks do not implicitly select this smoke or a full
+campaign. See [CLI](cli.md) for limits and evidence boundaries.
 
 Consumer CI calls `library-ci.yml` at an immutable commit SHA. The same SHA is
 passed as `tooling_sha` for the isolated tooling checkout. By default the setup action
