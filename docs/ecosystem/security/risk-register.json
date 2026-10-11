@@ -10,7 +10,7 @@
       "rationale": "The tooling contract supports per-module security records before every standalone repository has published a row.",
       "mitigation": "Absent rows are not interpreted as passing verdicts; adoption remains explicit and risk-proportional.",
       "review_condition": "Review when a repository adopts the security record contract, before the next ecosystem milestone, or by 2026-11-09; the deferred bounded fleet audits remain required after the substantive-delivery review checkpoint.",
-      "evidence": "sha256:9db6de6b5e157f8fa7f479e573e08751a40c5d4a39f0a153daa8a119b6c62113:security-matrix.json",
+      "evidence": "sha256:aff79304e9cf13a98f7299f3550d20a6b5c31ab20278bd3217819172095d0085:security-matrix.json",
       "expires_at": "2026-11-09T21:50:36Z"
     }
   ]
