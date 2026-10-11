@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Add bounded changed-input active fuzz smoke to local PR/main checks using
+  configured typed targets and actual Go production/test/embed dependencies.
+  Preserve explicit full campaigns and existing local command syntax.
+
 - Add committed-change module selection through `golib inventory --json
   --base-sha <commit>` and repeated local module selectors. Shared CI selects
   changed module owners and their repository-local consumers in one check

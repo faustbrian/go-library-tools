@@ -71,7 +71,7 @@ local-check:
 	$(call run_golib,"$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check)
 
 local-ci:
-	$(call run_golib,"$$task/golib" check --local; "$$task/golib" security validate --directory docs/ecosystem/security; "$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check)
+	$(call run_golib,arguments=(check --local); if [[ "$${GOLIB_CHANGE_EVENT:-}" == pull_request || "$${GOLIB_CHANGE_EVENT:-}" == push || -n "$${GOLIB_BASE_SHA:-}" ]]; then arguments+=(--base-sha "$${GOLIB_BASE_SHA:-}"); fi; "$$task/golib" "$${arguments[@]}"; "$$task/golib" security validate --directory docs/ecosystem/security; "$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check)
 
 milestone-check: consumers compatibility
 

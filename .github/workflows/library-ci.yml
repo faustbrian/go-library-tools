@@ -403,6 +403,8 @@ jobs:
         if: inputs.release_dry_run != true
         env:
           MODULE_MATRIX: ${{ needs.prepare.outputs.matrix }}
+          EVENT_NAME: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           set -euo pipefail
           golib_help="$(golib --help)"
@@ -423,6 +425,13 @@ jobs:
             exit 1
           fi
           arguments=(check --local)
+          if [[ "${EVENT_NAME:-}" == pull_request || "${EVENT_NAME:-}" == push ]]; then
+            if ! grep -Fq 'golib check --local --base-sha <commit> [--all|--module <directory> ...]' <<<"${golib_help}"; then
+              echo 'this workflow requires changed-target fuzz smoke; select a qualified capable release or explicit immutable source_bootstrap' >&2
+              exit 1
+            fi
+            arguments+=(--base-sha "${BASE_SHA:-}")
+          fi
           while IFS= read -r directory; do
             arguments+=(--module "${directory}")
           done <<<"${directory_lines}"

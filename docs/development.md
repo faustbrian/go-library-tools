@@ -104,7 +104,8 @@ Do not edit unrelated manifests, published compatibility sets or SBOM records
 solely because source changed. Update facts genuinely affected by the change;
 generate retained release artifacts at their actual publication boundary.
 
-The reusable library workflow requires a verifier with `check --local`. A
+The reusable library workflow requires a verifier with `check --local` and
+changed-input `--base-sha` fuzz smoke for PR/main checks. A
 legacy verifier without that capability fails with an adoption diagnostic;
 it never falls back to `check --all` and a mutation campaign. Keep existing
 workflow pins until adopting a qualified capable release or explicitly select

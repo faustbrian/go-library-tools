@@ -66,6 +66,9 @@ jobs:
           go-version-file: .go-version
           cache: false
       - name: Run fast local CI
+        env:
+          GOLIB_CHANGE_EVENT: ${{ github.event_name }}
+          GOLIB_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: make local-ci
       - name: Verify finite workflow traversal regressions when affected
         env:

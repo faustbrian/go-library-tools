@@ -43,12 +43,21 @@ Git input fails closed. Schedules, manual checks and explicit release rehearsals
 retain their whole-repository or explicit release selection.
 
 The quality job passes all selected directories to one
-`golib check --local --module <directory> [--module <directory> ...]` invocation,
+`golib check --local --base-sha <commit> --module <directory>
+[--module <directory> ...]` invocation for PR/main events,
 sharing its bounded executor session. These new capabilities require adopting
 a qualified capable release or reviewed source bootstrap; older workflow pins
 are unchanged. Committed-change inventory is a CI scope selector, not proof of
 uncommitted or untracked local work; contributors should select modules explicitly
 or use `--all` for that work. Metadata-only documentation checks remain separate.
+
+PR/main checks add short active fuzz smoke only for configured typed targets
+affected through their current Go production/test/embed dependencies. They retain
+saved fuzz regressions in ordinary tests and do not start mutation campaigns.
+Smoke has a three-minute total ceiling, a 20-second per-target wall deadline and
+two seconds of fuzz work per target; invalid selection or an exceeded budget fails
+honestly. Scheduled/manual local checks do not implicitly select this smoke or a
+full campaign. See [CLI](cli.md) for limits and evidence boundaries.
 
 Consumer CI calls `library-ci.yml` at an immutable commit SHA. The same SHA is
 passed as `tooling_sha` for the isolated tooling checkout. By default the setup action
@@ -104,7 +113,8 @@ The setup action reads the exact `tool_version` from `.golib.yaml`, selects the
 Linux or macOS amd64/arm64 archive, downloads it with GitHub CLI, verifies its
 SHA-256 checksum and GitHub artifact attestation, and only then extracts the
 binary. It never evaluates a downloaded installer.
-The workflow requires the installed verifier to support bounded `check --local`.
+The workflow requires the installed verifier to support bounded `check --local`
+and PR/main changed-input `--base-sha` smoke.
 An incapable verifier fails with an adoption diagnostic rather than falling
 back to a full campaign. Keep an existing workflow pin until adopting a
 qualified capable release or explicitly reviewed immutable source bootstrap.

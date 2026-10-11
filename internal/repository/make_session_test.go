@@ -10,16 +10,19 @@ import (
 
 func TestMakeReusesDisposableSessionAndCleansFailures(t *testing.T) {
 	for _, test := range []struct {
-		name, target, failure string
-		want                  []string
+		name, target, failure   string
+		want                    []string
+		changeEvent, changeBase string
 	}{
-		{"package tests and vet", "check-packages", "", []string{"go test ./internal/example", "go vet ./internal/example"}},
-		{"package test failure", "check-packages", "test ./internal/example", []string{"go test ./internal/example"}},
-		{"package vet failure", "check-packages", "vet ./internal/example", []string{"go test ./internal/example", "go vet ./internal/example"}},
-		{"local checks", "local-check", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}},
-		{"CLI build failure", "local-ci", "build", []string{"go build"}},
-		{"local CI", "local-ci", "", []string{"go build", "golib check --local", "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}},
-		{"local CI failure", "local-ci", "cohesion check", []string{"go build", "golib check --local", "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check"}},
+		{"package tests and vet", "check-packages", "", []string{"go test ./internal/example", "go vet ./internal/example"}, "", ""},
+		{"package test failure", "check-packages", "test ./internal/example", []string{"go test ./internal/example"}, "", ""},
+		{"package vet failure", "check-packages", "vet ./internal/example", []string{"go test ./internal/example", "go vet ./internal/example"}, "", ""},
+		{"local checks", "local-check", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}, "", ""},
+		{"CLI build failure", "local-ci", "build", []string{"go build"}, "", ""},
+		{"local CI", "local-ci", "", []string{"go build", "golib check --local", "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}, "", ""},
+		{"local CI failure", "local-ci", "cohesion check", []string{"go build", "golib check --local", "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check"}, "", ""},
+		{"PR fuzz base", "local-ci", "", []string{"go build", "golib check --local --base-sha " + strings.Repeat("a", 40), "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}, "pull_request", strings.Repeat("a", 40)},
+		{"push fuzz base", "local-ci", "", []string{"go build", "golib check --local --base-sha " + strings.Repeat("b", 40), "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}, "push", strings.Repeat("b", 40)},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			repository := t.TempDir()
@@ -48,6 +51,7 @@ fi
 			command.Dir = repository
 			command.Env = append(os.Environ(), "PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
 				"GOLIB_MAKE_FIXTURE_LOG="+log, "GOLIB_MAKE_FIXTURE_BIN="+cli,
+				"GOLIB_CHANGE_EVENT="+test.changeEvent, "GOLIB_BASE_SHA="+test.changeBase,
 				"GOLIB_MAKE_FIXTURE_FAILURE="+test.failure)
 			output, err := command.CombinedOutput()
 			if (err != nil) != (test.failure != "") {

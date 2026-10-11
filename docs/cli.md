@@ -72,6 +72,18 @@ Core commands:
   toolchain selected for the repository rather than the CLI build toolchain.
   Configured mutation imports are materialized before mutation verification,
   using the same fail-closed behavior as `golib mutation`.
+- `golib check --local --base-sha COMMIT [--all|--module DIR ...]` adds active
+  fuzz smoke after deterministic local checks. The base must be a full lowercase
+  commit SHA available locally. It selects configured single-package typed Go
+  fuzz targets through actual production/test imports, testdata, and embed
+  inputs; module dependency or target configuration changes widen selection.
+  Discovery and execution share the local executor. Smoke uses two workers,
+  two seconds of fuzzing per target, a 20-second target wall deadline and a
+  three-minute total discovery/execution deadline, with at most 32 selected
+  targets from 128 configured candidates. Missing, ambiguous, invalid or
+  oversized evidence and failed targets fail the check. This is not a campaign,
+  dirty-work certification or proof that published reverse consumers use
+  unreleased dependency source. Ordinary local syntax remains unchanged.
 - `golib coverage [--module DIR]` collects production-package coverage with exact
   enforcement by default. An explicit `coverage.modules` evidence policy retains
   instrumentation and counts without claiming exact coverage or release readiness;

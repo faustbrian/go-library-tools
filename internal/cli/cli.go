@@ -38,6 +38,7 @@ Usage:
   golib secrets check
   golib check [--local] [--all|--module <directory>]
   golib check --local --module <directory> [--module <directory> ...]
+  golib check --local --base-sha <commit> [--all|--module <directory> ...]
   golib cohesion check [--json]
   golib cohesion catalog <consumer|engineering> [--json]
   golib cohesion aggregate <generate|check> --inputs <file> --output <directory>
@@ -159,6 +160,13 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		if local {
 			selectionArguments = args[2:]
 		}
+		base := ""
+		if local && len(selectionArguments) > 0 && selectionArguments[0] == "--base-sha" {
+			if len(selectionArguments) < 2 || selectionArguments[1] == "" {
+				return usage(stderr, "changed local checks require --base-sha <commit>")
+			}
+			base, selectionArguments = selectionArguments[1], selectionArguments[2:]
+		}
 		selection, usageError := moduleSelection(selectionArguments, catalog.Modules)
 		if local && len(selectionArguments) > 2 {
 			selection, usageError = repeatedModuleSelection(selectionArguments)
@@ -169,6 +177,9 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
 			runner := gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}
 			if local {
+				if base != "" {
+					return runner.LocalChanges(ctx, selection, base)
+				}
 				return runner.Local(ctx, selection)
 			}
 			return runner.Check(ctx, selection)

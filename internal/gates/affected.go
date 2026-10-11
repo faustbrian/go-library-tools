@@ -18,33 +18,21 @@ import (
 // and an empty diff select every module; missing Git evidence is an error.
 // It does not certify uncommitted or untracked changes.
 func (runner Runner) ChangedModules(ctx context.Context, base string) ([]inventory.Module, error) {
-	if len(base) != 40 || strings.IndexFunc(base, func(c rune) bool { return !strings.ContainsRune("0123456789abcdef", c) }) >= 0 {
-		return nil, errors.New("affected inventory requires a full lowercase Git commit SHA")
-	}
 	if len(runner.Catalog.Modules) == 0 || len(runner.Catalog.Modules) > inventory.MaximumModules {
 		return nil, errors.New("affected inventory module cardinality is invalid")
 	}
-	if _, err := runner.changeGit(ctx, "cat-file", "-e", base+"^{commit}"); err != nil {
-		return nil, err
-	}
-	diff, err := runner.changeGit(ctx, "diff", "--no-ext-diff", "--no-textconv", "--no-renames", "--name-only", "-z", base, "HEAD", "--")
+	changes, err := runner.committedChanges(ctx, base)
 	if err != nil {
 		return nil, err
 	}
 	selected := make(map[string]bool, len(runner.Catalog.Modules))
-	all := diff == ""
-	if diff != "" && !strings.HasSuffix(diff, "\x00") {
-		return nil, errors.New("affected inventory Git paths are malformed")
-	}
-	for name := range strings.SplitSeq(strings.TrimSuffix(diff, "\x00"), "\x00") {
+	all := len(changes) == 0
+	for _, name := range changes {
 		if err := ctx.Err(); err != nil {
 			return nil, err
 		}
 		if all {
 			break
-		}
-		if !fs.ValidPath(name) || path.Clean(name) != name || name == "." {
-			return nil, errors.New("affected inventory Git paths are malformed")
 		}
 		owner := ""
 		for _, module := range runner.Catalog.Modules {
@@ -131,6 +119,29 @@ func (runner Runner) ChangedModules(ctx context.Context, base string) ([]invento
 		}
 	}
 	return modules, ctx.Err()
+}
+
+func (runner Runner) committedChanges(ctx context.Context, base string) ([]string, error) {
+	if len(base) != 40 || strings.IndexFunc(base, func(c rune) bool { return !strings.ContainsRune("0123456789abcdef", c) }) >= 0 {
+		return nil, errors.New("affected inventory requires a full lowercase Git commit SHA")
+	}
+	if _, err := runner.changeGit(ctx, "cat-file", "-e", base+"^{commit}"); err != nil {
+		return nil, err
+	}
+	diff, err := runner.changeGit(ctx, "diff", "--no-ext-diff", "--no-textconv", "--no-renames", "--name-only", "-z", base, "HEAD", "--")
+	if err != nil || diff == "" {
+		return nil, err
+	}
+	if !strings.HasSuffix(diff, "\x00") {
+		return nil, errors.New("affected inventory Git paths are malformed")
+	}
+	changes := strings.Split(strings.TrimSuffix(diff, "\x00"), "\x00")
+	for _, name := range changes {
+		if !fs.ValidPath(name) || path.Clean(name) != name || name == "." {
+			return nil, errors.New("affected inventory Git paths are malformed")
+		}
+	}
+	return changes, ctx.Err()
 }
 
 func (runner Runner) changeGit(ctx context.Context, args ...string) (string, error) {
