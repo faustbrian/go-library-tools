@@ -25,6 +25,9 @@ Core commands:
 - `golib config validate` validates configuration and both manifests.
 - `golib config show --json` emits normalized policy for workflow orchestration.
 - `golib inventory [--json]` prints the canonical module inventory.
+- `golib inventory --json --base-sha COMMIT` selects committed-change module
+  owners and owned reverse consumers. Unknown/shared inputs select all modules;
+  invalid Git evidence fails. This does not certify dirty or untracked work.
 - `golib consumers validate [--json]` validates the maintained consumer
   inventory and reports active, deferred, and tooling repository counts.
 - `golib cohesion check [--json]` validates schema-v2 or optional schema-v3
@@ -62,7 +65,8 @@ Core commands:
   module-declared service fixtures: formatting,
   module tidiness, unsafe-import checks, tests, vet, configured lint/static
   analysis, the complete security scanner contract, local documentation links,
-  and applicable API compatibility.
+  and applicable API compatibility. Repeat `--module DIR` to check several
+  modules with one executor session; duplicates are checked only once.
   `golib check [--all|--module DIR]` runs the complete enabled contract. Formatting is
   checked by the active `gofmt` executable, keeping it aligned with the Go
   toolchain selected for the repository rather than the CLI build toolchain.
@@ -84,6 +88,9 @@ Core commands:
 - `golib evidence inspect [--json]` validates attributable evidence records.
 - `golib docs check [--module DIR]` validates bounded Markdown navigation and
   optional typed documentation tests.
+- `golib docs check --local` checks repository-local Markdown structure and
+  links without network access or runtime commands; executable examples still
+  require their affected compile/tests.
 - `golib services cycle [--module DIR]` starts each selected module's declared
   fixtures, waits for readiness, and closes the exact task-owned lease. It does
   not expose detached service state.

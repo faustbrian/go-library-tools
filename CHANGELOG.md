@@ -24,6 +24,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Document standalone contributor commands and Tools' locally unsafe test
+  boundaries without making aggregate milestones a prerequisite for every fix.
+  Align the CLI and workflow references with affected-module local checks.
+
 - Select Tools aggregate milestones for new or changed published compatibility
   sets and explicit manual runs. Keep offline catalog validation and require
   success from applicable jobs rather than accepting skipped mandatory checks.

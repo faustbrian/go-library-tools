@@ -4,9 +4,10 @@ Verification is proportional to the change. Ordinary development uses focused
 package tests and applicable static analysis, then the fast repository-local
 checks. Pull requests run `make local-ci`, including formatting, module
 tidiness, safety, tests, vet, configured lint/static analysis, local Markdown
-links, and applicable API compatibility. Main, scheduled, and explicit
-milestones reuse that revision's successful local check and run
-`make milestone-check` only for consumer and compatibility validation.
+links, and applicable API compatibility. Main and scheduled runs do not
+automatically select an aggregate milestone. `make milestone-check` supplies
+consumer/compatibility validation only when that boundary is selected; shared
+ordinary quality uses the selected affected modules in one local session.
 
 Mutation, broad fuzzing, race, benchmark, external-service, release-rehearsal,
 and ecosystem-wide checks do not block a routine change unless they directly

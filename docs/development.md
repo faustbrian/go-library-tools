@@ -4,7 +4,8 @@ Use the Go version in `.go-version`. Every Go command must receive disposable
 `GOCACHE`, `GOMODCACHE`, and `GOTMPDIR` directories and remove them afterward.
 
 Run focused package tests and static analysis while editing with
-`make check-packages PACKAGES='./internal/example ./internal/other'`.
+`make check-packages PACKAGES='./internal/inventory'` (select the actual affected
+packages, not this example indiscriminately).
 Its test and vet commands share one disposable cache session. `make local-check`
 and `make local-ci` each build the CLI once and reuse it for adjacent checks;
 their build-session directories are removed on success or failure. Each CLI
@@ -36,8 +37,72 @@ security gates. Coverage, race, and mutation remain available when the changed
 behavior's risk classification selects them; disabling one of those gates for
 a module does not by itself prevent an otherwise verified release.
 
-Docker fixture behavior is unit-tested behind process boundaries; use
-designated CI or an explicit manual environment for real service rehearsals.
+Tools' complete test set includes process-control and descendant-cleanup cases.
+Agents must not run those or Docker-impacting rehearsals locally; select safe
+package/test cases and use the designated hosted jobs for those boundaries.
+This restriction is specific to Tools' test effects, not an instruction to
+replace every ordinary library test run with hosted CI.
+
+## Contribute to one standalone library
+
+Work in the owning repository/module with its declared Go toolchain. A normal
+simple module's starting point is `go test ./...`: it includes deterministic
+fuzz corpus regressions, not active fuzzing or mutation. No sibling checkout,
+ecosystem ledger, agent protocol, or new Tools release is required to submit a
+normal source fix. Follow any actual adapter/service requirements documented by
+that repository, and test affected nested modules separately.
+
+For an isolated bounded local session, these commands share private caches and
+remove them afterward:
+
+```bash
+(
+  set -eu
+  golib_task_root=$(mktemp -d "${TMPDIR:-/tmp}/golib-contributor.XXXXXX")
+  trap 'chmod -R u+w "$golib_task_root" 2>/dev/null || true; find "$golib_task_root" -depth -delete' EXIT
+  mkdir -p "$golib_task_root/cache" "$golib_task_root/mod" "$golib_task_root/tmp"
+  export GOCACHE="$golib_task_root/cache" GOMODCACHE="$golib_task_root/mod"
+  export GOTMPDIR="$golib_task_root/tmp"
+  go test ./...
+  go vet ./...
+)
+```
+
+For changed parser/untrusted-input behavior, replace or add the selected test
+command inside that session with a short active fuzz smoke. In this Tools
+repository the bounded manifest target, for example, is:
+
+```bash
+go test ./internal/inventory -run '^$' -fuzz '^FuzzManifest$' -fuzztime=10s -parallel=2
+```
+
+Choose the owning library's actual package and target; this example does not
+exercise another parser. Save any minimized failing input as a deterministic
+regression and fix it; do not call a short smoke exhaustive fuzz assurance.
+Use focused `go test -race` and actual integration/direct-consumer checks when
+concurrency, persistence, public API or external-boundary changes require them.
+
+When the matching `golib` tool is already available, explicit local commands are:
+
+```bash
+golib check --local --module .
+golib mutation --module .
+golib release check --module .
+golib release dry-run --module .
+```
+
+These are different boundaries, not a required four-command checklist. The first
+runs ordinary configured checks. Mutation is an optional developer-local or
+selected scheduled campaign and can be expensive; it is not routine PR work.
+The last two apply only to a release decision/rehearsal and retain full selected
+release obligations. Use a nested module's declared directory instead of `.`
+where applicable. These `golib` commands manage their own disposable executors;
+source builds still need the private Go session above. Tools' system-risk tests
+remain hosted even when a command would otherwise select them.
+
+Do not edit unrelated manifests, published compatibility sets or SBOM records
+solely because source changed. Update facts genuinely affected by the change;
+generate retained release artifacts at their actual publication boundary.
 
 The reusable library workflow requires a verifier with `check --local`. A
 legacy verifier without that capability fails with an adoption diagnostic;

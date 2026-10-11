@@ -146,8 +146,9 @@ source-bootstrap modes. Older tooling without this command fails closed;
 adopt the workflow and supporting tooling together.
 Exactly paired reusable-workflow and tooling-pin changes use metadata assurance
 in both installation modes, on pull requests and corresponding main pushes.
-Runtime-selected ordinary jobs use `golib check --local --all`; bootstrapping
-does not select a campaign. Schedules and manual runs retain their applicable
+Runtime-selected ordinary jobs pass the affected module matrix to one
+`golib check --local` invocation; bootstrapping does not select a campaign.
+Schedules and manual runs retain their applicable
 runtime route; release rehearsals remain explicitly dispatched. Every
 source-mode job removes the exact owned installation and ancillary caches in an
 always-cleanup step, including when later gates fail. Setup failures clean
@@ -195,8 +196,8 @@ that a version is unavailable, so bootstrap archives cannot shadow a published
 module with different bytes.
 
 The reusable workflow keeps consumer policy in repository manifests. It builds
-a bounded module inventory from `golib inventory --json`, runs one all-module
-quality invocation with module-specific gate attribution, uploads one aggregate
+a bounded selected module inventory, runs one quality invocation for that
+selection with module-specific gate attribution, uploads one aggregate
 `evidence-selected-modules` artifact containing repository-owned `.verification`
 evidence, and runs CodeQL. Repository secrets run once; all selected module
 security scans finish before repository tests execute. The caller's final `required` job converts the reusable-call
