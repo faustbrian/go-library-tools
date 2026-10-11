@@ -71,9 +71,10 @@ The setup action reads the exact `tool_version` from `.golib.yaml`, selects the
 Linux or macOS amd64/arm64 archive, downloads it with GitHub CLI, verifies its
 SHA-256 checksum and GitHub artifact attestation, and only then extracts the
 binary. It never evaluates a downloaded installer.
-The workflow detects whether that installed version supports the bounded local
-check mode and otherwise uses the older all-module check form, so updating an
-immutable workflow pin does not force a simultaneous tool-manifest migration.
+The workflow requires the installed verifier to support bounded `check --local`.
+An incapable verifier fails with an adoption diagnostic rather than falling
+back to a full campaign. Keep an existing workflow pin until adopting a
+qualified capable release or explicitly reviewed immutable source bootstrap.
 Release rehearsals similarly omit module selectors when the installed tool
 predates module-scoped release commands.
 
@@ -106,16 +107,16 @@ All four setup sites then use the immutable remote setup action at
 `e8c0c51cc517dfede5475858bb417f0e7a21f39d`, passing the same `tooling_sha`
 used for their fixed tooling checkout. Documentation/license-only pull requests
 use the ordinary metadata assurance tier, including in source-bootstrap mode.
-Metadata-only source-bootstrap jobs still scan repository history and the
-current tree through `golib secrets check`, using the existing bounded scan
-policy. Older source tooling without this command fails closed; adopt the
-workflow and supporting tooling source together.
-Changed source-bootstrap tooling pins still require runtime assurance, even
-when the reusable workflow and tooling pins match. Runtime-selected source
-jobs run full ordinary `golib check --all`, never the help-detected local
-shortcut. Pushes, schedules, manual runs and release rehearsals retain runtime
-assurance. Every source-mode
-job removes the exact owned installation and ancillary caches in an
+Metadata-only jobs scan repository history and the current tree through
+`golib secrets check`, using the existing bounded scan policy in installed and
+source-bootstrap modes. Older tooling without this command fails closed;
+adopt the workflow and supporting tooling together.
+Exactly paired reusable-workflow and tooling-pin changes use metadata assurance
+in both installation modes, on pull requests and corresponding main pushes.
+Runtime-selected ordinary jobs use `golib check --local --all`; bootstrapping
+does not select a campaign. Schedules and manual runs retain their applicable
+runtime route; release rehearsals remain explicitly dispatched. Every
+source-mode job removes the exact owned installation and ancillary caches in an
 always-cleanup step, including when later gates fail. Setup failures clean
 build resources inside the action; cleanup tolerates an installation that was
 never created or was already removed on failure.
@@ -167,7 +168,8 @@ quality invocation with module-specific gate attribution, uploads one aggregate
 evidence, and runs CodeQL. Repository secrets run once; all selected module
 security scans finish before repository tests execute. The caller's final `required` job converts the reusable-call
 result into the stable `Required` check used by branch protection.
-Set `release_dry_run: true` only for an explicit release rehearsal; this first
+Set `release_dry_run: true` only for an explicit non-PR release rehearsal; a PR
+attempt is rejected before it can select campaign work. This first
 validates the stable release contract and then runs the complete release
 dry-run for every releasable module. Set `release_module` to an exact module
 directory to limit module-scoped release checks to that
@@ -187,18 +189,23 @@ Consumer workflows retain least-privileged permissions, explicit concurrency,
 bounded module selection, attributable aggregate evidence, scheduled checks, CodeQL,
 release dry-runs, and one stable final required job.
 
-Pull requests that change only Markdown, `LICENSE`, or `NOTICE` run repository
-structural validation without launching module-quality or CodeQL jobs. An
+Pull requests and corresponding main pushes that change only Markdown,
+`LICENSE`, or `NOTICE` run repository structural validation without launching
+module-quality or CodeQL jobs. An
 otherwise lightweight pull request may also update only the canonical
 reusable-workflow SHA and matching `tooling_sha`; structural validation still
 checks that caller, including when the replaced release comment has a legacy
 descriptive suffix. Source, configuration, substantive or mismatched workflow
-changes, structured metadata, push, scheduled, and explicit release-rehearsal
+changes, structured metadata, scheduled, and explicit release-rehearsal
 events retain the complete applicable runtime path.
 Pull-request runs review dependency changes before the final required job.
 Workflow syntax and expression validation are available locally through
 `golib workflows check`, run as part of the repository `make ci` contract, and
 execute in the reusable workflow's hosted repository-contract job.
+
+The final required job rejects missing or invalid classifications, failed or
+cancelled mandatory results, and applicable checks that were skipped. A job
+deliberately excluded by the selected route is not a passing runtime check.
 
 Tool version, binary checksum, setup-action SHA, and reusable-workflow SHA are
 updated together through reviewable pull requests. Existing consumers do not
