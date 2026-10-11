@@ -4,6 +4,19 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.1.2 - 2026-10-11
+
+### Fixed
+
+- Allow cold instrumented fuzz builds within a two-minute target deadline,
+  retaining the three-minute shared budget and two-second active exploration.
+
+### Changed
+
+- Accept exact native CI and dependency-review evidence for reviewed releases
+  without a scanner-record-only commit. Preserve historical risk decisions,
+  full release secret scanning, source identity and publication integrity.
+
 ## 2.1.1 - 2026-10-11
 
 ### Fixed

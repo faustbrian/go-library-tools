@@ -43,10 +43,28 @@ The versioned [ecosystem security contract](ecosystem/security/README.md)
 defines the shared threat model, vulnerability-management process, risk
 ownership, scanner-result matrix, and per-revision release verdict.
 Resolved risks that permit a passing verdict bind the exact raw matrix bytes as
-`sha256:<digest>:security-matrix.json`. A release tag may add only those risk
-and matrix records on top of the scanned source commit; the workflow verifies
-that the matrix revision is the tag commit's sole parent and that no executable,
-source, dependency, manifest, or workflow content changed in between.
+`sha256:<digest>:security-matrix.json`. The security validator continues to
+enforce ownership, severity, expiry and unresolved-risk refusal for release.
+Existing valid historical records remain policy inputs; their scanner results
+are not copied or relabeled as observations of a new tagged source.
+
+For native source releases, the workflow verifies the latest exact-tagged-source
+main push CI, including successful Required and executed Quality, CodeQL runtime
+build and the pinned analyze action. It also authenticates the merged PR for
+that tag. A distinct squash-merge PR head must have the same Git tree as the tag.
+One pinned dependency-review action at release compares the authenticated PR's
+base SHA against the exact tagged SHA, rejecting low-or-higher vulnerabilities
+and disallowed licenses without posting comments. Historical PR run associations
+may disappear after merge and are not used as proof of reviewed release inputs.
+The release runs one full secret scan, reusing its private validation cache.
+Successful CodeQL execution does not establish absence of findings: reviewed
+risk policy remains mandatory. No fresh eleven-scanner transcription or
+records-only commit is required for this route.
+
+The supported legacy route remains narrower: a tag whose sole parent is the
+matrix's scanned revision may change only the risk and matrix records. That
+route retains its original parent-bound evidence rather than rebinding it to
+new executable, dependency, manifest or workflow content.
 
 Security-enabled modules run pinned govulncheck, standalone gosec, a centrally
 owned go-analysis security policy, full-history gitleaks with a centrally owned

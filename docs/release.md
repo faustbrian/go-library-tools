@@ -33,10 +33,28 @@ from an immutable tag. Consumers verify artifacts before execution.
 
 The release workflow runs only for exact semantic-version tags. It verifies
 that the tag resolves to the checked-out commit and that the exact commit
-already has a successful applicable `CI` push run. The tagged commit must belong
-to the fetched immutable main history, but later main commits do not invalidate
-it. Tags outside main, unavailable ancestry and non-green or wrong-source CI
-are refused. It then builds and verifies current source while `.golib.yaml`
+already has a successful latest applicable `CI` main push run. The tagged commit
+must belong to the fetched immutable main history, but later main commits do not
+invalidate it. Tags outside main, unavailable ancestry and non-green or wrong-source CI
+are refused. Native source tags require actual successful Required, Quality,
+CodeQL runtime-build and pinned analyze execution, not merely green jobs with
+skipped scanner steps. An authenticated merged PR must identify the tag and
+target main. A distinct PR head is accepted only with Git tree equality to the
+tag. The release runs one pinned, five-minute dependency review with that PR's
+authenticated base SHA and the exact tagged SHA, retaining low-severity,
+license and vulnerability refusal without comments or write permissions.
+Missing ref outputs fail closed. Historical PR CI associations are not reused:
+GitHub may clear them after merge, and they do not prove the release comparison.
+
+Native releases retain valid human risk dispositions and historical scanner
+records as policy inputs, without fresh eleven-row transcription or a
+records-only commit. They run the existing security validator, one full secret
+scan and release metadata check using one private cache. Scanner execution does
+not promise zero CodeQL findings; reviewed severity, expiry and unresolved-risk
+policy remain required. Existing records-only tags retain their supported
+sole-parent interlock; see [security](security.md).
+
+It then builds and verifies current source while `.golib.yaml`
 remains pinned to a stable published
 bootstrap release. This avoids both requiring an unpublished binary and
 checksum set to bootstrap their own release and repeating

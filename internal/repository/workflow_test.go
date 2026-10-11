@@ -1440,7 +1440,7 @@ func TestReleaseWorkflowVerifiesRealTagAgainstCurrentMainAndSecurityEvidence(t *
 			releaseWriteExecutable(t, filepath.Join(bin, "go"), "printf '%s\\n' \"$*\" >>\"${GO_CALLS}\"\n")
 			command := exec.CommandContext(t.Context(), "bash", "-euo", "pipefail", "-c", verifyScript)
 			command.Dir = work
-			command.Env = append(os.Environ(), "PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"), "GITHUB_REF_NAME=v2.0.0", "GITHUB_SHA="+sha, "GITHUB_REPOSITORY=faustbrian/go-library-tools", "GITHUB_TOKEN=test", "RUNNER_TEMP="+t.TempDir(), "GO_CALLS="+calls)
+			command.Env = append(os.Environ(), "PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"), "GITHUB_REF_NAME=v2.0.0", "GITHUB_SHA="+sha, "GITHUB_REPOSITORY=faustbrian/go-library-tools", "GITHUB_TOKEN=test", "GITHUB_OUTPUT="+filepath.Join(t.TempDir(), "github-output"), "RUNNER_TEMP="+t.TempDir(), "GO_CALLS="+calls)
 			output, err := command.CombinedOutput()
 			if (err == nil) != test.wantSuccess {
 				t.Fatalf("verify success = %t, want %t: %v, %s", err == nil, test.wantSuccess, err, output)
@@ -1454,6 +1454,381 @@ func TestReleaseWorkflowVerifiesRealTagAgainstCurrentMainAndSecurityEvidence(t *
 			}
 		})
 	}
+}
+
+// This exercises the hosted verification shell, not a transcription of its
+// policy. Git identity/ancestry are real; only GitHub and Go are external seams.
+func TestReleaseWorkflowUsesExactNativeEvidenceWithoutRecordsOnlyCommit(t *testing.T) {
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/release.yml")), &workflow); err != nil {
+		t.Fatal(err)
+	}
+	var script string
+	for _, step := range workflow.Jobs["verify"].Steps {
+		if step.Name == "Validate release identity and contract" {
+			script = step.Run
+		}
+	}
+	if script == "" {
+		t.Fatal("release verification boundary missing")
+	}
+	for _, test := range []struct {
+		name, defect string
+		wantSuccess  bool
+	}{
+		{name: "exact native source with historical records", wantSuccess: true},
+		{name: "squash merge retains same-tree source proof", defect: "distinct-pr-head", wantSuccess: true},
+		{name: "live merged PR has empty historical run associations", defect: "empty-pr-association", wantSuccess: true},
+		{name: "merged PR source differs from tagged tree", defect: "different-pr-tree"},
+		{name: "tag remains ancestor of current remote main", defect: "advance-main", wantSuccess: true},
+		{name: "tag outside remote main", defect: "outside-main"},
+		{name: "manifest version differs from tag", defect: "wrong-version"},
+		{name: "workflow source differs from tag", defect: "wrong-source"},
+		{name: "green CI belongs to another head", defect: "wrong-ci-head"},
+		{name: "CI belongs to another branch", defect: "wrong-ci-branch"},
+		{name: "CI run failed", defect: "failed-ci"},
+		{name: "new failed CI cannot reuse an older green run", defect: "newer-failed-ci"},
+		{name: "Required missing", defect: "missing-required"},
+		{name: "Required failed", defect: "failed-required"},
+		{name: "Quality missing", defect: "missing-quality"},
+		{name: "Quality execution skipped", defect: "skipped-quality"},
+		{name: "Quality execution failed", defect: "failed-quality"},
+		{name: "CodeQL build missing", defect: "missing-build"},
+		{name: "CodeQL build skipped in green job", defect: "skipped-build"},
+		{name: "CodeQL build failed", defect: "failed-build"},
+		{name: "CodeQL analyze missing", defect: "missing-analyze"},
+		{name: "CodeQL analyze skipped in green job", defect: "skipped-analyze"},
+		{name: "CodeQL analyze failed", defect: "failed-analyze"},
+		{name: "CodeQL analyze uses another action", defect: "wrong-analyze"},
+		{name: "merged PR absent", defect: "missing-pr"},
+		{name: "PR not merged", defect: "unmerged-pr"},
+		{name: "PR merge belongs to another tag head", defect: "wrong-pr-merge"},
+		{name: "PR targets another branch", defect: "wrong-pr-base"},
+		{name: "authenticated PR base SHA malformed", defect: "invalid-pr-base-sha"},
+		{name: "authenticated PR base SHA missing", defect: "missing-pr-base-sha"},
+		{name: "full release secret scan fails", defect: "secrets-fail"},
+		{name: "existing security validator refuses disposition", defect: "security-fail"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			work := filepath.Join(t.TempDir(), "work")
+			origin := filepath.Join(t.TempDir(), "origin.git")
+			runGit(t, "", "init", "--bare", origin)
+			runGit(t, "", "init", "--initial-branch=main", work)
+			runGit(t, work, "config", "user.name", "Release Test")
+			runGit(t, work, "config", "user.email", "release@example.invalid")
+			runGit(t, work, "remote", "add", "origin", origin)
+			write := func(path, data string) {
+				t.Helper()
+				path = filepath.Join(work, path)
+				if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			write("modules.json", `{"modules":[{"directory":".","module_path":"github.com/faustbrian/go-library-tools/v2","version":"2.0.0","tag_prefix":"v"}]}`)
+			write("runtime.go", "package fixture\nconst Version = 1\n")
+			runGit(t, work, "add", "modules.json", "runtime.go")
+			runGit(t, work, "commit", "-m", "historical source")
+			historical := strings.TrimSpace(runGit(t, work, "rev-parse", "HEAD"))
+			risks, matrix := releaseSecurityDocuments(t, historical)
+			write("docs/ecosystem/security/risk-register.json", string(risks))
+			write("docs/ecosystem/security/security-matrix.json", string(matrix))
+			runGit(t, work, "add", "docs")
+			runGit(t, work, "commit", "-m", "historical security disposition")
+			prHead := strings.TrimSpace(runGit(t, work, "rev-parse", "HEAD"))
+			// No fresh scanner rows and no records-only release commit: the tag
+			// identifies executable/version preparation, with native runtime CI.
+			write("runtime.go", "package fixture\nconst Version = 2\n")
+			write("modules.json", `{"modules":[{"directory":".","module_path":"github.com/faustbrian/go-library-tools/v2","version":"2.1.0","tag_prefix":"v"}]}`)
+			runGit(t, work, "add", "runtime.go", "modules.json")
+			runGit(t, work, "commit", "-m", "prepare current source release")
+			sha := strings.TrimSpace(runGit(t, work, "rev-parse", "HEAD"))
+			runGit(t, work, "tag", "-a", "v2.1.0", "-m", "release")
+			main := "main"
+			if test.defect == "outside-main" {
+				main = historical + ":refs/heads/main"
+			}
+			runGit(t, work, "push", "origin", main, "refs/tags/v2.1.0")
+			if test.defect == "advance-main" {
+				write("later", "later\n")
+				runGit(t, work, "add", "later")
+				runGit(t, work, "commit", "-m", "advance main")
+				runGit(t, work, "push", "origin", "main")
+			}
+			runGit(t, work, "checkout", "--detach", "v2.1.0")
+			if test.defect == "distinct-pr-head" {
+				tree := strings.TrimSpace(runGit(t, work, "rev-parse", "HEAD^{tree}"))
+				prHead = strings.TrimSpace(runGit(t, work, "commit-tree", tree, "-p", historical, "-m", "reviewed same-tree PR source"))
+				runGit(t, work, "push", "origin", prHead+":refs/heads/feature/release")
+			} else if test.defect != "different-pr-tree" {
+				prHead = sha
+			}
+			fixtures := releaseNativeEvidence(t, sha, prHead, historical, test.defect)
+			bin := filepath.Join(t.TempDir(), "bin")
+			if err := os.Mkdir(bin, 0o700); err != nil {
+				t.Fatal(err)
+			}
+			releaseWriteExecutable(t, filepath.Join(bin, "gh"), `
+[[ "${GH_TOKEN:-}" == test ]] || { echo 'unauthenticated fixture request' >&2; exit 90; }
+endpoint=''
+for argument in "$@"; do
+  case "${argument}" in /repos/*) endpoint="${argument}" ;; esac
+done
+case "${endpoint}" in
+  */actions/workflows/ci.yml/runs*)
+    if [[ "${endpoint}" == *event=pull_request* ]]; then file=pr-runs; else file=push-runs; fi ;;
+  */actions/runs/100/jobs*) file=push-jobs ;;
+  */actions/runs/200/jobs*) file=pr-jobs ;;
+  */commits/*/pulls*) file=pulls ;;
+  */pulls/7) file=pull ;;
+  *) echo "unexpected gh request: ${endpoint}" >&2; exit 91 ;;
+esac
+cat "${GH_FIXTURES}/${file}.json"
+`)
+			releaseWriteExecutable(t, filepath.Join(bin, "go"), `
+case "${GOCACHE:-}|${GOMODCACHE:-}|${GOTMPDIR:-}" in
+  "${RUNNER_TEMP}"/golib-release-check.*/cache\|"${RUNNER_TEMP}"/golib-release-check.*/mod\|"${RUNNER_TEMP}"/golib-release-check.*/tmp) ;;
+  *) echo 'unowned Go fixture cache' >&2; exit 93 ;;
+esac
+printf '%s\n' "$*" >>"${GO_CALLS}"
+case "$*" in
+  'run ./cmd/golib security validate --directory docs/ecosystem/security')
+    [[ "${DEFECT}" != security-fail ]] || exit 42 ;;
+  'run ./cmd/golib secrets check')
+    [[ "${DEFECT}" != secrets-fail ]] || exit 42 ;;
+  'run ./cmd/golib release check') ;;
+  *) echo 'unexpected Go fixture command' >&2; exit 92 ;;
+esac
+`)
+			calls := filepath.Join(t.TempDir(), "go-calls")
+			githubSHA, tag := sha, "v2.1.0"
+			if test.defect == "wrong-source" {
+				githubSHA = historical
+			}
+			if test.defect == "wrong-version" {
+				tag = "v2.0.0"
+			}
+			runner := t.TempDir()
+			githubOutput := filepath.Join(t.TempDir(), "github-output")
+			command := exec.CommandContext(t.Context(), "bash", "-euo", "pipefail", "-c", script)
+			command.Dir = work
+			command.Env = append(os.Environ(), "PATH="+bin+string(os.PathListSeparator)+os.Getenv("PATH"),
+				"GITHUB_REF_NAME="+tag, "GITHUB_SHA="+githubSHA, "GITHUB_REPOSITORY=faustbrian/go-library-tools",
+				"GITHUB_TOKEN=test", "GITHUB_OUTPUT="+githubOutput, "RUNNER_TEMP="+runner, "GO_CALLS="+calls, "GH_FIXTURES="+fixtures, "DEFECT="+test.defect)
+			output, err := command.CombinedOutput()
+			if strings.Contains(string(output), "unexpected gh request") || strings.Contains(string(output), "unexpected Go fixture command") || strings.Contains(string(output), "unauthenticated fixture request") || strings.Contains(string(output), "unowned Go fixture cache") {
+				t.Fatalf("external fixture contract mismatch: %s", output)
+			}
+			if (err == nil) != test.wantSuccess {
+				t.Fatalf("native verify success = %t, want %t: %v, %s", err == nil, test.wantSuccess, err, output)
+			}
+			if test.wantSuccess {
+				refs, err := os.ReadFile(githubOutput)
+				if err != nil || string(refs) != "native=true\nbase_ref="+historical+"\nhead_ref="+sha+"\n" {
+					t.Fatalf("dependency review refs must come from authenticated PR base and exact tagged head: %q, %v", refs, err)
+				}
+				data, err := os.ReadFile(calls)
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, required := range []string{"run ./cmd/golib security validate --directory docs/ecosystem/security", "run ./cmd/golib secrets check", "run ./cmd/golib release check"} {
+					if strings.Count(string(data), required+"\n") != 1 {
+						t.Fatalf("native release must validate disposition, scan full secrets once and retain release checks: %q", data)
+					}
+				}
+			}
+			for path, before := range map[string][]byte{"risk-register.json": risks, "security-matrix.json": matrix} {
+				after, err := os.ReadFile(filepath.Join(work, "docs/ecosystem/security", path))
+				if err != nil || string(after) != string(before) {
+					t.Fatalf("native verification rewrote historical evidence %s: %v", path, err)
+				}
+			}
+			remaining, err := os.ReadDir(runner)
+			if err != nil || len(remaining) != 0 {
+				t.Fatalf("release private workspace remains: %v, %v", remaining, err)
+			}
+		})
+	}
+}
+
+func TestReleaseWorkflowRequiresAuthenticatedDependencyReviewRefs(t *testing.T) {
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/release.yml")), &workflow); err != nil {
+		t.Fatal(err)
+	}
+	var action, guard workflowStep
+	for _, step := range workflow.Jobs["verify"].Steps {
+		if strings.HasPrefix(step.Uses, "actions/dependency-review-action@") {
+			if action.Uses != "" {
+				t.Fatal("multiple release dependency reviews")
+			}
+			action = step
+		}
+		if step.Name == "Validate dependency review inputs" {
+			guard = step
+		}
+	}
+	if action.Uses != "actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294" || guard.Run == "" {
+		t.Fatal("native release lacks pinned dependency review with an executable fail-closed ref guard")
+	}
+	for key, want := range map[string]string{
+		"base-ref": "${{ steps.identity.outputs.base_ref }}", "head-ref": "${{ steps.identity.outputs.head_ref }}",
+		"fail-on-severity": "low", "license-check": "true", "vulnerability-check": "true",
+		"warn-only": "false", "comment-summary-in-pr": "never",
+	} {
+		if action.With[key] != want {
+			t.Fatalf("dependency review %s = %q, want %q", key, action.With[key], want)
+		}
+	}
+	if action.If != "steps.identity.outputs.native == 'true'" || guard.If != "steps.identity.outputs.native != 'false'" {
+		t.Fatal("missing native identity outputs must not silently skip dependency review")
+	}
+	for key, want := range map[string]string{
+		"NATIVE": "${{ steps.identity.outputs.native }}", "BASE_REF": "${{ steps.identity.outputs.base_ref }}", "HEAD_REF": "${{ steps.identity.outputs.head_ref }}",
+	} {
+		if guard.Env[key] != want {
+			t.Fatalf("ref guard %s does not consume authenticated identity outputs", key)
+		}
+	}
+	for _, test := range []struct {
+		name, native, base, head string
+		wantSuccess             bool
+	}{
+		{name: "authenticated immutable refs", native: "true", base: strings.Repeat("a", 40), head: strings.Repeat("b", 40), wantSuccess: true},
+		{name: "missing identity outputs"},
+		{name: "missing base", native: "true", head: strings.Repeat("b", 40)},
+		{name: "missing head", native: "true", base: strings.Repeat("a", 40)},
+		{name: "symbolic base", native: "true", base: "main", head: strings.Repeat("b", 40)},
+		{name: "symbolic head", native: "true", base: strings.Repeat("a", 40), head: "v2.1.0"},
+		{name: "unknown mode", native: "unknown", base: strings.Repeat("a", 40), head: strings.Repeat("b", 40)},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			command := exec.CommandContext(t.Context(), "bash", "-euo", "pipefail", "-c", guard.Run)
+			command.Env = append(os.Environ(), "NATIVE="+test.native, "BASE_REF="+test.base, "HEAD_REF="+test.head)
+			output, err := command.CombinedOutput()
+			if (err == nil) != test.wantSuccess {
+				t.Fatalf("dependency review ref admission = %t, want %t: %v, %s", err == nil, test.wantSuccess, err, output)
+			}
+		})
+	}
+}
+
+func releaseNativeEvidence(t *testing.T, sha, prHead, other, defect string) string {
+	t.Helper()
+	step := func(name string) map[string]any {
+		return map[string]any{"name": name, "number": 1, "status": "completed", "conclusion": "success", "started_at": "2099-09-01T00:00:00Z", "completed_at": "2099-09-01T00:01:00Z"}
+	}
+	job := func(name string, steps ...map[string]any) map[string]any {
+		return map[string]any{"id": 10, "run_id": 100, "head_sha": sha, "name": name, "status": "completed", "conclusion": "success", "steps": steps}
+	}
+	required := job("Required", step("Run set -euo pipefail"))
+	qualityStep := step("Run fast local CI")
+	quality := job("Quality", qualityStep)
+	build := step("Build runtime source")
+	analyze := step("Run github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2")
+	codeql := job("CodeQL", build, analyze)
+	dependencyStep := step("Run actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294")
+	dependency := job("Dependency review", dependencyStep)
+	dependency["run_id"], dependency["head_sha"] = 200, prHead
+	run := func(id int, head, event string) map[string]any {
+		return map[string]any{"id": id, "head_sha": head, "head_branch": "main", "event": event, "status": "completed", "conclusion": "success", "path": ".github/workflows/ci.yml", "pull_requests": []any{}}
+	}
+	pushRun := run(100, sha, "push")
+	prRun := run(200, prHead, "pull_request")
+	prRun["head_branch"] = "feature/release"
+	prRun["pull_requests"] = []any{map[string]any{"number": 7, "head": map[string]any{"sha": prHead}, "base": map[string]any{"ref": "main"}}}
+	pull := map[string]any{"number": 7, "state": "closed", "merged": true, "merged_at": "2099-09-01T00:00:00Z", "merge_commit_sha": sha,
+		"head": map[string]any{"sha": prHead, "repo": map[string]any{"full_name": "faustbrian/go-library-tools"}},
+		"base": map[string]any{"ref": "main", "sha": other, "repo": map[string]any{"full_name": "faustbrian/go-library-tools"}}}
+	jobs := []map[string]any{required, quality, codeql}
+	pulls := []map[string]any{pull}
+	prRuns := []any{prRun}
+	pushRuns := []any{pushRun}
+	switch defect {
+	case "wrong-ci-head":
+		pushRun["head_sha"] = other
+	case "wrong-ci-branch":
+		pushRun["head_branch"] = "feature/unmerged"
+	case "failed-ci":
+		pushRun["conclusion"] = "failure"
+	case "newer-failed-ci":
+		newer := run(101, sha, "push")
+		newer["conclusion"] = "failure"
+		pushRuns = []any{newer, pushRun}
+	case "missing-required":
+		jobs = jobs[1:]
+	case "failed-required":
+		required["conclusion"] = "failure"
+	case "missing-quality":
+		jobs = []map[string]any{required, codeql}
+	case "skipped-quality":
+		qualityStep["conclusion"] = "skipped"
+	case "failed-quality":
+		qualityStep["conclusion"] = "failure"
+	case "missing-build":
+		codeql["steps"] = []map[string]any{analyze}
+	case "skipped-build":
+		build["conclusion"] = "skipped"
+	case "failed-build":
+		build["conclusion"] = "failure"
+	case "missing-analyze":
+		codeql["steps"] = []map[string]any{build}
+	case "skipped-analyze":
+		analyze["conclusion"] = "skipped"
+	case "failed-analyze":
+		analyze["conclusion"] = "failure"
+	case "wrong-analyze":
+		analyze["name"] = "Run github/codeql-action/analyze@" + strings.Repeat("b", 40)
+	case "missing-pr":
+		pulls = []map[string]any{}
+	case "unmerged-pr":
+		pull["merged"], pull["merged_at"] = false, nil
+	case "wrong-pr-merge":
+		pull["merge_commit_sha"] = other
+	case "wrong-pr-base":
+		pull["base"].(map[string]any)["ref"] = "develop"
+	case "invalid-pr-base-sha":
+		pull["base"].(map[string]any)["sha"] = "refs/heads/main"
+	case "missing-pr-base-sha":
+		delete(pull["base"].(map[string]any), "sha")
+	case "empty-pr-association":
+		prRun["pull_requests"] = []any{}
+	case "wrong-dependency-head":
+		prRun["head_sha"] = other
+	case "wrong-dependency-pr":
+		prRun["pull_requests"] = []any{map[string]any{"number": 8}}
+	case "missing-dependency-run":
+		prRuns = []any{}
+	case "failed-dependency-job":
+		dependency["conclusion"] = "failure"
+	case "newer-failed-dependency":
+		newer := run(201, prHead, "pull_request")
+		newer["conclusion"], newer["pull_requests"] = "failure", prRun["pull_requests"]
+		prRuns = []any{newer, prRun}
+	case "missing-dependency":
+		dependency["steps"] = []map[string]any{}
+	case "skipped-dependency":
+		dependencyStep["conclusion"] = "skipped"
+	case "failed-dependency":
+		dependencyStep["conclusion"] = "failure"
+	}
+	directory := t.TempDir()
+	for name, value := range map[string]any{
+		"push-runs": map[string]any{"workflow_runs": pushRuns}, "push-jobs": map[string]any{"jobs": jobs},
+		"pr-runs": map[string]any{"workflow_runs": prRuns}, "pr-jobs": map[string]any{"jobs": []any{dependency}},
+		"pulls": pulls, "pull": pull,
+	} {
+		data, err := json.Marshal(value)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(directory, name+".json"), data, 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return directory
 }
 
 func releaseSecurityDocuments(t *testing.T, revision string) ([]byte, []byte) {
