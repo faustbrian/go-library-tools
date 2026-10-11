@@ -13,6 +13,7 @@ import (
 	"slices"
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/faustbrian/go-library-tools/v2/internal/config"
 	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
@@ -21,6 +22,8 @@ import (
 )
 
 const maximumModuleFileSize = 16 << 20
+
+const mutationPackageBudget = 20 * time.Minute
 
 type mutationCampaignRunner func(context.Context, mutation.Campaign) error
 type mutationImportRunner func(context.Context, mutation.Campaign, []mutation.Checkpoint, mutation.MigrationLedger) error
@@ -62,6 +65,46 @@ func (runner Runner) Mutation(ctx context.Context, selection []string) error {
 		}
 	}
 	return nil
+}
+
+// MutationPackage runs or reuses one catalogued production package's mutation
+// evidence with one worker and a finite setup/execution budget. It does not
+// import whole-module legacy archives or certify the complete module.
+func (runner Runner) MutationPackage(ctx context.Context, moduleDirectory, packageDirectory string) error {
+	ctx, cancel := context.WithTimeout(ctx, mutationPackageBudget)
+	defer cancel()
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	module, err := selectedMutationModule(runner.Catalog.Modules, moduleDirectory)
+	if err != nil {
+		return err
+	}
+	if !module.Gates["mutation"] {
+		return fmt.Errorf("module %s does not enable mutation verification", module.Directory)
+	}
+	index := slices.IndexFunc(module.Packages, func(pkg inventory.Package) bool {
+		return pkg.Directory == packageDirectory && pkg.Production && pkg.CoverageRequired
+	})
+	if index < 0 {
+		return fmt.Errorf("package %q is not mutation-enabled in module %s", packageDirectory, module.Directory)
+	}
+	module.Packages = []inventory.Package{module.Packages[index]}
+	output := runner.Output
+	if output == nil {
+		output = io.Discard
+	}
+	_, _ = fmt.Fprintf(output, "[%s] mutation scope: package %s only; one worker, 20-minute execution budget\n", module.Directory, packageDirectory)
+	err = runner.withModuleServices(ctx, module, func(scoped Runner) error {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
+		scoped.Policy.Mutation.MaxWorkers = 1
+		return announce(output, module.Directory, "mutation-package", func() error {
+			return scoped.runMutation(ctx, output, module)
+		})
+	})
+	return errors.Join(err, ctx.Err())
 }
 
 func (runner Runner) verifyMutation(ctx context.Context, output io.Writer, module inventory.Module) error {

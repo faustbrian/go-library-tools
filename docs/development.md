@@ -86,7 +86,7 @@ When the matching `golib` tool is already available, explicit local commands are
 
 ```bash
 golib check --local --module .
-golib mutation --module .
+golib mutation --module . --package internal/inventory
 golib release check --module .
 golib release dry-run --module .
 ```
@@ -94,6 +94,12 @@ golib release dry-run --module .
 These are different boundaries, not a required four-command checklist. The first
 runs ordinary configured checks. Mutation is an optional developer-local or
 selected scheduled campaign and can be expensive; it is not routine PR work.
+The mutation example selects Tools' inventory package, limits execution to
+20 minutes and uses one worker. Choose the owning library's actual package;
+required service cleanup has its own 30-second bound. A timeout is incomplete
+assurance, not a passing result. Existing immutable package checkpoints are
+reused without importing an entire legacy archive; `golib mutation --module .`
+remains the explicit full-module command.
 The last two apply only to a release decision/rehearsal and retain full selected
 release obligations. Use a nested module's declared directory instead of `.`
 where applicable. These `golib` commands manage their own disposable executors;

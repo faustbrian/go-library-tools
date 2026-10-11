@@ -6,6 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Add an explicit one-package mutation command with one worker and a 20-minute
+  execution bound, retaining reusable evidence and visible failures without
+  importing entire legacy archives or claiming full-module qualification.
+
 - Include owning-repository checks for changed shared fixture modules even
   when script consumers have no Go import edge.
 

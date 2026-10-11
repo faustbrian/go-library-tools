@@ -53,6 +53,7 @@ Usage:
   golib workflows check
   golib coverage [--module <directory>]
   golib mutation [--module <directory>]
+  golib mutation --module <directory> --package <directory>
 	golib mutation import --module <directory> --archive <path> --ledger <path>
   golib api check
   golib api update
@@ -309,6 +310,17 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 			return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
 				return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).MutationImport(
 					ctx, options.module, options.archive, options.ledger,
+				)
+			})
+		}
+		if slices.Contains(args[1:], "--package") {
+			options, usageError := mutationPackageArguments(args[1:])
+			if usageError != nil {
+				return usage(stderr, "usage: golib mutation --module <directory> --package <directory>")
+			}
+			return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
+				return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).MutationPackage(
+					ctx, options.module, options.directory,
 				)
 			})
 		}
@@ -698,6 +710,29 @@ type mutationImportOptions struct {
 	module  string
 	archive string
 	ledger  string
+}
+
+type mutationPackageOptions struct {
+	module    string
+	directory string
+}
+
+func mutationPackageArguments(args []string) (mutationPackageOptions, error) {
+	if len(args) != 4 {
+		return mutationPackageOptions{}, errors.New("mutation package selection requires module and package directories")
+	}
+	values := make(map[string]string, 2)
+	for index := 0; index < len(args); index += 2 {
+		flag, value := args[index], args[index+1]
+		if value == "" || (flag != "--module" && flag != "--package") {
+			return mutationPackageOptions{}, errors.New("mutation package arguments are malformed")
+		}
+		if _, duplicate := values[flag]; duplicate {
+			return mutationPackageOptions{}, errors.New("mutation package arguments are duplicated")
+		}
+		values[flag] = value
+	}
+	return mutationPackageOptions{module: values["--module"], directory: values["--package"]}, nil
 }
 
 func mutationImportArguments(args []string) (mutationImportOptions, error) {

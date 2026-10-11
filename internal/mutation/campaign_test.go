@@ -87,6 +87,17 @@ func TestCampaignExecutesPersistsAndReusesPackageEvidence(t *testing.T) {
 	if strings.Count(output.String(), "mutation evidence (1 mutants)") != 2 || strings.Contains(output.String(), "reviewed equivalent") {
 		t.Fatalf("ordinary reused accounting = %q; want native counts without equivalent claims", output.String())
 	}
+	output.Reset()
+	campaign.Policy.Packages = []string{"adapter"}
+	campaign.Policy.Workers = 1
+	if err := campaign.Run(context.Background()); err != nil || process.mutations != 2 || strings.Count(output.String(), "reused content-identical") != 1 {
+		t.Fatalf("selected package reuse = %v, mutations %d, output %q", err, process.mutations, output.String())
+	}
+	output.Reset()
+	campaign.Policy.Packages = []string{"adapter", "."}
+	if err := campaign.Run(context.Background()); err != nil || process.mutations != 2 || strings.Count(output.String(), "reused content-identical") != 2 {
+		t.Fatalf("full reuse after selected campaign = %v, mutations %d, output %q", err, process.mutations, output.String())
+	}
 }
 
 func TestCampaignAcceptsOnlyExactReviewedEfficacyExit(t *testing.T) {

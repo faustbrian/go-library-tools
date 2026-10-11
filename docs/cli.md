@@ -104,6 +104,16 @@ Core commands:
   Native `LIVED` statuses remain visible when an exact repository-owned
   equivalence review applies; diagnostics report killed and reviewed-equivalent
   counts separately. Survivors lacking review and other incomplete statuses fail.
+- `golib mutation --module DIR --package DIR` runs or reuses exactly one
+  catalogued mutation-enabled production package, with one worker and a
+  20-minute setup/execution deadline. Package directories are relative to the
+  selected module; use `.` for its root package. Required service cleanup retains
+  its separate 30-second bound. Unknown, disabled or excluded selections and
+  exhausted budgets fail. This command does not import a whole legacy archive
+  or certify other packages; existing matching package checkpoints remain reusable.
+  Native module baselines and integration tests still execute when evidence is
+  missing, so a selected campaign can remain expensive. Use it deliberately for
+  local or owner-selected scheduled assurance, not ordinary PR feedback.
 - `golib mutation import --module DIR --archive PATH --ledger PATH` validates
   an approved legacy checkpoint archive and persists current content-addressed
   evidence without retaining Git identity.

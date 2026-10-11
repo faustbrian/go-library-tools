@@ -103,6 +103,19 @@ survivors lacking review, uncovered, timed-out, not-viable, missing, or stale
 results still fail. A reviewed equivalence may be limited to a stated public
 contract domain rather than byte-for-byte internal behavior. Failed campaigns
 emit bounded coordinate diagnostics without publishing passing evidence.
+
+For optional local or owner-selected scheduled work, `golib mutation --module
+DIR --package DIR` selects one catalogued production package and one worker.
+Its 20-minute deadline includes service setup, input discovery, tool preparation,
+module baselines and campaign execution; service cleanup keeps its independent
+30-second bound. Existing content-identical package checkpoints and reviewed
+equivalence classifications remain reusable, including after a broader run.
+No whole-module legacy import is performed. Unknown, disabled or excluded
+packages fail rather than yielding a successful not-applicable result. Survivor,
+infrastructure and budget failures remain failures; this partial scope does not
+certify unselected packages or release readiness. The native backend still uses
+module baselines and integration tests; selecting a package bounds the campaign
+scope and wall time but does not make every mutant a cheap unit-only run.
 Admitted failed-report projections persist in the mutation evidence directory's
 `failed-reports` sibling, outside disposable campaign workspaces. They retain
 native coordinates, statuses and numeric aggregate field presence, but omit
