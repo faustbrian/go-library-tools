@@ -23,6 +23,10 @@ func TestMakeReusesDisposableSessionAndCleansFailures(t *testing.T) {
 		{"local CI failure", "local-ci", "cohesion check", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check"}, "", ""},
 		{"PR fuzz base", "local-ci", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local --base-sha " + strings.Repeat("a", 40)}, "pull_request", strings.Repeat("a", 40)},
 		{"push fuzz base", "local-ci", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local --base-sha " + strings.Repeat("b", 40)}, "push", strings.Repeat("b", 40)},
+		{"metadata CI", "metadata-ci", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib docs check --local", "golib secrets check --base-sha " + strings.Repeat("a", 40)}, "pull_request", strings.Repeat("a", 40)},
+		{"metadata secret failure", "metadata-ci", "secrets check --base-sha " + strings.Repeat("a", 40), []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib docs check --local", "golib secrets check --base-sha " + strings.Repeat("a", 40)}, "pull_request", strings.Repeat("a", 40)},
+		{"metadata doc failure", "metadata-ci", "docs check --local", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib docs check --local"}, "push", strings.Repeat("b", 40)},
+		{"metadata missing base", "metadata-ci", "missing base", []string{"go build"}, "pull_request", ""},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			repository := t.TempDir()

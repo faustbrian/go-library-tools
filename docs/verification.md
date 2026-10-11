@@ -19,6 +19,19 @@ replace repository-wide security coverage. Query suites and mandatory-result
 aggregation are unchanged. This routing reduces unrelated PR compilation, not
 the security requirements of the selected source and its consumers.
 
+Tools' own CI applies the same documentation/runtime distinction on both PRs
+and main pushes. Prose, license and notice changes use `make metadata-ci` with
+`GOLIB_BASE_SHA` set to the immutable comparison commit: repository/security
+structure, local documentation and changed-content secrets still fail closed.
+Only regular, non-executable prose is metadata; executable or symlinked Markdown,
+unknown legal-document suffixes and names such as `LICENSE.go` require runtime
+checks in both the Tools and reusable workflows.
+Unknown, source, workflow and policy changes retain `make local-ci` and CodeQL;
+scheduled/manual analysis retains full runtime coverage. An empty diff is not
+metadata, and missing comparison evidence fails rather than hiding applicable
+work. The metadata CodeQL job validates applicability but does not compile or
+query unchanged runtime source; Required still rejects a failed or cancelled job.
+
 Mutation, broad fuzzing, race, benchmark, external-service, release-rehearsal,
 and ecosystem-wide checks do not block a routine change unless they directly
 exercise its material risk. `make check-packages PACKAGES=...` is the focused

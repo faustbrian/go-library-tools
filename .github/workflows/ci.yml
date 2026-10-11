@@ -61,6 +61,45 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+      - &tooling-change-scope
+        id: scope
+        name: Select proportional assurance tier
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          runtime=true
+          case "${EVENT_NAME}" in
+            pull_request|push)
+              [[ "${BASE_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo 'change classification requires an immutable base commit' >&2; exit 1; }
+              git cat-file -e "${BASE_SHA}^{commit}"
+              task="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/golib-tooling-scope.XXXXXX")"
+              trap 'find "${task}" -depth -delete' EXIT
+              git diff --no-ext-diff --no-textconv --no-renames --raw --no-abbrev -z "${BASE_SHA}" HEAD -- >"${task}/paths"
+              [[ "$(wc -c <"${task}/paths")" -le 1048576 ]] || { echo 'changed path budget exceeded' >&2; exit 1; }
+              runtime=false
+              changed=false
+              while IFS= read -r -d '' change; do
+                IFS= read -r -d '' path || { echo 'incomplete changed path record' >&2; exit 1; }
+                changed=true
+                # Only regular, non-executable prose can take the metadata route.
+                # Inspect both sides so deletion/retargeting cannot hide code.
+                case "${change}" in
+                  ':100644 100644 '*|':000000 100644 '*|':100644 000000 '*) ;;
+                  *) runtime=true; break ;;
+                esac
+                case "${path}" in
+                  *.md|LICENSE|LICENSE.txt|LICENSE.rst|NOTICE|NOTICE.txt|NOTICE.rst) ;;
+                  *) runtime=true; break ;;
+                esac
+              done <"${task}/paths"
+              [[ "${changed}" == true ]] || runtime=true
+              ;;
+            schedule|workflow_dispatch) ;;
+            *) echo 'unsupported change event' >&2; exit 1 ;;
+          esac
+          echo "runtime=${runtime}" >>"${GITHUB_OUTPUT}"
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version-file: .go-version
@@ -69,7 +108,14 @@ jobs:
         env:
           GOLIB_CHANGE_EVENT: ${{ github.event_name }}
           GOLIB_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: make local-ci
+          GOLIB_RUNTIME_REQUIRED: ${{ steps.scope.outputs.runtime }}
+        run: |
+          set -euo pipefail
+          case "${GOLIB_RUNTIME_REQUIRED}" in
+            true) make local-ci ;;
+            false) make metadata-ci ;;
+            *) echo 'missing or invalid change classification' >&2; exit 1 ;;
+          esac
       - name: Verify finite workflow traversal regressions when affected
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -443,7 +489,7 @@ jobs:
   codeql:
     name: CodeQL
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: ${{ github.event_name == 'pull_request' && 30 || 120 }}
     permissions:
       contents: read
       packages: read
@@ -452,21 +498,29 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          fetch-depth: 0
+      - *tooling-change-scope
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        if: steps.scope.outputs.runtime == 'true'
         with:
           go-version-file: .go-version
           cache: false
       - uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        if: steps.scope.outputs.runtime == 'true'
         with:
           languages: go
+          build-mode: manual
           queries: security-extended,security-and-quality
-      - run: |
+      - name: Build runtime source
+        if: steps.scope.outputs.runtime == 'true'
+        run: |
           set -euo pipefail
           task="$(mktemp -d "${RUNNER_TEMP}/golib-codeql.XXXXXX")"
           trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
-          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" go build ./...
+          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" GOWORK=off go build ./...
       - uses: github/codeql-action/analyze@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
+        if: steps.scope.outputs.runtime == 'true'
 
   release-rehearsal:
     name: Release rehearsal

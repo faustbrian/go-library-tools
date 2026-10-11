@@ -76,6 +76,10 @@ jobs:
           RELEASE_DRY_RUN: ${{ inputs.release_dry_run }}
         run: |
           set -euo pipefail
+          case "${EVENT_NAME}" in
+            pull_request|push|schedule|workflow_dispatch) ;;
+            *) echo 'unsupported change event' >&2; exit 1 ;;
+          esac
           if [[ "${EVENT_NAME}" == pull_request && "${RELEASE_DRY_RUN}" == true ]]; then
             echo 'release rehearsal is not a pull-request check; dispatch it explicitly after integration' >&2
             exit 1
@@ -128,14 +132,19 @@ jobs:
           if [[ ( "${EVENT_NAME}" == pull_request || "${EVENT_NAME}" == push ) && "${RELEASE_DRY_RUN}" != true ]]; then
             [[ "${BASE_SHA}" =~ ^[0-9a-f]{40}$ ]] || { echo 'change classification requires an immutable base commit' >&2; exit 1; }
             git cat-file -e "${BASE_SHA}^{commit}"
-            git diff --no-ext-diff --no-renames --name-only -z "${BASE_SHA}" HEAD >"${task}/paths"
+            git diff --no-ext-diff --no-textconv --no-renames --raw --no-abbrev -z "${BASE_SHA}" HEAD -- >"${task}/paths"
+            [[ "$(wc -c <"${task}/paths")" -le 1048576 ]] || { echo 'changed path budget exceeded' >&2; exit 1; }
             runtime=false
             changed=false
-            while IFS= read -r -d '' path; do
-              [[ -n "${path}" ]] || continue
+            while IFS= read -r -d '' change; do
+              IFS= read -r -d '' path || { echo 'incomplete changed path record' >&2; exit 1; }
               changed=true
+              case "${change}" in
+                ':100644 100644 '*|':000000 100644 '*|':100644 000000 '*) ;;
+                *) runtime=true; break ;;
+              esac
               case "${path}" in
-                *.md|LICENSE|LICENSE.*|NOTICE|NOTICE.*) ;;
+                *.md|LICENSE|LICENSE.txt|LICENSE.rst|NOTICE|NOTICE.txt|NOTICE.rst) ;;
                 .github/workflows/ci.yml)
                   reusable_pin_only "${path}" || { runtime=true; break; }
                   ;;

@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: build check check-packages ci cohesion compatibility compatibility-candidate compatibility-rebase config consumers inventory local-check local-ci milestone-check repository-check security-differential workflows
+.PHONY: build check check-packages ci cohesion compatibility compatibility-candidate compatibility-rebase config consumers inventory local-check local-ci metadata-ci milestone-check repository-check security-differential workflows
 
 PACKAGES ?=
 COMPATIBILITY_SET_ID ?=
@@ -21,6 +21,7 @@ endef
 
 run_go = $(call with_go_task,go $(1))
 run_golib = $(call with_go_task,export GOLIB_TASK_CACHE_ROOT="$$task"; go build -o "$$task/golib" ./cmd/golib; $(1))
+metadata_contract = "$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check; "$$task/golib" security validate --directory docs/ecosystem/security
 
 build:
 	$(call run_go,build ./cmd/golib)
@@ -71,7 +72,10 @@ local-check:
 	$(call run_golib,"$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check)
 
 local-ci:
-	$(call run_golib,"$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check; "$$task/golib" security validate --directory docs/ecosystem/security; arguments=(check --local); if [[ "$${GOLIB_CHANGE_EVENT:-}" == pull_request || "$${GOLIB_CHANGE_EVENT:-}" == push || -n "$${GOLIB_BASE_SHA:-}" ]]; then arguments+=(--base-sha "$${GOLIB_BASE_SHA:-}"); fi; "$$task/golib" "$${arguments[@]}")
+	$(call run_golib,$(metadata_contract); arguments=(check --local); if [[ "$${GOLIB_CHANGE_EVENT:-}" == pull_request || "$${GOLIB_CHANGE_EVENT:-}" == push || -n "$${GOLIB_BASE_SHA:-}" ]]; then arguments+=(--base-sha "$${GOLIB_BASE_SHA:-}"); fi; "$$task/golib" "$${arguments[@]}")
+
+metadata-ci:
+	$(call run_golib,[[ "$${GOLIB_BASE_SHA:-}" =~ ^[0-9a-f]{40}$$ ]] || { echo 'metadata CI requires an immutable base commit' >&2; exit 1; }; $(metadata_contract); "$$task/golib" docs check --local; "$$task/golib" secrets check --base-sha "$${GOLIB_BASE_SHA}")
 
 milestone-check: consumers compatibility
 

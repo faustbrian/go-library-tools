@@ -46,6 +46,11 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Apply Tools' documentation fast path to PRs and main pushes, preserving local
+  structure and changed-secret checks without unrelated runtime or query builds.
+  Keep executable/symlinked prose and legal-filename source collisions on the
+  runtime route in both Tools and reusable CI.
+
 - Limit reusable PR CodeQL compilation to the prepared affected module set,
   retaining canonical build tags, failure propagation and full main/scheduled
   analysis. Bound PR analysis to 30 minutes and ignore ambient Go workspaces.
