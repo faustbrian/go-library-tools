@@ -100,8 +100,12 @@ required service cleanup has its own 30-second bound. A timeout is incomplete
 assurance, not a passing result. Existing immutable package checkpoints are
 reused without importing an entire legacy archive; `golib mutation --module .`
 remains the explicit full-module command.
-The last two apply only to a release decision/rehearsal and retain full selected
-release obligations. Use a nested module's declared directory instead of `.`
+The last two apply only to a release decision/rehearsal. `release check` validates
+metadata and required gate configuration, not runtime qualification. The dry-run
+is an explicit complete all-enabled rehearsal, not mandatory for every tag;
+select it when that boundary is needed. See the [release policy](release.md) for
+affected-contract qualification and clean public consumption. Use a nested
+module's declared directory instead of `.`
 where applicable. These `golib` commands manage their own disposable executors;
 source builds still need the private Go session above. Tools' system-risk tests
 remain hosted even when a command would otherwise select them.

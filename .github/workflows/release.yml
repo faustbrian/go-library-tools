@@ -11,7 +11,7 @@ jobs:
   verify:
     name: Verify release
     runs-on: ubuntu-24.04
-    timeout-minutes: 360
+    timeout-minutes: 30
     permissions:
       actions: read
       contents: read

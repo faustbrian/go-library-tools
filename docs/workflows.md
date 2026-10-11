@@ -241,7 +241,9 @@ evidence, and runs CodeQL. Repository secrets run once; all selected module
 security scans finish before repository tests execute. The caller's final `required` job converts the reusable-call
 result into the stable `Required` check used by branch protection.
 Set `release_dry_run: true` only for an explicit non-PR release rehearsal; a PR
-attempt is rejected before it can select campaign work. This first
+attempt is rejected before it can select campaign work. A full rehearsal is
+selected for a named risk or release boundary, not every tag; selected failures
+still block affected publication. See the [release policy](release.md). This first
 validates the stable release contract and then runs the complete release
 dry-run for every releasable module. Set `release_module` to an exact module
 directory to limit module-scoped release checks to that

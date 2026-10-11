@@ -1,10 +1,20 @@
 # Release Process
 
-The first public release is `v1.0.0`. A release requires a clean final diff,
-coverage under the selected acceptance policy and mutation results, race and
-fuzz checks, static analysis,
-security and license checks, documentation validation, representative consumer
-parity, and successful remote CI.
+Releases require a clean reviewed final diff, successful exact-source remote
+CI, documentation, lint, tests, security and license checks. Select affected API,
+integration and direct-consumer qualification for the actual changed contracts;
+verify the published version through a clean public consumer. A normal library
+release does not require a new Tools release or ecosystem-catalog publication.
+
+Coverage, mutation, race, fuzz, performance and full rehearsal work require a
+named changed risk or relevant release boundary. Reuse evidence for unchanged
+source, dependencies, tools and material environment inputs; do not repeat full
+campaigns merely because a tag, prose or progress record changed. Known concrete
+defects block affected delivery until resolved under the security/release policy.
+Unresolved viable survivors require repair or an explicit behavioral-risk
+disposition; moving a campaign to a schedule is not that disposition. Missing selected evidence,
+timeouts and infrastructure failures are not passing results. Scheduled work
+does not waive a known defect or an untested critical boundary.
 
 The root module explicitly selects coverage evidence mode: it still runs the
 complete instrumented module tests and requires valid, nonzero execution for
@@ -12,9 +22,10 @@ every expected production package. Counts do not certify behavioral adequacy.
 The release review owns the assessment of reachable behavior and defensive
 guards that cannot be independently reached through admitted inputs; tests
 must cover concrete scanner metadata, failure and redaction contracts. Other
-modules retain exact coverage unless their own policy explicitly selects
-evidence mode. Security, mutation, race, fuzz, API and consumer gates remain
-unchanged.
+modules retain exact coverage when selected unless their own policy explicitly
+selects evidence mode. Selected mutation campaigns retain complete viable-mutant
+accounting and narrow reviewed equivalent/invalid dispositions; this policy
+does not lower their acceptance threshold. See [verification](verification.md).
 
 Release automation builds Linux and macOS archives for amd64 and arm64,
 generates checksums, SBOMs, provenance, and a release manifest, and publishes
@@ -22,11 +33,11 @@ from an immutable tag. Consumers verify artifacts before execution.
 
 The release workflow runs only for exact semantic-version tags. It verifies
 that the tag resolves to the checked-out commit and that the exact commit
-already has a successful full `CI` push run. The tagged commit must belong to
-the fetched immutable main history, but later main commits do not invalidate
+already has a successful applicable `CI` push run. The tagged commit must belong
+to the fetched immutable main history, but later main commits do not invalidate
 it. Tags outside main, unavailable ancestry and non-green or wrong-source CI
-are refused. It then builds and verifies the
-current source while `.golib.yaml` remains pinned to a stable published
+are refused. It then builds and verifies current source while `.golib.yaml`
+remains pinned to a stable published
 bootstrap release. This avoids both requiring an unpublished binary and
 checksum set to bootstrap their own release and repeating
 content-identical mutation campaigns during publication. The workflow
@@ -83,23 +94,35 @@ fine-grained cross-repository `GOLIB_ROLLOUT_TOKEN` described in the
 [consumer rollout guide](consumers.md). Initial adoption remains a manual,
 parity-reviewed migration rather than an automated upgrade.
 
-Run `golib release check` before preparing a tag and `golib release dry-run`
-against the final source. In a repository whose modules release independently,
-pass `--module DIR` to both commands so metadata, tag collision, clean proxy
-consumption, and module gates apply only to that exact module. Repository
-structure and specification validation remain global prerequisites. Omitting
-the selector or passing `--all` selects every releasable module. The dry-run
-must happen before creating the tag. Releasable modules must use stable
-versions, canonical tag prefixes, and all mandatory gates.
+Run `golib release check` before preparing a tag. It validates metadata and
+required gate configuration; it does not execute tests or certify release
+readiness. Releasable modules use stable versions, canonical tag prefixes and
+mandatory documentation, lint, security and test gates. Coverage, mutation and
+race configuration alone is not a universal release prerequisite.
 
-For a release candidate on `main`, dispatch the `CI` workflow with
-`release_rehearsal` enabled. Set `release_module` to the exact independently
+`golib release dry-run` remains an explicit complete rehearsal, not a routine
+release checklist item. It rejects existing tags, constructs task-owned proxy
+archives, proves candidate module resolution and executes all enabled selected
+module gates, including configured expensive campaigns. Use it before creating
+the tag when that complete boundary is needed. Its local candidate proxy does
+not replace clean consumption of the actual published public version.
+In independently versioned repositories, pass `--module DIR` to confine metadata,
+tag collision, proxy-consumption and module gates to the exact release owner.
+Repository structure and specification validation remain global prerequisites;
+omitting the selector or passing `--all` selects every releasable module.
+
+When a complete hosted rehearsal is selected for a candidate on `main`, dispatch
+the `CI` workflow with `release_rehearsal` enabled. Set `release_module` to the exact independently
 versioned module directory, or leave it blank for the repository-wide dry-run.
 The ordinary quality and CodeQL jobs must pass, then the release-rehearsal job
 runs the selected complete dry-run in GitHub Actions. This keeps
 process-lifecycle and cleanup tests in their isolated CI boundary instead of
-running them on a maintainer workstation. Do not create the tag until the
-workflow's stable `Required` job passes.
+running them on a maintainer workstation. The selected rehearsal must pass before
+tagging; a skipped or failed selected job is not qualification. Releases always
+retain their applicable exact-source required CI and current-source security
+evidence interlock, plus checksums, SBOMs, attestations and immutable publication.
+The identity/metadata verification job has a 30-minute ceiling and does not run
+a mutation campaign; budget exhaustion fails publication.
 
 Reusable-workflow consumers must expose a `release_module` dispatch input and
 forward it to `library-ci.yml` before relying on a root-only hosted rehearsal.

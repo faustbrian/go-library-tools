@@ -81,5 +81,9 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 - Commit coherent verified batches with conventional messages. Do not amend,
   force-push, rewrite history, or bypass hooks.
 - Do not push, publish, tag, or change repository settings without authority.
-- The first public release is `v1.0.0`. It requires complete local gates,
-  review, remote CI, checksums, SBOM, and provenance.
+- Public releases MUST retain reviewed affected-contract qualification,
+  successful exact-source remote CI, clean public consumption, checksums, SBOM
+  and provenance. Expensive campaigns and complete release rehearsals MUST be
+  selected for a named risk or relevant release boundary, not every tag.
+  Unchanged immutable evidence SHOULD be reused. Selected failures, known
+  defects and untested critical boundaries MUST NOT be hidden by scheduling.

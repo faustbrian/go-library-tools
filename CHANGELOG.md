@@ -43,6 +43,11 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Align release guidance with affected-contract qualification and reusable
+  immutable evidence, not mandatory fresh full campaigns or rehearsals for
+  every tag. Bound identity/metadata verification to 30 minutes without
+  changing selected campaign or artifact-integrity requirements.
+
 - Verify release-tag ancestry on immutable fetched main instead of requiring
   main's tip to stay frozen, retaining exact-source CI and security evidence.
 

@@ -133,7 +133,10 @@ Core commands:
   structure. Before a tag exists,
   `golib release dry-run [--all|--module DIR]` also rejects tag collisions,
   builds task-owned module-proxy archives, proves clean module resolution, and
-  executes the complete contract. Omitting the selector or using `--all`
+  executes all enabled selected module gates. This explicit full rehearsal is
+  not a routine release prerequisite; release checks alone do not certify
+  runtime qualification or published public consumption. See the
+  [release policy](release.md). Omitting the selector or using `--all`
   preserves all-module release validation; `--module` confines release
   metadata, tag collision, proxy-consumption, and module-gate work to exactly
   one independently releasable module. Repository structure and specification
