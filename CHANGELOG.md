@@ -43,6 +43,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Keep exact specification decision identities in changelogs without requiring
+  duplicate current digests in prose. Canonical decision-history integrity and
+  supported historical scanner policy remain unchanged.
+
 - Align release guidance with affected-contract qualification and reusable
   immutable evidence, not mandatory fresh full campaigns or rehearsals for
   every tag. Bound identity/metadata verification to 30 minutes without

@@ -45,6 +45,7 @@ var (
 	decisionHeading           = regexp.MustCompile(`(?m)^## ([A-Z][A-Z0-9-]*-DEC-[0-9]{3}): ([^\n]+)$`)
 	levelTwoHeading           = regexp.MustCompile(`(?m)^## [^\n]+$`)
 	decisionID                = regexp.MustCompile(`\b[A-Z][A-Z0-9-]*-DEC-[0-9]{3}\b`)
+	changelogDecisionID       = regexp.MustCompile(`[A-Z][A-Z0-9-]*-DEC-[0-9]{3}`)
 	markdownLink              = regexp.MustCompile(`\]\([[:space:]]*(?:<([^>\n]+)>|([^[:space:])]+))(?:[[:space:]]+(?:"[^"\n]*"|'[^'\n]*'|\([^\)\n]*\)))?[[:space:]]*\)`)
 	sha256Value               = regexp.MustCompile(`^[0-9a-f]{64}$`)
 	publicAuthorityExceptions = []netip.Prefix{
@@ -772,17 +773,39 @@ func validateDecisionHistory(root, path string, decisions []decision) error {
 	if err != nil {
 		return err
 	}
-	current := make(map[string]struct{}, len(decisions))
+	// Canonical content digests belong to the separately validated decision
+	// ledger. Changelogs retain human-facing identities without duplicating
+	// hash-shaped metadata or requiring scanner policy changes for each edit.
+	current := make(map[string]bool, len(decisions))
 	for _, item := range decisions {
-		current[item.ID] = struct{}{}
-		if !bytes.Contains(data, []byte(item.ID+" sha256:"+decisionDigest(item))) {
-			return fmt.Errorf("specification decision %q has no changelog record for its current content", item.ID)
+		current[item.ID] = false
+	}
+	text := string(data)
+	unknown := ""
+	continuesIdentifier := func(value byte) bool {
+		return value == '-' || value >= 'A' && value <= 'Z' || value >= 'a' && value <= 'z' || value >= '0' && value <= '9'
+	}
+	for _, bounds := range changelogDecisionID.FindAllStringIndex(text, -1) {
+		// Underscores can frame Markdown emphasis; letters, digits and
+		// hyphens instead continue an identifier. A heading anchor may
+		// contain such a prefix, but cannot satisfy the exact record.
+		partial := bounds[0] > 0 && continuesIdentifier(text[bounds[0]-1]) || bounds[1] < len(text) && continuesIdentifier(text[bounds[1]])
+		identifier := text[bounds[0]:bounds[1]]
+		if _, exists := current[identifier]; exists {
+			if !partial {
+				current[identifier] = true
+			}
+		} else if unknown == "" {
+			unknown = identifier
 		}
 	}
-	for _, identifier := range decisionID.FindAllString(string(data), -1) {
-		if _, exists := current[identifier]; !exists {
-			return fmt.Errorf("specification changelog preserves decision %q but the current register does not", identifier)
+	for _, item := range decisions {
+		if !current[item.ID] {
+			return fmt.Errorf("specification decision %q has no changelog record", item.ID)
 		}
+	}
+	if unknown != "" {
+		return fmt.Errorf("specification changelog preserves decision %q but the current register does not", unknown)
 	}
 	return nil
 }

@@ -152,6 +152,74 @@ func TestCheckRequiresDecisionSpecificChangelogRecord(t *testing.T) {
 	}
 }
 
+func TestCheckAllowsDecisionChangelogWithoutDuplicateDigest(t *testing.T) {
+	for _, record := range []string{
+		"- EXAMPLE-DEC-001: Preserve byte-exact request targets.",
+		"- Preserve byte-exact request targets ([EXAMPLE-DEC-001](docs/specification-decisions.md)).",
+		"- _EXAMPLE-DEC-001_: Preserve byte-exact request targets.",
+		"- __EXAMPLE-DEC-001__: Preserve byte-exact request targets.",
+	} {
+		t.Run(record, func(t *testing.T) {
+			root, catalog := validFixture(t)
+			write(t, filepath.Join(root, "CHANGELOG.md"), "# Changelog\n\n"+record+"\n\n[Decision register](docs/specification-decisions.md)\n")
+			if report, err := Check(root, catalog); err != nil || report.Decisions != 1 {
+				t.Fatalf("Check() = %#v, %v; want accepted decision with canonical history", report, err)
+			}
+		})
+	}
+}
+
+func TestCheckKeepsLegacyEmphasizedDigestChangelog(t *testing.T) {
+	for _, framing := range []string{"_", "__", "*", "**", "`"} {
+		t.Run(framing, func(t *testing.T) {
+			root, catalog := validFixture(t)
+			data, err := os.ReadFile(filepath.Join(root, "specification/decision-history.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			var history decisionHistory
+			if err := json.Unmarshal(data, &history); err != nil || len(history.Entries) != 1 || len(history.Entries[0].Digests) != 1 {
+				t.Fatal("fixture canonical history is incomplete")
+			}
+			record := "- " + framing + "EXAMPLE-DEC-001 sha256:" + history.Entries[0].Digests[0] + framing + ": Preserve exact bytes."
+			write(t, filepath.Join(root, "CHANGELOG.md"), "# Changelog\n\n"+record+"\n\n[Decision register](docs/specification-decisions.md#EXAMPLE-DEC-001-Request-target-normalization)\n")
+			if report, err := Check(root, catalog); err != nil || report.Decisions != 1 {
+				t.Fatalf("Check() = %#v, %v; want preserved legacy Markdown record", report, err)
+			}
+		})
+	}
+}
+
+func TestCheckRejectsDigestFreeChangelogWithInvalidDecisionIdentity(t *testing.T) {
+	for _, record := range []string{
+		"- EXAMPLE-DEC-0010: Different identifier.",
+		"- EXAMPLE-DEC-001-OLD: Extended identifier.",
+		"- archive-EXAMPLE-DEC-001: Prefixed identifier.",
+		"- EXAMPLE-DEC-001: Current decision. EXAMPLE-DEC-999-OLD: Extended removed identifier.",
+		"- EXAMPLE-DEC-001: Preserve exact bytes. EXAMPLE-DEC-999: Removed decision.",
+	} {
+		t.Run(record, func(t *testing.T) {
+			root, catalog := validFixture(t)
+			write(t, filepath.Join(root, "CHANGELOG.md"), "# Changelog\n\n"+record+"\n\n[Decision register](docs/specification-decisions.md)\n")
+			if _, err := Check(root, catalog); err == nil || !strings.Contains(err.Error(), "changelog") {
+				t.Fatalf("Check() error = %v; want changelog identity refusal", err)
+			}
+		})
+	}
+}
+
+func TestCheckRequiresCurrentCanonicalDigestWithDigestFreeChangelog(t *testing.T) {
+	root, catalog := validFixture(t)
+	write(t, filepath.Join(root, "CHANGELOG.md"), "# Changelog\n\n- EXAMPLE-DEC-001: Preserve exact bytes.\n\n[Decision register](docs/specification-decisions.md)\n")
+	writeJSON(t, filepath.Join(root, "specification/decision-history.json"), decisionHistory{
+		SchemaVersion: 1,
+		Entries:       []decisionHistoryEntry{{ID: "EXAMPLE-DEC-001", Digests: []string{strings.Repeat("0", 64)}}},
+	})
+	if _, err := Check(root, catalog); err == nil || !strings.Contains(err.Error(), "history does not contain current decision") {
+		t.Fatalf("Check() error = %v; want current canonical-history refusal", err)
+	}
+}
+
 func TestCheckRequiresSupersededDecisionReplacementLink(t *testing.T) {
 	root, catalog := validFixture(t)
 	decisionPath := filepath.Join(root, "specification/decisions.json")
@@ -658,6 +726,7 @@ func TestCheckHandlesDiscoveryAndRepositoryFailures(t *testing.T) {
 	}
 	write(t, filepath.Join(root, "nested/contract_test.go"), "package nested\n\nimport \"testing\"\n\nfunc TestRequestTargetContract(t *testing.T) {}\nfunc FuzzRequestTargetContract(f *testing.F) {}\n")
 	refreshModuleDecisionArtifacts(t, root, "nested", "https://www.rfc-editor.org/rfc/rfc9110.txt")
+	write(t, filepath.Join(root, "nested/CHANGELOG.md"), "# Changelog\n\n- NESTED-DEC-001: Preserve exact request-target bytes.\n\n[Decision register](docs/specification-decisions.md)\n")
 	catalog.Modules = append(catalog.Modules, second)
 	if report, err := Check(root, catalog); err != nil || report.Modules != 2 {
 		t.Fatalf("Check(two modules) = %#v, %v", report, err)

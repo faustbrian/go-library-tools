@@ -232,11 +232,14 @@ compatibility impact, changelog entry, and any replacement or supersession.
 Every Markdown decision entry must contain every exact value from its typed
 decision record plus the authoritative source URL. This keeps the human
 register and machine record in agreement instead of accepting field-name
-keywords. Every current decision identifier and canonical decision SHA-256
-must also have a durable changelog record. Historical changelog identifiers
-must remain in the current register as superseded entries, preventing silent
-erasure; a changed record requires a new digest record. The strict
-`decision-history.json` ledger contains every retained identifier and every
+keywords. Every current decision identifier must also have a durable human-facing
+changelog record, describing or linking the affected decision. Duplicating its
+canonical SHA-256 in prose is optional; existing digest-bearing entries remain
+valid, and future edits do not need new central secret-scanner exceptions merely
+to repeat a public digest. Historical changelog identifiers must remain in the
+current register as superseded entries, preventing silent
+erasure. A changed typed record still requires its current digest in the strict
+`decision-history.json` ledger, which contains every retained identifier and every
 canonical digest that identifier has held. The checker validates that current
 content is internally complete without depending on Git topology. Because no
 self-contained tree can prove that a previous tree did not contain an entry,
