@@ -70,7 +70,7 @@
     "module": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["directory", "module_path", "go_version", "kind", "purpose", "lifecycle", "releasable", "version", "tag_prefix", "gates", "test_tags", "build_tags", "required_services", "external_runtime_dependencies", "interoperability_tools", "conformance_corpora", "specifications", "owned_dependencies", "reverse_owned_dependencies", "packages", "family", "family_label", "family_description", "family_order"],
+      "required": ["directory", "module_path", "go_version", "kind", "purpose", "lifecycle", "releasable", "version", "tag_prefix", "gates", "test_tags", "build_tags", "required_services", "external_runtime_dependencies", "interoperability_tools", "conformance_corpora", "specifications", "owned_dependencies", "reverse_owned_dependencies", "family", "family_label", "family_description", "family_order"],
       "properties": {
         "directory": {"type": "string", "minLength": 1},
         "module_path": {"type": "string", "minLength": 1},

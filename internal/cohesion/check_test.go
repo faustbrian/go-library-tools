@@ -9,6 +9,7 @@ import (
 
 	"github.com/faustbrian/go-library-tools/v2/internal/cohesion"
 	"github.com/faustbrian/go-library-tools/v2/internal/config"
+	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
 func TestCheckRequiresSchemaV2Adoption(t *testing.T) {
@@ -89,6 +90,48 @@ func TestCheckValidatesOptionalSchemaV3CohesionMetadata(t *testing.T) {
 	report := cohesion.Check(root, policy())
 	if report.Valid || !hasDiagnostic(report, "invalid-value", "/modules/0/cohesion/family") {
 		t.Fatalf("Check(schema v3 family mismatch) = %#v", report)
+	}
+}
+
+func TestCohesionProjectsCanonicalPackagesWithoutModuleMirror(t *testing.T) {
+	root := fixture(t, 2, ",\n    \"cohesion\": "+validCohesion)
+	path := filepath.Join(root, "modules.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var document map[string]any
+	if err := json.Unmarshal(data, &document); err != nil {
+		t.Fatal(err)
+	}
+	delete(document["modules"].([]any)[0].(map[string]any), "packages")
+	encoded, err := json.Marshal(document)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, path, string(encoded))
+	catalog, report := cohesion.LoadAndCheck(root, policy())
+	if !report.Valid {
+		t.Fatalf("omitted mirror failed cohesion: %#v", report.Diagnostics)
+	}
+	identity := cohesion.Identity{DesignLanguageVersion: "1.0", DesignLanguageSHA256: strings.Repeat("a", 64), SourceIdentity: "unpublished", ToolingVersion: "dev", PublicationStatus: "unpublished"}
+	projected, err := cohesion.Project(catalog, "engineering", identity)
+	if err != nil {
+		t.Fatal(err)
+	}
+	output, err := json.Marshal(projected)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var expanded struct {
+		Modules []struct {
+			Packages []inventory.Package `json:"packages"`
+		} `json:"modules"`
+	}
+	if err := json.Unmarshal(output, &expanded); err != nil || len(expanded.Modules) != 1 ||
+		len(expanded.Modules[0].Packages) != 1 || expanded.Modules[0].Packages[0].ImportPath != "github.com/faustbrian/example" ||
+		!expanded.Modules[0].Packages[0].CoverageRequired {
+		t.Fatal("engineering catalog lost canonical package classification")
 	}
 }
 

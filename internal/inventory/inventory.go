@@ -35,6 +35,10 @@ var compiledModulesV3Schema = compileModuleSchemas(map[string]string{
 	modulesV3SchemaIdentity: modulesV3SchemaJSON,
 }, modulesV3SchemaIdentity)
 
+var compiledPackageSchema = compileModuleSchemas(map[string]string{
+	modulesSchemaIdentity: modulesSchemaJSON,
+}, modulesSchemaIdentity+"#/$defs/package")
+
 // compileModuleSchemas owns fail-closed compilation of source-controlled schemas.
 func compileModuleSchemas(resources map[string]string, target string) *jsonschema.Schema {
 	compiler := jsonschema.NewCompiler()
@@ -262,6 +266,9 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 	}
 	var header struct {
 		SchemaVersion int `json:"schema_version"`
+		Modules       []struct {
+			Packages json.RawMessage `json:"packages"`
+		} `json:"modules"`
 	}
 	if err := json.Unmarshal(moduleManifest, &header); err != nil {
 		return Inventory{}, fmt.Errorf("load module manifest: %w", err)
@@ -279,7 +286,11 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 		return Inventory{}, fmt.Errorf("load module manifest: %w", err)
 	}
 	var packages packageInventory
-	if err := decode(root, policy.Manifests.Packages, &packages); err != nil {
+	packageManifest, err := repositoryfile.Read(root, policy.Manifests.Packages, maximumManifestSize)
+	if err != nil {
+		return modules, fmt.Errorf("load package manifest: %w", err)
+	}
+	if err := decodeData(packageManifest, &packages); err != nil {
 		return modules, fmt.Errorf("load package manifest: %w", err)
 	}
 	if (modules.SchemaVersion != 1 && modules.SchemaVersion != 2 && modules.SchemaVersion != 3) || packages.SchemaVersion != 1 {
@@ -305,10 +316,37 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 		return modules, errors.New("module manifest contains no modules")
 	}
 	byDirectory := make(map[string]Module, len(modules.Modules))
-	for _, module := range modules.Modules {
+	derived := make(map[string]bool, len(modules.Modules))
+	for index, module := range modules.Modules {
 		if _, exists := byDirectory[module.Directory]; exists {
 			return modules, fmt.Errorf("duplicate module directory %q", module.Directory)
 		}
+		byDirectory[module.Directory] = module
+		if header.Modules[index].Packages == nil {
+			derived[module.Directory] = true
+		}
+	}
+	if err := validateDerivedPackageRecords(packageManifest, packages.Packages, derived); err != nil {
+		return modules, err
+	}
+	canonicalByModule := make(map[string][]Package, len(modules.Modules))
+	for _, packagePolicy := range packages.Packages {
+		if _, exists := byDirectory[packagePolicy.ModuleDirectory]; !exists {
+			return modules, errors.New("canonical package references unknown module")
+		}
+		canonicalByModule[packagePolicy.ModuleDirectory] = append(canonicalByModule[packagePolicy.ModuleDirectory], packagePolicy)
+	}
+	for index, module := range modules.Modules {
+		// Absence opts into the canonical owner. An explicit empty array or null
+		// remains an explicit mirror and must not silently acquire records.
+		if header.Modules[index].Packages != nil {
+			continue
+		}
+		module.Packages = canonicalByModule[module.Directory]
+		if module.Packages == nil {
+			module.Packages = []Package{}
+		}
+		modules.Modules[index] = module
 		byDirectory[module.Directory] = module
 	}
 	if err := validatePackages(modules.Modules, packages.Packages); err != nil {
@@ -486,6 +524,31 @@ func validateDecodedModuleIdentities(catalog Inventory) error {
 			continue
 		}
 		return errors.New("invalid module path")
+	}
+	return nil
+}
+
+// Omission must not turn absent/null raw classification fields into Go zero
+// values. Reuse the package definition rather than maintaining a second schema;
+// explicit legacy mirrors retain their existing admission behavior.
+func validateDerivedPackageRecords(manifest []byte, canonical []Package, derived map[string]bool) error {
+	if len(derived) == 0 {
+		return nil
+	}
+	var document struct {
+		Packages []json.RawMessage `json:"packages"`
+	}
+	if err := json.Unmarshal(manifest, &document); err != nil || document.Packages == nil {
+		return errors.New("canonical package records must be an explicit array for derivation")
+	}
+	for index, packagePolicy := range canonical {
+		if !derived[packagePolicy.ModuleDirectory] {
+			continue
+		}
+		value, err := jsonschema.UnmarshalJSON(bytes.NewReader(document.Packages[index]))
+		if err != nil || compiledPackageSchema.Validate(value) != nil {
+			return fmt.Errorf("canonical package record %d violates required classification", index)
+		}
 	}
 	return nil
 }

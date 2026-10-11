@@ -293,6 +293,43 @@ func TestExecutePrintsHumanInventory(t *testing.T) {
 	}
 }
 
+func TestExecuteInventoryExpandsCanonicalPackagesWithoutMirror(t *testing.T) {
+	root := fixture(t)
+	path := filepath.Join(root, "modules.json")
+	data, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var document map[string]any
+	if err := json.Unmarshal(data, &document); err != nil {
+		t.Fatal(err)
+	}
+	delete(document["modules"].([]any)[0].(map[string]any), "packages")
+	encoded, err := json.Marshal(document)
+	if err != nil {
+		t.Fatal(err)
+	}
+	write(t, path, string(encoded))
+	write(t, filepath.Join(root, "packages.json"), `{"schema_version":1,"repository":"github.com/faustbrian/example","packages":[{"module_directory":".","directory":".","name":"example","import_path":"github.com/faustbrian/example","kind":"public","production":true,"executable":true,"coverage_required":true,"build_required":true,"build_tags":[]}]}`)
+	var stdout, stderr bytes.Buffer
+	if code := cli.Execute([]string{"inventory", "--json"}, root, &stdout, &stderr); code != 0 || stderr.Len() != 0 {
+		t.Fatalf("inventory failed: code=%d stderr=%q", code, stderr.String())
+	}
+	var catalog struct {
+		Modules []struct {
+			Packages []struct {
+				ImportPath       string `json:"import_path"`
+				CoverageRequired bool   `json:"coverage_required"`
+			} `json:"packages"`
+		} `json:"modules"`
+	}
+	if err := json.Unmarshal(stdout.Bytes(), &catalog); err != nil || len(catalog.Modules) != 1 ||
+		len(catalog.Modules[0].Packages) != 1 || catalog.Modules[0].Packages[0].ImportPath != "github.com/faustbrian/example" ||
+		!catalog.Modules[0].Packages[0].CoverageRequired {
+		t.Fatal("public CLI lost canonical package classification")
+	}
+}
+
 func TestExecuteValidatesConsumerInventory(t *testing.T) {
 	root := fixture(t)
 	writeConsumerInventory(t, root)

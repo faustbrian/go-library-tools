@@ -46,6 +46,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Allow omitted module package mirrors to expand from canonical package data,
+  retaining complete inventory output and strict explicit-mirror checks.
+
 - Keep reviewed secret-scanner metadata policy in one embedded data asset,
   preserving exact finding scope and scanning the asset itself.
 

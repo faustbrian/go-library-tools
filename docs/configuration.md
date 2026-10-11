@@ -35,6 +35,20 @@ version, lifecycle, gates, tags, services, and release metadata.
 `packages.json` owns package classification. Configuration references those
 facts rather than duplicating them.
 
+With capable tooling, a module may omit its `packages` field: `packages.json`
+is the single classification owner, and the verifier expands its records into
+the module's inventory and generated catalogs. No filesystem inference or new
+classification defaults are involved: raw records supplying omitted mirrors
+must satisfy the existing required package definition before expansion. This
+optional form works with module schemas 1–3 and requires no schema migration.
+Existing explicit mirrors
+remain supported and must match every canonical record exactly; `[]` and `null`
+do not mean omission. Unknown owners and duplicate or conflicting records remain
+errors. JSON inventory/catalog output still includes complete package arrays,
+and manifest snapshots retain the original input bytes. Older published tools
+require the mirrors, so remove them only after adopting a qualified release
+with this capability; unchanged repositories need no migration or release.
+
 Each `goal_evidence` entry in `modules.json` is a structured record with the
 goal file, requirements digest, implementation artifacts, verification gates,
 and implementation status. Unknown record fields are rejected. This metadata
