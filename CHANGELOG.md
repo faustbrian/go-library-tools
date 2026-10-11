@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.1.3 - 2026-10-11
+
+### Fixed
+
+- Select active fuzz smoke from material declaration and causal source changes,
+  rather than every policy edit. Keep changed targets and runtime authorities
+  conservative, and reject missing or invalid immutable policy inputs.
+
 ## 2.1.2 - 2026-10-11
 
 ### Fixed

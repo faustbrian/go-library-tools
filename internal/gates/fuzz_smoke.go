@@ -8,6 +8,7 @@ import (
 	"io"
 	"path"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"slices"
 	"strings"
@@ -98,6 +99,10 @@ func (runner Runner) LocalChanges(ctx context.Context, selection []string, base 
 	}
 	smokeContext, cancel := context.WithTimeout(ctx, fuzzSmokeTotalBudget)
 	defer cancel()
+	policyChanges, err := runner.changedFuzzPolicy(smokeContext, changes)
+	if err != nil {
+		return err
+	}
 	var targets []fuzzSmokeTarget
 	selectedIdentities := make(map[string]bool)
 	candidates := 0
@@ -135,6 +140,7 @@ func (runner Runner) LocalChanges(ctx context.Context, selection []string, base 
 				return err
 			}
 			identity := module.Directory + "\x00" + step.Packages[0] + "\x00" + step.Fuzz
+			affected = affected || policyChanges[fuzzPolicyIdentity(module.Directory, step)]
 			if affected && !selectedIdentities[identity] {
 				selectedIdentities[identity] = true
 				targets = append(targets, fuzzSmokeTarget{module, step})
@@ -167,6 +173,136 @@ func (runner Runner) LocalChanges(ctx context.Context, selection []string, base 
 		_, _ = fmt.Fprintf(output, "[%s] fuzz-smoke: %d affected configured targets passed\n", module.Directory, len(selected))
 	}
 	return smokeContext.Err()
+}
+
+// changedFuzzPolicy compares only declarations that affect the smoke binary.
+// Full-campaign budgets and non-fuzz gates remain validated by ordinary local
+// checks but do not invalidate unchanged application fuzz targets.
+func (runner Runner) changedFuzzPolicy(ctx context.Context, changes []string) (map[string]bool, error) {
+	policyChanged := slices.Contains(changes, ".golib.yaml")
+	catalogChanged := slices.Contains(changes, runner.Policy.Manifests.Modules) || slices.Contains(changes, runner.Policy.Manifests.Packages)
+	if !policyChanged && !catalogChanged {
+		return nil, nil
+	}
+	if runner.secretChanges == nil {
+		return nil, errors.New("fuzz smoke policy requires an immutable Git range")
+	}
+	read := func(commit string) (config.Config, error) {
+		data, err := runner.changeGit(ctx, "show", commit+":.golib.yaml")
+		if err != nil {
+			return config.Config{}, err
+		}
+		policy, err := config.Decode([]byte(data))
+		if err != nil {
+			return config.Config{}, errors.New("fuzz smoke historical policy is invalid or exceeds its size budget")
+		}
+		return policy, nil
+	}
+	before, after := runner.Policy, runner.Policy
+	if policyChanged {
+		var err error
+		before, err = read(runner.secretChanges.base)
+		if err != nil {
+			return nil, err
+		}
+		after, err = read(runner.secretChanges.head)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !reflect.DeepEqual(after, runner.Policy) {
+		return nil, errors.New("fuzz smoke policy differs from immutable HEAD")
+	}
+	materialModules := make(map[string]bool)
+	if catalogChanged || before.Manifests != after.Manifests {
+		readCatalog := func(commit string, policy config.Config) (inventory.Inventory, error) {
+			moduleData, err := runner.changeGit(ctx, "show", commit+":"+policy.Manifests.Modules)
+			if err != nil {
+				return inventory.Inventory{}, err
+			}
+			packageData, err := runner.changeGit(ctx, "show", commit+":"+policy.Manifests.Packages)
+			if err != nil {
+				return inventory.Inventory{}, err
+			}
+			catalog, err := inventory.Decode(policy, []byte(moduleData), []byte(packageData))
+			if err != nil {
+				return inventory.Inventory{}, errors.New("fuzz smoke historical inventory is invalid or exceeds its size budget")
+			}
+			return catalog, nil
+		}
+		oldCatalog, err := readCatalog(runner.secretChanges.base, before)
+		if err != nil {
+			return nil, err
+		}
+		newCatalog, err := readCatalog(runner.secretChanges.head, after)
+		if err != nil {
+			return nil, err
+		}
+		if !reflect.DeepEqual(newCatalog, runner.Catalog) {
+			return nil, errors.New("fuzz smoke inventory differs from immutable HEAD")
+		}
+		oldModules := make(map[string]inventory.Module)
+		for _, module := range oldCatalog.Modules {
+			oldModules[module.Directory] = module
+		}
+		for _, module := range newCatalog.Modules {
+			old, exists := oldModules[module.Directory]
+			materialModules[module.Directory] = !exists || oldCatalog.GoVersion != newCatalog.GoVersion || !sameFuzzModuleInputs(old, module)
+		}
+	}
+	previous := make(map[string]config.Step)
+	for _, operation := range before.Operations {
+		if operation.Gate != "fuzz" {
+			continue
+		}
+		for _, step := range operation.Steps {
+			if step.Type == "go-test" && step.Fuzz != "" && len(step.Packages) == 1 {
+				previous[fuzzPolicyIdentity(operation.Module, step)] = normalizedFuzzPolicyStep(step)
+			}
+		}
+	}
+	selected := make(map[string]bool)
+	for _, operation := range after.Operations {
+		if operation.Gate != "fuzz" {
+			continue
+		}
+		for _, step := range operation.Steps {
+			if step.Type != "go-test" || step.Fuzz == "" || len(step.Packages) != 1 {
+				continue
+			}
+			identity := fuzzPolicyIdentity(operation.Module, step)
+			old, exists := previous[identity]
+			selected[identity] = materialModules[operation.Module] || before.Runtimes != after.Runtimes || !exists || !reflect.DeepEqual(old, normalizedFuzzPolicyStep(step))
+		}
+	}
+	return selected, ctx.Err()
+}
+
+// Versions, descriptions and unrelated gate policy do not change a fuzz binary.
+// Compare only runtime, service and ownership declarations; package ordering is
+// immaterial and package documentation/coverage classification is not execution.
+func sameFuzzModuleInputs(before, after inventory.Module) bool {
+	packageInputs := func(module inventory.Module) map[string]inventory.Package {
+		result := make(map[string]inventory.Package)
+		for _, pkg := range module.Packages {
+			result[pkg.Directory] = inventory.Package{ModuleDirectory: pkg.ModuleDirectory, Directory: pkg.Directory, ImportPath: pkg.ImportPath, BuildTags: pkg.BuildTags}
+		}
+		return result
+	}
+	return before.ModulePath == after.ModulePath && before.GoVersion == after.GoVersion && before.Gates["fuzz"] == after.Gates["fuzz"] &&
+		slices.Equal(before.TestTags, after.TestTags) && slices.Equal(before.BuildTags, after.BuildTags) &&
+		slices.Equal(before.RequiredServices, after.RequiredServices) && slices.Equal(before.OwnedDependencies, after.OwnedDependencies) &&
+		reflect.DeepEqual(packageInputs(before), packageInputs(after))
+}
+
+func fuzzPolicyIdentity(module string, step config.Step) string {
+	return module + "\x00" + path.Clean(step.Packages[0]) + "\x00" + step.Fuzz
+}
+
+func normalizedFuzzPolicyStep(step config.Step) config.Step {
+	step.Packages = []string{path.Clean(step.Packages[0])}
+	step.Budget, step.Timeout, step.Count = "2s", "15s", 1
+	return step
 }
 
 func (runner Runner) fuzzPackageGraph(ctx context.Context, module inventory.Module, packages []string) (map[string]fuzzPackage, error) {
@@ -214,7 +350,7 @@ func (runner Runner) fuzzTargetAffected(ctx context.Context, module inventory.Mo
 	}
 	affected := false
 	for _, change := range changes {
-		if change == ".golib.yaml" || change == ".go-version" ||
+		if change == ".go-version" ||
 			change == path.Join(module.Directory, "go.mod") || change == path.Join(module.Directory, "go.sum") {
 			affected = true
 		}

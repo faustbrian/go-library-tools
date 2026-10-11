@@ -152,7 +152,15 @@ func Load(root string) (Config, error) {
 	if err != nil {
 		return Config{}, fmt.Errorf("load %s: %w", fileName, err)
 	}
+	return Decode(data)
+}
 
+// Decode applies the same bounded, strict policy contract to immutable Git
+// blobs as Load applies to repository-owned files.
+func Decode(data []byte) (Config, error) {
+	if len(data) > MaximumSize {
+		return Config{}, ErrTooLarge
+	}
 	var result Config
 	decoder := yaml.NewDecoder(strings.NewReader(string(data)))
 	decoder.KnownFields(true)

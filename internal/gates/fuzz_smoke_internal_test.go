@@ -61,7 +61,7 @@ func TestFuzzSmokeSelectsRuntimeAndTestDependencyInputs(t *testing.T) {
 		{"path prefix collision", "helper-other/value.go", false},
 		{"changed module dependencies", "go.mod", true},
 		{"changed owned dependency module", "adapter/go.mod", true},
-		{"changed configured targets", ".golib.yaml", true},
+		{"policy selection belongs to declaration comparison", ".golib.yaml", false},
 	} {
 		t.Run(scenario.name, func(t *testing.T) {
 			got, err := runner.fuzzTargetAffected(t.Context(), module, "example/parser", graph, []string{scenario.input})

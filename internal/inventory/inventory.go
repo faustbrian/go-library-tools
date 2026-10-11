@@ -256,7 +256,20 @@ func LoadSnapshot(root string, policy config.Config) (Inventory, []byte, error) 
 	return catalog, moduleManifest, nil
 }
 
+// Decode validates immutable manifest bytes with the same admission rules as
+// Load. It does not read the checkout while comparing historical inputs.
+func Decode(policy config.Config, moduleManifest, packageManifest []byte) (Inventory, error) {
+	if len(moduleManifest) == 0 || len(packageManifest) == 0 || len(moduleManifest) > maximumManifestSize || len(packageManifest) > maximumManifestSize {
+		return Inventory{}, errors.New("manifest bytes are missing or exceed their size budget")
+	}
+	return loadManifests("", policy, moduleManifest, packageManifest)
+}
+
 func load(root string, policy config.Config, moduleManifest []byte) (Inventory, error) {
+	return loadManifests(root, policy, moduleManifest, nil)
+}
+
+func loadManifests(root string, policy config.Config, moduleManifest, packageManifest []byte) (Inventory, error) {
 	if moduleManifest == nil {
 		var err error
 		moduleManifest, err = repositoryfile.Read(root, policy.Manifests.Modules, maximumManifestSize)
@@ -286,9 +299,12 @@ func load(root string, policy config.Config, moduleManifest []byte) (Inventory, 
 		return Inventory{}, fmt.Errorf("load module manifest: %w", err)
 	}
 	var packages packageInventory
-	packageManifest, err := repositoryfile.Read(root, policy.Manifests.Packages, maximumManifestSize)
-	if err != nil {
-		return modules, fmt.Errorf("load package manifest: %w", err)
+	if packageManifest == nil {
+		var err error
+		packageManifest, err = repositoryfile.Read(root, policy.Manifests.Packages, maximumManifestSize)
+		if err != nil {
+			return modules, fmt.Errorf("load package manifest: %w", err)
+		}
 	}
 	if err := decodeData(packageManifest, &packages); err != nil {
 		return modules, fmt.Errorf("load package manifest: %w", err)
