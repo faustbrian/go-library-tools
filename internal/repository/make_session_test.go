@@ -19,10 +19,10 @@ func TestMakeReusesDisposableSessionAndCleansFailures(t *testing.T) {
 		{"package vet failure", "check-packages", "vet ./internal/example", []string{"go test ./internal/example", "go vet ./internal/example"}, "", ""},
 		{"local checks", "local-check", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}, "", ""},
 		{"CLI build failure", "local-ci", "build", []string{"go build"}, "", ""},
-		{"local CI", "local-ci", "", []string{"go build", "golib check --local", "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}, "", ""},
-		{"local CI failure", "local-ci", "cohesion check", []string{"go build", "golib check --local", "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check"}, "", ""},
-		{"PR fuzz base", "local-ci", "", []string{"go build", "golib check --local --base-sha " + strings.Repeat("a", 40), "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}, "pull_request", strings.Repeat("a", 40)},
-		{"push fuzz base", "local-ci", "", []string{"go build", "golib check --local --base-sha " + strings.Repeat("b", 40), "golib security validate --directory docs/ecosystem/security", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}, "push", strings.Repeat("b", 40)},
+		{"local CI", "local-ci", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local"}, "", ""},
+		{"local CI failure", "local-ci", "cohesion check", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check"}, "", ""},
+		{"PR fuzz base", "local-ci", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local --base-sha " + strings.Repeat("a", 40)}, "pull_request", strings.Repeat("a", 40)},
+		{"push fuzz base", "local-ci", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local --base-sha " + strings.Repeat("b", 40)}, "push", strings.Repeat("b", 40)},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			repository := t.TempDir()
@@ -33,7 +33,11 @@ func TestMakeReusesDisposableSessionAndCleansFailures(t *testing.T) {
 			writeExecutable(t, cli, `#!/usr/bin/env bash
 set -euo pipefail
 printf 'golib %s\t%s\t%s\t%s\n' "$*" "$GOCACHE" "$GOMODCACHE" "$GOTMPDIR" >>"$GOLIB_MAKE_FIXTURE_LOG"
+test "$GOLIB_TASK_CACHE_ROOT" = "$(dirname "$GOCACHE")"
 if test "$*" = "$GOLIB_MAKE_FIXTURE_FAILURE"; then exit 23; fi
+# Application tests can modify writable session outputs. No verifier may run
+# afterward; replace this fixture executable to expose any such invocation.
+if test "$1" = check; then printf '#!/bin/sh\nexit 99\n' > "$0"; fi
 `)
 			writeExecutable(t, filepath.Join(bin, "go"), `#!/usr/bin/env bash
 set -euo pipefail

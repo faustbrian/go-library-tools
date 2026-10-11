@@ -43,6 +43,10 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Reuse explicit parent-owned temporary compilation caches in local Makefile
+  sessions, retaining private executor scratch and verifying metadata/workflows
+  before the final runtime check.
+
 - Reuse pinned analyzer builds within a selected multi-module security pass,
   keeping every module scan fresh and removing builds before runtime tests.
 

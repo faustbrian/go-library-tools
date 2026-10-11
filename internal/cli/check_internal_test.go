@@ -755,6 +755,131 @@ func TestExecuteRoutesWorkflowChecks(t *testing.T) {
 	}
 }
 
+func TestExecuteContextBorrowsExplicitTaskCachesAndCleansOnlyScratch(t *testing.T) {
+	for _, status := range []string{"0", "23"} {
+		t.Run(status, func(t *testing.T) {
+			root := internalFixture(t)
+			cacheRoot := taskCacheFixture(t)
+			bin, log := t.TempDir(), filepath.Join(t.TempDir(), "cache-environment")
+			program := "#!/bin/sh\nprintf '%s\\t%s\\t%s\\t%s\\n' \"$GOCACHE\" \"$GOMODCACHE\" \"$GOTMPDIR\" \"$GOBIN\" >> \"$CACHE_ENVIRONMENT_LOG\"\nexit \"$CACHE_TEST_STATUS\"\n"
+			if err := os.WriteFile(filepath.Join(bin, "go"), []byte(program), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+			t.Setenv("GOLIB_TASK_CACHE_ROOT", cacheRoot)
+			t.Setenv("CACHE_ENVIRONMENT_LOG", log)
+			t.Setenv("CACHE_TEST_STATUS", status)
+			for range 2 {
+				var stdout, stderr bytes.Buffer
+				code := ExecuteContext(t.Context(), []string{"workflows", "check"}, root, &stdout, &stderr)
+				if (code == 0) != (status == "0") {
+					t.Fatalf("CLI status = %d: %s", code, stderr.String())
+				}
+			}
+			data, err := os.ReadFile(log)
+			if err != nil {
+				t.Fatal(err)
+			}
+			lines := strings.Split(strings.TrimSpace(string(data)), "\n")
+			if len(lines) != 2 {
+				t.Fatalf("expected two fresh workflow executions, got %q", lines)
+			}
+			for _, line := range lines {
+				paths := strings.Split(line, "\t")
+				if len(paths) != 4 || paths[0] != filepath.Join(cacheRoot, "cache") || paths[1] != filepath.Join(cacheRoot, "mod") {
+					t.Fatalf("production executor discarded explicit parent caches: %q", line)
+				}
+				for _, scratch := range paths[2:] {
+					if strings.HasPrefix(scratch, cacheRoot+string(filepath.Separator)) {
+						t.Fatal("invocation scratch is not private")
+					}
+					if _, err := os.Stat(scratch); !os.IsNotExist(err) {
+						t.Fatalf("invocation scratch remains: %v", err)
+					}
+				}
+			}
+			if _, err := os.Stat(filepath.Join(cacheRoot, "cache", "parent-marker")); err != nil {
+				t.Fatal("executor removed caller-owned cache contents")
+			}
+		})
+	}
+}
+
+func TestExecuteContextRejectsUnsafeTaskCacheOptIn(t *testing.T) {
+	for _, scenario := range []string{"relative", "shared permissions", "shared cache", "symlinked cache", "missing cache", "repository root", "repository inside cache"} {
+		t.Run(scenario, func(t *testing.T) {
+			root, cacheRoot := internalFixture(t), taskCacheFixture(t)
+			bin := t.TempDir()
+			if err := os.WriteFile(filepath.Join(bin, "go"), []byte("#!/bin/sh\nexit 0\n"), 0o700); err != nil {
+				t.Fatal(err)
+			}
+			t.Setenv("PATH", bin+string(os.PathListSeparator)+os.Getenv("PATH"))
+			switch scenario {
+			case "relative":
+				cacheRoot = "relative-cache"
+			case "shared permissions":
+				if err := os.Chmod(cacheRoot, 0o755); err != nil {
+					t.Fatal(err)
+				}
+			case "shared cache":
+				if err := os.Chmod(filepath.Join(cacheRoot, "cache"), 0o755); err != nil {
+					t.Fatal(err)
+				}
+			case "symlinked cache":
+				if err := os.Remove(filepath.Join(cacheRoot, "mod")); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Symlink(t.TempDir(), filepath.Join(cacheRoot, "mod")); err != nil {
+					t.Fatal(err)
+				}
+			case "missing cache":
+				if err := os.Remove(filepath.Join(cacheRoot, "mod")); err != nil {
+					t.Fatal(err)
+				}
+			case "repository root":
+				cacheRoot = root
+			case "repository inside cache":
+				destination := filepath.Join(cacheRoot, "repository")
+				if err := os.Rename(root, destination); err != nil {
+					t.Fatal(err)
+				}
+				root = destination
+			}
+			t.Setenv("GOLIB_TASK_CACHE_ROOT", cacheRoot)
+			var stdout, stderr bytes.Buffer
+			if code := ExecuteContext(t.Context(), []string{"workflows", "check"}, root, &stdout, &stderr); code != 1 || !strings.Contains(stderr.String(), "task cache") {
+				t.Fatalf("unsafe opt-in accepted: status %d, %s", code, stderr.String())
+			}
+		})
+	}
+}
+
+func taskCacheFixture(t *testing.T) string {
+	t.Helper()
+	root, err := os.MkdirTemp("", "golib-cache-session.")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.RemoveAll(root); err != nil {
+			t.Error(err)
+		}
+	})
+	root, err = filepath.EvalSymlinks(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, name := range []string{"cache", "mod"} {
+		if err := os.Mkdir(filepath.Join(root, name), 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(root, "cache", "parent-marker"), []byte("owned"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return root
+}
+
 func TestExecuteRoutesAPICheckAndUpdate(t *testing.T) {
 	root := internalFixture(t)
 	if err := os.Mkdir(filepath.Join(root, "api"), 0o700); err != nil {

@@ -77,7 +77,13 @@ func ExecuteContext(ctx context.Context, args []string, workingDirectory string,
 		_, _ = fmt.Fprintln(stdout, buildinfo.Version)
 		return 0
 	}
-	return executeContext(ctx, args, workingDirectory, stdout, stderr, gates.NewProcessExecutor)
+	createExecutor := gates.NewProcessExecutor
+	if cacheRoot := os.Getenv("GOLIB_TASK_CACHE_ROOT"); cacheRoot != "" {
+		createExecutor = func(root string, stdout, stderr io.Writer) (gates.Executor, func() error, error) {
+			return gates.NewProcessExecutorWithTaskCache(root, cacheRoot, stdout, stderr)
+		}
+	}
+	return executeContext(ctx, args, workingDirectory, stdout, stderr, createExecutor)
 }
 
 type executorFactory func(string, io.Writer, io.Writer) (gates.Executor, func() error, error)

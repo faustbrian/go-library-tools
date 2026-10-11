@@ -8,9 +8,20 @@ Run focused package tests and static analysis while editing with
 packages, not this example indiscriminately).
 Its test and vet commands share one disposable cache session. `make local-check`
 and `make local-ci` each build the CLI once and reuse it for adjacent checks;
-their build-session directories are removed on success or failure. Each CLI
-invocation retains its existing executor-owned isolation. No shared global
-cache or persistent local binary is introduced.
+their build-session directories are removed on success or failure. These wrappers
+explicitly pass `GOLIB_TASK_CACHE_ROOT` so production CLI executors reuse the
+parent-owned compilation caches, while temporary files and installed tools remain
+invocation-private and are cleaned after each command. Default CLI invocation
+still owns all of its caches. No global cache or persistent binary is introduced.
+
+The opt-in root must be a canonical direct child of the system temporary
+directory named `golib-cache-session.*`, with existing `cache` and `mod`
+directories, all mode 0700 and without symlinks. It must not overlap the repository.
+The caller owns final deletion and must not reuse caches modified by application
+execution to prepare a later verifier. `make local-ci` therefore runs all
+metadata/workflow verification before its final runtime check; no verifier runs
+after application tests. This is bounded local/job reuse, not a cross-job or
+privileged-release cache policy.
 
 `make local-check` validates repository-owned configuration, inventory,
 cohesion, and workflow invariants; `make local-ci` adds the complete Go test and

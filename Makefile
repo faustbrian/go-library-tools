@@ -11,16 +11,16 @@ COMPATIBILITY_GO_MOD ?=
 
 define with_go_task
 	set -euo pipefail; \
-	task="$$(mktemp -d "$${TMPDIR:-/tmp}/go-library-tools-make.XXXXXX")"; \
+	task="$$(mktemp -d "$${TMPDIR:-/tmp}/golib-cache-session.XXXXXX")"; \
 	task="$$(cd "$$task" && pwd -P)"; \
 	trap 'chmod -R u+w "$$task" 2>/dev/null || true; find "$$task" -depth -delete' EXIT; \
-	mkdir -p "$$task/cache" "$$task/mod" "$$task/tmp"; \
+	mkdir -m 700 -p "$$task/cache" "$$task/mod" "$$task/tmp"; \
 	export GOCACHE="$$task/cache" GOMODCACHE="$$task/mod" GOTMPDIR="$$task/tmp"; \
 	$(1)
 endef
 
 run_go = $(call with_go_task,go $(1))
-run_golib = $(call with_go_task,go build -o "$$task/golib" ./cmd/golib; $(1))
+run_golib = $(call with_go_task,export GOLIB_TASK_CACHE_ROOT="$$task"; go build -o "$$task/golib" ./cmd/golib; $(1))
 
 build:
 	$(call run_go,build ./cmd/golib)
@@ -71,7 +71,7 @@ local-check:
 	$(call run_golib,"$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check)
 
 local-ci:
-	$(call run_golib,arguments=(check --local); if [[ "$${GOLIB_CHANGE_EVENT:-}" == pull_request || "$${GOLIB_CHANGE_EVENT:-}" == push || -n "$${GOLIB_BASE_SHA:-}" ]]; then arguments+=(--base-sha "$${GOLIB_BASE_SHA:-}"); fi; "$$task/golib" "$${arguments[@]}"; "$$task/golib" security validate --directory docs/ecosystem/security; "$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check)
+	$(call run_golib,"$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check; "$$task/golib" security validate --directory docs/ecosystem/security; arguments=(check --local); if [[ "$${GOLIB_CHANGE_EVENT:-}" == pull_request || "$${GOLIB_CHANGE_EVENT:-}" == push || -n "$${GOLIB_BASE_SHA:-}" ]]; then arguments+=(--base-sha "$${GOLIB_BASE_SHA:-}"); fi; "$$task/golib" "$${arguments[@]}")
 
 milestone-check: consumers compatibility
 

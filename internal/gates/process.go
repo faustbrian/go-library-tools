@@ -58,6 +58,58 @@ func NewProcessExecutor(repositoryRoot string, stdout, stderr io.Writer) (Execut
 	return newProcessExecutor(repositoryRoot, stdout, stderr, operatingTaskFileSystem{})
 }
 
+// NewProcessExecutorWithTaskCache borrows only compilation caches from a
+// caller-owned bounded session. Its cleanup removes only invocation scratch;
+// the caller must remove the session after use and must not seed verifier
+// compilation from repository-controlled execution.
+func NewProcessExecutorWithTaskCache(repositoryRoot, cacheRoot string, stdout, stderr io.Writer) (Executor, func() error, error) {
+	directories, err := taskCacheDirectories(repositoryRoot, cacheRoot)
+	if err != nil {
+		return nil, nil, err
+	}
+	executor, cleanup, err := newProcessExecutor(repositoryRoot, stdout, stderr, operatingTaskFileSystem{})
+	if err != nil {
+		return nil, nil, err
+	}
+	for name, directory := range directories {
+		executor.environment[name] = directory
+	}
+	return executor, cleanup, nil
+}
+
+func taskCacheDirectories(repositoryRoot, root string) (map[string]string, error) {
+	invalid := errors.New("task cache requires a private, canonical temporary session with existing private cache directories")
+	if len(root) > 4096 || !filepath.IsAbs(root) || filepath.Clean(root) != root || !strings.HasPrefix(filepath.Base(root), "golib-cache-session.") {
+		return nil, invalid
+	}
+	canonical, err := filepath.EvalSymlinks(root)
+	if err != nil || canonical != root {
+		return nil, invalid
+	}
+	temporary, err := filepath.EvalSymlinks(os.TempDir())
+	if err != nil || filepath.Dir(root) != temporary {
+		return nil, invalid
+	}
+	repository, err := filepath.EvalSymlinks(repositoryRoot)
+	if err != nil {
+		return nil, invalid
+	}
+	for _, pair := range [][2]string{{repository, root}, {root, repository}} {
+		relative, err := filepath.Rel(pair[0], pair[1])
+		if err != nil || relative == "." || relative != ".." && !strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+			return nil, invalid
+		}
+	}
+	directories := map[string]string{"GOCACHE": filepath.Join(root, "cache"), "GOMODCACHE": filepath.Join(root, "mod")}
+	for _, path := range []string{root, directories["GOCACHE"], directories["GOMODCACHE"]} {
+		info, err := os.Lstat(path)
+		if err != nil || !info.IsDir() || info.Mode().Perm() != 0o700 {
+			return nil, invalid
+		}
+	}
+	return directories, nil
+}
+
 func newProcessExecutor(repositoryRoot string, stdout, stderr io.Writer, files taskFileSystem) (*processExecutor, func() error, error) {
 	slug := strings.NewReplacer("/", "-", "\\", "-").Replace(filepath.Base(repositoryRoot))
 	task, err := files.MkdirTemp("", "golib-"+slug+"-")
