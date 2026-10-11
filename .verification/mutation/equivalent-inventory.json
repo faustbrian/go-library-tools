@@ -3,6 +3,31 @@
   "packages": [
     {
       "module_directory": ".",
+      "package_directory": "internal/config",
+      "source_digest": "044c9cc776c26d5ce1bda28165a9bb96b7d221f22eaeb5318b3abf7509fa0933",
+      "gremlins_version": "v0.6.0",
+      "gremlins_verifier_sha256": "390cf4085a0063fe5dcaa29ce942ea4cb8c7876347da90376b65dc8c5c811104",
+      "mutations": [
+        {
+          "file_name": "config.go",
+          "type": "INVERT_LOGICAL",
+          "line": 418,
+          "column": 37,
+          "contract_domain": "LocalTestBudget and public Load of selectors admitted by unchanged textual ^Test prefix, terminal dollar, no slash and Go 1.27.2 syntax.Perl parsing; identical whole-expression admission, sanitized refusal and budget",
+          "reason": "Owner faustbrian; independent classification /root/review_identity_process_reconciliation; date 2026-10-11; expiry 2026-11-10 or earlier bound source/verifier/operator, Go regexp parser or caller-domain change. Pinned Gremlins v0.6.0 changes the first disjunction to conjunction. Under the preceding textual and parser guards, a whole-expression concatenation retains initial BeginText and a mandatory literal Tes prefix. Short concatenations still fail the unchanged terminal EndText guard, and top-level alternatives cannot simultaneously provide the unchanged terminal EndText and mandatory literal Test checks. Native Gremlins AST printing preserves this grouping; newly reached indexes remain safe. Both forms therefore preserve supported public admission, refusal and deadline accounting. Arbitrary ASTs bypassing syntax.Parse or these guards are excluded. This record accepts only this exact coordinate; the seven viable survivors remain separate test repairs. Native run 38166132296 remains failed, and no report counters or LIVED statuses are relabelled."
+        },
+        {
+          "file_name": "config.go",
+          "type": "INVERT_LOGICAL",
+          "line": 418,
+          "column": 62,
+          "contract_domain": "LocalTestBudget and public Load of selectors admitted by unchanged textual ^Test prefix, terminal dollar, no slash and Go 1.27.2 syntax.Perl parsing; identical whole-expression admission, sanitized refusal and budget",
+          "reason": "Owner faustbrian; independent classification /root/review_identity_process_reconciliation; date 2026-10-11; expiry 2026-11-10 or earlier bound source/verifier/operator, Go regexp parser or caller-domain change. Pinned Gremlins v0.6.0 changes the second disjunction to conjunction. Parsed concatenations retain BeginText from the preceding ^Test guard, so removing the isolated short-length rejection cannot admit a selector: short concatenations still fail the unchanged terminal EndText or mandatory literal Test checks. A top-level alternative remains refused by the unchanged outer OpConcat predicate. Native Gremlins AST printing preserves this grouping and the admitted parser domain keeps newly reached indexes safe. Both forms preserve public admission, sanitized refusal and deadline accounting. Arbitrary ASTs bypassing syntax.Parse or these guards are excluded. No terminal-anchor, literal-prefix, quota or race selector mutant is accepted. Native run 38166132296 remains failed; no report counters or LIVED statuses are relabelled."
+        }
+      ]
+    },
+    {
+      "module_directory": ".",
       "package_directory": "internal/mutation",
       "source_digest": "3c7d1e08fac96b48c3b4243a92f51ad7cfbb10cb2dacf807543685aee27e3015",
       "gremlins_version": "v0.6.0",
