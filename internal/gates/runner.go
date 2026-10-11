@@ -63,8 +63,21 @@ const (
 	cycloneDXVersion    = "v1.10.0"
 )
 
+// Unclassified commands may execute repository code. Only explicit native Go
+// producers borrow a caller session; pinned verifier producers remain private.
+type commandCacheClass uint8
+
+const (
+	repositoryRuntimeCache commandCacheClass = iota
+	nativeRepositoryCache
+	verifierCache
+)
+
 // Command is one external process invocation without shell interpretation.
 type Command struct {
+	cacheClass commandCacheClass
+	// Set only by the owned Gremlins campaign producer, never from command.Env.
+	runtimeBuildCache string
 	// boundedScanner is only set by owned scanner/source/test command callers.
 	// It does not claim containment of arbitrary repository code.
 	boundedScanner bool
@@ -493,7 +506,8 @@ func (runner Runner) checkModule(ctx context.Context, output io.Writer, module i
 	if module.Gates["lint"] {
 		_, _ = fmt.Fprintf(output, "[%s] nilaway\n", module.Directory)
 		err := runner.Executor.Run(ctx, Command{
-			Name: "go", Dir: directory, Env: map[string]string{"GOWORK": "off"},
+			cacheClass: verifierCache,
+			Name:       "go", Dir: directory, Env: map[string]string{"GOWORK": "off"},
 			Args: []string{"run", "go.uber.org/nilaway/cmd/nilaway@" + nilAwayVersion,
 				"-include-pkgs=" + module.ModulePath, "./..."},
 		})
@@ -1011,7 +1025,8 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 				name, scannerArguments = binary, args
 			}
 			err := runner.Executor.Run(ctx, Command{
-				Name: name, Args: scannerArguments, Dir: directory, Env: map[string]string{"GOWORK": "off"}, boundedScanner: true,
+				cacheClass: verifierCache,
+				Name:       name, Args: scannerArguments, Dir: directory, Env: map[string]string{"GOWORK": "off"}, boundedScanner: true,
 				Stdout: stdoutWriter, Stderr: stderr,
 			})
 			var overflow error
@@ -1079,7 +1094,7 @@ func (runner Runner) runCoverage(ctx context.Context, output io.Writer, director
 		args = append(args, "-tags="+strings.Join(module.TestTags, ","))
 	}
 	args = append(args, "./...", "-count=1", "-timeout=20m", "-covermode=atomic", "-coverpkg="+strings.Join(targets, ","), "-coverprofile="+profilePath)
-	if err := runner.Executor.Run(ctx, Command{Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}); err != nil {
+	if err := runner.Executor.Run(ctx, Command{cacheClass: nativeRepositoryCache, Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}); err != nil {
 		return err
 	}
 	opened, err := files.Open(profilePath)
@@ -1156,7 +1171,7 @@ func operationCommand(directory string, module inventory.Module, step config.Ste
 		if step.Fuzz != "" {
 			args = append(args, "-run=^$", "-fuzz="+step.Fuzz, "-fuzztime="+step.Budget)
 		}
-		return Command{Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}, nil
+		return Command{cacheClass: nativeRepositoryCache, Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}, nil
 	case "make":
 		makefile, err := repositoryfile.Read(directory, step.Makefile, maximumMakefileSize)
 		if err != nil {
@@ -1186,8 +1201,17 @@ func testArguments(tags []string, race bool) []string {
 }
 
 func (runner Runner) command(ctx context.Context, output io.Writer, module, gate, directory string, args ...string) error {
+	class := repositoryRuntimeCache
+	if len(args) > 0 {
+		switch args[0] {
+		case "test", "mod":
+			class = nativeRepositoryCache
+		case "run", "vet":
+			class = verifierCache
+		}
+	}
 	return announce(output, module, gate, func() error {
-		if err := runner.Executor.Run(ctx, Command{Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}); err != nil {
+		if err := runner.Executor.Run(ctx, Command{cacheClass: class, Name: "go", Args: args, Dir: directory, Env: map[string]string{"GOWORK": "off"}}); err != nil {
 			return fmt.Errorf("%s %s: %w", module, gate, err)
 		}
 		return nil

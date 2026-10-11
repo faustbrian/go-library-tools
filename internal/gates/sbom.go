@@ -62,6 +62,7 @@ type cycloneDXDocument struct {
 func (runner Runner) runSBOM(ctx context.Context, directory string) error {
 	var document, diagnostics boundedSBOMBuffer
 	err := runner.Executor.Run(ctx, Command{
+		cacheClass:     verifierCache,
 		boundedScanner: true,
 		Name:           "go", Dir: directory, Env: map[string]string{"GOWORK": "off"},
 		Args: []string{

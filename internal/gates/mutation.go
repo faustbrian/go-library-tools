@@ -267,7 +267,7 @@ func (runner Runner) prepareMutationCampaign(ctx context.Context, output io.Writ
 			ServiceIdentities: cloneServiceMap(runner.serviceIdentities), OwnedModules: owned, Workers: workers,
 		},
 		ZeroReviews: reviews, EquivalentReviews: equivalents, Environment: environment, RuntimeIdentity: runtimeIdentity,
-		Process: runner.mutationProcess(), Output: output,
+		Process: runner.mutationProcess(campaignWorkspace), Output: output,
 	}, nil
 }
 
@@ -389,9 +389,39 @@ func (runner Runner) mutationWorkers(module inventory.Module) (int, error) {
 	return 4, nil
 }
 
-func (runner Runner) mutationProcess() mutation.Process {
+func (runner Runner) mutationProcess(workspace string) mutation.Process {
 	return func(ctx context.Context, name string, args []string, directory string, environment map[string]string, stdout, stderr io.Writer) error {
-		return runner.Executor.Run(ctx, Command{Name: name, Args: args, Dir: directory, Env: environment, Stdout: stdout, Stderr: stderr})
+		command := Command{Name: name, Args: args, Dir: directory, Env: environment, Stdout: stdout, Stderr: stderr}
+		if name == "go" && len(args) > 0 {
+			switch args[0] {
+			case "list", "test":
+				command.cacheClass = nativeRepositoryCache
+			case "mod":
+				if slices.Equal(args, []string{"mod", "download", "-json", "github.com/go-gremlins/gremlins@" + mutation.GremlinsVersion}) {
+					command.cacheClass = verifierCache
+				}
+			case "build":
+				if directory == filepath.Join(workspace, "gremlins-source") && slices.Equal(args, []string{"build", "-trimpath", "-buildvcs=false", "-o", filepath.Join(workspace, "golib-gremlins"), "./cmd/gremlins"}) {
+					command.cacheClass = verifierCache
+				}
+			}
+		}
+		if name == filepath.Join(workspace, "golib-gremlins") && len(args) > 0 && args[0] == "unleash" {
+			// This binary executes repository tests, unlike its checksum-pinned
+			// download/build. Retain only the campaign's owned package cache.
+			cache := environment["GOCACHE"]
+			digest, err := hex.DecodeString(filepath.Base(cache))
+			info, statErr := os.Lstat(cache)
+			canonical, canonicalErr := filepath.EvalSymlinks(cache)
+			owned, ownedErr := filepath.EvalSymlinks(filepath.Join(workspace, "mutation-cache"))
+			validPackage := filepath.Base(cache) == "root" || err == nil && len(digest) == sha256.Size
+			if !validPackage || filepath.Dir(cache) != filepath.Join(workspace, "mutation-cache") || statErr != nil || !info.IsDir() || info.Mode().Perm() != 0o700 || canonicalErr != nil || ownedErr != nil || canonical != filepath.Join(owned, filepath.Base(cache)) {
+				return errors.New("mutation campaign requires an owned private package cache")
+			}
+			command.cacheClass = nativeRepositoryCache
+			command.runtimeBuildCache = cache
+		}
+		return runner.Executor.Run(ctx, command)
 	}
 }
 

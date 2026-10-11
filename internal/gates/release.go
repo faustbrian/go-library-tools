@@ -89,7 +89,8 @@ func (runner Runner) releaseRehearsal(ctx context.Context, modules []inventory.M
 	for _, item := range modules {
 		version := "v" + item.Version
 		if err := runner.Executor.Run(ctx, Command{
-			Name: "go", Args: []string{"list", "-m", item.ModulePath + "@" + version},
+			cacheClass: verifierCache,
+			Name:       "go", Args: []string{"list", "-m", item.ModulePath + "@" + version},
 			Dir:    workspace.TemporaryDirectory(),
 			Env:    map[string]string{"GOPROXY": "file://" + proxy, "GOSUMDB": "off", "GOWORK": "off"},
 			Stdout: io.Discard, Stderr: runner.Output,

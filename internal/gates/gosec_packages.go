@@ -34,7 +34,8 @@ func (runner Runner) gosecPackages(ctx context.Context, directory string) ([]str
 	stdout.limit = maximumSecurityProcessOutput
 	stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 	err = runner.Executor.Run(ctx, Command{
-		Name: "go", Args: []string{"list", "-json=Dir", "./..."}, Dir: directory,
+		cacheClass: verifierCache,
+		Name:       "go", Args: []string{"list", "-json=Dir", "./..."}, Dir: directory,
 		Env: map[string]string{"GOWORK": "off"}, Stdout: stdout, Stderr: stderr, boundedScanner: true,
 	})
 	if err != nil || stdout.didOverflow() || stderr.didOverflow() || ctx.Err() != nil {

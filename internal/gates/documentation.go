@@ -47,14 +47,16 @@ func (runner Runner) runDocumentationSpelling(ctx context.Context, directory str
 		"NPM_CONFIG_FUND":  "false",
 	}
 	if err := runner.Executor.Run(ctx, Command{
-		Name: "npm", Args: []string{"ci", "--ignore-scripts", "--no-audit", "--no-fund", "--silent"},
+		cacheClass: verifierCache,
+		Name:       "npm", Args: []string{"ci", "--ignore-scripts", "--no-audit", "--no-fund", "--silent"},
 		Dir: toolRoot, Env: environment,
 	}); err != nil {
 		return fmt.Errorf("install pinned spelling tool: %w", err)
 	}
 	cspell := filepath.Join(toolRoot, "node_modules", ".bin", "cspell")
 	if err := runner.Executor.Run(ctx, Command{
-		Name: cspell,
+		cacheClass: verifierCache,
+		Name:       cspell,
 		Args: []string{
 			"lint", "--config", filepath.Join(directory, "cspell.json"), "--no-config-search",
 			"--validate-directives", "--no-progress", "--no-summary", "README.md", "docs/**/*.md",
@@ -72,7 +74,8 @@ func (runner Runner) checkDocumentation(ctx context.Context, directory string, m
 			return runner.runOperation(ctx, directory, module, operation)
 		}
 		if err := runner.Executor.Run(ctx, Command{
-			Name: "go", Args: []string{"test", "./...", "-run=^Example", "-count=1", "-timeout=20m"},
+			cacheClass: nativeRepositoryCache,
+			Name:       "go", Args: []string{"test", "./...", "-run=^Example", "-count=1", "-timeout=20m"},
 			Dir: directory, Env: map[string]string{"GOWORK": "off"},
 		}); err != nil {
 			return fmt.Errorf("check documentation examples: %w", err)
@@ -121,7 +124,8 @@ func (runner Runner) runDocumentationLinks(ctx context.Context, directory string
 	}
 	archive := filepath.Join(toolRoot, "lychee.tar.gz")
 	if err := runner.Executor.Run(ctx, Command{
-		Name: "curl",
+		cacheClass: verifierCache,
+		Name:       "curl",
 		Args: []string{
 			"--fail", "--silent", "--show-error", "--location", "--proto", "=https", "--tlsv1.2",
 			release.URL, "--output", archive,
@@ -144,7 +148,8 @@ func (runner Runner) runDocumentationLinks(ctx context.Context, directory string
 		return fmt.Errorf("write link checker: %w", err)
 	}
 	if err := runner.Executor.Run(ctx, Command{
-		Name: lychee,
+		cacheClass: verifierCache,
+		Name:       lychee,
 		Args: []string{
 			"--cache=false",
 			"--exclude", `^https://pkg\.go\.dev/(badge/)?github\.com/faustbrian/go-`,

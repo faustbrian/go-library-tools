@@ -311,7 +311,7 @@ func (runner Runner) fuzzPackageGraph(ctx context.Context, module inventory.Modu
 		args = append(args, "-tags="+strings.Join(module.TestTags, ","))
 	}
 	args = append(args, packages...)
-	data, err := runner.fuzzCommand(ctx, Command{Name: "go", Args: args, Dir: filepath.Join(runner.Root, module.Directory), Env: map[string]string{"GOWORK": "off"}}, fuzzSmokeMaximumPackageBytes)
+	data, err := runner.fuzzCommand(ctx, Command{cacheClass: nativeRepositoryCache, Name: "go", Args: args, Dir: filepath.Join(runner.Root, module.Directory), Env: map[string]string{"GOWORK": "off"}}, fuzzSmokeMaximumPackageBytes)
 	if err != nil {
 		return nil, err
 	}

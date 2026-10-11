@@ -16,6 +16,8 @@ import (
 
 type processExecutor struct {
 	environment           map[string]string
+	runtimeCaches         map[string]string
+	borrowedCaches        map[string]string
 	stdout                io.Writer
 	stderr                io.Writer
 	task                  string
@@ -60,8 +62,8 @@ func NewProcessExecutor(repositoryRoot string, stdout, stderr io.Writer) (Execut
 
 // NewProcessExecutorWithTaskCache borrows only compilation caches from a
 // caller-owned bounded session. Its cleanup removes only invocation scratch;
-// the caller must remove the session after use and must not seed verifier
-// compilation from repository-controlled execution.
+// the caller must remove the session after use. Only explicitly classified
+// native repository commands borrow it; verifier caches remain invocation-owned.
 func NewProcessExecutorWithTaskCache(repositoryRoot, cacheRoot string, stdout, stderr io.Writer) (Executor, func() error, error) {
 	directories, err := taskCacheDirectories(repositoryRoot, cacheRoot)
 	if err != nil {
@@ -71,7 +73,7 @@ func NewProcessExecutorWithTaskCache(repositoryRoot, cacheRoot string, stdout, s
 	if err != nil {
 		return nil, nil, err
 	}
-	maps.Copy(executor.environment, directories)
+	executor.borrowedCaches = directories
 	return executor, cleanup, nil
 }
 
@@ -135,7 +137,12 @@ func newProcessExecutor(repositoryRoot string, stdout, stderr io.Writer, files t
 		"GOBIN":               filepath.Join(task, "bin"),
 		"GOLANGCI_LINT_CACHE": filepath.Join(task, "golangci-lint"),
 	}
-	for _, directory := range directories {
+	runtimeCaches := map[string]string{
+		"GOCACHE":             filepath.Join(task, "runtime-go-build"),
+		"GOMODCACHE":          filepath.Join(task, "runtime-go-mod"),
+		"GOLANGCI_LINT_CACHE": filepath.Join(task, "runtime-lint"),
+	}
+	for _, directory := range appendCacheDirectories(directories, runtimeCaches) {
 		if err := files.MkdirAll(directory, 0o700); err != nil {
 			_ = cleanup()
 			return nil, nil, fmt.Errorf("create task directory: %w", err)
@@ -143,7 +150,36 @@ func newProcessExecutor(repositoryRoot string, stdout, stderr io.Writer, files t
 	}
 	// An external lint-cache backend can retain results outside owned scratch.
 	directories["GOLANGCI_LINT_CACHEPROG"] = ""
-	return &processExecutor{environment: directories, stdout: stdout, stderr: stderr, task: task}, cleanup, nil
+	directories["GOCACHEPROG"] = ""
+	directories["GOLIB_TASK_CACHE_ROOT"] = ""
+	return &processExecutor{environment: directories, runtimeCaches: runtimeCaches, stdout: stdout, stderr: stderr, task: task}, cleanup, nil
+}
+
+func appendCacheDirectories(sets ...map[string]string) []string {
+	var directories []string
+	for _, set := range sets {
+		for _, directory := range set {
+			directories = append(directories, directory)
+		}
+	}
+	return directories
+}
+
+// Seal owned cache identities after command overrides. Runtime tools can write
+// their cache, so it must never become an input to a later verifier, even when
+// no caller session was requested. Unknown producers cannot borrow a session.
+func (executor *processExecutor) commandEnvironment(command Command) []string {
+	protected := maps.Clone(executor.environment)
+	if command.cacheClass != verifierCache {
+		maps.Copy(protected, executor.runtimeCaches)
+		if command.cacheClass == nativeRepositoryCache {
+			maps.Copy(protected, executor.borrowedCaches)
+		}
+		if command.cacheClass == nativeRepositoryCache && command.runtimeBuildCache != "" {
+			protected["GOCACHE"] = command.runtimeBuildCache
+		}
+	}
+	return mergeEnvironment(os.Environ(), command.Env, protected)
 }
 
 func (executor *processExecutor) TemporaryDirectory() string { return executor.task }
@@ -155,7 +191,7 @@ func (executor *processExecutor) Run(ctx context.Context, command Command) error
 	// #nosec G204 -- repository policy intentionally supplies argument-array gate commands without a shell
 	process := exec.CommandContext(ctx, command.Name, command.Args...)
 	process.Dir = command.Dir
-	process.Env = mergeEnvironment(os.Environ(), executor.environment, command.Env)
+	process.Env = executor.commandEnvironment(command)
 	process.Stdin = command.Stdin
 	process.Stdout = command.Stdout
 	if process.Stdout == nil {
@@ -184,7 +220,7 @@ func (executor *processExecutor) runBounded(ctx context.Context, command Command
 	//nolint:noctx // pinned scanners use owned cancellation of their original process group, not a sandbox
 	process := exec.Command(command.Name, command.Args...)
 	process.Dir = command.Dir
-	process.Env = mergeEnvironment(os.Environ(), executor.environment, command.Env)
+	process.Env = executor.commandEnvironment(command)
 	process.Stdin = command.Stdin
 	process.Stdout = command.Stdout
 	process.Stderr = command.Stderr

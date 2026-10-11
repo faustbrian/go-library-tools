@@ -55,7 +55,8 @@ func (runner Runner) Workflows(ctx context.Context) error {
 	}
 	var standardOutput, diagnostics boundedWorkflowBuffer
 	err := runner.Executor.Run(ctx, Command{
-		Name: "go", Dir: runner.Root, Env: map[string]string{"GOWORK": "off"},
+		cacheClass: verifierCache,
+		Name:       "go", Dir: runner.Root, Env: map[string]string{"GOWORK": "off"},
 		Args: []string{
 			"run", "github.com/rhysd/actionlint/cmd/actionlint@" + actionlintVersion,
 			"-no-color", "-oneline", "-shellcheck=", "-pyflakes=",

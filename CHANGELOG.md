@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Isolate pinned verifier compilation from repository-controlled caches in
+  ordinary and borrowed sessions. Preserve bounded native repository cache
+  reuse and remove owned invocation resources on success and failure.
+
 ### Changed
 
 - Add a separate bounded weekly fuzz-risk rotation and explicit main-only

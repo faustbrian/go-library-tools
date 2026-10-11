@@ -9,19 +9,23 @@ packages, not this example indiscriminately).
 Its test and vet commands share one disposable cache session. `make local-check`
 and `make local-ci` each build the CLI once and reuse it for adjacent checks;
 their build-session directories are removed on success or failure. These wrappers
-explicitly pass `GOLIB_TASK_CACHE_ROOT` so production CLI executors reuse the
-parent-owned compilation caches, while temporary files and installed tools remain
-invocation-private and are cleaned after each command. Default CLI invocation
-still owns all of its caches. No global cache or persistent binary is introduced.
+explicitly pass `GOLIB_TASK_CACHE_ROOT` so classified native repository commands
+reuse parent-owned compilation caches. Pinned verifiers and unknown scripts do
+not borrow these caches; temporary files and installed tools remain invocation-
+private and are cleaned after each command. Default CLI invocation also separates
+repository runtime caches from verifier caches. No global cache or persistent
+binary is introduced.
 
 The opt-in root must be a canonical direct child of the system temporary
 directory named `golib-cache-session.*`, with existing `cache` and `mod`
 directories, all mode 0700 and without symlinks. It must not overlap the repository.
-The caller owns final deletion and must not reuse caches modified by application
-execution to prepare a later verifier. `make local-ci` therefore runs all
-metadata/workflow verification before its final runtime check; no verifier runs
-after application tests. This is bounded local/job reuse, not a cross-job or
-privileged-release cache policy.
+The caller owns final deletion. The executor seals verifier cache identities and
+external cache backends after command overrides, so repository cache overrides
+cannot seed a later verifier. This is cache isolation, not an operating-system
+sandbox for arbitrary code. `make local-ci` runs metadata/workflow CLI invocations
+before the final runtime CLI invocation. Inside that final invocation, tests may
+precede lint and API verifiers; separate caches protect those later verifiers.
+This is bounded local/job reuse, not a cross-job or privileged-release cache policy.
 
 `make local-check` validates repository-owned configuration, inventory,
 cohesion, and workflow invariants; `make local-ci` adds the complete Go test and

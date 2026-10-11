@@ -784,12 +784,14 @@ func TestExecuteContextBorrowsExplicitTaskCachesAndCleansOnlyScratch(t *testing.
 			if len(lines) != 2 {
 				t.Fatalf("expected two fresh workflow executions, got %q", lines)
 			}
+			var previousVerifierCache string
 			for _, line := range lines {
 				paths := strings.Split(line, "\t")
-				if len(paths) != 4 || paths[0] != filepath.Join(cacheRoot, "cache") || paths[1] != filepath.Join(cacheRoot, "mod") {
-					t.Fatalf("production executor discarded explicit parent caches: %q", line)
+				if len(paths) != 4 || paths[0] == filepath.Join(cacheRoot, "cache") || paths[1] == filepath.Join(cacheRoot, "mod") || paths[0] == previousVerifierCache {
+					t.Fatalf("workflow verifier did not retain fresh private caches: %q", line)
 				}
-				for _, scratch := range paths[2:] {
+				previousVerifierCache = paths[0]
+				for _, scratch := range paths {
 					if strings.HasPrefix(scratch, cacheRoot+string(filepath.Separator)) {
 						t.Fatal("invocation scratch is not private")
 					}
