@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -130,7 +131,7 @@ func TestMutationAssuranceRefusesCacheReplacementOfCommittedEvidence(t *testing.
 				writeFile(t, root, path, "{\"source\":\"cache replacement\"}\n")
 			}
 			command := exec.CommandContext(t.Context(), "bash", "-c", script)
-			command.Dir, command.Env = root, append(gitEnv, "RUNNER_TEMP="+root)
+			command.Dir, command.Env = root, append(slices.Clone(gitEnv), "RUNNER_TEMP="+root)
 			data, err := command.CombinedOutput()
 			if (err != nil) != changed {
 				t.Fatalf("restored evidence admission = %v, output %q", err, data)

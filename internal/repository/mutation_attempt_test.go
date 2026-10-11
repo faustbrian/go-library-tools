@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -118,7 +119,7 @@ esac
 			}
 			command := exec.CommandContext(t.Context(), "bash", "-c", guard)
 			command.Dir = root
-			command.Env = append(gitEnv, "PATH="+filepath.Join(root, "bin")+string(os.PathListSeparator)+os.Getenv("PATH"),
+			command.Env = append(slices.Clone(gitEnv), "PATH="+filepath.Join(root, "bin")+string(os.PathListSeparator)+os.Getenv("PATH"),
 				"EVENT_NAME="+event, "SELECTED_PACKAGE=internal/config", "GITHUB_SHA="+head,
 				"GITHUB_REPOSITORY=faustbrian/go-library-tools", "GITHUB_RUN_ID=74", "GITHUB_OUTPUT="+output, "GITHUB_STEP_SUMMARY="+summary,
 				"ImageOS=ubuntu24", "ImageVersion=20261004.1", "RUNNER_ARCH=X64", fmt.Sprintf("API_FAILURE=%t", test.apiFailure))
