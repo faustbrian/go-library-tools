@@ -43,6 +43,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Limit ordinary reusable runtime quality to 30 minutes while retaining the
+  existing longer ceiling only for explicitly selected release rehearsals.
+
 - Keep exact specification decision identities in changelogs without requiring
   duplicate current digests in prose. Canonical decision-history integrity and
   supported historical scanner policy remain unchanged.

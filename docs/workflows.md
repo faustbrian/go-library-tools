@@ -74,6 +74,11 @@ a qualified capable release or reviewed source bootstrap; older workflow pins
 are unchanged. Committed-change inventory is a CI scope selector, not proof of
 uncommitted or untracked local work; contributors should select modules explicitly
 or use `--all` for that work. Metadata-only documentation checks remain separate.
+Ordinary runtime quality has a 30-minute job ceiling, including setup; only an
+explicitly selected release rehearsal retains the six-hour ceiling. Exhausting a
+budget fails the applicable check and cannot satisfy Required. These ceilings are
+failure limits, not measured feedback-time targets; pilot latency must still be
+recorded separately.
 Runtime and metadata PR/main routes require changed-secret capability; older
 fuzz-capable tooling is rejected before checks, without a full-scan fallback.
 
