@@ -203,6 +203,7 @@ jobs:
           set -euo pipefail
           if [[ -n "${BASE_SHA}" ]] && git cat-file -e "${BASE_SHA}^{commit}" &&
             git diff --quiet "${BASE_SHA}" HEAD -- internal/gates/runner.go \
+              internal/gates/gitleaks_policy.go internal/gates/policy/secrets.toml \
               internal/gates/apidiff_history_policy_internal_test.go \
               internal/gates/apidiff_history_policy_hosted_test.go .github/workflows/ci.yml; then
             exit 0
@@ -268,6 +269,8 @@ jobs:
           set -euo pipefail
           if [[ -n "${BASE_SHA}" ]] && git cat-file -e "${BASE_SHA}^{commit}" &&
             git diff --quiet "${BASE_SHA}" HEAD -- internal/gates/runner.go \
+              internal/gates/gitleaks_policy.go internal/gates/policy/secrets.toml \
+              internal/gates/embedded_policy_internal_test.go \
               internal/gates/affected.go internal/gates/fuzz_smoke.go \
               internal/gates/gitleaks_sources.go internal/gates/secrets_changes.go \
               internal/gates/secrets_changes_internal_test.go \
@@ -287,7 +290,7 @@ jobs:
           export GOTMPDIR="${task}/tmp" TMPDIR="${task}/tmp"
           test "$(go env GOVERSION)" = go1.27.2
           go test -p=1 ./internal/gates \
-            -run '^(TestChangedSecretsPinnedScannerRetainsFindings|TestEthereumTrieFixturePolicyHosted|TestJSONAPIDecisionDigestPolicyHosted|TestOpenAPIDecisionDigestPolicyIntegration|TestGitHubPublicExamplesPolicyIntegration|TestPublicPasswordAndGitHubMetadataPinnedScanner|TestPublicPolicySourceHistoryPinnedScanner)$' -count=1 -timeout=15m
+            -run '^(TestChangedSecretsPinnedScannerRetainsFindings|TestEthereumTrieFixturePolicyHosted|TestJSONAPIDecisionDigestPolicyHosted|TestOpenAPIDecisionDigestPolicyIntegration|TestGitHubPublicExamplesPolicyIntegration|TestPublicPasswordAndGitHubMetadataPinnedScanner|TestPublicPolicySourceHistoryPinnedScanner|TestEmbeddedGitleaksPolicyPinnedScanner)$' -count=1 -timeout=15m
 
   compatibility-consumer-scope:
     name: Compatibility consumer scope

@@ -58,6 +58,17 @@ and inline `gitleaks:allow` directives are ignored by both scans. Source-level
 native gosec suppressions must name exact rules and include a reason, while
 `nolint:gosec` explanations must appear on the same comment line. A consumer
 cannot silently widen the shared policy. NilAway remains advisory.
+The reviewed scanner policy data lives in `internal/gates/policy/secrets.toml`
+and is embedded in the verifier. Updating a public-metadata tuple no longer
+requires editing runner code; it retains the same detector/path/content review
+and finding-retention fixtures. The asset itself is scanned, including an
+adjacent-credential regression, rather than relying on the inherited exclusion
+for filenames containing `gitleaks.toml`. Empty noncapturing groups fragment
+public literal matcher payloads without expanding their accepted content.
+Historical `runner.go` source allowances remain because moving current data
+does not erase old Git source. Installed verifiers still carry compiled policy:
+data updates require a qualified Tools binary release, not a consumer override
+or automatic fleet migration.
 The historical public-tool-identity exception for root `Makefile` and exact
 `.golib/package.mk` is restricted to `generic-api-key` findings on complete
 `APIDIFF_VERSION` assignments using `:=` or `?=` with the public version form

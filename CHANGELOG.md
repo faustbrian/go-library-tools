@@ -46,6 +46,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Keep reviewed secret-scanner metadata policy in one embedded data asset,
+  preserving exact finding scope and scanning the asset itself.
+
 - Keep Tools manifest/version preparation out of unrelated sibling-library
   consumer qualification; retain actual consumer-input and publication triggers.
 
