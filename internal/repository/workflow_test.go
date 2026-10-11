@@ -1332,12 +1332,18 @@ func TestReleaseWorkflowVerifiesRealTagAgainstCurrentMainAndSecurityEvidence(t *
 		annotated   bool
 		ready       bool
 		advanceMain bool
+		outsideMain bool
+		failedCI    bool
+		wrongCIHead bool
 		wantSuccess bool
 		wantGoCalls int
 	}{
 		{name: "exact annotated evidence tag", annotated: true, ready: true, wantSuccess: true, wantGoCalls: 2},
 		{name: "exact lightweight evidence tag", ready: true, wantSuccess: true, wantGoCalls: 2},
-		{name: "tagged ancestor of main", annotated: true, ready: true, advanceMain: true},
+		{name: "tagged ancestor of main", annotated: true, ready: true, advanceMain: true, wantSuccess: true, wantGoCalls: 2},
+		{name: "tag outside main", annotated: true, ready: true, outsideMain: true},
+		{name: "failed exact source CI", annotated: true, ready: true, failedCI: true},
+		{name: "green wrong source CI", annotated: true, ready: true, wrongCIHead: true},
 		{name: "current security interlock", annotated: true, wantGoCalls: 1},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -1398,7 +1404,11 @@ func TestReleaseWorkflowVerifiesRealTagAgainstCurrentMainAndSecurityEvidence(t *
 			} else {
 				runGit(t, work, "tag", "v2.0.0")
 			}
-			runGit(t, work, "push", "origin", "main", "refs/tags/v2.0.0")
+			main := "main"
+			if test.outsideMain {
+				main = sourceSHA + ":refs/heads/main"
+			}
+			runGit(t, work, "push", "origin", main, "refs/tags/v2.0.0")
 			if test.advanceMain {
 				if err := os.WriteFile(filepath.Join(work, "later"), []byte("later\n"), 0o600); err != nil {
 					t.Fatal(err)
@@ -1418,7 +1428,14 @@ func TestReleaseWorkflowVerifiesRealTagAgainstCurrentMainAndSecurityEvidence(t *
 				t.Fatal(err)
 			}
 			calls := filepath.Join(t.TempDir(), "go-calls")
-			releaseWriteExecutable(t, filepath.Join(bin, "gh"), "printf '{\"workflow_runs\":[{\"head_sha\":\"%s\",\"event\":\"push\",\"status\":\"completed\",\"conclusion\":\"success\"}]}' \"${GITHUB_SHA}\"\n")
+			ciSHA, conclusion := sha, "success"
+			if test.wrongCIHead {
+				ciSHA = sourceSHA
+			}
+			if test.failedCI {
+				conclusion = "failure"
+			}
+			releaseWriteExecutable(t, filepath.Join(bin, "gh"), fmt.Sprintf("printf '%%s' '%s'\n", fmt.Sprintf(`{"workflow_runs":[{"head_sha":%q,"event":"push","status":"completed","conclusion":%q}]}`, ciSHA, conclusion)))
 			releaseWriteExecutable(t, filepath.Join(bin, "go"), "printf '%s\\n' \"$*\" >>\"${GO_CALLS}\"\n")
 			command := exec.CommandContext(t.Context(), "bash", "-euo", "pipefail", "-c", verifyScript)
 			command.Dir = work

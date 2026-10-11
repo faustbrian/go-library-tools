@@ -43,6 +43,9 @@ All notable changes to this project are documented in this file.
 
 ### Changed
 
+- Verify release-tag ancestry on immutable fetched main instead of requiring
+  main's tip to stay frozen, retaining exact-source CI and security evidence.
+
 - Document standalone contributor commands and Tools' locally unsafe test
   boundaries without making aggregate milestones a prerequisite for every fix.
   Align the CLI and workflow references with affected-module local checks.

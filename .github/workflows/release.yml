@@ -42,10 +42,12 @@ jobs:
           if [[ "${declared}" != "${GITHUB_REF_NAME}" ]]; then exit 1; fi
           tagged="$(git rev-list -n 1 "${GITHUB_REF_NAME}")"
           remote_main="$(git ls-remote --exit-code origin refs/heads/main | awk 'NR == 1 {print $1}')"
-          if [[ -z "${remote_main}" ]]; then exit 1; fi
+          [[ "${remote_main}" =~ ^[0-9a-f]{40}$ ]]
           if [[ "$(git rev-parse HEAD)" != "${tagged}" ]]; then exit 1; fi
           if [[ "${GITHUB_SHA}" != "${tagged}" ]]; then exit 1; fi
-          if [[ "${remote_main}" != "${tagged}" ]]; then exit 1; fi
+          git fetch --no-tags --no-recurse-submodules origin "${remote_main}"
+          [[ "$(git rev-parse FETCH_HEAD)" == "${remote_main}" ]]
+          git merge-base --is-ancestor "${tagged}" "${remote_main}"
           ci_runs="$(
             GH_TOKEN="${GITHUB_TOKEN}" gh api \
               "/repos/${GITHUB_REPOSITORY}/actions/workflows/ci.yml/runs?head_sha=${GITHUB_SHA}&event=push&status=success&per_page=100"

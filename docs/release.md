@@ -22,7 +22,10 @@ from an immutable tag. Consumers verify artifacts before execution.
 
 The release workflow runs only for exact semantic-version tags. It verifies
 that the tag resolves to the checked-out commit and that the exact commit
-already has a successful full `CI` push run. It then builds and verifies the
+already has a successful full `CI` push run. The tagged commit must belong to
+the fetched immutable main history, but later main commits do not invalidate
+it. Tags outside main, unavailable ancestry and non-green or wrong-source CI
+are refused. It then builds and verifies the
 current source while `.golib.yaml` remains pinned to a stable published
 bootstrap release. This avoids both requiring an unpublished binary and
 checksum set to bootstrap their own release and repeating
