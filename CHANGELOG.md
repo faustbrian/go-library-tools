@@ -13,6 +13,13 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Include source-bound dependency licenses, notices, attribution and Go runtime
+  license material in binary archives. Reject unsupported compiled identities
+  or changed license mappings before packaging; verify the exact notice payload
+  when accepting release candidates. Existing published archives stay immutable.
+- Acquire the release SBOM generator through its checked executable archive
+  digest rather than executing an unverified mutable upstream installer.
+
 - Avoid rebuilding the public compatibility consumer for unrelated Tools-root
   module or checksum changes. Retain Tools' own checks and qualification for
   changed scenarios, consumer dependencies, toolchain and publication inputs.

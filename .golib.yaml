@@ -22,6 +22,11 @@ operations:
         budget: 100x
         timeout: 2m
       - type: go-test
+        packages: [./internal/releasecheck]
+        fuzz: FuzzVerifyBinaryArchiveRefusesHostileContentWithoutPanic
+        budget: 100x
+        timeout: 2m
+      - type: go-test
         packages: [./internal/cli]
         fuzz: FuzzModuleSelection
         budget: 100x

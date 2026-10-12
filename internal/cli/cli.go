@@ -62,6 +62,8 @@ Usage:
 	golib services cycle [--module <directory>]
   golib release check [--all|--module <directory>]
   golib release dry-run [--all|--module <directory>]
+  golib release package --binary <path> --license <path> --output <path>
+  golib release archive-check --file <path>
   golib evidence inspect
   golib upgrade <plan|apply> --version <version> --workflow-sha <sha> --checksums-sha256 <digest> [--json]
 `
@@ -104,6 +106,9 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 	}
 	if args[0] == "upgrade" {
 		return executeUpgrade(args[1:], workingDirectory, stdout, stderr)
+	}
+	if len(args) >= 2 && args[0] == "release" && (args[1] == "package" || args[1] == "archive-check") {
+		return executeBinaryRelease(ctx, args[1:], stdout, stderr)
 	}
 
 	root, err := findRoot(workingDirectory)

@@ -61,8 +61,37 @@ checksum set to bootstrap their own release and repeating
 content-identical mutation campaigns during publication. The workflow
 revalidates release metadata, cross-compiles
 a `CGO_ENABLED=0` binary for each supported platform, embeds the tag as the
-binary identity, packages the binary with the license, produces SPDX JSON
+binary identity, packages the binary with the product license and
+`THIRD_PARTY_NOTICES`, produces SPDX JSON
 SBOMs, and attests the artifacts.
+
+The Ubuntu build lane retrieves the Syft v1.54.0 Linux amd64 archive and checks
+its reviewed SHA-256 before extracting or executing it. Version checks and
+task-owned caches retain the existing SPDX JSON outputs; no mutable upstream
+installer is executed. Updating this executable requires review of the release
+asset identity and checksum, not just changing a version label.
+
+`golib release package --binary PATH --license LICENSE --output ARCHIVE`
+creates a new deterministic three-member archive without overwriting existing
+output. `THIRD_PARTY_NOTICES` retains exact reviewed license, NOTICE, patent
+grant and copyright attribution bytes for the compiled Go dependency graph
+and the pinned Go runtime. The embedded
+[`binary license mapping`](../internal/releasecheck/licenses.json) binds module
+versions and Go module checksums to source URLs and file SHA-256 values. It does
+not distribute notices for unused go.mod entries or infer licensing from names.
+New/replaced dependencies, changed versions/checksums, missing/changed material,
+unreviewed runtime versions and CGO/experimental builds fail closed. Review the
+actual upstream license obligations and refresh this corpus when those inputs
+change; module source/license acquisition retains normal Go checksum validation.
+
+`golib release archive-check --file ARCHIVE` independently checks safe archive
+structure and compares its product license and notices byte-for-byte with the
+compiled binary's reviewed mapping without executing it. Every platform build
+uses this check before attestation; catalog preparation repeats it after
+attestation verification. Extraction scripts must accept
+the additional notice member and retain it when redistributing the binary.
+This new contract does not retroactively qualify or replace older published
+two-member archives; corrections require a new release.
 
 Normal tooling releases publish eight payloads: four platform archives and four
 matching SBOMs. A read-only publication-preparation job creates the source- and

@@ -213,21 +213,44 @@ jobs:
           trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
           mkdir -p "${directory}"
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
-          GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
-            CGO_ENABLED=0 go build -trimpath -buildvcs=false \
+          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp"
+          CGO_ENABLED=0 go build -trimpath -buildvcs=false \
             -ldflags="-s -w -X github.com/faustbrian/go-library-tools/v2/internal/buildinfo.Version=${VERSION} -X github.com/faustbrian/go-library-tools/v2/internal/buildinfo.DesignLanguageSourceIdentity=${VERSION}" \
             -o "${directory}/golib" ./cmd/golib
           cp LICENSE "${directory}/LICENSE"
-          tar --sort=name --owner=0 --group=0 --numeric-owner \
-            --mtime='UTC 1970-01-01' --gzip --create \
-            --file="dist/golib_${release}_${GOOS}_${GOARCH}.tar.gz" \
-            --directory="${directory}" golib LICENSE
-      - uses: anchore/sbom-action@66cbf4bc1f1c0d2edc94016e65bc221b6bb0ad6c # v0.24.3
-        with:
-          path: dist/stage
-          format: spdx-json
-          output-file: dist/golib_${{ matrix.goos }}_${{ matrix.goarch }}.spdx.json
-          upload-artifact: false
+          archive="dist/golib_${release}_${GOOS}_${GOARCH}.tar.gz"
+          GOOS="$(go env GOHOSTOS)" GOARCH="$(go env GOHOSTARCH)" CGO_ENABLED=0 \
+            go run ./cmd/golib release package \
+              --binary "${directory}/golib" --license LICENSE \
+              --output "${archive}"
+          GOOS="$(go env GOHOSTOS)" GOARCH="$(go env GOHOSTARCH)" CGO_ENABLED=0 \
+            go run ./cmd/golib release archive-check --file "${archive}"
+      - name: Generate SBOM with digest-pinned Syft
+        timeout-minutes: 5
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          SYFT_CHECK_FOR_APP_UPDATE: 'false'
+        run: |
+          set -euo pipefail
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-release-syft.XXXXXX")"
+          trap 'find "${task}" -depth -delete' EXIT
+          export SYFT_CACHE_DIR="${task}/cache" XDG_CACHE_HOME="${task}/cache"
+          export SYFT_PARALLELISM=2
+          # Syft v1.54.0 release 401347535, Linux amd64 asset 604117627.
+          # Verify the actual executable archive before extraction or execution;
+          # no mutable upstream installer is downloaded or run.
+          curl --fail --silent --show-error --location --proto '=https' --tlsv1.2 \
+            --connect-timeout 10 --max-time 120 --max-filesize 134217728 \
+            --output "${task}/syft.tar.gz" \
+            https://github.com/anchore/syft/releases/download/v1.54.0/syft_1.54.0_linux_amd64.tar.gz
+          printf '%s  %s\n' \
+            54a87372498168b2d033e876fd41fa4e8035b872699e525a57046e1f2f09c860 \
+            "${task}/syft.tar.gz" | sha256sum --check --strict -
+          tar --extract --gzip --file="${task}/syft.tar.gz" --directory="${task}" syft
+          test "$("${task}/syft" version -o json | jq -er '.version')" = 1.54.0
+          "${task}/syft" scan dir:dist/stage \
+            --output "spdx-json=dist/golib_${GOOS}_${GOARCH}.spdx.json"
       - name: Remove release staging directory
         run: find dist/stage -depth -delete
       - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
@@ -276,9 +299,10 @@ jobs:
           test -f "${archive}"
           gh attestation verify "${archive}" --repo "${GITHUB_REPOSITORY}"
           tar -tzf "${archive}" | LC_ALL=C sort >"${task}/members"
-          diff -u <(printf '%s\n' LICENSE golib) "${task}/members"
+          diff -u <(printf '%s\n' LICENSE THIRD_PARTY_NOTICES golib) "${task}/members"
           tar --extract --gzip --file="${archive}" --directory="${task}/bin" golib
           export PATH="${task}/bin:${PATH}"
+          golib release archive-check --file "${archive}"
           test "$(golib --version)" = "${GITHUB_REF_NAME}"
           golib cohesion sources check --inputs release/cohesion-sources.json
           matrix="$(jq -c --arg release_commit "${GITHUB_SHA}" '
