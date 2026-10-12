@@ -80,6 +80,10 @@ func TestBinaryArchivePackagingIsDeterministicAndPreservesExistingOutput(t *test
 		if err := releasecheck.PackageBinary(context.Background(), binary, license, output); err != nil {
 			t.Fatal(err)
 		}
+		info, err := os.Stat(output)
+		if err != nil || info.Mode().Perm()&0o077 != 0 {
+			t.Fatal("staged release archive must not grant group or other access")
+		}
 		if err := releasecheck.VerifyBinaryArchive(context.Background(), output); err != nil {
 			t.Fatal(err)
 		}
@@ -95,6 +99,47 @@ func TestBinaryArchivePackagingIsDeterministicAndPreservesExistingOutput(t *test
 	after, err := os.ReadFile(first)
 	if err != nil || !bytes.Equal(after, a) {
 		t.Fatal("existing archive changed on refusal")
+	}
+	for _, target := range []string{first, filepath.Join(root, "absent.tgz")} {
+		linked := filepath.Join(t.TempDir(), "linked.tgz")
+		if err := os.Symlink(target, linked); err != nil {
+			t.Fatal(err)
+		}
+		if err := releasecheck.PackageBinary(context.Background(), binary, license, linked); err == nil {
+			t.Fatal("packaging accepted an existing output symlink")
+		}
+		if actual, err := os.Readlink(linked); err != nil || actual != target {
+			t.Fatal("output symlink changed on refusal")
+		}
+		if target == first {
+			body, err := os.ReadFile(target)
+			if err != nil || !bytes.Equal(body, a) {
+				t.Fatal("existing symlink target changed on refusal")
+			}
+		} else {
+			if _, err := os.Stat(target); !os.IsNotExist(err) {
+				t.Fatal("packaging created a dangling symlink target")
+			}
+		}
+	}
+	selectedDirectory := filepath.Join(root, "selected")
+	if err := os.Mkdir(selectedDirectory, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	selected := filepath.Join(selectedDirectory, "archive.tgz")
+	if err := releasecheck.PackageBinary(context.Background(), binary, license, selected); err != nil {
+		t.Fatal(err)
+	}
+	selectedBytes, err := os.ReadFile(selected)
+	if err != nil || !bytes.Equal(selectedBytes, a) {
+		t.Fatal("caller-selected directory changed archive bytes")
+	}
+	if err := releasecheck.PackageBinary(context.Background(), binary, license, selectedDirectory+string(os.PathSeparator)); err == nil {
+		t.Fatal("packaging accepted a directory as the output filename")
+	}
+	children, err := os.ReadDir(selectedDirectory)
+	if err != nil || len(children) != 1 || children[0].Name() != "archive.tgz" {
+		t.Fatal("directory output refusal left an unexpected artifact")
 	}
 	if err := os.WriteFile(license, []byte("changed"), 0o600); err != nil {
 		t.Fatal(err)

@@ -17,6 +17,8 @@ All notable changes to this project are documented in this file.
   license material in binary archives. Reject unsupported compiled identities
   or changed license mappings before packaging; verify the exact notice payload
   when accepting release candidates. Existing published archives stay immutable.
+- Create staged binary archives with owner-only access in the caller-selected
+  directory without replacing existing files or following output symlinks.
 - Acquire the release SBOM generator through its checked executable archive
   digest rather than executing an unverified mutable upstream installer.
 - Select the qualified CodeQL 2.27.2 Linux bundle explicitly in native and

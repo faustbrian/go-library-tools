@@ -16,6 +16,7 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 	"runtime/debug"
 	"slices"
 	"strings"
@@ -106,14 +107,23 @@ func PackageBinary(ctx context.Context, binaryPath, licensePath, outputPath stri
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	output, err := os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
+	directory, name := filepath.Split(outputPath)
+	if directory == "" {
+		directory = "."
+	}
+	root, err := os.OpenRoot(directory)
+	if err != nil {
+		return fmt.Errorf("open release archive directory: %w", err)
+	}
+	defer root.Close()
+	output, err := root.OpenFile(name, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o600)
 	if err != nil {
 		return fmt.Errorf("create new release archive: %w", err)
 	}
 	_, writeErr := output.Write(archive.Bytes())
 	closeErr := output.Close()
 	if err := errors.Join(writeErr, closeErr, ctx.Err()); err != nil {
-		return errors.Join(err, os.Remove(outputPath))
+		return errors.Join(err, root.Remove(name))
 	}
 	return nil
 }
