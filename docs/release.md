@@ -98,6 +98,40 @@ checksums, attestation, and immutable publication path as the tooling assets.
 Later releases follow semantic versioning. Never replace release artifacts or
 move tags; publish a new patch release for corrections.
 
+## Source-module publication
+
+Source modules are not Tools binary distributions. Their consumer artifact is
+the public module zip, authenticated by the Go proxy and checksum database;
+do not create platform archives for a library that ships no command. Each
+module's maintainer owns publication, with explicit approval for tagging and
+publishing. `release check` and `release dry-run` are prerequisites, not asset
+publication commands.
+
+From a clean reviewed source with successful applicable exact-source CI, prepare
+one module-scoped dependency inventory and applicable SBOM. Record the canonical
+module/version, tag prefix, source commit/tree, selected graph, generator
+identities, checksums and preparation environment. Retain the assets at that
+release boundary. Provenance must describe the actual builder: locally prepared
+and maintainer-signed evidence must not claim a hosted or independently
+attested build. Sign the checksums or attest the distributed assets using the
+maintainer's approved identity; retain signer identity and verification guidance.
+
+After authorized publication, verify the remote tag's exact commit and module
+directory, download the actual assets and verify their membership, digests and
+signature/attestation. Consume the published canonical module and version in a
+clean temporary module with `GOWORK=off`, public proxy/SumDB authentication and
+no replacements. Exercise its real public contract, not merely a cached or
+file-proxy lookup. For distributed commands, use the clean reproducibility
+comparison appropriate to their declared build environment. A module-only
+release does not claim binary reproducibility.
+
+Reuse already verified signed assets and public consumers for untouched
+releases. Correct evidence through new assets with explicit supersession or a
+new release as appropriate, never by moving a tag or replacing historical
+bytes. A missing or mismatched asset, signature, source identity or actual
+public-consumer result remains an unverified release boundary. See
+[supply-chain ownership](supply-chain.md) for inventories and imported assets.
+
 Consumer upgrades use `golib upgrade plan` before `golib upgrade apply`. The
 command rejects incomplete, duplicated, mutable, or mismatched pins and changes
 only `.golib.yaml` and the thin CI caller. It restores the configuration if the

@@ -4,7 +4,17 @@ updates:
     directory: /
     schedule:
       interval: weekly
+  - package-ecosystem: gomod
+    directory: /release/compatibility-consumer
+    allow:
+      - dependency-type: indirect
+    schedule:
+      interval: weekly
   - package-ecosystem: github-actions
     directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: npm
+    directory: /internal/docscheck/assets
     schedule:
       interval: weekly
