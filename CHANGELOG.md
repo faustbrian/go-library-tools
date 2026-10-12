@@ -4,33 +4,63 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.3.0 - 2026-10-12
+
+### Added
+
+- Expose license-aware binary packaging and archive verification through
+  `golib release package` and `golib release archive-check`.
+- Allow the reusable compatibility-consumer selector and runner to use a
+  validated owner directory while preserving existing callers and defaults.
+  ([aad911ea18](https://github.com/faustbrian/go-library-tools/commit/aad911ea18))
+
+### Changed
+
 - Move editable current composition scenarios and selection to
   `go-library-assurance`. Retain the historical published-set import fixture,
   generator defaults, immutable catalogs and reusable execution in Tools.
-
-- Allow the reusable compatibility-consumer selector and runner to use a
-  validated owner directory while preserving existing callers and defaults.
+  ([7dff3e3767](https://github.com/faustbrian/go-library-tools/commit/7dff3e3767))
+- Document module-owned updater scopes, upstream provenance and compromise
+  response, and the approved expiring CI action-response retention.
+  ([85ca428d0a](https://github.com/faustbrian/go-library-tools/commit/85ca428d0a)) ([d75702f7b5](https://github.com/faustbrian/go-library-tools/commit/d75702f7b5))
+- Standardize development policy and correct published installation guidance.
+  ([75aeb45cf4](https://github.com/faustbrian/go-library-tools/commit/75aeb45cf4)) ([9d91f9dfa1](https://github.com/faustbrian/go-library-tools/commit/9d91f9dfa1))
 
 ### Fixed
 
 - Keep owned Gosec analysis read-only by clearing inherited AI provider,
   credential and endpoint configuration only in its child environment.
+  ([1aad1c7756](https://github.com/faustbrian/go-library-tools/commit/1aad1c7756))
+
 - Generate CycloneDX 1.6 SBOMs with upstream `cyclonedx-gomod` v1.12.0,
   incorporating its fixed Git dependencies without local graph overrides.
 - Include source-bound dependency licenses, notices, attribution and Go runtime
   license material in binary archives. Reject unsupported compiled identities
   or changed license mappings before packaging; verify the exact notice payload
   when accepting release candidates. Existing published archives stay immutable.
+  ([a80b309195](https://github.com/faustbrian/go-library-tools/commit/a80b309195))
+
 - Create staged binary archives with owner-only access in the caller-selected
   directory without replacing existing files or following output symlinks.
+  ([ac3a8e881e](https://github.com/faustbrian/go-library-tools/commit/ac3a8e881e))
+
 - Acquire the release SBOM generator through its checked executable archive
   digest rather than executing an unverified mutable upstream installer.
+  ([eb83339c79](https://github.com/faustbrian/go-library-tools/commit/eb83339c79))
+
 - Select the qualified CodeQL 2.27.2 Linux bundle explicitly in native and
   reusable CI instead of allowing the action to select a mutable CLI baseline.
+  ([03f4902ba0](https://github.com/faustbrian/go-library-tools/commit/03f4902ba0))
 
 - Avoid rebuilding the public compatibility consumer for unrelated Tools-root
   module or checksum changes. Retain Tools' own checks and qualification for
   changed scenarios, consumer dependencies, toolchain and publication inputs.
+  ([47a291bfa9](https://github.com/faustbrian/go-library-tools/commit/47a291bfa9))
+
+- Use maintained Node 24.21.0 and its bundled npm 11.19.0 in owned workflow
+  paths, preserving package locks, engines and fixture inputs.
+- Retain qualified indirect floors in the frozen public consumer graph.
+  ([c519121565](https://github.com/faustbrian/go-library-tools/commit/c519121565)) ([c810e49225](https://github.com/faustbrian/go-library-tools/commit/c810e49225))
 
 ## 2.2.0 - 2026-10-11
 

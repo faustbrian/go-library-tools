@@ -68,6 +68,23 @@
     "GOPRIVATE",
     "GOPROXY",
     "GOSUMDB",
-    "worktree"
+    "worktree",
+    "cutover",
+    "fuzztime",
+    "GOFLAGS",
+    "GOMAXPROCS",
+    "govet",
+    "jsonwire",
+    "misassociated",
+    "mktemp",
+    "noncapturing",
+    "repositoryfile",
+    "requalify",
+    "Syft",
+    "unreviewed",
+    "Verkle"
+  ],
+  "ignoreRegExpList": [
+    "\\bGHSA-[a-z0-9]{4}-[a-z0-9]{4}-[a-z0-9]{4}\\b"
   ]
 }
