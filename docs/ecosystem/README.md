@@ -77,6 +77,9 @@ release evidence. Existing immutable catalogs, assets and tagged documentation
 keep their original owner and scope. The selections and ordinary composition
 checks described below now refer to Assurance; they do not require a harness
 release, a Tools CLI release or immediate library/tooling fleet adoption.
+The retained fixture keeps the already-qualified patched Excelize indirect
+floor; it does not restore the vulnerable v2.11.0 resolver choice or rewrite
+the historical cohort's external-version record.
 
 The maintained consumer selects Excelize
 `v2.11.1-0.20261003002531-6258dcebc4e2`, an upstream public revision containing
