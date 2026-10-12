@@ -7,7 +7,9 @@ checksummed released catalogs. The appended indirect requirements and `go.sum`
 were derived through authenticated public proxy/SumDB resolution during the
 ownership cutover; they are not historical release assets.
 
-The indirect Excelize floor retains the already-qualified patched public
+Shared third-party indirect dependencies retain the qualified pre-cutover
+floors rather than being downgraded by the historical direct selections.
+This includes gRPC v1.83.2 and the patched Excelize public
 revision `v2.11.1-0.20261003002531-6258dcebc4e2`, rather than reintroducing
 the vulnerable v2.11.0 transitive dependency. This changes neither the frozen
 123 direct selections nor the historical set's recorded external versions;
