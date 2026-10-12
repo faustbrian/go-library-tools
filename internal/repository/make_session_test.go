@@ -8,6 +8,9 @@ import (
 	"testing"
 )
 
+// TestMakeReusesDisposableSessionAndCleansFailures exercises shared cache
+// identity, fail-closed documentation admission before runtime checks, and
+// cleanup on both downstream and early verifier failures.
 func TestMakeReusesDisposableSessionAndCleansFailures(t *testing.T) {
 	for _, test := range []struct {
 		name, target, failure   string
@@ -17,15 +20,18 @@ func TestMakeReusesDisposableSessionAndCleansFailures(t *testing.T) {
 		{"package tests and vet", "check-packages", "", []string{"go test ./internal/example", "go vet ./internal/example"}, "", ""},
 		{"package test failure", "check-packages", "test ./internal/example", []string{"go test ./internal/example"}, "", ""},
 		{"package vet failure", "check-packages", "vet ./internal/example", []string{"go test ./internal/example", "go vet ./internal/example"}, "", ""},
-		{"local checks", "local-check", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}, "", ""},
+		{"local checks", "local-check", "", []string{"go build", "golib source-docs check --json", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check"}, "", ""},
+		{"local documentation failure", "local-check", "source-docs check --json", []string{"go build", "golib source-docs check --json"}, "", ""},
+		{"local CI documentation failure", "local-ci", "source-docs check --json", []string{"go build", "golib source-docs check --json"}, "", ""},
+		{"metadata documentation failure", "metadata-ci", "source-docs check --json", []string{"go build", "golib source-docs check --json"}, "pull_request", strings.Repeat("a", 40)},
 		{"CLI build failure", "local-ci", "build", []string{"go build"}, "", ""},
-		{"local CI", "local-ci", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local"}, "", ""},
-		{"local CI failure", "local-ci", "cohesion check", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check"}, "", ""},
-		{"PR fuzz base", "local-ci", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local --base-sha " + strings.Repeat("a", 40)}, "pull_request", strings.Repeat("a", 40)},
-		{"push fuzz base", "local-ci", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local --base-sha " + strings.Repeat("b", 40)}, "push", strings.Repeat("b", 40)},
-		{"metadata CI", "metadata-ci", "", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib docs check --local", "golib secrets check --base-sha " + strings.Repeat("a", 40)}, "pull_request", strings.Repeat("a", 40)},
-		{"metadata secret failure", "metadata-ci", "secrets check --base-sha " + strings.Repeat("a", 40), []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib docs check --local", "golib secrets check --base-sha " + strings.Repeat("a", 40)}, "pull_request", strings.Repeat("a", 40)},
-		{"metadata doc failure", "metadata-ci", "docs check --local", []string{"go build", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib docs check --local"}, "push", strings.Repeat("b", 40)},
+		{"local CI", "local-ci", "", []string{"go build", "golib source-docs check --json", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local"}, "", ""},
+		{"local CI failure", "local-ci", "cohesion check", []string{"go build", "golib source-docs check --json", "golib config validate", "golib repository check", "golib cohesion check"}, "", ""},
+		{"PR fuzz base", "local-ci", "", []string{"go build", "golib source-docs check --json", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local --base-sha " + strings.Repeat("a", 40)}, "pull_request", strings.Repeat("a", 40)},
+		{"push fuzz base", "local-ci", "", []string{"go build", "golib source-docs check --json", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib check --local --base-sha " + strings.Repeat("b", 40)}, "push", strings.Repeat("b", 40)},
+		{"metadata CI", "metadata-ci", "", []string{"go build", "golib source-docs check --json", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib docs check --local", "golib secrets check --base-sha " + strings.Repeat("a", 40)}, "pull_request", strings.Repeat("a", 40)},
+		{"metadata secret failure", "metadata-ci", "secrets check --base-sha " + strings.Repeat("a", 40), []string{"go build", "golib source-docs check --json", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib docs check --local", "golib secrets check --base-sha " + strings.Repeat("a", 40)}, "pull_request", strings.Repeat("a", 40)},
+		{"metadata doc failure", "metadata-ci", "docs check --local", []string{"go build", "golib source-docs check --json", "golib config validate", "golib repository check", "golib cohesion check", "golib workflows check", "golib security validate --directory docs/ecosystem/security", "golib docs check --local"}, "push", strings.Repeat("b", 40)},
 		{"metadata missing base", "metadata-ci", "missing base", []string{"go build"}, "pull_request", ""},
 	} {
 		t.Run(test.name, func(t *testing.T) {
