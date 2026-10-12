@@ -2,6 +2,14 @@
 
 All notable changes to this project are documented in this file.
 
+## Unreleased
+
+### Fixed
+
+- Avoid rebuilding the public compatibility consumer for unrelated Tools-root
+  module or checksum changes. Retain Tools' own checks and qualification for
+  changed scenarios, consumer dependencies, toolchain and publication inputs.
+
 ## 2.2.0 - 2026-10-11
 
 ### Fixed

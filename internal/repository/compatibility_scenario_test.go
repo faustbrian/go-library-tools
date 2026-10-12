@@ -18,14 +18,19 @@ import (
 func TestCompatibilityConsumerSelectionRetainsSharedAndUnknownQualification(t *testing.T) {
 	script := readProjectFile(t, ".github/scripts/select-compatibility-consumer.py")
 	for _, test := range []struct {
-		name, changed, mode string
-		full, refuse        bool
+		name, changed, alsoChanged, mode string
+		full, none, refuse               bool
 	}{
-		{name: "unrelated root metadata", changed: "modules.json"},
+		{name: "unrelated root metadata", changed: "modules.json", none: true},
 		{name: "one independent file", changed: "release/compatibility-consumer/wsdl2_composition_test.go"},
+		{name: "consumer dependency", changed: "release/compatibility-consumer/go.mod", full: true},
 		{name: "checksum input", changed: "release/compatibility-consumer/go.sum", full: true},
 		{name: "toolchain", changed: ".go-version", full: true},
-		{name: "root dependency", changed: "go.mod", full: true},
+		{name: "root dependency", changed: "go.mod", none: true},
+		{name: "root checksum", changed: "go.sum", none: true},
+		{name: "root dependency and scenario", changed: "go.mod", alsoChanged: "release/compatibility-consumer/wsdl2_composition_test.go"},
+		{name: "root checksum and consumer dependency", changed: "go.sum", alsoChanged: "release/compatibility-consumer/go.mod", full: true},
+		{name: "root dependency and publication", changed: "go.mod", mode: "publication", full: true},
 		{name: "selector", changed: ".github/scripts/select-compatibility-consumer.py", full: true},
 		{name: "generator", changed: "tools/compatibility/new.py", full: true},
 		{name: "publication", mode: "publication", full: true},
@@ -65,6 +70,9 @@ func TestCompatibilityConsumerSelectionRetainsSharedAndUnknownQualification(t *t
 				default:
 					writeFile(t, root, test.changed, "changed\n")
 				}
+				if test.alsoChanged != "" {
+					writeFile(t, root, test.alsoChanged, "changed\n")
+				}
 				runGit(t, root, "add", "--", ".")
 				commit()
 			}
@@ -101,6 +109,9 @@ func TestCompatibilityConsumerSelectionRetainsSharedAndUnknownQualification(t *t
 			if err := json.Unmarshal([]byte(strings.TrimPrefix(parts[1], "files=")), &files); err != nil {
 				t.Fatal(err)
 			}
+			if parts[0] != fmt.Sprintf("required=%t", len(files) > 0) {
+				t.Fatalf("required output disagrees with selected files: %q", output)
+			}
 			switch {
 			case test.full:
 				paths, err := filepath.Glob(filepath.Join(root, "release/compatibility-consumer/*.go"))
@@ -115,9 +126,9 @@ func TestCompatibilityConsumerSelectionRetainsSharedAndUnknownQualification(t *t
 				if !slices.Equal(files, expected) {
 					t.Fatalf("shared/unknown input selected %v, want every source %v", files, expected)
 				}
-			case test.changed == "modules.json":
+			case test.none:
 				if len(files) != 0 {
-					t.Fatalf("unrelated metadata rebuilt: %v", files)
+					t.Fatalf("unrelated root inputs rebuilt: %v", files)
 				}
 			case len(files) != 1 || files[0] != "wsdl2_composition_test.go":
 				t.Fatalf("scenario inputs: %v", files)

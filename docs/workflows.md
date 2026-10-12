@@ -14,11 +14,11 @@ does not refresh remote tags or public proxy identities; full publication and
 explicit milestone qualification retain those checks.
 
 The separate compatibility consumer imports published sibling-library modules,
-not Tools' internal APIs or root manifest. Root `modules.json` changes, including
-Tools version preparation, retain repository and catalog validation but do not
-select that unrelated three-platform consumer rebuild. Consumer source,
-dependency/selection files, its toolchain and workflow, generator changes and
-published compatibility-set changes retain their qualification triggers.
+not Tools' internal APIs or root manifest. Root `go.mod`, `go.sum` and
+`modules.json` changes retain Tools' applicable dependency, security, repository
+and catalog checks but do not select that unrelated three-platform consumer
+rebuild. Consumer source, dependency/selection files, its toolchain and workflow,
+generator changes and published compatibility-set changes retain their triggers.
 
 An edit to an existing independent consumer test file selects only that file
 (or the union of changed files), on the same three supported platforms. The
@@ -28,9 +28,9 @@ to unrelated compositions. This is file-level qualification: editing the grouped
 `composition_test.go` still qualifies every composition and import in that file.
 Current helpers are file-local; a new shared helper requires full qualification.
 
-Shared module/checksum, toolchain, generator, workflow/runner/selector, selection
-and published-set inputs retain the full current three-platform set. New,
-deleted, renamed or unknown consumer inputs select the complete current set;
+Consumer module/checksum, toolchain, generator, workflow/runner/selector,
+selection and published-set inputs retain the full current three-platform set.
+New, deleted, renamed or unknown consumer inputs select the complete current set;
 unknown nested Go ownership fails closed instead of silently omitting sources.
 Invalid or unavailable immutable Git bases, missing/unsafe selected sources,
 public-resolution/toolchain/platform refusal and test failures remain fatal.
@@ -390,9 +390,9 @@ write to sibling repositories. The workflow changes only `.golib.yaml` and the
 thin CI caller and never force-pushes an existing rollout branch.
 
 Own tooling builds and CI select Go 1.27.2 from `.go-version`; the module
-language floor remains Go 1.27.0. Runtime or CI changes select the existing
-native compatibility-consumer matrix without republishing the historical
-Go 1.27.0 compatibility cohort or relabeling its observations.
+language floor remains Go 1.27.0. Producer-Go or shared consumer-input changes
+select the existing native compatibility-consumer matrix without republishing
+the historical Go 1.27.0 compatibility cohort or relabeling its observations.
 
 This repository bootstraps its own CI from source so the first release does not
 depend on itself. Consumer workflows use released binaries by default;

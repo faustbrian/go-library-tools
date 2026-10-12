@@ -11,7 +11,9 @@ import sys
 import time
 
 DIRECTORY = "release/compatibility-consumer/"
-SHARED = {".go-version", "go.mod", "go.sum", ".github/workflows/ci.yml",
+# The public consumer stages its own manifests and never imports the Tools module.
+# Root dependency changes still receive Tools checks, not unrelated compositions.
+SHARED = {".go-version", ".github/workflows/ci.yml",
           ".github/scripts/select-compatibility-consumer.py",
           ".github/scripts/run-compatibility-consumer.sh"}
 
