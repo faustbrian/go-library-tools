@@ -554,7 +554,7 @@ func TestCheckRunsSecurityTools(t *testing.T) {
 		"go build -mod=mod -o <golib-analysis> github.com/faustbrian/go-analysis/cmd/golib-analysis",
 		"<golib-analysis> check -config <generated-analysis-config> -root " + filepath.Clean(root) + " ./...",
 		"go run github.com/google/go-licenses/v2@v2.0.1 check ./... --ignore github.com/acme/example",
-		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.10.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
+		"go run github.com/CycloneDX/cyclonedx-gomod/cmd/cyclonedx-gomod@v1.12.0 mod -json -licenses -type library -noserial -notimestamp -output - .",
 		"gofmt -l -- example.go",
 		"go mod tidy -diff",
 	}

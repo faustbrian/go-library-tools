@@ -13,6 +13,10 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Keep owned Gosec analysis read-only by clearing inherited AI provider,
+  credential and endpoint configuration only in its child environment.
+- Generate CycloneDX 1.6 SBOMs with upstream `cyclonedx-gomod` v1.12.0,
+  incorporating its fixed Git dependencies without local graph overrides.
 - Include source-bound dependency licenses, notices, attribution and Go runtime
   license material in binary archives. Reject unsupported compiled identities
   or changed license mappings before packaging; verify the exact notice payload

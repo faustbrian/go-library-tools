@@ -27,7 +27,10 @@ snapshot and cannot preempt an in-flight filesystem operation or parser call.
 
 For every module with the `security` gate enabled, `golib check` generates a
 deterministic CycloneDX 1.6 library SBOM with the pinned `cyclonedx-gomod`
-version. The CLI captures output in memory with a hard size limit, rejects
+version, currently v1.12.0 at upstream commit
+`07257d5b9cbd2a3d4338a880c0ca50081e1ac445`. Its authenticated module graph
+includes go-git v5.19.2 and go-billy v5.9.0 without local overrides.
+The CLI captures output in memory with a hard size limit, rejects
 empty or malformed output, and verifies the CycloneDX format and specification
 version. SBOM stdout and stderr have independent 16 MiB limits and are never
 rendered in diagnostics. This gate proves that the current module graph can
@@ -76,6 +79,10 @@ and inline `gitleaks:allow` directives are ignored by both scans. Source-level
 native gosec suppressions must name exact rules and include a reason, while
 `nolint:gosec` explanations must appear on the same comment line. A consumer
 cannot silently widen the shared policy. NilAway remains advisory.
+Owned Gosec execution clears `GOSEC_AI_PROVIDER`, `GOSEC_AI_API_KEY` and
+`GOSEC_AI_BASE_URL` in its child environment so inherited optional AI settings
+cannot activate a client or source autofix. Other child environment inputs,
+other scanners and the caller's environment remain unchanged.
 The reviewed scanner policy data lives in `internal/gates/policy/secrets.toml`
 and is embedded in the verifier. Updating a public-metadata tuple no longer
 requires editing runner code; it retains the same detector/path/content review

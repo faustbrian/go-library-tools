@@ -60,7 +60,7 @@ const (
 	goAnalysisVersion   = "v1.0.0"
 	gitleaksVersion     = "v8.30.1"
 	goLicensesVersion   = "v2.0.1"
-	cycloneDXVersion    = "v1.10.0"
+	cycloneDXVersion    = "v1.12.0"
 )
 
 // Unclassified commands may execute repository code. Only explicit native Go
@@ -1024,9 +1024,16 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 			if binary != "" {
 				name, scannerArguments = binary, args
 			}
+			environment := map[string]string{"GOWORK": "off"}
+			if gosec {
+				// The owned source scanner is read-only, not an AI autofix client.
+				environment["GOSEC_AI_PROVIDER"] = ""
+				environment["GOSEC_AI_API_KEY"] = ""
+				environment["GOSEC_AI_BASE_URL"] = ""
+			}
 			err := runner.Executor.Run(ctx, Command{
 				cacheClass: verifierCache,
-				Name:       name, Args: scannerArguments, Dir: directory, Env: map[string]string{"GOWORK": "off"}, boundedScanner: true,
+				Name:       name, Args: scannerArguments, Dir: directory, Env: environment, boundedScanner: true,
 				Stdout: stdoutWriter, Stderr: stderr,
 			})
 			var overflow error
