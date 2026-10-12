@@ -1305,8 +1305,12 @@ func TestReleaseWorkflowBuildsAndAttestsEverySupportedPlatform(t *testing.T) {
 		"{goos: darwin, goarch: arm64}",
 		"checksums.txt",
 		"release-manifest.json",
-		"anchore/sbom-action@",
+		`"${task}/syft" scan dir:dist/stage`,
+		`--output "spdx-json=dist/golib_${GOOS}_${GOARCH}.spdx.json"`,
 		"actions/attest@",
+		"subject-path: dist/*",
+		"name: release-${{ matrix.goos }}-${{ matrix.goarch }}",
+		"path: dist/*",
 		"actions: read",
 		"actions/workflows/ci.yml/runs",
 		"gh release create",
@@ -1321,6 +1325,86 @@ func TestReleaseWorkflowBuildsAndAttestsEverySupportedPlatform(t *testing.T) {
 	}
 	if strings.Contains(content, "go run ./cmd/golib check --all") {
 		t.Fatal("release workflow repeats the exact-commit repository contract")
+	}
+}
+
+func TestReleaseWorkflowRefusesUnverifiedSBOMExecutableAndCleansAcquisition(t *testing.T) {
+	var workflow workflowDocument
+	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/release.yml")), &workflow); err != nil {
+		t.Fatal(err)
+	}
+	var script string
+	for _, step := range workflow.Jobs["build"].Steps {
+		if step.Name == "Generate SBOM with digest-pinned Syft" {
+			script = step.Run
+		}
+	}
+	checksum, extract, execute := strings.Index(script, "sha256sum --check --strict -"), strings.Index(script, "tar --extract"), strings.Index(script, `"${task}/syft" version`)
+	if checksum < 0 || extract < 0 || execute < 0 || checksum > extract || extract > execute {
+		t.Fatal("release SBOM executable must be verified before extraction and execution")
+	}
+	for _, required := range []string{
+		"https://github.com/anchore/syft/releases/download/v1.54.0/syft_1.54.0_linux_amd64.tar.gz",
+		"54a87372498168b2d033e876fd41fa4e8035b872699e525a57046e1f2f09c860",
+		"--proto '=https' --tlsv1.2", "set -euo pipefail",
+	} {
+		if !strings.Contains(script, required) {
+			t.Fatalf("release SBOM acquisition lacks %q", required)
+		}
+	}
+	if strings.Contains(script, "install.sh") {
+		t.Fatal("release SBOM acquisition must not run an upstream installer")
+	}
+	if _, err := exec.LookPath("sha256sum"); err != nil {
+		t.Fatal(err)
+	}
+	for _, failure := range []string{"download", "digest"} {
+		t.Run(failure, func(t *testing.T) {
+			task := t.TempDir()
+			bin := filepath.Join(task, "bin")
+			runner := filepath.Join(task, "runner")
+			for _, directory := range []string{bin, runner} {
+				if err := os.Mkdir(directory, 0o700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			log := filepath.Join(task, "commands.log")
+			stubs := map[string]string{
+				"curl": `echo download >>"${COMMAND_LOG}"
+if [[ "${ACQUISITION_FAILURE}" == download ]]; then exit 42; fi
+while [[ $# -gt 0 ]]; do
+  if [[ "$1" == --output ]]; then shift; printf 'corrupt executable archive' >"$1"; fi
+  shift
+done
+`,
+				"tar": `echo extraction >>"${COMMAND_LOG}"
+exit 43
+`,
+			}
+			for name, body := range stubs {
+				if err := os.WriteFile(filepath.Join(bin, name), []byte("#!/usr/bin/env bash\nset -eu\n"+body), 0o700); err != nil {
+					t.Fatal(err)
+				}
+			}
+			command := exec.CommandContext(t.Context(), "bash", "-c", script)
+			command.Env = append(os.Environ(), "PATH="+bin+":"+os.Getenv("PATH"), "COMMAND_LOG="+log,
+				"RUNNER_TEMP="+runner, "ACQUISITION_FAILURE="+failure, "GOOS=linux", "GOARCH=amd64")
+			output, runErr := command.CombinedOutput()
+			if runErr == nil {
+				t.Fatal("release SBOM generation accepted failed executable acquisition")
+			}
+			if failure == "digest" && !strings.Contains(string(output), "FAILED") {
+				t.Fatalf("corrupt acquisition failed outside checksum verification: %v\n%s", runErr, output)
+			}
+			commands, err := os.ReadFile(log)
+			if err != nil || string(commands) != "download\n" {
+				t.Fatalf("unverified executable reached extraction: %q, %v", commands, err)
+			}
+			children, err := os.ReadDir(runner)
+			if err != nil || len(children) != 0 {
+				t.Fatalf("failed SBOM acquisition left staging artifacts: %v", err)
+			}
+		})
 	}
 }
 
