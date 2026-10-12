@@ -19,6 +19,8 @@ All notable changes to this project are documented in this file.
   when accepting release candidates. Existing published archives stay immutable.
 - Acquire the release SBOM generator through its checked executable archive
   digest rather than executing an unverified mutable upstream installer.
+- Select the qualified CodeQL 2.27.2 Linux bundle explicitly in native and
+  reusable CI instead of allowing the action to select a mutable CLI baseline.
 
 - Avoid rebuilding the public compatibility consumer for unrelated Tools-root
   module or checksum changes. Retain Tools' own checks and qualification for
