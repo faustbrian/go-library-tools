@@ -4,11 +4,20 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.4.1 - 2026-10-13
+
 ### Fixed
 
 - Recognize contained tracked Go command-package directories in generated
   headers without executing producers. Unsafe or missing targets still fail;
   unsupported regeneration commands retain explicit manual review.
+  ([8267b828fb](https://github.com/faustbrian/go-library-tools/commit/8267b828fb))
+
+### Changed
+
+- Require the audited source-documentation contract in Tools' own local
+  and required CI routes while retaining its stable release bootstrap.
+  ([8267b828fb](https://github.com/faustbrian/go-library-tools/commit/8267b828fb))
 
 ## 2.4.0 - 2026-10-12
 
