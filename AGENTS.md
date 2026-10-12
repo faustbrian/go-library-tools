@@ -2,11 +2,105 @@
 
 The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
-"OPTIONAL" are interpreted as described in BCP 14 when capitalized.
+"OPTIONAL" in this document are to be interpreted as described in BCP 14
+[RFC2119] [RFC8174] when, and only when, they appear in all capitals, as
+shown here.
 
-## Contract
+This file is the canonical, self-contained repository policy. `CLAUDE.md` and
+tool-specific instructions MUST point here. Historical plans remain product
+requirements/evidence, not an alternate execution workflow or proof of completion.
 
-- This file is the canonical repository policy. `CLAUDE.md` MUST point here.
+## Shared Repository Development Workflow
+
+This self-contained workflow is identical in every repository's `AGENTS.md`.
+Repository additions MAY define concrete domain contracts and named risks, not
+another lifecycle, gate sequence, review count or evidence framework. This
+user-approved Golib workflow replaces conflicting inherited procedural defaults,
+not correctness, security or mandatory CI. Explicit user authority and higher-
+priority system/developer instructions remain controlling.
+
+### Scope and verification
+
+- Before writing, identify the outcome, owner, affected contracts/direct
+  consumers, named risks and smallest sufficient checks in one compact plan.
+  Preserve existing work; separate role factories, signed lifecycle receipts
+  and recursive approval chains MUST NOT be routine stages.
+- Classify the semantic change, not its filename or line count:
+  - **Tier A:** non-runtime prose/metadata/registration: affected structure,
+    links, examples/generation and final-diff inspection.
+  - **Tier B:** internal behavior: focused regression, affected package/module
+    tests, applicable format/static checks and one complete review.
+  - **Tier C:** public API, lifecycle, security, persistence or concurrency:
+    regression/characterization, affected integration/API/direct-consumer
+    proof and one independent complete-final-diff review.
+  - **Tier D:** release/milestone: relevant immutable-input compatibility,
+    composition, public-consumer and release-integrity proof.
+  Metadata, dependency, workflow and policy edits MUST retain their actual
+  security/trust checks; names/extensions MUST NOT conceal executable changes.
+  Actions and external tools MUST use immutable pinned identities. Preserve
+  authenticated inputs, least privilege and untrusted-PR/release separation.
+- Behavioral fixes MUST demonstrate the regression and corrected behavior.
+  Tests assert outcomes, invariants, failures and cleanup, not just line counts.
+  Behavioral PRs use affected tests, fuzz seeds/saved crashes and applicable
+  static/security checks; changed hostile inputs add bounded active fuzzing.
+  Cheap changed-content secret checks remain applicable to every change.
+- Mutation campaigns MUST NOT run on PRs or become required PR statuses.
+  Optional local mutation and bounded selected main/scheduled assurance remain
+  separate. Race/leak, fuzz, service, conformance and performance checks require
+  a named risk/release boundary. Material concurrency/lifetime changes MUST
+  retain targeted race/leak proof; conformance claims MUST use applicable pinned
+  official fixtures and independent oracles; performance claims MUST compare
+  equivalent workloads with reproducible environment/corpus evidence.
+  Selected timeouts, partial results and viable survivors are not passing
+  proof; equivalent/invalid mutants need narrow independently reviewed proof.
+  Coverage scores MUST NOT replace behavioral adequacy or waive required gates.
+
+### Commands, review and evidence
+
+- Choose actual commands from `CONTRIBUTING.md`, the Makefile and CI; run native
+  focused tests in the affected module. Use the bounded local target where
+  provided. `make check`/`make ci` MUST NOT be assumed cheap or made universal
+  full qualification. Local/CI executions of the same selected gate preserve
+  its scripts/thresholds. Missing prerequisites fail only an applicable gate.
+  NilAway remains advisory with visible findings; mandatory failures stay fatal.
+- One independent complete-final-diff review is the default for meaningful
+  Tier C/D work; more reviews require a distinct named high-risk domain. Fix
+  material findings, rerun affected checks and review the changed final diff,
+  without restarting planning for clerical changes.
+- Reuse evidence only when material source, dependency, fixture, tool and
+  environment inputs still prove the same claim. Retain original identity and
+  result; ambiguous/forged/partial evidence is not proof. A new SHA or mutable
+  prose MUST NOT force broad reruns or provenance chains. Keep real integrity
+  checksums, signatures, source locks and atomic publication at their actual
+  supply-chain/reuse boundaries.
+- Required aggregation MUST reject failed, cancelled, missing or skipped
+  applicable work and classifier failures. Inapplicable work is not a passed
+  check. Protection, scanner and dependency-authentication bypasses are forbidden.
+
+### Delivery and resources
+
+- Work/releases stay on main using the pinned Go 1.27 toolchain, required major
+  module/import suffixes and Git tags, not versioned source branches/directories.
+  CI-only protected-main carriers require applicable authority and advance the
+  exact green reviewed source. Preserve user work, stage explicit owned paths
+  and honor push/publication/destructive safeguards; carry approvals within scope.
+  No routine amend, force-push, history rewrite or hook bypass is permitted.
+- A changed repository is handled only on remote main with applicable exact-
+  source CI green. Required releases also need published tags and actual clean
+  public consumers. Pure internal policy/prose without consumer-visible contract
+  impact MUST NOT force changelogs, repins or releases. Material consumer changes
+  require the affected changelog before publication; preserve Unreleased entries.
+- Agent Go runs MUST use task-owned `GOCACHE`, `GOMODCACHE` and `GOTMPDIR`,
+  reused within a bounded local session rather than rebuilt per adjacent command.
+  Clean exact owned caches/resources on success, failure and interruption;
+  never remove user/shared resources. Serialize local heavy runs and honor
+  hosted-only system-risk restrictions.
+- Distinguish local, committed, pushed, CI-qualified and released states. Report
+  failures, skipped checks and unverified boundaries; reused proof MUST NOT be
+  described as newly executed.
+
+## Tools Contracts
+
 - Shared behavior belongs in typed Go code. Repository-specific facts belong
   in strict configuration, manifests, fixtures, or evidence.
 - Arbitrary package-owned shell hooks, hidden global state, and compatibility
@@ -14,18 +108,12 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 - Public CLI, schema, workflow, and evidence changes MUST be documented and
   represented in `CHANGELOG.md`.
 
-## Resources
-
-- Every Go command MUST use a task-owned disposable `GOCACHE`, `GOMODCACHE`,
-  and `GOTMPDIR`; all task resources MUST be removed after use.
 - Containers, networks, volumes, ports, credentials, and temporary files MUST
   be uniquely task-owned, bounded, and cleaned on success and failure.
 - Cleanup MUST resolve exact owned resources and MUST NOT use broad Docker,
   process, cache, or filesystem cleanup.
 - Agents MUST NOT run Docker-impacting, process-control, descendant-cleanup,
   or comparable system-risk tests locally.
-
-## Design And Security
 
 - Prefer standard library behavior, explicit composition, immutable data, and
   narrow interfaces over reflection, registration magic, or service locators.
@@ -37,53 +125,14 @@ The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
 - Concurrent work MUST have explicit ownership, cancellation, synchronization,
   and cleanup. Locks MUST NOT cover callbacks, network IO, or unbounded work.
 
-## Verification
+## Published Tooling Integrity
 
-- Behavioral work MUST establish an observable contract and meaningful test
-  before implementation. Tests MUST cover outcomes, failure paths, hostile
-  input, cancellation, concurrency, cleanup, and compatibility as applicable.
-- Routine changes MUST use the least expensive current evidence that directly
-  covers their material risk. Documentation and metadata changes require
-  structural checks; internal behavior requires focused package tests and
-  applicable static analysis; public, security, persistence, or concurrency
-  changes require their directly affected integrations and consumers.
-- Fast local and pull-request checks MUST remain separate from aggregate
-  milestone, scheduled, and release checks. A routine pull request MUST NOT be
-  blocked by unrelated mutation, fuzz, race, benchmark, external-service,
-  release-rehearsal, or ecosystem-wide work.
-- Exact per-production-package coverage and complete viable-mutant accounting
-  are available aggregate controls when an identified risk or release boundary
-  requires them. Equivalent or unreachable mutants require narrow reviewed
-  machine-readable records, never percentage exceptions.
-- Parsers and untrusted boundaries MUST be fuzzed, concurrent code MUST pass
-  race tests, and performance claims require equivalent reproducible
-  benchmarks only when those checks exercise a material risk of the change.
-- NilAway is advisory; all other required quality, security, documentation,
-  compatibility, and release gates fail closed.
-- Completion claims require fresh evidence for affected behavior and a final
-  review of the complete change.
-
-## Evidence
-
-- Reused expensive evidence and Tier D trust-boundary evidence MUST bind the
-  material immutable inputs needed to prove its exact claim. Routine Tier A,
-  B, and C results MAY remain ephemeral when no later decision relies on them.
-- Git commits, branches, tags, and history shape MAY be metadata but MUST NOT
-  invalidate content-identical evidence.
-- Evidence selected for durable publication MUST be persisted atomically.
-  Unrelated changes MUST NOT trigger broad reruns.
-- Missing, partial, corrupt, forged, ambiguous, or mismatched evidence MUST be
-  rejected when an applicable risk-selected or Tier D gate requires it.
-
-## Git And Delivery
-
-- Preserve unrelated and concurrent work. Stage explicit paths only.
-- Commit coherent verified batches with conventional messages. Do not amend,
-  force-push, rewrite history, or bypass hooks.
-- Do not push, publish, tag, or change repository settings without authority.
 - Public releases MUST retain reviewed affected-contract qualification,
   successful exact-source remote CI, clean public consumption, checksums, SBOM
   and provenance. Expensive campaigns and complete release rehearsals MUST be
   selected for a named risk or relevant release boundary, not every tag.
   Unchanged immutable evidence SHOULD be reused. Selected failures, known
   defects and untested critical boundaries MUST NOT be hidden by scheduling.
+
+[RFC2119]: https://www.rfc-editor.org/rfc/rfc2119
+[RFC8174]: https://www.rfc-editor.org/rfc/rfc8174
