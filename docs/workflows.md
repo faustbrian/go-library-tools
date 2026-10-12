@@ -6,19 +6,29 @@ Tools' own CI runs `make milestone-check` only when a compatibility set is
 published, an already-published set changes, or a manual run selects
 `ecosystem_milestone: true`. Ordinary
 main pushes and scheduled runs retain their applicable local checks without
-automatically repeating the aggregate catalog campaign. Changed consumer inputs
-still select their separate compatibility-consumer qualification.
+automatically repeating the aggregate catalog campaign. Tools' consumer
+qualification now covers only its historical published-set import fixture.
+Current selections and runtime composition jobs have one editable owner in
+[go-library-assurance](https://github.com/faustbrian/go-library-assurance).
+Library delivery does not wait for that harness or require a Tools release.
 PR/main classification retains the existing generator's offline structure and
 generated-artifact checks. `python3 tools/compatibility/generate.py check --offline`
 does not refresh remote tags or public proxy identities; full publication and
 explicit milestone qualification retain those checks.
 
-The separate compatibility consumer imports published sibling-library modules,
+The historical compatibility consumer imports published sibling-library modules,
 not Tools' internal APIs or root manifest. Root `go.mod`, `go.sum` and
 `modules.json` changes retain Tools' applicable dependency, security, repository
 and catalog checks but do not select that unrelated three-platform consumer
 rebuild. Consumer source, dependency/selection files, its toolchain and workflow,
 generator changes and published compatibility-set changes retain their triggers.
+
+The active Assurance harness consumes the generic selector and runner at an
+immutable qualified Tools source. It retains the three native platforms and
+public resolution; it does not copy generic policy or dispatch a Tools release.
+Tools' default directory preserves only the frozen 123-module/161-import
+fixture, with authenticated cutover-derived indirect locks distinguished from
+historical assets. The generic routing below applies to either owner.
 
 An edit to an existing independent consumer test file selects only that file
 (or the union of changed files), on the same three supported platforms. The
@@ -26,7 +36,9 @@ disposable public-consumer module copies only those sources plus the existing
 `go.mod` and `go.sum`; it does not add the broad `consumer_test.go` import smoke
 to unrelated compositions. This is file-level qualification: editing the grouped
 `composition_test.go` still qualifies every composition and import in that file.
-Current helpers are file-local; a new shared helper requires full qualification.
+Assurance scenario helpers are file-local; a new shared helper requires full
+qualification. Tools' retained import-only fixture is not current runtime or
+security assurance, and its run must not be reported as such.
 
 The generic selector and runner accept `CONSUMER_DIRECTORY` for a separate
 scenario owner, defaulting to `release/compatibility-consumer` for existing

@@ -54,8 +54,10 @@ module to its owning repository's exact remote release tag and public Go proxy
 version. Set records can also carry structured recipe,
 external-version, upgrade, rollback, and exclusion details. Published
 identifiers are immutable; a later recommendation receives a new identifier.
-The maintained `release/compatibility-consumer` may separately declare
-`selection.json`: a published base set and explicit released-module
+The maintained current consumer is owned by
+[go-library-assurance](https://github.com/faustbrian/go-library-assurance/tree/main/scenarios/compatibility-consumer),
+not the Tools change/release queue. Its `selection.json` declares a published
+base set and explicit released-module
 `replacements` or `additions`, each with its exact tag source revision and
 primary imports. Replacements substitute a selected module path or version;
 additions import a distinct major path alongside the original base family,
@@ -66,6 +68,15 @@ set or projecting new `known_good_compatibility_sets` membership. This
 current consumer is not evidence that the changed versions belong to the frozen
 verified cohort; its blank imports establish composition-only compilation, not
 runtime security certification.
+
+Tools retains `release/compatibility-consumer` only as the published set's
+historical import fixture and as the backward-compatible generator default.
+It does not retain an editable current selection or runtime scenario copy.
+Its authenticated cutover-derived indirect requirements/checksums are not old
+release evidence. Existing immutable catalogs, assets and tagged documentation
+keep their original owner and scope. The selections and ordinary composition
+checks described below now refer to Assurance; they do not require a harness
+release, a Tools CLI release or immediate library/tooling fleet adoption.
 
 The maintained consumer selects Excelize
 `v2.11.1-0.20261003002531-6258dcebc4e2`, an upstream public revision containing

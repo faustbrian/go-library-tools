@@ -4,6 +4,10 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+- Move editable current composition scenarios and selection to
+  `go-library-assurance`. Retain the historical published-set import fixture,
+  generator defaults, immutable catalogs and reusable execution in Tools.
+
 - Allow the reusable compatibility-consumer selector and runner to use a
   validated owner directory while preserving existing callers and defaults.
 
