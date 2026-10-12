@@ -57,9 +57,9 @@ func validDeclarationComment(comment *ast.CommentGroup, name string) bool {
 	return !unicode.IsLetter(next) && !unicode.IsDigit(next) && next != '_'
 }
 
-func inspectFile(root string, file parsedFile, all []parsedFile, surface publicSurface, report *Report) {
+func inspectFile(root string, file parsedFile, all []parsedFile, commandDirectories map[string]bool, surface publicSurface, report *Report) {
 	if file.file.Generated {
-		checkGenerator(root, file, all, report)
+		checkGenerator(root, file, all, commandDirectories, report)
 		// Externally generated declarations stay visible in the inventory, but
 		// hand-maintained API comment rules must not rewrite generator output.
 	} else if file.file.Kind == "source" {
@@ -421,7 +421,7 @@ func checkLinks(root string, file parsedFile, group *ast.CommentGroup, report *R
 	}
 }
 
-func checkGenerator(root string, file parsedFile, all []parsedFile, report *Report) {
+func checkGenerator(root string, file parsedFile, all []parsedFile, commandDirectories map[string]bool, report *Report) {
 	headerAvailable, headerMissing, headerReview := false, false, false
 	for _, group := range file.ast.Comments {
 		for _, comment := range group.List {
@@ -451,7 +451,13 @@ func checkGenerator(root string, file parsedFile, all []parsedFile, report *Repo
 					continue
 				}
 				name := path.Clean(path.Join(path.Dir(file.relative), word))
-				if path.IsAbs(word) || strings.Contains(word, "\\") || !file.tracked[name] || repositoryfile.ValidateRegularFile(root, filepath.FromSlash(name)) != nil {
+				availableFile := file.tracked[name] && repositoryfile.ValidateRegularFile(root, filepath.FromSlash(name)) == nil
+				// Directory headers name a Go command package, not an arbitrary
+				// tracked input directory. The index uses already parsed maintained
+				// source with a main function; tests, fixtures and generated output
+				// cannot establish a producer. Build constraints remain inventoried.
+				availableCommand := commandDirectories[name] && repositoryfile.ValidateDirectory(root, filepath.FromSlash(name)) == nil
+				if path.IsAbs(word) || strings.Contains(word, "\\") || (!availableFile && !availableCommand) {
 					headerMissing = true
 				} else {
 					headerAvailable = true

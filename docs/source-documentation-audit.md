@@ -98,3 +98,12 @@ fixture strings, not outstanding maintained debt; their bytes are preserved.
 Real fuzz declarations describe their actual bounds, including targets without
 an explicit harness cap. Function-like text inside executable fixtures is not
 counted as a separate Go declaration or manually edited.
+
+## Required objective enforcement
+
+Tools' local check and CI entry points now require the strict tracked-source
+check, as does the hosted Quality job feeding Required. The package-directory
+producer correction keeps local regular-file ownership and path safety intact;
+unsupported shell regeneration still requires manual availability/output proof.
+Source comments, generators and frozen consumer inputs remain separately
+reviewed rather than certified by the structural status.

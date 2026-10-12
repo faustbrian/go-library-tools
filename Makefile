@@ -21,7 +21,7 @@ endef
 
 run_go = $(call with_go_task,go $(1))
 run_golib = $(call with_go_task,mkdir -m 700 "$$task/verifier-cache" "$$task/verifier-mod" "$$task/verifier-tmp"; export GOLIB_TASK_CACHE_ROOT="$$task"; go build -o "$$task/golib" ./cmd/golib; $(1))
-metadata_contract = "$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check; "$$task/golib" security validate --directory docs/ecosystem/security
+metadata_contract = "$$task/golib" source-docs check --json; "$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check; "$$task/golib" security validate --directory docs/ecosystem/security
 
 build:
 	$(call run_go,build ./cmd/golib)
@@ -75,7 +75,7 @@ security-differential:
 		uv run --no-project --with jsonschema==4.17.3 python tools/securitydocs/differential.py "$(CURDIR)" "$$task/golib"
 
 local-check:
-	$(call run_golib,"$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check)
+	$(call run_golib,"$$task/golib" source-docs check --json; "$$task/golib" config validate; "$$task/golib" repository check; "$$task/golib" cohesion check; "$$task/golib" workflows check)
 
 local-ci:
 	$(call run_golib,$(metadata_contract); arguments=(check --local); if [[ "$${GOLIB_CHANGE_EVENT:-}" == pull_request || "$${GOLIB_CHANGE_EVENT:-}" == push || -n "$${GOLIB_BASE_SHA:-}" ]]; then arguments+=(--base-sha "$${GOLIB_BASE_SHA:-}"); fi; "$$task/golib" "$${arguments[@]}")
@@ -86,6 +86,6 @@ metadata-ci:
 milestone-check: consumers compatibility
 
 check:
-	$(call run_go,run ./cmd/golib check --all)
+	$(call with_go_task,go run ./cmd/golib source-docs check --json; go run ./cmd/golib check --all)
 
 ci: local-ci milestone-check

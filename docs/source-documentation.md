@@ -59,7 +59,11 @@ Generated files need a same-directory `//go:generate` declaration or an explicit
 `by <local-path>` producer in their canonical header. Input paths mentioned
 elsewhere do not establish generator ownership; ambiguous or external identities
 remain manual-review findings. Recognized local targets must
-be Git-tracked, regular and inside the repository without symlinks. Local targets
+be Git-tracked, regular and inside the repository without symlinks. A header
+may instead name a contained Go command-package directory with tracked,
+hand-maintained source declaring a main function; test, fixture and generated
+files alone cannot establish that producer. Build constraints do not hide its
+source from inventory. This does not certify compilation or execution. Local targets
 of supported `go run` forms are checked without executing them.
 All consecutive local `.go` source arguments are checked, and Go double-quoted
 arguments are recognized. Lexical admission is bounded to 64 KiB and 256

@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Recognize contained tracked Go command-package directories in generated
+  headers without executing producers. Unsafe or missing targets still fail;
+  unsupported regeneration commands retain explicit manual review.
+
 ## 2.4.0 - 2026-10-12
 
 ### Added

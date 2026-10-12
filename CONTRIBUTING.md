@@ -12,6 +12,11 @@ make check-packages PACKAGES=./internal/inventory
 make local-check
 ```
 
+Run `make source-docs-check` for the tracked-source documentation contract.
+The local check/CI routes and required hosted Quality job also run it. Findings
+classified for manual review remain visible; this objective check does not
+certify prose truth or generator reproducibility.
+
 Do not run unrelated mutation, coverage, race or ecosystem campaigns for an
 ordinary fix. Select additional verification for the changed contract's actual
 risk. Tools' process-control, descendant-cleanup and Docker-impacting tests run

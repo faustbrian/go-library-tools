@@ -334,8 +334,17 @@ func auditPaths(ctx context.Context, root string, paths []string) (Report, error
 	}
 	packages := map[string][]parsedFile{}
 	directories := map[string][]parsedFile{}
+	commandDirectories := map[string]bool{}
 	for _, file := range parsed {
 		directories[path.Dir(file.relative)] = append(directories[path.Dir(file.relative)], file)
+		if file.file.Kind == "source" && !file.file.Generated && file.ast.Name.Name == "main" {
+			for _, declaration := range file.ast.Decls {
+				function, ok := declaration.(*ast.FuncDecl)
+				if ok && function.Recv == nil && function.Name.Name == "main" && function.Body != nil && function.Type.Params.NumFields() == 0 && function.Type.Results.NumFields() == 0 && function.Type.TypeParams.NumFields() == 0 {
+					commandDirectories[path.Dir(file.relative)] = true
+				}
+			}
+		}
 	}
 	surfaces := map[string]publicSurface{}
 	for directory, files := range directories {
@@ -351,7 +360,7 @@ func auditPaths(ctx context.Context, root string, paths []string) (Report, error
 		if err := ctx.Err(); err != nil {
 			return Report{}, err
 		}
-		inspectFile(root, file, directories[path.Dir(file.relative)], surfaces[path.Dir(file.relative)+"/"+file.file.Package], &report)
+		inspectFile(root, file, directories[path.Dir(file.relative)], commandDirectories, surfaces[path.Dir(file.relative)+"/"+file.file.Package], &report)
 		if file.file.Kind == "source" && !file.file.Generated {
 			key := path.Dir(file.relative) + "/" + file.file.Package
 			packages[key] = append(packages[key], file)
