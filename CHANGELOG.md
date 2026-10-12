@@ -11,6 +11,9 @@ All notable changes to this project are documented in this file.
   members, comment markers, deprecations, generator declarations and local links.
   Existing reusable CI callers remain unchanged; source-documentation adoption
   is an explicit workflow input and does not certify prose meaning.
+- Identify the actual owner in generated compatibility import source and
+  provide guarded, source-only regeneration without changing frozen selections
+  or direct requirements. Downstream owners can name their local producer.
 
 ## 2.3.0 - 2026-10-12
 

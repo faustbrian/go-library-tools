@@ -28,6 +28,14 @@ CLI, schema, workflow, evidence, or fixture changes require compatibility
 tests and corresponding documentation. New external dependencies require a
 maintenance, license, vulnerability, and supply-chain review.
 
+The compatibility import fixture is owned by
+`tools/compatibility/generate.py`. From the repository root, regenerate only
+its source with `python3 tools/compatibility/generate.py consumer --write`.
+Without `--write`, the command prints the selected source. This offline path
+preserves frozen catalogs, selection and requirements; writing refuses changed
+direct requirements, symlinks and oversized existing files. Work in a stable
+checkout. Selection upgrades remain separate from comment regeneration.
+
 Specification-backed modules must follow the
 [specification decision contract](docs/specification-decisions.md), including
 its decision-register, conformance, compatibility, changelog, and pull-request
