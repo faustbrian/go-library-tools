@@ -4,16 +4,29 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.4.0 - 2026-10-12
+
 ### Added
 
-- Add bounded, tracked-source documentation inventories and explicit strict
+- Add bounded tracked-source inventories and explicit strict documentation
   checks through `golib source-docs`, including inactive build variants, public
-  members, comment markers, deprecations, generator declarations and local links.
-  Existing reusable CI callers remain unchanged; source-documentation adoption
-  is an explicit workflow input and does not certify prose meaning.
-- Identify the actual owner in generated compatibility import source and
-  provide guarded, source-only regeneration without changing frozen selections
-  or direct requirements. Downstream owners can name their local producer.
+  members, markers, deprecations, generator ownership and local links.
+  Reusable CI adoption is opt-in and does not certify prose meaning.
+  ([9ad66ccb88](https://github.com/faustbrian/go-library-tools/commit/9ad66ccb88))
+- Identify the real owner in generated compatibility imports and provide
+  guarded source-only regeneration. Frozen selections and requirements stay
+  unchanged; owners upgrading the helper must regenerate their import source.
+  ([a2da4e9984](https://github.com/faustbrian/go-library-tools/commit/a2da4e9984))
+
+### Fixed
+
+- Support source audits in plain Git repositories and nested modules, while
+  inspecting consumer-reachable members and actual local generator inputs.
+  ([c0c540d9e4](https://github.com/faustbrian/go-library-tools/commit/c0c540d9e4))
+- Constrain Git inventory to literal queries in the checked repository root.
+  ([006a307b1f](https://github.com/faustbrian/go-library-tools/commit/006a307b1f))
+- Align source-audit implementation with the pinned native lint rules.
+  ([e65c749c34](https://github.com/faustbrian/go-library-tools/commit/e65c749c34))
 
 ## 2.3.0 - 2026-10-12
 
