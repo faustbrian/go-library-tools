@@ -1,5 +1,8 @@
 //go:build ignore
 
+// Command schema_generate_main embeds tracked module schemas. Run go generate
+// from internal/inventory; outputs retain exact schema bytes and native tests
+// guard generation. It owns no network or release publication.
 package main
 
 import (

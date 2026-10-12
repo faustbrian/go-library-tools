@@ -1,4 +1,8 @@
-// Package config loads and validates the repository-owned golib policy.
+// Package config strictly decodes bounded repository-owned golib policy.
+// Load admits .golib.yaml; Decode handles immutable blobs with the same defaults.
+// Values own their parsed collections but remain mutable caller data: keep them
+// stable while orchestration reads. This package selects typed recipes, not a
+// shell executor, release discovery service or source of runtime readiness.
 package config
 
 import (
@@ -37,34 +41,62 @@ var (
 // Config is the complete repository-specific policy. Facts already owned by
 // canonical manifests are referenced here, not repeated.
 type Config struct {
-	SchemaVersion       int         `json:"schema_version" yaml:"schema_version"`
-	ToolVersion         string      `json:"tool_version" yaml:"tool_version"`
-	ToolChecksumsSHA256 string      `json:"tool_checksums_sha256,omitempty" yaml:"tool_checksums_sha256,omitempty"`
-	Manifests           Manifests   `json:"manifest" yaml:"manifest,omitempty"`
-	Evidence            Evidence    `json:"evidence" yaml:"evidence,omitempty"`
-	Mutation            Mutation    `json:"mutation" yaml:"mutation,omitempty"`
-	Coverage            Coverage    `json:"coverage,omitzero" yaml:"coverage,omitempty"`
-	API                 API         `json:"api,omitzero" yaml:"api,omitempty"`
-	Runtimes            Runtimes    `json:"runtimes" yaml:"runtimes,omitempty"`
-	Operations          []Operation `json:"operations,omitempty" yaml:"operations,omitempty"`
+	// SchemaVersion must be 1 for the supported strict policy format.
+	SchemaVersion int `json:"schema_version" yaml:"schema_version"`
+	// ToolVersion is the required exact CLI release; development source builds are
+	// handled separately by buildinfo.
+	ToolVersion string `json:"tool_version" yaml:"tool_version"`
+	// ToolChecksumsSHA256 optionally pins the release checksum manifest digest;
+	// decoding checks syntax, not downloaded authenticity. Omission preserves
+	// older supported policies.
+	ToolChecksumsSHA256 string `json:"tool_checksums_sha256,omitempty" yaml:"tool_checksums_sha256,omitempty"`
+	// Manifests selects canonical repository-relative inventory owners, defaulting
+	// to modules.json and packages.json.
+	Manifests Manifests `json:"manifest" yaml:"manifest,omitempty"`
+	// Evidence selects the evidence root, defaulting to .verification.
+	Evidence Evidence `json:"evidence" yaml:"evidence,omitempty"`
+	// Mutation selects report storage, worker admission and explicit historical
+	// imports.
+	Mutation Mutation `json:"mutation" yaml:"mutation,omitempty"`
+	// Coverage overrides statement acceptance only for named enabled modules;
+	// omission remains exact.
+	Coverage Coverage `json:"coverage,omitzero" yaml:"coverage,omitempty"`
+	// API selects explicit enabled module compatibility baselines without arbitrary
+	// execution hooks.
+	API API `json:"api,omitzero" yaml:"api,omitempty"`
+	// Runtimes declares supported pinned non-Go test executables, not shell policy.
+	Runtimes Runtimes `json:"runtimes" yaml:"runtimes,omitempty"`
+	// Operations is an ordered set of unique module/gate recipes validated before
+	// command execution.
+	Operations []Operation `json:"operations,omitempty" yaml:"operations,omitempty"`
 }
 
 // Manifests names the canonical repository inventory files.
 type Manifests struct {
-	Modules  string `json:"modules" yaml:"modules,omitempty"`
+	// Modules names the repository-relative module catalog; default is modules.json.
+	Modules string `json:"modules" yaml:"modules,omitempty"`
+	// Packages names the repository-relative package classifications; default is
+	// packages.json.
 	Packages string `json:"packages" yaml:"packages,omitempty"`
 }
 
 // Evidence identifies the repository-owned verification evidence root.
 type Evidence struct {
+	// Root is the repository-relative evidence directory; path admission is distinct
+	// from report validity.
 	Root string `json:"root" yaml:"root,omitempty"`
 }
 
 // Mutation identifies repository-owned reports, checkpoints, and reviews.
 type Mutation struct {
-	Root       string           `json:"root" yaml:"root,omitempty"`
-	MaxWorkers MutationWorkers  `json:"max_workers,omitempty" yaml:"max_workers,omitempty"`
-	Imports    []MutationImport `json:"imports,omitempty" yaml:"imports,omitempty"`
+	// Root is the repository-relative mutation evidence directory.
+	Root string `json:"root" yaml:"root,omitempty"`
+	// MaxWorkers admits 0–4 workers; zero delegates the execution default rather
+	// than disabling mutation.
+	MaxWorkers MutationWorkers `json:"max_workers,omitempty" yaml:"max_workers,omitempty"`
+	// Imports declares unique module-specific legacy archives and ledgers for
+	// explicit import.
+	Imports []MutationImport `json:"imports,omitempty" yaml:"imports,omitempty"`
 }
 
 // MutationWorkers preserves integer-only worker admission in YAML as in JSON.
@@ -86,63 +118,106 @@ func (workers *MutationWorkers) UnmarshalYAML(node *yaml.Node) error {
 // MutationImport identifies one repository-owned approved legacy checkpoint
 // set that is materialized into content-addressed evidence before verification.
 type MutationImport struct {
-	Module  string `json:"module" yaml:"module"`
+	// Module is a canonical module directory, with . naming the root.
+	Module string `json:"module" yaml:"module"`
+	// Archive is the repository-relative historical report archive, not an arbitrary
+	// download.
 	Archive string `json:"archive" yaml:"archive"`
-	Ledger  string `json:"ledger" yaml:"ledger"`
+	// Ledger is the repository-relative reviewed import ledger.
+	Ledger string `json:"ledger" yaml:"ledger"`
 }
 
 // Coverage selects explicit module-level statement acceptance. Omission keeps
 // exact coverage; evidence mode collects counts without certifying risk coverage.
 type Coverage struct {
+	// Modules is a unique module-specific acceptance list, not an ecosystem coverage
+	// score.
 	Modules []CoverageModule `json:"modules,omitempty" yaml:"modules,omitempty"`
 }
 
 // CoverageModule changes acceptance only for its named canonical module.
 type CoverageModule struct {
+	// Module names an inventoried module with coverage enabled.
 	Module string `json:"module" yaml:"module"`
-	Mode   string `json:"mode" yaml:"mode"`
+	// Mode is exact or evidence; evidence records execution without claiming full
+	// coverage.
+	Mode string `json:"mode" yaml:"mode"`
 }
 
 // API identifies module-specific exported API baseline formats and locations.
 type API struct {
+	// Baselines is a unique module-specific baseline list; it cannot share ownership
+	// with a custom API operation.
 	Baselines []APIBaseline `json:"baselines,omitempty" yaml:"baselines,omitempty"`
 }
 
 // APIBaseline defines one module's repository-owned compatibility baseline.
 type APIBaseline struct {
-	Module   string   `json:"module" yaml:"module"`
-	Mode     string   `json:"mode" yaml:"mode"`
-	Path     string   `json:"path" yaml:"path"`
+	// Module names an inventoried module with API compatibility enabled.
+	Module string `json:"module" yaml:"module"`
+	// Mode is apidiff export data or go-doc complete rendered prose.
+	Mode string `json:"mode" yaml:"mode"`
+	// Path is the repository-relative baseline file; publication uses the API gate's
+	// admitted directory.
+	Path string `json:"path" yaml:"path"`
+	// Packages is a nonempty ordered nonrecursive local package list for go-doc;
+	// forbidden for apidiff.
 	Packages []string `json:"packages,omitempty" yaml:"packages,omitempty"`
 }
 
 // Runtimes declares exact non-Go executables required by repository tests.
 // Node is a tooling-owned documentation runtime and is not repository policy.
 type Runtimes struct {
+	// Deno optionally pins an exact supported MAJOR.MINOR.PATCH runtime.
 	Deno string `json:"deno,omitempty" yaml:"deno,omitempty"`
-	Zsh  string `json:"zsh,omitempty" yaml:"zsh,omitempty"`
+	// Zsh optionally selects the supported 5.9 shell; it does not allow arbitrary
+	// versions.
+	Zsh string `json:"zsh,omitempty" yaml:"zsh,omitempty"`
 }
 
 // Operation replaces one package-specific legacy Make target with typed steps.
 type Operation struct {
+	// Module is the canonical module directory whose gate owns the recipe.
 	Module string `json:"module" yaml:"module"`
-	Gate   string `json:"gate" yaml:"gate"`
-	Steps  []Step `json:"steps" yaml:"steps"`
+	// Gate is one supported opt-in gate; local-test has stricter bounded selector
+	// rules.
+	Gate string `json:"gate" yaml:"gate"`
+	// Steps is an ordered nonempty command recipe, not shell text.
+	Steps []Step `json:"steps" yaml:"steps"`
 }
 
 // Step is a constrained operation with no shell or arbitrary executable hook.
 type Step struct {
-	Type      string   `json:"type" yaml:"type"`
-	Makefile  string   `json:"makefile,omitempty" yaml:"makefile,omitempty"`
-	Target    string   `json:"target,omitempty" yaml:"target,omitempty"`
-	Packages  []string `json:"packages,omitempty" yaml:"packages,omitempty"`
-	Run       string   `json:"run,omitempty" yaml:"run,omitempty"`
-	Benchmark string   `json:"benchmark,omitempty" yaml:"benchmark,omitempty"`
-	Fuzz      string   `json:"fuzz,omitempty" yaml:"fuzz,omitempty"`
-	Budget    string   `json:"budget,omitempty" yaml:"budget,omitempty"`
-	Count     int      `json:"count,omitempty" yaml:"count,omitempty"`
-	Race      bool     `json:"race,omitempty" yaml:"race,omitempty"`
-	Timeout   string   `json:"timeout" yaml:"timeout,omitempty"`
+	// Type is go-test or make; mixed command-specific fields are refused.
+	Type string `json:"type" yaml:"type"`
+	// Makefile is a repository-local file required only for a make step.
+	Makefile string `json:"makefile,omitempty" yaml:"makefile,omitempty"`
+	// Target is a validated non-flag make target, not a shell expression.
+	Target string `json:"target,omitempty" yaml:"target,omitempty"`
+	// Packages is a local Go package pattern list; omitted go-test defaults to
+	// ./....
+	Packages []string `json:"packages,omitempty" yaml:"packages,omitempty"`
+	// Run is an optional Go test selector, mutually exclusive with Benchmark and
+	// Fuzz.
+	Run string `json:"run,omitempty" yaml:"run,omitempty"`
+	// Benchmark is an optional benchmark selector, mutually exclusive with Run and
+	// Fuzz.
+	Benchmark string `json:"benchmark,omitempty" yaml:"benchmark,omitempty"`
+	// Fuzz is an optional fuzz target selector, mutually exclusive with Run and
+	// Benchmark.
+	Fuzz string `json:"fuzz,omitempty" yaml:"fuzz,omitempty"`
+	// Budget is positive duration or iteration count for benchmark/fuzz; defaults
+	// depend on selector.
+	Budget string `json:"budget,omitempty" yaml:"budget,omitempty"`
+	// Count is the go-test repetition count; omitted zero defaults to one before
+	// validation.
+	Count int `json:"count,omitempty" yaml:"count,omitempty"`
+	// Race selects the Go race detector only for test runs, never
+	// benchmark/fuzz/make.
+	Race bool `json:"race,omitempty" yaml:"race,omitempty"`
+	// Timeout is a positive parsed duration; omission defaults to 20m, while
+	// local-test totals are capped.
+	Timeout string `json:"timeout" yaml:"timeout,omitempty"`
 }
 
 // Load reads .golib.yaml from root, rejects unknown fields, applies stable

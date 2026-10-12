@@ -3,6 +3,8 @@
 - [Golib ecosystem](ecosystem/README.md): versioned consumer design language
   and package-selection entry point.
 - [Architecture](architecture.md): component and trust boundaries.
+- [Source documentation audit](source-documentation-audit.md): tracked source,
+  ownership contracts and executable-preservation boundaries.
 - [CLI reference](cli.md): commands, output, and exit behavior.
 - [Configuration](configuration.md): `.golib.yaml` and canonical manifests.
 - [Specification decisions](specification-decisions.md): auditable choices,

@@ -12,29 +12,48 @@ const maximumEquivalentInventorySize = 1 << 20
 // EquivalentInventory describes exact, independently reviewed tool limitations.
 // It does not change a native mutant's LIVED status or its report counters.
 type EquivalentInventory struct {
-	SchemaVersion int                `json:"schema_version"`
-	Packages      []EquivalentReview `json:"packages"`
+	// SchemaVersion must be 1 for the closed review format.
+	SchemaVersion int `json:"schema_version"`
+	// Packages is an explicit unique module/package review list; empty admits no
+	// exceptions.
+	Packages []EquivalentReview `json:"packages"`
 }
 
 // EquivalentReview applies only to one source and verifier identity.
 type EquivalentReview struct {
-	ModuleDirectory        string               `json:"module_directory"`
-	PackageDirectory       string               `json:"package_directory"`
-	SourceDigest           string               `json:"source_digest"`
-	GremlinsVersion        string               `json:"gremlins_version"`
-	GremlinsVerifierSHA256 string               `json:"gremlins_verifier_sha256"`
-	Mutations              []EquivalentMutation `json:"mutations"`
+	// ModuleDirectory selects the exact repository-relative module.
+	ModuleDirectory string `json:"module_directory"`
+	// PackageDirectory selects the exact package within that module.
+	PackageDirectory string `json:"package_directory"`
+	// SourceDigest is the lowercase source-only SHA-256 requiring exact current
+	// equality.
+	SourceDigest string `json:"source_digest"`
+	// GremlinsVersion is the exact engine release reviewed for these coordinates.
+	GremlinsVersion string `json:"gremlins_version"`
+	// GremlinsVerifierSHA256 is the exact semantic verifier digest without a prefix.
+	GremlinsVerifierSHA256 string `json:"gremlins_verifier_sha256"`
+	// Mutations is a nonempty unique coordinate set; Review returns its independent
+	// slice copy.
+	Mutations []EquivalentMutation `json:"mutations"`
 }
 
 // EquivalentMutation identifies a survivor and the observable contract under
 // which the native mutation is equivalent, not necessarily byte-identical.
 type EquivalentMutation struct {
-	FileName       string `json:"file_name"`
-	Type           string `json:"type"`
-	Line           int    `json:"line"`
-	Column         int    `json:"column"`
+	// FileName is the canonical relative Go source filename.
+	FileName string `json:"file_name"`
+	// Type is the exact native mutation operator identity.
+	Type string `json:"type"`
+	// Line is the positive native one-based source line.
+	Line int `json:"line"`
+	// Column is the positive native one-based source column.
+	Column int `json:"column"`
+	// ContractDomain names the reviewed observable domain in detailed single-line
+	// prose.
 	ContractDomain string `json:"contract_domain"`
-	Reason         string `json:"reason"`
+	// Reason states the independently reviewed equivalence, not a blanket score
+	// waiver.
+	Reason string `json:"reason"`
 }
 
 // ParseEquivalentInventory strictly bounds and parses an optional review file.

@@ -1,5 +1,8 @@
-// Package services owns isolated lifecycle management for generic test
-// services used by library verification.
+// Package services starts isolated optional test fixtures for verification.
+// Manager.Start returns an exact-resource Lease whose owner must Close it;
+// Docker/network/file activity is explicit and not production backend lifecycle.
+// Borrowed callbacks must honor context and keep credentials out of diagnostics;
+// caller-owned fixture files survive lease cleanup. No cgo is introduced.
 package services
 
 import (
@@ -63,27 +66,60 @@ type Secret func(int) (string, error)
 
 // FileSystem owns task-local fixture files.
 type FileSystem interface {
+	// MkdirAll prepares only requested caller-owned fixture directories.
 	MkdirAll(string, os.FileMode) error
+	// WriteFile synchronously persists provided fixture bytes with the requested mode;
+	// implementations must not disclose credential contents in errors.
 	WriteFile(string, []byte, os.FileMode) error
+	// Chmod applies the requested fixture access mode without changing ownership scope.
 	Chmod(string, os.FileMode) error
 }
 
-// Manager starts one isolated set of generic service fixtures.
+// Manager starts one isolated set of generic service fixtures. Collaborators
+// remain borrowed: honor context, bound blocking, and redact diagnostics. Each
+// Start owns a distinct lease; sharing requires safe collaborators and unique
+// tokens. This is test infrastructure, not production backend lifecycle.
 type Manager struct {
-	Process     Process
-	Probe       Probe
-	Wait        Wait
-	Token       Token
-	HTTPProbe   HTTPProbe
+	// Process is mandatory borrowed synchronous command execution; support context
+	// and exact resource cleanup.
+	Process Process
+	// Probe is optional borrowed TCP readiness verification; nil uses the local TCP
+	// probe.
+	Probe Probe
+	// Wait is optional cooperative retry delay; nil uses context-aware timer
+	// waiting.
+	Wait Wait
+	// Token is optional collision-resistant namespace generation; nil uses
+	// crypto/rand and returned text is validated.
+	Token Token
+	// HTTPProbe is optional borrowed HTTP readiness verification; nil uses the
+	// bounded fixture client.
+	HTTPProbe HTTPProbe
+	// HTTPRequest is optional borrowed fixture-control HTTP execution for
+	// specialized topologies.
 	HTTPRequest HTTPRequest
-	Secret      Secret
-	Files       FileSystem
-	Workspace   string
-	Attempts    int
-	OpenSearch  *OpenSearchImages
+	// Secret is optional borrowed hexadecimal credential generation for specialized
+	// fixtures, not application secret storage.
+	Secret Secret
+	// Files is optional borrowed task-local fixture writing; specialized fixtures
+	// use the operating filesystem when nil.
+	Files FileSystem
+	// Workspace is caller-owned absolute scratch required by file-based specialized
+	// fixtures, not removed by Lease.Close.
+	Workspace string
+	// Attempts is positive readiness retry count; zero selects 90 and elapsed bounds
+	// still depend on collaborators.
+	Attempts int
+	// OpenSearch optionally supplies the admitted digest-pinned compatibility pair;
+	// nil uses catalog selection.
+	OpenSearch *OpenSearchImages
 }
 
-// Lease exposes fixture environment and owns exact started resources.
+// Lease exposes copied fixture metadata and owns exactly tracked containers,
+// volumes and networks. Start returns acquired state; zero owns no resources
+// and Close succeeds, while methods require a non-nil receiver. Close may be
+// called concurrently and caches the first cleanup result; fixture
+// files remain caller-owned and credentials are not securely erased.
 type Lease struct {
 	environment map[string]string
 	identities  map[string]string
@@ -324,7 +360,11 @@ func (lease *Lease) Environment() map[string]string { return clone(lease.environ
 // Identities returns immutable image identities for evidence binding.
 func (lease *Lease) Identities() map[string]string { return clone(lease.identities) }
 
-// Close removes only containers started by this lease, in reverse order.
+// Close removes tracked containers, volumes, then networks in reverse order
+// within each group, joining all failures. Concurrent calls wait for one cleanup
+// and receive its cached result; a canceled first context is not retried later.
+// The process callback must honor context; no worker is detached to force a
+// timeout. Cleanup failure may leave exact tracked resources for caller recovery.
 func (lease *Lease) Close(ctx context.Context) error {
 	lease.closeOnce.Do(func() {
 		failures := make([]error, 0)

@@ -43,8 +43,11 @@ func (buffer *boundedWorkflowBuffer) Write(value []byte) (int, error) {
 	return len(value), nil
 }
 
-// Workflows validates every GitHub Actions workflow with the centrally pinned
-// Actionlint release.
+// Workflows admits bounded confined workflow/local-action descriptors and
+// immutable security policy before starting the pinned Actionlint verifier.
+// Admission failure never invokes actionlint; local actions are recursively
+// inspected with depth/cardinality limits, not executed. Output is bounded but
+// actionlint failure text is not a general secret-redaction boundary.
 func (runner Runner) Workflows(ctx context.Context) error {
 	if err := checkWorkflowSecurityContext(ctx, runner.Root); err != nil {
 		return err

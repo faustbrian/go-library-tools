@@ -1,4 +1,7 @@
-// Package consumers loads the maintained repository rollout inventory.
+// Package consumers loads the bounded maintained repository rollout inventory.
+// Load or Parse validates sorted explicit classifications and Summary copies
+// the repository slice. It performs no GitHub discovery, publication or rollout;
+// caller-owned returned data is mutable and does not certify adoption.
 package consumers
 
 import (
@@ -23,28 +26,46 @@ var (
 // Manifest is the explicit source of truth for repositories managed by the
 // tooling release and rollout process.
 type Manifest struct {
-	SchemaVersion int          `json:"schema_version"`
-	Owner         string       `json:"owner"`
-	Repositories  []Repository `json:"repositories"`
+	// SchemaVersion must be 1; other versions are refused.
+	SchemaVersion int `json:"schema_version"`
+	// Owner is the validated GitHub owner shared by all repository names.
+	Owner string `json:"owner"`
+	// Repositories is a strictly sorted unique set of 1–256 classifications, with at
+	// least one active and exactly one tooling owner.
+	Repositories []Repository `json:"repositories"`
 }
 
 // Repository classifies one repository for rollout decisions.
 type Repository struct {
-	Name           string `json:"name"`
+	// Name is a canonical go-* name within Manifest.Owner.
+	Name string `json:"name"`
+	// Classification is active, deferred or tooling; it selects rollout membership,
+	// not runtime readiness.
 	Classification string `json:"classification"`
-	DefaultBranch  string `json:"default_branch"`
-	Reason         string `json:"reason,omitempty"`
+	// DefaultBranch is a validated branch name used by rollout callers, not a
+	// resolved commit.
+	DefaultBranch string `json:"default_branch"`
+	// Reason is required for deferred/tooling and omitted for active entries.
+	Reason string `json:"reason,omitempty"`
 }
 
 // Summary is a stable machine-readable inventory result.
 type Summary struct {
-	SchemaVersion int          `json:"schema_version"`
-	Owner         string       `json:"owner"`
-	Total         int          `json:"total"`
-	Active        int          `json:"active"`
-	Deferred      int          `json:"deferred"`
-	Tooling       int          `json:"tooling"`
-	Repositories  []Repository `json:"repositories"`
+	// SchemaVersion preserves the parsed manifest format version.
+	SchemaVersion int `json:"schema_version"`
+	// Owner preserves the validated GitHub namespace.
+	Owner string `json:"owner"`
+	// Total counts all classified repositories, not successful deliveries.
+	Total int `json:"total"`
+	// Active counts repositories eligible for ordinary rollout.
+	Active int `json:"active"`
+	// Deferred counts explicitly postponed repositories.
+	Deferred int `json:"deferred"`
+	// Tooling counts tooling owners; a valid manifest has exactly one.
+	Tooling int `json:"tooling"`
+	// Repositories is a copied slice in original sorted order; modifying it does not
+	// change the manifest.
+	Repositories []Repository `json:"repositories"`
 }
 
 // Load reads and validates a bounded repository-relative manifest.

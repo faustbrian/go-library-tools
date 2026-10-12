@@ -13,6 +13,9 @@ import (
 	"github.com/faustbrian/go-library-tools/v2/internal/docscheck"
 )
 
+// FuzzLycheeArchive caps hostile archives at 2 MiB and supplies their own
+// matching digest so traversal/type/expansion checks remain reachable, not a
+// forged official-release identity.
 func FuzzLycheeArchive(f *testing.F) {
 	f.Add([]byte("not an archive"))
 	f.Add(validLycheeArchive(f))

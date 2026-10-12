@@ -33,7 +33,11 @@ func (operatingInspectFileSystem) Rel(base, target string) (string, error) {
 // #nosec G304 -- inspection opens paths found beneath the validated evidence root and rechecks content identity
 func (operatingInspectFileSystem) Open(path string) (io.ReadCloser, error) { return os.Open(path) }
 
-// Inspect validates every content-addressed record under an evidence root.
+// Inspect validates admitted content-addressed records under evidenceRoot and
+// returns deterministic module/package/gate/input order. Missing storage returns
+// an empty slice; invalid records return no partial inventory. Unrelated JSON
+// outside by-input is ignored. It checks recorded identities, not source/report
+// truth, and requires a stable caller-owned tree rather than an atomic snapshot.
 func Inspect(root, evidenceRoot, repository string, modules []string) ([]Record, error) {
 	if err := repositoryfile.ValidateDirectory(root, evidenceRoot); err != nil {
 		if errors.Is(err, os.ErrNotExist) {

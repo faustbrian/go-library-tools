@@ -207,6 +207,8 @@ func TestValidateRejectsOversizedExtendedHeaderMetadata(t *testing.T) {
 	}
 }
 
+// FuzzValidateNeverPanics varies gzip/tar bytes under 32-entry and 1 MiB
+// compressed/expanded bounds; rejection must not panic.
 func FuzzValidateNeverPanics(f *testing.F) {
 	f.Add([]byte("not an archive"))
 	f.Add(archive(f, tar.Header{Name: "proxy/data", Mode: 0o600, Typeflag: tar.TypeReg}, "value"))

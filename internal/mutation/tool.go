@@ -16,12 +16,18 @@ import (
 
 const maximumDownloadMetadataSize = 1 << 20
 
-// Process executes one non-shell command for verifier construction.
+// Process executes one explicit argv command and waits for its completion.
+// Implementations own process cancellation/termination and borrowed output
+// handling; callbacks must return under ctx rather than detach unowned workers.
 type Process func(context.Context, string, []string, string, map[string]string, io.Writer, io.Writer) error
 
 // Tool identifies one built, content-addressed verifier binary.
 type Tool struct {
-	Path   string
+	// Path is the task-owned constructed verifier executable; caller owns scratch
+	// cleanup.
+	Path string
+	// Digest is sha256:-prefixed built binary content identity, distinct from
+	// semantic verifier identity.
 	Digest string
 }
 
@@ -66,7 +72,10 @@ func Arguments(target, output, tags string, discover bool, workers int) ([]strin
 }
 
 // BuildVerifier downloads the checksum-pinned Gremlins source, applies the
-// embedded semantic patches, and builds a task-owned binary.
+// embedded semantic patches, and builds a task-owned binary. Caller owns the
+// absolute private workspace and all cleanup, including on partial failure.
+// Process errors are wrapped rather than globally redacted; source metadata
+// checksums bind the download, while returned Digest binds actual built bytes.
 func BuildVerifier(ctx context.Context, workspace string, process Process) (Tool, error) {
 	if !filepath.IsAbs(workspace) || process == nil {
 		return Tool{}, fmt.Errorf("%w: verifier workspace and process are required", ErrInvalid)

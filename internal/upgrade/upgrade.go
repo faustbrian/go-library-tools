@@ -1,4 +1,8 @@
-// Package upgrade plans and applies coordinated consumer tooling pin updates.
+// Package upgrade plans and applies coordinated consumer tooling pins.
+// Plan is read-only; Apply publishes individually atomic configuration/workflow
+// replacements with attempted rollback. Callers own a stable serialized checkout;
+// no cross-file crash transaction, remote release discovery, push or fleet
+// completion is provided. Result metadata does not certify published adoption.
 package upgrade
 
 import (
@@ -28,23 +32,38 @@ var (
 
 // Request identifies one immutable tooling release.
 type Request struct {
-	Version         string `json:"version"`
-	WorkflowSHA     string `json:"workflow_sha"`
+	// Version is an exact vMAJOR.MINOR.PATCH CLI pin, not a release discovery query.
+	Version string `json:"version"`
+	// WorkflowSHA is the exact 40-character lowercase Git commit for both workflow
+	// bindings.
+	WorkflowSHA string `json:"workflow_sha"`
+	// ChecksumsSHA256 is the lowercase 64-character release checksum-manifest
+	// digest.
 	ChecksumsSHA256 string `json:"checksums_sha256"`
 }
 
 // File describes whether one coordinated pin file changes.
 type File struct {
-	Path    string `json:"path"`
-	Changed bool   `json:"changed"`
+	// Path is one of the coordinated repository-relative configuration/workflow
+	// targets.
+	Path string `json:"path"`
+	// Changed compares planned bytes to the admitted original bytes, not remote
+	// adoption.
+	Changed bool `json:"changed"`
 }
 
 // Result is the deterministic upgrade plan or applied result.
 type Result struct {
-	SchemaVersion int     `json:"schema_version"`
-	Request       Request `json:"request"`
-	Changed       bool    `json:"changed"`
-	Files         []File  `json:"files"`
+	// SchemaVersion is 1 for the stable JSON result shape.
+	SchemaVersion int `json:"schema_version"`
+	// Request is the validated requested identity; no remote publication is
+	// inferred.
+	Request Request `json:"request"`
+	// Changed is true if either coordinated file differs.
+	Changed bool `json:"changed"`
+	// Files is a deterministic workflow/configuration listing; internal staged bytes
+	// remain private.
+	Files         []File `json:"files"`
 	configuration []byte
 	workflow      []byte
 	original      map[string][]byte
@@ -57,7 +76,11 @@ func Plan(root string, request Request) (Result, error) {
 }
 
 // Apply validates all changes before atomically replacing each affected file.
-// If the second replacement fails, it restores the first file.
+// If the second replacement fails, it attempts to restore the first file and
+// joins rollback failure. Replacements are individually atomic, not one crash-
+// atomic transaction; callers must serialize a stable checkout and inspect
+// failure before assuming both pins agree. No publication or remote validation
+// is performed.
 func Apply(root string, request Request) (Result, error) {
 	result, err := Plan(root, request)
 	if err != nil {

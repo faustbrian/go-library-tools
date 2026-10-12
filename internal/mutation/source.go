@@ -36,7 +36,10 @@ func (operatingSourceFiles) Rel(base, target string) (string, error) {
 }
 
 // SourceDigest reproduces the source-only identity used by zero-mutant
-// reviews. It includes direct production Go files and their repository paths.
+// reviews. It includes full bytes of direct production Go files (including
+// comments and inactive variants) and their repository paths, not tests or
+// dependency execution. Return is unprefixed SHA-256; callers own a stable
+// trusted absolute root and no atomic filesystem snapshot is promised.
 func SourceDigest(root, moduleDirectory, packageDirectory string) (string, error) {
 	return sourceDigest(operatingSourceFiles{}, root, moduleDirectory, packageDirectory)
 }

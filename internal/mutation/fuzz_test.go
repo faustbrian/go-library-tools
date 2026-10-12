@@ -7,6 +7,9 @@ import (
 	"github.com/faustbrian/go-library-tools/v2/internal/mutation"
 )
 
+// FuzzMutationRecords caps input at 2 MiB and exercises report, migration,
+// zero-review and runtime parsers; parser success is not passing campaign
+// evidence.
 func FuzzMutationRecords(f *testing.F) {
 	f.Add([]byte(`{"schema_version":1,"packages":[]}`))
 	f.Add([]byte("go_version='go1.27.0'\ngoos='linux'\ngoarch='amd64'\n"))

@@ -11,29 +11,44 @@ const maximumSourceLockSize int64 = 1 << 20
 // SourceLock binds every repository used for ecosystem catalog publication to
 // an immutable commit or to the release source that supplies the generator.
 type SourceLock struct {
-	SchemaVersion   int                    `json:"schema_version"`
-	RepositoryCount int                    `json:"repository_count"`
-	Repositories    []SourceLockRepository `json:"repositories"`
+	// SchemaVersion selects the closed source-lock schema validated before decoding.
+	SchemaVersion int `json:"schema_version"`
+	// RepositoryCount must equal the explicit repository list length.
+	RepositoryCount int `json:"repository_count"`
+	// Repositories is strictly sorted and unique, with exactly one release-source
+	// entry.
+	Repositories []SourceLockRepository `json:"repositories"`
 }
 
 // SourceLockRepository records one catalog input repository and its expected
 // adopted tooling identity when the repository is a consumer.
 type SourceLockRepository struct {
-	Repository string             `json:"repository"`
-	Source     SourceLockRevision `json:"source"`
-	Tooling    *SourceLockTooling `json:"tooling,omitempty"`
+	// Repository is the locked canonical source repository identity.
+	Repository string `json:"repository"`
+	// Source selects an immutable consumer commit or the single tag-resolved release
+	// source.
+	Source SourceLockRevision `json:"source"`
+	// Tooling records adopted consumer tooling; release-source has no prior-release
+	// policy requirement.
+	Tooling *SourceLockTooling `json:"tooling,omitempty"`
 }
 
 // SourceLockRevision is either an immutable consumer commit or the one release
 // source whose commit is resolved from the release tag.
 type SourceLockRevision struct {
-	Kind   string `json:"kind"`
+	// Kind is commit or release-source under the closed schema.
+	Kind string `json:"kind"`
+	// Commit is the immutable Git commit for a consumer; omitted for tag-resolved
+	// release-source.
 	Commit string `json:"commit,omitempty"`
 }
 
 // SourceLockTooling is the released CLI identity already adopted by a consumer.
 type SourceLockTooling struct {
-	Version         string `json:"version"`
+	// Version is the exact released CLI identity expected in consumer policy.
+	Version string `json:"version"`
+	// ChecksumsSHA256 is the exact adopted checksum-manifest digest, compared
+	// without remote discovery.
 	ChecksumsSHA256 string `json:"checksums_sha256"`
 }
 

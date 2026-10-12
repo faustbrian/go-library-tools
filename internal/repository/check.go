@@ -1,4 +1,8 @@
-// Package repository validates the standalone repository contract.
+// Package repository validates standalone module/version/workspace topology
+// and specification ownership. Check is the entry over an admitted catalog;
+// it rejects copied legacy implementation without treating sibling checkouts
+// as one repository. Native tests separately guard integration scripts/templates.
+// No template execution, release publication or runtime qualification is owned.
 package repository
 
 import (

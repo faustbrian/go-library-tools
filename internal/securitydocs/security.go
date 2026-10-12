@@ -1,4 +1,8 @@
-// Package securitydocs validates the versioned ecosystem security record contract.
+// Package securitydocs validates versioned ecosystem risk/matrix records.
+// ValidateContext is the bounded cancellable entry over a stable caller-owned
+// directory; schema/semantic admission does not rerun scanners or authenticate
+// claimed release outcomes. Inputs are read-only and filesystem/parser work is
+// cooperative, not forcibly interrupted. No service or cgo lifecycle is owned.
 //
 //go:generate go run ./cmd/genschemas
 package securitydocs

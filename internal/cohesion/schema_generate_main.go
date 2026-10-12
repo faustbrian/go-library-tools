@@ -1,5 +1,8 @@
 //go:build ignore
 
+// Command schema_generate_main embeds four tracked cohesion schemas. Run
+// go generate from internal/cohesion; outputs and schema constants are guarded
+// by native generator tests. It owns no network or release publication.
 package main
 
 import (

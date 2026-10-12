@@ -1,4 +1,8 @@
-// Package cli implements the stable golib command-line contract.
+// Package cli implements golib command dispatch, exit codes and output routing.
+// ExecuteContext is the cancellable entry; Execute uses a background context.
+// Streams and arguments remain caller-owned. Commands select their own policy,
+// resource and publication boundaries; source-docs alone needs only a Git root.
+// The package owns invocation cleanup, not server or ecosystem completion.
 package cli
 
 import (
@@ -75,7 +79,11 @@ func Execute(args []string, workingDirectory string, stdout, stderr io.Writer) i
 	return ExecuteContext(context.Background(), args, workingDirectory, stdout, stderr)
 }
 
-// ExecuteContext runs one command with caller-owned cancellation.
+// ExecuteContext runs one command with caller-owned non-nil context and output
+// writers. It returns 0 for success, 2 for usage refusal and 1 for operation or
+// cleanup failure. Arguments/streams remain borrowed and must not be mutated
+// concurrently. Cancellation is cooperative around command-specific boundaries;
+// it does not contain callback panics or forcibly interrupt arbitrary output I/O.
 func ExecuteContext(ctx context.Context, args []string, workingDirectory string, stdout, stderr io.Writer) int {
 	if len(args) == 1 && args[0] == "--version" {
 		_, _ = fmt.Fprintln(stdout, buildinfo.Version)

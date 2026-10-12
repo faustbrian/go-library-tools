@@ -8,6 +8,8 @@ import (
 	"github.com/faustbrian/go-library-tools/v2/internal/config"
 )
 
+// FuzzConfig writes at most MaximumSize+1 bytes to owned policy storage and
+// exercises the strict loader without assuming rejected YAML is executable.
 func FuzzConfig(f *testing.F) {
 	f.Add([]byte("schema_version: 1\ntool_version: v1.0.0\n"))
 	f.Add([]byte("schema_version: 2\nunknown: true\n"))

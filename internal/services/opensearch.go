@@ -21,11 +21,17 @@ var (
 
 // OpenSearchImages is a repository-owned, digest-pinned compatibility pair.
 type OpenSearchImages struct {
+	// Repository is the admitted image repository, not a shell expression.
 	Repository string
+	// OldVersion is the exact previous release metadata; OldImage selects its
+	// digest.
 	OldVersion string
-	OldDigest  string
+	// OldDigest is the previous sha256: image identity.
+	OldDigest string
+	// NewVersion is the exact current release metadata, distinct from OldVersion.
 	NewVersion string
-	NewDigest  string
+	// NewDigest is the current sha256: image identity, distinct from OldDigest.
+	NewDigest string
 }
 
 // ParseOpenSearchImages parses the supported declarative image-lock format

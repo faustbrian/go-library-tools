@@ -1,5 +1,9 @@
-// Package inventory loads and cross-validates canonical module and package
-// manifests without deriving policy from the working tree.
+// Package inventory loads and cross-validates canonical module/package policy.
+// Start with Load or LoadSnapshot; Decode consumes bounded immutable Git blobs.
+// Explicit mirrors must match and omitted package lists derive from the canonical
+// owner, not build-selected discovery. Parsed collections are caller-owned and
+// mutable; keep them stable during concurrent readers. No sibling checkout,
+// generator execution, gate process or release lifecycle is owned.
 package inventory
 
 import (
@@ -60,11 +64,19 @@ func compileModuleSchemas(resources map[string]string, target string) *jsonschem
 
 // Inventory is the validated repository catalog.
 type Inventory struct {
-	SchemaID      string   `json:"schema_id,omitempty"`
-	SchemaVersion int      `json:"schema_version"`
-	Repository    string   `json:"repository"`
-	GoVersion     string   `json:"go_version"`
-	Modules       []Module `json:"modules"`
+	// SchemaID is optional schema-v3 authority identity; legacy versions reject its
+	// presence.
+	SchemaID string `json:"schema_id,omitempty"`
+	// SchemaVersion selects supported versions 1–3 and their ownership/projection
+	// rules.
+	SchemaVersion int `json:"schema_version"`
+	// Repository is the canonical identity that both manifests must share.
+	Repository string `json:"repository"`
+	// GoVersion records repository toolchain policy, not a discovered installation.
+	GoVersion string `json:"go_version"`
+	// Modules is the admitted module catalog; callers must not mutate shared slices
+	// while readers use it.
+	Modules []Module `json:"modules"`
 }
 
 // MarshalJSON keeps legacy output unchanged while ensuring optional schema-v3
@@ -106,121 +118,239 @@ func projectSchemaV3Inventory(encoded []byte) ([]byte, error) {
 
 // Module contains canonical module policy used by orchestration.
 type Module struct {
-	Directory                   string          `json:"directory"`
-	ModulePath                  string          `json:"module_path"`
-	GoVersion                   string          `json:"go_version"`
-	Kind                        string          `json:"kind"`
-	Purpose                     string          `json:"purpose"`
-	Lifecycle                   string          `json:"lifecycle"`
-	Releasable                  bool            `json:"releasable"`
-	Version                     string          `json:"version"`
-	TagPrefix                   string          `json:"tag_prefix"`
-	Gates                       map[string]bool `json:"gates"`
-	TestTags                    []string        `json:"test_tags"`
-	BuildTags                   []string        `json:"build_tags"`
-	RequiredServices            []string        `json:"required_services"`
-	ExternalRuntimeDependencies []string        `json:"external_runtime_dependencies"`
-	InteroperabilityTools       []string        `json:"interoperability_tools"`
-	ConformanceCorpora          []string        `json:"conformance_corpora"`
-	Specifications              []string        `json:"specifications"`
-	OwnedDependencies           []string        `json:"owned_dependencies"`
-	ReverseOwnedDependencies    []string        `json:"reverse_owned_dependencies"`
-	Packages                    []Package       `json:"packages"`
-	Family                      string          `json:"family"`
-	FamilyLabel                 string          `json:"family_label"`
-	FamilyDescription           string          `json:"family_description"`
-	FamilyOrder                 int             `json:"family_order"`
-	GoalStatus                  string          `json:"goal_status"`
-	GoalFiles                   []string        `json:"goal_files"`
-	GoalEvidence                []GoalEvidence  `json:"goal_evidence"`
-	Provenance                  json.RawMessage `json:"provenance"`
-	Cohesion                    *Cohesion       `json:"cohesion,omitempty"`
+	// Directory is a canonical repository-relative module root; . denotes the root.
+	Directory string `json:"directory"`
+	// ModulePath is the validated import identity, including Go's required major
+	// suffix.
+	ModulePath string `json:"module_path"`
+	// GoVersion is the declared minimum module Go version.
+	GoVersion string `json:"go_version"`
+	// Kind classifies public library, adapter, internal, command or other maintained
+	// module purpose.
+	Kind string `json:"kind"`
+	// Purpose is maintained responsibility prose, not an inferred readiness claim.
+	Purpose string `json:"purpose"`
+	// Lifecycle is the legacy maintained lifecycle classification.
+	Lifecycle string `json:"lifecycle"`
+	// Releasable identifies modules eligible for release, independently of gate
+	// success.
+	Releasable bool `json:"releasable"`
+	// Version is the catalog's release version; validation does not publish its tag.
+	Version string `json:"version"`
+	// TagPrefix selects tag naming for this module's release unit.
+	TagPrefix string `json:"tag_prefix"`
+	// Gates is the explicit applicability map; disabled work is not passing work.
+	Gates map[string]bool `json:"gates"`
+	// TestTags is the configured test build-tag set, separate from production
+	// BuildTags.
+	TestTags []string `json:"test_tags"`
+	// BuildTags is the production build-tag set used by orchestration.
+	BuildTags []string `json:"build_tags"`
+	// RequiredServices is the explicit service dependency list, not permission to
+	// start unowned services.
+	RequiredServices []string `json:"required_services"`
+	// ExternalRuntimeDependencies records infrastructure outside the Go module
+	// graph.
+	ExternalRuntimeDependencies []string `json:"external_runtime_dependencies"`
+	// InteroperabilityTools names maintained peer/tool contracts requiring typed
+	// operations.
+	InteroperabilityTools []string `json:"interoperability_tools"`
+	// ConformanceCorpora names reviewed conformance inputs, not an automatic
+	// compliance claim.
+	ConformanceCorpora []string `json:"conformance_corpora"`
+	// Specifications names specification authorities whose decisions belong to the
+	// module.
+	Specifications []string `json:"specifications"`
+	// OwnedDependencies records mandatory owned module edges for compatibility
+	// planning.
+	OwnedDependencies []string `json:"owned_dependencies"`
+	// ReverseOwnedDependencies records known consumer edges without discovering
+	// sibling checkouts.
+	ReverseOwnedDependencies []string `json:"reverse_owned_dependencies"`
+	// Packages is the canonical package classification; omission derives from
+	// packages.json, explicit mirrors must match.
+	Packages []Package `json:"packages"`
+	// Family is the legacy family identifier that cohesion metadata must match.
+	Family string `json:"family"`
+	// FamilyLabel is the maintained human-readable family heading.
+	FamilyLabel string `json:"family_label"`
+	// FamilyDescription is the maintained family scope explanation.
+	FamilyDescription string `json:"family_description"`
+	// FamilyOrder is catalog grouping metadata, not dependency execution order.
+	FamilyOrder int `json:"family_order"`
+	// GoalStatus is legacy delivery metadata, not gate selection; schema-v3
+	// projection omits it.
+	GoalStatus string `json:"goal_status"`
+	// GoalFiles names legacy goal evidence; schema-v3 projection omits it.
+	GoalFiles []string `json:"goal_files"`
+	// GoalEvidence records legacy requirement claims without making them gate
+	// policy.
+	GoalEvidence []GoalEvidence `json:"goal_evidence"`
+	// Provenance preserves legacy raw JSON metadata; schema-v3 output omits it.
+	Provenance json.RawMessage `json:"provenance"`
+	// Cohesion is optional consumer/engineering metadata; releasable schema-v2+
+	// modules require it.
+	Cohesion *Cohesion `json:"cohesion,omitempty"`
 }
 
 // Cohesion is the schema-v2 consumer and engineering catalog contract.
 type Cohesion struct {
-	Family                     string            `json:"family"`
-	SecondaryCapabilities      []string          `json:"secondary_capabilities"`
-	Responsibility             string            `json:"responsibility"`
-	NonGoals                   []string          `json:"non_goals"`
-	PublicPackageIdentifier    string            `json:"public_package_identifier"`
-	PrimaryEntryPackages       []string          `json:"primary_entry_packages"`
-	PackageSelection           map[string]string `json:"package_selection"`
-	LifecycleStatus            string            `json:"lifecycle_status"`
-	Maturity                   string            `json:"maturity"`
-	ConstructionStyles         []string          `json:"construction_styles"`
-	LifecycleStyles            []string          `json:"lifecycle_styles"`
-	Ownership                  Ownership         `json:"ownership"`
-	OptionalOwnedDependencies  []string          `json:"optional_owned_dependencies"`
-	Adapters                   []string          `json:"adapters"`
-	Companions                 []string          `json:"companions"`
-	SupportedGo                SupportedGo       `json:"supported_go"`
-	SupportedPlatforms         []string          `json:"supported_platforms"`
-	SupportedBackends          []string          `json:"supported_backends"`
-	SupportedProtocols         []string          `json:"supported_protocols"`
-	Documentation              Documentation     `json:"documentation"`
-	KnownGoodCompatibilitySets []string          `json:"known_good_compatibility_sets"`
-	Delivery                   Delivery          `json:"delivery"`
+	// Family is a frozen family identifier matching Module.Family.
+	Family string `json:"family"`
+	// SecondaryCapabilities is a sorted unique supported capability set.
+	SecondaryCapabilities []string `json:"secondary_capabilities"`
+	// Responsibility is reviewed responsibility prose, not inferred from exported
+	// names.
+	Responsibility string `json:"responsibility"`
+	// NonGoals is a nonempty explicit scope-boundary list.
+	NonGoals []string `json:"non_goals"`
+	// PublicPackageIdentifier is a matching public Go identifier or none for
+	// rootless suites.
+	PublicPackageIdentifier string `json:"public_package_identifier"`
+	// PrimaryEntryPackages is a sorted unique inventoried entry-package list.
+	PrimaryEntryPackages []string `json:"primary_entry_packages"`
+	// PackageSelection maps inventoried imports to maintained selection guidance.
+	PackageSelection map[string]string `json:"package_selection"`
+	// LifecycleStatus is planned, active, deprecated or retired, independently of
+	// delivery proof.
+	LifecycleStatus string `json:"lifecycle_status"`
+	// Maturity is experimental, preview or stable; planned entries cannot be stable.
+	Maturity string `json:"maturity"`
+	// ConstructionStyles is a sorted unique supported construction vocabulary.
+	ConstructionStyles []string `json:"construction_styles"`
+	// LifecycleStyles is a sorted unique explicit lifecycle vocabulary.
+	LifecycleStyles []string `json:"lifecycle_styles"`
+	// Ownership records caller/package/shared ownership rather than deriving it from
+	// Go types.
+	Ownership Ownership `json:"ownership"`
+	// OptionalOwnedDependencies is the sorted optional owned dependency set,
+	// disjoint from mandatory edges.
+	OptionalOwnedDependencies []string `json:"optional_owned_dependencies"`
+	// Adapters names sorted owned adapter relationships.
+	Adapters []string `json:"adapters"`
+	// Companions names sorted companion relationships.
+	Companions []string `json:"companions"`
+	// SupportedGo records minimum and explicitly tested exact versions.
+	SupportedGo SupportedGo `json:"supported_go"`
+	// SupportedPlatforms is the sorted maintained platform set, not a test execution
+	// result.
+	SupportedPlatforms []string `json:"supported_platforms"`
+	// SupportedBackends is the sorted declared backend set.
+	SupportedBackends []string `json:"supported_backends"`
+	// SupportedProtocols is the sorted declared protocol set.
+	SupportedProtocols []string `json:"supported_protocols"`
+	// Documentation records local or HTTPS guidance references, with nil marking
+	// inapplicability.
+	Documentation Documentation `json:"documentation"`
+	// KnownGoodCompatibilitySets names reviewed compatibility sets; metadata alone
+	// does not requalify them.
+	KnownGoodCompatibilitySets []string `json:"known_good_compatibility_sets"`
+	// Delivery retains legacy separate readiness states; schema-v3 projection omits
+	// it.
+	Delivery Delivery `json:"delivery"`
 }
 
 // Ownership records consumer-visible configuration, alias, resource, and work ownership.
 type Ownership struct {
-	Configuration    string   `json:"configuration"`
-	MutableInputs    []string `json:"mutable_inputs"`
-	RuntimeResources string   `json:"runtime_resources"`
-	BackgroundWork   string   `json:"background_work"`
+	// Configuration is caller or none for configuration ownership.
+	Configuration string `json:"configuration"`
+	// MutableInputs lists copy, borrow, transfer or none aliasing contracts; none
+	// must stand alone.
+	MutableInputs []string `json:"mutable_inputs"`
+	// RuntimeResources identifies caller, package, shared or none resource
+	// ownership.
+	RuntimeResources string `json:"runtime_resources"`
+	// BackgroundWork identifies caller, package, shared or none worker ownership.
+	BackgroundWork string `json:"background_work"`
 }
 
 // SupportedGo records the minimum version and exact versions exercised by CI.
 type SupportedGo struct {
-	Minimum string   `json:"minimum"`
-	Tested  []string `json:"tested"`
+	// Minimum must match Module.GoVersion and use an exact version.
+	Minimum string `json:"minimum"`
+	// Tested is a sorted unique exact-version set, each no lower than Minimum.
+	Tested []string `json:"tested"`
 }
 
 // Documentation records entry points; nil means the entry point is inapplicable.
 type Documentation struct {
-	README         *string `json:"readme"`
-	API            *string `json:"api"`
-	Adoption       *string `json:"adoption"`
-	Security       *string `json:"security"`
-	Compatibility  *string `json:"compatibility"`
-	Performance    *string `json:"performance"`
-	Examples       *string `json:"examples"`
-	FAQ            *string `json:"faq"`
-	Changelog      *string `json:"changelog"`
-	PkgGoDev       *string `json:"pkg_go_dev"`
+	// README is the repository introduction reference, nil when inapplicable.
+	README *string `json:"readme"`
+	// API is the API guidance reference, nil when inapplicable.
+	API *string `json:"api"`
+	// Adoption is the adoption/migration guidance reference, nil when inapplicable.
+	Adoption *string `json:"adoption"`
+	// Security is the maintained security guidance reference, nil when inapplicable.
+	Security *string `json:"security"`
+	// Compatibility is the compatibility guidance reference, nil when inapplicable.
+	Compatibility *string `json:"compatibility"`
+	// Performance is the workload/evidence guidance reference, nil when
+	// inapplicable.
+	Performance *string `json:"performance"`
+	// Examples is the usage example reference, nil when inapplicable.
+	Examples *string `json:"examples"`
+	// FAQ is the frequently asked questions reference, nil when inapplicable.
+	FAQ *string `json:"faq"`
+	// Changelog is the release history reference, nil when inapplicable.
+	Changelog *string `json:"changelog"`
+	// PkgGoDev is the public package documentation reference, nil when inapplicable.
+	PkgGoDev *string `json:"pkg_go_dev"`
+	// EcosystemIndex is the catalog entry reference, nil when inapplicable.
 	EcosystemIndex *string `json:"ecosystem_index"`
 }
 
 // Delivery keeps implementation, hardening, and release states independent.
 type Delivery struct {
+	// Implementation records the legacy implementation state, distinct from
+	// hardening/release.
 	Implementation string `json:"implementation"`
-	Hardening      string `json:"hardening"`
-	Release        string `json:"release"`
+	// Hardening records the legacy assurance state, not automatically implied by
+	// implementation.
+	Hardening string `json:"hardening"`
+	// Release records the legacy publication state, not automatically implied by
+	// local checks.
+	Release string `json:"release"`
 }
 
 // GoalEvidence binds a goal document to its implementation and verification
 // claims without making those claims part of gate selection.
 type GoalEvidence struct {
-	File                   string   `json:"file"`
-	RequirementsSHA256     string   `json:"requirements_sha256"`
+	// File is the legacy repository-relative requirements document.
+	File string `json:"file"`
+	// RequirementsSHA256 binds the recorded requirements bytes, not current gate
+	// success.
+	RequirementsSHA256 string `json:"requirements_sha256"`
+	// ImplementationEvidence names maintained implementation claims.
 	ImplementationEvidence []string `json:"implementation_evidence"`
-	VerificationGates      []string `json:"verification_gates"`
-	ImplementationStatus   string   `json:"implementation_status"`
+	// VerificationGates names claimed verification boundaries without enabling
+	// gates.
+	VerificationGates []string `json:"verification_gates"`
+	// ImplementationStatus records the legacy implementation disposition.
+	ImplementationStatus string `json:"implementation_status"`
 }
 
 // Package is the canonical package classification shared by both manifests.
 type Package struct {
-	ModuleDirectory  string   `json:"module_directory"`
-	Directory        string   `json:"directory"`
-	Name             string   `json:"name"`
-	ImportPath       string   `json:"import_path"`
-	Kind             string   `json:"kind"`
-	Production       bool     `json:"production"`
-	Executable       bool     `json:"executable"`
-	CoverageRequired bool     `json:"coverage_required"`
-	BuildRequired    bool     `json:"build_required"`
-	BuildTags        []string `json:"build_tags"`
+	// ModuleDirectory is the owning canonical module root.
+	ModuleDirectory string `json:"module_directory"`
+	// Directory is the repository-relative package source directory.
+	Directory string `json:"directory"`
+	// Name is the Go package identifier, not its import identity.
+	Name string `json:"name"`
+	// ImportPath is unique across the canonical package inventory.
+	ImportPath string `json:"import_path"`
+	// Kind distinguishes public/internal/command/test classification.
+	Kind string `json:"kind"`
+	// Production identifies production source for selected scans and accounting.
+	Production bool `json:"production"`
+	// Executable identifies executable statements rather than metadata-only source.
+	Executable bool `json:"executable"`
+	// CoverageRequired selects expected coverage accounting for this package.
+	CoverageRequired bool `json:"coverage_required"`
+	// BuildRequired selects build qualification for this package.
+	BuildRequired bool `json:"build_required"`
+	// BuildTags is the explicit package variant selection.
+	BuildTags []string `json:"build_tags"`
 }
 
 type packageInventory struct {
@@ -240,7 +370,10 @@ func Load(root string, policy config.Config) (Inventory, error) {
 
 // LoadSnapshot returns the validated inventory and the exact module-manifest
 // bytes from which it was decoded so callers can perform additional checks
-// without racing a second filesystem read.
+// without racing a second filesystem read. On failure a partially decoded
+// catalog and admitted module bytes may still be returned for diagnostics;
+// callers must check err before using them as validated execution policy.
+// This single-read binding is not an atomic snapshot of both manifest files.
 func LoadSnapshot(root string, policy config.Config) (Inventory, []byte, error) {
 	moduleManifest, err := repositoryfile.Read(root, policy.Manifests.Modules, maximumManifestSize)
 	if err != nil {
@@ -258,6 +391,8 @@ func LoadSnapshot(root string, policy config.Config) (Inventory, []byte, error) 
 
 // Decode validates immutable manifest bytes with the same admission rules as
 // Load. It does not read the checkout while comparing historical inputs.
+// Errors may accompany a partial diagnostic catalog; no returned policy is
+// qualified until validation succeeds. Input bytes remain borrowed for the call.
 func Decode(policy config.Config, moduleManifest, packageManifest []byte) (Inventory, error) {
 	if len(moduleManifest) == 0 || len(packageManifest) == 0 || len(moduleManifest) > maximumManifestSize || len(packageManifest) > maximumManifestSize {
 		return Inventory{}, errors.New("manifest bytes are missing or exceed their size budget")

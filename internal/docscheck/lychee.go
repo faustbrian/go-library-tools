@@ -24,10 +24,15 @@ const (
 
 // LycheeRelease identifies one checksum-pinned official binary archive.
 type LycheeRelease struct {
+	// Version is the pinned upstream release edition.
 	Version string
-	Target  string
-	URL     string
-	SHA256  string
+	// Target is the supported archive target triple determining the expected binary
+	// path.
+	Target string
+	// URL is the exact official download URL selected by LycheeReleaseFor.
+	URL string
+	// SHA256 is the lowercase archive-content digest verified before decompression.
+	SHA256 string
 }
 
 // LycheeReleaseFor returns the exact release artifact for a supported Go

@@ -1951,6 +1951,9 @@ func (lease *securityPreflightTestLease) Close(context.Context) error {
 	return nil
 }
 
+// FuzzSecuritySuppressionsNeverPanic caps source-comment payloads at 4 KiB and
+// exercises suppression syntax/reason admission in owned files, without
+// executing scanners.
 func FuzzSecuritySuppressionsNeverPanic(f *testing.F) {
 	for _, seed := range []string{
 		"// #nosec G304 -- bounded",

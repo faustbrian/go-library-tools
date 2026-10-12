@@ -406,6 +406,8 @@ func TestGeneratorValidatesAllLocalInputsAndGoQuotedArguments(t *testing.T) {
 	}
 }
 
+// FuzzGeneratorArguments caps directive text at 8 KiB, asserting deterministic
+// lexical admission and at most 256 argv entries, without executing generators.
 func FuzzGeneratorArguments(f *testing.F) {
 	f.Add("go run present.go missing.go")
 	f.Add("go run \"generator with spaces.go\"")
@@ -443,6 +445,8 @@ func TestLimitsRefusePartialSourceInventories(t *testing.T) {
 	}
 }
 
+// FuzzTrackedPaths caps Git path bytes at 8 KiB, asserting deterministic
+// admission and refusal of unsafe paths.
 func FuzzTrackedPaths(f *testing.F) {
 	f.Add([]byte("doc.go\x00nested/api.go\x00"))
 	f.Add([]byte("../escape.go\x00"))
@@ -464,6 +468,8 @@ func FuzzTrackedPaths(f *testing.F) {
 	})
 }
 
+// FuzzCommentStructure caps source at 32 KiB, parses accepted ASTs and asserts
+// deterministic consumer-surface/comment findings without building package code.
 func FuzzCommentStructure(f *testing.F) {
 	root := f.TempDir()
 	f.Add([]byte("// Package example owns parsing.\npackage example\n// Value is immutable.\ntype Value struct { Field int }\n"))

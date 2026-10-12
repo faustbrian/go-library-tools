@@ -14,11 +14,20 @@ import (
 
 // Identity binds catalog output to the design language and generator.
 type Identity struct {
+	// DesignLanguageVersion must identify the reviewed 1.0 language.
 	DesignLanguageVersion string
-	DesignLanguageSHA256  string
-	SourceIdentity        string
-	ToolingVersion        string
-	PublicationStatus     string
+	// DesignLanguageSHA256 binds the reviewed language bytes using lowercase
+	// SHA-256.
+	DesignLanguageSHA256 string
+	// SourceIdentity is unpublished for development or an exact published semantic
+	// tag.
+	SourceIdentity string
+	// ToolingVersion is dev for unpublished projection or the exact released
+	// generator tag.
+	ToolingVersion string
+	// PublicationStatus is unpublished or published; it must agree with source/tool
+	// identities.
+	PublicationStatus string
 }
 
 // RenderMarkdown renders an envelope without adding timestamps or local state.
@@ -90,25 +99,41 @@ func documentationURL(repository, directory, version, reference string) string {
 
 // Envelope is a deterministic repository or ecosystem catalog projection.
 type Envelope struct {
-	SchemaVersion  int                    `json:"schema_version"`
-	View           string                 `json:"view"`
-	Scope          string                 `json:"scope"`
-	Repository     *string                `json:"repository"`
+	// SchemaVersion is 1 for the stable catalog projection shape.
+	SchemaVersion int `json:"schema_version"`
+	// View selects consumer or engineering and determines the concrete Modules slice
+	// type.
+	View string `json:"view"`
+	// Scope distinguishes repository from ecosystem projection.
+	Scope string `json:"scope"`
+	// Repository is non-nil for repository scope and nil for ecosystem scope.
+	Repository *string `json:"repository"`
+	// DesignLanguage records the reviewed language authority used by the projection.
 	DesignLanguage DesignLanguageIdentity `json:"design_language"`
-	Tooling        ToolingIdentity        `json:"tooling"`
-	Modules        any                    `json:"modules"`
+	// Tooling records the generator's declared publication identity, not a live
+	// release check.
+	Tooling ToolingIdentity `json:"tooling"`
+	// Modules holds the typed consumer/engineering projection; nested referenced
+	// data is not deep-copied.
+	Modules any `json:"modules"`
 }
 
 // DesignLanguageIdentity binds the catalog to reviewed consumer guidance.
 type DesignLanguageIdentity struct {
-	Version        string `json:"version"`
-	SHA256         string `json:"sha256"`
+	// Version is the reviewed design-language edition.
+	Version string `json:"version"`
+	// SHA256 is the reviewed language content digest.
+	SHA256 string `json:"sha256"`
+	// SourceIdentity is the declared immutable tag or explicit unpublished state.
 	SourceIdentity string `json:"source_identity"`
 }
 
 // ToolingIdentity records the exact generator identity and publication state.
 type ToolingIdentity struct {
-	Version           string `json:"version"`
+	// Version is the declared generator release tag or dev.
+	Version string `json:"version"`
+	// PublicationStatus distinguishes published authority from an unpublished source
+	// render.
 	PublicationStatus string `json:"publication_status"`
 }
 
@@ -170,7 +195,11 @@ var familyOrder = map[string]int{
 	"tooling":                       8,
 }
 
-// Project creates a repository-scoped consumer or engineering catalog.
+// Project creates a repository-scoped consumer or engineering catalog from
+// already admitted inventory and a validated declared generator identity. It
+// sorts a copied module slice but borrows nested metadata; keep inputs stable
+// while using the projection. Consumer view omits nonreleasable/internal/planned
+// entries rather than inventing publication or readiness evidence.
 func Project(catalog inventory.Inventory, view string, identity Identity) (Envelope, error) {
 	if view != "consumer" && view != "engineering" {
 		return Envelope{}, errors.New("catalog view must be consumer or engineering")

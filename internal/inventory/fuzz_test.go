@@ -8,6 +8,9 @@ import (
 	"github.com/faustbrian/go-library-tools/v2/internal/config"
 )
 
+// FuzzManifest bounds candidate module JSON at the manifest limit plus one byte,
+// pairs it with owned package metadata and exercises decoding/cross-owner
+// admission.
 func FuzzManifest(f *testing.F) {
 	f.Add([]byte(`{"schema_version":1,"repository":"example","go_version":"1.27.0","modules":[]}`))
 	f.Add([]byte(`{"schema_version":1,"unknown":true}`))

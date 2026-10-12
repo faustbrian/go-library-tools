@@ -56,7 +56,11 @@ func (operatingTaskFileSystem) RemoveAll(path string) error {
 }
 
 // NewProcessExecutor creates an executor whose Go and lint caches and temporary
-// files are task-owned. The caller must invoke cleanup exactly once.
+// files are task-owned. The caller must invoke cleanup exactly once after all
+// runs finish and handle cleanup errors. Streams remain borrowed; neither the
+// executor nor its writers are made safe for overlapping caller use. Ordinary
+// exec.CommandContext terminates its command; bounded scanner calls additionally
+// own the original Darwin/Linux process group, not deliberately detached work.
 func NewProcessExecutor(repositoryRoot string, stdout, stderr io.Writer) (Executor, func() error, error) {
 	return newProcessExecutor(repositoryRoot, stdout, stderr, operatingTaskFileSystem{})
 }
@@ -285,6 +289,8 @@ func (executor *processExecutor) runBounded(ctx context.Context, command Command
 		case <-done:
 		}
 	}()
+	// Join the monitor before returning: completion can race cancellation,
+	// and a newly observed context error remains failure even after process exit.
 	err := process.Wait()
 	close(done)
 	<-monitorDone

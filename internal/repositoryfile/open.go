@@ -18,6 +18,8 @@ func OpenContext(ctx context.Context, path string, maximum int64) (io.ReadCloser
 
 // OpenRootContext retains the supplied root's confinement and symlink semantics.
 // It has the same stable-filesystem/cooperative-IO requirements as OpenContext.
+// ctx and root must be non-nil; the caller owns root lifetime and must close the
+// returned handle on success. This function never closes the supplied root.
 func OpenRootContext(ctx context.Context, root *os.Root, path string, maximum int64) (io.ReadCloser, error) {
 	return openContext(ctx, path, maximum, root.Stat, func(name string) (file, error) { return root.Open(name) })
 }

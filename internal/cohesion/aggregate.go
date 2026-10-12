@@ -70,9 +70,14 @@ type aggregateEngineeringEnvelope struct {
 
 // Artifacts contains the four deterministic ecosystem catalog projections.
 type Artifacts struct {
-	ConsumerJSON        []byte
-	ConsumerMarkdown    []byte
-	EngineeringJSON     []byte
+	// ConsumerJSON is owned deterministic public-consumer projection data.
+	ConsumerJSON []byte
+	// ConsumerMarkdown is owned rendered public-consumer guidance.
+	ConsumerMarkdown []byte
+	// EngineeringJSON is owned deterministic complete engineering projection data.
+	EngineeringJSON []byte
+	// EngineeringMarkdown is owned rendered engineering guidance; publication is
+	// separately staged.
 	EngineeringMarkdown []byte
 }
 
@@ -88,6 +93,10 @@ var aggregateArtifactNames = []struct {
 
 // GenerateAggregate atomically replaces each canonical catalog artifact after
 // every input has been validated and all four outputs have rendered in memory.
+// Files are staged before replacement and failures attempt rollback, joining
+// restoration errors. Crash or rollback failure can leave a partial set: this
+// is not one crash-atomic transaction across four artifacts. Callers own a
+// stable output directory and must handle cleanup/publication errors.
 func GenerateAggregate(inputsPath, outputDirectory string, identity Identity) error {
 	return generateAggregateProtected(inputsPath, outputDirectory, "", identity, nil)
 }
@@ -697,6 +706,9 @@ func stageCatalog(target string, content []byte, existed bool, files catalogFile
 	return stagedCatalog{target: target, temporary: temporaryPath, existed: existed}, nil
 }
 
+// Preserve existing artifacts until all staged data is ready, then retain
+// backups through the replacement phase. A restore failure must remain visible
+// rather than deleting its only recoverable copy (TestRollbackCatalogSetReportsRemovalAndRestoreFailures).
 func publishCatalogSet(staged []stagedCatalog, files catalogFiles) error {
 	for index := range staged {
 		if !staged[index].existed {

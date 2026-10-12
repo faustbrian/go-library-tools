@@ -1,4 +1,8 @@
-// Package docscheck validates repository-owned Markdown navigation.
+// Package docscheck validates bounded repository-owned Markdown navigation.
+// CheckWithinContext admits a stable canonical tree with cooperative filesystem
+// cancellation; it does not interrupt parsing or qualify external links.
+// SpellingAssets and LycheeReleaseFor supply pinned optional tool inputs; tool
+// execution/download lifetime belongs to gates. No server or cgo is introduced.
 package docscheck
 
 import (

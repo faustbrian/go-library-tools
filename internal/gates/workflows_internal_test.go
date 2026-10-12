@@ -195,6 +195,8 @@ func TestInspectWorkflowDereferencesSecuritySensitiveScalarAliases(t *testing.T)
 	}
 }
 
+// FuzzInspectWorkflowNeverPanics varies YAML through the bounded workflow
+// parser; no action, shell or actionlint execution is part of this target.
 func FuzzInspectWorkflowNeverPanics(f *testing.F) {
 	f.Add([]byte("name: safe\non: push\njobs: {}\n"))
 	f.Add([]byte("name: unsafe\n'on': {pull_request_target: {}}\njobs: {}\n"))

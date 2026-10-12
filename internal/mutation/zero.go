@@ -12,18 +12,30 @@ const maximumZeroInventorySize = 1 << 20
 // ZeroInventory contains source- and verifier-bound reviews for packages where
 // the complete mutation operator set finds no viable mutations.
 type ZeroInventory struct {
-	SchemaVersion int          `json:"schema_version"`
-	Packages      []ZeroReview `json:"packages"`
+	// SchemaVersion must be 1 for supported source-bound no-mutant reviews.
+	SchemaVersion int `json:"schema_version"`
+	// Packages is a unique module/package review list; absence grants no reviewed
+	// exception.
+	Packages []ZeroReview `json:"packages"`
 }
 
 // ZeroReview explains one exact zero-mutant result.
 type ZeroReview struct {
-	ModuleDirectory        string `json:"module_directory"`
-	PackageDirectory       string `json:"package_directory"`
-	SourceDigest           string `json:"source_digest"`
-	GremlinsVersion        string `json:"gremlins_version"`
+	// ModuleDirectory is the exact owning repository-relative module.
+	ModuleDirectory string `json:"module_directory"`
+	// PackageDirectory is the exact package within the module.
+	PackageDirectory string `json:"package_directory"`
+	// SourceDigest is the reviewed direct production-source SHA-256, without a
+	// prefix.
+	SourceDigest string `json:"source_digest"`
+	// GremlinsVersion is the exact reviewed mutation engine release.
+	GremlinsVersion string `json:"gremlins_version"`
+	// GremlinsVerifierSHA256 is the reviewed semantic verifier SHA-256, without a
+	// prefix.
 	GremlinsVerifierSHA256 string `json:"gremlins_verifier_sha256"`
-	Reason                 string `json:"reason"`
+	// Reason is a detailed single-line no-mutant explanation, not proof supplied by
+	// parsing alone.
+	Reason string `json:"reason"`
 }
 
 // ParseZeroInventory strictly parses a bounded zero-mutant review inventory.

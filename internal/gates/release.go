@@ -42,8 +42,11 @@ func (operatingReleaseFiles) Create(path string) (io.WriteCloser, error) {
 	return os.Create(path)
 }
 
-// ReleaseDryRun rejects tag collisions, proves clean module consumption from a
-// task-owned proxy, and then executes every release gate.
+// ReleaseDryRun admits security policy and scans selected security sources
+// before checking tag collisions, rehearsing module resolution from a task-owned
+// local file proxy and executing applicable gates. The proxy uses checkout
+// bytes with GOSUMDB off: it is not published-tag or clean public consumption.
+// No tag is created; owned rehearsal files live until executor cleanup.
 func (runner Runner) ReleaseDryRun(ctx context.Context, selection []string) error {
 	modules, err := runner.selectModules(selection)
 	if err != nil {

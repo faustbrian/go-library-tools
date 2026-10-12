@@ -1,4 +1,8 @@
-// Package releasecheck validates immutable release metadata and required gates.
+// Package releasecheck admits release metadata and deterministic binary archives.
+// Validate selects eligible release units; PackageBinary and VerifyBinaryArchive
+// bind actual binary/toolchain/license inputs. Metadata admission does not prove
+// hosted CI, public consumption or tag publication. Callers own source/output
+// paths and context; archive bytes are never executed here.
 package releasecheck
 
 import (

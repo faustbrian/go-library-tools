@@ -16,42 +16,75 @@ const MaximumMigrationLedgerSize = 4 << 20
 // reviewed semantic replacements. Git revisions are matching data for the old
 // records only; approved evidence emitted by the new tool excludes them.
 type MigrationLedger struct {
-	SchemaVersion           int                     `json:"schema_version"`
-	Reason                  string                  `json:"reason"`
+	// SchemaVersion must be 3 for the admitted migration contract.
+	SchemaVersion int `json:"schema_version"`
+	// Reason is the detailed single-line rationale for the ledger.
+	Reason string `json:"reason"`
+	// VerifierMigrationReview is the exact reviewed replacement semantic verifier.
 	VerifierMigrationReview VerifierMigrationReview `json:"verifier_migration_review"`
-	VerifierMigrations      []VerifierMigration     `json:"verifier_migrations"`
-	Entries                 []InputMigration        `json:"entries"`
+	// VerifierMigrations is a unique complete historical checkpoint approval list.
+	VerifierMigrations []VerifierMigration `json:"verifier_migrations"`
+	// Entries is a unique exact input-transition approval list.
+	Entries []InputMigration `json:"entries"`
 }
 
 // VerifierMigrationReview records the human approval for one verifier.
 type VerifierMigrationReview struct {
+	// GremlinsVerifierSHA256 is the approved semantic verifier digest without a
+	// prefix.
 	GremlinsVerifierSHA256 string `json:"gremlins_verifier_sha256"`
-	Reason                 string `json:"reason"`
-	ReviewedAt             string `json:"reviewed_at"`
+	// Reason is the detailed single-line review rationale.
+	Reason string `json:"reason"`
+	// ReviewedAt is a parsed YYYY-MM-DD review date, not a freshness or signature
+	// check.
+	ReviewedAt string `json:"reviewed_at"`
 }
 
 // VerifierMigration proves which legacy checkpoint used the reviewed verifier.
 type VerifierMigration struct {
-	ExecutionRevision      string `json:"execution_revision"`
-	GateInputDigest        string `json:"gate_input_digest"`
+	// ExecutionRevision is the exact legacy execution commit used for approval
+	// matching only.
+	ExecutionRevision string `json:"execution_revision"`
+	// GateInputDigest is the approved historical gate-input SHA-256.
+	GateInputDigest string `json:"gate_input_digest"`
+	// GremlinsVerifierSHA256 must equal the ledger's approved replacement verifier.
 	GremlinsVerifierSHA256 string `json:"gremlins_verifier_sha256"`
-	GremlinsVersion        string `json:"gremlins_version"`
-	Module                 string `json:"module"`
-	Package                string `json:"package"`
-	ReportSHA256           string `json:"report_sha256"`
+	// GremlinsVersion is the exact historical engine release.
+	GremlinsVersion string `json:"gremlins_version"`
+	// Module is the exact approved legacy module directory.
+	Module string `json:"module"`
+	// Package is the exact approved package directory.
+	Package string `json:"package"`
+	// ReportSHA256 is the approved canonical report digest, not mutable source
+	// state.
+	ReportSHA256 string `json:"report_sha256"`
 }
 
 // InputMigration approves one exact replacement input identity.
 type InputMigration struct {
-	ExecutionRevision      string `json:"execution_revision"`
-	GateInputDigest        string `json:"gate_input_digest"`
+	// ExecutionRevision is the exact legacy execution commit for matching this
+	// transition.
+	ExecutionRevision string `json:"execution_revision"`
+	// GateInputDigest is the exact original gate-input identity.
+	GateInputDigest string `json:"gate_input_digest"`
+	// ReplacementInputDigest optionally selects the approved replacement identity;
+	// omission follows existing transition rules.
 	ReplacementInputDigest string `json:"replacement_gate_input_digest,omitempty"`
-	MigrationReason        string `json:"migration_reason,omitempty"`
+	// MigrationReason is bounded single-line transition guidance, not an executable
+	// hook.
+	MigrationReason string `json:"migration_reason,omitempty"`
+	// GremlinsVerifierSHA256 optionally repeats the approved verifier; omission
+	// inherits the ledger review.
 	GremlinsVerifierSHA256 string `json:"gremlins_verifier_sha256,omitempty"`
-	GremlinsVersion        string `json:"gremlins_version"`
-	Module                 string `json:"module"`
-	Package                string `json:"package"`
-	ReportSHA256           string `json:"report_sha256"`
+	// GremlinsVersion is the exact legacy engine release.
+	GremlinsVersion string `json:"gremlins_version"`
+	// Module is the exact module whose input may transition.
+	Module string `json:"module"`
+	// Package is the exact package whose input may transition.
+	Package string `json:"package"`
+	// ReportSHA256 binds the existing approved report rather than pretending to
+	// rerun it.
+	ReportSHA256 string `json:"report_sha256"`
 }
 
 // ParseMigrationLedger strictly parses one bounded approval ledger.

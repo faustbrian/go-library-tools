@@ -1,4 +1,9 @@
-// Package repositoryfile safely reads bounded repository-owned files.
+// Package repositoryfile admits bounded caller-owned filesystem inputs.
+// Read rejects symlinked below-root components and checks opened identity;
+// OpenContext preserves ordinary Stat/Open semantics and OpenRootContext borrows
+// os.Root confinement. These are intentionally different entry points, requiring
+// a stable trusted filesystem and cooperative I/O, not an atomic source snapshot.
+// Returned handles belong to callers; no background worker or cgo is added.
 package repositoryfile
 
 import (

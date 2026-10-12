@@ -1,5 +1,9 @@
 // Package sourcedocs inventories objective Go comment structure across tracked
 // source variants without compiling packages, executing generators, or scoring prose.
+// Root discovers a generic Git worktree; Audit consumes its stable tracked files.
+// Reports are owned deterministic inventories, not semantic/build-matrix or
+// generator reproducibility certification. No retained worker, cgo or framework
+// metadata dependency is introduced.
 package sourcedocs
 
 import (

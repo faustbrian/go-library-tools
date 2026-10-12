@@ -849,6 +849,9 @@ func TestValidateRejectsMalformedScannerAndVerdictProvenance(t *testing.T) {
 	}
 }
 
+// FuzzValidateNeverPanics varies paired risk/matrix JSON including size
+// boundaries, asserting malformed-JSON refusal and unchanged input bytes; no
+// explicit harness cap precedes owned file creation.
 func FuzzValidateNeverPanics(f *testing.F) {
 	emptyRisks := `{"schema_version":1,"risks":[]}`
 	emptyMatrix := `{"schema_version":1,"modules":[]}`

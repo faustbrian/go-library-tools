@@ -1,5 +1,8 @@
-// Package coverage validates Go coverage profiles against canonical production
-// package inventory.
+// Package coverage accounts for Go profile statements against explicit
+// production package inventory. Verify enforces exact accounting; VerifyWithMode
+// can collect evidence without certifying behavioral adequacy. Readers remain
+// borrowed, input lines and failure diagnostics are bounded, and no test process
+// or lifecycle is owned here.
 package coverage
 
 import (

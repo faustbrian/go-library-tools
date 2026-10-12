@@ -1,4 +1,8 @@
-// Package cohesion validates and projects the ecosystem cohesion contract.
+// Package cohesion validates repository metadata and projects deterministic
+// consumer/engineering catalogs. Start with LoadAndCheck or Project, then use
+// explicit aggregation for locked inputs. Validation is not runtime or release
+// qualification; projections may borrow nested catalog data. Publication owns
+// confined staged files, not a crash-atomic transaction across all artifacts.
 package cohesion
 
 import (
@@ -14,26 +18,46 @@ import (
 
 // Report is the stable machine-readable cohesion-check result.
 type Report struct {
-	SchemaVersion         int          `json:"schema_version"`
-	Repository            *string      `json:"repository"`
-	ManifestSchemaVersion *int         `json:"manifest_schema_version"`
-	Valid                 bool         `json:"valid"`
-	Summary               Summary      `json:"summary"`
-	Diagnostics           []Diagnostic `json:"diagnostics"`
+	// SchemaVersion is 1 for the stable diagnostic shape.
+	SchemaVersion int `json:"schema_version"`
+	// Repository is nil when identity could not be established.
+	Repository *string `json:"repository"`
+	// ManifestSchemaVersion is nil when no source schema version could be
+	// established.
+	ManifestSchemaVersion *int `json:"manifest_schema_version"`
+	// Valid is true only when no cohesion diagnostics remain, not when downstream
+	// gates pass.
+	Valid bool `json:"valid"`
+	// Summary contains established counts, with nil preserving unavailable facts.
+	Summary Summary `json:"summary"`
+	// Diagnostics is sorted by path, code and message; parse failures remain
+	// visible.
+	Diagnostics []Diagnostic `json:"diagnostics"`
 }
 
 // Summary counts the modules that could be established from the manifest.
 type Summary struct {
-	TotalModules      *int `json:"total_modules"`
+	// TotalModules is nil for unavailable inventory, otherwise the decoded count.
+	TotalModules *int `json:"total_modules"`
+	// ReleasableModules counts declared release units, not published releases; nil
+	// means unavailable.
 	ReleasableModules *int `json:"releasable_modules"`
+	// ClassifiedModules counts modules with cohesion metadata; nil means
+	// unavailable.
 	ClassifiedModules *int `json:"classified_modules"`
-	ErrorCount        int  `json:"error_count"`
+	// ErrorCount counts reported cohesion violations, independently of partial
+	// summary counts.
+	ErrorCount int `json:"error_count"`
 }
 
 // Diagnostic identifies one deterministic cohesion violation.
 type Diagnostic struct {
-	Code    string `json:"code"`
-	Path    string `json:"path"`
+	// Code is the stable machine classification of the violation.
+	Code string `json:"code"`
+	// Path is the JSON-style manifest location, empty for document-wide failure.
+	Path string `json:"path"`
+	// Message is bounded maintained diagnostic prose rather than untrusted source
+	// payload.
 	Message string `json:"message"`
 }
 
@@ -43,7 +67,10 @@ func Check(root string, policy config.Config) Report {
 	return report
 }
 
-// LoadAndCheck returns the single validated inventory snapshot used by catalog projection.
+// LoadAndCheck binds diagnostics to one admitted module-manifest read and the
+// corresponding decoded inventory. Report.Valid must be true before catalog
+// projection; an invalid report may retain partial inventory/counts solely for
+// diagnostics. Neither success nor one read is an atomic two-file snapshot.
 func LoadAndCheck(root string, policy config.Config) (inventory.Inventory, Report) {
 	catalog, moduleManifest, err := inventory.LoadSnapshot(root, policy)
 	if err != nil && len(moduleManifest) == 0 {

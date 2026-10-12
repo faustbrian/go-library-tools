@@ -28,21 +28,35 @@ const (
 // OwnedModule identifies a repository-local module whose source may observe a
 // mutation campaign.
 type OwnedModule struct {
+	// ModulePath is a declared owned import identity, not discovered from siblings.
 	ModulePath string `json:"module_path"`
-	Directory  string `json:"directory"`
+	// Directory is its canonical repository-relative source root.
+	Directory string `json:"directory"`
 }
 
 // InputPolicy is the package-level semantic policy bound to mutation evidence.
 type InputPolicy struct {
-	ModuleDirectory   string            `json:"module_directory"`
-	PackageDirectory  string            `json:"package_directory"`
-	ModulePath        string            `json:"module_path"`
-	GoVersion         string            `json:"go_version"`
-	TestTags          []string          `json:"test_tags"`
-	BuildTags         []string          `json:"build_tags"`
-	RequiredServices  []string          `json:"required_services"`
+	// ModuleDirectory is the repository-relative owning module root.
+	ModuleDirectory string `json:"module_directory"`
+	// PackageDirectory is the package directory within ModuleDirectory.
+	PackageDirectory string `json:"package_directory"`
+	// ModulePath is the owning import identity used to identify observing tests.
+	ModulePath string `json:"module_path"`
+	// GoVersion is declared semantic toolchain policy, not the installed binary
+	// digest.
+	GoVersion string `json:"go_version"`
+	// TestTags is the test variant set canonicalized into identity.
+	TestTags []string `json:"test_tags"`
+	// BuildTags is the production variant set canonicalized into identity.
+	BuildTags []string `json:"build_tags"`
+	// RequiredServices is the declared required service set.
+	RequiredServices []string `json:"required_services"`
+	// ServiceIdentities is actual nonsecret service metadata canonicalized into
+	// identity.
 	ServiceIdentities map[string]string `json:"service_identities"`
-	OwnedModules      []OwnedModule     `json:"owned_modules"`
+	// OwnedModules is explicit local module ownership; current identity retains only
+	// observed roots.
+	OwnedModules []OwnedModule `json:"owned_modules"`
 }
 
 type listedPackage struct {

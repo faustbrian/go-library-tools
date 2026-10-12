@@ -1,4 +1,9 @@
-// Package evidence owns the durable, content-addressed verification record.
+// Package evidence owns immutable content-addressed verification records.
+// Parse/Validate establish metadata shape; gate-specific consumers must verify
+// actual input, verifier and report identities before reuse. Store publishes
+// without replacing conflicts and treats completion time as nonsemantic.
+// Roots and returned collections remain caller-owned; no worker, authentication
+// service or multi-artifact crash transaction is provided.
 package evidence
 
 import (
@@ -38,17 +43,33 @@ var (
 // Record binds a gate result to source content and verifier semantics. Git
 // identity is deliberately absent because history does not change proof.
 type Record struct {
-	SchemaVersion  int               `json:"schema_version"`
-	Repository     string            `json:"repository"`
-	Module         string            `json:"module"`
-	Package        string            `json:"package,omitempty"`
-	Gate           string            `json:"gate"`
-	InputDigest    string            `json:"input_digest"`
-	VerifierDigest string            `json:"verifier_digest"`
-	Result         string            `json:"result"`
-	ReportDigest   string            `json:"report_digest"`
-	Environment    map[string]string `json:"environment,omitempty"`
-	CompletedAt    time.Time         `json:"completed_at"`
+	// SchemaVersion must equal the supported record SchemaVersion.
+	SchemaVersion int `json:"schema_version"`
+	// Repository is the nonempty owner identity checked by the consuming gate.
+	Repository string `json:"repository"`
+	// Module is the nonempty module identity checked by the consuming gate.
+	Module string `json:"module"`
+	// Package optionally scopes the record to one observing package.
+	Package string `json:"package,omitempty"`
+	// Gate is a canonical lowercase gate key used in the content-addressed path.
+	Gate string `json:"gate"`
+	// InputDigest is the sha256:-prefixed observed input identity.
+	InputDigest string `json:"input_digest"`
+	// VerifierDigest is the sha256:-prefixed semantic verifier identity, not an
+	// execution Git revision.
+	VerifierDigest string `json:"verifier_digest"`
+	// Result is passed, advisory, not_applicable or failed; only consumer-specific
+	// policy grants reuse.
+	Result string `json:"result"`
+	// ReportDigest is the sha256:-prefixed report identity that consumers must
+	// independently verify.
+	ReportDigest string `json:"report_digest"`
+	// Environment is borrowed nonsecret execution metadata; validation checks keys,
+	// not secret redaction.
+	Environment map[string]string `json:"environment,omitempty"`
+	// CompletedAt is required completion time; immutable equivalence deliberately
+	// ignores timestamp differences.
+	CompletedAt time.Time `json:"completed_at"`
 }
 
 type durableFile interface {
@@ -190,7 +211,8 @@ func requireEOF(decoder *json.Decoder) error {
 	return nil
 }
 
-// Validate rejects incomplete, forged, or non-canonical record metadata.
+// Validate rejects incomplete or non-canonical record metadata. It does not
+// authenticate claimed outcomes or inspect referenced source/report content.
 func (record Record) Validate() error {
 	if record.SchemaVersion != SchemaVersion {
 		return fmt.Errorf("%w: schema_version must be %d", ErrInvalid, SchemaVersion)
@@ -235,7 +257,11 @@ func Marshal(record Record) ([]byte, error) {
 }
 
 // Store writes a record once without replacing different evidence. The bool
-// reports whether byte-identical evidence was already present.
+// reports whether semantically equivalent evidence was already present;
+// completion timestamp differences do not conflict. Publication syncs the file
+// and links without replacement, not a multi-artifact crash-atomic transaction.
+// Roots must remain stable and caller-owned; concurrent identical writes may
+// reuse the winner, while differing semantic metadata returns ErrConflict.
 func Store(root string, record Record) (string, bool, error) {
 	if err := record.Validate(); err != nil {
 		return "", false, err

@@ -1,5 +1,9 @@
-// Package specification validates specification decision registers and their
-// executable conformance evidence.
+// Package specification validates pinned authority inputs, current decision
+// registers, recorded history and executable-evidence references. Check is
+// offline; CheckOnline additionally verifies mutable public authorities under
+// bounded network policy. Neither executes conformance evidence or proves a
+// cited test passed. Callers own context and admitted catalog; no worker or cgo
+// lifecycle is retained.
 package specification
 
 import (
@@ -83,8 +87,12 @@ var (
 
 // Report summarizes the specification-backed modules and registered choices.
 type Report struct {
-	Modules    int
-	Decisions  int
+	// Modules counts applicable specification-backed modules inspected.
+	Modules int
+	// Decisions counts registered decisions inspected, not independent conformance
+	// passes.
+	Decisions int
+	// Unresolved counts unresolved choices reported by the checker.
 	Unresolved int
 }
 

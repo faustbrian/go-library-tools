@@ -1,4 +1,8 @@
 // Command golib validates and executes the shared Go library contract.
+// Its normal entry is the explicit CLI subcommand; SIGINT/SIGTERM cancel one
+// invocation; owned scratch cleanup is attempted before exit and failures are
+// reported. It does not
+// publish a release or qualify sibling libraries merely by being installed.
 package main
 
 import (

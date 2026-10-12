@@ -1,4 +1,10 @@
-// Package gates orchestrates repository checks from canonical module policy.
+// Package gates orchestrates checks for one admitted standalone repository.
+// Construct Runner with validated policy/catalog and a caller-owned Executor;
+// release selection, applicability and security admission are explicit.
+// Runs borrow streams and policy collections and must be externally serialized
+// when sharing state/caches. Optional tools and services are pinned/owned by
+// their gates; cancellation is cooperative, not a sandbox or public-consumer
+// qualification. Executor cleanup follows all completed invocations.
 package gates
 
 import (
@@ -81,13 +87,24 @@ type Command struct {
 	// boundedScanner is only set by owned scanner/source/test command callers.
 	// It does not claim containment of arbitrary repository code.
 	boundedScanner bool
-	Name           string
-	Args           []string
-	Dir            string
-	Env            map[string]string
-	Stdin          io.Reader
-	Stdout         io.Writer
-	Stderr         io.Writer
+	// Name is the executable name/path; secrets must not be supplied as arguments.
+	Name string
+	// Args is a borrowed explicit argv slice, without shell interpolation.
+	Args []string
+	// Dir is the working directory selected by the owning gate.
+	Dir string
+	// Env is borrowed per-command overrides; executor-owned cache protection takes
+	// precedence.
+	Env map[string]string
+	// Stdin is borrowed input consumed synchronously; the executor does not close
+	// it.
+	Stdin io.Reader
+	// Stdout is borrowed output; nil uses the executor default for ordinary
+	// commands.
+	Stdout io.Writer
+	// Stderr is borrowed diagnostics; nil uses the executor default for ordinary
+	// commands.
+	Stderr io.Writer
 }
 
 const maximumSecurityProcessOutput = 4 << 20
@@ -174,8 +191,13 @@ func (output *boundedProcessOutput) findingMetadata() string {
 	return output.metadata.summary()
 }
 
-// Executor runs one external command.
+// Executor runs explicit argument-array commands and owns their completion.
+// Honor context and output ownership; describe termination limits rather than
+// claiming a sandbox or automatic cancellation of detached descendants.
 type Executor interface {
+	// Run finishes the admitted command or returns its failure. Borrowed argv,
+	// environment and streams must remain stable; raw external errors may contain
+	// diagnostics, so scanner callers supply their own bounded privacy boundary.
 	Run(context.Context, Command) error
 }
 
@@ -185,10 +207,18 @@ type taskWorkspace interface {
 
 // Runner executes gates for modules in one validated repository.
 type Runner struct {
-	Root              string
-	Catalog           inventory.Inventory
-	Policy            config.Config
-	Executor          Executor
+	// Root is the validated standalone repository, not the coordination directory.
+	Root string
+	// Catalog is borrowed canonical inventory; do not mutate its collections during
+	// a run.
+	Catalog inventory.Inventory
+	// Policy is borrowed validated configuration, not arbitrary execution hooks.
+	Policy config.Config
+	// Executor is the caller-owned command/lifetime boundary; cleanup must wait for
+	// all runs.
+	Executor Executor
+	// Output is borrowed progress/diagnostic output; nil discards it and no close is
+	// owned.
 	Output            io.Writer
 	coverageFiles     coverageFileSystem
 	secretConfigFiles secretConfigFileSystem

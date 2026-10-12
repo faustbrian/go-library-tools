@@ -68,42 +68,80 @@ func (output *boundedMutationOutput) confirmsNoResults() bool {
 // CampaignPolicy contains the canonical module and package policy required by
 // mutation execution. Service lifecycle remains owned by the caller.
 type CampaignPolicy struct {
-	Repository        string
-	ModuleDirectory   string
-	ModulePath        string
-	GoVersion         string
-	Packages          []string
-	TestTags          []string
-	BuildTags         []string
-	RequiredServices  []string
+	// Repository is the canonical evidence repository identity.
+	Repository string
+	// ModuleDirectory is the repository-relative campaign module root.
+	ModuleDirectory string
+	// ModulePath is the owning import identity.
+	ModulePath string
+	// GoVersion is the declared module toolchain input to evidence identity.
+	GoVersion string
+	// Packages is the explicit package-directory selection; Run sorts a copied
+	// slice.
+	Packages []string
+	// TestTags selects observing tests bound into evidence identity.
+	TestTags []string
+	// BuildTags records production variant policy bound into evidence identity.
+	BuildTags []string
+	// RequiredServices names services already owned by the caller, not started by
+	// Campaign.
+	RequiredServices []string
+	// ServiceIdentities binds actual service versions/images without credentials.
 	ServiceIdentities map[string]string
-	OwnedModules      []OwnedModule
-	Workers           int
+	// OwnedModules declares local module roots whose observed source can affect a
+	// package.
+	OwnedModules []OwnedModule
+	// Workers must be 1–64 for a constructed Campaign; zero is refused.
+	Workers int
 }
 
 // RuntimeIdentity contains only non-secret execution metadata.
 type RuntimeIdentity struct {
-	GoVersion  string `json:"GOVERSION"`
-	GOOS       string `json:"GOOS"`
-	GOARCH     string `json:"GOARCH"`
+	// GoVersion is the nonempty observed GOVERSION string.
+	GoVersion string `json:"GOVERSION"`
+	// GOOS is the nonempty observed target operating system.
+	GOOS string `json:"GOOS"`
+	// GOARCH is the nonempty observed target architecture.
+	GOARCH string `json:"GOARCH"`
+	// CGOEnabled is the nonempty observed CGO_ENABLED setting; parsing does not
+	// infer support.
 	CGOEnabled string `json:"CGO_ENABLED"`
 }
 
 // Campaign executes or reuses package-granular mutation evidence.
 type Campaign struct {
-	Root              string
-	EvidenceRoot      string
-	MutationRoot      string
-	Workspace         string
-	Policy            CampaignPolicy
-	ZeroReviews       ZeroInventory
+	// Root is the absolute stable repository source root.
+	Root string
+	// EvidenceRoot is the absolute content-addressed record directory.
+	EvidenceRoot string
+	// MutationRoot is the absolute immutable report/checkpoint directory.
+	MutationRoot string
+	// Workspace is caller-owned disposable construction/execution scratch, cleaned
+	// after all work finishes.
+	Workspace string
+	// Policy is borrowed admitted package/module policy; keep collections stable
+	// during execution.
+	Policy CampaignPolicy
+	// ZeroReviews is borrowed exact no-mutant review policy, not automatic
+	// acceptance of empty output.
+	ZeroReviews ZeroInventory
+	// EquivalentReviews is borrowed exact survivor disposition policy, not altered
+	// native statuses.
 	EquivalentReviews EquivalentInventory
-	Environment       map[string]string
-	RuntimeIdentity   RuntimeIdentity
-	Process           Process
-	Output            io.Writer
-	Now               func() time.Time
-	directoryFiles    campaignDirectoryFileSystem
+	// Environment is borrowed nonsecret execution metadata bound into records.
+	Environment map[string]string
+	// RuntimeIdentity is observed Go target metadata, distinct from declared
+	// GoVersion.
+	RuntimeIdentity RuntimeIdentity
+	// Process is mandatory synchronous argument-array execution; caller owns
+	// cancellation and process lifetime.
+	Process Process
+	// Output is borrowed progress output; nil discards it.
+	Output io.Writer
+	// Now is optional borrowed completion clock; nil uses time.Now, without callback
+	// panic containment.
+	Now            func() time.Time
+	directoryFiles campaignDirectoryFileSystem
 }
 
 type campaignDirectoryFileSystem interface {
@@ -120,7 +158,12 @@ func (operatingCampaignDirectories) Lstat(path string) (os.FileInfo, error) {
 	return os.Lstat(path)
 }
 
-// Run executes missing package campaigns and persists each result immediately.
+// Run executes missing package campaigns in sorted order and persists each
+// result immediately. Earlier successful records survive later failure; source
+// is checked again before publication, not held as an atomic checkout snapshot.
+// Process/clock/output callbacks remain synchronous and may block or panic.
+// Caller must serialize shared workspace/evidence inputs and own cleanup; context
+// checkpoints do not forcibly interrupt filesystem operations.
 func (campaign Campaign) Run(ctx context.Context) error {
 	if err := campaign.validate(); err != nil {
 		return err
@@ -143,8 +186,10 @@ func (campaign Campaign) Run(ctx context.Context) error {
 	return nil
 }
 
-// Import migrates explicitly approved legacy checkpoints to current
-// content-addressed evidence without depending on their Git revisions.
+// Import migrates approved legacy checkpoints to current content-addressed
+// evidence. ExecutionRevision still selects exact historical ledger approval;
+// it is omitted from newly emitted reuse identity. Successfully imported prior
+// packages survive later failure, and no old execution is reported as rerun.
 func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, ledger MigrationLedger) error {
 	if err := campaign.validate(); err != nil {
 		return err

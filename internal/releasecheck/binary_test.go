@@ -149,6 +149,9 @@ func changeLicenseManifest(t *testing.T, corpus fstest.MapFS, change func(*binar
 	corpus["licenses.json"].Data = data
 }
 
+// FuzzVerifyBinaryArchiveRefusesHostileContentWithoutPanic caps untrusted
+// archive content at 1 MiB; accepted output must at least be gzip and satisfy
+// deeper owned archive checks, without executing its binary.
 func FuzzVerifyBinaryArchiveRefusesHostileContentWithoutPanic(f *testing.F) {
 	f.Add([]byte("not an archive"))
 	f.Add([]byte{0x1f, 0x8b, 0x08})

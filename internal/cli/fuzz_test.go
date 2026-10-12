@@ -8,6 +8,8 @@ import (
 	"github.com/faustbrian/go-library-tools/v2/internal/inventory"
 )
 
+// FuzzModuleSelection caps CLI text at 4 KiB and 32 tokens, asserting
+// deterministic module/release selection and error outcomes.
 func FuzzModuleSelection(f *testing.F) {
 	f.Add("")
 	f.Add("--module .")

@@ -1,4 +1,9 @@
-// Package mutation validates and executes exact mutation-testing campaigns.
+// Package mutation admits exact mutation reports and runs explicitly selected
+// package campaigns. Start with report/review parsing or an admitted Campaign;
+// current reuse binds observed source, tests, tool semantics and reviewed native
+// coordinates, not a changed Git revision or score alone. Callers own process,
+// workspace and service cleanup; callbacks must honor context and not expose
+// secrets. No broad campaign runs implicitly from record validation.
 package mutation
 
 import (
@@ -43,21 +48,40 @@ var (
 )
 
 // Checkpoint is validated legacy evidence suitable for content-identity
-// migration. Revision fields are intentionally discarded.
+// migration. ExecutionRevision is retained for exact legacy approval matching;
+// validated-revision metadata is discarded and new evidence uses content identity.
 type Checkpoint struct {
-	Module            string
-	Package           string
+	// Module is the validated legacy module directory.
+	Module string
+	// Package is the validated package directory within Module.
+	Package string
+	// ExecutionRevision is retained solely to match exact historical migration
+	// approval, not new reusable evidence identity.
 	ExecutionRevision string
-	InputDigest       string
-	InputLineage      []string
-	VerifierDigest    string
-	BinaryDigest      string
-	VerifierSource    string
-	Gremlins          string
-	Environment       map[string]string
-	ReportDigest      string
-	Report            json.RawMessage
-	Mutants           int
+	// InputDigest is the validated legacy gate input digest without the sha256:
+	// prefix.
+	InputDigest string
+	// InputLineage preserves admitted prior input identities for explicit migration
+	// matching.
+	InputLineage []string
+	// VerifierDigest binds the legacy semantic verifier, not its execution revision.
+	VerifierDigest string
+	// BinaryDigest is the optional recorded legacy verifier executable identity.
+	BinaryDigest string
+	// VerifierSource records how the legacy verifier identity was established.
+	VerifierSource string
+	// Gremlins is the exact legacy engine version.
+	Gremlins string
+	// Environment contains admitted recorded execution metadata; callers must not
+	// add secrets.
+	Environment map[string]string
+	// ReportDigest is the canonical validated report identity.
+	ReportDigest string
+	// Report owns admitted raw report JSON; do not mutate it while migration uses
+	// it.
+	Report json.RawMessage
+	// Mutants is the validated report mutant count, not a coverage score.
+	Mutants int
 }
 
 type legacyCheckpoint struct {
@@ -106,9 +130,14 @@ type mutation struct {
 
 // ReportResult summarizes a strictly validated Gremlins report.
 type ReportResult struct {
-	Digest     string
-	Mutants    int
-	Killed     int
+	// Digest is the sha256:-prefixed canonical validated report identity.
+	Digest string
+	// Mutants counts completely accounted native mutation records.
+	Mutants int
+	// Killed counts native KILLED records without rewriting reviewed survivors.
+	Killed int
+	// Equivalent counts exact independently reviewed LIVED coordinates accepted
+	// under the selected contract.
 	Equivalent int
 }
 

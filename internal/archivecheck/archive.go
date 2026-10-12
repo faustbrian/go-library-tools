@@ -1,4 +1,7 @@
-// Package archivecheck validates untrusted gzip-compressed tar archives before extraction.
+// Package archivecheck admits gzip/tar metadata and expanded content before
+// extraction. Validate is the entry point; it borrows a reader and writes no
+// files. Per-stream quotas and canonical regular/directory paths are enforced,
+// but the caller owns reader lifetime and any subsequent confined extraction.
 package archivecheck
 
 import (
@@ -14,8 +17,13 @@ import (
 
 // Limits bounds archive metadata and expanded content.
 type Limits struct {
-	Entries         int
-	Bytes           int64
+	// Entries is the positive maximum count of regular-file and directory headers.
+	Entries int
+	// Bytes is the positive expanded-stream ceiling, including tar padding and
+	// discarded content.
+	Bytes int64
+	// CompressedBytes optionally bounds gzip input with one-byte look-ahead;
+	// nonpositive disables this dimension.
 	CompressedBytes int64
 }
 
