@@ -112,6 +112,11 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 	if len(args) >= 2 && args[0] == "release" && (args[1] == "package" || args[1] == "archive-check") {
 		return executeBinaryRelease(ctx, args[1:], stdout, stderr)
 	}
+	if args[0] == "source-docs" {
+		// Comment inspection consumes Git-tracked source, not framework policy.
+		// Test-only and ordinary Go repositories need no synthetic catalog.
+		return executeSourceDocumentation(ctx, args[1:], workingDirectory, stdout, stderr)
+	}
 
 	root, err := findRoot(workingDirectory)
 	if err != nil {
@@ -366,8 +371,6 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Docs(ctx, selection)
 		})
-	case "source-docs":
-		return executeSourceDocumentation(ctx, args[1:], root, stdout, stderr)
 	case "services":
 		if len(args) < 2 || args[1] != "cycle" {
 			return usage(stderr, "usage: golib services cycle [--module <directory>]")
@@ -864,7 +867,11 @@ func executeSourceDocumentation(ctx context.Context, args []string, root string,
 	if len(args) < 1 || len(args) > 2 || (args[0] != "inventory" && args[0] != "check") || (len(args) == 2 && args[1] != "--json") {
 		return usage(stderr, "usage: golib source-docs <inventory|check> [--json]")
 	}
-	report, err := sourcedocs.Audit(ctx, root)
+	gitRoot, err := sourcedocs.Root(ctx, root)
+	if err != nil {
+		return failure(stderr, err)
+	}
+	report, err := sourcedocs.Audit(ctx, gitRoot)
 	if err != nil {
 		return failure(stderr, err)
 	}

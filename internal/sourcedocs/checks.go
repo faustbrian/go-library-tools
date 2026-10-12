@@ -7,6 +7,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"unicode"
@@ -23,6 +24,8 @@ var issuePattern = regexp.MustCompile(`(?:https://[^\s]+/(?:issues|pull)/[0-9]+|
 var linkPattern = regexp.MustCompile(`(?m)\[[^\]\n]+\]\(([^)\s]+)\)|^\s*\[[^\]\n]+\]:\s*(\S+)`)
 var externalURLPattern = regexp.MustCompile(`https?://[^\s<>]+`)
 var deprecationMarkerPattern = regexp.MustCompile(`(?i)^deprecated\s*:`)
+var generatorPathPattern = regexp.MustCompile(`\.(?:go|php|py|sh|rb)$`)
+var headerProducerPattern = regexp.MustCompile(`^by ("(?:[^"\\]|\\.)*"|[^\s;]+)(?:;|\s|$)`)
 
 func validPackageComment(comment *ast.CommentGroup, name string) bool {
 	if comment == nil {
@@ -54,7 +57,7 @@ func validDeclarationComment(comment *ast.CommentGroup, name string) bool {
 	return !unicode.IsLetter(next) && !unicode.IsDigit(next) && next != '_'
 }
 
-func inspectFile(root string, file parsedFile, all []parsedFile, report *Report) error {
+func inspectFile(root string, file parsedFile, all []parsedFile, surface publicSurface, report *Report) error {
 	if file.file.Generated {
 		checkGenerator(root, file, all, report)
 		// Externally generated declarations stay visible in the inventory, but
@@ -63,7 +66,7 @@ func inspectFile(root string, file parsedFile, all []parsedFile, report *Report)
 		for _, declaration := range file.ast.Decls {
 			switch declaration := declaration.(type) {
 			case *ast.FuncDecl:
-				if declaration.Name.IsExported() {
+				if declaration.Name.IsExported() && (declaration.Recv == nil || surface.methods[declaration]) {
 					checkDeclaration(file, declaration.Name, declaration.Doc, report)
 				}
 			case *ast.GenDecl:
@@ -102,7 +105,7 @@ func inspectFile(root string, file parsedFile, all []parsedFile, report *Report)
 				}
 			}
 		}
-		checkMembers(file, file.ast, report)
+		checkMembers(file, file.ast, surface, report)
 	}
 	for _, group := range file.ast.Comments {
 		text := group.Text()
@@ -147,7 +150,7 @@ func checkDeclaration(file parsedFile, name *ast.Ident, comment *ast.CommentGrou
 	}
 }
 
-func checkMembers(file parsedFile, expression ast.Node, report *Report) {
+func checkMembers(file parsedFile, expression ast.Node, surface publicSurface, report *Report) {
 	ast.Inspect(expression, func(node ast.Node) bool {
 		var members *ast.FieldList
 		switch node := node.(type) {
@@ -159,6 +162,9 @@ func checkMembers(file parsedFile, expression ast.Node, report *Report) {
 			return true
 		}
 		for _, member := range members.List {
+			if !surface.members[member] {
+				continue
+			}
 			comment := member.Doc
 			if comment == nil {
 				comment = member.Comment
@@ -174,6 +180,176 @@ func checkMembers(file parsedFile, expression ast.Node, report *Report) {
 		}
 		return true
 	})
+}
+
+type publicSurface struct {
+	methods map[*ast.FuncDecl]bool
+	members map[*ast.Field]bool
+}
+
+// consumerSurface follows type expressions from public declarations, never
+// function bodies. Private concrete types can expose members through public
+// signatures or embedding; private wire layouts and implementation seams cannot.
+func consumerSurface(files []parsedFile) publicSurface {
+	surface := publicSurface{methods: map[*ast.FuncDecl]bool{}, members: map[*ast.Field]bool{}}
+	types := map[string][]ast.Expr{}
+	methods := map[string][]*ast.FuncDecl{}
+	functions := map[string][]*ast.FuncType{}
+	roots := []ast.Expr{}
+	for _, file := range files {
+		if file.file.Kind != "source" || file.file.Generated {
+			continue
+		}
+		for _, declaration := range file.ast.Decls {
+			switch declaration := declaration.(type) {
+			case *ast.FuncDecl:
+				if declaration.Recv != nil {
+					if name := receiverName(declaration.Recv.List[0].Type); name != "" {
+						methods[name] = append(methods[name], declaration)
+					}
+				} else {
+					functions[declaration.Name.Name] = append(functions[declaration.Name.Name], declaration.Type)
+					if declaration.Name.IsExported() {
+						roots = append(roots, declaration.Type)
+					}
+				}
+			case *ast.GenDecl:
+				for _, specification := range declaration.Specs {
+					switch specification := specification.(type) {
+					case *ast.TypeSpec:
+						types[specification.Name.Name] = append(types[specification.Name.Name], specification.Type)
+						if specification.TypeParams != nil {
+							for _, parameter := range specification.TypeParams.List {
+								types[specification.Name.Name] = append(types[specification.Name.Name], parameter.Type)
+							}
+						}
+						if specification.Name.IsExported() {
+							roots = append(roots, specification.Name)
+						}
+					case *ast.ValueSpec:
+						if slices.ContainsFunc(specification.Names, func(name *ast.Ident) bool { return name.IsExported() }) {
+							if specification.Type != nil {
+								roots = append(roots, specification.Type)
+							}
+							roots = append(roots, specification.Values...)
+						}
+					}
+				}
+			}
+		}
+	}
+	seen := map[ast.Expr]bool{}
+	for len(roots) > 0 {
+		expression := roots[len(roots)-1]
+		roots = roots[:len(roots)-1]
+		if expression == nil || seen[expression] {
+			continue
+		}
+		seen[expression] = true
+		switch expression := expression.(type) {
+		case *ast.Ident:
+			roots = append(roots, types[expression.Name]...)
+			for _, method := range methods[expression.Name] {
+				if method.Name.IsExported() {
+					surface.methods[method] = true
+					roots = append(roots, method.Type)
+				}
+			}
+		case *ast.StarExpr:
+			roots = append(roots, expression.X)
+		case *ast.ParenExpr:
+			roots = append(roots, expression.X)
+		case *ast.ArrayType:
+			roots = append(roots, expression.Elt)
+		case *ast.MapType:
+			roots = append(roots, expression.Key, expression.Value)
+		case *ast.ChanType:
+			roots = append(roots, expression.Value)
+		case *ast.Ellipsis:
+			roots = append(roots, expression.Elt)
+		case *ast.IndexExpr:
+			roots = append(roots, expression.X, expression.Index)
+		case *ast.IndexListExpr:
+			roots = append(roots, expression.X)
+			roots = append(roots, expression.Indices...)
+		case *ast.UnaryExpr:
+			roots = append(roots, expression.X)
+		case *ast.BinaryExpr:
+			roots = append(roots, expression.X, expression.Y)
+		case *ast.CompositeLit:
+			roots = append(roots, expression.Type)
+		case *ast.FuncLit:
+			roots = append(roots, expression.Type)
+		case *ast.CallExpr:
+			callee := expression.Fun
+			for {
+				parenthesized, ok := callee.(*ast.ParenExpr)
+				if !ok {
+					break
+				}
+				callee = parenthesized.X
+			}
+			results := []*ast.FieldList{}
+			switch callee := callee.(type) {
+			case *ast.Ident:
+				roots = append(roots, callee)
+				for _, function := range functions[callee.Name] {
+					results = append(results, function.Results)
+				}
+				if (callee.Name == "make" || callee.Name == "new") && len(expression.Args) > 0 {
+					roots = append(roots, expression.Args[0])
+				}
+			case *ast.FuncLit:
+				results = append(results, callee.Type.Results)
+			}
+			// Calling a private factory exposes its result, not its parameter
+			// layouts. A function value exposes both via FuncLit/FuncType above.
+			for _, fields := range results {
+				if fields != nil {
+					for _, field := range fields.List {
+						roots = append(roots, field.Type)
+					}
+				}
+			}
+		case *ast.FuncType:
+			for _, fields := range []*ast.FieldList{expression.TypeParams, expression.Params, expression.Results} {
+				if fields != nil {
+					for _, field := range fields.List {
+						roots = append(roots, field.Type)
+					}
+				}
+			}
+		case *ast.StructType:
+			for _, field := range expression.Fields.List {
+				if len(field.Names) == 0 || slices.ContainsFunc(field.Names, func(name *ast.Ident) bool { return name.IsExported() }) {
+					surface.members[field] = true
+					roots = append(roots, field.Type)
+				}
+			}
+		case *ast.InterfaceType:
+			for _, field := range expression.Methods.List {
+				if len(field.Names) == 0 || slices.ContainsFunc(field.Names, func(name *ast.Ident) bool { return name.IsExported() }) {
+					surface.members[field] = true
+					roots = append(roots, field.Type)
+				}
+			}
+		}
+	}
+	return surface
+}
+
+func receiverName(expression ast.Expr) string {
+	switch expression := expression.(type) {
+	case *ast.Ident:
+		return expression.Name
+	case *ast.StarExpr:
+		return receiverName(expression.X)
+	case *ast.IndexExpr:
+		return receiverName(expression.X)
+	case *ast.IndexListExpr:
+		return receiverName(expression.X)
+	}
+	return ""
 }
 
 func checkDeprecation(file parsedFile, group *ast.CommentGroup, report *Report) {
@@ -247,12 +423,39 @@ func checkLinks(root string, file parsedFile, group *ast.CommentGroup, report *R
 }
 
 func checkGenerator(root string, file parsedFile, all []parsedFile, report *Report) {
+	headerAvailable, headerMissing, headerReview := false, false, false
 	for _, group := range file.ast.Comments {
 		for _, comment := range group.List {
 			if strings.HasPrefix(comment.Text, "// Code generated ") && strings.HasSuffix(comment.Text, " DO NOT EDIT.") {
 				identity := strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(comment.Text, "// Code generated "), " DO NOT EDIT."))
 				if strings.Trim(identity, ";. ") == "" {
 					addFinding(report, file, comment.Pos(), "generated-identity", "error", "canonical generated header must identify its generator or regeneration source")
+				}
+				// A canonical header may identify a real local producer directly;
+				// go:generate is one declaration format, not the only ownership path.
+				producer := headerProducerPattern.FindStringSubmatch(identity)
+				if len(producer) == 0 {
+					headerReview = true
+					continue
+				}
+				word := producer[1]
+				if strings.HasPrefix(word, "\"") {
+					var err error
+					word, err = strconv.Unquote(word)
+					if err != nil {
+						headerReview = true
+						continue
+					}
+				}
+				if !generatorPathPattern.MatchString(word) && !strings.Contains(word, "/") || strings.Contains(word, ":") || strings.ContainsAny(word, "$@") {
+					headerReview = true
+					continue
+				}
+				name := path.Clean(path.Join(path.Dir(file.relative), word))
+				if path.IsAbs(word) || strings.Contains(word, "\\") || !file.tracked[name] || repositoryfile.ValidateRegularFile(root, filepath.FromSlash(name)) != nil {
+					headerMissing = true
+				} else {
+					headerAvailable = true
 				}
 			}
 		}
@@ -274,7 +477,7 @@ func checkGenerator(root string, file parsedFile, all []parsedFile, report *Repo
 					needsReview = true
 					continue
 				}
-				switch inspectGeneratorArguments(root, path.Dir(candidate.relative), args) {
+				switch inspectGeneratorArguments(root, path.Dir(candidate.relative), args, file.tracked) {
 				case generatorUnknown:
 					needsReview = true
 				case generatorMissing:
@@ -285,10 +488,10 @@ func checkGenerator(root string, file parsedFile, all []parsedFile, report *Repo
 			}
 		}
 	}
-	if !hasDeclaration || unavailable {
-		addFinding(report, file, file.ast.Package, "generator-unavailable", "error", "generated file needs an available same-directory regeneration declaration; audit never executes it")
+	if (!hasDeclaration && !headerAvailable && !headerReview) || unavailable || headerMissing {
+		addFinding(report, file, file.ast.Package, "generator-unavailable", "error", "generated file needs an available local header path or regeneration declaration; audit never executes it")
 	}
-	if needsReview {
+	if needsReview || (!hasDeclaration && headerReview) {
 		addFinding(report, file, file.ast.Package, "generator-review", "review", "unsupported, external, or ambiguous generator declaration needs manual availability and output verification; audit never expands or executes it")
 	}
 }
@@ -351,7 +554,7 @@ func generatorArguments(line string) ([]string, bool) {
 	}
 }
 
-func inspectGeneratorArguments(root, directory string, args []string) generatorDisposition {
+func inspectGeneratorArguments(root, directory string, args []string, tracked map[string]bool) generatorDisposition {
 	if len(args) < 3 || args[0] != "go" || args[1] != "run" || strings.HasPrefix(args[2], "-") {
 		return generatorUnknown
 	}
@@ -372,7 +575,7 @@ func inspectGeneratorArguments(root, directory string, args []string) generatorD
 				return generatorMissing
 			}
 			name := path.Clean(path.Join(directory, source))
-			if repositoryfile.ValidateRegularFile(root, filepath.FromSlash(name)) != nil {
+			if !tracked[name] || repositoryfile.ValidateRegularFile(root, filepath.FromSlash(name)) != nil {
 				return generatorMissing
 			}
 		}
@@ -380,7 +583,14 @@ func inspectGeneratorArguments(root, directory string, args []string) generatorD
 	}
 	if strings.HasPrefix(first, "./") || strings.HasPrefix(first, "../") {
 		name := path.Clean(path.Join(directory, first))
-		if repositoryfile.ValidateDirectory(root, filepath.FromSlash(name)) != nil {
+		found := false
+		for entry := range tracked {
+			if strings.HasPrefix(entry, name+"/") {
+				found = true
+				break
+			}
+		}
+		if !found || repositoryfile.ValidateDirectory(root, filepath.FromSlash(name)) != nil {
 			return generatorMissing
 		}
 		return generatorAvailable

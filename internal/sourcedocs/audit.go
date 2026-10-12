@@ -97,6 +97,40 @@ type parsedFile struct {
 	relative string
 	ast      *ast.File
 	fset     *token.FileSet
+	tracked  map[string]bool
+}
+
+// Root returns the canonical Git worktree root containing directory, without
+// consulting framework policy or module catalogs. directory must be absolute
+// and ctx non-nil. Git discovery is bounded to 30 seconds and ignores ambient
+// Git overrides; it does not execute hooks, filters or generators.
+func Root(ctx context.Context, directory string) (string, error) {
+	if !filepath.IsAbs(directory) {
+		return "", errors.New("source documentation working directory must be absolute")
+	}
+	canonical, err := filepath.EvalSymlinks(directory)
+	if err != nil {
+		return "", errors.New("source documentation working directory is unavailable")
+	}
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+	identity, err := gitOutput(ctx, canonical, "rev-parse", "--show-toplevel")
+	if err != nil {
+		return "", err
+	}
+	root := strings.TrimSpace(string(identity))
+	if !filepath.IsAbs(root) {
+		return "", errors.New("source documentation requires a Git worktree")
+	}
+	root, err = filepath.EvalSymlinks(root)
+	if err != nil {
+		return "", errors.New("source documentation Git worktree root is unavailable")
+	}
+	relative, err := filepath.Rel(root, canonical)
+	if err != nil || filepath.IsAbs(relative) || relative == ".." || strings.HasPrefix(relative, ".."+string(filepath.Separator)) {
+		return "", errors.New("source documentation Git root does not contain the working directory")
+	}
+	return root, nil
 }
 
 // Audit inspects current contents of Git-tracked files across all modules,
@@ -197,6 +231,10 @@ func safePath(name string) string {
 
 func auditPaths(ctx context.Context, root string, paths []string) (Report, error) {
 	report := Report{SchemaVersion: 1, Modules: []Module{}, Files: []File{}, Findings: []Finding{}}
+	tracked := make(map[string]bool, len(paths))
+	for _, name := range paths {
+		tracked[name] = true
+	}
 	moduleDirectories := []string{}
 	total := 0
 	for _, name := range paths {
@@ -271,18 +309,28 @@ func auditPaths(ctx context.Context, root string, paths []string) (Report, error
 		}
 		record := File{Path: safePath(name), Module: safePath(module), Package: safePath(file.Name.Name), Kind: kind, Generated: ast.IsGenerated(file), BuildConstrained: bytes.Contains(content, []byte("//go:build ")) || bytes.Contains(content, []byte("// +build "))}
 		report.Files = append(report.Files, record)
-		parsed = append(parsed, parsedFile{record, name, file, fset})
+		parsed = append(parsed, parsedFile{record, name, file, fset, tracked})
 	}
 	packages := map[string][]parsedFile{}
 	directories := map[string][]parsedFile{}
 	for _, file := range parsed {
 		directories[path.Dir(file.relative)] = append(directories[path.Dir(file.relative)], file)
 	}
+	surfaces := map[string]publicSurface{}
+	for directory, files := range directories {
+		byPackage := map[string][]parsedFile{}
+		for _, file := range files {
+			byPackage[file.file.Package] = append(byPackage[file.file.Package], file)
+		}
+		for name, files := range byPackage {
+			surfaces[directory+"/"+name] = consumerSurface(files)
+		}
+	}
 	for _, file := range parsed {
 		if err := ctx.Err(); err != nil {
 			return Report{}, err
 		}
-		if err := inspectFile(root, file, directories[path.Dir(file.relative)], &report); err != nil {
+		if err := inspectFile(root, file, directories[path.Dir(file.relative)], surfaces[path.Dir(file.relative)+"/"+file.file.Package], &report); err != nil {
 			return Report{}, err
 		}
 		if file.file.Kind == "source" && !file.file.Generated {

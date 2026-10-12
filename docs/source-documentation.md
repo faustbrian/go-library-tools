@@ -1,5 +1,10 @@
 # Source documentation checks
 
+Run the source-only commands from a Git worktree or one of its subdirectories.
+They inspect tracked module boundaries without requiring `.golib.yaml`, a root
+module, or generated framework manifests. Policy-enforcement commands retain
+their separate configuration and version checks.
+
 `golib source-docs inventory --json` inventories current contents of Git-tracked
 Go files and module boundaries without compiling packages or selecting a build.
 It includes nested modules, platform/tag variants, tests and examples. Tracked
@@ -27,7 +32,13 @@ and `make source-docs-check` provide source-built local routes with owned caches
 
 Objective checks require a canonical `Package name` comment (or `Command` for a
 main package), exported declaration comments beginning with their name, and
-documented exported struct fields/interface methods. Shared grouped-value
+documented consumer-visible struct fields/interface methods. Public type
+definitions, signatures and value types/initializers retain reachable anonymous,
+aliased and promoted members, including concrete private types exposed to callers.
+Private wire layouts, implementation receivers and function-local types are not
+forced to repeat contracts owned by public interfaces. This is bounded lexical
+reachability, not Go type checking; imported or dynamically inferred surfaces
+still require the repository's API and manual review. Shared grouped-value
 comments and grouped field names are supported; embedded members inherit type
 documentation. Test and fixture declarations are not mistaken for public APIs,
 nor are external `_test` namespaces required to have package documentation.
@@ -44,8 +55,12 @@ without explanations fail strict checks. NOTE/WARNING and actionable markers rem
 for their semantic truth, hazards, removal conditions and safe modification
 procedure. The check does not infer these properties from word counts.
 
-Generated files need a same-directory `//go:generate` declaration. Local targets
-of supported `go run` forms must exist inside the repository without symlinks.
+Generated files need a same-directory `//go:generate` declaration or an explicit
+`by <local-path>` producer in their canonical header. Input paths mentioned
+elsewhere do not establish generator ownership; ambiguous or external identities
+remain manual-review findings. Recognized local targets must
+be Git-tracked, regular and inside the repository without symlinks. Local targets
+of supported `go run` forms are checked without executing them.
 All consecutive local `.go` source arguments are checked, and Go double-quoted
 arguments are recognized. Lexical admission is bounded to 64 KiB and 256
 arguments; aliases, environment expansion, unsupported flags, malformed quotes

@@ -23,8 +23,10 @@ compressed, entry, and expansion bounds before a caller extracts it.
 Zero padding after the tar terminator is accepted within the full expansion
 bound; nonzero trailing content and invalid gzip trailers remain rejected.
 
-`golib --help` lists the stable command surface. Commands locate the repository
-by walking upward to `.golib.yaml`; failure to find it exits with status 1.
+`golib --help` lists the stable command surface. Policy commands locate the
+repository by walking upward to `.golib.yaml`; failure to find it exits with
+status 1. Source-only `source-docs` commands instead discover the containing Git
+worktree, including from a nested module, without framework configuration.
 Invalid command syntax exits with status 2. Failed validation or gates exit
 with status 1. Success exits with status 0.
 
