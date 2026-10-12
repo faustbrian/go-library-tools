@@ -214,7 +214,7 @@ func parsePaths(data []byte) ([]string, error) {
 		return nil, errors.New("tracked source path inventory is oversized or malformed")
 	}
 	paths := []string{}
-	for _, name := range bytes.Split(bytes.TrimSuffix(data, []byte{0}), []byte{0}) {
+	for name := range bytes.SplitSeq(bytes.TrimSuffix(data, []byte{0}), []byte{0}) {
 		if len(data) == 0 {
 			break
 		}
@@ -229,7 +229,7 @@ func parsePaths(data []byte) ([]string, error) {
 }
 
 func fixture(name string) bool {
-	for _, component := range strings.Split(name, "/") {
+	for component := range strings.SplitSeq(name, "/") {
 		if component == "testdata" || component == "fixtures" || component == "fixture" {
 			return true
 		}
@@ -347,9 +347,7 @@ func auditPaths(ctx context.Context, root string, paths []string) (Report, error
 		if err := ctx.Err(); err != nil {
 			return Report{}, err
 		}
-		if err := inspectFile(root, file, directories[path.Dir(file.relative)], surfaces[path.Dir(file.relative)+"/"+file.file.Package], &report); err != nil {
-			return Report{}, err
-		}
+		inspectFile(root, file, directories[path.Dir(file.relative)], surfaces[path.Dir(file.relative)+"/"+file.file.Package], &report)
 		if file.file.Kind == "source" && !file.file.Generated {
 			key := path.Dir(file.relative) + "/" + file.file.Package
 			packages[key] = append(packages[key], file)

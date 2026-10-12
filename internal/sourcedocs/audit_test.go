@@ -19,7 +19,8 @@ import (
 func trackedFixture(t *testing.T, files map[string]string) string {
 	t.Helper()
 	root := t.TempDir()
-	args := []string{"add", "-f", "--"}
+	args := make([]string, 3, 3+len(files))
+	copy(args, []string{"add", "-f", "--"})
 	for name, content := range files {
 		full := filepath.Join(root, filepath.FromSlash(name))
 		if err := os.MkdirAll(filepath.Dir(full), 0o700); err != nil {
@@ -41,7 +42,7 @@ func trackedFixture(t *testing.T, files map[string]string) string {
 }
 
 func codes(report Report) []string {
-	result := []string{}
+	result := make([]string, 0, len(report.Findings))
 	for _, finding := range report.Findings {
 		result = append(result, finding.Code)
 	}
@@ -434,7 +435,7 @@ func TestLimitsRefusePartialSourceInventories(t *testing.T) {
 	}
 	report := Report{}
 	file := parsedFile{file: File{Path: "doc.go"}, fset: token.NewFileSet()}
-	for i := 0; i < maximumFindings+100; i++ {
+	for range maximumFindings + 100 {
 		addFinding(&report, file, token.NoPos, "limit", "error", "bounded")
 	}
 	if len(report.Findings) != maximumFindings+1 {
@@ -479,12 +480,8 @@ func FuzzCommentStructure(f *testing.F) {
 		parsed := parsedFile{file: File{Path: "source.go", Kind: "source", Generated: ast.IsGenerated(file)}, relative: "source.go", ast: file, fset: fset}
 		first, second := Report{}, Report{}
 		surface := consumerSurface([]parsedFile{parsed})
-		if err := inspectFile(root, parsed, []parsedFile{parsed}, surface, &first); err != nil {
-			t.Fatal(err)
-		}
-		if err := inspectFile(root, parsed, []parsedFile{parsed}, surface, &second); err != nil {
-			t.Fatal(err)
-		}
+		inspectFile(root, parsed, []parsedFile{parsed}, surface, &first)
+		inspectFile(root, parsed, []parsedFile{parsed}, surface, &second)
 		if !reflect.DeepEqual(first, second) {
 			t.Fatal("comment checks are not deterministic")
 		}

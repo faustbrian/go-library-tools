@@ -57,7 +57,7 @@ func validDeclarationComment(comment *ast.CommentGroup, name string) bool {
 	return !unicode.IsLetter(next) && !unicode.IsDigit(next) && next != '_'
 }
 
-func inspectFile(root string, file parsedFile, all []parsedFile, surface publicSurface, report *Report) error {
+func inspectFile(root string, file parsedFile, all []parsedFile, surface publicSurface, report *Report) {
 	if file.file.Generated {
 		checkGenerator(root, file, all, report)
 		// Externally generated declarations stay visible in the inventory, but
@@ -141,7 +141,6 @@ func inspectFile(root string, file parsedFile, all []parsedFile, surface publicS
 			})
 		}
 	}
-	return nil
 }
 
 func checkDeclaration(file parsedFile, name *ast.Ident, comment *ast.CommentGroup, report *Report) {
@@ -368,7 +367,7 @@ func checkDeprecation(file parsedFile, group *ast.CommentGroup, report *Report) 
 }
 
 func checkMarkers(file parsedFile, group *ast.CommentGroup, report *Report) {
-	for _, line := range strings.Split(group.Text(), "\n") {
+	for line := range strings.SplitSeq(group.Text(), "\n") {
 		location := markerPattern.FindStringIndex(line)
 		if location == nil {
 			continue
@@ -378,7 +377,7 @@ func checkMarkers(file parsedFile, group *ast.CommentGroup, report *Report) {
 		severity, code, message := "review", "marker-review", "review marker semantics against implementation, owner, hazard, and removal condition"
 		if body == "" {
 			severity, code, message = "error", "marker-context", "marker needs an explanation of its missing behavior, constraint, or hazard"
-		} else if (marker == "TODO" || marker == "FIXME" || marker == "HACK") && !issuePattern.MatchString(body) && !(strings.Contains(body, "owner=") && strings.Contains(body, "trigger=")) {
+		} else if (marker == "TODO" || marker == "FIXME" || marker == "HACK") && !issuePattern.MatchString(body) && (!strings.Contains(body, "owner=") || !strings.Contains(body, "trigger=")) {
 			code, message = "marker-context", "verify debt marker has a tracked issue or enough owner and trigger context; free-form semantics need human review"
 		}
 		addFinding(report, file, group.Pos(), code, severity, message)
@@ -432,7 +431,7 @@ func checkGenerator(root string, file parsedFile, all []parsedFile, report *Repo
 					addFinding(report, file, comment.Pos(), "generated-identity", "error", "canonical generated header must identify its generator or regeneration source")
 				}
 				// A canonical header may identify a real local producer directly;
-				// go:generate is one declaration format, not the only ownership path.
+				// A generation directive is one format, not the only ownership path.
 				producer := headerProducerPattern.FindStringSubmatch(identity)
 				if len(producer) == 0 {
 					headerReview = true
