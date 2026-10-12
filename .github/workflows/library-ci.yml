@@ -27,6 +27,11 @@ on:
         required: false
         default: ''
         type: string
+      source_documentation:
+        description: Explicit source-docs mode (inventory or check); blank preserves existing released-tooling callers
+        required: false
+        default: ''
+        type: string
 
 permissions:
   contents: read
@@ -265,6 +270,16 @@ jobs:
             echo "zsh=$(jq -r '.runtimes.zsh // empty' <<<"${configuration}")"
           } >>"${GITHUB_OUTPUT}"
 
+      - name: Audit tracked source documentation when explicitly adopted
+        if: inputs.source_documentation != ''
+        env:
+          SOURCE_DOCUMENTATION: ${{ inputs.source_documentation }}
+        run: |
+          set -euo pipefail
+          case "${SOURCE_DOCUMENTATION}" in
+            inventory|check) golib source-docs "${SOURCE_DOCUMENTATION}" --json ;;
+            *) echo 'source_documentation must be blank, inventory or check' >&2; exit 1 ;;
+          esac
       - name: Remove source bootstrap workspace
         if: always() && inputs.source_bootstrap == true
         env:

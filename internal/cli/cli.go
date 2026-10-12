@@ -25,6 +25,7 @@ import (
 	"github.com/faustbrian/go-library-tools/v2/internal/repository"
 	"github.com/faustbrian/go-library-tools/v2/internal/repositoryfile"
 	"github.com/faustbrian/go-library-tools/v2/internal/securitydocs"
+	"github.com/faustbrian/go-library-tools/v2/internal/sourcedocs"
 	"github.com/faustbrian/go-library-tools/v2/internal/specification"
 	"github.com/faustbrian/go-library-tools/v2/internal/upgrade"
 )
@@ -59,6 +60,7 @@ Usage:
   golib api update
   golib docs check [--module <directory>]
   golib docs check --local
+  golib source-docs <inventory|check> [--json]
 	golib services cycle [--module <directory>]
   golib release check [--all|--module <directory>]
   golib release dry-run [--all|--module <directory>]
@@ -364,6 +366,8 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		return withExecutor(root, stdout, stderr, createExecutor, func(executor gates.Executor) error {
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Docs(ctx, selection)
 		})
+	case "source-docs":
+		return executeSourceDocumentation(ctx, args[1:], root, stdout, stderr)
 	case "services":
 		if len(args) < 2 || args[1] != "cycle" {
 			return usage(stderr, "usage: golib services cycle [--module <directory>]")
@@ -854,4 +858,37 @@ func usage(stderr io.Writer, message string) int {
 func failure(stderr io.Writer, err error) int {
 	_, _ = fmt.Fprintln(stderr, err)
 	return 1
+}
+
+func executeSourceDocumentation(ctx context.Context, args []string, root string, stdout, stderr io.Writer) int {
+	if len(args) < 1 || len(args) > 2 || (args[0] != "inventory" && args[0] != "check") || (len(args) == 2 && args[1] != "--json") {
+		return usage(stderr, "usage: golib source-docs <inventory|check> [--json]")
+	}
+	report, err := sourcedocs.Audit(ctx, root)
+	if err != nil {
+		return failure(stderr, err)
+	}
+	if len(args) == 2 {
+		encoder := json.NewEncoder(stdout)
+		encoder.SetIndent("", "  ")
+		if err := encoder.Encode(report); err != nil {
+			return failure(stderr, errors.New("write source documentation inventory failed"))
+		}
+	} else {
+		for _, finding := range report.Findings {
+			if _, err := fmt.Fprintf(stdout, "%q:%d: %s: %s (%s)\n", finding.Path, finding.Line, finding.Code, finding.Message, finding.Severity); err != nil {
+				return failure(stderr, errors.New("write source documentation inventory failed"))
+			}
+		}
+		if _, err := fmt.Fprintf(stdout, "source documentation inventory: %d module boundaries, %d Go files, %d vendor files excluded\n", len(report.Modules), len(report.Files), report.ExcludedVendorFiles); err != nil {
+			return failure(stderr, errors.New("write source documentation inventory failed"))
+		}
+	}
+	if err := ctx.Err(); err != nil {
+		return failure(stderr, err)
+	}
+	if args[0] == "check" && report.HasErrors() {
+		return 1
+	}
+	return 0
 }

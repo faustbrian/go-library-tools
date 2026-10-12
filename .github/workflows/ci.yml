@@ -116,6 +116,8 @@ jobs:
             false) make metadata-ci ;;
             *) echo 'missing or invalid change classification' >&2; exit 1 ;;
           esac
+      - name: Inventory tracked source documentation without enabling strict enforcement
+        run: make source-docs-inventory
       - name: Verify finite workflow traversal regressions when affected
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}

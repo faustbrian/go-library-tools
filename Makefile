@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: build check check-packages ci cohesion compatibility compatibility-candidate compatibility-rebase config consumers inventory local-check local-ci metadata-ci milestone-check repository-check security-differential workflows
+.PHONY: build check check-packages ci cohesion compatibility compatibility-candidate compatibility-rebase config consumers inventory local-check local-ci metadata-ci milestone-check repository-check security-differential source-docs-inventory source-docs-check workflows
 
 PACKAGES ?=
 COMPATIBILITY_SET_ID ?=
@@ -54,6 +54,12 @@ compatibility-rebase:
 
 workflows:
 	$(call run_go,run ./cmd/golib workflows check)
+
+source-docs-inventory:
+	$(call run_go,run ./cmd/golib source-docs inventory --json)
+
+source-docs-check:
+	$(call run_go,run ./cmd/golib source-docs check --json)
 
 check-packages:
 	@test -n "$(strip $(PACKAGES))" || { echo 'PACKAGES is required, for example PACKAGES=./internal/inventory' >&2; exit 2; }

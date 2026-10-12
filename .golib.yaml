@@ -17,6 +17,21 @@ operations:
     gate: fuzz
     steps:
       - type: go-test
+        packages: [./internal/sourcedocs]
+        fuzz: FuzzTrackedPaths
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/sourcedocs]
+        fuzz: FuzzCommentStructure
+        budget: 100x
+        timeout: 2m
+      - type: go-test
+        packages: [./internal/sourcedocs]
+        fuzz: FuzzGeneratorArguments
+        budget: 100x
+        timeout: 2m
+      - type: go-test
         packages: [./internal/archivecheck]
         fuzz: FuzzValidateNeverPanics
         budget: 100x

@@ -1,0 +1,367 @@
+package sourcedocs
+
+import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"reflect"
+	"strings"
+	"testing"
+)
+
+func trackedFixture(t *testing.T, files map[string]string) string {
+	t.Helper()
+	root := t.TempDir()
+	args := []string{"add", "-f", "--"}
+	for name, content := range files {
+		full := filepath.Join(root, filepath.FromSlash(name))
+		if err := os.MkdirAll(filepath.Dir(full), 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(full, []byte(content), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		args = append(args, name)
+	}
+	for _, arguments := range [][]string{{"init", "-q"}, args} {
+		command := exec.CommandContext(t.Context(), "git", arguments...)
+		command.Dir = root
+		if err := command.Run(); err != nil {
+			t.Fatal(err)
+		}
+	}
+	return root
+}
+
+func codes(report Report) []string {
+	result := []string{}
+	for _, finding := range report.Findings {
+		result = append(result, finding.Code)
+	}
+	return result
+}
+
+func TestAuditCoversNestedModulesAllVariantsAndPublicMembers(t *testing.T) {
+	root := trackedFixture(t, map[string]string{
+		"go.mod":                  "module example\n",
+		"doc.go":                  "// Package example owns the fixture contract.\npackage example\n",
+		"api.go":                  "package example\n// API owns one value.\ntype API struct {\n Value int\n}\n// Reader returns values.\ntype Reader interface {\n Read() int\n}\n// Values names grouped constants.\nconst (One = 1; Two = 2)\n// Left and Right are paired values.\nvar Left, Right int\n",
+		"api_windows.go":          "//go:build windows\n\npackage example\nfunc Platform() {}\n",
+		"api_test.go":             "package example_test\nfunc TestIgnored() {}\n",
+		"nested/go.mod":           "module example/nested\n",
+		"nested/doc.go":           "// Package nested owns another module.\npackage nested\n",
+		"z/go.mod":                "module example/z\n",
+		"z/doc.go":                "// Package z owns a short directory name.\npackage z\n",
+		"testdata/fixture/go.mod": "module fixture\n",
+		"testdata/fixture/doc.go": "package fixture\nfunc Fixture() {}\n",
+		"vendor/external.go":      "invalid vendor code is deliberately not parsed",
+	})
+	first, err := Audit(t.Context(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := Audit(t.Context(), root)
+	if err != nil || !reflect.DeepEqual(first, second) {
+		t.Fatal("audit is not deterministic", err)
+	}
+	if len(first.Modules) != 4 || len(first.Files) != 7 || first.ExcludedVendorFiles != 1 {
+		t.Fatalf("scope = %#v", first)
+	}
+	if got := codes(first); !reflect.DeepEqual(got, []string{"exported-comment", "exported-comment", "exported-comment"}) {
+		t.Fatalf("public members and platform declarations = %v", got)
+	}
+	for _, file := range first.Files {
+		if file.Path == "z/doc.go" && file.Module != "z" {
+			t.Fatal("single-character nested module was attributed to root")
+		}
+		if file.Path == "nested/doc.go" && file.Module != "nested" {
+			t.Fatal("nested module was attributed to root")
+		}
+		if file.Path == "testdata/fixture/doc.go" && (file.Kind != "fixture" || file.Module != "testdata/fixture") {
+			t.Fatal("fixture was certified as production")
+		}
+		if file.Path == "api_windows.go" && !file.BuildConstrained {
+			t.Fatal("inactive platform was omitted")
+		}
+	}
+}
+
+func TestAuditMarkerDeprecationLinksAndSecretsRemainObjectiveAndRedacted(t *testing.T) {
+	secret := "ghp_" + strings.Repeat("Z", 36)
+	root := trackedFixture(t, map[string]string{
+		"go.mod":          "module example\n",
+		"doc.go":          "// Package example checks comments.\npackage example\n",
+		"api.go":          "package example\n// Old returns a value.\n// deprecated: use New.\nfunc Old() {}\n// Good returns a value.\n//\n// Deprecated: Use New instead.\nfunc Good() {}\n// TODO: missing behavior\n// FIXME: https://github.com/example/example/issues/12 incorrect result.\n// NOTE: allocation ownership is intentional.\n// HACK: owner=example trigger=upstream-fix temporary bridge.\n// WARNING\n// Link [missing](not-there.md) and [spec](https://example.org/spec).\n// [local]: doc.go\n// " + secret + "\n",
+		"example_test.go": "package example\nfunc ExampleOld() { println(\"" + secret + "\") }\n",
+	})
+	report, err := Audit(t.Context(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	counts := map[string]int{}
+	for _, code := range codes(report) {
+		counts[code]++
+	}
+	for code, count := range map[string]int{"deprecated-syntax": 1, "marker-context": 2, "marker-review": 3, "comment-link": 1, "secret-pattern": 2} {
+		if counts[code] != count {
+			t.Errorf("%s = %d want %d", code, counts[code], count)
+		}
+	}
+	encoded, err := json.Marshal(report)
+	if err != nil || bytes.Contains(encoded, []byte(secret)) {
+		t.Fatal("report disclosed comment/example contents", err)
+	}
+	if !report.HasErrors() {
+		t.Fatal("strict check ignored objective defects")
+	}
+}
+
+func TestAuditGeneratedRegenerationDeclarationIsInspectedWithoutExecution(t *testing.T) {
+	root := trackedFixture(t, map[string]string{
+		"go.mod":                "module example\n",
+		"doc.go":                "// Package example checks generated source.\npackage example\n//go:generate go run ./gen.go\n",
+		"gen.go":                "//go:build ignore\n\npackage main\nfunc main() { panic(\"generator must never execute\") }\n",
+		"generated.go":          "// Code generated by gen.go; DO NOT EDIT.\npackage example\nfunc GeneratedUndocumented() {}\n",
+		"identity_generated.go": "// Code generated ; DO NOT EDIT.\npackage example\n",
+		"missing/generated.go":  "// Code generated by missing generator; DO NOT EDIT.\npackage missing\n",
+		"stale.go":              "// Code generated by stale tool.\npackage example\n",
+	})
+	report, err := Audit(t.Context(), root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	counts := map[string]int{}
+	for _, code := range codes(report) {
+		counts[code]++
+	}
+	if counts["generator-unavailable"] != 1 || counts["generated-header"] != 1 || counts["generated-identity"] != 1 || counts["exported-comment"] != 0 {
+		t.Fatalf("generated accounting = %v", counts)
+	}
+	if err := os.Remove(filepath.Join(root, "gen.go")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Audit(t.Context(), root); err == nil {
+		t.Fatal("missing tracked generator was silently accepted")
+	}
+}
+
+func TestAuditRejectsFilesystemEscapesAndUnsafeAcquisition(t *testing.T) {
+	for _, scenario := range []string{"source symlink", "directory symlink", "oversized", "malformed", "nested root", "canceled"} {
+		t.Run(scenario, func(t *testing.T) {
+			root := trackedFixture(t, map[string]string{"go.mod": "module example\n", "nested/api.go": "// Package example owns input.\npackage example\n"})
+			ctx := t.Context()
+			name := filepath.Join(root, "nested", "api.go")
+			switch scenario {
+			case "source symlink":
+				if err := os.Remove(name); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Symlink(filepath.Join(t.TempDir(), "outside.go"), name); err != nil {
+					t.Fatal(err)
+				}
+			case "directory symlink":
+				if err := os.Remove(name); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Remove(filepath.Dir(name)); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Symlink(t.TempDir(), filepath.Dir(name)); err != nil {
+					t.Fatal(err)
+				}
+			case "oversized":
+				if err := os.WriteFile(name, []byte(strings.Repeat(" ", maximumFileBytes+1)), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			case "malformed":
+				if err := os.WriteFile(name, []byte("package example\nfunc Broken("), 0o600); err != nil {
+					t.Fatal(err)
+				}
+			case "nested root":
+				root = filepath.Dir(name)
+			case "canceled":
+				var cancel context.CancelFunc
+				ctx, cancel = context.WithCancel(ctx)
+				cancel()
+			}
+			if _, err := Audit(ctx, root); err == nil {
+				t.Fatal("unsafe acquisition succeeded")
+			}
+		})
+	}
+}
+
+func TestPathInventoryAdmission(t *testing.T) {
+	for _, data := range [][]byte{[]byte("../outside.go\x00"), []byte("/absolute.go\x00"), []byte("a\nb.go\x00"), []byte("api.go"), []byte(strings.Repeat("a", maximumPathBytes+1))} {
+		if _, err := parsePaths(data); err == nil {
+			t.Fatal("unsafe tracked input admitted")
+		}
+	}
+	paths, err := parsePaths([]byte("z.go\x00a.go\x00z.go\x00"))
+	if err != nil || !reflect.DeepEqual(paths, []string{"a.go", "z.go"}) {
+		t.Fatal("paths are not canonical", paths, err)
+	}
+}
+
+func TestMalformedFixtureIsVisibleButNotCertifiedAsProduction(t *testing.T) {
+	root := trackedFixture(t, map[string]string{"go.mod": "module example\n", "doc.go": "// Package example owns fixtures.\npackage example\n", "testdata/broken.go": "package broken\nfunc Broken("})
+	report, err := Audit(t.Context(), root)
+	if err != nil || !reflect.DeepEqual(codes(report), []string{"fixture-parse-review"}) || report.HasErrors() || len(report.Files) != 2 {
+		t.Fatalf("negative fixture accounting = %#v, %v", report, err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "untracked.go"), []byte("not parsed"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	again, err := Audit(t.Context(), root)
+	if err != nil || !reflect.DeepEqual(report, again) {
+		t.Fatal("untracked source entered tracked inventory", err)
+	}
+}
+
+func TestFreeFormDebtContextRequiresReviewNotSyntaxRewrite(t *testing.T) {
+	root := trackedFixture(t, map[string]string{"go.mod": "module example\n", "doc.go": "// Package example owns policy.\npackage example\n// TODO(Brian): enable the adapter when upstream fixes cancellation.\n"})
+	report, err := Audit(t.Context(), root)
+	if err != nil || report.HasErrors() || len(report.Findings) != 1 || report.Findings[0].Code != "marker-context" || report.Findings[0].Severity != "review" {
+		t.Fatalf("free-form actionable context was given an unsupported fatal syntax requirement: %#v, %v", report, err)
+	}
+}
+
+func TestDeprecatedAPINameIsNotADeactivationMarker(t *testing.T) {
+	root := trackedFixture(t, map[string]string{"go.mod": "module example\n", "doc.go": "// Package example owns naming.\npackage example\n", "api.go": "package example\n// Deprecated returns a historical state name, not an obsolete API.\nfunc Deprecated() {}\n"})
+	report, err := Audit(t.Context(), root)
+	if err != nil || report.HasErrors() || len(report.Findings) != 0 {
+		t.Fatalf("ordinary documentation of API named Deprecated fails strict check: %#v, %v", report.Findings, err)
+	}
+}
+
+func TestGeneratorValidatesAllLocalInputsAndGoQuotedArguments(t *testing.T) {
+	for _, scenario := range []struct {
+		name, directive, extra string
+		wantError, wantReview  bool
+	}{
+		{"missing later input", "go run present.go missing.go", "", true, false},
+		{"quoted existing input", "go run \"generator with spaces.go\"", "generator with spaces.go", false, false},
+		{"quoted missing later input", "go run present.go \"missing with spaces.go\"", "", true, false},
+		{"multiple existing inputs", "go run present.go other.go", "other.go", false, false},
+		{"program arguments are not source files", "go run present.go -- missing.go", "", false, false},
+		{"external pinned tool", "go run example.invalid/generator@v1.0.0", "", false, true},
+		{"unsupported flags", "go run -tags=generator present.go", "", false, true},
+		{"environment input", "go run $GENERATOR", "", false, true},
+		{"ambiguous quote", "go run \"present.go", "", false, true},
+	} {
+		t.Run(scenario.name, func(t *testing.T) {
+			files := map[string]string{"go.mod": "module example\n", "doc.go": "// Package example owns generation.\npackage example\n//go:generate " + scenario.directive + "\n", "present.go": "package example\n", "generated.go": "// Code generated by owned generator; DO NOT EDIT.\npackage example\n"}
+			if scenario.extra != "" {
+				files[scenario.extra] = "package example\n"
+			}
+			root := trackedFixture(t, files)
+			report, err := Audit(t.Context(), root)
+			if err != nil {
+				t.Fatal(err)
+			}
+			gotError, gotReview := false, false
+			for _, finding := range report.Findings {
+				gotError = gotError || finding.Code == "generator-unavailable"
+				gotReview = gotReview || finding.Code == "generator-review"
+			}
+			if gotError != scenario.wantError || gotReview != scenario.wantReview || report.HasErrors() != scenario.wantError {
+				t.Fatalf("generator arguments have incorrect strict/review disposition: %v", codes(report))
+			}
+		})
+	}
+}
+
+func FuzzGeneratorArguments(f *testing.F) {
+	f.Add("go run present.go missing.go")
+	f.Add("go run \"generator with spaces.go\"")
+	f.Add("go run \"unterminated")
+	f.Fuzz(func(t *testing.T, input string) {
+		if len(input) > 8192 {
+			t.Skip()
+		}
+		first, understood := generatorArguments(input)
+		second, again := generatorArguments(input)
+		if !reflect.DeepEqual(first, second) || understood != again {
+			t.Fatal("generator lexical admission is not deterministic")
+		}
+		if len(first) > 256 {
+			t.Fatal("generator argv exceeded declared bound")
+		}
+	})
+}
+
+func TestLimitsRefusePartialSourceInventories(t *testing.T) {
+	if _, err := parsePaths([]byte(strings.Repeat("a.go\x00", maximumPaths+1))); err == nil {
+		t.Fatal("path count limit admitted excess source")
+	}
+	var output boundedBuffer
+	if _, err := output.Write(make([]byte, maximumPathBytes+1)); err == nil || output.Len() != 0 {
+		t.Fatal("oversized Git output retained partial inventory")
+	}
+	report := Report{}
+	file := parsedFile{file: File{Path: "doc.go"}, fset: token.NewFileSet()}
+	for i := 0; i < maximumFindings+100; i++ {
+		addFinding(&report, file, token.NoPos, "limit", "error", "bounded")
+	}
+	if len(report.Findings) != maximumFindings+1 {
+		t.Fatal("finding overflow was unbounded or silently discarded")
+	}
+}
+
+func FuzzTrackedPaths(f *testing.F) {
+	f.Add([]byte("doc.go\x00nested/api.go\x00"))
+	f.Add([]byte("../escape.go\x00"))
+	f.Add([]byte("unclosed"))
+	f.Fuzz(func(t *testing.T, data []byte) {
+		if len(data) > 8192 {
+			t.Skip()
+		}
+		first, firstErr := parsePaths(data)
+		second, secondErr := parsePaths(data)
+		if !reflect.DeepEqual(first, second) || (firstErr == nil) != (secondErr == nil) {
+			t.Fatal("path admission is not deterministic")
+		}
+		for _, name := range first {
+			if pathIsUnsafe(name) {
+				t.Fatal("unsafe admitted path")
+			}
+		}
+	})
+}
+
+func FuzzCommentStructure(f *testing.F) {
+	root := f.TempDir()
+	f.Add([]byte("// Package example owns parsing.\npackage example\n// Value is immutable.\ntype Value struct { Field int }\n"))
+	f.Add([]byte("package example\n// TODO\n// Deprecated:\n// [link]: ../../outside\nfunc Exported() {}\n"))
+	f.Fuzz(func(t *testing.T, content []byte) {
+		if len(content) > 32768 {
+			t.Skip()
+		}
+		fset := token.NewFileSet()
+		file, err := parser.ParseFile(fset, "source.go", content, parser.ParseComments|parser.SkipObjectResolution)
+		if err != nil {
+			return
+		}
+		parsed := parsedFile{file: File{Path: "source.go", Kind: "source", Generated: ast.IsGenerated(file)}, relative: "source.go", ast: file, fset: fset}
+		first, second := Report{}, Report{}
+		if err := inspectFile(root, parsed, []parsedFile{parsed}, &first); err != nil {
+			t.Fatal(err)
+		}
+		if err := inspectFile(root, parsed, []parsedFile{parsed}, &second); err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(first, second) {
+			t.Fatal("comment checks are not deterministic")
+		}
+	})
+}
+
+func pathIsUnsafe(name string) bool {
+	return name == "" || strings.HasPrefix(name, "../") || filepath.IsAbs(name) || strings.ContainsAny(name, "\x00\r\n")
+}

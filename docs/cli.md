@@ -46,6 +46,12 @@ cached results for current-source checks. Tools' `local-check`, `local-ci` and
 
 Core commands:
 
+- `golib source-docs inventory|check [--json]` inventories all Git-tracked Go
+  variants without compiling or running generators. Inventory findings are
+  nonblocking; explicit check mode fails objective error findings. See the
+  [source documentation contract](source-documentation.md) for bounds,
+  fixture/generated accounting, security, manual-review limits and CI adoption.
+
 - `golib --version` prints `dev` for source builds or the immutable release.
 - `golib config validate` validates configuration and both manifests.
 - `golib config show --json` emits normalized policy for workflow orchestration.

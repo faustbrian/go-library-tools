@@ -4,6 +4,14 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add bounded, tracked-source documentation inventories and explicit strict
+  checks through `golib source-docs`, including inactive build variants, public
+  members, comment markers, deprecations, generator declarations and local links.
+  Existing reusable CI callers remain unchanged; source-documentation adoption
+  is an explicit workflow input and does not certify prose meaning.
+
 ## 2.3.0 - 2026-10-12
 
 ### Added
