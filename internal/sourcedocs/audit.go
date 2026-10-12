@@ -114,7 +114,7 @@ func Root(ctx context.Context, directory string) (string, error) {
 	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	identity, err := gitOutput(ctx, canonical, "rev-parse", "--show-toplevel")
+	identity, err := gitOutput(ctx, canonical, gitRootQuery)
 	if err != nil {
 		return "", err
 	}
@@ -145,11 +145,11 @@ func Audit(ctx context.Context, root string) (Report, error) {
 	}
 	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	identity, err := gitOutput(ctx, canonical, "rev-parse", "--show-toplevel")
+	identity, err := gitOutput(ctx, canonical, gitRootQuery)
 	if err != nil || strings.TrimSpace(string(identity)) != canonical {
 		return Report{}, errors.New("source documentation requires the exact Git repository root")
 	}
-	data, err := gitOutput(ctx, canonical, "ls-files", "--cached", "--full-name", "-z")
+	data, err := gitOutput(ctx, canonical, gitPathsQuery)
 	if err != nil {
 		return Report{}, err
 	}
@@ -171,10 +171,27 @@ func (buffer *boundedBuffer) Write(data []byte) (int, error) {
 	return buffer.Buffer.Write(data)
 }
 
-func gitOutput(ctx context.Context, root string, args ...string) ([]byte, error) {
+type gitQuery uint8
+
+const (
+	gitRootQuery gitQuery = iota
+	gitPathsQuery
+)
+
+func gitOutput(ctx context.Context, root string, query gitQuery) ([]byte, error) {
 	// Git index inspection runs no repository hooks, filters, generators or shell.
 	// Ambient Git overrides cannot redirect the repository or inject configuration.
-	command := exec.CommandContext(ctx, "git", append([]string{"-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "-C", root}, args...)...)
+	// The two queries have literal argument vectors. Repository-controlled paths
+	// select only the checked working directory, never a command or option.
+	var command *exec.Cmd
+	switch query {
+	case gitRootQuery:
+		command = exec.CommandContext(ctx, "git", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "rev-parse", "--show-toplevel")
+	case gitPathsQuery:
+		command = exec.CommandContext(ctx, "git", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false", "ls-files", "--cached", "--full-name", "-z")
+	default:
+		return nil, errors.New("unsupported source documentation Git query")
+	}
 	command.Dir = root
 	for _, variable := range os.Environ() {
 		name, _, _ := strings.Cut(variable, "=")
