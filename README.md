@@ -5,10 +5,10 @@ libraries. It validates canonical manifests, runs proportional quality gates
 in task-owned environments, and owns generic service fixtures without copying
 automation into every repository.
 
-The prepared security-contract release is `v2.0.0`; `v1.8.5` remains the
-current published release until the major tag is created. Consumer
-repositories must use checksum-verified release binaries and immutable workflow
-references.
+The qualified published release is
+[`v2.2.0`](https://github.com/faustbrian/go-library-tools/releases/tag/v2.2.0).
+Consumer repositories must use checksum-verified release binaries and immutable
+workflow references; compatible existing pins do not need an immediate update.
 
 The supported v2 release targets are Darwin and Linux on amd64 and arm64.
 Its bounded security scanners terminate their original process group; on
@@ -22,11 +22,11 @@ accepted in either field. Repositories outside these bounds cannot adopt v2
 unchanged.
 
 The v2 Go module and command path is
-`github.com/faustbrian/go-library-tools/v2`. After the `v2.0.0` tag is
-published, install the command with:
+`github.com/faustbrian/go-library-tools/v2`. For a source installation of the
+published command:
 
 ```bash
-go install github.com/faustbrian/go-library-tools/v2/cmd/golib@v2.0.0
+go install github.com/faustbrian/go-library-tools/v2/cmd/golib@v2.2.0
 ```
 
 ## Quick Start
