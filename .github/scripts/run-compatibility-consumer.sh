@@ -53,8 +53,12 @@ if len(encoded) > 16384:
 files = json.loads(encoded)
 if not isinstance(files,list) or not files or len(files)>64 or len(set(files))!=len(files):
     raise ValueError('missing or ambiguous consumer selection')
-source = 'release/compatibility-consumer'
-for parent in ('release',source):
+source = os.environ.get('CONSUMER_DIRECTORY','release/compatibility-consumer')
+if len(source)>256 or not re.fullmatch(r'[a-z0-9][a-z0-9_-]*(/[a-z0-9][a-z0-9_-]*){0,7}',source):
+    raise ValueError('invalid consumer directory')
+parent = ''
+for component in source.split('/'):
+    parent = os.path.join(parent,component)
     if not stat.S_ISDIR(os.lstat(parent).st_mode):
         raise ValueError('unsafe consumer directory')
 for name in files:

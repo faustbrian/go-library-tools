@@ -28,6 +28,14 @@ to unrelated compositions. This is file-level qualification: editing the grouped
 `composition_test.go` still qualifies every composition and import in that file.
 Current helpers are file-local; a new shared helper requires full qualification.
 
+The generic selector and runner accept `CONSUMER_DIRECTORY` for a separate
+scenario owner, defaulting to `release/compatibility-consumer` for existing
+callers. It must be a bounded relative directory of ordinary non-symlink
+components. The owner supplies its immutable Git base and scenario sources;
+Tools supplies reusable execution, not a second copy of the maintained inputs.
+All existing source-selection, public-resolution, platform, cancellation and
+cleanup guarantees apply to the selected owner directory.
+
 Consumer module/checksum, toolchain, generator, workflow/runner/selector,
 selection and published-set inputs retain the full current three-platform set.
 New, deleted, renamed or unknown consumer inputs select the complete current set;

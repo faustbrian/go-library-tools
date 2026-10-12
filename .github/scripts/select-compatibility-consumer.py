@@ -10,7 +10,6 @@ import subprocess
 import sys
 import time
 
-DIRECTORY = "release/compatibility-consumer/"
 # The public consumer stages its own manifests and never imports the Tools module.
 # Root dependency changes still receive Tools checks, not unrelated compositions.
 SHARED = {".go-version", ".github/workflows/ci.yml",
@@ -48,6 +47,15 @@ def git(*arguments):
 
 
 try:
+    directory = os.environ.get("CONSUMER_DIRECTORY", "release/compatibility-consumer")
+    if len(directory) > 256 or not re.fullmatch(r"[a-z0-9][a-z0-9_-]*(/[a-z0-9][a-z0-9_-]*){0,7}", directory):
+        raise ValueError("invalid consumer directory")
+    parent = ""
+    for component in directory.split("/"):
+        parent = os.path.join(parent, component)
+        if not stat.S_ISDIR(os.lstat(parent).st_mode):
+            raise ValueError("unsafe consumer directory")
+    DIRECTORY = directory + "/"
     base = os.environ["BASE_SHA"]
     publication = os.environ["PUBLICATION_REQUIRED"]
     if not re.fullmatch(r"[0-9a-f]{40}", base) or publication not in {"true", "false"}:

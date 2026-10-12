@@ -18,8 +18,8 @@ import (
 func TestCompatibilityConsumerSelectionRetainsSharedAndUnknownQualification(t *testing.T) {
 	script := readProjectFile(t, ".github/scripts/select-compatibility-consumer.py")
 	for _, test := range []struct {
-		name, changed, alsoChanged, mode string
-		full, none, refuse               bool
+		name, changed, alsoChanged, mode, directory string
+		full, none, refuse                          bool
 	}{
 		{name: "unrelated root metadata", changed: "modules.json", none: true},
 		{name: "one independent file", changed: "release/compatibility-consumer/wsdl2_composition_test.go"},
@@ -41,14 +41,25 @@ func TestCompatibilityConsumerSelectionRetainsSharedAndUnknownQualification(t *t
 		{name: "nested source", changed: "release/compatibility-consumer/nested/helper.go", refuse: true},
 		{name: "invalid immutable base", mode: "invalid", refuse: true},
 		{name: "missing immutable base", mode: "missing", refuse: true},
+		{name: "separate scenario owner", directory: "scenarios/compatibility-consumer", changed: "release/compatibility-consumer/wsdl2_composition_test.go"},
+		{name: "separate owner dependency", directory: "scenarios/compatibility-consumer", changed: "release/compatibility-consumer/go.mod", full: true},
+		{name: "separate owner adapter", directory: "scenarios/compatibility-consumer", changed: "tools/compatibility/check.py", full: true},
+		{name: "absolute directory", directory: "/scenarios/compatibility-consumer", refuse: true},
+		{name: "traversal directory", directory: "scenarios/../compatibility-consumer", refuse: true},
+		{name: "symlink owner directory", directory: "scenarios/compatibility-consumer", mode: "symlink", refuse: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			root := t.TempDir()
+			directory := "release/compatibility-consumer"
+			if test.directory == "scenarios/compatibility-consumer" {
+				directory = test.directory
+			}
+			changed := strings.ReplaceAll(test.changed, "release/compatibility-consumer", directory)
 			for _, name := range []string{"go.mod", "go.sum", "wsdl2_composition_test.go", "openapi2_composition_test.go", "consumer_test.go"} {
-				writeFile(t, root, "release/compatibility-consumer/"+name, "initial\n")
+				writeFile(t, root, directory+"/"+name, "initial\n")
 			}
 			if test.changed != "" && test.mode != "rename" {
-				writeFile(t, root, test.changed, "initial\n")
+				writeFile(t, root, changed, "initial\n")
 			}
 			runGit(t, root, "init", "-q")
 			runGit(t, root, "add", "--", ".")
@@ -60,15 +71,15 @@ func TestCompatibilityConsumerSelectionRetainsSharedAndUnknownQualification(t *t
 			if test.changed != "" {
 				switch test.mode {
 				case "delete":
-					if err := os.Remove(filepath.Join(root, test.changed)); err != nil {
+					if err := os.Remove(filepath.Join(root, changed)); err != nil {
 						t.Fatal(err)
 					}
 				case "rename":
-					if err := os.Rename(filepath.Join(root, test.changed), filepath.Join(root, "release/compatibility-consumer/renamed_test.go")); err != nil {
+					if err := os.Rename(filepath.Join(root, changed), filepath.Join(root, directory+"/renamed_test.go")); err != nil {
 						t.Fatal(err)
 					}
 				default:
-					writeFile(t, root, test.changed, "changed\n")
+					writeFile(t, root, changed, "changed\n")
 				}
 				if test.alsoChanged != "" {
 					writeFile(t, root, test.alsoChanged, "changed\n")
@@ -82,6 +93,14 @@ func TestCompatibilityConsumerSelectionRetainsSharedAndUnknownQualification(t *t
 			if test.mode == "missing" {
 				base = strings.Repeat("a", 40)
 			}
+			if test.mode == "symlink" {
+				if err := os.Rename(filepath.Join(root, "scenarios"), filepath.Join(root, "actual")); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.Symlink("actual", filepath.Join(root, "scenarios")); err != nil {
+					t.Fatal(err)
+				}
+			}
 			publication := "false"
 			if test.mode == "publication" {
 				publication = "true"
@@ -90,6 +109,9 @@ func TestCompatibilityConsumerSelectionRetainsSharedAndUnknownQualification(t *t
 			command := exec.CommandContext(t.Context(), "python3", "-c", script)
 			command.Dir = root
 			command.Env = append(os.Environ(), "BASE_SHA="+base, "PUBLICATION_REQUIRED="+publication, "GITHUB_OUTPUT="+outputPath)
+			if test.directory != "" {
+				command.Env = append(command.Env, "CONSUMER_DIRECTORY="+test.directory)
+			}
 			data, err := command.CombinedOutput()
 			if (err != nil) != test.refuse {
 				t.Fatalf("selection refusal=%v want %t: %s", err, test.refuse, data)
@@ -114,7 +136,7 @@ func TestCompatibilityConsumerSelectionRetainsSharedAndUnknownQualification(t *t
 			}
 			switch {
 			case test.full:
-				paths, err := filepath.Glob(filepath.Join(root, "release/compatibility-consumer/*.go"))
+				paths, err := filepath.Glob(filepath.Join(root, directory+"/*.go"))
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -287,7 +309,7 @@ func TestCompatibilityConsumerStagesOnlySelectedSourcesAndPropagatesFailure(t *t
 		t.Fatal("missing consumer execution")
 	}
 	for _, test := range []struct {
-		name, files                    string
+		name, files, directory         string
 		missing, failTest, wantFailure bool
 	}{
 		{name: "one scenario", files: `["wsdl2_composition_test.go"]`},
@@ -297,14 +319,21 @@ func TestCompatibilityConsumerStagesOnlySelectedSourcesAndPropagatesFailure(t *t
 		{name: "empty selection", files: `[]`, wantFailure: true},
 		{name: "malformed selection", files: `{`, wantFailure: true},
 		{name: "selected test fails", files: `["wsdl2_composition_test.go"]`, failTest: true, wantFailure: true},
+		{name: "separate owner scenario", directory: "scenarios/compatibility-consumer", files: `["wsdl2_composition_test.go"]`},
+		{name: "owner traversal refused", directory: "release/../compatibility-consumer", files: `["wsdl2_composition_test.go"]`, wantFailure: true},
+		{name: "owner absolute path refused", directory: "/release/compatibility-consumer", files: `["wsdl2_composition_test.go"]`, wantFailure: true},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			root := t.TempDir()
+			directory := "release/compatibility-consumer"
+			if test.directory == "scenarios/compatibility-consumer" {
+				directory = test.directory
+			}
 			for _, path := range []string{"go.mod", "go.sum", "consumer_test.go", "composition_test.go", "workflow_composition_test.go", "wire3_composition_test.go", "qcp3_composition_test.go", "postgres2_composition_test.go", "state_machine2_composition_test.go", "wsdl2_composition_test.go", "openapi2_composition_test.go", "outbox2_composition_test.go", "tabular_xlsx_composition_test.go"} {
 				if test.missing && path == "wsdl2_composition_test.go" {
 					continue
 				}
-				writeFile(t, root, "release/compatibility-consumer/"+path, "fixture\n")
+				writeFile(t, root, directory+"/"+path, "fixture\n")
 			}
 			if data, err := os.ReadFile(filepath.Join(projectRoot(t), ".github/scripts/run-compatibility-consumer.sh")); err == nil {
 				writeFile(t, root, ".github/scripts/run-compatibility-consumer.sh", string(data))
@@ -331,6 +360,9 @@ esac
 			command := exec.CommandContext(t.Context(), "bash", "-e", "-c", strings.NewReplacer("${{ matrix.goos }}", "linux", "${{ matrix.goarch }}", "amd64").Replace(script))
 			command.Dir = root
 			command.Env = append(os.Environ(), "PATH="+filepath.Join(root, "bin")+string(os.PathListSeparator)+os.Getenv("PATH"), "RUNNER_TEMP="+root, "SCENARIO_FILES="+test.files, "EXPECTED_GOOS=linux", "EXPECTED_GOARCH=amd64", "EXECUTED="+log, "FAIL_TEST="+map[bool]string{true: "true", false: "false"}[test.failTest])
+			if test.directory != "" {
+				command.Env = append(command.Env, "CONSUMER_DIRECTORY="+test.directory)
+			}
 			output, err := command.CombinedOutput()
 			if (err != nil) != test.wantFailure {
 				t.Fatalf("consumer failure=%v, want %t: %s", err, test.wantFailure, output)

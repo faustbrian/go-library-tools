@@ -4,6 +4,9 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+- Allow the reusable compatibility-consumer selector and runner to use a
+  validated owner directory while preserving existing callers and defaults.
+
 ### Fixed
 
 - Avoid rebuilding the public compatibility consumer for unrelated Tools-root
