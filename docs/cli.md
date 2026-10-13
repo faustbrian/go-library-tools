@@ -157,6 +157,10 @@ Core commands:
 - `golib docs check --local` checks repository-local Markdown structure and
   links without network access or runtime commands; executable examples still
   require their affected compile/tests.
+- `golib docs check --navigation` checks local Markdown heading fragments,
+  module documentation reachability from the root README, and personal machine
+  paths with a 32 MiB aggregate input limit. It is optional, local-only and
+  incompatible with `--local` or `--module`; no process executor is created.
 - `golib services cycle [--module DIR]` starts each selected module's declared
   fixtures, waits for readiness, and closes the exact task-owned lease. It does
   not expose detached service state.

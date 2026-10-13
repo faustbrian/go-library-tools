@@ -1,200 +1,100 @@
-# Golib Ecosystem
+# Golib: independent Go libraries
 
-This directory is the versioned public entry point for the independently
-released Golib libraries. It describes shared consumer expectations without
-creating an umbrella module, application runtime, service container, or
-lockstep release train.
+[![Tooling CI](https://github.com/faustbrian/go-library-tools/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/faustbrian/go-library-tools/actions/workflows/ci.yml)
+[![Tooling release](https://img.shields.io/github/v/release/faustbrian/go-library-tools?sort=semver)](https://github.com/faustbrian/go-library-tools/releases)
+[![Canonical documentation](https://img.shields.io/badge/docs-Markdown-blue)](docs/index.md)
+[![Security policy](https://img.shields.io/badge/security-policy-blue)](security/README.md)
 
-- [Design language](design-language.md): construction, ownership, lifecycle,
-  errors, adapters, compatibility, and explicit composition.
-- [Cohesion v1 contract](goals/cohesion-v1.md): current module, compatibility,
-  composition, assurance, and evolution boundaries.
-- [Consumer catalog](catalog-consumer.md): active and deprecated public modules
-  organized by capability and intended adoption boundary.
-- [Engineering catalog](catalog-engineering.md): complete repository-owned
-  module and package inventory for maintainers.
-- [Compatibility set and receipts](compatibility-sets.md): exact known-good
-  public versions, covered compositions, exclusions, and receipt sources.
-- [Security contract](security/README.md): shared threat model, vulnerability
-  management, risk ownership, scanner records, and release verdicts.
-- [Residual register](../../release/cohesion-residuals.json): remaining
-  material exceptions, migrations, and removal conditions.
-- [Release process](../release.md): milestone validation, native consumer
-  matrix, immutable assets, and rollback boundary.
+Golib is a collection of independently released, standard-library-first Go
+libraries for explicitly composed services and domain work. Choose only the
+modules your application needs; applications own configuration, dependency
+wiring, policy order, resource acquisition and reverse-order cleanup. There is
+no umbrella module, service container, hidden initialization, global registry
+or synchronized release train.
 
-At an ecosystem milestone, the reviewed repository revisions and adopted
-tooling identities are declared in
-[`release/cohesion-sources.json`](../../release/cohesion-sources.json) and
-validated by
-[`schema/cohesion-sources.schema.json`](../../schema/cohesion-sources.schema.json).
-The matching standalone input manifest lists only SHA-256-bound repository
-engineering projections described by
-[`schema/cohesion-inputs.schema.json`](../../schema/cohesion-inputs.schema.json).
-Projection paths are safe POSIX paths confined to the manifest directory. A
-checksum-verified released `golib` binary generates deterministic consumer and
-engineering catalogs; the consumer view contains releasable libraries and
-adapters, while the engineering view also retains fixtures, harnesses,
-examples, benchmarks, and internal tools. The matching `cohesion aggregate
-check` command byte-verifies the checked-in set. Aggregation accepts at most
-256 repositories, 256 MiB of projection input, and 4,096 modules; each rendered
-artifact is capped at 512 MiB.
+## Start with your task
 
-Only a selected ecosystem-milestone tooling release publishes ten
-checksum- and attestation-covered assets: the source lock, residual register,
-compatibility-set JSON and Markdown, standalone input manifest, deterministic
-projection bundle, and four catalogs. That milestone pipeline
-independently regenerates locked projections and catalogs and binds bundle
-membership to the source lock before publication. Ordinary tooling and library
-releases do not refresh or publish these aggregate artifacts.
+| Problem | Start here |
+| --- | --- |
+| Evaluate and install one package | [Catalog](docs/packages.md) and [selection guide](docs/choosing-packages.md) |
+| Build an API or RPC service | [Protocol decisions](docs/api-protocols.md), [stacks](docs/recommended-stacks.md), [recipes](docs/recipes/index.md) |
+| Build a worker, ingester or scheduler | [Role/processing recipes](docs/recipes/index.md) |
+| Move incrementally from Laravel/PHP | [Migration route](docs/migration/laravel-php.md) |
+| Deploy and operate Kubernetes services | [Operator route](docs/operations/kubernetes.md) |
+| Extend a library or adapter | [Contributor route](docs/contributing.md) |
+| Review security, architecture or tradeoffs | [Ownership](docs/integration-map.md), [security](security/README.md), [comparisons](docs/comparisons/index.md) |
 
-Compatibility-set drafts use `draft-<YYYYMMDD>.<sequence>` identifiers and are
-non-installable. Published sets use
-`golib-compat-v<schema>-<YYYYMMDD>.<sequence>`, are installable, and bind every
-module to its owning repository's exact remote release tag and public Go proxy
-version. Set records can also carry structured recipe,
-external-version, upgrade, rollback, and exclusion details. Published
-identifiers are immutable; a later recommendation receives a new identifier.
-The maintained current consumer is owned by
-[go-library-assurance](https://github.com/faustbrian/go-library-assurance/tree/main/scenarios/compatibility-consumer),
-not the Tools change/release queue. Its `selection.json` declares a published
-base set and explicit released-module
-`replacements` or `additions`, each with its exact tag source revision and
-primary imports. Replacements substitute a selected module path or version;
-additions import a distinct major path alongside the original base family,
-preserving its currently selected module even when a replacement already
-selects a newer major. The generator checks each remote tag and public Go proxy
-version and the resulting consumer files without modifying the published base
-set or projecting new `known_good_compatibility_sets` membership. This
-current consumer is not evidence that the changed versions belong to the frozen
-verified cohort; its blank imports establish composition-only compilation, not
-runtime security certification.
+The [complete documentation map](docs/index.md) connects all audiences and
+related next steps. Canonical Markdown is usable directly on GitHub; package
+API docs and pkg.go.dev links remain with the owning module.
 
-Tools retains `release/compatibility-consumer` only as the published set's
-historical import fixture and as the backward-compatible generator default.
-It does not retain an editable current selection or runtime scenario copy.
-Its authenticated cutover-derived indirect requirements/checksums are not old
-release evidence. Existing immutable catalogs, assets and tagged documentation
-keep their original owner and scope. The selections and ordinary composition
-checks described below now refer to Assurance; they do not require a harness
-release, a Tools CLI release or immediate library/tooling fleet adoption.
-The retained fixture keeps the already-qualified patched Excelize indirect
-floor; it does not restore the vulnerable v2.11.0 resolver choice or rewrite
-the historical cohort's external-version record.
+## Packages by problem
 
-The maintained consumer selects Excelize
-`v2.11.1-0.20261003002531-6258dcebc4e2`, an upstream public revision containing
-the fixes for the reported dependency advisories, instead of the vulnerable
-v2.11.0 stable tag. Ordinary XLSX rows and end-of-input are exercised through
-both retained Tabular v1 and v2 wrappers. This is dependency compatibility
-evidence, not comprehensive spreadsheet security certification or a change to
-the frozen cohort's external-version record.
+| Primary family | Responsibility and selection |
+| --- | --- |
+| Foundations | Explicit time, configuration, identifiers and foundational contracts |
+| Service edge | Process lifecycle, routing, HTTP policy, authentication and authorization |
+| Protocols and descriptions | Resource/operation protocols, schema and API descriptions |
+| Persistence and durability | PostgreSQL, migrations, cache, queue, lease, idempotency, outbox and workflow |
+| Resilience | Bounded retry, admission/rate policy and circuit breaking |
+| Observability | Logging, telemetry and correlation with caller-owned providers |
+| Integration and data movement | Filesystems, tabular data, broker/event movement and ingestion |
+| Domain utilities | Time/calendar/geography/localization, numerical values and other domain owners |
+| Tooling | Repository validation, release integrity and engineering fixtures |
 
-Outbox selects public `/v2` v2.0.0 alongside its historical root and four
-canonical adapter families. Event Sourcing's Outbox adapter `/v3` v3.0.0 and
-Webhook `/v3` v3.0.0 compose through the same actual Outbox v2 envelope.
-Ordinary tests check event round trips and identity refusal, webhook routing,
-copied input ownership and encoding limits; these are not database, broker,
-live HTTP or full security qualification. The frozen compatibility set and
-historical selections remain unchanged.
-The current selection records the required Event Sourcing core v2.0.1,
-Postgres adapter v2.0.2 and Idempotency v1.2.0 dependency floors. JSON Schema
-v2, already used by the OpenAPI v2 composition test, is selected explicitly.
+The [consumer catalog](catalog-consumer.md) supplies each installable module's
+purpose, status, path and version; the [selection guide](docs/choosing-packages.md)
+explains alternatives and deliberate non-goals. Families are ownership groups,
+not import layers. The [engineering inventory](catalog-engineering.md) also
+contains planned work and non-production fixtures; it is not an install list.
 
-Query, International and Localized select
-their published v3.0.0 identities together, while Validation retains v2.0.0.
-Money selects published `/v2` v2.0.0 together with canonical Knapsack
-`objective/money/v3` v3.0.0; root Knapsack and Measurement retain `/v2`.
-The separate ordinary composition test checks exact Money v2 totals and copied
-cost-map ownership through canonical objective v3, not runtime security
-certification. Deprecated facade selections and frozen cohort records are
-unchanged.
-Log selects published `/v2` v2.0.0. Its ordinary composition assertion checks
-default message replacement and attribute omission, then explicit `TrustedNew`
-preservation of a fixed application event and field; it is not a broader
-security certification.
-OpenRPC selects published `/v2` v2.0.0. Its ordinary composition assertion
-builds a single method, validates it with explicit method and diagnostic
-bounds, and checks exact canonical output; it does not certify all protocol
-or security boundaries.
-Other selections and the frozen cohort's release identities remain unchanged.
-The maintained Localized v4 addition is superseded by published `/v5` v5.0.0,
-composed with International v4 locale identities, HTTP Client `/v2` v2.0.0
-request identities, API Query v4 predicates and Wire v3 codecs. Its ordinary
-composition assertions cover canonical and retained adapters, exact
-present-empty and missing locales, immutable request preferences and decoded
-payload ownership. Localized v1 and v3 and the original HTTP Client remain
-selected; this does not update the frozen compatibility set or release Tools.
-Wire v3, International v4, Measurement v3 and Opening Hours v4 are added
-alongside their earlier selected majors. The ordinary published composition
-tests exercise Wire v3 format identities through each successor adapter;
-they do not certify unrelated runtime security boundaries.
-Without this optional selection, older fixtures retain the existing candidate or
-published-set selection behavior. Remove the selection explicitly before
-generating a new cohort candidate; candidate writes must not silently overwrite
-a maintained current-release consumer. Middleware, feature-flags, measurement,
-filesystem, fault-injection, router, password, semaphore and Knapsack select
-their published `/v2` modules, along with the optional measurement rule adapter.
-Barcode, Rate Limit, Sequencer and Idempotency
-add their released `/v2` modules while retaining v1 imports. Neither form
-rewrites the base set's v1 versions or historical evidence.
-Idempotency selects `/v2` v2.0.1 alongside the frozen v1 selection. A finite
-in-memory composition checks acquisition, completion, and replay; its graph
-retains the selected OpenTelemetry versions at or above the patch's v1.45.0
-dependency floor. This is not durable-backend or security certification.
-Matching module entries in the generated catalogs list the published set under
-`known_good_compatibility_sets`; unreleased drafts are never projected there.
-Candidate fingerprints withdrawn before the first publication are not public
-identities; `golib-compat-v1-20260910.1` becomes immutable only with its v1.8.0
-milestone release.
+## Five-minute minimal service path
 
-## Adopt, upgrade, or roll back
+With Go 1.27.0 installed, follow the [minimal HTTP recipe](docs/recipes/01-minimal-http-service.md).
+Its real loopback server exercises a business request, readiness withdrawal and
+bounded shutdown. The complete public source owns configuration, imports and
+wiring; do not deploy the fixture as a product. The
+[recipe index](docs/recipes/index.md#run-a-reference) explains clean checkout,
+exact compatible versions and task-owned resource cleanup. For application code,
+continue to the selected Service README/adoption guide from the catalog.
 
-Select only the modules an application directly uses from the published set,
-apply those exact versions in the application's `go.mod`, and run its directly
-affected compositions with `GOWORK=off` and public proxy/SumDB resolution. The
-set is guidance, not an umbrella module or mandatory fleet upgrade.
+## Install and version independently
 
-Upgrade one owned dependency boundary at a time. To roll back, restore the
-application's prior direct versions for that boundary and rerun the same
-focused compositions; unrelated module versions do not need to change.
-
-After the final aggregate consumer catalog contains the complete active public
-roster, generate one unreleased candidate and its clean-consumer module with:
+In an initialized application module, install only a chosen published module;
+for example, the frozen cohort's standalone clock seam:
 
 ```sh
-make compatibility-candidate \
-  COMPATIBILITY_SET_ID=draft-YYYYMMDD.1 \
-  COMPATIBILITY_OBSERVED_AT=YYYY-MM-DDTHH:MM:SSZ \
-  COMPATIBILITY_MODULE_COUNT=<active-module-count> \
-  COMPATIBILITY_VERSION_OVERRIDES='<module>@<public-version> ...'
+go get github.com/faustbrian/go-clock@v1.1.0
 ```
 
-Generation selects only active, releasable catalog modules, sorts them by
-module path, applies any deliberate public-version overrides, resolves every
-selected version through its exact remote tag and the public Go proxy, and
-writes `compatibility-sets.{json,md}` together with
-`release/compatibility-consumer/{go.mod,consumer_test.go}`. A missing release,
-deprecated or planned module, stale catalog version, or roster-count mismatch
-fails before a candidate is written. Do not run the write command until the
-catalog, public releases, candidate metadata, and receipt sources are final.
+Follow its [versioned README](https://github.com/faustbrian/go-clock/blob/v1.1.0/README.md)
+and [API reference](https://pkg.go.dev/github.com/faustbrian/go-clock@v1.1.0).
+Nested adapters have separate module requirements and repository-relative tag
+prefixes. Major versions retain Go's `/vN` import/module suffix; development and
+Git tags stay on main, not version-specific source branches. See
+[installation and release policy](docs/versioning.md).
 
-Composition receipts run from task-owned disposable source checkouts. Rebase
-only dependencies already required by that checkout, reject any local replace,
-then tidy and execute with public resolution:
+## Stability, compatibility and limitations
 
-```sh
-make compatibility-rebase \
-  COMPATIBILITY_SET_ID=draft-YYYYMMDD.1 \
-  COMPATIBILITY_GO_MOD=/task/checkout/go.mod
-GOWORK=off go mod tidy
-GOWORK=off go test -mod=readonly ./...
-```
+Design-language **1.0** and published **`golib-compat-v1-20260912.2`** describe
+exact public versions on Go **1.27.0**, their platform/backend assumptions and
+fourteen bounded composition results. They are a frozen cohort, not the latest
+version of every module. Package-current releases and majors have their own
+migration and compatibility contracts. [Status](docs/status.md),
+[compatibility](compatibility-sets.md) and [limitations](docs/limitations.md)
+distinguish active, experimental, planned, deprecated and unavailable work.
+Planned Identity-family roots and Secret Store have no public install route.
+No badge here certifies every library, backend or production deployment: CI and
+release badges refer to this tooling repository; the other badges link documents.
 
-`compatibility-rebase` reads the selected candidate, updates matching existing
-requirements to its versions, and leaves unrelated dependencies unchanged. It
-does not edit a maintained repository unless that repository is itself the
-explicit task-owned checkout.
+## Continue
 
-The development copy on a default branch is not an immutable compatibility
-contract. Published documents identify their design-language version, exact
-`go-library-tools` tag, and content digest.
+[Architecture](docs/architecture.md) · [Integration map](docs/integration-map.md) ·
+[Recommended stacks](docs/recommended-stacks.md) · [Recipes](docs/recipes/index.md) ·
+[Migration](docs/migration/index.md) · [Operations](docs/operations/index.md) ·
+[Tradeoffs](docs/comparisons/index.md) · [Benchmarks](docs/comparisons/performance.md) ·
+[Contribution](docs/contributing.md) · [Validation](docs/validation.md) ·
+[Glossary](docs/glossary.md)
+
+Maintainers: [catalog publication and maintained consumer](docs/catalog-publication.md),
+[release integrity](../release.md), [tooling documentation](../README.md).

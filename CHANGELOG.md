@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add a task-oriented ecosystem documentation portal with selection, protocol,
+  composition, migration, operations, contribution and limitations routes,
+  preserving the frozen compatibility cohort and package-owned boundaries.
+- Add optional local Markdown navigation validation for heading fragments,
+  declared-module reachability, bounded input and private machine paths without
+  changing existing documentation commands or executing examples.
+
 ## 2.4.1 - 2026-10-13
 
 ### Fixed

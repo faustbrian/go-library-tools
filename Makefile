@@ -1,6 +1,6 @@
 SHELL := /usr/bin/env bash
 
-.PHONY: build check check-packages ci cohesion compatibility compatibility-candidate compatibility-rebase config consumers inventory local-check local-ci metadata-ci milestone-check repository-check security-differential source-docs-inventory source-docs-check workflows
+.PHONY: build check check-packages ci cohesion compatibility compatibility-candidate compatibility-rebase config consumers docs-navigation inventory local-check local-ci metadata-ci milestone-check repository-check security-differential source-docs-inventory source-docs-check workflows
 
 PACKAGES ?=
 COMPATIBILITY_SET_ID ?=
@@ -25,6 +25,9 @@ metadata_contract = "$$task/golib" source-docs check --json; "$$task/golib" conf
 
 build:
 	$(call run_go,build ./cmd/golib)
+
+docs-navigation:
+	$(call run_golib,"$$task/golib" docs check --navigation)
 
 config:
 	$(call run_go,run ./cmd/golib config validate)

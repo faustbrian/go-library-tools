@@ -64,6 +64,7 @@ Usage:
   golib api update
   golib docs check [--module <directory>]
   golib docs check --local
+  golib docs check --navigation
   golib source-docs <inventory|check> [--json]
 	golib services cycle [--module <directory>]
   golib release check [--all|--module <directory>]
@@ -358,6 +359,21 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 			return (gates.Runner{Root: root, Catalog: catalog, Policy: policy, Executor: executor, Output: stdout}).Mutation(ctx, selection)
 		})
 	case "docs":
+		if len(args) == 3 && args[1] == "check" && args[2] == "--navigation" {
+			modules := make([]string, 0, len(catalog.Modules))
+			for _, module := range catalog.Modules {
+				if module.Directory == "." || module.Gates["documentation"] {
+					modules = append(modules, module.Directory)
+				}
+			}
+			if err := docscheck.CheckNavigationContext(ctx, root, modules); err != nil {
+				if ctx.Err() != nil {
+					return failure(stderr, ctx.Err())
+				}
+				return failure(stderr, errors.New("documentation navigation failed; inspect fragments, reachability and public paths"))
+			}
+			return publishValidationSuccess(ctx, stdout, stderr, "documentation navigation valid\n")
+		}
 		if len(args) == 3 && args[1] == "check" && args[2] == "--local" {
 			if err := docscheck.CheckContext(ctx, root); err != nil {
 				if ctx.Err() != nil {

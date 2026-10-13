@@ -23,3 +23,11 @@
 - [Release process](release.md): artifacts, checksums, SBOM, and provenance.
 - [Security model](security.md): threats, controls, and residual risks.
 - [Troubleshooting](troubleshooting.md): common failures and diagnostics.
+
+## Additional owned guides
+
+- [Selected library assurance](library-assurance.md).
+- [Source documentation checks](source-documentation.md).
+- [Supply-chain ownership](supply-chain.md).
+
+Next: [ecosystem routes](ecosystem/docs/index.md), [development](development.md).
