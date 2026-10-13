@@ -122,6 +122,14 @@ required service cleanup has its own 30-second bound. A timeout is incomplete
 assurance, not a passing result. Existing immutable package checkpoints are
 reused without importing an entire legacy archive; `golib mutation --module .`
 remains the explicit full-module command.
+Mutation discovery uses the target package's native `go list` production files
+under the campaign environment and tags. Inactive OS/tag variants are excluded
+with exact filename matches, not accepted as equivalent survivors. Selected
+shared files retain the same mutation thresholds. Current reuse includes the
+selection and runtime; a historical checkpoint with missing/different OS or
+architecture, or an unfiltered checkpoint for inactive variants, cannot establish
+the current selection. Its historical result remains intact and current
+execution is required.
 The last two apply only to a release decision/rehearsal. `release check` validates
 metadata and required gate configuration, not runtime qualification. The dry-run
 is an explicit complete all-enabled rehearsal, not mandatory for every tag;

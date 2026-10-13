@@ -12,6 +12,17 @@ All notable changes to this project are documented in this file.
 - Add optional local Markdown navigation validation for heading fragments,
   declared-module reachability, bounded input and private machine paths without
   changing existing documentation commands or executing examples.
+- Admit optional per-mutant `goarchs` restrictions in equivalent inventories.
+  Native campaign, report and reuse admission enforce the observed target;
+  absent restrictions preserve existing global reviews without migration.
+
+### Fixed
+
+- Select mutation source files from the native package build context rather
+  than mutating inactive OS or build-tag variants. Shared selected sources and
+  existing efficacy/coverage thresholds remain mandatory. Reuse binds the
+  selected filenames, exclusions and runtime; ambiguous platform checkpoints
+  or legacy checkpoints with inactive source variants require current execution.
 
 ## 2.4.1 - 2026-10-13
 

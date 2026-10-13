@@ -117,13 +117,13 @@ func equivalentSelectionEqual(left, right *EquivalentReview) bool {
 	}
 	if left.ModuleDirectory != right.ModuleDirectory || left.PackageDirectory != right.PackageDirectory ||
 		left.SourceDigest != right.SourceDigest || left.GremlinsVersion != right.GremlinsVersion ||
-		left.GremlinsVerifierSHA256 != right.GremlinsVerifierSHA256 {
+		left.GremlinsVerifierSHA256 != right.GremlinsVerifierSHA256 || left.architecture != right.architecture {
 		return false
 	}
 	selection := func(review *EquivalentReview) map[string]string {
 		result := make(map[string]string, len(review.Mutations))
 		for _, candidate := range review.Mutations {
-			result[mutationIdentity(candidate.FileName, candidate.Type, candidate.Line, candidate.Column)] = candidate.ContractDomain
+			result[mutationIdentity(candidate.FileName, candidate.Type, candidate.Line, candidate.Column)] = candidate.ContractDomain + "\x00" + strings.Join(candidate.Goarchs, "\x00")
 		}
 		return result
 	}

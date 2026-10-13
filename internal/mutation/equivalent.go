@@ -1,9 +1,11 @@
 package mutation
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
+	"slices"
 	"strings"
 )
 
@@ -21,6 +23,7 @@ type EquivalentInventory struct {
 
 // EquivalentReview applies only to one source and verifier identity.
 type EquivalentReview struct {
+	architecture string
 	// ModuleDirectory selects the exact repository-relative module.
 	ModuleDirectory string `json:"module_directory"`
 	// PackageDirectory selects the exact package within that module.
@@ -54,6 +57,25 @@ type EquivalentMutation struct {
 	// Reason states the independently reviewed equivalence, not a blanket score
 	// waiver.
 	Reason string `json:"reason"`
+	// Goarchs optionally limits this disposition to sorted unique supported
+	// Go 1.27 target architectures. Absence preserves historical global scope.
+	Goarchs targetArchitectures `json:"goarchs,omitempty"`
+}
+
+// targetArchitectures distinguishes absent legacy scope from explicit null.
+type targetArchitectures []string
+
+// UnmarshalJSON requires an array; null must not silently broaden scope.
+func (architectures *targetArchitectures) UnmarshalJSON(data []byte) error {
+	if strings.TrimSpace(string(data)) == "null" {
+		return errors.New("architecture scope must not be null")
+	}
+	var values []string
+	if err := json.Unmarshal(data, &values); err != nil {
+		return err
+	}
+	*architectures = values
+	return nil
 }
 
 // ParseEquivalentInventory strictly bounds and parses an optional review file.
@@ -94,6 +116,16 @@ func (review EquivalentReview) validate() error {
 	}
 	seen := make(map[string]struct{}, len(review.Mutations))
 	for _, candidate := range review.Mutations {
+		if candidate.Goarchs != nil {
+			if len(candidate.Goarchs) == 0 {
+				return errors.New("equivalent-mutant architecture scope is empty")
+			}
+			for index, arch := range candidate.Goarchs {
+				if !supportedArchitecture(arch) || index > 0 && candidate.Goarchs[index-1] >= arch {
+					return errors.New("equivalent-mutant architectures must be canonical unique supported targets")
+				}
+			}
+		}
 		if !validRelative(candidate.FileName) || !strings.HasSuffix(candidate.FileName, ".go") ||
 			candidate.Type == "" || strings.ContainsAny(candidate.Type, "\x00\r\n") ||
 			candidate.Line <= 0 || candidate.Column <= 0 ||
@@ -116,7 +148,14 @@ func mutationIdentity(file, kind string, line, column int) string {
 
 // Review fails closed when a selected package's source or tool identity drifts.
 // A nil review means that the package follows the original all-KILLED policy.
-func (inventory EquivalentInventory) Review(module, pkg, source, version, verifier string) (*EquivalentReview, error) {
+func (inventory EquivalentInventory) Review(module, pkg, source, version, verifier string, architecture ...string) (*EquivalentReview, error) {
+	if len(architecture) > 1 {
+		return nil, fmt.Errorf("%w: one native target architecture is required", ErrInvalid)
+	}
+	arch := ""
+	if len(architecture) == 1 {
+		arch = architecture[0]
+	}
 	for _, review := range inventory.Packages {
 		if review.ModuleDirectory != module || review.PackageDirectory != pkg {
 			continue
@@ -128,8 +167,48 @@ func (inventory EquivalentInventory) Review(module, pkg, source, version, verifi
 			return nil, fmt.Errorf("%w: equivalent-mutant source or verifier identity changed", ErrInvalid)
 		}
 		selected := review
-		selected.Mutations = append([]EquivalentMutation(nil), review.Mutations...)
+		selected.architecture = arch
+		selected.Mutations = nil
+		for _, candidate := range review.Mutations {
+			if candidate.Goarchs != nil {
+				if !supportedArchitecture(arch) {
+					return nil, fmt.Errorf("%w: scoped equivalence requires known native GOARCH", ErrInvalid)
+				}
+				if !slices.Contains(candidate.Goarchs, arch) {
+					continue
+				}
+				candidate.Goarchs = slices.Clone(candidate.Goarchs)
+			}
+			selected.Mutations = append(selected.Mutations, candidate)
+		}
+		if len(selected.Mutations) == 0 {
+			return nil, nil
+		}
 		return &selected, nil
 	}
 	return nil, nil
+}
+
+// supportedArchitecture lists actual Go 1.27 build targets, not historical
+// filename suffixes for removed architectures.
+func supportedArchitecture(arch string) bool {
+	switch arch {
+	case "386", "amd64", "arm", "arm64", "loong64", "mips", "mips64", "mips64le", "mipsle", "ppc64", "ppc64le", "riscv64", "s390x", "wasm":
+		return true
+	default:
+		return false
+	}
+}
+
+// validateExecution refuses a parsed but not runtime-admitted scoped review.
+func (review EquivalentReview) validateExecution() error {
+	if err := review.validate(); err != nil {
+		return err
+	}
+	for _, candidate := range review.Mutations {
+		if candidate.Goarchs != nil && (!supportedArchitecture(review.architecture) || !slices.Contains(candidate.Goarchs, review.architecture)) {
+			return errors.New("scoped equivalence has no admitted native target architecture")
+		}
+	}
+	return nil
 }

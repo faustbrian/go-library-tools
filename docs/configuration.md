@@ -147,6 +147,16 @@ module and package directories, `source_digest`, `gremlins_version`, and
 `line`, `column`, `contract_domain`, and detailed `reason`. Use schema version
 `1` with a `packages` array. The file is absent in repositories with no such
 review. A selected package with stale source or verifier identity fails closed.
+Each mutation may additionally declare `goarchs`, a nonempty sorted unique array
+of supported Go 1.27 target architectures, for example `["amd64", "arm64"]`.
+Omission preserves the existing all-architecture disposition; explicit null,
+empty, duplicate, unknown or unsorted values fail. The native campaign applies
+only the rows matching its observed `GOARCH`. Other targets still execute those
+mutants without an equivalence allowance: a viable survivor remains fatal.
+Scoped report/reuse admission requires an authenticated runtime selection and
+matching evidence architecture; prose such as "64-bit only" is not enforcement.
+`goarchs` restricts architecture, not operating system; it does not establish an
+OS-specific equivalence claim.
 Changing explanatory prose does not change native campaign identity; every
 reused raw report is checked against the exact selection captured at campaign
 start. Inventory edits and withdrawals apply on the next invocation, not to

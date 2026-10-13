@@ -21,6 +21,11 @@ func Reuse(evidenceRoot, mutationRoot, repository, module, pkg, inputDigest stri
 // ReuseWithReview checks the current exact classification before accepting an
 // immutable report, independently of the evidence record's earlier verdict.
 func ReuseWithReview(evidenceRoot, mutationRoot, repository, module, pkg, inputDigest string, review *EquivalentReview) (bool, ReportResult, error) {
+	if review != nil {
+		if err := review.validateExecution(); err != nil {
+			return false, ReportResult{}, fmt.Errorf("%w: invalid runtime equivalent review", ErrInvalid)
+		}
+	}
 	record, err := evidence.Load(evidenceRoot, "mutation", inputDigest)
 	if errors.Is(err, os.ErrNotExist) {
 		return false, ReportResult{}, nil
@@ -31,6 +36,13 @@ func ReuseWithReview(evidenceRoot, mutationRoot, repository, module, pkg, inputD
 	if record.Repository != repository || record.Module != module || record.Package != pkg ||
 		record.Result != "passed" || !applicableVerifierRecord(record) {
 		return false, ReportResult{}, fmt.Errorf("%w: mutation evidence identity does not match requested package", ErrInvalid)
+	}
+	if review != nil {
+		for _, candidate := range review.Mutations {
+			if candidate.Goarchs != nil && record.Environment["GOARCH"] != review.architecture {
+				return false, ReportResult{}, fmt.Errorf("%w: scoped mutation evidence target architecture changed", ErrInvalid)
+			}
+		}
 	}
 	data, report, err := LoadReportWithReview(mutationRoot, inputDigest, review)
 	if err != nil {

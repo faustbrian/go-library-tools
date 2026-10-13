@@ -246,8 +246,8 @@ func TestCampaignImportPreservesCheckpointEnvironment(t *testing.T) {
 	checkpoint, ledger := approvedImportFixture(t, currentInput)
 	checkpoint.Environment = map[string]string{
 		"GOVERSION":   "go1.26.6",
-		"GOOS":        "darwin",
-		"GOARCH":      "arm64",
+		"GOOS":        "linux",
+		"GOARCH":      "amd64",
 		"CGO_ENABLED": "1",
 	}
 	campaign.RuntimeIdentity = RuntimeIdentity{
@@ -494,7 +494,7 @@ func approvedImportFixture(t *testing.T, currentInput string) (Checkpoint, Migra
 	checkpoint := Checkpoint{
 		Module: ".", Package: ".", ExecutionRevision: revision, InputDigest: oldInput,
 		VerifierDigest: verifier, Gremlins: GremlinsVersion,
-		Environment:  map[string]string{"GOVERSION": "go1.26.6"},
+		Environment:  map[string]string{"GOVERSION": "go1.26.6", "GOOS": "linux", "GOARCH": "amd64"},
 		ReportDigest: result.Digest, Report: report, Mutants: result.Mutants,
 	}
 	reportDigest := strings.TrimPrefix(result.Digest, "sha256:")
@@ -770,6 +770,7 @@ func TestPackageInputsPinsRepositoryRootBeforeListing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("packageInputs() error = %v", err)
 	}
+	wantCurrent = selectedInputDigest(wantCurrent, productionSelection{Files: []string{"source.go"}, Excluded: []string{}}, campaign.RuntimeIdentity)
 	if current != wantCurrent || legacy != wantLegacy {
 		t.Fatalf("packageInputs() = %s, %s; want original snapshot %s, %s", current, legacy, wantCurrent, wantLegacy)
 	}

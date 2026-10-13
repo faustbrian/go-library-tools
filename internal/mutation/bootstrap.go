@@ -313,7 +313,7 @@ func validateReportDataWithReview(data []byte, review *EquivalentReview) (Report
 	equivalent := 0
 	reviewed := make(map[string]struct{})
 	if review != nil {
-		if err := review.validate(); err != nil {
+		if err := review.validateExecution(); err != nil {
 			return ReportResult{}, fmt.Errorf("%w: invalid equivalent-mutant review", ErrInvalid)
 		}
 		for _, candidate := range review.Mutations {

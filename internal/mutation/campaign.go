@@ -238,12 +238,18 @@ func (campaign Campaign) Import(ctx context.Context, checkpoints []Checkpoint, l
 			return err
 		}
 		currentInputs := inputs[LegacyVerifierDigest()]
-		approvalInputs := []string{strings.TrimPrefix(currentInputs.legacy, "sha256:")}
+		if len(currentInputs.selection.Excluded) != 0 || checkpoint.Environment["GOOS"] != campaign.RuntimeIdentity.GOOS || checkpoint.Environment["GOARCH"] != campaign.RuntimeIdentity.GOARCH {
+			changedInputs = errors.Join(changedInputs, fmt.Errorf("%s %s: %w: legacy checkpoint does not prove current native source selection", checkpoint.Module, checkpoint.Package, ErrInputChanged))
+			_, _ = fmt.Fprintf(output, "[%s] %s requires current mutation execution after native source selection\n", campaign.Policy.ModuleDirectory, packageTarget(checkpoint.Package))
+			continue
+		}
+		approvalInputs := []string{strings.TrimPrefix(currentInputs.legacy, "sha256:"), strings.TrimPrefix(currentInputs.unselected, "sha256:")}
 		if verifierDigest != LegacyVerifierDigest() {
 			legacyInputs := inputs[verifierDigest]
 			approvalInputs = append(approvalInputs,
 				strings.TrimPrefix(legacyInputs.current, "sha256:"),
 				strings.TrimPrefix(legacyInputs.legacy, "sha256:"),
+				strings.TrimPrefix(legacyInputs.unselected, "sha256:"),
 			)
 		}
 		if err := ledger.approveCandidates(
@@ -338,10 +344,12 @@ type campaignState struct {
 }
 
 func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packageDirectory string, state *campaignState) error {
-	_, input, source, err := campaign.packageInputAndSource(ctx, packageDirectory)
+	inputs, err := campaign.packageInputsForVerifiers(ctx, packageDirectory, LegacyVerifierDigest())
 	if err != nil {
 		return err
 	}
+	selected := inputs[LegacyVerifierDigest()]
+	input, source := selected.current, selected.source
 	review, err := campaign.equivalentReview(packageDirectory, source)
 	if err != nil {
 		return err
@@ -370,6 +378,7 @@ func (campaign Campaign) runPackage(ctx context.Context, output io.Writer, packa
 	if err != nil {
 		return err
 	}
+	arguments[slices.Index(arguments, "--exclude-files")+1] = selected.selection.exclusion()
 	environment := campaign.commandEnvironment()
 	environment["GOLIB_GREMLINS_COVERAGE_PROFILE"] = state.coverageProfile
 	environment["GOLIB_GREMLINS_COVERAGE_ELAPSED"] = state.coverageElapsed
@@ -453,7 +462,7 @@ func (campaign Campaign) equivalentReview(packageDirectory, source string) (*Equ
 	if len(campaign.EquivalentReviews.Packages) == 0 {
 		return nil, nil
 	}
-	return campaign.EquivalentReviews.Review(campaign.Policy.ModuleDirectory, packageDirectory, source, GremlinsVersion, LegacyVerifierDigest())
+	return campaign.EquivalentReviews.Review(campaign.Policy.ModuleDirectory, packageDirectory, source, GremlinsVersion, LegacyVerifierDigest(), campaign.RuntimeIdentity.GOARCH)
 }
 
 func (campaign Campaign) packageInput(ctx context.Context, packageDirectory string) (*ZeroReview, string, error) {
@@ -482,7 +491,9 @@ func (campaign Campaign) packageInputs(ctx context.Context) (string, string, err
 type verifierPackageInputs struct {
 	review          *ZeroReview
 	current, legacy string
+	unselected      string
 	source          string
+	selection       productionSelection
 }
 
 func (campaign Campaign) packageInputsForVerifiers(ctx context.Context, packageDirectory string, verifiers ...string) (map[string]verifierPackageInputs, error) {
@@ -510,6 +521,10 @@ func (campaign Campaign) packageInputsForVerifiers(ctx context.Context, packageD
 	if err := campaign.Process(ctx, "go", arguments, directory, campaign.commandEnvironment(), &listing, io.Discard); err != nil {
 		return nil, fmt.Errorf("list mutation input for %s: %w", packageDirectory, err)
 	}
+	selection, err := selectProduction(root, campaign.Policy.ModuleDirectory, packageDirectory, campaign.Policy.ModulePath, strings.NewReader(listing.String()), campaign.Root)
+	if err != nil {
+		return nil, err
+	}
 	result := make(map[string]verifierPackageInputs, len(verifiers))
 	for _, verifier := range verifiers {
 		if _, exists := result[verifier]; exists {
@@ -520,7 +535,7 @@ func (campaign Campaign) packageInputsForVerifiers(ctx context.Context, packageD
 		if inputErr != nil {
 			return nil, inputErr
 		}
-		result[verifier] = verifierPackageInputs{review: review, current: current, legacy: legacy, source: source}
+		result[verifier] = verifierPackageInputs{review: review, current: selectedInputDigest(current, selection, campaign.RuntimeIdentity), legacy: legacy, unselected: current, source: source, selection: selection}
 	}
 	// The inventory's source binding and the input digest must observe the same
 	// source. A go-list hook or concurrent edit cannot turn a pre-list review
