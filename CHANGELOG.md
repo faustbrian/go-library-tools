@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.5.0 - 2026-10-13
+
+Recorded as a prepared release candidate on this date; public availability
+requires the v2.5.0 tag and release.
+
 ### Added
 
 - Add a task-oriented ecosystem documentation portal with selection, protocol,
@@ -12,6 +17,7 @@ All notable changes to this project are documented in this file.
 - Add optional local Markdown navigation validation for heading fragments,
   declared-module reachability, bounded input and private machine paths without
   changing existing documentation commands or executing examples.
+  ([b28eeab4a6](https://github.com/faustbrian/go-library-tools/commit/b28eeab4a65297300f2b5b664932cd441d93b3c8))
 - Admit optional per-mutant `goarchs` restrictions in equivalent inventories.
   Native campaign, report and reuse admission enforce the observed target;
   absent restrictions preserve existing global reviews without migration.
@@ -23,6 +29,7 @@ All notable changes to this project are documented in this file.
   existing efficacy/coverage thresholds remain mandatory. Reuse binds the
   selected filenames, exclusions and runtime; ambiguous platform checkpoints
   or legacy checkpoints with inactive source variants require current execution.
+  ([7f1ca47e47](https://github.com/faustbrian/go-library-tools/commit/7f1ca47e470b4a1ebfc0679344ba2d115450c296))
 
 ## 2.4.1 - 2026-10-13
 
