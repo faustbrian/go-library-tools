@@ -1,3 +1,5 @@
+//go:build verifierintegration
+
 package mutation
 
 import (
@@ -28,7 +30,7 @@ func TestHostedVerifierUnitFirstExecution(t *testing.T) {
 			t.Error("verifier workspace cleanup permission repair failed")
 		}
 	})
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Minute)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	run := func(ctx context.Context, name string, arguments []string, directory string, environment map[string]string, stdout, stderr io.Writer) error {
 		command := exec.CommandContext(ctx, name, arguments...)

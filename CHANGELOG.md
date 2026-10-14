@@ -15,6 +15,9 @@ All notable changes to this project are documented in this file.
   affected-contract qualification and clean public consumption stay separate.
 - Keep ordinary module contracts in reusable release CI and bound hosted
   rehearsal jobs to 30 minutes instead of six hours.
+- Route cold mutation-verifier construction to selected hosted integration
+  checks for verifier, dependency or toolchain changes, not every ordinary
+  test run. Preserve the finite-execution assertions and fatal failures.
 
 ## 2.5.0 - 2026-10-13
 

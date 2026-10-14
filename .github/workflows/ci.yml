@@ -286,20 +286,21 @@ jobs:
             go test -p=1 -tags=scannerintegration ./internal/gates \
               -run '^TestGosecSelectedPackagesHosted$' -count=1 -timeout=15m
       - name: Run mutation verifier behavior when affected
-        if: github.event_name == 'pull_request'
         env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
         run: |
           set -euo pipefail
-          if git diff --quiet "${BASE_SHA}" HEAD -- internal/mutation; then
+          if [[ -n "${BASE_SHA}" ]] && git cat-file -e "${BASE_SHA}^{commit}" &&
+            git diff --quiet "${BASE_SHA}" HEAD -- internal/mutation go.mod go.sum .go-version; then
             exit 0
           fi
           task="$(mktemp -d "${RUNNER_TEMP}/golib-verifier-test.XXXXXX")"
           trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" \
-            go test -tags=verifierintegration ./internal/mutation \
-              -run '^TestPatchedVerifierRenewsTimeoutForEachIntegrationPhase$' -count=1 -timeout=2m
+            GOMAXPROCS=2 go test -p=1 -tags=verifierintegration ./internal/mutation \
+              -run '^Test(HostedVerifierUnitFirstExecution|PatchedVerifierRenewsTimeoutForEachIntegrationPhase)$' \
+              -count=1 -timeout=6m
 
       - name: Verify public metadata and fixture finding retention when affected
         env:

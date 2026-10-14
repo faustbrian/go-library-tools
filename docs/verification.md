@@ -50,6 +50,11 @@ exercise its material risk. `make check-packages PACKAGES=...` is the focused
 developer entry point, `make local-check` validates repository-owned metadata,
 and `make check` remains the explicit complete all-enabled repository gate for
 release work or a risk-selected aggregate run.
+Cold mutation-verifier construction uses the hosted `verifierintegration`
+suite, outside ordinary package tests. Tools CI selects its finite-execution
+checks when mutation code, dependencies or the toolchain change, and for
+scheduled/manual qualification without a comparison baseline. Selection does
+not run a mutation campaign; the selected integration failures remain fatal.
 Changed-input fuzz smoke permits two minutes per target for discovery, cold
 instrumented compilation and execution, within a three-minute total smoke
 deadline. It still runs a two-second active campaign with a 15-second test
