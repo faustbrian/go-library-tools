@@ -542,7 +542,7 @@ func TestReleaseModuleSelectorFlowsThroughHostedReleasePaths(t *testing.T) {
 	for _, step := range reusable.Jobs["quality"].Steps {
 		if step.Name == "Run repository module contracts" {
 			ordinaryContract = true
-			if step.If != "inputs.release_dry_run != true" {
+			if step.If != "" {
 				t.Fatalf("ordinary module contract guard = %q", step.If)
 			}
 		}

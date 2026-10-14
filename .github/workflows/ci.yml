@@ -19,7 +19,7 @@ on:
         type: boolean
         default: false
       release_rehearsal:
-        description: Run the complete pre-tag release dry-run
+        description: Verify pre-tag security and candidate packaging without runtime campaigns
         required: false
         type: boolean
         default: false
@@ -495,7 +495,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && (inputs.release_rehearsal || inputs.release_module != '')
     needs: quality
     runs-on: ubuntu-24.04
-    timeout-minutes: 360
+    timeout-minutes: 30
     steps:
       - name: Validate release inputs
         env:
@@ -515,10 +515,6 @@ jobs:
         with:
           go-version-file: .go-version
           cache: false
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
-        with:
-          node-version: '24.21.0'
-          package-manager-cache: false
       - name: Run pre-tag release dry-run
         env:
           RELEASE_MODULE: ${{ inputs.release_module }}

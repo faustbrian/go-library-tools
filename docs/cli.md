@@ -168,13 +168,14 @@ Core commands:
   prefixes, module-path major versions, mandatory gates, and repository
   structure. Before a tag exists,
   `golib release dry-run [--all|--module DIR]` also rejects tag collisions,
-  builds task-owned module-proxy archives, proves clean module resolution, and
-  executes all enabled selected module gates. This explicit full rehearsal is
-  not a routine release prerequisite; release checks alone do not certify
+  retains security scans and SBOM generation, builds task-owned module-proxy
+  archives and proves candidate module resolution. It does not start runtime
+  services or execute tests, race, coverage or mutation campaigns. Neither
+  release command certifies
   runtime qualification or published public consumption. See the
   [release policy](release.md). Omitting the selector or using `--all`
   preserves all-module release validation; `--module` confines release
-  metadata, tag collision, proxy-consumption, and module-gate work to exactly
+  metadata, security, tag collision and proxy-consumption work to exactly
   one independently releasable module. Repository structure and specification
   integrity remain repository-wide prerequisites.
 - `golib upgrade plan|apply --version VERSION --workflow-sha SHA

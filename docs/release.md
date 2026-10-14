@@ -181,24 +181,35 @@ readiness. Releasable modules use stable versions, canonical tag prefixes and
 mandatory documentation, lint, security and test gates. Coverage, mutation and
 race configuration alone is not a universal release prerequisite.
 
-`golib release dry-run` remains an explicit complete rehearsal, not a routine
-release checklist item. It rejects existing tags, constructs task-owned proxy
-archives, proves candidate module resolution and executes all enabled selected
-module gates, including configured expensive campaigns. Use it before creating
-the tag when that complete boundary is needed. Its local candidate proxy does
-not replace clean consumption of the actual published public version.
+`golib release dry-run` verifies security and candidate packaging, not complete
+runtime qualification. It retains suppression admission, current/history secret
+scans, vulnerability/security/license checks and SBOM generation for selected
+security-enabled modules. It rejects existing tags, constructs task-owned proxy
+archives and proves candidate module resolution. It does not start services or
+repeat full tests, race, coverage, mutation, lint or documentation campaigns.
+Its local candidate proxy does not replace clean consumption of the actual
+published public version.
+Qualify affected contracts through focused tests and applicable exact-source CI.
+Run `golib check --module DIR` separately only when a named risk requires a full
+all-enabled campaign; selected failures still block the applicable qualification.
+Keep broad mutation assurance in the selected main/scheduled workflow rather
+than making every tooling patch wait for it. Unrelated library development uses
+its existing supported tooling pin and must not wait for a Tools release unless
+it actually depends on that tooling correction.
 In independently versioned repositories, pass `--module DIR` to confine metadata,
-tag collision, proxy-consumption and module gates to the exact release owner.
+security, tag collision and proxy-consumption work to the exact release owner.
 Repository structure and specification validation remain global prerequisites;
 omitting the selector or passing `--all` selects every releasable module.
 
-When a complete hosted rehearsal is selected for a candidate on `main`, dispatch
+When a hosted packaging rehearsal is selected for a candidate on `main`, dispatch
 the `CI` workflow with `release_rehearsal` enabled. Set `release_module` to the exact independently
 versioned module directory, or leave it blank for the repository-wide dry-run.
-The ordinary quality and CodeQL jobs must pass, then the release-rehearsal job
-runs the selected complete dry-run in GitHub Actions. This keeps
-process-lifecycle and cleanup tests in their isolated CI boundary instead of
-running them on a maintainer workstation. The selected rehearsal must pass before
+The ordinary quality and CodeQL jobs must pass, and the release-rehearsal job
+runs the selected packaging/security dry-run with a 30-minute ceiling.
+Reusable release CI retains ordinary module tests instead of replacing them
+with packaging checks. Process-lifecycle and cleanup tests remain in their
+isolated hosted Quality boundary, not on a maintainer workstation.
+The selected rehearsal must pass before
 tagging; a skipped or failed selected job is not qualification. Releases always
 retain their applicable exact-source required CI and current-source security
 evidence interlock, plus checksums, SBOMs, attestations and immutable publication.

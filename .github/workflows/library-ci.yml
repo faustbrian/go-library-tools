@@ -13,7 +13,7 @@ on:
         default: false
         type: boolean
       release_dry_run:
-        description: Run the stable release rehearsal instead of the standard contract
+        description: Add release security and candidate packaging to the standard contract
         required: false
         default: false
         type: boolean
@@ -424,7 +424,7 @@ jobs:
     needs: prepare
     if: needs.prepare.outputs.runtime == 'true'
     runs-on: ubuntu-24.04
-    timeout-minutes: ${{ inputs.release_dry_run && 360 || 30 }}
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -501,7 +501,6 @@ jobs:
           printf '%s\n' 'GOPROXY=https://proxy.golang.org' 'GOSUMDB=sum.golang.org' \
             'GOPRIVATE=' 'GONOPROXY=' 'GONOSUMDB=' >>"${GITHUB_ENV}"
       - name: Run repository module contracts
-        if: inputs.release_dry_run != true
         env:
           MODULE_MATRIX: ${{ needs.prepare.outputs.matrix }}
           EVENT_NAME: ${{ github.event_name }}

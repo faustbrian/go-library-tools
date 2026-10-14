@@ -1130,7 +1130,7 @@ func TestExecuteSelectsExactlyOneReleaseModule(t *testing.T) {
 		return releaseSelectionExecutor{directory: t.TempDir(), existingTag: "nested/v1.0.0", tagQueries: &tagQueries, proxyQueries: &proxyQueries, gateDirectories: &gateDirectories}, func() error { return nil }, nil
 	}
 	stderr.Reset()
-	if code := execute([]string{"release", "dry-run", "--module", "."}, root, &stdout, &stderr, factory); code != 1 || !strings.Contains(stderr.String(), "injected gate stop") {
+	if code := execute([]string{"release", "dry-run", "--module", "."}, root, &stdout, &stderr, factory); code != 0 || stderr.Len() != 0 {
 		t.Fatalf("execute(release dry-run --module .) = %d, %q", code, stderr.String())
 	}
 	if got := strings.Join(tagQueries, ","); got != "v1.1.0" {
@@ -1139,7 +1139,7 @@ func TestExecuteSelectsExactlyOneReleaseModule(t *testing.T) {
 	if got := strings.Join(proxyQueries, ","); got != "github.com/example/library@v1.1.0" {
 		t.Fatalf("selected release proxy queries = %q", got)
 	}
-	if got := strings.Join(gateDirectories, ","); got != root {
+	if got := strings.Join(gateDirectories, ","); got != "" {
 		t.Fatalf("selected release gate directories = %q", got)
 	}
 
@@ -1150,7 +1150,7 @@ func TestExecuteSelectsExactlyOneReleaseModule(t *testing.T) {
 		return releaseSelectionExecutor{directory: t.TempDir(), tagQueries: &tagQueries, proxyQueries: &proxyQueries, gateDirectories: &gateDirectories}, func() error { return nil }, nil
 	}
 	stderr.Reset()
-	if code := execute([]string{"release", "dry-run", "--module", "nested"}, root, &stdout, &stderr, nestedFactory); code != 1 || !strings.Contains(stderr.String(), "injected gate stop") {
+	if code := execute([]string{"release", "dry-run", "--module", "nested"}, root, &stdout, &stderr, nestedFactory); code != 0 || stderr.Len() != 0 {
 		t.Fatalf("execute(release dry-run --module nested) = %d, %q", code, stderr.String())
 	}
 	if got := strings.Join(tagQueries, ","); got != "nested/v1.0.0" {
@@ -1159,7 +1159,7 @@ func TestExecuteSelectsExactlyOneReleaseModule(t *testing.T) {
 	if got := strings.Join(proxyQueries, ","); got != "github.com/example/library/nested@v1.0.0" {
 		t.Fatalf("nested release proxy queries = %q", got)
 	}
-	if got := strings.Join(gateDirectories, ","); got != filepath.Join(root, "nested") {
+	if got := strings.Join(gateDirectories, ","); got != "" {
 		t.Fatalf("nested release gate directories = %q", got)
 	}
 

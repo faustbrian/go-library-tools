@@ -170,7 +170,7 @@ func TestReleaseCandidateInstallsV2CommandFromLocalProxy(t *testing.T) {
 	}
 }
 
-func TestReleaseDryRunRoutesRehearsalBeforeGates(t *testing.T) {
+func TestReleaseDryRunRoutesRehearsal(t *testing.T) {
 	root := releaseFixture(t)
 	module := releaseModule()
 	runner := Runner{
@@ -186,6 +186,70 @@ func TestReleaseDryRunRoutesRehearsalBeforeGates(t *testing.T) {
 	runner.Executor = executorFunction(func(context.Context, Command) error { return nil })
 	if err := runner.ReleaseDryRun(context.Background(), []string{"."}); err == nil {
 		t.Fatal("ReleaseDryRun(rehearsal failure) error = nil")
+	}
+}
+
+func TestReleaseDryRunDoesNotExecuteRuntimeQualification(t *testing.T) {
+	root := releaseFixture(t)
+	selected := releaseModule()
+	selected.Gates = map[string]bool{
+		"tests": true, "race": true, "coverage": true, "mutation": true,
+		"lint": true, "documentation": true, "api_compatibility": true,
+	}
+	selected.RequiredServices = []string{"postgresql"}
+	var output bytes.Buffer
+	resolved := false
+	runner := Runner{
+		Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{selected}}, Output: &output,
+		Executor: workspaceExecutor{directory: t.TempDir(), run: func(_ context.Context, command Command) error {
+			if command.Name == "git" && strings.Join(command.Args, " ") == "tag --list v1.0.0" {
+				return nil
+			}
+			if command.Name == "go" && strings.Join(command.Args, " ") == "list -m example.com/library@v1.0.0" {
+				proxy := strings.TrimPrefix(command.Env["GOPROXY"], "file://")
+				archive, err := zip.OpenReader(filepath.Join(proxy, "example.com", "library", "@v", "v1.0.0.zip"))
+				if err != nil {
+					return err
+				}
+				defer archive.Close()
+				resolved = len(archive.File) == 2
+				return nil
+			}
+			return errors.New("unexpected runtime qualification command")
+		}},
+		startServices: func(context.Context, []string) (serviceLease, error) {
+			return nil, errors.New("unexpected runtime service startup")
+		},
+	}
+	if err := runner.ReleaseDryRun(t.Context(), []string{"."}); err != nil {
+		t.Fatalf("release packaging must not execute runtime qualification: %v", err)
+	}
+	if !resolved {
+		t.Fatal("release candidate archive was not resolved")
+	}
+	if !strings.Contains(output.String(), "runtime qualification and published public consumption are not certified") {
+		t.Fatalf("dry-run omitted its qualification boundary: %q", output.String())
+	}
+}
+
+func TestReleaseDryRunRetainsScannerFailureBeforePackaging(t *testing.T) {
+	root := releaseFixture(t)
+	selected := releaseModule()
+	selected.Gates = map[string]bool{"security": true}
+	stop := errors.New("security source inventory unavailable")
+	files := &trackingReleaseFiles{}
+	runner := Runner{
+		Root: root, Catalog: inventory.Inventory{Modules: []inventory.Module{selected}},
+		Executor: workspaceExecutor{directory: t.TempDir(), run: func(context.Context, Command) error {
+			return stop
+		}},
+		releaseFiles: files,
+	}
+	if err := runner.ReleaseDryRun(t.Context(), []string{"."}); !errors.Is(err, stop) {
+		t.Fatalf("release must preserve the scanner failure: %v", err)
+	}
+	if files.calls != 0 {
+		t.Fatal("release packaging ran after a security failure")
 	}
 }
 

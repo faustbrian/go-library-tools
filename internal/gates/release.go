@@ -44,7 +44,9 @@ func (operatingReleaseFiles) Create(path string) (io.WriteCloser, error) {
 
 // ReleaseDryRun admits security policy and scans selected security sources
 // before checking tag collisions, rehearsing module resolution from a task-owned
-// local file proxy and executing applicable gates. The proxy uses checkout
+// local file proxy. Runtime qualification is a separate risk-selected operation;
+// this command does not start services, tests or mutation campaigns. The proxy
+// uses checkout
 // bytes with GOSUMDB off: it is not published-tag or clean public consumption.
 // No tag is created; owned rehearsal files live until executor cleanup.
 func (runner Runner) ReleaseDryRun(ctx context.Context, selection []string) error {
@@ -65,7 +67,8 @@ func (runner Runner) ReleaseDryRun(ctx context.Context, selection []string) erro
 	if err := runner.releaseRehearsal(ctx, modules); err != nil {
 		return err
 	}
-	return runner.checkModules(ctx, output, modules)
+	_, _ = fmt.Fprintln(output, "release candidate rehearsal passed; runtime qualification and published public consumption are not certified")
+	return nil
 }
 
 func (runner Runner) releaseRehearsal(ctx context.Context, modules []inventory.Module) error {

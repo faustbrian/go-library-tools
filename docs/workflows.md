@@ -367,7 +367,10 @@ monitoring event. A blank selector preserves the all-module rehearsal,
 and a non-blank selector without `release_dry_run: true` fails closed. Existing
 consumer callers must expose and forward `release_module` before they can
 dispatch an exact-module hosted rehearsal; a tooling-pin upgrade alone does not
-wire the caller input.
+wire the caller input. Current release dry-runs verify security and candidate
+packaging without runtime campaigns; reusable release runs retain ordinary
+module contracts and use a 30-minute module-quality job limit. An older tooling
+pin retains its older dry-run behavior until deliberately upgraded.
 
 Consumer workflows retain least-privileged permissions, explicit concurrency,
 bounded module selection, attributable aggregate evidence, scheduled checks, CodeQL,

@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.5.1 - 2026-10-14
+
+### Fixed
+
+- Separate release dry-run security and candidate packaging from runtime
+  qualification. Dry-runs no longer start services or rerun full tests, race,
+  coverage, mutation, lint and documentation campaigns. Required ordinary CI,
+  security scans, SBOMs, tag collision checks and module-proxy resolution remain;
+  affected-contract qualification and clean public consumption stay separate.
+- Keep ordinary module contracts in reusable release CI and bound hosted
+  rehearsal jobs to 30 minutes instead of six hours.
+
 ## 2.5.0 - 2026-10-13
 
 Recorded as a prepared release candidate on this date; public availability

@@ -132,8 +132,10 @@ the current selection. Its historical result remains intact and current
 execution is required.
 The last two apply only to a release decision/rehearsal. `release check` validates
 metadata and required gate configuration, not runtime qualification. The dry-run
-is an explicit complete all-enabled rehearsal, not mandatory for every tag;
-select it when that boundary is needed. See the [release policy](release.md) for
+checks current security and candidate packaging without runtime campaigns.
+Use focused tests for affected contracts; select `golib check --module DIR`
+separately only when a named risk requires full all-enabled qualification.
+See the [release policy](release.md) for
 affected-contract qualification and clean public consumption. Use a nested
 module's declared directory instead of `.`
 where applicable. These `golib` commands manage their own disposable executors;
