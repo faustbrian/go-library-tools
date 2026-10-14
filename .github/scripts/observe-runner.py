@@ -39,7 +39,45 @@ def fields(path, selected):
     return result
 
 
-def sample(parent, proc=Path("/proc"), disk=Path(".")):
+def process_role(process):
+    # Emit only fixed categories, never a raw executable path, comm, argv or
+    # environment. Unknown process names can contain sensitive caller input.
+    try:
+        name = Path(os.readlink(process / "exe")).name
+    except OSError:
+        return "unknown"
+    if name in {"go", "golib", "gremlins", "compile", "link", "vet", "asm", "cgo", "bash", "sh", "python3"}:
+        return name
+    return "go-test" if name.endswith(".test") else "unknown"
+
+
+def cgroup_memory(root):
+    pressure = {kind: {key: None for key in ("avg10", "avg60", "avg300", "total")}
+                for kind in ("some", "full")}
+    for line in (read_text(root / "memory.pressure") or "").splitlines():
+        parts = line.split()
+        if not parts or parts[0] not in pressure:
+            continue
+        for part in parts[1:]:
+            key, separator, value = part.partition("=")
+            if not separator or key not in pressure[parts[0]]:
+                continue
+            if key == "total":
+                pressure[parts[0]][key] = number(value)
+                continue
+            try:
+                parsed = float(value)
+                pressure[parts[0]][key] = parsed if math.isfinite(parsed) and parsed >= 0 else None
+            except ValueError:
+                pass
+    result = {"events": fields(root / "memory.events", ["low", "high", "max", "oom", "oom_kill", "oom_group_kill"]),
+              "pressure": pressure, "scope": "cgroup-mount-view-best-effort"}
+    for filename, key in [("memory.current", "current_bytes"), ("memory.max", "limit_bytes")]:
+        result[key] = number((read_text(root / filename) or "").strip())
+    return result
+
+
+def sample(parent, proc=Path("/proc"), disk=Path("."), cgroup=Path("/sys/fs/cgroup")):
     memory = fields(proc / "meminfo", ["MemAvailable"])
     loads = read_text(proc / "loadavg")
     try:
@@ -83,14 +121,16 @@ def sample(parent, proc=Path("/proc"), disk=Path(".")):
         status = visible.get(pid, {"PPid": None, "VmRSS": None, "Threads": None})
         unavailable = unavailable or status["PPid"] is None
         processes.append({"pid": pid, "parent_pid": status["PPid"],
-                          "rss_kib": status["VmRSS"], "threads": status["Threads"]})
+                          "rss_kib": status["VmRSS"], "threads": status["Threads"],
+                          "role": process_role(proc / str(pid))})
         pending.extend(child for child in children.get(pid, [])
                        if child not in seen and child != os.getpid())
     return {"event": "runner-observation", "utc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "load_averages": load, "logical_cpus": os.cpu_count(),
             "memory_available_kib": memory["MemAvailable"], "disk_available_bytes": free,
             "processes": processes, "processes_truncated": scan_truncated or bool(pending),
-            "process_sample_unavailable": unavailable, "process_sample_best_effort": True}
+            "process_sample_unavailable": unavailable, "process_sample_best_effort": True,
+            "cgroup_memory": cgroup_memory(cgroup)}
 
 
 def main():

@@ -158,6 +158,16 @@ renames, unmatched pins, and substantive workflow changes retain runtime
 checks. Missing comparison commits fail classification rather than produce
 green. Release rehearsals must be explicitly dispatched, not selected by a PR.
 
+For an interrupted CLI mutation phase, select `native_cli_diagnostic` in the
+existing CI dispatch instead of repeating an unexplained full rehearsal. This
+probe has a 25-minute internal budget and does not qualify a release. Both
+hosted routes request two Go processors and serial Go build scheduling; owned
+native commands may select their own build flags. The bounded observer emits
+fixed executable roles, not arguments, raw names, paths or environment values.
+Its numeric cgroup mount-view events and memory pressure are best-effort,
+possibly shared observations: missing values are unknown, and counter changes
+alone do not attribute an OOM or shutdown to this job.
+
 Keep CLI, configuration, workflow, evidence, and fixture contracts backward
 compatible within a major release. Update tests, documentation, schema, and
 changelog together.

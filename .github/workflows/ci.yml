@@ -118,6 +118,8 @@ jobs:
           esac
       - name: Check tracked source documentation
         run: make source-docs-check
+      - name: Check bounded runner observations
+        run: PYTHONDONTWRITEBYTECODE=1 python3 .github/scripts/test-observe-runner.py
       - name: Verify finite workflow traversal regressions when affected
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
@@ -519,6 +521,8 @@ jobs:
       - name: Run pre-tag release dry-run
         env:
           RELEASE_MODULE: ${{ inputs.release_module }}
+          GOMAXPROCS: '2'
+          GOFLAGS: -p=1
         run: |
           set -euo pipefail
           task="$(mktemp -d "${RUNNER_TEMP}/golib-release-rehearsal.XXXXXX")"
@@ -576,16 +580,30 @@ jobs:
           go-version-file: .go-version
           cache: false
       - name: Observe actual CLI mutant execution and rollback
+        env:
+          GOMAXPROCS: '2'
+          GOFLAGS: -p=1
         run: |
           set -euo pipefail
           task="$(mktemp -d "${RUNNER_TEMP}/golib-native-cli-diagnostic.XXXXXX")"
+          observer=""
           cleanup() {
+            if [[ -n "${observer}" ]] && jobs -pr | grep -qx "${observer}"; then
+              kill "${observer}" 2>/dev/null || true
+            fi
+            if [[ -n "${observer}" ]]; then
+              wait "${observer}" 2>/dev/null || true
+            fi
             chmod -R u+w "${task}" && find "${task}" -depth -delete
           }
           trap 'status=$?; if ! cleanup; then status=1; fi; exit "${status}"' EXIT
+          trap 'exit 143' TERM
+          trap 'exit 130' INT
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" GOWORK=off
           export GOLIB_NATIVE_CLI_DIAGNOSTIC=1
+          python3 -u .github/scripts/observe-runner.py "$$" &
+          observer=$!
           go test -p 1 ./internal/mutation -run '^TestHostedNativeCLISingleMutationDiagnostic$' -count=1 -timeout=27m -v
 
   required:

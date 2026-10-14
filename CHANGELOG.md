@@ -24,6 +24,10 @@ requires the v2.5.0 tag and release.
 
 ### Fixed
 
+- Bound Go scheduling in hosted release and CLI diagnostic jobs, and retain
+  argument-free process roles and best-effort cgroup memory observations.
+  Diagnostic results remain separate from complete release qualification.
+
 - Select mutation source files from the native package build context rather
   than mutating inactive OS or build-tag variants. Shared selected sources and
   existing efficacy/coverage thresholds remain mandatory. Reuse binds the
