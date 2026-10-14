@@ -1,12 +1,12 @@
 # Identity Platform Progress
 
-Last updated: **2026-10-14 02:38 UTC / 2026-10-14 05:38 Europe/Helsinki**.
+Last updated: **2026-10-14 03:01 UTC / 2026-10-14 06:01 Europe/Helsinki**.
 
 ## Maintenance contract
 
 The primary implementation agent MUST maintain this file at material delivery,
 verification, review or scope changes, and at least every six hours while actively
-working. Next scheduled freshness boundary: **2026-10-14 08:38 UTC**. This is an
+working. Next scheduled freshness boundary: **2026-10-14 09:01 UTC**. This is an
 active-session obligation, not a background automation or an idle-session promise.
 Carry the last update and next boundary through continuation/context handoff.
 
@@ -49,8 +49,10 @@ live source and the execution ledger; the document itself is not proof of delive
   policy/automation is retained; structural planning and required secret checks
   pass locally. Hosted Required failed on historical secret-detector matches,
   not runtime tests; narrow shared Tools classification/release authority is
-  pending. Remaining transition work is the control
-  commit/scoped main delivery and final cleanup. No whole-platform completion
+  pending. Control main is locally committed at362f94d, but its push was rejected
+  because exact-head Required is expected. A CI-only carrier/PR needs authority
+  under the current no-PR goal. Remaining transition work is that protected-main
+  delivery and final cleanup. No whole-platform completion
   or released/product qualification is claimed; the revised goal stays inactive.
 - Recorded integrated units: **5/67 (7.5%)**, all primitive extensions.
 - Recorded fully verified units: **2/67 (3.0%)**.

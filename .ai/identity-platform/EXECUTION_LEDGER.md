@@ -2,6 +2,20 @@
 
 ## Current single-agent implementation
 
+- 2026-10-14 03:01 UTC, protected-main handoff boundary.
+  Control main checkpoint `362f94d20c20d25bf69148a893719bae81174121` is locally
+  committed and clean. Ordinary push was rejected by GH013: exact-head Required
+  is expected. Remote main remainsa39523861388e4ec7e4f9eb0253b6a3b2c0ff8cd.
+  No force, rule bypass, fake check or unauthorized PR was attempted. Current
+  task forbids PR creation; a single authorization question requests a temporary
+  CI-only carrier/PR containing the unchanged main commit, then ordinary push
+  of that green source. Runtime main remains clean/pushed atef377dd, with its
+  historical secret-classifier CI failure and shared Tools release question
+  unresolved. The two authority questions address different concrete boundaries,
+  not repeated capture/verification approvals. All safe checkpoint work is
+  committed; do not start the revised implementation goal or a new feature.
+  Final scratch cleanup is pending only after retaining this handoff record.
+
 - 2026-10-14 02:47 UTC, control main snapshot packaging and bounded checks.
   The first metadata check rejected copied historical Go fixtures as current
   production source (eight comment/link findings). Do not alter historical
