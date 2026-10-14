@@ -24,6 +24,9 @@ requires the v2.5.0 tag and release.
 
 ### Fixed
 
+- Classify authenticated literal public identity-evidence records without
+  excluding their paths, history, scanners or different credential values.
+
 - Bound Go scheduling in hosted release and CLI diagnostic jobs, and retain
   argument-free process roles and best-effort cgroup memory observations.
   Diagnostic results remain separate from complete release qualification.

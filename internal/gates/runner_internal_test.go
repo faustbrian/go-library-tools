@@ -1108,9 +1108,18 @@ func gitleaksRepository(t *testing.T, files map[string]string) (string, string) 
 	if err := os.WriteFile(configPath, []byte(gitleaksPolicy), 0o600); err != nil {
 		t.Fatal(err)
 	}
+	// Include every requested fixture even when inherited ignore rules exclude
+	// a suffix such as .log. Otherwise history and current-tree checks exercise
+	// different inputs and can falsely appear to prove a detector boundary.
+	stage := make([]string, 0, 4+len(files))
+	stage = append(stage, "add", "--force", "--", "generated-gitleaks.toml")
+	for path := range files {
+		stage = append(stage, path)
+	}
+	slices.Sort(stage[3:])
 	for _, arguments := range [][]string{
 		{"init", "-q"},
-		{"add", "."},
+		stage,
 		{"-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "test: capture scanner fixture"},
 	} {
 		// #nosec G204 -- the executable and arguments are fixed test-owned Git operations.
