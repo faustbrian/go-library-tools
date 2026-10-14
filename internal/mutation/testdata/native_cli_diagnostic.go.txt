@@ -69,7 +69,7 @@ func TestNativeCLISingleMutation(t *testing.T) {
 		t.Fatal("native source acquisition failed")
 	}
 	lines := bytes.Split(original, []byte("\n"))
-	if len(lines) < 138 || !bytes.Contains(lines[137], []byte("256 << 20")) {
+	if len(lines) < 171 || !bytes.Contains(lines[170], []byte("256 << 20")) {
 		t.Fatal("native mutation source expression changed")
 	}
 	configuration.Reset()
@@ -94,7 +94,7 @@ func TestNativeCLISingleMutation(t *testing.T) {
 	count := 0
 	for candidate := range stream {
 		position := candidate.Position()
-		if candidate.Type() == mutator.InvertBitwise && position.Filename == "cli.go" && position.Line == 138 && position.Column == 25 {
+		if candidate.Type() == mutator.InvertBitwise && position.Filename == "cli.go" && position.Line == 171 && position.Column == 25 {
 			selected = candidate
 			count++
 		}
