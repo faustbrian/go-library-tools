@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- Clarify the ecosystem HTTP recommendation around the supported `net/http`
+  transport, link Service-owned comparison evidence and keep Fiber/fasthttp
+  in a separate architecture track requiring its own compatibility and
+  maintenance commitment before adapter support.
+
 ## 2.5.1 - 2026-10-14
 
 ### Fixed

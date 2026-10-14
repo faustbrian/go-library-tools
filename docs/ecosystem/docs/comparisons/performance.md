@@ -9,6 +9,14 @@ stated tooling workloads, not a universal application-library ranking. Do not
 claim faster, lower-overhead or production-capable operation without a linked
 equivalent-workload result for the versions being compared.
 
+For the HTTP runtime decision, follow the Service-owned
+[transport comparison](https://github.com/faustbrian/go-service/blob/ed47aa57048e8cd3780c87c5966542d4d1a91887/docs/transport-comparison.md)
+and its exact workload and environment boundaries. Its service-level evidence
+is separate from tooling measurements and from the
+[Fiber/fasthttp architecture track](service-and-logging.md#separate-architecture-track-fiber-and-fasthttp).
+Neither a routing microbenchmark nor a result for one workload establishes a
+production bottleneck or a preferred transport for every application.
+
 For a useful comparison, record toolchain, platform/CPU, fixtures and their
 sizes, versions, cache state, concurrency, enabled policies, failure rates and
 measurement method. Compare identical semantics, including validation,

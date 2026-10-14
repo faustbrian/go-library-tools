@@ -10,6 +10,11 @@ request/job order, failure/unknown outcomes, shutdown and execution boundary.
 The source module owns exact import/version declarations; the portal does not
 maintain a second drifting version matrix.
 
+The HTTP compositions retain `net/http` as the supported public transport.
+Use the [service comparison and transport boundary](comparisons/service-and-logging.md#server-routing-and-middleware)
+when selecting routing and middleware; Fiber/fasthttp remains a separate
+architecture comparison, not an interchangeable supported adapter.
+
 | Operation | Required semantic owners | Processing order and boundary |
 | --- | --- | --- |
 | [Minimal HTTP service](recipes/01-minimal-http-service.md) | Service, healthhttp and serverhttp | Serve a business request and readiness request; withdraw readiness during drain before joining both servers. |

@@ -24,6 +24,10 @@ OpenSearch behavior and deployed Track/Postal/Location business behavior are
 not inferred from those fixture results. New illustrative stacks do not join
 the published cohort by appearing in documentation.
 
+Golib Service supports `net/http`; the
+[Fiber/fasthttp architecture comparison](comparisons/service-and-logging.md#separate-architecture-track-fiber-and-fasthttp)
+does not promise a supported adapter or extend the frozen compatibility cohort.
+
 **Verkle Tree remains experimental/non-production for every published v1
 version and current source.** Do not use it to protect production integrity or
 confidentiality. Stable API versions and the historical catalog's active/stable
