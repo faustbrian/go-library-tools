@@ -4,6 +4,13 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Fixed
+
+- Classify exact public identity source/API hashes, vulnerability-source URLs,
+  protocol names and synthetic idempotency fixtures without treating them as
+  credentials. Detector, path and value must all match reviewed records;
+  altered values, neighboring credentials and unrelated paths remain scanned.
+
 ## 2.5.0 - 2026-10-13
 
 Recorded as a prepared release candidate on this date; public availability

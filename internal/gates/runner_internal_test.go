@@ -1110,7 +1110,8 @@ func gitleaksRepository(t *testing.T, files map[string]string) (string, string) 
 	}
 	for _, arguments := range [][]string{
 		{"init", "-q"},
-		{"add", "."},
+		// Fixtures must not disappear because a developer globally ignores logs.
+		{"-c", "core.excludesFile=/dev/null", "add", "."},
 		{"-c", "user.name=golib-test", "-c", "user.email=golib-test@example.invalid", "commit", "-qm", "test: capture scanner fixture"},
 	} {
 		// #nosec G204 -- the executable and arguments are fixed test-owned Git operations.
