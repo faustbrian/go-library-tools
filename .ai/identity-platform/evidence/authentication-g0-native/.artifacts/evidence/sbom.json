@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "module": ".",
+  "gate": "sbom",
+  "result": "passed",
+  "exit_code": 0,
+  "execution_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "completed_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "input_digest": "63220a9b808a60ba01a9ae71fbc072f7886d2bbab57333884e73cd0af4c2c090",
+  "completed_input_digest": "63220a9b808a60ba01a9ae71fbc072f7886d2bbab57333884e73cd0af4c2c090",
+  "log_sha256": "69879a40aca68292a09c64fa37ebe134645c4af90ab5f92656610f62ea9ad8ff",
+  "started_at": "2026-10-01T07:32:18Z",
+  "completed_at": "2026-10-01T07:32:44Z",
+  "environment": {
+    "go_version": "go1.26.6",
+    "goos": "darwin",
+    "goarch": "arm64"
+  }
+}

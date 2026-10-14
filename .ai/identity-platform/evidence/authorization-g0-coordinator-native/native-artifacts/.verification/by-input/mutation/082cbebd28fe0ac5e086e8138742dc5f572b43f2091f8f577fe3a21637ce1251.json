@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-authorization",
+  "module": ".",
+  "package": "adapters/otel",
+  "gate": "mutation",
+  "input_digest": "sha256:082cbebd28fe0ac5e086e8138742dc5f572b43f2091f8f577fe3a21637ce1251",
+  "verifier_digest": "sha256:9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+  "result": "passed",
+  "report_digest": "sha256:fb51b7b97396a228a73c77da782a9d84b1a2eee49d6d6e1148c2b6f6a75d3c6e",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOOS": "darwin",
+    "GOVERSION": "go1.27.1",
+    "gremlins_binary_sha256": "sha256:3500ba5216454cd0e74be81da7b927251d831230ee89858c90d2028c1ade7694"
+  },
+  "completed_at": "2026-10-01T09:07:30.901909Z"
+}

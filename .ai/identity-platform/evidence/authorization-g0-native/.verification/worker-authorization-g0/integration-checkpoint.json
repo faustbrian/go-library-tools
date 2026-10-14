@@ -1,0 +1,18 @@
+{
+  "commit": "b984df5db1b09cb19d292ac1ac01ca39d738c747",
+  "tree": "c6b71d63e97caea8feaf93c24633118615545342",
+  "parents": [
+    "fc43df279d06e70cff8f2a4a5077a6fb296a9004",
+    "e08db3af02adde4ad67094d678febc7b12302d85"
+  ],
+  "source_checkpoint": "committed-checkpoint.json",
+  "source_closure_sha256": "780b6ed40addf4bba78cb796c073ef087f8df86c6f56ee9b317535d864557405",
+  "reserved_integration_contracts_tree": "ddf56b907f3b7aa415d1a01a21e5e33ab397c601",
+  "resolved_paths": [".github/workflows/ci.yml", ".golib.yaml"],
+  "resolution": "Exact already-reviewed first-parent bytes retained using apply_patch; resulting complete tree equals source checkpoint.",
+  "verification": "Index tree and committed tree match source checkpoint exactly; full diff empty; all23 frozen hashes pass; no behavioral gates rerun for history-only integration.",
+  "intent_validation": "Core only, line validator passed, normal hooks and configured signing used",
+  "pushed": false,
+  "unit_verified": false,
+  "family_writer": "Coordinator only; this worker merge does not write the family branch."
+}

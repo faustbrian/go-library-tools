@@ -1,0 +1,99 @@
+{
+  "schema_version": 1,
+  "schema": "identity-platform.preflight-tool-environment.v1",
+  "control_revision": "f448c203121b7edb90e7648a827ec5806208c723",
+  "recorded_at": "2026-08-30T10:32:30Z",
+  "platform": {
+    "os": "darwin",
+    "architecture": "arm64",
+    "cgo_enabled": true,
+    "go_toolchain_policy": "auto"
+  },
+  "tools": [
+    {
+      "id": "go",
+      "classification": "available",
+      "identity": "version:go1.27.0 darwin/arm64 path:/opt/homebrew/Cellar/go/1.27.0/libexec/bin/go binary-sha256:71c4991041d8e44975c882e4f72005719c958013d3340dc665a3808b72ddf702"
+    },
+    {
+      "id": "ruby",
+      "classification": "available",
+      "identity": "version:ruby 4.0.6 (2026-07-14 revision 03b6d3f889) +PRISM [arm64-darwin25] path:/opt/homebrew/Cellar/ruby/4.0.6_1/bin/ruby binary-sha256:341d69419d11b2706864868f08d987d1d0dfde226669f49f210f1d5e823e98e5"
+    },
+    {
+      "id": "go-library-tools",
+      "classification": "available",
+      "identity": "source:f448c203121b7edb90e7648a827ec5806208c723 binary-sha256:65fd0f74a7fbb235aa7c6a8bfdbcf5526fd1b0fd6799c75a6de3eccd255e447f"
+    },
+    {
+      "id": "codex",
+      "classification": "available",
+      "identity": "version:codex-cli 0.151.0 path:/opt/homebrew/Caskroom/codex/0.151.0/bin/codex binary-sha256:98491713ffb196061003ee148636e743997cc31d76144ba7c53462269896891d"
+    },
+    {
+      "id": "docker",
+      "classification": "available",
+      "identity": "version:client=29.7.2 server=29.7.2 path:/Applications/Docker.app/Contents/Resources/bin/docker binary-sha256:a6822407e207ff0b687419ccbe55700ffbf389d77de58ef625b3b1790d88747c"
+    },
+    {
+      "id": "gitleaks",
+      "classification": "available",
+      "identity": "version:version is set by build process path:/Users/brian/go/bin/gitleaks binary-sha256:366c5649485d51596d727080b43d05ccb9aec6ec36d94f72638c90cd41515bfd"
+    },
+    {
+      "id": "golangci-lint",
+      "classification": "available",
+      "identity": "version:2.12.2 go1.26.5 path:/Users/brian/go/bin/golangci-lint binary-sha256:7313eccd229be768bada337a73097ef2082ce08d08962ece4603409d8d28fe7d"
+    },
+    {
+      "id": "staticcheck",
+      "classification": "available",
+      "identity": "version:2026.1 (v0.7.0) path:/Users/brian/go/bin/staticcheck binary-sha256:47d5f8af165e49bc2d7785599bf5c7948fd33dd03f04871d23f9f09779ac7d5f"
+    },
+    {
+      "id": "govulncheck",
+      "classification": "available",
+      "identity": "version:govulncheck@v1.6.0 go1.27.0 path:/Users/brian/go/bin/govulncheck binary-sha256:5b781c87b5eccf29f7339672a64e9fdec47cdce0fc98c196911a3cbdf1609d4e"
+    },
+    {
+      "id": "gremlins",
+      "classification": "available",
+      "identity": "version:dev darwin/arm64 path:/Users/brian/go/bin/gremlins binary-sha256:d0ebb7c967c345818693785e3e8e4f87055cc0baff3d7b19b00429cd63399013"
+    }
+  ],
+  "service_profiles": [
+    {
+      "id": "postgresql",
+      "classification": "available",
+      "image": "postgres:18.4-alpine",
+      "digest": "sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15"
+    },
+    {
+      "id": "valkey",
+      "classification": "available",
+      "image": "valkey/valkey:9.1.0-alpine",
+      "digest": "sha256:c9b77919daeba2c02ad954d0c844cc4e7142069d177b89c5fd771f405daf9e02"
+    }
+  ],
+  "harnesses": [
+    {
+      "id": "race-fuzz-leak-mutation",
+      "classification": "available",
+      "identity": "go race and fuzz plus repository-owned leak and gremlins mutation gates"
+    },
+    {
+      "id": "browser",
+      "classification": "unavailable",
+      "blocker": "blocker:browser-harness"
+    },
+    {
+      "id": "interoperability",
+      "classification": "not-yet-needed",
+      "identity": "pinned Better Auth checkout b8077b74ef9a80a7757220b72834349bd8de05c0; external suites and credentials remain profile-specific"
+    }
+  ],
+  "limitations": [
+    "Tool presence and image availability are preflight facts, not passing package or interoperability evidence.",
+    "Secret-bearing environment values were neither read nor recorded."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "packages": [
+    {
+      "gremlins_verifier_sha256": "9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+      "gremlins_version": "v0.6.0",
+      "module_directory": ".",
+      "package_directory": "authcache",
+      "reason": "The compatibility facade contains declarations, field projections, composite literals and direct delegations only; the complete enabled Gremlins operator set has no eligible transformation sites.",
+      "source_digest": "9a8fb11120acb9dfb659c273077406bdf3e0b1a7345a8d5cec75b7528a031845"
+    },
+    {
+      "gremlins_verifier_sha256": "9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+      "gremlins_version": "v0.6.0",
+      "module_directory": ".",
+      "package_directory": "authhttp",
+      "reason": "The compatibility package contains aliases and direct delegations only; the complete enabled Gremlins operator set discovers no viable transformations.",
+      "source_digest": "bcf1a19c88bfb1c3b03bcc24ff88e1516604ee9fadaf2b8351e78e5ae53192a3"
+    }
+  ]
+}

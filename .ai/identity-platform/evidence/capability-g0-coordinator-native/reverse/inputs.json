@@ -1,0 +1,26 @@
+{
+  "consumer_repository": "github.com/faustbrian/go-service",
+  "consumer_revision": "b0a6f412d2f5aa3c3fb067222f96dc4242b8034f",
+  "consumer_subtree": "e3f6846b5989ade5c961284087fa8b3db823359b",
+  "archive_sha256": "f54682cc7552bd85e3e28ee1ba21429f056eebd93a2c95c370bb060bc472a95f",
+  "integrated_dependency_revision": "c43af8abe83f33119ce2b13ec978e556408344f3",
+  "integrated_dependency_tree": "226969a5a3b81f4625200b9c2ec7c564fc90685e",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOFLAGS": "-p=2",
+    "GOOS": "darwin",
+    "GOVERSION": "go1.26.6",
+    "GOWORK": "off"
+  },
+  "temporary_go_mod_sha256": "6174e2ef06737dc962159a7290de1d8e8427c33cc502d437526a5c66948c62c6",
+  "temporary_go_sum_sha256": "14cbfb350dc5fde3f2fdd7c0c2dcc40bff39bffeea9235ec7d4707a97d4b58a2",
+  "argv": [
+    "/opt/homebrew/bin/go",
+    "test",
+    "-race",
+    "-count=1",
+    "-timeout=90s",
+    "./..."
+  ]
+}

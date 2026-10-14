@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "module": ".",
+  "gate": "tidy-check",
+  "result": "passed",
+  "exit_code": 0,
+  "execution_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "completed_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "input_digest": "a111432b49c7d3ee494c34eeaddf61519b192cc868f398d715ecce05987101c5",
+  "completed_input_digest": "a111432b49c7d3ee494c34eeaddf61519b192cc868f398d715ecce05987101c5",
+  "log_sha256": "02d449fd33605a705904a7998bf665fd2909658d5c7a71517a5086e6318da43d",
+  "started_at": "2026-10-01T05:34:04Z",
+  "completed_at": "2026-10-01T05:34:14Z",
+  "environment": {
+    "go_version": "go1.26.6",
+    "goos": "darwin",
+    "goarch": "arm64"
+  }
+}

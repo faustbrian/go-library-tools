@@ -1,0 +1,740 @@
+{
+  "results": {
+    "behavior-red": {
+      "revision": "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+      "toolchain": "go version go1.27.1 darwin/arm64",
+      "command": [
+        "go",
+        "test",
+        "-tags=integration",
+        ".",
+        "-run",
+        "^TestIssuedEvidenceSameWorkIntegration/official-risk-reservation/protected_counters/durable-lockout-admission/active$",
+        "-count=1"
+      ],
+      "inputs": {
+        "risk/carrier.go": "6f2c04ecd3f9ceb11665365271ef3cb58b23515ea86370668bce2ca79613c016",
+        "risk/carrier_test.go": "efa78d873a9751af897db127f2c5df7414b0b396c81e22d6d58e6151e1d80bed",
+        "risk/catalog_generated.go": "fbab15822aa87cf00b3aa8fe44410a42c2857a8c8b35a1b29a56da19b31e03ef",
+        "risk/command_counter.go": "052668f18805eea6e90b14a8f0c8b4220f2904caa3b42408c40de8b6e10e2dd8",
+        "risk/command_counter_test.go": "b1074f29af46b4440a2318c758399874c9b6099ea601a6ca5c8a0c5b3519e8e2",
+        "risk/counted_evaluation_test.go": "d9284886eca93ca5f45a2695e8896b21dbf2d22a4b44bd9fe1ad0505a08618d1",
+        "risk/counter.go": "e1df73c382057404bdd1d8b0fdc3f25165c83f4c78c21f5887380441eecc39de",
+        "risk/counter_configuration_test.go": "49994bcf44306fec822188ea71bf53b196e88f1953a069129c883aa8e7c04948",
+        "risk/counter_test.go": "40bf7c304293e75a97b9855f2b442af8d4a6b558f07e241e4c0487f814d8a70d",
+        "risk/decision_audit.go": "4c720c29e4d67a5e73aa9b3f5cbf2e6af00f1ed0e22f886e7d20f2843caa6c90",
+        "risk/decision_audit_test.go": "da8186898de21eef50b498f3eb6710f5a85fed10137fe1c831e802d6b5b5d299",
+        "risk/evaluation.go": "b8c98939e5b5fc42fd50a7a4913db3b760e7210b5566b87572984e0bab64490c",
+        "risk/evaluation_fuzz_test.go": "4f4f6a6a73f80b9f0a88b3eb9c0ecf6cc3471f182e77e233ffe769b8b660bb6b",
+        "risk/evaluation_test.go": "3b347ec96712bf476350df1af37e19de7b5b70ca42d686a80f18078c7ca11b8d",
+        "risk/example_test.go": "dc41a0aef6562d763db10f06186a7e4f04b4df39fe107cb2a04ec5387d0a5896",
+        "risk/go.mod": "a62d3e9ef10caeddeea3214b00cd95f3201cfb9c3aa3e1bcc0bf0231fb391d09",
+        "risk/go.sum": "b5b605658e14d76f3f20301697ecef75178d9e1c45e4c32d75c8839849afb4c9",
+        "risk/issuance.go": "2f563ae5def897a7d444c8b5717ccac88ed7f457472d74dcde3297cad138446c",
+        "risk/issuance_test.go": "2c7789df56f4ce4a223b18925cae3e5f46cb57be6c6f502e375be69c034a2a35",
+        "risk/password_signal.go": "7ab3b32798612a3d01d6373143232675a6e9bcd273ffff88484447e07017edbc",
+        "risk/password_signal_test.go": "e7b729a186d39ddcdf80b7fe7df6c7582bdbc83066e3ee2b9cd799be89593cb5",
+        "risk/policy.go": "2c723f3b723adbf66107f4625bf4af4d0797cf9ed2b6205d434671e7a4eb3d5b",
+        "risk/policy_fuzz_test.go": "d932b8a07fa391b7ba53e8ab0dc5af679698dde2c54597778d88931cdff536ea",
+        "risk/policy_test.go": "95ee634b05f5440333500008762170b577d8679281876009bc70baff1cedecd8",
+        "risk/postgres/cipher.go": "057401ccd7ed6e03a3c7feffd0adf78b96143a099402bcbf2e2236aca5095c0a",
+        "risk/postgres/cipher_test.go": "831c56dec1e80b28ab4b518dab15d28ebbb194e85f2be9a6157a5fe4164a3081",
+        "risk/postgres/command.go": "88bb28ce6ca0cfc280606acc982c508b2284823e90a9934d1f4ee86f84a95b12",
+        "risk/postgres/command_test.go": "51273093a44a59523c8f7bf51b806ab4a7fad37b4235d0687bbf4a9ef95fb3ff",
+        "risk/postgres/commit_ack_integration_test.go": "557bbf09881b389eb734f6520e90eb90bb32109f5eba30ea4106e7561e9b59c7",
+        "risk/postgres/counter.go": "8f57ebeb40405f68e33e51c1f9672af033d7c52894d20ec6deac860ce678d4af",
+        "risk/postgres/counter_admission.go": "8936df84d5510c64f75fe60737540aa1355fc354021b432fe4dbb665c29085d5",
+        "risk/postgres/counter_command.go": "8f0c360fa54ba69f8c9c3a29ea7642f488754496814836f86008dbd870e99364",
+        "risk/postgres/counter_integration_test.go": "3db8e939b65566727a796559bd3ace0320c210590cfb3f11bce37d6a0ddca228",
+        "risk/postgres/counter_migrations.go": "2f142cbe3d161fcf93e2c7ad03c759737b36941bf0bca807e805758946f32182",
+        "risk/postgres/counter_test.go": "d6192bbc9d6af5f0867cdcda51759389fa7cec8dac262bb844b098d4fc71c2d8",
+        "risk/postgres/executor.go": "81d049403c927540061787ee4c9ee568b319a2c39d1d4f3d6aae70e1095e53c1",
+        "risk/postgres/executor_test.go": "ed475211f0333e338acd5f0582ccfd54699bd48256cdcc1b2cdfb4204ff6355a",
+        "risk/postgres/go.mod": "d5bd77ad3f1a897171583c885417833333ec2da1341e856e95bd7f89479f8647",
+        "risk/postgres/issuance_id_migrations.go": "4ff30c43db5516c0f481a04a89491344911d6d0a62e7a64bb7280d835dca3cdb",
+        "risk/postgres/issuance_integration_test.go": "8a63ef673879bfe5a23015a584b8f9acb134683d00d644fb5d875c2b4c85001b",
+        "risk/postgres/lockout_admission_integration_test.go": "2a92afc0bc619dff0d4779a5166510611a1c9c8f080a20a8e913ebbc1adc84f2",
+        "risk/postgres/lockout_migrations.go": "b95a4b3c92503d454bc6930803b29c24fa6692d67575a6f2e18ddcdb3bdf3802",
+        "risk/postgres/migrations.go": "228cc33d0c581bb228ef585d7bbe77fa953b7bdfe2518eb010f0ab6834398be7",
+        "risk/postgres/migrations_test.go": "4375ae252816dd4a3ca02762e5c0d8f412950aba4bdd5a32b12d9998663ba7aa",
+        "risk/postgres/release.go": "30e6337d5d3c18362010b5d915df598dab770214dd39e604abeef443c0d3e4e3",
+        "risk/postgres/repository.go": "0fd5291bb01b5f021bfb4dcafc003fc46eda660706a1fdbc75d10210cf531d0a",
+        "risk/postgres/repository_test.go": "bb2bb460cdac96773799e60d49685c105d5e2b63813d65a1a15c69736850e43d",
+        "risk/postgres/reservation.go": "610a9d137e4c406895c297af680f697b0f5e42f99d7d2df4f4c758c2fb34e789",
+        "risk/postgres/reservation_integration_test.go": "826e874fd94b1655ac57140928e32b3cb2a576a508ce1ff5089a9b771b069e09",
+        "risk/postgres/reservation_migrations.go": "f8ba1b549a64c2f0fc084c258eb18d27e91c4c595762b6524507eb3d23b6b2d0",
+        "risk/postgres/reservation_migrations_integration_test.go": "9ac76101899b608393f9de65c57eb15812a63da5a2f8948f3de1b133a11f763a",
+        "risk/postgres/reservation_test.go": "87cb036056121a7da60561bebbf575051d5cbcc569aaf54aa31736f7d7c29916",
+        "risk/postgres/use_command.go": "ae6381d6d37d5f6fc732a9674aac51b9c79d7845e578cf82daf0085c61efe36f",
+        "risk/postgres/use_command_test.go": "58a52a9ed05c6b902ec8d02a720c9ba4c829fba483475a9c0d904d6912ac070c",
+        "risk/postgres/velocity_integrity.go": "301925055bb9a5faed62311675421c662352463c41024b51990e80d40030653f",
+        "risk/postgres/velocity_integrity_integration_test.go": "5a8c88f3bc743ae25d495531f9de6d226528edc6a1501c2118428fd3d17a1030",
+        "risk/postgres/velocity_integrity_migrations.go": "abf947682037bbf5536d38d14a896051f42c14bff0280339c596d2c951fd82b4",
+        "risk/postgres/velocity_integrity_migrations_test.go": "23a930b7ae0ba701722115509ea4da7303db6ee4f338e9b4296a9c8232bdb09f",
+        "risk/postgres/velocity_intent_migrations.go": "616d4fe748b6f2d1af3a27a2d0e444cb3584fc9ab9d2cfd832b8c6f6afda77c5",
+        "risk/postgres/velocity_journal.go": "4b00999d1ecc443ee8a8dd47761732069fbaf66e3a8d05e57dc9465f0a401528",
+        "risk/postgres/velocity_journal_integration_test.go": "6443769cb3e9bc8f3b960a36bb484b5c3c15e25f93376a892073558ae0653cff",
+        "risk/postgres/velocity_journal_test.go": "fccf99bc56d0cf684625a81887776bf9d7e9bcc8b00d8d36c85db3e345d0ee60",
+        "risk/postgres/velocity_migrations.go": "a69c937d403ff02606d3c69e75ea689377493daa9513969050ce09bbe64e945e",
+        "risk/postgres/velocity_migrations_integration_test.go": "94d43318a27d59b66be65b992359a17c7b09bedf7e06a809e1082259e57801e0",
+        "risk/postgres/velocity_migrations_test.go": "bc653d8ba1eba63fc2b38c2664b91a96f10045f4ae26997459a1c92d09db028b",
+        "risk/postgres/velocity_page.go": "660bc1e02ed8c49251163d73d1302be2533b98890d5f99f9c7f4e6ec35466c84",
+        "risk/postgres/velocity_page_integration_test.go": "f5e328f64622382af472fc58a44feac7858c51d7b1c9b1a3fe8126de55ec8004",
+        "risk/postgres/velocity_page_migrations.go": "be37647d2c56b8dd2a15e2a5cf5038625be58ce176a91d4c5cacbd9bad471cb6",
+        "risk/postgres/velocity_page_migrations_test.go": "54a09bc437b7d2da08064d70be5615f95aa364ed41423d091b1f3eb8b83e50c9",
+        "risk/postgres/velocity_page_test.go": "2466614d3839b9d10035486f0ff30fc7ff5d32234e1b3492d47cdb4db9f406b3",
+        "risk/postgres/velocity_recovery.go": "bd6114a895ca8fd1bd5303f60a1bd7c7bd9dbc3fe8b1a8f59f6cc7163dfce8e9",
+        "risk/postgres/velocity_recovery_integration_test.go": "16985c64a62651ebbac9aef1910dc46126b98a66059f7f5e5f201fbc73f4b4fe",
+        "risk/postgres/velocity_recovery_test.go": "9423f81ad1d4ea9a0790c0582d434077cc99241c8b46a6cb532cfc8d49997d7f",
+        "risk/postgres/velocity_results.go": "c5bf6d7afd1fe491b95c98772286637399044fe2a5cedc8478507f14791feae9",
+        "risk/postgres/velocity_results_integration_test.go": "02023dff11981668d6fdbe3400e77bb446515c924cd2a74e97a7b38ea7cb87a9",
+        "risk/postgres/velocity_scope.go": "340ddc4c6c9800ec03b131d192d10a11f980977c7e6a99d732768d7f7a12159c",
+        "risk/postgres/velocity_writer_fence_integration_test.go": "0b1561599a014456ba5e5c09475919a4dca507240a8d231513077e1b7b35aa9d",
+        "risk/use.go": "1fcf40c09fc61704a3cbc55f838e16325b23ef3fe248f1a2b8c298a22255cfb8",
+        "risk/use_bridge.go": "ce567207f681ba204e3b7d92c9ecd0ada374f7c859aa1b58fdbaef2d4822bac5",
+        "risk/use_bridge_test.go": "580a87fe1325ffdcd92cdc94d4f92bd9abc1483b2f649681f225099950b0b1f7",
+        "risk/use_configuration_test.go": "d49c1dab0d01e8cd16ae381851bbb7fd0fceec37b858fd49cedf8d129139a93a",
+        "risk/use_test.go": "cc84adb7342e065d2a0acfc65687d818732a09423b90009fa3ba726115ec3cc0"
+      },
+      "dependencies": {
+        "go-audit": [
+          "go-audit",
+          "v1.0.0",
+          ""
+        ],
+        "go-clock": [
+          "go-clock",
+          "v1.0.0",
+          ""
+        ],
+        "go-identity": [
+          "go-identity",
+          "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+          ""
+        ],
+        "go-authorization": [
+          "go-authorization",
+          "60ed4b3229d8",
+          ""
+        ],
+        "go-capability": [
+          "go-capability",
+          "2985d8ea8700",
+          ""
+        ],
+        "go-cache": [
+          "go-cache",
+          "v1.0.0",
+          ""
+        ],
+        "go-jsonrpc": [
+          "go-jsonrpc",
+          "v1.0.0",
+          ""
+        ],
+        "go-migrations": [
+          "go-migrations",
+          "v1.0.0",
+          ""
+        ],
+        "go-audit/postgres": [
+          "go-audit",
+          "21ad3d11d3b2",
+          "postgres"
+        ],
+        "go-authentication": [
+          "go-authentication",
+          "3467aab01d0c",
+          ""
+        ],
+        "go-identity/postgres": [
+          "go-identity",
+          "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+          "postgres"
+        ],
+        "go-migrations/v3": [
+          "go-migrations",
+          "a461b18b6b24",
+          ""
+        ],
+        "go-postgres": [
+          "go-postgres",
+          "61261695bcc7",
+          ""
+        ],
+        "go-secret-envelope": [
+          "go-secret-envelope",
+          "22fc4a2d925d",
+          ""
+        ],
+        "go-transactional-outbox/v2": [
+          "go-transactional-outbox",
+          "72a9fe57a638",
+          ""
+        ],
+        "go-transactional-outbox/v2/postgres/identity": [
+          "go-transactional-outbox",
+          "72a9fe57a638",
+          "postgres/identity"
+        ]
+      },
+      "output": "--- FAIL: TestIssuedEvidenceSameWorkIntegration (0.24s)\n    --- FAIL: TestIssuedEvidenceSameWorkIntegration/official-risk-reservation (0.14s)\n        --- FAIL: TestIssuedEvidenceSameWorkIntegration/official-risk-reservation/protected_counters (0.13s)\n            --- FAIL: TestIssuedEvidenceSameWorkIntegration/official-risk-reservation/protected_counters/durable-lockout-admission (0.03s)\n                --- FAIL: TestIssuedEvidenceSameWorkIntegration/official-risk-reservation/protected_counters/durable-lockout-admission/active (0.03s)\n                    lockout_admission_integration_test.go:77: active or unavailable durable lockout allowed domain mutation\nFAIL\nFAIL\tgithub.com/faustbrian/go-identity/risk/postgres\t0.507s\nFAIL\n",
+      "exit": 1
+    },
+    "expanded-integration-green": {
+      "revision": "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+      "toolchain": "go version go1.27.1 darwin/arm64",
+      "command": [
+        "go",
+        "test",
+        "-tags=integration",
+        ".",
+        "-run",
+        "^TestIssuedEvidenceSameWorkIntegration/official-risk-reservation/protected_counters/durable-lockout-admission",
+        "-count=1"
+      ],
+      "inputs": {
+        "risk/carrier.go": "6f2c04ecd3f9ceb11665365271ef3cb58b23515ea86370668bce2ca79613c016",
+        "risk/carrier_test.go": "efa78d873a9751af897db127f2c5df7414b0b396c81e22d6d58e6151e1d80bed",
+        "risk/catalog_generated.go": "fbab15822aa87cf00b3aa8fe44410a42c2857a8c8b35a1b29a56da19b31e03ef",
+        "risk/command_counter.go": "052668f18805eea6e90b14a8f0c8b4220f2904caa3b42408c40de8b6e10e2dd8",
+        "risk/command_counter_test.go": "b1074f29af46b4440a2318c758399874c9b6099ea601a6ca5c8a0c5b3519e8e2",
+        "risk/counted_evaluation_test.go": "d9284886eca93ca5f45a2695e8896b21dbf2d22a4b44bd9fe1ad0505a08618d1",
+        "risk/counter.go": "e1df73c382057404bdd1d8b0fdc3f25165c83f4c78c21f5887380441eecc39de",
+        "risk/counter_configuration_test.go": "49994bcf44306fec822188ea71bf53b196e88f1953a069129c883aa8e7c04948",
+        "risk/counter_test.go": "40bf7c304293e75a97b9855f2b442af8d4a6b558f07e241e4c0487f814d8a70d",
+        "risk/decision_audit.go": "4c720c29e4d67a5e73aa9b3f5cbf2e6af00f1ed0e22f886e7d20f2843caa6c90",
+        "risk/decision_audit_test.go": "da8186898de21eef50b498f3eb6710f5a85fed10137fe1c831e802d6b5b5d299",
+        "risk/evaluation.go": "b8c98939e5b5fc42fd50a7a4913db3b760e7210b5566b87572984e0bab64490c",
+        "risk/evaluation_fuzz_test.go": "4f4f6a6a73f80b9f0a88b3eb9c0ecf6cc3471f182e77e233ffe769b8b660bb6b",
+        "risk/evaluation_test.go": "3b347ec96712bf476350df1af37e19de7b5b70ca42d686a80f18078c7ca11b8d",
+        "risk/example_test.go": "dc41a0aef6562d763db10f06186a7e4f04b4df39fe107cb2a04ec5387d0a5896",
+        "risk/go.mod": "a62d3e9ef10caeddeea3214b00cd95f3201cfb9c3aa3e1bcc0bf0231fb391d09",
+        "risk/go.sum": "b5b605658e14d76f3f20301697ecef75178d9e1c45e4c32d75c8839849afb4c9",
+        "risk/issuance.go": "2f563ae5def897a7d444c8b5717ccac88ed7f457472d74dcde3297cad138446c",
+        "risk/issuance_test.go": "2c7789df56f4ce4a223b18925cae3e5f46cb57be6c6f502e375be69c034a2a35",
+        "risk/password_signal.go": "7ab3b32798612a3d01d6373143232675a6e9bcd273ffff88484447e07017edbc",
+        "risk/password_signal_test.go": "e7b729a186d39ddcdf80b7fe7df6c7582bdbc83066e3ee2b9cd799be89593cb5",
+        "risk/policy.go": "2c723f3b723adbf66107f4625bf4af4d0797cf9ed2b6205d434671e7a4eb3d5b",
+        "risk/policy_fuzz_test.go": "d932b8a07fa391b7ba53e8ab0dc5af679698dde2c54597778d88931cdff536ea",
+        "risk/policy_test.go": "95ee634b05f5440333500008762170b577d8679281876009bc70baff1cedecd8",
+        "risk/postgres/cipher.go": "057401ccd7ed6e03a3c7feffd0adf78b96143a099402bcbf2e2236aca5095c0a",
+        "risk/postgres/cipher_test.go": "831c56dec1e80b28ab4b518dab15d28ebbb194e85f2be9a6157a5fe4164a3081",
+        "risk/postgres/command.go": "88bb28ce6ca0cfc280606acc982c508b2284823e90a9934d1f4ee86f84a95b12",
+        "risk/postgres/command_test.go": "51273093a44a59523c8f7bf51b806ab4a7fad37b4235d0687bbf4a9ef95fb3ff",
+        "risk/postgres/commit_ack_integration_test.go": "557bbf09881b389eb734f6520e90eb90bb32109f5eba30ea4106e7561e9b59c7",
+        "risk/postgres/counter.go": "8f57ebeb40405f68e33e51c1f9672af033d7c52894d20ec6deac860ce678d4af",
+        "risk/postgres/counter_admission.go": "96b6fdac5f82ce6be06b4c790e574b130224c41dac1617ade4be2ae3fea01a33",
+        "risk/postgres/counter_command.go": "8f0c360fa54ba69f8c9c3a29ea7642f488754496814836f86008dbd870e99364",
+        "risk/postgres/counter_integration_test.go": "3db8e939b65566727a796559bd3ace0320c210590cfb3f11bce37d6a0ddca228",
+        "risk/postgres/counter_migrations.go": "2f142cbe3d161fcf93e2c7ad03c759737b36941bf0bca807e805758946f32182",
+        "risk/postgres/counter_test.go": "d6192bbc9d6af5f0867cdcda51759389fa7cec8dac262bb844b098d4fc71c2d8",
+        "risk/postgres/executor.go": "81d049403c927540061787ee4c9ee568b319a2c39d1d4f3d6aae70e1095e53c1",
+        "risk/postgres/executor_test.go": "ed475211f0333e338acd5f0582ccfd54699bd48256cdcc1b2cdfb4204ff6355a",
+        "risk/postgres/go.mod": "d5bd77ad3f1a897171583c885417833333ec2da1341e856e95bd7f89479f8647",
+        "risk/postgres/issuance_id_migrations.go": "4ff30c43db5516c0f481a04a89491344911d6d0a62e7a64bb7280d835dca3cdb",
+        "risk/postgres/issuance_integration_test.go": "8a63ef673879bfe5a23015a584b8f9acb134683d00d644fb5d875c2b4c85001b",
+        "risk/postgres/lockout_admission.go": "4b3172357cb6c7f713f96b7d98a20e9508136a7516cc7e5e00a75dc49bf2abb8",
+        "risk/postgres/lockout_admission_integration_test.go": "ffec5300b91b8f17afa4aad9a507f97d07b78b24aa69bd5cb18b998aefc81eb5",
+        "risk/postgres/lockout_admission_test.go": "0fe6c0a43a208a1e6d34189157455d7424852909328b8c21a34286234fbf6be0",
+        "risk/postgres/lockout_migrations.go": "69690d30dff2f8e744e3eb2853043e58e3f24ac86dbb9e43ca2cde1b157a0234",
+        "risk/postgres/migrations.go": "228cc33d0c581bb228ef585d7bbe77fa953b7bdfe2518eb010f0ab6834398be7",
+        "risk/postgres/migrations_test.go": "4375ae252816dd4a3ca02762e5c0d8f412950aba4bdd5a32b12d9998663ba7aa",
+        "risk/postgres/release.go": "30e6337d5d3c18362010b5d915df598dab770214dd39e604abeef443c0d3e4e3",
+        "risk/postgres/repository.go": "6696a55b096023f69b65377b0797057135b2b9ce042c2730f23855a3530ccb47",
+        "risk/postgres/repository_test.go": "bb2bb460cdac96773799e60d49685c105d5e2b63813d65a1a15c69736850e43d",
+        "risk/postgres/reservation.go": "610a9d137e4c406895c297af680f697b0f5e42f99d7d2df4f4c758c2fb34e789",
+        "risk/postgres/reservation_integration_test.go": "826e874fd94b1655ac57140928e32b3cb2a576a508ce1ff5089a9b771b069e09",
+        "risk/postgres/reservation_migrations.go": "f8ba1b549a64c2f0fc084c258eb18d27e91c4c595762b6524507eb3d23b6b2d0",
+        "risk/postgres/reservation_migrations_integration_test.go": "9ac76101899b608393f9de65c57eb15812a63da5a2f8948f3de1b133a11f763a",
+        "risk/postgres/reservation_test.go": "87cb036056121a7da60561bebbf575051d5cbcc569aaf54aa31736f7d7c29916",
+        "risk/postgres/use_command.go": "ae6381d6d37d5f6fc732a9674aac51b9c79d7845e578cf82daf0085c61efe36f",
+        "risk/postgres/use_command_test.go": "58a52a9ed05c6b902ec8d02a720c9ba4c829fba483475a9c0d904d6912ac070c",
+        "risk/postgres/velocity_integrity.go": "301925055bb9a5faed62311675421c662352463c41024b51990e80d40030653f",
+        "risk/postgres/velocity_integrity_integration_test.go": "5a8c88f3bc743ae25d495531f9de6d226528edc6a1501c2118428fd3d17a1030",
+        "risk/postgres/velocity_integrity_migrations.go": "abf947682037bbf5536d38d14a896051f42c14bff0280339c596d2c951fd82b4",
+        "risk/postgres/velocity_integrity_migrations_test.go": "23a930b7ae0ba701722115509ea4da7303db6ee4f338e9b4296a9c8232bdb09f",
+        "risk/postgres/velocity_intent_migrations.go": "616d4fe748b6f2d1af3a27a2d0e444cb3584fc9ab9d2cfd832b8c6f6afda77c5",
+        "risk/postgres/velocity_journal.go": "4b00999d1ecc443ee8a8dd47761732069fbaf66e3a8d05e57dc9465f0a401528",
+        "risk/postgres/velocity_journal_integration_test.go": "6443769cb3e9bc8f3b960a36bb484b5c3c15e25f93376a892073558ae0653cff",
+        "risk/postgres/velocity_journal_test.go": "fccf99bc56d0cf684625a81887776bf9d7e9bcc8b00d8d36c85db3e345d0ee60",
+        "risk/postgres/velocity_migrations.go": "a69c937d403ff02606d3c69e75ea689377493daa9513969050ce09bbe64e945e",
+        "risk/postgres/velocity_migrations_integration_test.go": "94d43318a27d59b66be65b992359a17c7b09bedf7e06a809e1082259e57801e0",
+        "risk/postgres/velocity_migrations_test.go": "bc653d8ba1eba63fc2b38c2664b91a96f10045f4ae26997459a1c92d09db028b",
+        "risk/postgres/velocity_page.go": "660bc1e02ed8c49251163d73d1302be2533b98890d5f99f9c7f4e6ec35466c84",
+        "risk/postgres/velocity_page_integration_test.go": "f5e328f64622382af472fc58a44feac7858c51d7b1c9b1a3fe8126de55ec8004",
+        "risk/postgres/velocity_page_migrations.go": "be37647d2c56b8dd2a15e2a5cf5038625be58ce176a91d4c5cacbd9bad471cb6",
+        "risk/postgres/velocity_page_migrations_test.go": "54a09bc437b7d2da08064d70be5615f95aa364ed41423d091b1f3eb8b83e50c9",
+        "risk/postgres/velocity_page_test.go": "2466614d3839b9d10035486f0ff30fc7ff5d32234e1b3492d47cdb4db9f406b3",
+        "risk/postgres/velocity_recovery.go": "bd6114a895ca8fd1bd5303f60a1bd7c7bd9dbc3fe8b1a8f59f6cc7163dfce8e9",
+        "risk/postgres/velocity_recovery_integration_test.go": "16985c64a62651ebbac9aef1910dc46126b98a66059f7f5e5f201fbc73f4b4fe",
+        "risk/postgres/velocity_recovery_test.go": "9423f81ad1d4ea9a0790c0582d434077cc99241c8b46a6cb532cfc8d49997d7f",
+        "risk/postgres/velocity_results.go": "c5bf6d7afd1fe491b95c98772286637399044fe2a5cedc8478507f14791feae9",
+        "risk/postgres/velocity_results_integration_test.go": "02023dff11981668d6fdbe3400e77bb446515c924cd2a74e97a7b38ea7cb87a9",
+        "risk/postgres/velocity_scope.go": "340ddc4c6c9800ec03b131d192d10a11f980977c7e6a99d732768d7f7a12159c",
+        "risk/postgres/velocity_writer_fence_integration_test.go": "0b1561599a014456ba5e5c09475919a4dca507240a8d231513077e1b7b35aa9d",
+        "risk/use.go": "1fcf40c09fc61704a3cbc55f838e16325b23ef3fe248f1a2b8c298a22255cfb8",
+        "risk/use_bridge.go": "ce567207f681ba204e3b7d92c9ecd0ada374f7c859aa1b58fdbaef2d4822bac5",
+        "risk/use_bridge_test.go": "580a87fe1325ffdcd92cdc94d4f92bd9abc1483b2f649681f225099950b0b1f7",
+        "risk/use_configuration_test.go": "d49c1dab0d01e8cd16ae381851bbb7fd0fceec37b858fd49cedf8d129139a93a",
+        "risk/use_test.go": "cc84adb7342e065d2a0acfc65687d818732a09423b90009fa3ba726115ec3cc0"
+      },
+      "dependencies": {
+        "go-audit": [
+          "go-audit",
+          "v1.0.0",
+          ""
+        ],
+        "go-clock": [
+          "go-clock",
+          "v1.0.0",
+          ""
+        ],
+        "go-identity": [
+          "go-identity",
+          "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+          ""
+        ],
+        "go-authorization": [
+          "go-authorization",
+          "60ed4b3229d8",
+          ""
+        ],
+        "go-capability": [
+          "go-capability",
+          "2985d8ea8700",
+          ""
+        ],
+        "go-cache": [
+          "go-cache",
+          "v1.0.0",
+          ""
+        ],
+        "go-jsonrpc": [
+          "go-jsonrpc",
+          "v1.0.0",
+          ""
+        ],
+        "go-migrations": [
+          "go-migrations",
+          "v1.0.0",
+          ""
+        ],
+        "go-audit/postgres": [
+          "go-audit",
+          "21ad3d11d3b2",
+          "postgres"
+        ],
+        "go-authentication": [
+          "go-authentication",
+          "3467aab01d0c",
+          ""
+        ],
+        "go-identity/postgres": [
+          "go-identity",
+          "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+          "postgres"
+        ],
+        "go-migrations/v3": [
+          "go-migrations",
+          "a461b18b6b24",
+          ""
+        ],
+        "go-postgres": [
+          "go-postgres",
+          "61261695bcc7",
+          ""
+        ],
+        "go-secret-envelope": [
+          "go-secret-envelope",
+          "22fc4a2d925d",
+          ""
+        ],
+        "go-transactional-outbox/v2": [
+          "go-transactional-outbox",
+          "72a9fe57a638",
+          ""
+        ],
+        "go-transactional-outbox/v2/postgres/identity": [
+          "go-transactional-outbox",
+          "72a9fe57a638",
+          "postgres/identity"
+        ]
+      },
+      "output": "ok  \tgithub.com/faustbrian/go-identity/risk/postgres\t1.045s\n",
+      "exit": 0
+    },
+    "final-race": {
+      "revision": "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+      "toolchain": "go version go1.27.1 darwin/arm64",
+      "command": [
+        "go",
+        "test",
+        "-race",
+        "-tags=integration",
+        ".",
+        "-count=1"
+      ],
+      "inputs": {
+        "risk/carrier.go": "6f2c04ecd3f9ceb11665365271ef3cb58b23515ea86370668bce2ca79613c016",
+        "risk/carrier_test.go": "efa78d873a9751af897db127f2c5df7414b0b396c81e22d6d58e6151e1d80bed",
+        "risk/catalog_generated.go": "fbab15822aa87cf00b3aa8fe44410a42c2857a8c8b35a1b29a56da19b31e03ef",
+        "risk/command_counter.go": "052668f18805eea6e90b14a8f0c8b4220f2904caa3b42408c40de8b6e10e2dd8",
+        "risk/command_counter_test.go": "b1074f29af46b4440a2318c758399874c9b6099ea601a6ca5c8a0c5b3519e8e2",
+        "risk/counted_evaluation_test.go": "d9284886eca93ca5f45a2695e8896b21dbf2d22a4b44bd9fe1ad0505a08618d1",
+        "risk/counter.go": "e1df73c382057404bdd1d8b0fdc3f25165c83f4c78c21f5887380441eecc39de",
+        "risk/counter_configuration_test.go": "49994bcf44306fec822188ea71bf53b196e88f1953a069129c883aa8e7c04948",
+        "risk/counter_test.go": "40bf7c304293e75a97b9855f2b442af8d4a6b558f07e241e4c0487f814d8a70d",
+        "risk/decision_audit.go": "4c720c29e4d67a5e73aa9b3f5cbf2e6af00f1ed0e22f886e7d20f2843caa6c90",
+        "risk/decision_audit_test.go": "da8186898de21eef50b498f3eb6710f5a85fed10137fe1c831e802d6b5b5d299",
+        "risk/evaluation.go": "b8c98939e5b5fc42fd50a7a4913db3b760e7210b5566b87572984e0bab64490c",
+        "risk/evaluation_fuzz_test.go": "4f4f6a6a73f80b9f0a88b3eb9c0ecf6cc3471f182e77e233ffe769b8b660bb6b",
+        "risk/evaluation_test.go": "3b347ec96712bf476350df1af37e19de7b5b70ca42d686a80f18078c7ca11b8d",
+        "risk/example_test.go": "dc41a0aef6562d763db10f06186a7e4f04b4df39fe107cb2a04ec5387d0a5896",
+        "risk/go.mod": "a62d3e9ef10caeddeea3214b00cd95f3201cfb9c3aa3e1bcc0bf0231fb391d09",
+        "risk/go.sum": "b5b605658e14d76f3f20301697ecef75178d9e1c45e4c32d75c8839849afb4c9",
+        "risk/issuance.go": "2f563ae5def897a7d444c8b5717ccac88ed7f457472d74dcde3297cad138446c",
+        "risk/issuance_test.go": "2c7789df56f4ce4a223b18925cae3e5f46cb57be6c6f502e375be69c034a2a35",
+        "risk/password_signal.go": "7ab3b32798612a3d01d6373143232675a6e9bcd273ffff88484447e07017edbc",
+        "risk/password_signal_test.go": "e7b729a186d39ddcdf80b7fe7df6c7582bdbc83066e3ee2b9cd799be89593cb5",
+        "risk/policy.go": "2c723f3b723adbf66107f4625bf4af4d0797cf9ed2b6205d434671e7a4eb3d5b",
+        "risk/policy_fuzz_test.go": "d932b8a07fa391b7ba53e8ab0dc5af679698dde2c54597778d88931cdff536ea",
+        "risk/policy_test.go": "95ee634b05f5440333500008762170b577d8679281876009bc70baff1cedecd8",
+        "risk/postgres/cipher.go": "057401ccd7ed6e03a3c7feffd0adf78b96143a099402bcbf2e2236aca5095c0a",
+        "risk/postgres/cipher_test.go": "831c56dec1e80b28ab4b518dab15d28ebbb194e85f2be9a6157a5fe4164a3081",
+        "risk/postgres/command.go": "88bb28ce6ca0cfc280606acc982c508b2284823e90a9934d1f4ee86f84a95b12",
+        "risk/postgres/command_test.go": "51273093a44a59523c8f7bf51b806ab4a7fad37b4235d0687bbf4a9ef95fb3ff",
+        "risk/postgres/commit_ack_integration_test.go": "557bbf09881b389eb734f6520e90eb90bb32109f5eba30ea4106e7561e9b59c7",
+        "risk/postgres/counter.go": "8f57ebeb40405f68e33e51c1f9672af033d7c52894d20ec6deac860ce678d4af",
+        "risk/postgres/counter_admission.go": "96b6fdac5f82ce6be06b4c790e574b130224c41dac1617ade4be2ae3fea01a33",
+        "risk/postgres/counter_command.go": "8f0c360fa54ba69f8c9c3a29ea7642f488754496814836f86008dbd870e99364",
+        "risk/postgres/counter_integration_test.go": "3db8e939b65566727a796559bd3ace0320c210590cfb3f11bce37d6a0ddca228",
+        "risk/postgres/counter_migrations.go": "2f142cbe3d161fcf93e2c7ad03c759737b36941bf0bca807e805758946f32182",
+        "risk/postgres/counter_test.go": "d6192bbc9d6af5f0867cdcda51759389fa7cec8dac262bb844b098d4fc71c2d8",
+        "risk/postgres/executor.go": "81d049403c927540061787ee4c9ee568b319a2c39d1d4f3d6aae70e1095e53c1",
+        "risk/postgres/executor_test.go": "ed475211f0333e338acd5f0582ccfd54699bd48256cdcc1b2cdfb4204ff6355a",
+        "risk/postgres/go.mod": "d5bd77ad3f1a897171583c885417833333ec2da1341e856e95bd7f89479f8647",
+        "risk/postgres/issuance_id_migrations.go": "4ff30c43db5516c0f481a04a89491344911d6d0a62e7a64bb7280d835dca3cdb",
+        "risk/postgres/issuance_integration_test.go": "8a63ef673879bfe5a23015a584b8f9acb134683d00d644fb5d875c2b4c85001b",
+        "risk/postgres/lockout_admission.go": "4b3172357cb6c7f713f96b7d98a20e9508136a7516cc7e5e00a75dc49bf2abb8",
+        "risk/postgres/lockout_admission_integration_test.go": "ffec5300b91b8f17afa4aad9a507f97d07b78b24aa69bd5cb18b998aefc81eb5",
+        "risk/postgres/lockout_admission_test.go": "0fe6c0a43a208a1e6d34189157455d7424852909328b8c21a34286234fbf6be0",
+        "risk/postgres/lockout_migrations.go": "69690d30dff2f8e744e3eb2853043e58e3f24ac86dbb9e43ca2cde1b157a0234",
+        "risk/postgres/migrations.go": "228cc33d0c581bb228ef585d7bbe77fa953b7bdfe2518eb010f0ab6834398be7",
+        "risk/postgres/migrations_test.go": "4375ae252816dd4a3ca02762e5c0d8f412950aba4bdd5a32b12d9998663ba7aa",
+        "risk/postgres/release.go": "30e6337d5d3c18362010b5d915df598dab770214dd39e604abeef443c0d3e4e3",
+        "risk/postgres/repository.go": "6696a55b096023f69b65377b0797057135b2b9ce042c2730f23855a3530ccb47",
+        "risk/postgres/repository_test.go": "bb2bb460cdac96773799e60d49685c105d5e2b63813d65a1a15c69736850e43d",
+        "risk/postgres/reservation.go": "610a9d137e4c406895c297af680f697b0f5e42f99d7d2df4f4c758c2fb34e789",
+        "risk/postgres/reservation_integration_test.go": "826e874fd94b1655ac57140928e32b3cb2a576a508ce1ff5089a9b771b069e09",
+        "risk/postgres/reservation_migrations.go": "f8ba1b549a64c2f0fc084c258eb18d27e91c4c595762b6524507eb3d23b6b2d0",
+        "risk/postgres/reservation_migrations_integration_test.go": "9ac76101899b608393f9de65c57eb15812a63da5a2f8948f3de1b133a11f763a",
+        "risk/postgres/reservation_test.go": "87cb036056121a7da60561bebbf575051d5cbcc569aaf54aa31736f7d7c29916",
+        "risk/postgres/use_command.go": "ae6381d6d37d5f6fc732a9674aac51b9c79d7845e578cf82daf0085c61efe36f",
+        "risk/postgres/use_command_test.go": "58a52a9ed05c6b902ec8d02a720c9ba4c829fba483475a9c0d904d6912ac070c",
+        "risk/postgres/velocity_integrity.go": "301925055bb9a5faed62311675421c662352463c41024b51990e80d40030653f",
+        "risk/postgres/velocity_integrity_integration_test.go": "5a8c88f3bc743ae25d495531f9de6d226528edc6a1501c2118428fd3d17a1030",
+        "risk/postgres/velocity_integrity_migrations.go": "abf947682037bbf5536d38d14a896051f42c14bff0280339c596d2c951fd82b4",
+        "risk/postgres/velocity_integrity_migrations_test.go": "23a930b7ae0ba701722115509ea4da7303db6ee4f338e9b4296a9c8232bdb09f",
+        "risk/postgres/velocity_intent_migrations.go": "616d4fe748b6f2d1af3a27a2d0e444cb3584fc9ab9d2cfd832b8c6f6afda77c5",
+        "risk/postgres/velocity_journal.go": "4b00999d1ecc443ee8a8dd47761732069fbaf66e3a8d05e57dc9465f0a401528",
+        "risk/postgres/velocity_journal_integration_test.go": "6443769cb3e9bc8f3b960a36bb484b5c3c15e25f93376a892073558ae0653cff",
+        "risk/postgres/velocity_journal_test.go": "fccf99bc56d0cf684625a81887776bf9d7e9bcc8b00d8d36c85db3e345d0ee60",
+        "risk/postgres/velocity_migrations.go": "a69c937d403ff02606d3c69e75ea689377493daa9513969050ce09bbe64e945e",
+        "risk/postgres/velocity_migrations_integration_test.go": "94d43318a27d59b66be65b992359a17c7b09bedf7e06a809e1082259e57801e0",
+        "risk/postgres/velocity_migrations_test.go": "bc653d8ba1eba63fc2b38c2664b91a96f10045f4ae26997459a1c92d09db028b",
+        "risk/postgres/velocity_page.go": "660bc1e02ed8c49251163d73d1302be2533b98890d5f99f9c7f4e6ec35466c84",
+        "risk/postgres/velocity_page_integration_test.go": "f5e328f64622382af472fc58a44feac7858c51d7b1c9b1a3fe8126de55ec8004",
+        "risk/postgres/velocity_page_migrations.go": "be37647d2c56b8dd2a15e2a5cf5038625be58ce176a91d4c5cacbd9bad471cb6",
+        "risk/postgres/velocity_page_migrations_test.go": "54a09bc437b7d2da08064d70be5615f95aa364ed41423d091b1f3eb8b83e50c9",
+        "risk/postgres/velocity_page_test.go": "2466614d3839b9d10035486f0ff30fc7ff5d32234e1b3492d47cdb4db9f406b3",
+        "risk/postgres/velocity_recovery.go": "bd6114a895ca8fd1bd5303f60a1bd7c7bd9dbc3fe8b1a8f59f6cc7163dfce8e9",
+        "risk/postgres/velocity_recovery_integration_test.go": "16985c64a62651ebbac9aef1910dc46126b98a66059f7f5e5f201fbc73f4b4fe",
+        "risk/postgres/velocity_recovery_test.go": "9423f81ad1d4ea9a0790c0582d434077cc99241c8b46a6cb532cfc8d49997d7f",
+        "risk/postgres/velocity_results.go": "c5bf6d7afd1fe491b95c98772286637399044fe2a5cedc8478507f14791feae9",
+        "risk/postgres/velocity_results_integration_test.go": "02023dff11981668d6fdbe3400e77bb446515c924cd2a74e97a7b38ea7cb87a9",
+        "risk/postgres/velocity_scope.go": "340ddc4c6c9800ec03b131d192d10a11f980977c7e6a99d732768d7f7a12159c",
+        "risk/postgres/velocity_writer_fence_integration_test.go": "0b1561599a014456ba5e5c09475919a4dca507240a8d231513077e1b7b35aa9d",
+        "risk/use.go": "1fcf40c09fc61704a3cbc55f838e16325b23ef3fe248f1a2b8c298a22255cfb8",
+        "risk/use_bridge.go": "ce567207f681ba204e3b7d92c9ecd0ada374f7c859aa1b58fdbaef2d4822bac5",
+        "risk/use_bridge_test.go": "580a87fe1325ffdcd92cdc94d4f92bd9abc1483b2f649681f225099950b0b1f7",
+        "risk/use_configuration_test.go": "d49c1dab0d01e8cd16ae381851bbb7fd0fceec37b858fd49cedf8d129139a93a",
+        "risk/use_test.go": "cc84adb7342e065d2a0acfc65687d818732a09423b90009fa3ba726115ec3cc0"
+      },
+      "dependencies": {
+        "go-audit": [
+          "go-audit",
+          "v1.0.0",
+          ""
+        ],
+        "go-clock": [
+          "go-clock",
+          "v1.0.0",
+          ""
+        ],
+        "go-identity": [
+          "go-identity",
+          "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+          ""
+        ],
+        "go-authorization": [
+          "go-authorization",
+          "60ed4b3229d8",
+          ""
+        ],
+        "go-capability": [
+          "go-capability",
+          "2985d8ea8700",
+          ""
+        ],
+        "go-cache": [
+          "go-cache",
+          "v1.0.0",
+          ""
+        ],
+        "go-jsonrpc": [
+          "go-jsonrpc",
+          "v1.0.0",
+          ""
+        ],
+        "go-migrations": [
+          "go-migrations",
+          "v1.0.0",
+          ""
+        ],
+        "go-audit/postgres": [
+          "go-audit",
+          "21ad3d11d3b2",
+          "postgres"
+        ],
+        "go-authentication": [
+          "go-authentication",
+          "3467aab01d0c",
+          ""
+        ],
+        "go-identity/postgres": [
+          "go-identity",
+          "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+          "postgres"
+        ],
+        "go-migrations/v3": [
+          "go-migrations",
+          "a461b18b6b24",
+          ""
+        ],
+        "go-postgres": [
+          "go-postgres",
+          "61261695bcc7",
+          ""
+        ],
+        "go-secret-envelope": [
+          "go-secret-envelope",
+          "22fc4a2d925d",
+          ""
+        ],
+        "go-transactional-outbox/v2": [
+          "go-transactional-outbox",
+          "72a9fe57a638",
+          ""
+        ],
+        "go-transactional-outbox/v2/postgres/identity": [
+          "go-transactional-outbox",
+          "72a9fe57a638",
+          "postgres/identity"
+        ]
+      },
+      "service": {
+        "container_identity": "903009f3e73ba22232f303bee34410ee4c583eab1bd8f8e742c9809f86b46bbe sha256:d3e1620b530c944afa6e887d22eb899824da68e19c52024bf98f5220c88a65b2 true",
+        "server": "postgres (PostgreSQL) 18.6",
+        "environment": "owned disposable loopback identity_test; trust authentication; tmpfs data"
+      },
+      "output": "ok  \tgithub.com/faustbrian/go-identity/risk/postgres\t12.283s\n",
+      "exit": 0
+    },
+    "final-vet": {
+      "revision": "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+      "toolchain": "go version go1.27.1 darwin/arm64",
+      "command": [
+        "go",
+        "vet",
+        "-tags=integration",
+        "."
+      ],
+      "inputs": {
+        "risk/carrier.go": "6f2c04ecd3f9ceb11665365271ef3cb58b23515ea86370668bce2ca79613c016",
+        "risk/carrier_test.go": "efa78d873a9751af897db127f2c5df7414b0b396c81e22d6d58e6151e1d80bed",
+        "risk/catalog_generated.go": "fbab15822aa87cf00b3aa8fe44410a42c2857a8c8b35a1b29a56da19b31e03ef",
+        "risk/command_counter.go": "052668f18805eea6e90b14a8f0c8b4220f2904caa3b42408c40de8b6e10e2dd8",
+        "risk/command_counter_test.go": "b1074f29af46b4440a2318c758399874c9b6099ea601a6ca5c8a0c5b3519e8e2",
+        "risk/counted_evaluation_test.go": "d9284886eca93ca5f45a2695e8896b21dbf2d22a4b44bd9fe1ad0505a08618d1",
+        "risk/counter.go": "e1df73c382057404bdd1d8b0fdc3f25165c83f4c78c21f5887380441eecc39de",
+        "risk/counter_configuration_test.go": "49994bcf44306fec822188ea71bf53b196e88f1953a069129c883aa8e7c04948",
+        "risk/counter_test.go": "40bf7c304293e75a97b9855f2b442af8d4a6b558f07e241e4c0487f814d8a70d",
+        "risk/decision_audit.go": "4c720c29e4d67a5e73aa9b3f5cbf2e6af00f1ed0e22f886e7d20f2843caa6c90",
+        "risk/decision_audit_test.go": "da8186898de21eef50b498f3eb6710f5a85fed10137fe1c831e802d6b5b5d299",
+        "risk/evaluation.go": "b8c98939e5b5fc42fd50a7a4913db3b760e7210b5566b87572984e0bab64490c",
+        "risk/evaluation_fuzz_test.go": "4f4f6a6a73f80b9f0a88b3eb9c0ecf6cc3471f182e77e233ffe769b8b660bb6b",
+        "risk/evaluation_test.go": "3b347ec96712bf476350df1af37e19de7b5b70ca42d686a80f18078c7ca11b8d",
+        "risk/example_test.go": "dc41a0aef6562d763db10f06186a7e4f04b4df39fe107cb2a04ec5387d0a5896",
+        "risk/go.mod": "a62d3e9ef10caeddeea3214b00cd95f3201cfb9c3aa3e1bcc0bf0231fb391d09",
+        "risk/go.sum": "b5b605658e14d76f3f20301697ecef75178d9e1c45e4c32d75c8839849afb4c9",
+        "risk/issuance.go": "2f563ae5def897a7d444c8b5717ccac88ed7f457472d74dcde3297cad138446c",
+        "risk/issuance_test.go": "2c7789df56f4ce4a223b18925cae3e5f46cb57be6c6f502e375be69c034a2a35",
+        "risk/password_signal.go": "7ab3b32798612a3d01d6373143232675a6e9bcd273ffff88484447e07017edbc",
+        "risk/password_signal_test.go": "e7b729a186d39ddcdf80b7fe7df6c7582bdbc83066e3ee2b9cd799be89593cb5",
+        "risk/policy.go": "2c723f3b723adbf66107f4625bf4af4d0797cf9ed2b6205d434671e7a4eb3d5b",
+        "risk/policy_fuzz_test.go": "d932b8a07fa391b7ba53e8ab0dc5af679698dde2c54597778d88931cdff536ea",
+        "risk/policy_test.go": "95ee634b05f5440333500008762170b577d8679281876009bc70baff1cedecd8",
+        "risk/postgres/cipher.go": "057401ccd7ed6e03a3c7feffd0adf78b96143a099402bcbf2e2236aca5095c0a",
+        "risk/postgres/cipher_test.go": "831c56dec1e80b28ab4b518dab15d28ebbb194e85f2be9a6157a5fe4164a3081",
+        "risk/postgres/command.go": "88bb28ce6ca0cfc280606acc982c508b2284823e90a9934d1f4ee86f84a95b12",
+        "risk/postgres/command_test.go": "51273093a44a59523c8f7bf51b806ab4a7fad37b4235d0687bbf4a9ef95fb3ff",
+        "risk/postgres/commit_ack_integration_test.go": "557bbf09881b389eb734f6520e90eb90bb32109f5eba30ea4106e7561e9b59c7",
+        "risk/postgres/counter.go": "8f57ebeb40405f68e33e51c1f9672af033d7c52894d20ec6deac860ce678d4af",
+        "risk/postgres/counter_admission.go": "96b6fdac5f82ce6be06b4c790e574b130224c41dac1617ade4be2ae3fea01a33",
+        "risk/postgres/counter_command.go": "8f0c360fa54ba69f8c9c3a29ea7642f488754496814836f86008dbd870e99364",
+        "risk/postgres/counter_integration_test.go": "3db8e939b65566727a796559bd3ace0320c210590cfb3f11bce37d6a0ddca228",
+        "risk/postgres/counter_migrations.go": "2f142cbe3d161fcf93e2c7ad03c759737b36941bf0bca807e805758946f32182",
+        "risk/postgres/counter_test.go": "d6192bbc9d6af5f0867cdcda51759389fa7cec8dac262bb844b098d4fc71c2d8",
+        "risk/postgres/executor.go": "81d049403c927540061787ee4c9ee568b319a2c39d1d4f3d6aae70e1095e53c1",
+        "risk/postgres/executor_test.go": "ed475211f0333e338acd5f0582ccfd54699bd48256cdcc1b2cdfb4204ff6355a",
+        "risk/postgres/go.mod": "d5bd77ad3f1a897171583c885417833333ec2da1341e856e95bd7f89479f8647",
+        "risk/postgres/issuance_id_migrations.go": "4ff30c43db5516c0f481a04a89491344911d6d0a62e7a64bb7280d835dca3cdb",
+        "risk/postgres/issuance_integration_test.go": "8a63ef673879bfe5a23015a584b8f9acb134683d00d644fb5d875c2b4c85001b",
+        "risk/postgres/lockout_admission.go": "4b3172357cb6c7f713f96b7d98a20e9508136a7516cc7e5e00a75dc49bf2abb8",
+        "risk/postgres/lockout_admission_integration_test.go": "ffec5300b91b8f17afa4aad9a507f97d07b78b24aa69bd5cb18b998aefc81eb5",
+        "risk/postgres/lockout_admission_test.go": "0fe6c0a43a208a1e6d34189157455d7424852909328b8c21a34286234fbf6be0",
+        "risk/postgres/lockout_migrations.go": "69690d30dff2f8e744e3eb2853043e58e3f24ac86dbb9e43ca2cde1b157a0234",
+        "risk/postgres/migrations.go": "228cc33d0c581bb228ef585d7bbe77fa953b7bdfe2518eb010f0ab6834398be7",
+        "risk/postgres/migrations_test.go": "4375ae252816dd4a3ca02762e5c0d8f412950aba4bdd5a32b12d9998663ba7aa",
+        "risk/postgres/release.go": "30e6337d5d3c18362010b5d915df598dab770214dd39e604abeef443c0d3e4e3",
+        "risk/postgres/repository.go": "6696a55b096023f69b65377b0797057135b2b9ce042c2730f23855a3530ccb47",
+        "risk/postgres/repository_test.go": "bb2bb460cdac96773799e60d49685c105d5e2b63813d65a1a15c69736850e43d",
+        "risk/postgres/reservation.go": "610a9d137e4c406895c297af680f697b0f5e42f99d7d2df4f4c758c2fb34e789",
+        "risk/postgres/reservation_integration_test.go": "826e874fd94b1655ac57140928e32b3cb2a576a508ce1ff5089a9b771b069e09",
+        "risk/postgres/reservation_migrations.go": "f8ba1b549a64c2f0fc084c258eb18d27e91c4c595762b6524507eb3d23b6b2d0",
+        "risk/postgres/reservation_migrations_integration_test.go": "9ac76101899b608393f9de65c57eb15812a63da5a2f8948f3de1b133a11f763a",
+        "risk/postgres/reservation_test.go": "87cb036056121a7da60561bebbf575051d5cbcc569aaf54aa31736f7d7c29916",
+        "risk/postgres/use_command.go": "ae6381d6d37d5f6fc732a9674aac51b9c79d7845e578cf82daf0085c61efe36f",
+        "risk/postgres/use_command_test.go": "58a52a9ed05c6b902ec8d02a720c9ba4c829fba483475a9c0d904d6912ac070c",
+        "risk/postgres/velocity_integrity.go": "301925055bb9a5faed62311675421c662352463c41024b51990e80d40030653f",
+        "risk/postgres/velocity_integrity_integration_test.go": "5a8c88f3bc743ae25d495531f9de6d226528edc6a1501c2118428fd3d17a1030",
+        "risk/postgres/velocity_integrity_migrations.go": "abf947682037bbf5536d38d14a896051f42c14bff0280339c596d2c951fd82b4",
+        "risk/postgres/velocity_integrity_migrations_test.go": "23a930b7ae0ba701722115509ea4da7303db6ee4f338e9b4296a9c8232bdb09f",
+        "risk/postgres/velocity_intent_migrations.go": "616d4fe748b6f2d1af3a27a2d0e444cb3584fc9ab9d2cfd832b8c6f6afda77c5",
+        "risk/postgres/velocity_journal.go": "4b00999d1ecc443ee8a8dd47761732069fbaf66e3a8d05e57dc9465f0a401528",
+        "risk/postgres/velocity_journal_integration_test.go": "6443769cb3e9bc8f3b960a36bb484b5c3c15e25f93376a892073558ae0653cff",
+        "risk/postgres/velocity_journal_test.go": "fccf99bc56d0cf684625a81887776bf9d7e9bcc8b00d8d36c85db3e345d0ee60",
+        "risk/postgres/velocity_migrations.go": "a69c937d403ff02606d3c69e75ea689377493daa9513969050ce09bbe64e945e",
+        "risk/postgres/velocity_migrations_integration_test.go": "94d43318a27d59b66be65b992359a17c7b09bedf7e06a809e1082259e57801e0",
+        "risk/postgres/velocity_migrations_test.go": "bc653d8ba1eba63fc2b38c2664b91a96f10045f4ae26997459a1c92d09db028b",
+        "risk/postgres/velocity_page.go": "660bc1e02ed8c49251163d73d1302be2533b98890d5f99f9c7f4e6ec35466c84",
+        "risk/postgres/velocity_page_integration_test.go": "f5e328f64622382af472fc58a44feac7858c51d7b1c9b1a3fe8126de55ec8004",
+        "risk/postgres/velocity_page_migrations.go": "be37647d2c56b8dd2a15e2a5cf5038625be58ce176a91d4c5cacbd9bad471cb6",
+        "risk/postgres/velocity_page_migrations_test.go": "54a09bc437b7d2da08064d70be5615f95aa364ed41423d091b1f3eb8b83e50c9",
+        "risk/postgres/velocity_page_test.go": "2466614d3839b9d10035486f0ff30fc7ff5d32234e1b3492d47cdb4db9f406b3",
+        "risk/postgres/velocity_recovery.go": "bd6114a895ca8fd1bd5303f60a1bd7c7bd9dbc3fe8b1a8f59f6cc7163dfce8e9",
+        "risk/postgres/velocity_recovery_integration_test.go": "16985c64a62651ebbac9aef1910dc46126b98a66059f7f5e5f201fbc73f4b4fe",
+        "risk/postgres/velocity_recovery_test.go": "9423f81ad1d4ea9a0790c0582d434077cc99241c8b46a6cb532cfc8d49997d7f",
+        "risk/postgres/velocity_results.go": "c5bf6d7afd1fe491b95c98772286637399044fe2a5cedc8478507f14791feae9",
+        "risk/postgres/velocity_results_integration_test.go": "02023dff11981668d6fdbe3400e77bb446515c924cd2a74e97a7b38ea7cb87a9",
+        "risk/postgres/velocity_scope.go": "340ddc4c6c9800ec03b131d192d10a11f980977c7e6a99d732768d7f7a12159c",
+        "risk/postgres/velocity_writer_fence_integration_test.go": "0b1561599a014456ba5e5c09475919a4dca507240a8d231513077e1b7b35aa9d",
+        "risk/use.go": "1fcf40c09fc61704a3cbc55f838e16325b23ef3fe248f1a2b8c298a22255cfb8",
+        "risk/use_bridge.go": "ce567207f681ba204e3b7d92c9ecd0ada374f7c859aa1b58fdbaef2d4822bac5",
+        "risk/use_bridge_test.go": "580a87fe1325ffdcd92cdc94d4f92bd9abc1483b2f649681f225099950b0b1f7",
+        "risk/use_configuration_test.go": "d49c1dab0d01e8cd16ae381851bbb7fd0fceec37b858fd49cedf8d129139a93a",
+        "risk/use_test.go": "cc84adb7342e065d2a0acfc65687d818732a09423b90009fa3ba726115ec3cc0"
+      },
+      "dependencies": {
+        "go-audit": [
+          "go-audit",
+          "v1.0.0",
+          ""
+        ],
+        "go-clock": [
+          "go-clock",
+          "v1.0.0",
+          ""
+        ],
+        "go-identity": [
+          "go-identity",
+          "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+          ""
+        ],
+        "go-authorization": [
+          "go-authorization",
+          "60ed4b3229d8",
+          ""
+        ],
+        "go-capability": [
+          "go-capability",
+          "2985d8ea8700",
+          ""
+        ],
+        "go-cache": [
+          "go-cache",
+          "v1.0.0",
+          ""
+        ],
+        "go-jsonrpc": [
+          "go-jsonrpc",
+          "v1.0.0",
+          ""
+        ],
+        "go-migrations": [
+          "go-migrations",
+          "v1.0.0",
+          ""
+        ],
+        "go-audit/postgres": [
+          "go-audit",
+          "21ad3d11d3b2",
+          "postgres"
+        ],
+        "go-authentication": [
+          "go-authentication",
+          "3467aab01d0c",
+          ""
+        ],
+        "go-identity/postgres": [
+          "go-identity",
+          "b0e746ad5fd75f575a605337cf0e21e325a1c069",
+          "postgres"
+        ],
+        "go-migrations/v3": [
+          "go-migrations",
+          "a461b18b6b24",
+          ""
+        ],
+        "go-postgres": [
+          "go-postgres",
+          "61261695bcc7",
+          ""
+        ],
+        "go-secret-envelope": [
+          "go-secret-envelope",
+          "22fc4a2d925d",
+          ""
+        ],
+        "go-transactional-outbox/v2": [
+          "go-transactional-outbox",
+          "72a9fe57a638",
+          ""
+        ],
+        "go-transactional-outbox/v2/postgres/identity": [
+          "go-transactional-outbox",
+          "72a9fe57a638",
+          "postgres/identity"
+        ]
+      },
+      "service": {
+        "container_identity": "903009f3e73ba22232f303bee34410ee4c583eab1bd8f8e742c9809f86b46bbe sha256:d3e1620b530c944afa6e887d22eb899824da68e19c52024bf98f5220c88a65b2 true",
+        "server": "postgres (PostgreSQL) 18.6",
+        "environment": "owned disposable loopback identity_test; trust authentication; tmpfs data"
+      },
+      "output": "",
+      "exit": 0
+    }
+  }
+}

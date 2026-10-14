@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "module": ".",
+  "gate": "coverage",
+  "result": "passed",
+  "exit_code": 0,
+  "execution_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "completed_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "input_digest": "819cbc39f4bce6459e7c922a60fe32fbb8bada3efbf28a9a78f4129e429226a4",
+  "completed_input_digest": "819cbc39f4bce6459e7c922a60fe32fbb8bada3efbf28a9a78f4129e429226a4",
+  "log_sha256": "68e7a31e46000a11d4bdc74374b36409597f070b9e25dd88079ff5cc5f98b5e8",
+  "started_at": "2026-10-01T05:39:21Z",
+  "completed_at": "2026-10-01T05:39:34Z",
+  "environment": {
+    "go_version": "go1.26.6",
+    "goos": "darwin",
+    "goarch": "arm64"
+  }
+}

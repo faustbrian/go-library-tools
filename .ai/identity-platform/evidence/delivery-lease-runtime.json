@@ -1,0 +1,162 @@
+{
+  "revision": "0f8aad0a43e184a13da0d098adde2ce2f01e0310",
+  "toolchain": "go1.27.1",
+  "service": "task-owned PostgreSQL18-alpine image d3e1620b530c",
+  "command": [
+    "go",
+    "test",
+    "-race",
+    "-tags=integration",
+    ".",
+    "-count=1"
+  ],
+  "inputs": {
+    "delivery/postgres/CHANGELOG.md": "a873ce6ea256bb7b831da64939f4df8ef27ed4986cf83ee14357cc4db57310cf",
+    "delivery/postgres/README.md": "4af79c80f4edabb410ce15b45edbc2920416b07d76cc316e8dec026e065245e4",
+    "delivery/postgres/admission.go": "cf9112393aacb07552535c8f8e0767a365c6692029fcaafd21ff7f68d38f73a8",
+    "delivery/postgres/admission_test.go": "2c822fde12fcd170c1c92a5dbfc4fb2ac87b72f49961414433c59e4f0f2ae24a",
+    "delivery/postgres/attempt.go": "01a3846ac15df1c417a26e088467f4942d796106f3f5696389a344166195d22b",
+    "delivery/postgres/attempt_integration_test.go": "52bcabde69032383c236b8c913ff16072095effaf8992641f6758282fba858ae",
+    "delivery/postgres/attempt_schema.go": "adbb3df463ccafb09610cbe313027e034c4bd7a838a55b1161eb647bec192d13",
+    "delivery/postgres/binding.go": "58405e256c4389f3dbe6daaceb9aad879016d4e457671679f292a7ec64f74e37",
+    "delivery/postgres/binding_integration_test.go": "855925d385195e9d52cc76277df11e302f7057a839bf72469b1693ab12c5974f",
+    "delivery/postgres/binding_test.go": "164d4355c6417ffa358122186a923ba19235f6b3a81c70015a7c425bd9d059d3",
+    "delivery/postgres/cancel.go": "e6364fa7e7301be9409cfbc2f9cfc510c870e18de70b8af0d8c107c36e433c9d",
+    "delivery/postgres/cancel_integration_test.go": "3fd89108394b5ab239c19bacea27f5249f009c2430f4628b8f50505faa3adf37",
+    "delivery/postgres/cancel_native.go": "709851ad9ed03bb95c95d3ec094337136caf4019e5c71895a5fe6df658a600cf",
+    "delivery/postgres/cancel_native_integration_test.go": "73f88ce39be7e8a3c0c225fbe50e6a337f98a60e9748887ec040efcad9fa2a3e",
+    "delivery/postgres/cancel_native_test.go": "019151f33319485dfd5d64fa6d1f5abe5e4a1ae223023185e8513dc80a8e8f7e",
+    "delivery/postgres/cancel_public.go": "77323ee76812b2bd2a3dae8b5d954267aa80bd002b071ad5905484c453eec668",
+    "delivery/postgres/cancel_public_integration_test.go": "fe1b192b9c33c95c63a73a97fdc76d49ff510aa7999a48c60a2401e9d727efc5",
+    "delivery/postgres/cancel_public_test.go": "ef151d51ebb96de0ebc939e84b55b8b276b5597393128f5f2e915c4502b2a9ab",
+    "delivery/postgres/cancel_schema.go": "32e24c0028df574a495682f21c8bb4d8c61205ceb5c578530eabab925fd9e154",
+    "delivery/postgres/composition_integration_test.go": "672b706c3d921620ad2a992886818101f11492e8a2f38790a8ff31abbc365d78",
+    "delivery/postgres/contributor.go": "bb69d48ff3e5da9fe986abec7ee7e9331927c153d40c8156ee29fafd983374df",
+    "delivery/postgres/contributor_test.go": "12f70cd1d99e59999f6fe64724ce590b685ac425f3770cec91c7dadc07546305",
+    "delivery/postgres/custody.go": "2e6a076fdcf40fbe1073782b388eda8e5dd52919d845bb31d161e5c94ef9053a",
+    "delivery/postgres/custody_test.go": "cad1b29fdcd6bc533ae3e231548c43cb5f722f26985846eae47dd7aded38176c",
+    "delivery/postgres/enqueue.go": "f792432adfd8583159cb789af3e4bcf6bc2a8b69e8528187c21fc86114776f11",
+    "delivery/postgres/enqueue_admission.go": "957d387bcbbd7ada055d02e91a42df6c03763bccbe595e6f8153e7ed23ab28ab",
+    "delivery/postgres/enqueue_execution.go": "a8bbb49cefb777e544aa4f5c610d43d1dfdfaffb4fde005207798ed4aaf18bf9",
+    "delivery/postgres/enqueue_execution_test.go": "d0777a3a60311b7bb2832a238a286abe11d3912b87e4dc33067c1240e060ab43",
+    "delivery/postgres/enqueue_test.go": "c8a1deda78d8d639cd7af0990a823f77eaf31830189e7b5e0315042862ccf7db",
+    "delivery/postgres/go.mod": "1ee1906383c83e6a591287f0183f0b7d4eac1510849a261c88f76d18db86ee8f",
+    "delivery/postgres/go.sum": "6e26dab89c4b383448a1d7173ce2416f0ed636bb417e2385fb84b50dbd82f987",
+    "delivery/postgres/keyed.go": "d41968c028b802085cdc10dddd3e17fcb946e6877c1fa0320c651df51935f44b",
+    "delivery/postgres/keyed_integration_test.go": "b433c58d532cf14863ab0113df9f2062d309b7bea511abba5316e6d206ad541c",
+    "delivery/postgres/lease.go": "353fc88053ac669d891780f015bd2ef02a22f0cb507738bbf1f4b02d67ad07af",
+    "delivery/postgres/lease_integration_test.go": "db1c9f0ff8e6125832234b4452d09a94226aa14e41ff9184b20ba106ca718024",
+    "delivery/postgres/migrations.go": "99d4d59b85fbefd9941b55edcdeb684679ba9e3dbbd1a425485baa340ea0227e",
+    "delivery/postgres/persistence.go": "134d85dfac2de98392956f328f5f48028703f0d57e5e2febe29b69c64209dcb5",
+    "delivery/postgres/persistence_integration_test.go": "3c2a1f598dfac397bb1311df78012d02106f197842e0cd9b5e3dbfd3d130ce16",
+    "delivery/postgres/persistence_test.go": "00855dee0a12335db6c86bc458b7bd11a71bec1746f1f5506e960036a03740f6",
+    "delivery/postgres/policy.go": "d9b6e2be8030625339833b355b98db80bd16d4911ef1f69f27afecd287b04a20",
+    "delivery/postgres/policy_integration_test.go": "859ae488c98524565c4e28d65fa21d22bd42dfb97440385c01b7b242d47f53d6",
+    "delivery/postgres/queue_public.go": "61985ad3a29883c2d3673e64575c48e72a1fa5c863e418f6a51a63d25558d222",
+    "delivery/postgres/queue_public_integration_test.go": "7084152434e7b8c6352cd0ddaff541da85f43544faf996cd54524813356ee015",
+    "delivery/postgres/receipt.go": "9d2a55f694b694d72d4f11a203d0f25757edccf602a0e8e77fd287fe39ee3526",
+    "delivery/postgres/receipt_auth.go": "f06c0109b0bd2d89b6f8c1d2309de10fbc6d2647aa649b545d6cd8d83926bc93",
+    "delivery/postgres/receipt_auth_test.go": "106d81a387098aac15c7de8747f57840313e32ab91fa7d65ac506ccebd68b986",
+    "delivery/postgres/receipt_command_schema.go": "9d5c1d139e5d8e7ffa9f22011909564be70ede93c4498d5234cf0c6aae3d5a42",
+    "delivery/postgres/receipt_configuration_test.go": "3e403af518ee1afed8c4f7222ce299033e24bb707460faa491d6add1439aacb6",
+    "delivery/postgres/receipt_integration_test.go": "c57a2aaf1ae5f1c1dbeb0d9f4b593b03bbeffa8c6458f82a6c03c7b92e75c929",
+    "delivery/postgres/receipt_native.go": "fb3ce3fb9e939f009939249d7b4f21bb5a2ff0d99feffb9ed95d874abbf3b51e",
+    "delivery/postgres/receipt_native_integration_test.go": "030e7e03c7a39ff7ded1b615bf98ac4872204d258840f4af49682e0c7a5a3db3",
+    "delivery/postgres/receipt_native_test.go": "9cfc9db179ca433d1cbd9fa4b26f459456d7365d84c95454287581aa34926c8d",
+    "delivery/postgres/receipt_public.go": "a60ccb7b8e6f2836d924e130c687cc23f7c09bc9cb4ec41b63500c4ce706387b",
+    "delivery/postgres/receipt_public_integration_test.go": "9a29ffc8bfbfa064250219e38b6e3a0bfa98dd04a2e2b6892ccca4b500a565a7",
+    "delivery/postgres/receipt_public_test.go": "0133618dbb47d4735aa696083dba1c8d2439e070ddda42e212d1acc4e1dec017",
+    "delivery/postgres/receipt_schema.go": "68b837c57cd2ecabf732c234f61001246c59468f05dc998b0e34710cef4379bf",
+    "delivery/postgres/receipt_status_integration_test.go": "6b5b01dc5633685c25bf2f59fe8782ed26357e4067039769e26b4001f1cf9951",
+    "delivery/postgres/receipt_test.go": "e17d1e15c4952ee1d50b4ddcfd907387d915a779ffee1624dc4fb5a1a7278a58",
+    "delivery/postgres/recipient.go": "8be908050384b1dff5797988514697bf3f362f686cac00b1cc6f0a6f498c4849",
+    "delivery/postgres/reconcile.go": "b84d229406824f7a850a64f048b7bc60c37def516bff48f02da04dd77e2d7c16",
+    "delivery/postgres/reconcile_command_schema.go": "2b236f0fb179e8fca9de72460984ad5610549d38936bdcb95e39f1c34b349b8b",
+    "delivery/postgres/reconcile_cursor.go": "f083e5fc16cb053de71467b2086b104aeb09f0bb7dfdde92827ee85c599b72a8",
+    "delivery/postgres/reconcile_cursor_test.go": "d799a220303c87a4fc8aa201a63c99f267a2c45fa2604bf75430d94f156aefb5",
+    "delivery/postgres/reconcile_integration_test.go": "36b94d32a019bf861c7979191475c6dd9f5f34b0b96a091d4c1ec3b4736a8397",
+    "delivery/postgres/reconcile_native.go": "4fed8a98ab493e44c2cfd962a298240ae3497be8c892eaf0e8d7b756a4d883a6",
+    "delivery/postgres/reconcile_native_integration_test.go": "983988925179d17802db5482eb60662d31236d9409fae380491baaf505eecd60",
+    "delivery/postgres/reconcile_native_test.go": "7f434fa52a46fb78eda375ac2eea75567bdaef4b8f8de7e1f65e2b5419791f6a",
+    "delivery/postgres/reconcile_public.go": "c6743ae540399c12504bd44c614f86c0759e4f4c380516a402f29e084ee0e26f",
+    "delivery/postgres/reconcile_public_integration_test.go": "459827ddd16d0ac44448f2295a3359a18f9d66604095d8fff02d337f69207ed2",
+    "delivery/postgres/reconcile_public_test.go": "b64113c460ccb03ab56e60f077709345612faa28baf4bed4b3125b8a37a9d79d",
+    "delivery/postgres/reconcile_query_native.go": "d79db471b2bc0928958bea59a54c684ea9576a95f7cea847cf772cc8a9ee49bc",
+    "delivery/postgres/reconcile_query_schema.go": "8e4d7f78407915c802af4d9cfdb5d0eb6347a2d1b98e23ecb13fb97d4ea26716",
+    "delivery/postgres/reconcile_recovery.go": "113afdfa334a771d08fe3d2b4659eb719e9bb505909bd4fde02939bf4bd34532",
+    "delivery/postgres/reconcile_schema.go": "0704c64e145df6e8d5923713ecbc0afa67647b222a1ff84528f12aea89b97544",
+    "delivery/postgres/schema.go": "5490ff5b85412625d5bbc5cfdd2aee33862f3b8b9eeba8ff7283cd1db9933cb0",
+    "delivery/postgres/state_integration_test.go": "d269c78096ba1c3e2b26e5a389e9fbc3c573196c68d206107ffde1f5249a8041",
+    "delivery/postgres/state_schema.go": "69b717075a0ac55cd96e7345e8a086f11b1913c87dae422490a5969b94bfb169",
+    "delivery/postgres/status.go": "e019c6518692276e6c25fcf07a58e2951ed7c76563f5ec80e51eb1affc3d1d75",
+    "delivery/postgres/status_test.go": "9f9e40d7b44e29e5cc7ce631dc9d1e709a9a5ad6a0c302db5bc2873070a0c69c",
+    "delivery/postgres/worker_audit.go": "c5b5d0b844298492087fed0ac60275c7273f557a9b9155d7a97f70452999f277",
+    "delivery/postgres/worker_lease.go": "e728ac34cbc2da8e52a83b4db55cb8f9798caac46fc23bc44b01399673fc211d",
+    "delivery/postgres/worker_lease_integration_test.go": "1ab2b1821325bd791a2cee1fdb92e2a10ab812f95a7c11a04e38e51d7120bd36",
+    "delivery/postgres/worker_lease_test.go": "10096bf199314b4af719b439e4f56c912e42ae9025e045148b068d8614252d02",
+    "delivery/postgres/worker_public.go": "42edfa124b4db8e93aa3b0423855404612f2a96ec46fc8f67a13e81131c1738b",
+    "delivery/postgres/worker_public_integration_test.go": "07a5ca2e6a80df37b7e25152017470f3560d9bb9ce3bee60dcaae621aa165013",
+    "delivery/postgres/worker_public_test.go": "34202d30ed35b54ec0447a35c4a67a89a11b6239b06b29fa556e7ccb8563213d"
+  },
+  "dependencies": {
+    "github.com/faustbrian/go-audit/postgres": {
+      "version": "v1.0.1-0.20261003012155-21ad3d11d3b2",
+      "input_digest": "9f02f8853de02ad464d71ee53eeddcd3fd9853d7a795204993f97e1fa0abf284"
+    },
+    "github.com/faustbrian/go-authorization": {
+      "version": "v1.0.1-0.20261001103722-a74c24b38463",
+      "input_digest": "5374e2430d6d6fb0c90368600282878e38def5bb07d0f2aa938b59b1ce46af9f"
+    },
+    "github.com/faustbrian/go-identity": {
+      "version": "v0.0.0-20261004182158-24b21c46d3ca",
+      "input_digest": "b23ac78c022514361aa1d0c3a1445b9848a795810d7e0ff434d9eb7530f8ee01"
+    },
+    "github.com/faustbrian/go-identity/delivery": {
+      "version": "v0.0.0-20261004192212-c70512ebfb31",
+      "input_digest": "db698d49663fd36ce5ba107a9bd44fbcf0ddf645ae83084c54fe0429a856950e"
+    },
+    "github.com/faustbrian/go-identity/postgres": {
+      "version": "v0.0.0-20261004044757-c3d7931906e0",
+      "input_digest": "909e2a90acab7be64407b49451ea8e8e20569e2d9ebcd1fe9b1ac7139a867fa6"
+    },
+    "github.com/faustbrian/go-migrations/v3": {
+      "version": "v3.0.2-0.20261001014304-a461b18b6b24",
+      "input_digest": "4e7391be630e943450f4a2bf7eee2ddf86c289536fa0c9df97425f450bff78f1"
+    },
+    "github.com/faustbrian/go-postgres": {
+      "version": "v1.1.1-0.20260912090843-61261695bcc7",
+      "input_digest": "c0f72c7b154ac18c9c0f5e7fb36b71256922890c937186b076b0711d79c8c45a"
+    },
+    "github.com/faustbrian/go-secret-envelope": {
+      "version": "v1.0.1-0.20260913112010-22fc4a2d925d",
+      "input_digest": "441ee8f4c50d2d3436989cb04814f78c919657924b3383616fe78b1bccc08111"
+    },
+    "github.com/faustbrian/go-transactional-outbox/v2": {
+      "version": "v2.0.0-20261002184451-72a9fe57a638",
+      "input_digest": "320d661e2443dc97e8bfdbe56ef2c1f5069a3df0e118d80aeda59d83a89ab147"
+    },
+    "github.com/faustbrian/go-transactional-outbox/v2/postgres/identity": {
+      "version": "v0.0.0-20261002184451-72a9fe57a638",
+      "input_digest": "75b4cc58316e7b07f0407f50588a65004143ad7a1eb3518ba6ab01483801fb9b"
+    },
+    "github.com/faustbrian/go-capability": {
+      "version": "v1.0.1-0.20261002040645-174b128867a4",
+      "input_digest": "b332e65dbfc38109e97f054f95bc573afdcbcc2bb7ab85a802f7e510575dcd55"
+    }
+  },
+  "output": "ok  \tgithub.com/faustbrian/go-identity/delivery/postgres\t34.065s\n",
+  "exit": 0,
+  "additional_results_on_identical_inputs": [
+    {
+      "command": [
+        "go",
+        "vet",
+        "-tags=integration",
+        "."
+      ],
+      "output": "",
+      "exit": 0,
+      "service": "none"
+    }
+  ]
+}

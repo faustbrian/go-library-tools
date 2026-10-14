@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-authorization",
+  "module": ".",
+  "package": "httpauth",
+  "gate": "mutation",
+  "input_digest": "sha256:8a57e9b925be0753a5572f8cbd94d50c941c927860fdd584c9481030451d29fe",
+  "verifier_digest": "sha256:9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+  "result": "passed",
+  "report_digest": "sha256:4ae2e0dbb5b99dfe01b2ffa978ddeae43a8f6f385d05fb5e8b4eac5c56c2cb2d",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOOS": "darwin",
+    "GOVERSION": "go1.26.6",
+    "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+  },
+  "completed_at": "2026-10-01T09:37:53.463816Z"
+}

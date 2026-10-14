@@ -1,0 +1,5 @@
+
+[.] conformance
+./scripts/check-conformance.sh
+go: downloading go1.26.6 (darwin/arm64)
+ok  	github.com/faustbrian/go-authentication/authhttp	0.201s

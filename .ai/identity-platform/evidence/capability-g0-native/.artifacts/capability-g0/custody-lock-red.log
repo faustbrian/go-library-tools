@@ -1,0 +1,5 @@
+--- FAIL: TestIdentityContextMethodsRunOutsideCustodyLock (0.00s)
+    identity_contracts_internal_test.go:136: caller context invoked under custody lock: context canceled
+FAIL
+FAIL	github.com/faustbrian/go-capability	0.190s
+FAIL

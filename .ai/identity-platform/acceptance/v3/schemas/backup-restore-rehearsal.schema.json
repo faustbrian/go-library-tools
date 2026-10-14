@@ -1,0 +1,1480 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity-platform.acceptance.backup-restore-rehearsal.v1",
+  "title": "backup-restore-rehearsal acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "result",
+    "control_repository",
+    "package_repository",
+    "input_manifest",
+    "input_root",
+    "observations",
+    "artifact_hashes",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 3
+    },
+    "artifact_id": {
+      "const": "backup-restore-rehearsal"
+    },
+    "result": {
+      "const": {
+        "status": "pass",
+        "gate": "make check MODULES=pkg/identity/reference"
+      }
+    },
+    "control_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "control"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-library-tools"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "package_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "package"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-identity"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "input_manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "repositories",
+        "environment_inputs"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 2
+        },
+        "repositories": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "prefixItems": [
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "items": false
+        },
+        "environment_inputs": {
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "input_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior"
+              },
+              "claim_id": {
+                "const": "cross.persistence-recovery.v1"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.backup-restore-rehearsal.v1"
+              },
+              "scenario": {
+                "const": "success,failure,outage,concurrency,cleanup,unknown-outcome"
+              },
+              "preconditions": {
+                "const": "Operations: make check MODULES=pkg/identity/reference; exact inputs: backup_id, source_revision, restore_target, encryption_key_id, credential_fixture_digest, replay_checkpoint; initial state: source database contains identities, encrypted credential material, sessions, organizations, audit rows, and a persisted replay checkpoint"
+              },
+              "stimulus": {
+                "const": "Run make check MODULES=pkg/identity/reference for success, failure, outage, concurrency, cleanup, unknown-outcome cases using backup_id, source_revision, restore_target, encryption_key_id, credential_fixture_digest, replay_checkpoint and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: the reference module gate creates a backup, restores it into an empty rehearsal database, decrypts key and credential fixtures, resumes from the exact replay checkpoint, and proves restored row and integrity digests equal the source revision; stable outcomes: success=pass/none, failure=failed/internal, outage=unavailable/unavailable, concurrency=pass/conflict, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit; required artifact fields: backup_id, encryption_key_id, restored_identity_count, restored_credential_count, decrypted_credential_count, replayed_checkpoint_count, source_digest, restore_digest"
+              },
+              "actual_outcome": {
+                "const": "Invariant: the reference module gate creates a backup, restores it into an empty rehearsal database, decrypts key and credential fixtures, resumes from the exact replay checkpoint, and proves restored row and integrity digests equal the source revision; stable outcomes: success=pass/none, failure=failed/internal, outage=unavailable/unavailable, concurrency=pass/conflict, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit; required artifact fields: backup_id, encryption_key_id, restored_identity_count, restored_credential_count, decrypted_credential_count, replayed_checkpoint_count, source_digest, restore_digest"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "artifact_hashes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.ai/[A-Za-z0-9._/-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "const": ".ai/identity-platform/evidence/artifacts/backup-restore-rehearsal.json"
+          }
+        }
+      },
+      "minContains": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "artifact_hashes": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "const": ".ai/identity-platform/evidence/executions/backup-restore-rehearsal.json"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    }
+  ],
+  "x-cross-field-rules": [
+    "every observations[].artifact_sha256 value must equal one artifact_hashes[].sha256 value",
+    "artifact_hashes must bind the artifact-specific evidence object at .ai/identity-platform/evidence/artifacts/backup-restore-rehearsal.json",
+    "artifact_hashes must bind the separately captured coordinator execution receipt at .ai/identity-platform/evidence/executions/backup-restore-rehearsal.json",
+    "control and package repository bindings have distinct identities, revisions, trees, and runtime workdirs",
+    "input_root is the repository-qualified v2 input-manifest fingerprint"
+  ],
+  "$defs": {
+    "artifact_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "invariant_id",
+        "invariant",
+        "operation_ids",
+        "input_digest",
+        "execution",
+        "scenario_cases",
+        "backup_id",
+        "encryption_key_id",
+        "restored_identity_count",
+        "restored_credential_count",
+        "decrypted_credential_count",
+        "replayed_checkpoint_count",
+        "source_digest",
+        "restore_digest"
+      ],
+      "properties": {
+        "artifact_id": {
+          "const": "backup-restore-rehearsal"
+        },
+        "invariant_id": {
+          "const": "backup-restore-rehearsal.invariant"
+        },
+        "invariant": {
+          "const": "the reference module gate creates a backup, restores it into an empty rehearsal database, decrypts key and credential fixtures, resumes from the exact replay checkpoint, and proves restored row and integrity digests equal the source revision"
+        },
+        "operation_ids": {
+          "const": [
+            "make check MODULES=pkg/identity/reference"
+          ]
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "execution_identity",
+            "execution_receipt_path",
+            "execution_receipt_sha256",
+            "capture_authority",
+            "logical_module",
+            "producer_argv",
+            "verifier_argv",
+            "control_repository",
+            "package_repository",
+            "input_root",
+            "sandbox_environment_sha256",
+            "executable_realpath",
+            "executable_sha256",
+            "verifier_executable_realpath",
+            "verifier_executable_sha256",
+            "verifier_driver_realpath",
+            "verifier_driver_sha256",
+            "version_argv",
+            "version_stdout",
+            "version_stderr",
+            "verifier_version_argv",
+            "verifier_version_stdout",
+            "verifier_version_stderr",
+            "environment_probe_argv",
+            "environment_probe_stdout",
+            "environment_probe_stderr",
+            "verifier_exit_status",
+            "verifier_stdout",
+            "verifier_stderr",
+            "verifier_attestation_sha256",
+            "started_at",
+            "completed_at",
+            "exit_status",
+            "stdout",
+            "stdout_byte_length",
+            "stdout_sha256",
+            "stderr",
+            "stderr_byte_length",
+            "stderr_sha256",
+            "captured_output_sha256",
+            "raw_capture_sha256",
+            "output_artifact_path",
+            "artifact_payload_binding"
+          ],
+          "properties": {
+            "execution_identity": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "execution_receipt_path": {
+              "const": ".ai/identity-platform/evidence/executions/backup-restore-rehearsal.json"
+            },
+            "execution_receipt_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "capture_authority": {
+              "const": "coordinator-owned-execution-runner/v4"
+            },
+            "logical_module": {
+              "const": "pkg/identity/reference"
+            },
+            "producer_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "check",
+                "--module",
+                "reference"
+              ]
+            },
+            "verifier_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "/Users/brian/Developer/.worktrees/golib-go-library-tools-identity-platform/.ai/identity-platform/acceptance/schema_validation.rb",
+                "verify",
+                "backup-restore-rehearsal"
+              ]
+            },
+            "control_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "control"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "package_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "package"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-identity"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "input_root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "sandbox_environment_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_driver_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_driver_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "--version"
+              ]
+            },
+            "version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "--version"
+              ]
+            },
+            "verifier_version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "verifier_version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "environment_probe_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "uname",
+                "-a"
+              ]
+            },
+            "environment_probe_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "environment_probe_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_exit_status": {
+              "const": 0
+            },
+            "verifier_stdout": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_attestation_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "started_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "completed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "exit_status": {
+              "const": 0
+            },
+            "stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1048576
+            },
+            "stdout_byte_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "stdout_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "stderr_byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "stderr_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "captured_output_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "raw_capture_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "output_artifact_path": {
+              "const": ".ai/identity-platform/evidence/artifacts/backup-restore-rehearsal.json"
+            },
+            "artifact_payload_binding": {
+              "const": "record.artifact_hashes[path,sha256]"
+            }
+          },
+          "x-execution-proof": 3
+        },
+        "scenario_cases": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "observation_id",
+              "claim_id",
+              "invariant_id",
+              "scenario",
+              "operation_ids",
+              "input_fields",
+              "initial_state",
+              "status",
+              "stable_error",
+              "expected_invariant",
+              "observed_state_digest",
+              "observed_event_digest",
+              "transcript_sha256",
+              "artifact_contract_sha256",
+              "observed_value_count",
+              "ordered_steps",
+              "expected_operation_set",
+              "observed_operation_set",
+              "observed_values"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string",
+                "enum": [
+                  "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#success",
+                  "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#failure",
+                  "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#outage",
+                  "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#concurrency",
+                  "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#cleanup",
+                  "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#unknown-outcome"
+                ]
+              },
+              "observation_id": {
+                "type": "string",
+                "enum": [
+                  "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior"
+                ]
+              },
+              "claim_id": {
+                "type": "string",
+                "enum": [
+                  "cross.persistence-recovery.v1"
+                ]
+              },
+              "invariant_id": {
+                "const": "backup-restore-rehearsal.invariant"
+              },
+              "scenario": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failure",
+                  "outage",
+                  "concurrency",
+                  "cleanup",
+                  "unknown-outcome"
+                ]
+              },
+              "operation_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "make check MODULES=pkg/identity/reference"
+                  ]
+                }
+              },
+              "input_fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "initial_state": {
+                "const": "source database contains identities, encrypted credential material, sessions, organizations, audit rows, and a persisted replay checkpoint"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "failed",
+                  "unavailable",
+                  "reconciled"
+                ]
+              },
+              "stable_error": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "internal",
+                  "unavailable",
+                  "conflict",
+                  "unknown_commit"
+                ]
+              },
+              "expected_invariant": {
+                "const": "the reference module gate creates a backup, restores it into an empty rehearsal database, decrypts key and credential fixtures, resumes from the exact replay checkpoint, and proves restored row and integrity digests equal the source revision"
+              },
+              "observed_state_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_event_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "artifact_contract_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_value_count": {
+                "const": 8
+              },
+              "ordered_steps": {
+                "const": [
+                  "precondition-established",
+                  "stimulus-executed",
+                  "outcome-observed",
+                  "transcript-bound"
+                ]
+              },
+              "expected_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "make check MODULES=pkg/identity/reference"
+                  ]
+                }
+              },
+              "observed_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "make check MODULES=pkg/identity/reference"
+                  ]
+                }
+              },
+              "observed_values": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "backup_id",
+                  "encryption_key_id",
+                  "restored_identity_count",
+                  "restored_credential_count",
+                  "decrypted_credential_count",
+                  "replayed_checkpoint_count",
+                  "source_digest",
+                  "restore_digest"
+                ],
+                "properties": {
+                  "backup_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "encryption_key_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "restored_identity_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "restored_credential_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "decrypted_credential_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "replayed_checkpoint_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "source_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "restore_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            }
+          },
+          "x-exact-scenario-case-fields": [
+            "case_id",
+            "observation_id",
+            "claim_id",
+            "scenario",
+            "operation_ids",
+            "input_fields",
+            "status",
+            "stable_error",
+            "artifact_contract_sha256",
+            "expected_operation_set",
+            "observed_operation_set"
+          ],
+          "x-exact-scenario-cases": [
+            {
+              "case_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#success",
+              "observation_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior",
+              "claim_id": "cross.persistence-recovery.v1",
+              "scenario": "success",
+              "operation_ids": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "input_fields": [
+                "backup_id",
+                "source_revision",
+                "restore_target",
+                "encryption_key_id",
+                "credential_fixture_digest",
+                "replay_checkpoint"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:75c7f7b0396de9fa210f042025b1152420d73d545203c5778265dc8375795b2c",
+              "expected_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "observed_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ]
+            },
+            {
+              "case_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#failure",
+              "observation_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior",
+              "claim_id": "cross.persistence-recovery.v1",
+              "scenario": "failure",
+              "operation_ids": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "input_fields": [
+                "backup_id",
+                "source_revision",
+                "restore_target",
+                "encryption_key_id",
+                "credential_fixture_digest",
+                "replay_checkpoint"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:6a95efefeeffc7ea4d8a064cc19971dbe00b29173e6cfa503742b47361f0a0a5",
+              "expected_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "observed_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ]
+            },
+            {
+              "case_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#outage",
+              "observation_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior",
+              "claim_id": "cross.persistence-recovery.v1",
+              "scenario": "outage",
+              "operation_ids": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "input_fields": [
+                "backup_id",
+                "source_revision",
+                "restore_target",
+                "encryption_key_id",
+                "credential_fixture_digest",
+                "replay_checkpoint"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:1afd858c4949ddc3421bb8bee9c5efd04ae12a22331fbf763ddd61ba9bb030bd",
+              "expected_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "observed_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ]
+            },
+            {
+              "case_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#concurrency",
+              "observation_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior",
+              "claim_id": "cross.persistence-recovery.v1",
+              "scenario": "concurrency",
+              "operation_ids": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "input_fields": [
+                "backup_id",
+                "source_revision",
+                "restore_target",
+                "encryption_key_id",
+                "credential_fixture_digest",
+                "replay_checkpoint"
+              ],
+              "status": "pass",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:ff553cab6797344728d76ec5303a641cdf077b31c7e4c646541185b19961a7e8",
+              "expected_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "observed_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ]
+            },
+            {
+              "case_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#cleanup",
+              "observation_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior",
+              "claim_id": "cross.persistence-recovery.v1",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "input_fields": [
+                "backup_id",
+                "source_revision",
+                "restore_target",
+                "encryption_key_id",
+                "credential_fixture_digest",
+                "replay_checkpoint"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:2d78fa57e3b5e521c7a0f4855c9e3b1f8a637a08d860c8ad7fc902da4b95143d",
+              "expected_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "observed_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ]
+            },
+            {
+              "case_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior#unknown-outcome",
+              "observation_id": "backup-restore-rehearsal.cross.persistence-recovery.v1.behavior",
+              "claim_id": "cross.persistence-recovery.v1",
+              "scenario": "unknown-outcome",
+              "operation_ids": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "input_fields": [
+                "backup_id",
+                "source_revision",
+                "restore_target",
+                "encryption_key_id",
+                "credential_fixture_digest",
+                "replay_checkpoint"
+              ],
+              "status": "reconciled",
+              "stable_error": "unknown_commit",
+              "artifact_contract_sha256": "sha256:f331a1db41c8c9249b718debcc2d3fd226c601467f50ccbe263b0e89969d573b",
+              "expected_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "observed_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ]
+            }
+          ]
+        },
+        "backup_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "encryption_key_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "restored_identity_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "restored_credential_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "decrypted_credential_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "replayed_checkpoint_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "source_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "restore_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "x-semantic-rules": [
+        {
+          "kind": "positive",
+          "fields": [
+            "restored_identity_count",
+            "restored_credential_count",
+            "decrypted_credential_count",
+            "replayed_checkpoint_count"
+          ]
+        },
+        {
+          "kind": "equal",
+          "left": "source_digest",
+          "right": "restore_digest"
+        }
+      ]
+    }
+  }
+}

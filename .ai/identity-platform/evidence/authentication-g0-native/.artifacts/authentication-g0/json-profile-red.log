@@ -1,0 +1,35 @@
+go: downloading go1.26.6 (darwin/arm64)
+go: downloading github.com/faustbrian/go-clock v1.0.0
+--- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames (0.01s)
+    authority_json_profile_test.go:53: signed noncanonical header accepted or misclassified
+    authority_json_profile_test.go:53: signed noncanonical header accepted or misclassified
+    authority_json_profile_test.go:53: signed noncanonical header accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/top-level-alias (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/top-level-conflict (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/unicode-fold-alias (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/owner-alias (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/owner-conflict (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/actor-alias (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/actor-conflict (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/credential-alias (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/credential-conflict (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/grant-alias (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/grant-conflict (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/parent-alias (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+    --- FAIL: TestSignedAccessJSONRequiresExactClosedFieldNames/parent-conflict (0.00s)
+        authority_json_profile_test.go:82: signed noncanonical claims accepted or misclassified
+FAIL
+FAIL	github.com/faustbrian/go-authentication	0.217s
+FAIL

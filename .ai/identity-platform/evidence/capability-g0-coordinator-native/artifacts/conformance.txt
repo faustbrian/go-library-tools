@@ -1,0 +1,2 @@
+./scripts/check-conformance.sh
+ok  	github.com/faustbrian/go-capability	0.097s

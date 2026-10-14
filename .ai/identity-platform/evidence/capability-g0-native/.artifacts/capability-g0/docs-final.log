@@ -1,0 +1,12 @@
+
+[.] docs
+/var/folders/c_/cyfs05854flfb113r0dpvz800000gn/T//golib-documentation-tools.Fzc3da/lychee-aarch64-apple-darwin.tar.gz: OK
+🔍 63 Total (in 1s 156ms) 🔗 54 Unique ✅ 61 OK 🚫 0 Errors 👻 2 Excluded
+
+GOWORK=off go test ./... -run '^Example' -count=1
+go: downloading go1.26.6 (darwin/arm64)
+ok  	github.com/faustbrian/go-capability	0.408s
+ok  	github.com/faustbrian/go-capability/caphttp	0.190s [no tests to run]
+ok  	github.com/faustbrian/go-capability/memory	0.381s [no tests to run]
+ok  	github.com/faustbrian/go-capability/postgres	0.380s [no tests to run]
+ok  	github.com/faustbrian/go-capability/valkey	0.378s [no tests to run]

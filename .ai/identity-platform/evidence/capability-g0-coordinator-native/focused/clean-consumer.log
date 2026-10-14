@@ -1,0 +1,2 @@
+go: creating new go.mod: module example.com/capability-consumer
+ok  	example.com/capability-consumer	0.188s

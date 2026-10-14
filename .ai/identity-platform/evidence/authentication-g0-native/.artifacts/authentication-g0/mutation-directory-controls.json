@@ -1,0 +1,18 @@
+[
+  {
+    "directory": "/tmp/auth-g0-digest-proof.PH5qOP/snapshot",
+    "selected": true
+  },
+  {
+    "directory": "/tmp/auth-g0-digest-proof.PH5qOP/snapshot/apikey",
+    "selected": true
+  },
+  {
+    "directory": "/tmp/auth-g0-digest-proof.PH5qOP/snapshot-sibling",
+    "selected": false
+  },
+  {
+    "directory": "/tmp/auth-g0-digest-proof.PH5qOP/unrelated",
+    "selected": false
+  }
+]

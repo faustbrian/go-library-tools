@@ -1,0 +1,266 @@
+go: downloading go1.26.6 (darwin/arm64)
+go: downloading github.com/faustbrian/go-clock v1.0.0
+--- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding (0.00s)
+    --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant (0.00s)
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0080 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0081 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0082 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0083 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0084 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0085 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0086 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0087 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0088 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0089 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+008A (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+008B (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+008C (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+008D (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+008E (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+008F (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0090 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0091 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0092 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0093 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0094 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0095 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0096 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0097 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0098 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+0099 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+009A (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+009B (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+009C (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+009D (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+009E (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/tenant/U+009F (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+    --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject (0.00s)
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0080 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0081 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0082 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0083 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0084 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0085 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0086 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0087 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0088 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0089 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+008A (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+008B (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+008C (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+008D (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+008E (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+008F (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0090 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0091 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0092 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0093 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0094 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0095 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0096 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0097 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0098 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+0099 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+009A (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+009B (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+009C (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+009D (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+009E (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/subject/U+009F (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+    --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method (0.00s)
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0080 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0081 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0082 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0083 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0084 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0085 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0086 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0087 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0088 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0089 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+008A (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+008B (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+008C (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+008D (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+008E (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+008F (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0090 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0091 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0092 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0093 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0094 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0095 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0096 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0097 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0098 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+0099 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+009A (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+009B (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+009C (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+009D (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+009E (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/method/U+009F (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+    --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience (0.00s)
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0080 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0081 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0082 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0083 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0084 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0085 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0086 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0087 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0088 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0089 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+008A (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+008B (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+008C (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+008D (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+008E (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+008F (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0090 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0091 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0092 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0093 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0094 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0095 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0096 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0097 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0098 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+0099 (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+009A (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+009B (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+009C (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+009D (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+009E (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+        --- FAIL: TestProofRejectsUnicodeControlsInEveryIdentityBinding/audience/U+009F (0.00s)
+            proof_test.go:102: Unicode control admitted or usable proof returned
+FAIL
+FAIL	github.com/faustbrian/go-authentication	0.203s
+FAIL

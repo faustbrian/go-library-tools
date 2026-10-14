@@ -1,0 +1,73 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "tools": [
+      {
+        "vendor": "CycloneDX",
+        "name": "cyclonedx-gomod",
+        "version": "v1.10.0",
+        "hashes": [
+          {
+            "alg": "MD5",
+            "content": "ca6f170b1d303f04a0a6a3fe6aed5ee9"
+          },
+          {
+            "alg": "SHA-1",
+            "content": "cad502154e0018bc2c3cb9451cf2d7b85833bb58"
+          },
+          {
+            "alg": "SHA-256",
+            "content": "2861871062b75b84ec54a750558d7bfac95baa1a49adb65837fde41336e7f114"
+          },
+          {
+            "alg": "SHA-384",
+            "content": "61146bbcf0b2826a4222e8d7dc3a6b3f036a040c74030bf03c89ec27ae5fd643ab3e1fdcbcec886a64fc1ea2a06e0d81"
+          },
+          {
+            "alg": "SHA-512",
+            "content": "6a7f01b5a93524292efb1af6f5796cf237233c732ffc61d25c636d589eb5f6ea4d3f09babff6986827790b3010f2d160e6a3bc98ee30f3ee2ae55d6054415f4b"
+          }
+        ],
+        "externalReferences": [
+          {
+            "url": "https://github.com/CycloneDX/cyclonedx-gomod",
+            "type": "vcs"
+          },
+          {
+            "url": "https://cyclonedx.org",
+            "type": "website"
+          }
+        ]
+      }
+    ],
+    "component": {
+      "bom-ref": "pkg:golang/github.com/faustbrian/go-capability?type=module",
+      "type": "library",
+      "name": "github.com/faustbrian/go-capability",
+      "purl": "pkg:golang/github.com/faustbrian/go-capability?goarch=arm64\u0026goos=darwin\u0026type=module",
+      "externalReferences": [
+        {
+          "url": "https://github.com/faustbrian/go-capability",
+          "type": "vcs"
+        }
+      ],
+      "evidence": {
+        "licenses": [
+          {
+            "license": {
+              "id": "MIT"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "dependencies": [
+    {
+      "ref": "pkg:golang/github.com/faustbrian/go-capability?type=module"
+    }
+  ]
+}

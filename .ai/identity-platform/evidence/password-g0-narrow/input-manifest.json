@@ -1,0 +1,999 @@
+{
+  "environment_inputs": [
+    {
+      "content_identity": "sha256:fc75142090f126eafc956ec532df9dca75522a775396d1e5e36f86975dba8586",
+      "environment_id": "environment:aggregate-tool",
+      "owner": "coordinator",
+      "reason": "Captured actual gate inputs; aggregate and focused executions retain distinct provenance"
+    },
+    {
+      "content_identity": "sha256:a07b8b67422f278c0d02f05908e767fead9025f8502669b460c71d6c3b1bdd4d",
+      "environment_id": "environment:benchmark-image",
+      "owner": "coordinator",
+      "reason": "Captured actual gate inputs; aggregate and focused executions retain distinct provenance"
+    },
+    {
+      "content_identity": "sha256:d9df962e6d253f492925135ea309a3713d4ab2acd26a5ec88849bb4e3f38c94f",
+      "environment_id": "environment:package-environment",
+      "owner": "coordinator",
+      "reason": "Captured actual gate inputs; aggregate and focused executions retain distinct provenance"
+    },
+    {
+      "content_identity": "sha256:e2c3723a3a3efa42a4bf27c64f983161c2311a151aec7111c09bea80a69ebfb4",
+      "environment_id": "environment:php-interop",
+      "owner": "coordinator",
+      "reason": "Captured actual gate inputs; aggregate and focused executions retain distinct provenance"
+    },
+    {
+      "content_identity": "sha256:36fcbab35272354234eee664bf6b263be57c1fae01b77e07442551648fb60325",
+      "environment_id": "environment:selected-applicability",
+      "owner": "coordinator",
+      "reason": "Captured actual gate inputs; aggregate and focused executions retain distinct provenance"
+    },
+    {
+      "content_identity": "sha256:b66d4b0812677db57781923dfbce8558b2dbcd85aefbc6a82ab0422f4069d9cb",
+      "environment_id": "environment:selected-primitive-contract",
+      "owner": "coordinator",
+      "reason": "Captured actual gate inputs; aggregate and focused executions retain distinct provenance"
+    },
+    {
+      "content_identity": "sha256:e8b6f4ad8ab039c18c0696261efeeb26dca5f646e022c699345f12a89f6159e1",
+      "environment_id": "environment:vulnerability-database",
+      "owner": "coordinator",
+      "reason": "Captured actual gate inputs; aggregate and focused executions retain distinct provenance"
+    },
+    {
+      "content_identity": "sha256:25ee89a07bd98c0b2f6d1d11bc0dc63c48a8eab9e0cf41aba43fef894229885c",
+      "environment_id": "environment:vulnerability-tool",
+      "owner": "coordinator",
+      "reason": "Captured actual gate inputs; aggregate and focused executions retain distinct provenance"
+    }
+  ],
+  "repositories": [
+    {
+      "inputs": [
+        {
+          "content_identity": "git-sha1:27732d493e15aec526a88abf4f545bba3a0c85ad",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/COMMON_REQUIREMENTS.md",
+          "reason": "Applicable unit requirements and existing input/source identity readers"
+        },
+        {
+          "content_identity": "git-sha1:26566f2f24ca7181de5edbfe72ce6bc3f43ad253",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/ORCHESTRATOR_GOAL.md",
+          "reason": "Applicable unit requirements and existing input/source identity readers"
+        },
+        {
+          "content_identity": "git-sha1:2c3b3d223404d377ccf9acbbfc1894504a39bd1d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/goals/primitive-password-secret-contracts.md",
+          "reason": "Applicable unit requirements and existing input/source identity readers"
+        },
+        {
+          "content_identity": "git-sha1:3238a98ba7af593fd576c444b71cdb52082261c7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/public_contract_repository.rb",
+          "reason": "Applicable unit requirements and existing input/source identity readers"
+        },
+        {
+          "content_identity": "git-sha1:7dee30bcaf8916ae384c81b2b8ab82c7fcc216d5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/repository_input_manifest.rb",
+          "reason": "Applicable unit requirements and existing input/source identity readers"
+        },
+        {
+          "content_identity": "git-sha1:fb9710bdcbe0ee2cbb4b8ada7faf618d6bd83d68",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/repository_topology.rb",
+          "reason": "Applicable unit requirements and existing input/source identity readers"
+        }
+      ],
+      "object_format": "git-sha1",
+      "repository_identity": "github.com/faustbrian/go-library-tools",
+      "revision": "e2cb844dd1d3cd65b0026c90834183a6595c66a1",
+      "tree": "git-sha1:112921cdf94c40569b5647a24e760c25047c3bce"
+    },
+    {
+      "inputs": [
+        {
+          "content_identity": "git-sha1:524e3cd60c87bcff56290af2f381f9041b7b6194",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".gitattributes",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:38675146d8a20c639edc9d541b482303851ec544",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".github/dependabot.yml",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:8e38f0c40fbf2950381028efe0dd69e918e60719",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".github/pull_request_template.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:320bb910dbd2856a15bbe9b1a5a52d297151c2cb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".github/workflows/ci.yml",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:2ae9e4382c405931760808b035bb641db6172574",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".gitignore",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:5a9687b96eaefc2f5f1b28dc13598846402428ca",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".gitleaks.toml",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:f250c8f6045f43ce98fd0fe2d0675b0656c7264f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".go-version",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:2ee2a54327b30dca29e12b9f6551d41083a32840",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".golangci.yml",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b0a38720f52c33c7d9c28251dcbe3a72c2752787",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".golib.yaml",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:6db1c466636b64940cc649cb8dc33ab730d090d4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".verification/mutation/bootstrap/root.zip",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:a1775d8fc55d59da6fedc90b2b3badd43aa139f6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".verification/mutation/migration-ledger.json",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:2986067e669a85163c6d113506417fb6b688d6d4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": ".verification/mutation/zero-inventory.json",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:c5b3d40418b3d0097a2d2a727313e3abbef9e991",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "AGENTS.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:c61ab5fca834b5261102f6bcea5c15a3020de83f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "CHANGELOG.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:9c6b85ed4591deab5d63504987d3b25f0d6f324b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "CLAUDE.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:94e4de703d425be22a5b027f64a92e643d4b91f4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "CODE_OF_CONDUCT.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:1203cc0fd8c517336593b6ba8ba4ec1718584315",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "COMPATIBILITY.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b20fa764ef796f72ff9a983a7a2be986496bd7d5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "CONTRIBUTING.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:78c94e6782ab7066050eaf88dfa2af1726233dee",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "DEPRECATION.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:a654d0c930fd62fab5b3237f14823225dacc7316",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "LICENSE",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:3098c3e59b59ea5b2460649e69b5cee5bd960205",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "Makefile",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:38871a1ed8169ce20422e5c3ecdd8b06bc70213a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "README.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:37ba6e4dc08c47db0693e39cf397a9406d883288",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "SECURITY.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:90fa6053c6642077936bedccb0797e3fcc0bd06c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "SUPPORT.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:01446b3675b706d385fabe1c4687581ba89a7682",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "adapters_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:20db46c751b900a56767dea92299a670829275ac",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "admission.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:ef1504dfc0763032e098605508297b2e132b9eb3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "admission_internal_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:846437910c1feb3c474e4dff605388c5a2a783e4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "admission_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:32e5c3609e2530cde6a572905e53fd79d354b0a3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "api/root.txt",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:e87413d14a304c66fce176437a73f0f1e1bc29e6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "argon2id/argon2id.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:185bec0337fb7dec8e7e37b4202157baeb41775c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "argon2id/argon2id_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b8bc58d33cac42621c8595f40300f3bb95e448cc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "argon2id/doc.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:ecc0e3e6e6166911cac52a8039515f541c64c718",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "bcrypt/bcrypt.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:ced34fba055b47a2f672df7e07c02107c8ad53fe",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "bcrypt/bcrypt_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:a43f0136782205d6daa0e5dfd794b4265ef9eaf1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "bcrypt/doc.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:0b27d76cb0c69454b4d2fdddc2723cedbbf6cfa4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "benchmark_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:08d2563cdf604c79a39401b13b1b2467c1d38cbc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "boundaries_internal_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:2f3d4a7a4ad28224a6b6234bb42be6770f160ecb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "concurrency_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:c0ea5a7e9d43d8abacd7083ca26908f557f44c9d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "contracts.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:e435c56530f6e7a8794b663ca57c17ab7f43d8cc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "contracts_matrix_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:07531fb9ca08b2776e6a7e150c111e063a029987",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "cspell.json",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:bc6a8d21430e69230d4c5ce605963afe60b7f093",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "doc.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:f2eb20f60a7ad7802c0f10aa6ecbf48c4262f935",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/README.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:e244d1f6a8a46e06363df075748812668769a00b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/algorithm-selection.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b6f1baae3f9ddb75682c0701ebdca2be2e69f5af",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/api.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:69026d8364dec57788e2ac4eb2fd2d0f2431d977",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/authentication-integration.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b0faed1b876609338e071e6f40e1e7e289d1b6b9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/compatibility.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:ededab4b439d6643c8395614ce2da508eb50bb59",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/concurrency.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:fcd399abd25e3f9b6e57d00626bb4057870d2d8d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/database-upgrades.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:16bc46ce98a9931766d8d6d66fca18bfe7bad07a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/faq.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:54cc716fff029ab2cc37ed3ad3032b36cb31595a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/kubernetes-sizing.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:fb2ede2701e95922b257528d965086a1b0e7439c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/laravel-migration.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:03597a84ecfed8c67019e8e0ddc8a911ec5f0582",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/observability.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:4501d9147906a4e7d8a53282f471484ef6945e7b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/parser-grammar.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b3b6866c2a65a500a52ccdab92a9eeed8b87fea5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/performance.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:f4531a826181e388760d560fefff25aa8bbe8b00",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/secret-handling.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:3bb08dcaaea7afe971830376a77768161203429a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/security-review.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:99d1ad0abb5c15800ec420c47c11f813aba079b8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/testing.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:72aef5a64dddbd4976a95563fe00083cdfbfb4ae",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/threat-model.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b31b0e05f10933f21aab007db4aab0c5664b7df3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/troubleshooting.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:23d664f6931ec21d9aa3e69107a384dd96255431",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "docs/vector-provenance.md",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:c7c032ef8e4e5c25188d2e497a597936445b7861",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "encoding.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:0bc23508a29d9ffe6d1a0cd2869391ea7d387af4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "errors.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:9d19497f79ab7f9dce3cf1e6f87a3199ba2c4776",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "example_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:c5cdd21eedd9619660da5cb04f4d4f235b6ec136",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "fuzz_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:5749445e884896b363316c66f299fa568264e8ec",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "go.mod",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:2f53f1f60b28716d333a6831893f008b70fd65ab",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "go.sum",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:3a6a89a3d64fc797ca847e5d489686815b86cea6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "lifecycle_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:7856459b1f9923cc787d062d54982d0846a352f5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "modules.json",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:a2dc2f446a5d4f06da496c6f2d3c44274a55bcaf",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "mutation_boundaries_internal_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:c42b9e0955d1741fe8a3c5a28128e18818561edc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "observation.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:a49a788997295dbf3a805f389b00f3d552c7be4c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "observation_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:880eb3f1bb99e04936a80c3f2bcff154e43dc62b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "packages.json",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:379950b7ab806a0047b7866300573ea3fec55e05",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "parameters.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:33d9d696323b5b590daf1929e15db762d1cee8b5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "password_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:7947c2cf017c7bd8b6b0b2d168dc700685019a6a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "passwordauth/doc.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:d627307cc6a95e85db80b6720ba70ecfdd926ec4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "passwordauth/example_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:5fe57d196b981319e28100fadca47912cacf974d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "passwordauth/passwordauth.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:187c457f2276c43cec6f8d5adf90a5280c0817eb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "passwordauth/passwordauth_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:e935d9cd33374a19302a3b0e17307b53898eadd8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "passwordservice/doc.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:5cc0abf2ceed111c300406ad2dcfc3282e3a45e5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "passwordservice/passwordservice.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:228a2dd173d7932539e02b6adb75ceead2fca2e0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "passwordservice/passwordservice_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:0b8bf59b76ff2956319488b36714cb2782c6190f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "passwordtest/doc.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b7e64e5749cfc2afcd6550bf7b5c34655ac524fe",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "passwordtest/passwordtest.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:54383450e96f121f922b55525e0014196f0f7172",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "passwordtest/passwordtest_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:f532eb62e5e9d5f65deb42ca28c8635fe449287c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "policy.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b3acd1dd589cfc463d904847ffa243df28076b97",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "rehash_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:1e2fa1000ce0805ee170460229671d1f22b068ad",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "resource_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:1661fdec315533898bc0a632aec4d9146e4ac995",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "scripts/check-api-docs.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:25726a5db8988a82ce6f5aadb372c64d9220eb8d",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "password",
+          "path": "scripts/check-api-docs.sh",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:23f55edb9aedc0029e6208b52159f5178bb1ee5a",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "password",
+          "path": "scripts/check-benchmarks.sh",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:4159c5065e5966762d3d6936933cfd99d66c0d07",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "password",
+          "path": "scripts/check-boundaries.sh",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:6360c13b9a30a6be8cc9796dd6f6a97591d175d1",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "password",
+          "path": "scripts/check-docs.sh",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:d63158750193bb38628015ba59925b478ad65b11",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "password",
+          "path": "scripts/check-interoperability.sh",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:c39d7fd629036504cd8f0ab3abb7ddf0f3ce402a",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "password",
+          "path": "scripts/check-kubernetes-benchmarks.sh",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b0a2a35367cbf030d338499fe99467cd2d2b1931",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "scripts/check-markdown-links.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:54962042f54d71c1af61021f958f232437890911",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "password",
+          "path": "scripts/check-portability.sh",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:b5e42ddd3a2c13415e681dde5d4ec9a6288c59e6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "scripts/generate-interoperability.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:8af5cd027e21cc94359ab15f3e97788f0fb10167",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "scripts/verify-interoperability.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:67f98419c5da503c1fd88f979d7bef5522a15e48",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "secret.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:64152534eae5314bfeaa105276f2ce6fef721d27",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "secret_contract_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:a5c0aba933ff17882734800d9793969d42f033ca",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "secret_example_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:04a7bce74a2791466ebecd7fb18d39dae5ae2ad3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "secret_fuzz_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:aef123c894ef752b86b2dee3b8750d66f6270084",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "secret_internal_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:4c1753117742702b29db9abc017ceb38ac449d53",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "security_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:96450ed801b53747fae43c72c3c7394159cbb1bd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "service.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:a2c61259f4d8aebca35182b73fa809ae158a573f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "service_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:9c66d979288a660cda3a43e60ab7124149ec7cbf",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "timing_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:27f0e93f6ad86f0bbd1c8b112303f4dc4f9fd0f7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "vectors_test.go",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        },
+        {
+          "content_identity": "git-sha1:f0095fd2e73fc04e010d155534e74f8b1092e150",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "password",
+          "path": "verification/package.mk",
+          "reason": "Immutable package, fixtures, documentation and native gate inputs; excludes execution outputs only"
+        }
+      ],
+      "object_format": "git-sha1",
+      "repository_identity": "github.com/faustbrian/go-password",
+      "revision": "a3dbd862340c48376fab7285cae33ee23cd09409",
+      "tree": "git-sha1:89702dc6314a58584e49ed305d144c8faba27bf9"
+    }
+  ],
+  "schema_version": 2
+}

@@ -1,0 +1,37 @@
+
+[.] benchmark
+go: downloading go1.26.6 (darwin/arm64)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.209s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/apikey
+cpu: Apple M4 Max
+BenchmarkStaticAuthenticate-16    	 1347441	       898.9 ns/op	    1072 B/op	      18 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/apikey	1.397s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/authhttp
+cpu: Apple M4 Max
+BenchmarkBearerAuthorizationExtraction-16    	14972635	        81.67 ns/op	      16 B/op	       1 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	1.461s
+PASS
+ok  	github.com/faustbrian/go-authentication/authlog	0.206s
+PASS
+ok  	github.com/faustbrian/go-authentication/authtest	0.226s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/basic
+cpu: Apple M4 Max
+BenchmarkStaticAuthenticate-16    	 1245544	       959.4 ns/op	    1072 B/op	      18 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/basic	1.385s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/bearer
+cpu: Apple M4 Max
+BenchmarkStaticAuthenticate-16    	 2964876	       435.7 ns/op	     528 B/op	       9 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/bearer	1.495s

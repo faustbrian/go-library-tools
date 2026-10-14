@@ -1,0 +1,110 @@
+{
+  "$schema": "http://cyclonedx.org/schema/bom-1.6.schema.json",
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "tools": [
+      {
+        "vendor": "CycloneDX",
+        "name": "cyclonedx-gomod",
+        "version": "v1.10.0",
+        "hashes": [
+          {
+            "alg": "MD5",
+            "content": "1b7b5b62870b32e4c547f3269a912a2c"
+          },
+          {
+            "alg": "SHA-1",
+            "content": "9aa29572b345cbce39b574e030cf5b9132c68caa"
+          },
+          {
+            "alg": "SHA-256",
+            "content": "81c401d6db625514018e4dbf9251d98e64e07f2e05518fd59ce309cfc6dfcce3"
+          },
+          {
+            "alg": "SHA-384",
+            "content": "7ad38f75b7b439834fbe564cc800f49ff50ad3d13a342e33f44bf129948d8de599812bff9b520fca796d88a82dd26198"
+          },
+          {
+            "alg": "SHA-512",
+            "content": "2a1d13fb41829c1950f78f1872531045c1560cee5d2ed0f76589d3729cf95d6cf8891c19b23e80cc2efc204d4710bf7686ed0496aaf4daf4cc1d69ef89ac7d3a"
+          }
+        ],
+        "externalReferences": [
+          {
+            "url": "https://github.com/CycloneDX/cyclonedx-gomod",
+            "type": "vcs"
+          },
+          {
+            "url": "https://cyclonedx.org",
+            "type": "website"
+          }
+        ]
+      }
+    ],
+    "component": {
+      "bom-ref": "pkg:golang/github.com/faustbrian/go-authentication?type=module",
+      "type": "library",
+      "name": "github.com/faustbrian/go-authentication",
+      "purl": "pkg:golang/github.com/faustbrian/go-authentication?goarch=arm64\u0026goos=darwin\u0026type=module",
+      "externalReferences": [
+        {
+          "url": "https://github.com/faustbrian/go-authentication",
+          "type": "vcs"
+        }
+      ],
+      "evidence": {
+        "licenses": [
+          {
+            "license": {
+              "id": "MIT"
+            }
+          }
+        ]
+      }
+    }
+  },
+  "components": [
+    {
+      "bom-ref": "pkg:golang/github.com/faustbrian/go-clock@v1.0.0?type=module",
+      "type": "library",
+      "name": "github.com/faustbrian/go-clock",
+      "version": "v1.0.0",
+      "scope": "required",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "17b604a2e53de19bb6984c4505ea7b25611af27333ed6cd68bf48fac3cf6c896"
+        }
+      ],
+      "purl": "pkg:golang/github.com/faustbrian/go-clock@v1.0.0?goarch=arm64\u0026goos=darwin\u0026type=module",
+      "externalReferences": [
+        {
+          "url": "https://github.com/faustbrian/go-clock",
+          "type": "vcs"
+        }
+      ],
+      "evidence": {
+        "licenses": [
+          {
+            "license": {
+              "id": "MIT"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "dependencies": [
+    {
+      "ref": "pkg:golang/github.com/faustbrian/go-authentication?type=module",
+      "dependsOn": [
+        "pkg:golang/github.com/faustbrian/go-clock@v1.0.0?type=module"
+      ]
+    },
+    {
+      "ref": "pkg:golang/github.com/faustbrian/go-clock@v1.0.0?type=module"
+    }
+  ]
+}

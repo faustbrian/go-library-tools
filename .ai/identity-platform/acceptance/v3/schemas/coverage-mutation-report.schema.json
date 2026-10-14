@@ -1,0 +1,1491 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity-platform.acceptance.coverage-mutation-report.v1",
+  "title": "coverage-mutation-report acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "result",
+    "control_repository",
+    "package_repository",
+    "input_manifest",
+    "input_root",
+    "observations",
+    "artifact_hashes",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 3
+    },
+    "artifact_id": {
+      "const": "coverage-mutation-report"
+    },
+    "result": {
+      "const": {
+        "status": "pass",
+        "gate": "make check MODULES=pkg/identity/reference"
+      }
+    },
+    "control_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "control"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-library-tools"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "package_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "package"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-identity"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "input_manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "repositories",
+        "environment_inputs"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 2
+        },
+        "repositories": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "prefixItems": [
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "items": false
+        },
+        "environment_inputs": {
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "input_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "coverage-mutation-report.cross.final-acceptance.v1.behavior"
+              },
+              "claim_id": {
+                "const": "cross.final-acceptance.v1"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.coverage-mutation-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure"
+              },
+              "preconditions": {
+                "const": "Operations: make check MODULES=pkg/identity/reference; exact inputs: package_set, coverage_profiles, mutation_profiles; initial state: all affected production packages and viable mutants are selected"
+              },
+              "stimulus": {
+                "const": "Run make check MODULES=pkg/identity/reference for success, failure cases using package_set, coverage_profiles, mutation_profiles and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: every package reports exact 100 percent statement coverage and every viable mutant is killed; stable outcomes: success=pass/none, failure=failed/internal; required artifact fields: package_count, statement_coverage_basis_points, viable_mutant_count, killed_mutant_count, report_digest, affected_package_results, viable_mutant_results, affected_package_manifest_sha256, viable_mutant_manifest_sha256"
+              },
+              "actual_outcome": {
+                "const": "Invariant: every package reports exact 100 percent statement coverage and every viable mutant is killed; stable outcomes: success=pass/none, failure=failed/internal; required artifact fields: package_count, statement_coverage_basis_points, viable_mutant_count, killed_mutant_count, report_digest, affected_package_results, viable_mutant_results, affected_package_manifest_sha256, viable_mutant_manifest_sha256"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "artifact_hashes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.ai/[A-Za-z0-9._/-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "const": ".ai/identity-platform/evidence/artifacts/coverage-mutation-report.json"
+          }
+        }
+      },
+      "minContains": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "coverage-mutation-report.cross.final-acceptance.v1.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "artifact_hashes": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "const": ".ai/identity-platform/evidence/executions/coverage-mutation-report.json"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    }
+  ],
+  "x-cross-field-rules": [
+    "every observations[].artifact_sha256 value must equal one artifact_hashes[].sha256 value",
+    "artifact_hashes must bind the artifact-specific evidence object at .ai/identity-platform/evidence/artifacts/coverage-mutation-report.json",
+    "artifact_hashes must bind the separately captured coordinator execution receipt at .ai/identity-platform/evidence/executions/coverage-mutation-report.json",
+    "control and package repository bindings have distinct identities, revisions, trees, and runtime workdirs",
+    "input_root is the repository-qualified v2 input-manifest fingerprint"
+  ],
+  "$defs": {
+    "artifact_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "invariant_id",
+        "invariant",
+        "operation_ids",
+        "input_digest",
+        "execution",
+        "scenario_cases",
+        "package_count",
+        "statement_coverage_basis_points",
+        "viable_mutant_count",
+        "killed_mutant_count",
+        "report_digest",
+        "affected_package_results",
+        "viable_mutant_results",
+        "affected_package_manifest_sha256",
+        "viable_mutant_manifest_sha256"
+      ],
+      "properties": {
+        "artifact_id": {
+          "const": "coverage-mutation-report"
+        },
+        "invariant_id": {
+          "const": "coverage-mutation-report.invariant"
+        },
+        "invariant": {
+          "const": "every package reports exact 100 percent statement coverage and every viable mutant is killed"
+        },
+        "operation_ids": {
+          "const": [
+            "make check MODULES=pkg/identity/reference"
+          ]
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "execution_identity",
+            "execution_receipt_path",
+            "execution_receipt_sha256",
+            "capture_authority",
+            "logical_module",
+            "producer_argv",
+            "verifier_argv",
+            "control_repository",
+            "package_repository",
+            "input_root",
+            "sandbox_environment_sha256",
+            "executable_realpath",
+            "executable_sha256",
+            "verifier_executable_realpath",
+            "verifier_executable_sha256",
+            "verifier_driver_realpath",
+            "verifier_driver_sha256",
+            "version_argv",
+            "version_stdout",
+            "version_stderr",
+            "verifier_version_argv",
+            "verifier_version_stdout",
+            "verifier_version_stderr",
+            "environment_probe_argv",
+            "environment_probe_stdout",
+            "environment_probe_stderr",
+            "verifier_exit_status",
+            "verifier_stdout",
+            "verifier_stderr",
+            "verifier_attestation_sha256",
+            "started_at",
+            "completed_at",
+            "exit_status",
+            "stdout",
+            "stdout_byte_length",
+            "stdout_sha256",
+            "stderr",
+            "stderr_byte_length",
+            "stderr_sha256",
+            "captured_output_sha256",
+            "raw_capture_sha256",
+            "output_artifact_path",
+            "artifact_payload_binding",
+            "package_discovery_argv",
+            "mutation_tool_argv",
+            "mutation_tool_output_sha256",
+            "package_manifest_sha256",
+            "mutant_manifest_sha256"
+          ],
+          "properties": {
+            "execution_identity": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "execution_receipt_path": {
+              "const": ".ai/identity-platform/evidence/executions/coverage-mutation-report.json"
+            },
+            "execution_receipt_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "capture_authority": {
+              "const": "coordinator-owned-execution-runner/v4"
+            },
+            "logical_module": {
+              "const": "pkg/identity/reference"
+            },
+            "producer_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "check",
+                "--module",
+                "reference"
+              ]
+            },
+            "verifier_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "/Users/brian/Developer/.worktrees/golib-go-library-tools-identity-platform/.ai/identity-platform/acceptance/schema_validation.rb",
+                "verify",
+                "coverage-mutation-report"
+              ]
+            },
+            "control_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "control"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "package_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "package"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-identity"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "input_root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "sandbox_environment_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_driver_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_driver_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "--version"
+              ]
+            },
+            "version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "--version"
+              ]
+            },
+            "verifier_version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "verifier_version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "environment_probe_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "uname",
+                "-a"
+              ]
+            },
+            "environment_probe_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "environment_probe_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_exit_status": {
+              "const": 0
+            },
+            "verifier_stdout": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_attestation_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "started_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "completed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "exit_status": {
+              "const": 0
+            },
+            "stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1048576
+            },
+            "stdout_byte_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "stdout_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "stderr_byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "stderr_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "captured_output_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "raw_capture_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "output_artifact_path": {
+              "const": ".ai/identity-platform/evidence/artifacts/coverage-mutation-report.json"
+            },
+            "artifact_payload_binding": {
+              "const": "record.artifact_hashes[path,sha256]"
+            },
+            "package_discovery_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "/Users/brian/Developer/.worktrees/golib-go-library-tools-identity-platform/.ai/identity-platform/acceptance/schema_validation.rb",
+                "discover-packages",
+                "coverage-mutation-report"
+              ]
+            },
+            "mutation_tool_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "/Users/brian/Developer/.worktrees/golib-go-library-tools-identity-platform/.ai/identity-platform/acceptance/schema_validation.rb",
+                "mutation-tool",
+                "pkg/identity/reference"
+              ]
+            },
+            "mutation_tool_output_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "package_manifest_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "mutant_manifest_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            }
+          },
+          "x-execution-proof": 3
+        },
+        "scenario_cases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "observation_id",
+              "claim_id",
+              "invariant_id",
+              "scenario",
+              "operation_ids",
+              "input_fields",
+              "initial_state",
+              "status",
+              "stable_error",
+              "expected_invariant",
+              "observed_state_digest",
+              "observed_event_digest",
+              "transcript_sha256",
+              "artifact_contract_sha256",
+              "observed_value_count",
+              "ordered_steps",
+              "expected_operation_set",
+              "observed_operation_set",
+              "observed_values"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string",
+                "enum": [
+                  "coverage-mutation-report.cross.final-acceptance.v1.behavior#success",
+                  "coverage-mutation-report.cross.final-acceptance.v1.behavior#failure"
+                ]
+              },
+              "observation_id": {
+                "type": "string",
+                "enum": [
+                  "coverage-mutation-report.cross.final-acceptance.v1.behavior"
+                ]
+              },
+              "claim_id": {
+                "type": "string",
+                "enum": [
+                  "cross.final-acceptance.v1"
+                ]
+              },
+              "invariant_id": {
+                "const": "coverage-mutation-report.invariant"
+              },
+              "scenario": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failure"
+                ]
+              },
+              "operation_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "make check MODULES=pkg/identity/reference"
+                  ]
+                }
+              },
+              "input_fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "initial_state": {
+                "const": "all affected production packages and viable mutants are selected"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "failed"
+                ]
+              },
+              "stable_error": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "internal"
+                ]
+              },
+              "expected_invariant": {
+                "const": "every package reports exact 100 percent statement coverage and every viable mutant is killed"
+              },
+              "observed_state_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_event_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "artifact_contract_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_value_count": {
+                "const": 7
+              },
+              "ordered_steps": {
+                "const": [
+                  "precondition-established",
+                  "stimulus-executed",
+                  "outcome-observed",
+                  "transcript-bound"
+                ]
+              },
+              "expected_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "make check MODULES=pkg/identity/reference"
+                  ]
+                }
+              },
+              "observed_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "make check MODULES=pkg/identity/reference"
+                  ]
+                }
+              },
+              "observed_values": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "package_count",
+                  "statement_coverage_basis_points",
+                  "viable_mutant_count",
+                  "killed_mutant_count",
+                  "report_digest",
+                  "affected_package_manifest_sha256",
+                  "viable_mutant_manifest_sha256"
+                ],
+                "properties": {
+                  "package_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "statement_coverage_basis_points": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 10000
+                  },
+                  "viable_mutant_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "killed_mutant_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "report_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "affected_package_manifest_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "viable_mutant_manifest_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            }
+          },
+          "x-exact-scenario-case-fields": [
+            "case_id",
+            "observation_id",
+            "claim_id",
+            "scenario",
+            "operation_ids",
+            "input_fields",
+            "status",
+            "stable_error",
+            "artifact_contract_sha256",
+            "expected_operation_set",
+            "observed_operation_set"
+          ],
+          "x-exact-scenario-cases": [
+            {
+              "case_id": "coverage-mutation-report.cross.final-acceptance.v1.behavior#success",
+              "observation_id": "coverage-mutation-report.cross.final-acceptance.v1.behavior",
+              "claim_id": "cross.final-acceptance.v1",
+              "scenario": "success",
+              "operation_ids": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "input_fields": [
+                "package_set",
+                "coverage_profiles",
+                "mutation_profiles"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:4d30ed3060880bdaf6b58518654e62deb136a839acf0f27013e18bc3097e3fb8",
+              "expected_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "observed_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ]
+            },
+            {
+              "case_id": "coverage-mutation-report.cross.final-acceptance.v1.behavior#failure",
+              "observation_id": "coverage-mutation-report.cross.final-acceptance.v1.behavior",
+              "claim_id": "cross.final-acceptance.v1",
+              "scenario": "failure",
+              "operation_ids": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "input_fields": [
+                "package_set",
+                "coverage_profiles",
+                "mutation_profiles"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:86c265a91442d8f16e29bf1e2db221a4c62e8065e0aed60da847b3db43708cdc",
+              "expected_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ],
+              "observed_operation_set": [
+                "make check MODULES=pkg/identity/reference"
+              ]
+            }
+          ]
+        },
+        "package_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "statement_coverage_basis_points": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "viable_mutant_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "killed_mutant_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "report_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "affected_package_results": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10000,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "package_id",
+              "statement_count",
+              "covered_statement_count",
+              "statement_coverage_basis_points",
+              "profile_sha256",
+              "transcript_sha256"
+            ],
+            "properties": {
+              "package_id": {
+                "type": "string",
+                "pattern": "^pkg/[a-z0-9][a-z0-9./-]*$"
+              },
+              "statement_count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2147483647
+              },
+              "covered_statement_count": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 2147483647
+              },
+              "statement_coverage_basis_points": {
+                "const": 10000
+              },
+              "profile_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        "viable_mutant_results": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1000000,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "mutant_id",
+              "package_id",
+              "operator",
+              "source_locator",
+              "outcome",
+              "transcript_sha256"
+            ],
+            "properties": {
+              "mutant_id": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 512
+              },
+              "package_id": {
+                "type": "string",
+                "pattern": "^pkg/[a-z0-9][a-z0-9./-]*$"
+              },
+              "operator": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "source_locator": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 1024
+              },
+              "outcome": {
+                "const": "killed"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        "affected_package_manifest_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "viable_mutant_manifest_sha256": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "x-semantic-rules": [
+        {
+          "kind": "positive",
+          "fields": [
+            "package_count",
+            "viable_mutant_count",
+            "killed_mutant_count"
+          ]
+        },
+        {
+          "kind": "const",
+          "field": "statement_coverage_basis_points",
+          "value": 10000
+        },
+        {
+          "kind": "equal",
+          "left": "killed_mutant_count",
+          "right": "viable_mutant_count"
+        }
+      ]
+    }
+  }
+}

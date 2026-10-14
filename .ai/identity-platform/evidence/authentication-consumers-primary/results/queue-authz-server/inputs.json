@@ -1,0 +1,34 @@
+{
+  "consumer": "queue-authz-server",
+  "source_repository": "queue",
+  "subdir": ".",
+  "source_inputs_sha256": "3e029c3d47dafe1c2f0da561f5e63f6c2255a4357c7cb2fe6e1a4e2b2b9d48ce",
+  "candidate_revisions": {
+    "authentication": "1c479773ed26604d9cd7cb6ffb471423458abb61",
+    "authorization": "a74c24b3846323e0c1627c6fccbb79ce25248392",
+    "capability": "c43af8abe83f33119ce2b13ec978e556408344f3"
+  },
+  "go_mod_sha256": "4b4e01a8c004756e0a53792e7aa483063d6d46694794bdf85ac0f841b7341f62",
+  "go_sum_sha256": "42fdf7cbf50bc62e9184988de6623828213596130583fd1c1321543ad88c4161",
+  "go_executable_sha256": "548608a910c46de32c65a3934f461b1787acf6ddd371044826068d8503b8509b",
+  "tool_version": "go version go1.27.1 darwin/arm64",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOFLAGS": "-p=2",
+    "GOOS": "darwin",
+    "GOROOT": "/opt/homebrew/Cellar/go/1.27.1/libexec",
+    "GOTOOLCHAIN": "go1.27.1",
+    "GOVERSION": "go1.27.1",
+    "GOWORK": "off"
+  },
+  "argv": [
+    "/opt/homebrew/bin/go",
+    "test",
+    "-race",
+    "-count=1",
+    "-timeout=180s",
+    "./authz",
+    "./server"
+  ]
+}

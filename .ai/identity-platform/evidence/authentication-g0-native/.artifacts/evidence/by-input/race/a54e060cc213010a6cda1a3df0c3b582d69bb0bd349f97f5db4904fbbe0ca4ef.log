@@ -1,0 +1,10 @@
+
+[.] race
+go: downloading go1.26.6 (darwin/arm64)
+ok  	github.com/faustbrian/go-authentication	3.087s
+ok  	github.com/faustbrian/go-authentication/apikey	1.210s
+ok  	github.com/faustbrian/go-authentication/authhttp	1.231s
+ok  	github.com/faustbrian/go-authentication/authlog	1.209s
+ok  	github.com/faustbrian/go-authentication/authtest	1.213s
+ok  	github.com/faustbrian/go-authentication/basic	1.210s
+ok  	github.com/faustbrian/go-authentication/bearer	1.210s

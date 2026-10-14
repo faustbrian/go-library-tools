@@ -1,0 +1,11 @@
+
+[.] test
+go: downloading go1.26.6 (darwin/arm64)
+go: downloading go1.26.6 (darwin/arm64)
+ok  	github.com/faustbrian/go-authentication	1.712s
+ok  	github.com/faustbrian/go-authentication/apikey	0.184s
+ok  	github.com/faustbrian/go-authentication/authhttp	0.194s
+ok  	github.com/faustbrian/go-authentication/authlog	0.180s
+ok  	github.com/faustbrian/go-authentication/authtest	0.188s
+ok  	github.com/faustbrian/go-authentication/basic	0.183s
+ok  	github.com/faustbrian/go-authentication/bearer	0.379s

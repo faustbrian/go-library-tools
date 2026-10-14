@@ -1,0 +1,3066 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity-platform.acceptance.scim-connection-lifecycle-report.v1",
+  "title": "scim-connection-lifecycle-report acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "result",
+    "tested_revision",
+    "gate_execution_revision",
+    "revalidation_revision",
+    "input_manifest",
+    "input_root",
+    "observations",
+    "artifact_hashes",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "artifact_id": {
+      "const": "scim-connection-lifecycle-report"
+    },
+    "result": {
+      "const": {
+        "status": "pass",
+        "gate": "make check MODULES=pkg/identity/reference"
+      }
+    },
+    "tested_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "gate_execution_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "revalidation_revision": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "input_manifest": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path_or_environment_id",
+          "kind",
+          "content_identity",
+          "owner",
+          "reason"
+        ],
+        "properties": {
+          "path_or_environment_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content_identity": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "input_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior"
+              },
+              "claim_id": {
+                "const": "identity.scim.connection-create"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.scim-connection-lifecycle-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.scim.connection-create; exact inputs: tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation; initial state: tenant has no SCIM connection for base_url"
+              },
+              "stimulus": {
+                "const": "Run identity.scim.connection-create for success, failure, denial, outage, cleanup cases using tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "actual_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior"
+              },
+              "claim_id": {
+                "const": "identity.scim.connection-delete"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.scim-connection-lifecycle-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.scim.connection-delete; exact inputs: tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation; initial state: tenant has no SCIM connection for base_url"
+              },
+              "stimulus": {
+                "const": "Run identity.scim.connection-delete for success, failure, denial, outage, cleanup cases using tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "actual_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior"
+              },
+              "claim_id": {
+                "const": "identity.scim.connection-get"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.scim-connection-lifecycle-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.scim.connection-get; exact inputs: tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation; initial state: tenant has no SCIM connection for base_url"
+              },
+              "stimulus": {
+                "const": "Run identity.scim.connection-get for success, failure, denial, outage, cleanup cases using tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "actual_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior"
+              },
+              "claim_id": {
+                "const": "identity.scim.connection-list"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.scim-connection-lifecycle-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.scim.connection-list; exact inputs: tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation; initial state: tenant has no SCIM connection for base_url"
+              },
+              "stimulus": {
+                "const": "Run identity.scim.connection-list for success, failure, denial, outage, cleanup cases using tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "actual_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior"
+              },
+              "claim_id": {
+                "const": "identity.scim.connection-reconcile"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.scim-connection-lifecycle-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.scim.connection-reconcile; exact inputs: tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation; initial state: tenant has no SCIM connection for base_url"
+              },
+              "stimulus": {
+                "const": "Run identity.scim.connection-reconcile for success, failure, denial, outage, cleanup cases using tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "actual_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior"
+              },
+              "claim_id": {
+                "const": "identity.scim.connection-rotate"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.scim-connection-lifecycle-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.scim.connection-rotate; exact inputs: tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation; initial state: tenant has no SCIM connection for base_url"
+              },
+              "stimulus": {
+                "const": "Run identity.scim.connection-rotate for success, failure, denial, outage, cleanup cases using tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "actual_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior"
+              },
+              "claim_id": {
+                "const": "identity.scim.connection-token-revoke"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.scim-connection-lifecycle-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.scim.connection-token-revoke; exact inputs: tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation; initial state: tenant has no SCIM connection for base_url"
+              },
+              "stimulus": {
+                "const": "Run identity.scim.connection-token-revoke for success, failure, denial, outage, cleanup cases using tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "actual_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior"
+              },
+              "claim_id": {
+                "const": "identity.scim.connection-update"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.scim-connection-lifecycle-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.scim.connection-update; exact inputs: tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation; initial state: tenant has no SCIM connection for base_url"
+              },
+              "stimulus": {
+                "const": "Run identity.scim.connection-update for success, failure, denial, outage, cleanup cases using tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "actual_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.journey.scim.v1.behavior"
+              },
+              "claim_id": {
+                "const": "journey.scim.v1"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.scim-connection-lifecycle-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.scim.connection-create, identity.scim.connection-delete, identity.scim.connection-get, identity.scim.connection-list, identity.scim.connection-reconcile, identity.scim.connection-rotate, identity.scim.connection-token-revoke, identity.scim.connection-update; exact inputs: tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation; initial state: tenant has no SCIM connection for base_url"
+              },
+              "stimulus": {
+                "const": "Run identity.scim.connection-create then identity.scim.connection-delete then identity.scim.connection-get then identity.scim.connection-list then identity.scim.connection-reconcile then identity.scim.connection-rotate then identity.scim.connection-token-revoke then identity.scim.connection-update for success, failure, denial, outage, cleanup cases using tenant_id, base_url, bearer_token, mapping_version, delete_failure_point, cascade_id, cascade_generation and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "actual_outcome": {
+                "const": "Invariant: create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: connection_id, cascade_id, token_digest, mapping_version, cascade_generation, old_token_rejected, local_authority_denied, delete_required_consumer_count, delete_closed_consumer_count, delete_outcome_unknown_count, remaining_schedule_count, delete_cascade_digest, connection_cascade_results"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "artifact_hashes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.ai/[A-Za-z0-9._/-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "const": ".ai/identity-platform/evidence/artifacts/scim-connection-lifecycle-report.json"
+          }
+        }
+      },
+      "minContains": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-connection-lifecycle-report.journey.scim.v1.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "artifact_hashes": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "const": ".ai/identity-platform/evidence/executions/scim-connection-lifecycle-report.json"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    }
+  ],
+  "x-cross-field-rules": [
+    "every observations[].artifact_sha256 value must equal one artifact_hashes[].sha256 value",
+    "artifact_hashes must bind the artifact-specific evidence object at .ai/identity-platform/evidence/artifacts/scim-connection-lifecycle-report.json",
+    "artifact_hashes must bind the separately captured coordinator execution receipt at .ai/identity-platform/evidence/executions/scim-connection-lifecycle-report.json",
+    "revalidation_revision is null exactly when tested_revision equals gate_execution_revision; otherwise it equals gate_execution_revision",
+    "input_root is SHA-256 over RFC 8785 canonical JSON of input_manifest"
+  ],
+  "$defs": {
+    "artifact_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "invariant_id",
+        "invariant",
+        "operation_ids",
+        "input_digest",
+        "execution",
+        "scenario_cases",
+        "connection_id",
+        "cascade_id",
+        "token_digest",
+        "mapping_version",
+        "cascade_generation",
+        "old_token_rejected",
+        "local_authority_denied",
+        "delete_required_consumer_count",
+        "delete_closed_consumer_count",
+        "delete_outcome_unknown_count",
+        "remaining_schedule_count",
+        "delete_cascade_digest",
+        "connection_cascade_results"
+      ],
+      "properties": {
+        "artifact_id": {
+          "const": "scim-connection-lifecycle-report"
+        },
+        "invariant_id": {
+          "const": "scim-connection-lifecycle-report.invariant"
+        },
+        "invariant": {
+          "const": "create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion"
+        },
+        "operation_ids": {
+          "const": [
+            "identity.scim.connection-create",
+            "identity.scim.connection-delete",
+            "identity.scim.connection-get",
+            "identity.scim.connection-list",
+            "identity.scim.connection-reconcile",
+            "identity.scim.connection-rotate",
+            "identity.scim.connection-token-revoke",
+            "identity.scim.connection-update"
+          ]
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "execution_identity",
+            "execution_receipt_path",
+            "execution_receipt_sha256",
+            "capture_authority",
+            "producer_argv",
+            "verifier_argv",
+            "tested_revision",
+            "input_root",
+            "sandbox_environment_sha256",
+            "canonical_workdir",
+            "executable_realpath",
+            "executable_sha256",
+            "verifier_executable_realpath",
+            "verifier_executable_sha256",
+            "verifier_driver_realpath",
+            "verifier_driver_sha256",
+            "version_argv",
+            "version_stdout",
+            "version_stderr",
+            "verifier_version_argv",
+            "verifier_version_stdout",
+            "verifier_version_stderr",
+            "environment_probe_argv",
+            "environment_probe_stdout",
+            "environment_probe_stderr",
+            "verifier_exit_status",
+            "verifier_stdout",
+            "verifier_stderr",
+            "verifier_attestation_sha256",
+            "started_at",
+            "completed_at",
+            "exit_status",
+            "stdout",
+            "stdout_byte_length",
+            "stdout_sha256",
+            "stderr",
+            "stderr_byte_length",
+            "stderr_sha256",
+            "captured_output_sha256",
+            "raw_capture_sha256",
+            "output_artifact_path",
+            "artifact_payload_binding"
+          ],
+          "properties": {
+            "execution_identity": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "execution_receipt_path": {
+              "const": ".ai/identity-platform/evidence/executions/scim-connection-lifecycle-report.json"
+            },
+            "execution_receipt_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "capture_authority": {
+              "const": "coordinator-owned-execution-runner/v3"
+            },
+            "producer_argv": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "make",
+                "check",
+                "MODULES=pkg/identity/reference"
+              ]
+            },
+            "verifier_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                ".ai/identity-platform/acceptance/schema_validation.rb",
+                "verify",
+                "scim-connection-lifecycle-report"
+              ]
+            },
+            "tested_revision": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "input_root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "sandbox_environment_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "canonical_workdir": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_driver_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_driver_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "make",
+                "--version"
+              ]
+            },
+            "version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "--version"
+              ]
+            },
+            "verifier_version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "verifier_version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "environment_probe_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "uname",
+                "-a"
+              ]
+            },
+            "environment_probe_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "environment_probe_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_exit_status": {
+              "const": 0
+            },
+            "verifier_stdout": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_attestation_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "started_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "completed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "exit_status": {
+              "const": 0
+            },
+            "stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1048576
+            },
+            "stdout_byte_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "stdout_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "stderr_byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "stderr_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "captured_output_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "raw_capture_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "output_artifact_path": {
+              "const": ".ai/identity-platform/evidence/artifacts/scim-connection-lifecycle-report.json"
+            },
+            "artifact_payload_binding": {
+              "const": "record.artifact_hashes[path,sha256]"
+            }
+          },
+          "x-execution-proof": 2
+        },
+        "scenario_cases": {
+          "type": "array",
+          "minItems": 45,
+          "maxItems": 45,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "observation_id",
+              "claim_id",
+              "invariant_id",
+              "scenario",
+              "operation_ids",
+              "input_fields",
+              "initial_state",
+              "status",
+              "stable_error",
+              "expected_invariant",
+              "observed_state_digest",
+              "observed_event_digest",
+              "transcript_sha256",
+              "artifact_contract_sha256",
+              "observed_value_count",
+              "ordered_steps",
+              "expected_operation_set",
+              "observed_operation_set",
+              "observed_values"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string",
+                "enum": [
+                  "scim-connection-lifecycle-report.identity.scim.connection-create.behavior#success",
+                  "scim-connection-lifecycle-report.identity.scim.connection-create.behavior#failure",
+                  "scim-connection-lifecycle-report.identity.scim.connection-create.behavior#denial",
+                  "scim-connection-lifecycle-report.identity.scim.connection-create.behavior#outage",
+                  "scim-connection-lifecycle-report.identity.scim.connection-create.behavior#cleanup",
+                  "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior#success",
+                  "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior#failure",
+                  "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior#denial",
+                  "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior#outage",
+                  "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior#cleanup",
+                  "scim-connection-lifecycle-report.identity.scim.connection-get.behavior#success",
+                  "scim-connection-lifecycle-report.identity.scim.connection-get.behavior#failure",
+                  "scim-connection-lifecycle-report.identity.scim.connection-get.behavior#denial",
+                  "scim-connection-lifecycle-report.identity.scim.connection-get.behavior#outage",
+                  "scim-connection-lifecycle-report.identity.scim.connection-get.behavior#cleanup",
+                  "scim-connection-lifecycle-report.identity.scim.connection-list.behavior#success",
+                  "scim-connection-lifecycle-report.identity.scim.connection-list.behavior#failure",
+                  "scim-connection-lifecycle-report.identity.scim.connection-list.behavior#denial",
+                  "scim-connection-lifecycle-report.identity.scim.connection-list.behavior#outage",
+                  "scim-connection-lifecycle-report.identity.scim.connection-list.behavior#cleanup",
+                  "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior#success",
+                  "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior#failure",
+                  "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior#denial",
+                  "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior#outage",
+                  "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior#cleanup",
+                  "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior#success",
+                  "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior#failure",
+                  "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior#denial",
+                  "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior#outage",
+                  "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior#cleanup",
+                  "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior#success",
+                  "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior#failure",
+                  "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior#denial",
+                  "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior#outage",
+                  "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior#cleanup",
+                  "scim-connection-lifecycle-report.identity.scim.connection-update.behavior#success",
+                  "scim-connection-lifecycle-report.identity.scim.connection-update.behavior#failure",
+                  "scim-connection-lifecycle-report.identity.scim.connection-update.behavior#denial",
+                  "scim-connection-lifecycle-report.identity.scim.connection-update.behavior#outage",
+                  "scim-connection-lifecycle-report.identity.scim.connection-update.behavior#cleanup",
+                  "scim-connection-lifecycle-report.journey.scim.v1.behavior#success",
+                  "scim-connection-lifecycle-report.journey.scim.v1.behavior#failure",
+                  "scim-connection-lifecycle-report.journey.scim.v1.behavior#denial",
+                  "scim-connection-lifecycle-report.journey.scim.v1.behavior#outage",
+                  "scim-connection-lifecycle-report.journey.scim.v1.behavior#cleanup"
+                ]
+              },
+              "observation_id": {
+                "type": "string",
+                "enum": [
+                  "scim-connection-lifecycle-report.identity.scim.connection-create.behavior",
+                  "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior",
+                  "scim-connection-lifecycle-report.identity.scim.connection-get.behavior",
+                  "scim-connection-lifecycle-report.identity.scim.connection-list.behavior",
+                  "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior",
+                  "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior",
+                  "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior",
+                  "scim-connection-lifecycle-report.identity.scim.connection-update.behavior",
+                  "scim-connection-lifecycle-report.journey.scim.v1.behavior"
+                ]
+              },
+              "claim_id": {
+                "type": "string",
+                "enum": [
+                  "identity.scim.connection-create",
+                  "identity.scim.connection-delete",
+                  "identity.scim.connection-get",
+                  "identity.scim.connection-list",
+                  "identity.scim.connection-reconcile",
+                  "identity.scim.connection-rotate",
+                  "identity.scim.connection-token-revoke",
+                  "identity.scim.connection-update",
+                  "journey.scim.v1"
+                ]
+              },
+              "invariant_id": {
+                "const": "scim-connection-lifecycle-report.invariant"
+              },
+              "scenario": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failure",
+                  "denial",
+                  "outage",
+                  "cleanup"
+                ]
+              },
+              "operation_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.scim.connection-create",
+                    "identity.scim.connection-delete",
+                    "identity.scim.connection-get",
+                    "identity.scim.connection-list",
+                    "identity.scim.connection-reconcile",
+                    "identity.scim.connection-rotate",
+                    "identity.scim.connection-token-revoke",
+                    "identity.scim.connection-update"
+                  ]
+                }
+              },
+              "input_fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "initial_state": {
+                "const": "tenant has no SCIM connection for base_url"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "failed",
+                  "denied",
+                  "unavailable"
+                ]
+              },
+              "stable_error": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "internal",
+                  "forbidden",
+                  "unavailable"
+                ]
+              },
+              "expected_invariant": {
+                "const": "create stores only token digest, rotate invalidates old token, and revoke stops calls; delete atomically denies local bearer/provisioning authority and closes only after every scim_connection_delete consumer reports applied, not-applicable, or an eligible limitation, while pending and outcome-unknown remain visible and provider ambiguity never claims deletion"
+              },
+              "observed_state_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_event_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "artifact_contract_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_value_count": {
+                "const": 12
+              },
+              "ordered_steps": {
+                "const": [
+                  "precondition-established",
+                  "stimulus-executed",
+                  "outcome-observed",
+                  "transcript-bound"
+                ]
+              },
+              "expected_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.scim.connection-create",
+                    "identity.scim.connection-delete",
+                    "identity.scim.connection-get",
+                    "identity.scim.connection-list",
+                    "identity.scim.connection-reconcile",
+                    "identity.scim.connection-rotate",
+                    "identity.scim.connection-token-revoke",
+                    "identity.scim.connection-update"
+                  ]
+                }
+              },
+              "observed_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.scim.connection-create",
+                    "identity.scim.connection-delete",
+                    "identity.scim.connection-get",
+                    "identity.scim.connection-list",
+                    "identity.scim.connection-reconcile",
+                    "identity.scim.connection-rotate",
+                    "identity.scim.connection-token-revoke",
+                    "identity.scim.connection-update"
+                  ]
+                }
+              },
+              "observed_values": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "connection_id",
+                  "cascade_id",
+                  "token_digest",
+                  "mapping_version",
+                  "cascade_generation",
+                  "old_token_rejected",
+                  "local_authority_denied",
+                  "delete_required_consumer_count",
+                  "delete_closed_consumer_count",
+                  "delete_outcome_unknown_count",
+                  "remaining_schedule_count",
+                  "delete_cascade_digest"
+                ],
+                "properties": {
+                  "connection_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "cascade_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "token_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "mapping_version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9223372036854775807
+                  },
+                  "cascade_generation": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9223372036854775807
+                  },
+                  "old_token_rejected": {
+                    "type": "boolean"
+                  },
+                  "local_authority_denied": {
+                    "type": "boolean"
+                  },
+                  "delete_required_consumer_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "delete_closed_consumer_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "delete_outcome_unknown_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "remaining_schedule_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "delete_cascade_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            }
+          },
+          "x-exact-scenario-case-fields": [
+            "case_id",
+            "observation_id",
+            "claim_id",
+            "scenario",
+            "operation_ids",
+            "input_fields",
+            "status",
+            "stable_error",
+            "artifact_contract_sha256",
+            "expected_operation_set",
+            "observed_operation_set"
+          ],
+          "x-exact-scenario-cases": [
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior#success",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior",
+              "claim_id": "identity.scim.connection-create",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.scim.connection-create"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:4819829d84bce9ebdf1050a4703c4b8d1c496f61f2c87d602ed8b7fc2c1fdd7d",
+              "expected_operation_set": [
+                "identity.scim.connection-create"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-create"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior#failure",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior",
+              "claim_id": "identity.scim.connection-create",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.scim.connection-create"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:8634f7bc9074ed8f5a4027f05c18dcd256f299dd5b1f64276adadf2853849473",
+              "expected_operation_set": [
+                "identity.scim.connection-create"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-create"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior#denial",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior",
+              "claim_id": "identity.scim.connection-create",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.scim.connection-create"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:7036569f05cd0b835e778b131f5b67326625e2b58ee76c7e11875a14db877c79",
+              "expected_operation_set": [
+                "identity.scim.connection-create"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-create"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior#outage",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior",
+              "claim_id": "identity.scim.connection-create",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.scim.connection-create"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:abc8433ef3c0c128750094bf8b06853d693e99da15898ad6c0365f3fc8ae44e8",
+              "expected_operation_set": [
+                "identity.scim.connection-create"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-create"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior#cleanup",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-create.behavior",
+              "claim_id": "identity.scim.connection-create",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.scim.connection-create"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:710b33acb745729c2788b07b96ac05025f5d051d467f7345bdd324115c55242e",
+              "expected_operation_set": [
+                "identity.scim.connection-create"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-create"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior#success",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior",
+              "claim_id": "identity.scim.connection-delete",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.scim.connection-delete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:7ceb65c5867d4fba84a8900919ab97464874bdab9e05d97879edb928fc164658",
+              "expected_operation_set": [
+                "identity.scim.connection-delete"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-delete"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior#failure",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior",
+              "claim_id": "identity.scim.connection-delete",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.scim.connection-delete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:1c9175d07f2fe982b31e1e4ae8676c7594a7368828f5c8bf4031ca3d7ee20fb2",
+              "expected_operation_set": [
+                "identity.scim.connection-delete"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-delete"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior#denial",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior",
+              "claim_id": "identity.scim.connection-delete",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.scim.connection-delete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:0dc494953aa4d99d967b7e83ac67628f8fa65cc3e5a8046071cd31f2ccb9be67",
+              "expected_operation_set": [
+                "identity.scim.connection-delete"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-delete"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior#outage",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior",
+              "claim_id": "identity.scim.connection-delete",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.scim.connection-delete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:6905e45eeaa9929549ee19ee4fdcee71cac5473818ca27803371898fe54c5841",
+              "expected_operation_set": [
+                "identity.scim.connection-delete"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-delete"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior#cleanup",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-delete.behavior",
+              "claim_id": "identity.scim.connection-delete",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.scim.connection-delete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:4d3182f99869f8b978a20b076b5253a033e409ec5d868365d7e27d90525257df",
+              "expected_operation_set": [
+                "identity.scim.connection-delete"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-delete"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior#success",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior",
+              "claim_id": "identity.scim.connection-get",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.scim.connection-get"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:d50d4141e94a4ccfd2049ae86ac570a724e803556e7f48359c434adc858c3331",
+              "expected_operation_set": [
+                "identity.scim.connection-get"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-get"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior#failure",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior",
+              "claim_id": "identity.scim.connection-get",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.scim.connection-get"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:821afae953300f45b8f385f44b1a1decd3ade7d50afb3a29c4aaf2001ee57e5a",
+              "expected_operation_set": [
+                "identity.scim.connection-get"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-get"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior#denial",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior",
+              "claim_id": "identity.scim.connection-get",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.scim.connection-get"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:8b6bd303d403a79f21d56777ae393c389d159e1c63ab3fdcde0c82c53c0b2cfb",
+              "expected_operation_set": [
+                "identity.scim.connection-get"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-get"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior#outage",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior",
+              "claim_id": "identity.scim.connection-get",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.scim.connection-get"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:48b7fd0cde71c35db82b8969f135c4bac74daa30f63cbeba5d9c9f0b5cff6844",
+              "expected_operation_set": [
+                "identity.scim.connection-get"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-get"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior#cleanup",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-get.behavior",
+              "claim_id": "identity.scim.connection-get",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.scim.connection-get"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:5b5b77cb576d768cb539eddc1b1ab54a8324b1be4f01b4c3b6f265ef7a27432c",
+              "expected_operation_set": [
+                "identity.scim.connection-get"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-get"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior#success",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior",
+              "claim_id": "identity.scim.connection-list",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.scim.connection-list"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:1ee29078795199917bab0bddb5167a929a60b25b5311ecc99e8ddcf463eb257c",
+              "expected_operation_set": [
+                "identity.scim.connection-list"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-list"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior#failure",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior",
+              "claim_id": "identity.scim.connection-list",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.scim.connection-list"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:973a9f3f4ab346ed430055a1bb469821dd3e4ef2056dcc1537801acefc59c794",
+              "expected_operation_set": [
+                "identity.scim.connection-list"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-list"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior#denial",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior",
+              "claim_id": "identity.scim.connection-list",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.scim.connection-list"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:a46f03036a202e2e17e9cc7f2af05dcdcf79d00cef656d73d4a6ba65003a5c8d",
+              "expected_operation_set": [
+                "identity.scim.connection-list"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-list"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior#outage",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior",
+              "claim_id": "identity.scim.connection-list",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.scim.connection-list"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:31cfc5cdfd1bc309d927da0b29973f8a46afe5d63725f2c01c1df12d9f6f7410",
+              "expected_operation_set": [
+                "identity.scim.connection-list"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-list"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior#cleanup",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-list.behavior",
+              "claim_id": "identity.scim.connection-list",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.scim.connection-list"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:3505cc1262410d41ce68888876fc41f3d7a51c504909f4fa0b4e6f91d16d537f",
+              "expected_operation_set": [
+                "identity.scim.connection-list"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-list"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior#success",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior",
+              "claim_id": "identity.scim.connection-reconcile",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.scim.connection-reconcile"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:b9ee8d82cb5b7def944ceab94d79b8a30cb5ce798b333f112edc6b068b96ec22",
+              "expected_operation_set": [
+                "identity.scim.connection-reconcile"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-reconcile"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior#failure",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior",
+              "claim_id": "identity.scim.connection-reconcile",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.scim.connection-reconcile"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:f7a55351dd29221ddd4da07479992d317715e93e1de27033582652a7de4c5640",
+              "expected_operation_set": [
+                "identity.scim.connection-reconcile"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-reconcile"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior#denial",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior",
+              "claim_id": "identity.scim.connection-reconcile",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.scim.connection-reconcile"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:98deb71629b574bf0136d3cb9bbb72726575c65f5b2f4b1d035b73b839a2e230",
+              "expected_operation_set": [
+                "identity.scim.connection-reconcile"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-reconcile"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior#outage",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior",
+              "claim_id": "identity.scim.connection-reconcile",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.scim.connection-reconcile"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:0aab690a236a0de964f6010973c8fc4b0171f34985a54a9fae452546ca69c3de",
+              "expected_operation_set": [
+                "identity.scim.connection-reconcile"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-reconcile"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior#cleanup",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-reconcile.behavior",
+              "claim_id": "identity.scim.connection-reconcile",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.scim.connection-reconcile"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:51a644104971041b54dbf71bfed5944276c3ee3ed13885c9a71712eadb6a9b02",
+              "expected_operation_set": [
+                "identity.scim.connection-reconcile"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-reconcile"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior#success",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior",
+              "claim_id": "identity.scim.connection-rotate",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.scim.connection-rotate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:783f915f32b157f3d08c4596e6f6b28ce8b8fd4a46009ee2ec5fa0c22263e2be",
+              "expected_operation_set": [
+                "identity.scim.connection-rotate"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-rotate"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior#failure",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior",
+              "claim_id": "identity.scim.connection-rotate",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.scim.connection-rotate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:4d7aff12a717eed07fbb66c3ed8fd34c519237896967884bab1d6045ccc7dc27",
+              "expected_operation_set": [
+                "identity.scim.connection-rotate"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-rotate"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior#denial",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior",
+              "claim_id": "identity.scim.connection-rotate",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.scim.connection-rotate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:d61de2895cdc4f0c3f05a74a1763072decc25a7fefa55e79df0adc853da3f4c7",
+              "expected_operation_set": [
+                "identity.scim.connection-rotate"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-rotate"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior#outage",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior",
+              "claim_id": "identity.scim.connection-rotate",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.scim.connection-rotate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:79e6e58877120e99a7575f2a65c69f0052733df24abdd789be40ea7827af643c",
+              "expected_operation_set": [
+                "identity.scim.connection-rotate"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-rotate"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior#cleanup",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-rotate.behavior",
+              "claim_id": "identity.scim.connection-rotate",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.scim.connection-rotate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:610f4bd90a1dee054174aaf6c92962bf89408bbb1e75ad1e1e3f6584970ea71e",
+              "expected_operation_set": [
+                "identity.scim.connection-rotate"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-rotate"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior#success",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior",
+              "claim_id": "identity.scim.connection-token-revoke",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.scim.connection-token-revoke"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:1ad80a467ed7522bd7b553b8b4c5c58d8276b23c3157e8b5244fa76e22de0ecb",
+              "expected_operation_set": [
+                "identity.scim.connection-token-revoke"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-token-revoke"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior#failure",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior",
+              "claim_id": "identity.scim.connection-token-revoke",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.scim.connection-token-revoke"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:6f280ed64e416a0b0d17b0f429d82cbea85b773024da7ead38a3146f117f674e",
+              "expected_operation_set": [
+                "identity.scim.connection-token-revoke"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-token-revoke"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior#denial",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior",
+              "claim_id": "identity.scim.connection-token-revoke",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.scim.connection-token-revoke"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:96e803b38520dc5ea55c1891c318357baf9d74faa6f359664ca195b0f4f47121",
+              "expected_operation_set": [
+                "identity.scim.connection-token-revoke"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-token-revoke"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior#outage",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior",
+              "claim_id": "identity.scim.connection-token-revoke",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.scim.connection-token-revoke"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:0a58281e56f8dfddf255e76f1a57b565a3e5821b77e9eb715f0ec48f51a6d387",
+              "expected_operation_set": [
+                "identity.scim.connection-token-revoke"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-token-revoke"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior#cleanup",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-token-revoke.behavior",
+              "claim_id": "identity.scim.connection-token-revoke",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.scim.connection-token-revoke"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:6fd581cbcee4d1144028410e49cc5568d21bb495cf5071a2da175d0dcc5f3dcc",
+              "expected_operation_set": [
+                "identity.scim.connection-token-revoke"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-token-revoke"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior#success",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior",
+              "claim_id": "identity.scim.connection-update",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.scim.connection-update"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:34848e7f8981d9f6a1de40a9b7b2b85966e5131066c580592ae469ae3169845d",
+              "expected_operation_set": [
+                "identity.scim.connection-update"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-update"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior#failure",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior",
+              "claim_id": "identity.scim.connection-update",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.scim.connection-update"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:394d373c630be9393a5c7be5f528715121a5ecba944b59ea8da82555b805bc71",
+              "expected_operation_set": [
+                "identity.scim.connection-update"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-update"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior#denial",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior",
+              "claim_id": "identity.scim.connection-update",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.scim.connection-update"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:f5805b716f78156baf3680d18db5119d8d563ccd764ac7735b978a6367de1dea",
+              "expected_operation_set": [
+                "identity.scim.connection-update"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-update"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior#outage",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior",
+              "claim_id": "identity.scim.connection-update",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.scim.connection-update"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:2507f0226aa2d145150bdbdedec7712460fdc0bf93b5d3ef394c46abdcbba420",
+              "expected_operation_set": [
+                "identity.scim.connection-update"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-update"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior#cleanup",
+              "observation_id": "scim-connection-lifecycle-report.identity.scim.connection-update.behavior",
+              "claim_id": "identity.scim.connection-update",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.scim.connection-update"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:8aaa98004cc5fa80af37d9656d5ef93eb7354d6048132346a60690c4c09d8253",
+              "expected_operation_set": [
+                "identity.scim.connection-update"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-update"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.journey.scim.v1.behavior#success",
+              "observation_id": "scim-connection-lifecycle-report.journey.scim.v1.behavior",
+              "claim_id": "journey.scim.v1",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:4f98b1c5e202436f33ca53eafd49901402b99f5cf44ef049d510a8f141f709f7",
+              "expected_operation_set": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.journey.scim.v1.behavior#failure",
+              "observation_id": "scim-connection-lifecycle-report.journey.scim.v1.behavior",
+              "claim_id": "journey.scim.v1",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:f301aa17226df146c5b69fa301a56cf9145f8bcc748651655cfa072274477279",
+              "expected_operation_set": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.journey.scim.v1.behavior#denial",
+              "observation_id": "scim-connection-lifecycle-report.journey.scim.v1.behavior",
+              "claim_id": "journey.scim.v1",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:f6ca72c9c8161bfb4c88477922602671b0490648c9f20cbf4646b1a77764260a",
+              "expected_operation_set": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.journey.scim.v1.behavior#outage",
+              "observation_id": "scim-connection-lifecycle-report.journey.scim.v1.behavior",
+              "claim_id": "journey.scim.v1",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:05616712dbbfc07d177adb52fcc9c000b7ac4b04158d6474c3614940a53ad0e9",
+              "expected_operation_set": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ]
+            },
+            {
+              "case_id": "scim-connection-lifecycle-report.journey.scim.v1.behavior#cleanup",
+              "observation_id": "scim-connection-lifecycle-report.journey.scim.v1.behavior",
+              "claim_id": "journey.scim.v1",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "base_url",
+                "bearer_token",
+                "mapping_version",
+                "delete_failure_point",
+                "cascade_id",
+                "cascade_generation"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:0e7b1a3a097effded4ee16165f50d9e6c5d4c69c9e6239d291f8e494d7c69d95",
+              "expected_operation_set": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ],
+              "observed_operation_set": [
+                "identity.scim.connection-create",
+                "identity.scim.connection-delete",
+                "identity.scim.connection-get",
+                "identity.scim.connection-list",
+                "identity.scim.connection-reconcile",
+                "identity.scim.connection-rotate",
+                "identity.scim.connection-token-revoke",
+                "identity.scim.connection-update"
+              ]
+            }
+          ]
+        },
+        "connection_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "cascade_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "token_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "mapping_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "cascade_generation": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "old_token_rejected": {
+          "type": "boolean"
+        },
+        "local_authority_denied": {
+          "type": "boolean"
+        },
+        "delete_required_consumer_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "delete_closed_consumer_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "delete_outcome_unknown_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "remaining_schedule_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "delete_cascade_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "connection_cascade_results": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "transition",
+                  "resource_kind",
+                  "cascade_started",
+                  "authority_version_advanced",
+                  "old_authority_rejected",
+                  "cleanup_outcome",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "transition": {
+                    "const": "disable"
+                  },
+                  "resource_kind": {
+                    "const": "connection"
+                  },
+                  "cascade_started": {
+                    "const": true
+                  },
+                  "authority_version_advanced": {
+                    "const": true
+                  },
+                  "old_authority_rejected": {
+                    "const": true
+                  },
+                  "cleanup_outcome": {
+                    "const": "committed-or-reconcilable"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "transition",
+                  "resource_kind",
+                  "cascade_started",
+                  "authority_version_advanced",
+                  "old_authority_rejected",
+                  "cleanup_outcome",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "transition": {
+                    "const": "credential-rotate"
+                  },
+                  "resource_kind": {
+                    "const": "connection"
+                  },
+                  "cascade_started": {
+                    "const": true
+                  },
+                  "authority_version_advanced": {
+                    "const": true
+                  },
+                  "old_authority_rejected": {
+                    "const": true
+                  },
+                  "cleanup_outcome": {
+                    "const": "committed-or-reconcilable"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "transition",
+                  "resource_kind",
+                  "cascade_started",
+                  "authority_version_advanced",
+                  "old_authority_rejected",
+                  "cleanup_outcome",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "transition": {
+                    "const": "delete"
+                  },
+                  "resource_kind": {
+                    "const": "connection"
+                  },
+                  "cascade_started": {
+                    "const": true
+                  },
+                  "authority_version_advanced": {
+                    "const": true
+                  },
+                  "old_authority_rejected": {
+                    "const": true
+                  },
+                  "cleanup_outcome": {
+                    "const": "committed-or-reconcilable"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            ]
+          },
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "transition",
+                  "resource_kind",
+                  "cascade_started",
+                  "authority_version_advanced",
+                  "old_authority_rejected",
+                  "cleanup_outcome",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "transition": {
+                    "const": "disable"
+                  },
+                  "resource_kind": {
+                    "const": "connection"
+                  },
+                  "cascade_started": {
+                    "const": true
+                  },
+                  "authority_version_advanced": {
+                    "const": true
+                  },
+                  "old_authority_rejected": {
+                    "const": true
+                  },
+                  "cleanup_outcome": {
+                    "const": "committed-or-reconcilable"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "transition",
+                  "resource_kind",
+                  "cascade_started",
+                  "authority_version_advanced",
+                  "old_authority_rejected",
+                  "cleanup_outcome",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "transition": {
+                    "const": "credential-rotate"
+                  },
+                  "resource_kind": {
+                    "const": "connection"
+                  },
+                  "cascade_started": {
+                    "const": true
+                  },
+                  "authority_version_advanced": {
+                    "const": true
+                  },
+                  "old_authority_rejected": {
+                    "const": true
+                  },
+                  "cleanup_outcome": {
+                    "const": "committed-or-reconcilable"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "transition",
+                  "resource_kind",
+                  "cascade_started",
+                  "authority_version_advanced",
+                  "old_authority_rejected",
+                  "cleanup_outcome",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "transition": {
+                    "const": "delete"
+                  },
+                  "resource_kind": {
+                    "const": "connection"
+                  },
+                  "cascade_started": {
+                    "const": true
+                  },
+                  "authority_version_advanced": {
+                    "const": true
+                  },
+                  "old_authority_rejected": {
+                    "const": true
+                  },
+                  "cleanup_outcome": {
+                    "const": "committed-or-reconcilable"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            }
+          ]
+        }
+      },
+      "x-semantic-rules": [
+        {
+          "kind": "positive",
+          "fields": [
+            "mapping_version",
+            "cascade_generation",
+            "delete_required_consumer_count",
+            "delete_closed_consumer_count",
+            "delete_outcome_unknown_count"
+          ]
+        },
+        {
+          "kind": "zero",
+          "fields": [
+            "remaining_schedule_count"
+          ]
+        },
+        {
+          "kind": "true",
+          "fields": [
+            "old_token_rejected",
+            "local_authority_denied"
+          ]
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,4 @@
+go: downloading go1.26.6 (darwin/arm64)
+go: downloading github.com/faustbrian/go-authentication v1.0.0
+go: downloading github.com/faustbrian/go-clock v1.0.0
+ok  	example.invalid/authentication-clean-consumer	0.190s

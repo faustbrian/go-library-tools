@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "module": ".",
+  "gate": "lint",
+  "result": "failed",
+  "exit_code": 1,
+  "execution_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "completed_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "input_digest": "20107de92993f53627606fd55e98fe1caac51ddf9b2c0f0a3d35c2e4137e4e43",
+  "completed_input_digest": "20107de92993f53627606fd55e98fe1caac51ddf9b2c0f0a3d35c2e4137e4e43",
+  "log_sha256": "d1096a8f496f879ef7a467fc691a3ea3b1acedef3d7a6c66cb24234266a39891",
+  "started_at": "2026-10-01T06:57:42Z",
+  "completed_at": "2026-10-01T06:58:28Z",
+  "environment": {
+    "go_version": "go1.26.6",
+    "goos": "darwin",
+    "goarch": "arm64"
+  }
+}

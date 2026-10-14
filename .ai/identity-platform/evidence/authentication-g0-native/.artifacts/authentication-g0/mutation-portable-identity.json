@@ -1,0 +1,29 @@
+{
+  "upstream_module": "github.com/go-gremlins/gremlins",
+  "upstream_version": "v0.6.0",
+  "upstream_sum": "h1:3G2ROO0I3q4bb5bxElQIUITTuEbl1iOfVYFqunGwrJI=",
+  "upstream_gomod_sum": "h1:LLbvJR33CWsu1sgvQ4qMzU2rqkwYJK3Qy/Al59eHKjA=",
+  "native_verifier_semantic_sha256": "9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+  "native_semantic_patch_sha256": {
+    "gremlins-run-all-mutants.patch": "f60222a69c6c3c28d3f7f6d2f35f732e4cbd88c0e6e393d6ef98140cc05f486d",
+    "gremlins-shared-coverage.patch": "1d690646158c9925304b9c45685c6716e898a72eb5c5eac42e9a4d837910bc38",
+    "gremlins-module-relative-diff.patch": "c68e0d732b8743a8291cb339cce8b20d5f18b4afe5afb3e8d1d12e458caf4592"
+  },
+  "gate_input_identity_repair": {
+    "path": ".golib/scripts/gate-input-digest.sh",
+    "original_sha256": "13758f1905cca24d24361824da4fb565b670c440d63386b265cf18c222167636",
+    "repaired_sha256": "b7da125bfdb406367f0b927c953f4c45712e9a2c22230cc5c86c9ff111d57bcb",
+    "exact_patch_sha256": "df0a4a4f884ec492e324a303214c9014acf21c24e1f2aec8cf4ba4498124115f",
+    "patch_artifact": "mutation-root-directory.patch"
+  },
+  "invocation_policy": {
+    "mode": "enforce",
+    "command": "unleash <target> --integration --coverpkg <target> --exclude-files ^.+/ --workers 4 --test-cpu 1 --timeout-coefficient 10 --threshold-efficacy 100 --threshold-mcover 100 --output-statuses lctvsr --output <task-owned-native-report>",
+    "test_tags": [],
+    "operators": ["arithmetic-base", "conditionals-boundary", "conditionals-negation", "invert-assignments", "invert-bitwise", "invert-bwassign", "increment-decrement", "invert-logical", "invert-loopctrl", "invert-negatives", "remove-self-assignments"],
+    "mutation_command_sha256": "4c4bb3ada2c1a10982ec23e93afbf8b675e5d91e3c782da2733eb4d715dd8f5e",
+    "mutation_coverage_sha256": "03af3e2fc67b0e304e0f2800352ae6a2e5e42e0b190e864b082bac1958a6191d",
+    "run_mutation_sha256": "bc82f8fe0e68b1db9317b09a84847c7d65715a23af3ed9e97a1943466c0abdc9"
+  },
+  "reuse_boundary": "Version alone is insufficient; native package input fingerprints plus portable source/patch/operator/policy identities must match. Old fingerprints omitted root source/tests and are incomplete, not reusable current evidence. This repair changes input admission only, not operators, thresholds, checksum validation or mutation execution."
+}

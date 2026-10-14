@@ -1,0 +1,34 @@
+PASS
+ok  	github.com/faustbrian/go-authentication	0.094s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/apikey
+cpu: Apple M4 Max
+BenchmarkStaticAuthenticate-2   	 2086244	       578.4 ns/op	    1072 B/op	      18 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/apikey	1.268s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/authhttp
+cpu: Apple M4 Max
+BenchmarkBearerAuthorizationExtraction-2   	18325738	        65.82 ns/op	      16 B/op	       1 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	1.341s
+PASS
+ok  	github.com/faustbrian/go-authentication/authlog	0.061s
+PASS
+ok  	github.com/faustbrian/go-authentication/authtest	0.097s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/basic
+cpu: Apple M4 Max
+BenchmarkStaticAuthenticate-2   	 2037841	       578.9 ns/op	    1072 B/op	      18 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/basic	1.238s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/bearer
+cpu: Apple M4 Max
+BenchmarkStaticAuthenticate-2   	 4003960	       301.1 ns/op	     528 B/op	       9 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/bearer	1.278s

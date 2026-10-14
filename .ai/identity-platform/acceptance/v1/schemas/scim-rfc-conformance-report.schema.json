@@ -1,0 +1,2521 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity-platform.acceptance.scim-rfc-conformance-report.v1",
+  "title": "scim-rfc-conformance-report acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "result",
+    "tested_revision",
+    "gate_execution_revision",
+    "revalidation_revision",
+    "input_manifest",
+    "input_root",
+    "observations",
+    "artifact_hashes",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "artifact_id": {
+      "const": "scim-rfc-conformance-report"
+    },
+    "result": {
+      "const": {
+        "status": "pass",
+        "gate": "make check MODULES=pkg/identity/reference"
+      }
+    },
+    "tested_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "gate_execution_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "revalidation_revision": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "input_manifest": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path_or_environment_id",
+          "kind",
+          "content_identity",
+          "owner",
+          "reason"
+        ],
+        "properties": {
+          "path_or_environment_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content_identity": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "input_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-rfc-conformance-report.journey.scim.v1.behavior"
+              },
+              "claim_id": {
+                "const": "journey.scim.v1"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.scim-rfc-conformance-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial"
+              },
+              "preconditions": {
+                "const": "Operations: identity.scim.service-provider-config, identity.scim.schemas-list, identity.scim.schema-get, identity.scim.resource-types-list, identity.scim.resource-type-get, identity.scim.search, identity.scim.user-list, identity.scim.user-search, identity.scim.user-create, identity.scim.user-get, identity.scim.user-replace, identity.scim.user-patch, identity.scim.user-delete, identity.scim.group-list, identity.scim.group-search, identity.scim.group-create, identity.scim.group-get, identity.scim.group-replace, identity.scim.group-patch, identity.scim.group-delete, identity.scim.bulk; exact inputs: schemas, search_request, attributes, excluded_attributes, filter, start_index, count, sort_by, sort_order, writable_user, writable_group, external_id, bulk_operations, fail_on_errors; initial state: pinned RFC 7643 and 7644 fixtures, resource schemas, exact advertised capabilities, and an independent SCIM client suite are loaded"
+              },
+              "stimulus": {
+                "const": "Run identity.scim.service-provider-config then identity.scim.schemas-list then identity.scim.schema-get then identity.scim.resource-types-list then identity.scim.resource-type-get then identity.scim.search then identity.scim.user-list then identity.scim.user-search then identity.scim.user-create then identity.scim.user-get then identity.scim.user-replace then identity.scim.user-patch then identity.scim.user-delete then identity.scim.group-list then identity.scim.group-search then identity.scim.group-create then identity.scim.group-get then identity.scim.group-replace then identity.scim.group-patch then identity.scim.group-delete then identity.scim.bulk for success, failure, denial cases using schemas, search_request, attributes, excluded_attributes, filter, start_index, count, sort_by, sort_order, writable_user, writable_group, external_id, bulk_operations, fail_on_errors and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: every advertised discovery, User, Group, GET list, POST search, replace, PATCH, delete, and Bulk operation matches pinned RFC fixtures; collections use exact ListResponse envelopes; writable inputs reject id and meta; externalId remains non-unique; scimType is omitted without a registered exact condition; Bulk results include method and conditional bulkId; failOnErrors rejects values above 100; ETag, filter, sort, projection, and pagination claims are exact; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden; required artifact fields: conformance_case_count, passed_case_count, advertised_operation_count, covered_operation_count, schema_digest, search_response_digest, filter_result_digest, sort_result_digest, etag_digest, bulk_response_digest, wire_contract_cases, protocol_case_results, external_profile_ids, external_profile_results"
+              },
+              "actual_outcome": {
+                "const": "Invariant: every advertised discovery, User, Group, GET list, POST search, replace, PATCH, delete, and Bulk operation matches pinned RFC fixtures; collections use exact ListResponse envelopes; writable inputs reject id and meta; externalId remains non-unique; scimType is omitted without a registered exact condition; Bulk results include method and conditional bulkId; failOnErrors rejects values above 100; ETag, filter, sort, projection, and pagination claims are exact; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden; required artifact fields: conformance_case_count, passed_case_count, advertised_operation_count, covered_operation_count, schema_digest, search_response_digest, filter_result_digest, sort_result_digest, etag_digest, bulk_response_digest, wire_contract_cases, protocol_case_results, external_profile_ids, external_profile_results"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "artifact_hashes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.ai/[A-Za-z0-9._/-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "const": ".ai/identity-platform/evidence/artifacts/scim-rfc-conformance-report.json"
+          }
+        }
+      },
+      "minContains": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "scim-rfc-conformance-report.journey.scim.v1.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "artifact_hashes": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "const": ".ai/identity-platform/evidence/executions/scim-rfc-conformance-report.json"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    }
+  ],
+  "x-cross-field-rules": [
+    "every observations[].artifact_sha256 value must equal one artifact_hashes[].sha256 value",
+    "artifact_hashes must bind the artifact-specific evidence object at .ai/identity-platform/evidence/artifacts/scim-rfc-conformance-report.json",
+    "artifact_hashes must bind the separately captured coordinator execution receipt at .ai/identity-platform/evidence/executions/scim-rfc-conformance-report.json",
+    "revalidation_revision is null exactly when tested_revision equals gate_execution_revision; otherwise it equals gate_execution_revision",
+    "input_root is SHA-256 over RFC 8785 canonical JSON of input_manifest"
+  ],
+  "$defs": {
+    "artifact_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "invariant_id",
+        "invariant",
+        "operation_ids",
+        "input_digest",
+        "execution",
+        "scenario_cases",
+        "conformance_case_count",
+        "passed_case_count",
+        "advertised_operation_count",
+        "covered_operation_count",
+        "schema_digest",
+        "search_response_digest",
+        "filter_result_digest",
+        "sort_result_digest",
+        "etag_digest",
+        "bulk_response_digest",
+        "wire_contract_cases",
+        "protocol_case_results",
+        "external_profile_ids",
+        "external_profile_results"
+      ],
+      "properties": {
+        "artifact_id": {
+          "const": "scim-rfc-conformance-report"
+        },
+        "invariant_id": {
+          "const": "scim-rfc-conformance-report.invariant"
+        },
+        "invariant": {
+          "const": "every advertised discovery, User, Group, GET list, POST search, replace, PATCH, delete, and Bulk operation matches pinned RFC fixtures; collections use exact ListResponse envelopes; writable inputs reject id and meta; externalId remains non-unique; scimType is omitted without a registered exact condition; Bulk results include method and conditional bulkId; failOnErrors rejects values above 100; ETag, filter, sort, projection, and pagination claims are exact"
+        },
+        "operation_ids": {
+          "const": [
+            "identity.scim.service-provider-config",
+            "identity.scim.schemas-list",
+            "identity.scim.schema-get",
+            "identity.scim.resource-types-list",
+            "identity.scim.resource-type-get",
+            "identity.scim.search",
+            "identity.scim.user-list",
+            "identity.scim.user-search",
+            "identity.scim.user-create",
+            "identity.scim.user-get",
+            "identity.scim.user-replace",
+            "identity.scim.user-patch",
+            "identity.scim.user-delete",
+            "identity.scim.group-list",
+            "identity.scim.group-search",
+            "identity.scim.group-create",
+            "identity.scim.group-get",
+            "identity.scim.group-replace",
+            "identity.scim.group-patch",
+            "identity.scim.group-delete",
+            "identity.scim.bulk"
+          ]
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "execution_identity",
+            "execution_receipt_path",
+            "execution_receipt_sha256",
+            "capture_authority",
+            "producer_argv",
+            "verifier_argv",
+            "tested_revision",
+            "input_root",
+            "sandbox_environment_sha256",
+            "canonical_workdir",
+            "executable_realpath",
+            "executable_sha256",
+            "verifier_executable_realpath",
+            "verifier_executable_sha256",
+            "verifier_driver_realpath",
+            "verifier_driver_sha256",
+            "version_argv",
+            "version_stdout",
+            "version_stderr",
+            "verifier_version_argv",
+            "verifier_version_stdout",
+            "verifier_version_stderr",
+            "environment_probe_argv",
+            "environment_probe_stdout",
+            "environment_probe_stderr",
+            "verifier_exit_status",
+            "verifier_stdout",
+            "verifier_stderr",
+            "verifier_attestation_sha256",
+            "started_at",
+            "completed_at",
+            "exit_status",
+            "stdout",
+            "stdout_byte_length",
+            "stdout_sha256",
+            "stderr",
+            "stderr_byte_length",
+            "stderr_sha256",
+            "captured_output_sha256",
+            "raw_capture_sha256",
+            "output_artifact_path",
+            "artifact_payload_binding"
+          ],
+          "properties": {
+            "execution_identity": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "execution_receipt_path": {
+              "const": ".ai/identity-platform/evidence/executions/scim-rfc-conformance-report.json"
+            },
+            "execution_receipt_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "capture_authority": {
+              "const": "coordinator-owned-execution-runner/v3"
+            },
+            "producer_argv": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "make",
+                "check",
+                "MODULES=pkg/identity/reference"
+              ]
+            },
+            "verifier_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                ".ai/identity-platform/acceptance/schema_validation.rb",
+                "verify",
+                "scim-rfc-conformance-report"
+              ]
+            },
+            "tested_revision": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "input_root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "sandbox_environment_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "canonical_workdir": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_driver_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_driver_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "make",
+                "--version"
+              ]
+            },
+            "version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "--version"
+              ]
+            },
+            "verifier_version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "verifier_version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "environment_probe_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "uname",
+                "-a"
+              ]
+            },
+            "environment_probe_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "environment_probe_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_exit_status": {
+              "const": 0
+            },
+            "verifier_stdout": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_attestation_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "started_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "completed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "exit_status": {
+              "const": 0
+            },
+            "stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1048576
+            },
+            "stdout_byte_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "stdout_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "stderr_byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "stderr_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "captured_output_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "raw_capture_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "output_artifact_path": {
+              "const": ".ai/identity-platform/evidence/artifacts/scim-rfc-conformance-report.json"
+            },
+            "artifact_payload_binding": {
+              "const": "record.artifact_hashes[path,sha256]"
+            }
+          },
+          "x-execution-proof": 2
+        },
+        "scenario_cases": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "observation_id",
+              "claim_id",
+              "invariant_id",
+              "scenario",
+              "operation_ids",
+              "input_fields",
+              "initial_state",
+              "status",
+              "stable_error",
+              "expected_invariant",
+              "observed_state_digest",
+              "observed_event_digest",
+              "transcript_sha256",
+              "artifact_contract_sha256",
+              "observed_value_count",
+              "ordered_steps",
+              "expected_operation_set",
+              "observed_operation_set",
+              "observed_values"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string",
+                "enum": [
+                  "scim-rfc-conformance-report.journey.scim.v1.behavior#success",
+                  "scim-rfc-conformance-report.journey.scim.v1.behavior#failure",
+                  "scim-rfc-conformance-report.journey.scim.v1.behavior#denial"
+                ]
+              },
+              "observation_id": {
+                "type": "string",
+                "enum": [
+                  "scim-rfc-conformance-report.journey.scim.v1.behavior"
+                ]
+              },
+              "claim_id": {
+                "type": "string",
+                "enum": [
+                  "journey.scim.v1"
+                ]
+              },
+              "invariant_id": {
+                "const": "scim-rfc-conformance-report.invariant"
+              },
+              "scenario": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failure",
+                  "denial"
+                ]
+              },
+              "operation_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.scim.service-provider-config",
+                    "identity.scim.schemas-list",
+                    "identity.scim.schema-get",
+                    "identity.scim.resource-types-list",
+                    "identity.scim.resource-type-get",
+                    "identity.scim.search",
+                    "identity.scim.user-list",
+                    "identity.scim.user-search",
+                    "identity.scim.user-create",
+                    "identity.scim.user-get",
+                    "identity.scim.user-replace",
+                    "identity.scim.user-patch",
+                    "identity.scim.user-delete",
+                    "identity.scim.group-list",
+                    "identity.scim.group-search",
+                    "identity.scim.group-create",
+                    "identity.scim.group-get",
+                    "identity.scim.group-replace",
+                    "identity.scim.group-patch",
+                    "identity.scim.group-delete",
+                    "identity.scim.bulk"
+                  ]
+                }
+              },
+              "input_fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "initial_state": {
+                "const": "pinned RFC 7643 and 7644 fixtures, resource schemas, exact advertised capabilities, and an independent SCIM client suite are loaded"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "failed",
+                  "denied"
+                ]
+              },
+              "stable_error": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "internal",
+                  "forbidden"
+                ]
+              },
+              "expected_invariant": {
+                "const": "every advertised discovery, User, Group, GET list, POST search, replace, PATCH, delete, and Bulk operation matches pinned RFC fixtures; collections use exact ListResponse envelopes; writable inputs reject id and meta; externalId remains non-unique; scimType is omitted without a registered exact condition; Bulk results include method and conditional bulkId; failOnErrors rejects values above 100; ETag, filter, sort, projection, and pagination claims are exact"
+              },
+              "observed_state_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_event_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "artifact_contract_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_value_count": {
+                "const": 10
+              },
+              "ordered_steps": {
+                "const": [
+                  "precondition-established",
+                  "stimulus-executed",
+                  "outcome-observed",
+                  "transcript-bound"
+                ]
+              },
+              "expected_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.scim.service-provider-config",
+                    "identity.scim.schemas-list",
+                    "identity.scim.schema-get",
+                    "identity.scim.resource-types-list",
+                    "identity.scim.resource-type-get",
+                    "identity.scim.search",
+                    "identity.scim.user-list",
+                    "identity.scim.user-search",
+                    "identity.scim.user-create",
+                    "identity.scim.user-get",
+                    "identity.scim.user-replace",
+                    "identity.scim.user-patch",
+                    "identity.scim.user-delete",
+                    "identity.scim.group-list",
+                    "identity.scim.group-search",
+                    "identity.scim.group-create",
+                    "identity.scim.group-get",
+                    "identity.scim.group-replace",
+                    "identity.scim.group-patch",
+                    "identity.scim.group-delete",
+                    "identity.scim.bulk"
+                  ]
+                }
+              },
+              "observed_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.scim.service-provider-config",
+                    "identity.scim.schemas-list",
+                    "identity.scim.schema-get",
+                    "identity.scim.resource-types-list",
+                    "identity.scim.resource-type-get",
+                    "identity.scim.search",
+                    "identity.scim.user-list",
+                    "identity.scim.user-search",
+                    "identity.scim.user-create",
+                    "identity.scim.user-get",
+                    "identity.scim.user-replace",
+                    "identity.scim.user-patch",
+                    "identity.scim.user-delete",
+                    "identity.scim.group-list",
+                    "identity.scim.group-search",
+                    "identity.scim.group-create",
+                    "identity.scim.group-get",
+                    "identity.scim.group-replace",
+                    "identity.scim.group-patch",
+                    "identity.scim.group-delete",
+                    "identity.scim.bulk"
+                  ]
+                }
+              },
+              "observed_values": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "conformance_case_count",
+                  "passed_case_count",
+                  "advertised_operation_count",
+                  "covered_operation_count",
+                  "schema_digest",
+                  "search_response_digest",
+                  "filter_result_digest",
+                  "sort_result_digest",
+                  "etag_digest",
+                  "bulk_response_digest"
+                ],
+                "properties": {
+                  "conformance_case_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "passed_case_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "advertised_operation_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "covered_operation_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "schema_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "search_response_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "filter_result_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "sort_result_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "etag_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "bulk_response_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            }
+          },
+          "x-exact-scenario-case-fields": [
+            "case_id",
+            "observation_id",
+            "claim_id",
+            "scenario",
+            "operation_ids",
+            "input_fields",
+            "status",
+            "stable_error",
+            "artifact_contract_sha256",
+            "expected_operation_set",
+            "observed_operation_set"
+          ],
+          "x-exact-scenario-cases": [
+            {
+              "case_id": "scim-rfc-conformance-report.journey.scim.v1.behavior#success",
+              "observation_id": "scim-rfc-conformance-report.journey.scim.v1.behavior",
+              "claim_id": "journey.scim.v1",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.scim.service-provider-config",
+                "identity.scim.schemas-list",
+                "identity.scim.schema-get",
+                "identity.scim.resource-types-list",
+                "identity.scim.resource-type-get",
+                "identity.scim.search",
+                "identity.scim.user-list",
+                "identity.scim.user-search",
+                "identity.scim.user-create",
+                "identity.scim.user-get",
+                "identity.scim.user-replace",
+                "identity.scim.user-patch",
+                "identity.scim.user-delete",
+                "identity.scim.group-list",
+                "identity.scim.group-search",
+                "identity.scim.group-create",
+                "identity.scim.group-get",
+                "identity.scim.group-replace",
+                "identity.scim.group-patch",
+                "identity.scim.group-delete",
+                "identity.scim.bulk"
+              ],
+              "input_fields": [
+                "schemas",
+                "search_request",
+                "attributes",
+                "excluded_attributes",
+                "filter",
+                "start_index",
+                "count",
+                "sort_by",
+                "sort_order",
+                "writable_user",
+                "writable_group",
+                "external_id",
+                "bulk_operations",
+                "fail_on_errors"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:3ddeaca82ac268627ebcaffeb52ac3e4aab9ed51d11ab886d2b53d7e922f5992",
+              "expected_operation_set": [
+                "identity.scim.bulk",
+                "identity.scim.group-create",
+                "identity.scim.group-delete",
+                "identity.scim.group-get",
+                "identity.scim.group-list",
+                "identity.scim.group-patch",
+                "identity.scim.group-replace",
+                "identity.scim.group-search",
+                "identity.scim.resource-type-get",
+                "identity.scim.resource-types-list",
+                "identity.scim.schema-get",
+                "identity.scim.schemas-list",
+                "identity.scim.search",
+                "identity.scim.service-provider-config",
+                "identity.scim.user-create",
+                "identity.scim.user-delete",
+                "identity.scim.user-get",
+                "identity.scim.user-list",
+                "identity.scim.user-patch",
+                "identity.scim.user-replace",
+                "identity.scim.user-search"
+              ],
+              "observed_operation_set": [
+                "identity.scim.bulk",
+                "identity.scim.group-create",
+                "identity.scim.group-delete",
+                "identity.scim.group-get",
+                "identity.scim.group-list",
+                "identity.scim.group-patch",
+                "identity.scim.group-replace",
+                "identity.scim.group-search",
+                "identity.scim.resource-type-get",
+                "identity.scim.resource-types-list",
+                "identity.scim.schema-get",
+                "identity.scim.schemas-list",
+                "identity.scim.search",
+                "identity.scim.service-provider-config",
+                "identity.scim.user-create",
+                "identity.scim.user-delete",
+                "identity.scim.user-get",
+                "identity.scim.user-list",
+                "identity.scim.user-patch",
+                "identity.scim.user-replace",
+                "identity.scim.user-search"
+              ]
+            },
+            {
+              "case_id": "scim-rfc-conformance-report.journey.scim.v1.behavior#failure",
+              "observation_id": "scim-rfc-conformance-report.journey.scim.v1.behavior",
+              "claim_id": "journey.scim.v1",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.scim.service-provider-config",
+                "identity.scim.schemas-list",
+                "identity.scim.schema-get",
+                "identity.scim.resource-types-list",
+                "identity.scim.resource-type-get",
+                "identity.scim.search",
+                "identity.scim.user-list",
+                "identity.scim.user-search",
+                "identity.scim.user-create",
+                "identity.scim.user-get",
+                "identity.scim.user-replace",
+                "identity.scim.user-patch",
+                "identity.scim.user-delete",
+                "identity.scim.group-list",
+                "identity.scim.group-search",
+                "identity.scim.group-create",
+                "identity.scim.group-get",
+                "identity.scim.group-replace",
+                "identity.scim.group-patch",
+                "identity.scim.group-delete",
+                "identity.scim.bulk"
+              ],
+              "input_fields": [
+                "schemas",
+                "search_request",
+                "attributes",
+                "excluded_attributes",
+                "filter",
+                "start_index",
+                "count",
+                "sort_by",
+                "sort_order",
+                "writable_user",
+                "writable_group",
+                "external_id",
+                "bulk_operations",
+                "fail_on_errors"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:40e411c76ef58848eff1a49c09bc56fd46b60eeb8f8549fea9666e3578834aad",
+              "expected_operation_set": [
+                "identity.scim.bulk",
+                "identity.scim.group-create",
+                "identity.scim.group-delete",
+                "identity.scim.group-get",
+                "identity.scim.group-list",
+                "identity.scim.group-patch",
+                "identity.scim.group-replace",
+                "identity.scim.group-search",
+                "identity.scim.resource-type-get",
+                "identity.scim.resource-types-list",
+                "identity.scim.schema-get",
+                "identity.scim.schemas-list",
+                "identity.scim.search",
+                "identity.scim.service-provider-config",
+                "identity.scim.user-create",
+                "identity.scim.user-delete",
+                "identity.scim.user-get",
+                "identity.scim.user-list",
+                "identity.scim.user-patch",
+                "identity.scim.user-replace",
+                "identity.scim.user-search"
+              ],
+              "observed_operation_set": [
+                "identity.scim.bulk",
+                "identity.scim.group-create",
+                "identity.scim.group-delete",
+                "identity.scim.group-get",
+                "identity.scim.group-list",
+                "identity.scim.group-patch",
+                "identity.scim.group-replace",
+                "identity.scim.group-search",
+                "identity.scim.resource-type-get",
+                "identity.scim.resource-types-list",
+                "identity.scim.schema-get",
+                "identity.scim.schemas-list",
+                "identity.scim.search",
+                "identity.scim.service-provider-config",
+                "identity.scim.user-create",
+                "identity.scim.user-delete",
+                "identity.scim.user-get",
+                "identity.scim.user-list",
+                "identity.scim.user-patch",
+                "identity.scim.user-replace",
+                "identity.scim.user-search"
+              ]
+            },
+            {
+              "case_id": "scim-rfc-conformance-report.journey.scim.v1.behavior#denial",
+              "observation_id": "scim-rfc-conformance-report.journey.scim.v1.behavior",
+              "claim_id": "journey.scim.v1",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.scim.service-provider-config",
+                "identity.scim.schemas-list",
+                "identity.scim.schema-get",
+                "identity.scim.resource-types-list",
+                "identity.scim.resource-type-get",
+                "identity.scim.search",
+                "identity.scim.user-list",
+                "identity.scim.user-search",
+                "identity.scim.user-create",
+                "identity.scim.user-get",
+                "identity.scim.user-replace",
+                "identity.scim.user-patch",
+                "identity.scim.user-delete",
+                "identity.scim.group-list",
+                "identity.scim.group-search",
+                "identity.scim.group-create",
+                "identity.scim.group-get",
+                "identity.scim.group-replace",
+                "identity.scim.group-patch",
+                "identity.scim.group-delete",
+                "identity.scim.bulk"
+              ],
+              "input_fields": [
+                "schemas",
+                "search_request",
+                "attributes",
+                "excluded_attributes",
+                "filter",
+                "start_index",
+                "count",
+                "sort_by",
+                "sort_order",
+                "writable_user",
+                "writable_group",
+                "external_id",
+                "bulk_operations",
+                "fail_on_errors"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:66c1527e8f409712b4da66d3da1e6fa8e7dc28cd2509682c90bf7de53268dc7e",
+              "expected_operation_set": [
+                "identity.scim.bulk",
+                "identity.scim.group-create",
+                "identity.scim.group-delete",
+                "identity.scim.group-get",
+                "identity.scim.group-list",
+                "identity.scim.group-patch",
+                "identity.scim.group-replace",
+                "identity.scim.group-search",
+                "identity.scim.resource-type-get",
+                "identity.scim.resource-types-list",
+                "identity.scim.schema-get",
+                "identity.scim.schemas-list",
+                "identity.scim.search",
+                "identity.scim.service-provider-config",
+                "identity.scim.user-create",
+                "identity.scim.user-delete",
+                "identity.scim.user-get",
+                "identity.scim.user-list",
+                "identity.scim.user-patch",
+                "identity.scim.user-replace",
+                "identity.scim.user-search"
+              ],
+              "observed_operation_set": [
+                "identity.scim.bulk",
+                "identity.scim.group-create",
+                "identity.scim.group-delete",
+                "identity.scim.group-get",
+                "identity.scim.group-list",
+                "identity.scim.group-patch",
+                "identity.scim.group-replace",
+                "identity.scim.group-search",
+                "identity.scim.resource-type-get",
+                "identity.scim.resource-types-list",
+                "identity.scim.schema-get",
+                "identity.scim.schemas-list",
+                "identity.scim.search",
+                "identity.scim.service-provider-config",
+                "identity.scim.user-create",
+                "identity.scim.user-delete",
+                "identity.scim.user-get",
+                "identity.scim.user-list",
+                "identity.scim.user-patch",
+                "identity.scim.user-replace",
+                "identity.scim.user-search"
+              ]
+            }
+          ]
+        },
+        "conformance_case_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "passed_case_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "advertised_operation_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "covered_operation_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "schema_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "search_response_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "filter_result_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "sort_result_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "etag_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "bulk_response_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "wire_contract_cases": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "schemas",
+                  "patch_supported",
+                  "bulk_supported",
+                  "bulk_max_operations",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "service-provider-config"
+                  },
+                  "operation_id": {
+                    "const": "identity.scim.service-provider-config"
+                  },
+                  "schemas": {
+                    "const": [
+                      "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"
+                    ]
+                  },
+                  "patch_supported": {
+                    "const": true
+                  },
+                  "bulk_supported": {
+                    "const": true
+                  },
+                  "bulk_max_operations": {
+                    "const": 1000
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "schemas",
+                  "total_results",
+                  "start_index",
+                  "items_per_page",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "schemas-list-response"
+                  },
+                  "operation_id": {
+                    "const": "identity.scim.schemas-list"
+                  },
+                  "schemas": {
+                    "const": [
+                      "urn:ietf:params:scim:api:messages:2.0:ListResponse"
+                    ]
+                  },
+                  "total_results": {
+                    "const": 2
+                  },
+                  "start_index": {
+                    "const": 1
+                  },
+                  "items_per_page": {
+                    "const": 2
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "schemas",
+                  "status",
+                  "scim_type",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "invalid-filter-error"
+                  },
+                  "operation_id": {
+                    "const": "identity.scim.search"
+                  },
+                  "schemas": {
+                    "const": [
+                      "urn:ietf:params:scim:api:messages:2.0:Error"
+                    ]
+                  },
+                  "status": {
+                    "const": "400"
+                  },
+                  "scim_type": {
+                    "const": "invalidFilter"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "schemas",
+                  "status",
+                  "scim_type",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "bulk-too-many-error"
+                  },
+                  "operation_id": {
+                    "const": "identity.scim.bulk"
+                  },
+                  "schemas": {
+                    "const": [
+                      "urn:ietf:params:scim:api:messages:2.0:Error"
+                    ]
+                  },
+                  "status": {
+                    "const": "413"
+                  },
+                  "scim_type": {
+                    "const": "tooMany"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            ]
+          },
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "schemas",
+                  "patch_supported",
+                  "bulk_supported",
+                  "bulk_max_operations",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "service-provider-config"
+                  },
+                  "operation_id": {
+                    "const": "identity.scim.service-provider-config"
+                  },
+                  "schemas": {
+                    "const": [
+                      "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"
+                    ]
+                  },
+                  "patch_supported": {
+                    "const": true
+                  },
+                  "bulk_supported": {
+                    "const": true
+                  },
+                  "bulk_max_operations": {
+                    "const": 1000
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "schemas",
+                  "total_results",
+                  "start_index",
+                  "items_per_page",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "schemas-list-response"
+                  },
+                  "operation_id": {
+                    "const": "identity.scim.schemas-list"
+                  },
+                  "schemas": {
+                    "const": [
+                      "urn:ietf:params:scim:api:messages:2.0:ListResponse"
+                    ]
+                  },
+                  "total_results": {
+                    "const": 2
+                  },
+                  "start_index": {
+                    "const": 1
+                  },
+                  "items_per_page": {
+                    "const": 2
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "schemas",
+                  "status",
+                  "scim_type",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "invalid-filter-error"
+                  },
+                  "operation_id": {
+                    "const": "identity.scim.search"
+                  },
+                  "schemas": {
+                    "const": [
+                      "urn:ietf:params:scim:api:messages:2.0:Error"
+                    ]
+                  },
+                  "status": {
+                    "const": "400"
+                  },
+                  "scim_type": {
+                    "const": "invalidFilter"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "schemas",
+                  "status",
+                  "scim_type",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "bulk-too-many-error"
+                  },
+                  "operation_id": {
+                    "const": "identity.scim.bulk"
+                  },
+                  "schemas": {
+                    "const": [
+                      "urn:ietf:params:scim:api:messages:2.0:Error"
+                    ]
+                  },
+                  "status": {
+                    "const": "413"
+                  },
+                  "scim_type": {
+                    "const": "tooMany"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            }
+          ]
+        },
+        "protocol_case_results": {
+          "type": "array",
+          "minItems": 6,
+          "maxItems": 6,
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.schema-comparison"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7643:scim.schema-comparison"
+                  },
+                  "requirement_id": {
+                    "const": "scim.schema-comparison"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "passed"
+                  },
+                  "source_id": {
+                    "const": "rfc-7643"
+                  },
+                  "locator": {
+                    "const": "Sections 2.1, 2.2, 3.1, 4.1.1, and 8.7.1"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.protocol-list-patch-bulk"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7644:scim.protocol-list-patch-bulk"
+                  },
+                  "requirement_id": {
+                    "const": "scim.protocol-list-patch-bulk"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "passed"
+                  },
+                  "source_id": {
+                    "const": "rfc-7644"
+                  },
+                  "locator": {
+                    "const": "Sections 3.4.2.4, 3.4.2.5, 3.5.2, 3.7, 3.9, and 4"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.duplicate-case-collision"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7643:scim.duplicate-case-collision"
+                  },
+                  "requirement_id": {
+                    "const": "scim.duplicate-case-collision"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "passed"
+                  },
+                  "source_id": {
+                    "const": "rfc-7643"
+                  },
+                  "locator": {
+                    "const": "Sections 2.1, 2.2, and 2.3"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.password-write-unsupported"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7643:scim.password-write-unsupported"
+                  },
+                  "requirement_id": {
+                    "const": "scim.password-write-unsupported"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "identity/reference",
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "unsupported"
+                  },
+                  "source_id": {
+                    "const": "rfc-7643"
+                  },
+                  "locator": {
+                    "const": "Section 4.1.2 password characteristic; reference profile rejects writes"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.if-match-precondition"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7644:scim.if-match-precondition"
+                  },
+                  "requirement_id": {
+                    "const": "scim.if-match-precondition"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "identity/reference",
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "passed"
+                  },
+                  "source_id": {
+                    "const": "rfc-7644"
+                  },
+                  "locator": {
+                    "const": "Section 3.14 with RFC 6585 Section 3 for HTTP 428"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.default-sorting"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7644:scim.default-sorting"
+                  },
+                  "requirement_id": {
+                    "const": "scim.default-sorting"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "identity/reference",
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "passed"
+                  },
+                  "source_id": {
+                    "const": "rfc-7644"
+                  },
+                  "locator": {
+                    "const": "Section 3.4.2.3; absent sortBy selects stable id ascending"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            ]
+          },
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.schema-comparison"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7643:scim.schema-comparison"
+                  },
+                  "requirement_id": {
+                    "const": "scim.schema-comparison"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "passed"
+                  },
+                  "source_id": {
+                    "const": "rfc-7643"
+                  },
+                  "locator": {
+                    "const": "Sections 2.1, 2.2, 3.1, 4.1.1, and 8.7.1"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.protocol-list-patch-bulk"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7644:scim.protocol-list-patch-bulk"
+                  },
+                  "requirement_id": {
+                    "const": "scim.protocol-list-patch-bulk"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "passed"
+                  },
+                  "source_id": {
+                    "const": "rfc-7644"
+                  },
+                  "locator": {
+                    "const": "Sections 3.4.2.4, 3.4.2.5, 3.5.2, 3.7, 3.9, and 4"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.duplicate-case-collision"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7643:scim.duplicate-case-collision"
+                  },
+                  "requirement_id": {
+                    "const": "scim.duplicate-case-collision"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "passed"
+                  },
+                  "source_id": {
+                    "const": "rfc-7643"
+                  },
+                  "locator": {
+                    "const": "Sections 2.1, 2.2, and 2.3"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.password-write-unsupported"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7643:scim.password-write-unsupported"
+                  },
+                  "requirement_id": {
+                    "const": "scim.password-write-unsupported"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "identity/reference",
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "unsupported"
+                  },
+                  "source_id": {
+                    "const": "rfc-7643"
+                  },
+                  "locator": {
+                    "const": "Section 4.1.2 password characteristic; reference profile rejects writes"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.if-match-precondition"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7644:scim.if-match-precondition"
+                  },
+                  "requirement_id": {
+                    "const": "scim.if-match-precondition"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "identity/reference",
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "passed"
+                  },
+                  "source_id": {
+                    "const": "rfc-7644"
+                  },
+                  "locator": {
+                    "const": "Section 3.14 with RFC 6585 Section 3 for HTTP 428"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "suite_case_id",
+                  "requirement_id",
+                  "consumer_ids",
+                  "operation_ids",
+                  "outcome",
+                  "source_id",
+                  "locator",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "scim-rfc-conformance-report:scim.default-sorting"
+                  },
+                  "suite_case_id": {
+                    "const": "rfc-7644:scim.default-sorting"
+                  },
+                  "requirement_id": {
+                    "const": "scim.default-sorting"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "identity/reference",
+                      "scim",
+                      "scim/postgres"
+                    ]
+                  },
+                  "operation_ids": {
+                    "const": [
+                      "identity.scim.service-provider-config",
+                      "identity.scim.schemas-list",
+                      "identity.scim.schema-get",
+                      "identity.scim.resource-types-list",
+                      "identity.scim.resource-type-get",
+                      "identity.scim.search",
+                      "identity.scim.user-list",
+                      "identity.scim.user-search",
+                      "identity.scim.user-create",
+                      "identity.scim.user-get",
+                      "identity.scim.user-replace",
+                      "identity.scim.user-patch",
+                      "identity.scim.user-delete",
+                      "identity.scim.group-list",
+                      "identity.scim.group-search",
+                      "identity.scim.group-create",
+                      "identity.scim.group-get",
+                      "identity.scim.group-replace",
+                      "identity.scim.group-patch",
+                      "identity.scim.group-delete",
+                      "identity.scim.bulk"
+                    ]
+                  },
+                  "outcome": {
+                    "const": "passed"
+                  },
+                  "source_id": {
+                    "const": "rfc-7644"
+                  },
+                  "locator": {
+                    "const": "Section 3.4.2.3; absent sortBy selects stable id ascending"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            }
+          ]
+        },
+        "external_profile_ids": {
+          "const": [
+            "protocol-unboundid-scim2-sdk"
+          ]
+        },
+        "external_profile_results": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "profile_id",
+                  "source_kind",
+                  "source_id",
+                  "source_sha256",
+                  "consumer_ids",
+                  "execution_outcome",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "profile_id": {
+                    "const": "protocol-unboundid-scim2-sdk"
+                  },
+                  "source_kind": {
+                    "const": "tool"
+                  },
+                  "source_id": {
+                    "const": "unboundid-scim2-sdk"
+                  },
+                  "source_sha256": {
+                    "const": "sha256:116ba12596da10932da9c8cc6eb9fff8a646365e45925fbb73aeda5c967a6539"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "scim",
+                      "scim/organization",
+                      "scim/postgres"
+                    ]
+                  },
+                  "execution_outcome": {
+                    "const": "passed"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            ]
+          },
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "profile_id",
+                  "source_kind",
+                  "source_id",
+                  "source_sha256",
+                  "consumer_ids",
+                  "execution_outcome",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "profile_id": {
+                    "const": "protocol-unboundid-scim2-sdk"
+                  },
+                  "source_kind": {
+                    "const": "tool"
+                  },
+                  "source_id": {
+                    "const": "unboundid-scim2-sdk"
+                  },
+                  "source_sha256": {
+                    "const": "sha256:116ba12596da10932da9c8cc6eb9fff8a646365e45925fbb73aeda5c967a6539"
+                  },
+                  "consumer_ids": {
+                    "const": [
+                      "scim",
+                      "scim/organization",
+                      "scim/postgres"
+                    ]
+                  },
+                  "execution_outcome": {
+                    "const": "passed"
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            }
+          ]
+        }
+      },
+      "x-semantic-rules": [
+        {
+          "kind": "positive",
+          "fields": [
+            "conformance_case_count",
+            "passed_case_count",
+            "advertised_operation_count",
+            "covered_operation_count"
+          ]
+        },
+        {
+          "kind": "const",
+          "field": "advertised_operation_count",
+          "value": 21
+        },
+        {
+          "kind": "equal",
+          "left": "passed_case_count",
+          "right": "conformance_case_count"
+        },
+        {
+          "kind": "equal",
+          "left": "advertised_operation_count",
+          "right": "covered_operation_count"
+        }
+      ]
+    }
+  }
+}

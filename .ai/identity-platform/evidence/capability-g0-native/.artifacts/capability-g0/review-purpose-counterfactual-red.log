@@ -1,0 +1,12 @@
+--- FAIL: TestIdentityServicePurposeIsIndependentOfAudience (0.00s)
+    --- FAIL: TestIdentityServicePurposeIsIndependentOfAudience/different (0.00s)
+        identity_contracts_test.go:74: wrong purpose with correct audience returned authority: <nil>
+    --- FAIL: TestIdentityServicePurposeIsIndependentOfAudience/download (0.00s)
+        identity_contracts_test.go:74: wrong purpose with correct audience returned authority: <nil>
+    --- FAIL: TestIdentityServicePurposeIsIndependentOfAudience/download.file.child (0.00s)
+        identity_contracts_test.go:74: wrong purpose with correct audience returned authority: <nil>
+    --- FAIL: TestIdentityServicePurposeIsIndependentOfAudience/Download.file (0.00s)
+        identity_contracts_test.go:74: wrong purpose with correct audience returned authority: <nil>
+FAIL
+FAIL	github.com/faustbrian/go-capability	0.227s
+FAIL

@@ -1,0 +1,17 @@
+=== RUN   TestIdentityProofTransferErasesPoisonedSpareCapacity
+=== RUN   TestIdentityProofTransferErasesPoisonedSpareCapacity/success
+    identity_contracts_test.go:306: borrow len=367 cap=384 spare=17
+    identity_contracts_test.go:333: exposed allocation byte 367 retained after success
+=== RUN   TestIdentityProofTransferErasesPoisonedSpareCapacity/error
+    identity_contracts_test.go:306: borrow len=367 cap=384 spare=17
+    identity_contracts_test.go:333: exposed allocation byte 367 retained after error
+=== RUN   TestIdentityProofTransferErasesPoisonedSpareCapacity/panic
+    identity_contracts_test.go:306: borrow len=367 cap=384 spare=17
+    identity_contracts_test.go:333: exposed allocation byte 367 retained after panic
+--- FAIL: TestIdentityProofTransferErasesPoisonedSpareCapacity (0.00s)
+    --- FAIL: TestIdentityProofTransferErasesPoisonedSpareCapacity/success (0.00s)
+    --- FAIL: TestIdentityProofTransferErasesPoisonedSpareCapacity/error (0.00s)
+    --- FAIL: TestIdentityProofTransferErasesPoisonedSpareCapacity/panic (0.00s)
+FAIL
+FAIL	github.com/faustbrian/go-capability	0.224s
+FAIL

@@ -1,0 +1,9 @@
+
+[.] test
+ok  	github.com/faustbrian/go-authentication	1.029s
+ok  	github.com/faustbrian/go-authentication/apikey	0.190s
+ok  	github.com/faustbrian/go-authentication/authhttp	0.214s
+ok  	github.com/faustbrian/go-authentication/authlog	0.195s
+ok  	github.com/faustbrian/go-authentication/authtest	0.210s
+ok  	github.com/faustbrian/go-authentication/basic	0.189s
+ok  	github.com/faustbrian/go-authentication/bearer	0.197s

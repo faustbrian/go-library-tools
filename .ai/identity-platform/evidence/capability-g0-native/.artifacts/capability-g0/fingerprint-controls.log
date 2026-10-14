@@ -1,0 +1,13 @@
+go: downloading github.com/valkey-io/valkey-go v1.0.76
+go: downloading github.com/jackc/pgx/v5 v5.10.0
+go: downloading golang.org/x/sys v0.43.0
+go: downloading github.com/jackc/puddle/v2 v2.2.2
+go: downloading github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761
+go: downloading golang.org/x/text v0.36.0
+go: downloading github.com/jackc/pgpassfile v1.0.0
+go: downloading golang.org/x/sync v0.20.0
+baseline root=94e450216313b66c2608e2f5fbc9fe84467276ee4ba064f91c16fd00d37f94a1 memory=13cf49f445f42453a0c3de5ca8e22560dd308ed442a5db73d55c35f6ea481ee7
+root source changes root and dependent memory digests
+root observer test changes root, not unrelated memory observer digest
+consumed descendant source changes memory and root observer digests
+unrelated adapter source leaves root and memory digests unchanged

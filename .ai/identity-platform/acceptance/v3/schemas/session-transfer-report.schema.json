@@ -1,0 +1,1515 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity-platform.acceptance.session-transfer-report.v1",
+  "title": "session-transfer-report acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "result",
+    "control_repository",
+    "package_repository",
+    "input_manifest",
+    "input_root",
+    "observations",
+    "artifact_hashes",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 3
+    },
+    "artifact_id": {
+      "const": "session-transfer-report"
+    },
+    "result": {
+      "const": {
+        "status": "pass",
+        "gate": "make check MODULES=pkg/identity/reference"
+      }
+    },
+    "control_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "control"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-library-tools"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "package_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "package"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-identity"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "input_manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "repositories",
+        "environment_inputs"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 2
+        },
+        "repositories": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "prefixItems": [
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "items": false
+        },
+        "environment_inputs": {
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "input_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "session-transfer-report.journey.sessions.v1.behavior"
+              },
+              "claim_id": {
+                "const": "journey.sessions.v1"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.session-transfer-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,replay,concurrency,cleanup,unknown-outcome"
+              },
+              "preconditions": {
+                "const": "Operations: identity.session.transfer-generate, identity.session.transfer-consume; exact inputs: tenant_id, session_id, target_device, transfer_token; initial state: source session is active and target device is untrusted"
+              },
+              "stimulus": {
+                "const": "Run identity.session.transfer-generate then identity.session.transfer-consume for success, failure, denial, outage, replay, concurrency, cleanup, unknown-outcome cases using tenant_id, session_id, target_device, transfer_token and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: one short-lived transfer token creates one policy-equivalent target session and is invalid after consume, expiry, or source revocation; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, replay=denied/conflict, concurrency=pass/conflict, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit; required artifact fields: transfer_id, source_session_id, target_session_id, consumed_count, replay_rejected"
+              },
+              "actual_outcome": {
+                "const": "Invariant: one short-lived transfer token creates one policy-equivalent target session and is invalid after consume, expiry, or source revocation; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, replay=denied/conflict, concurrency=pass/conflict, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit; required artifact fields: transfer_id, source_session_id, target_session_id, consumed_count, replay_rejected"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "artifact_hashes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.ai/[A-Za-z0-9._/-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "const": ".ai/identity-platform/evidence/artifacts/session-transfer-report.json"
+          }
+        }
+      },
+      "minContains": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "session-transfer-report.journey.sessions.v1.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "artifact_hashes": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "const": ".ai/identity-platform/evidence/executions/session-transfer-report.json"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    }
+  ],
+  "x-cross-field-rules": [
+    "every observations[].artifact_sha256 value must equal one artifact_hashes[].sha256 value",
+    "artifact_hashes must bind the artifact-specific evidence object at .ai/identity-platform/evidence/artifacts/session-transfer-report.json",
+    "artifact_hashes must bind the separately captured coordinator execution receipt at .ai/identity-platform/evidence/executions/session-transfer-report.json",
+    "control and package repository bindings have distinct identities, revisions, trees, and runtime workdirs",
+    "input_root is the repository-qualified v2 input-manifest fingerprint"
+  ],
+  "$defs": {
+    "artifact_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "invariant_id",
+        "invariant",
+        "operation_ids",
+        "input_digest",
+        "execution",
+        "scenario_cases",
+        "transfer_id",
+        "source_session_id",
+        "target_session_id",
+        "consumed_count",
+        "replay_rejected"
+      ],
+      "properties": {
+        "artifact_id": {
+          "const": "session-transfer-report"
+        },
+        "invariant_id": {
+          "const": "session-transfer-report.invariant"
+        },
+        "invariant": {
+          "const": "one short-lived transfer token creates one policy-equivalent target session and is invalid after consume, expiry, or source revocation"
+        },
+        "operation_ids": {
+          "const": [
+            "identity.session.transfer-generate",
+            "identity.session.transfer-consume"
+          ]
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "execution_identity",
+            "execution_receipt_path",
+            "execution_receipt_sha256",
+            "capture_authority",
+            "logical_module",
+            "producer_argv",
+            "verifier_argv",
+            "control_repository",
+            "package_repository",
+            "input_root",
+            "sandbox_environment_sha256",
+            "executable_realpath",
+            "executable_sha256",
+            "verifier_executable_realpath",
+            "verifier_executable_sha256",
+            "verifier_driver_realpath",
+            "verifier_driver_sha256",
+            "version_argv",
+            "version_stdout",
+            "version_stderr",
+            "verifier_version_argv",
+            "verifier_version_stdout",
+            "verifier_version_stderr",
+            "environment_probe_argv",
+            "environment_probe_stdout",
+            "environment_probe_stderr",
+            "verifier_exit_status",
+            "verifier_stdout",
+            "verifier_stderr",
+            "verifier_attestation_sha256",
+            "started_at",
+            "completed_at",
+            "exit_status",
+            "stdout",
+            "stdout_byte_length",
+            "stdout_sha256",
+            "stderr",
+            "stderr_byte_length",
+            "stderr_sha256",
+            "captured_output_sha256",
+            "raw_capture_sha256",
+            "output_artifact_path",
+            "artifact_payload_binding"
+          ],
+          "properties": {
+            "execution_identity": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "execution_receipt_path": {
+              "const": ".ai/identity-platform/evidence/executions/session-transfer-report.json"
+            },
+            "execution_receipt_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "capture_authority": {
+              "const": "coordinator-owned-execution-runner/v4"
+            },
+            "logical_module": {
+              "const": "pkg/identity/reference"
+            },
+            "producer_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "check",
+                "--module",
+                "reference"
+              ]
+            },
+            "verifier_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "/Users/brian/Developer/.worktrees/golib-go-library-tools-identity-platform/.ai/identity-platform/acceptance/schema_validation.rb",
+                "verify",
+                "session-transfer-report"
+              ]
+            },
+            "control_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "control"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "package_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "package"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-identity"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "input_root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "sandbox_environment_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_driver_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_driver_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "--version"
+              ]
+            },
+            "version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "--version"
+              ]
+            },
+            "verifier_version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "verifier_version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "environment_probe_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "uname",
+                "-a"
+              ]
+            },
+            "environment_probe_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "environment_probe_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_exit_status": {
+              "const": 0
+            },
+            "verifier_stdout": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_attestation_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "started_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "completed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "exit_status": {
+              "const": 0
+            },
+            "stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1048576
+            },
+            "stdout_byte_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "stdout_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "stderr_byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "stderr_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "captured_output_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "raw_capture_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "output_artifact_path": {
+              "const": ".ai/identity-platform/evidence/artifacts/session-transfer-report.json"
+            },
+            "artifact_payload_binding": {
+              "const": "record.artifact_hashes[path,sha256]"
+            }
+          },
+          "x-execution-proof": 3
+        },
+        "scenario_cases": {
+          "type": "array",
+          "minItems": 8,
+          "maxItems": 8,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "observation_id",
+              "claim_id",
+              "invariant_id",
+              "scenario",
+              "operation_ids",
+              "input_fields",
+              "initial_state",
+              "status",
+              "stable_error",
+              "expected_invariant",
+              "observed_state_digest",
+              "observed_event_digest",
+              "transcript_sha256",
+              "artifact_contract_sha256",
+              "observed_value_count",
+              "ordered_steps",
+              "expected_operation_set",
+              "observed_operation_set",
+              "observed_values"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string",
+                "enum": [
+                  "session-transfer-report.journey.sessions.v1.behavior#success",
+                  "session-transfer-report.journey.sessions.v1.behavior#failure",
+                  "session-transfer-report.journey.sessions.v1.behavior#denial",
+                  "session-transfer-report.journey.sessions.v1.behavior#outage",
+                  "session-transfer-report.journey.sessions.v1.behavior#replay",
+                  "session-transfer-report.journey.sessions.v1.behavior#concurrency",
+                  "session-transfer-report.journey.sessions.v1.behavior#cleanup",
+                  "session-transfer-report.journey.sessions.v1.behavior#unknown-outcome"
+                ]
+              },
+              "observation_id": {
+                "type": "string",
+                "enum": [
+                  "session-transfer-report.journey.sessions.v1.behavior"
+                ]
+              },
+              "claim_id": {
+                "type": "string",
+                "enum": [
+                  "journey.sessions.v1"
+                ]
+              },
+              "invariant_id": {
+                "const": "session-transfer-report.invariant"
+              },
+              "scenario": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failure",
+                  "denial",
+                  "outage",
+                  "replay",
+                  "concurrency",
+                  "cleanup",
+                  "unknown-outcome"
+                ]
+              },
+              "operation_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.session.transfer-generate",
+                    "identity.session.transfer-consume"
+                  ]
+                }
+              },
+              "input_fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "initial_state": {
+                "const": "source session is active and target device is untrusted"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "failed",
+                  "denied",
+                  "unavailable",
+                  "reconciled"
+                ]
+              },
+              "stable_error": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "internal",
+                  "forbidden",
+                  "unavailable",
+                  "conflict",
+                  "unknown_commit"
+                ]
+              },
+              "expected_invariant": {
+                "const": "one short-lived transfer token creates one policy-equivalent target session and is invalid after consume, expiry, or source revocation"
+              },
+              "observed_state_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_event_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "artifact_contract_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_value_count": {
+                "const": 5
+              },
+              "ordered_steps": {
+                "const": [
+                  "precondition-established",
+                  "stimulus-executed",
+                  "outcome-observed",
+                  "transcript-bound"
+                ]
+              },
+              "expected_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.session.transfer-generate",
+                    "identity.session.transfer-consume"
+                  ]
+                }
+              },
+              "observed_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.session.transfer-generate",
+                    "identity.session.transfer-consume"
+                  ]
+                }
+              },
+              "observed_values": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "transfer_id",
+                  "source_session_id",
+                  "target_session_id",
+                  "consumed_count",
+                  "replay_rejected"
+                ],
+                "properties": {
+                  "transfer_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "source_session_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "target_session_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "consumed_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "replay_rejected": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "x-exact-scenario-case-fields": [
+            "case_id",
+            "observation_id",
+            "claim_id",
+            "scenario",
+            "operation_ids",
+            "input_fields",
+            "status",
+            "stable_error",
+            "artifact_contract_sha256",
+            "expected_operation_set",
+            "observed_operation_set"
+          ],
+          "x-exact-scenario-cases": [
+            {
+              "case_id": "session-transfer-report.journey.sessions.v1.behavior#success",
+              "observation_id": "session-transfer-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.session.transfer-generate",
+                "identity.session.transfer-consume"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "target_device",
+                "transfer_token"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:45759b2bdd7c2ce488dd370a5bdac94ee6f759a78b8dfda525d712dae91964c2",
+              "expected_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ],
+              "observed_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ]
+            },
+            {
+              "case_id": "session-transfer-report.journey.sessions.v1.behavior#failure",
+              "observation_id": "session-transfer-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.session.transfer-generate",
+                "identity.session.transfer-consume"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "target_device",
+                "transfer_token"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:b58da6b4cde4ceeca3c6d89b298793cdf2b7f4a6f3fff5cee77849698c5f4306",
+              "expected_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ],
+              "observed_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ]
+            },
+            {
+              "case_id": "session-transfer-report.journey.sessions.v1.behavior#denial",
+              "observation_id": "session-transfer-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.session.transfer-generate",
+                "identity.session.transfer-consume"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "target_device",
+                "transfer_token"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:44d2bec318e14db3ccf8062370d66e6fb6498a1f8d11e49b797217b49718ad70",
+              "expected_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ],
+              "observed_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ]
+            },
+            {
+              "case_id": "session-transfer-report.journey.sessions.v1.behavior#outage",
+              "observation_id": "session-transfer-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.session.transfer-generate",
+                "identity.session.transfer-consume"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "target_device",
+                "transfer_token"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:49f963681c431a1d5a685586efc40ca6e30cb30506aa5ed0e38da502bf5e5daa",
+              "expected_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ],
+              "observed_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ]
+            },
+            {
+              "case_id": "session-transfer-report.journey.sessions.v1.behavior#replay",
+              "observation_id": "session-transfer-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "replay",
+              "operation_ids": [
+                "identity.session.transfer-generate",
+                "identity.session.transfer-consume"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "target_device",
+                "transfer_token"
+              ],
+              "status": "denied",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:f2ff8e0e5177e4a6b7f93e6e3b4d581eb62f5a47908f198f9468d8aab7fede62",
+              "expected_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ],
+              "observed_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ]
+            },
+            {
+              "case_id": "session-transfer-report.journey.sessions.v1.behavior#concurrency",
+              "observation_id": "session-transfer-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "concurrency",
+              "operation_ids": [
+                "identity.session.transfer-generate",
+                "identity.session.transfer-consume"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "target_device",
+                "transfer_token"
+              ],
+              "status": "pass",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:aaaada193ad19af1741d03f40d08347bca29a0f51d4648547daaf449898bde33",
+              "expected_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ],
+              "observed_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ]
+            },
+            {
+              "case_id": "session-transfer-report.journey.sessions.v1.behavior#cleanup",
+              "observation_id": "session-transfer-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.session.transfer-generate",
+                "identity.session.transfer-consume"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "target_device",
+                "transfer_token"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:c9ec75062d7fb798a709a0882def991b03847fc16afbbf5252b7ff8ef065ea2e",
+              "expected_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ],
+              "observed_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ]
+            },
+            {
+              "case_id": "session-transfer-report.journey.sessions.v1.behavior#unknown-outcome",
+              "observation_id": "session-transfer-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "unknown-outcome",
+              "operation_ids": [
+                "identity.session.transfer-generate",
+                "identity.session.transfer-consume"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "target_device",
+                "transfer_token"
+              ],
+              "status": "reconciled",
+              "stable_error": "unknown_commit",
+              "artifact_contract_sha256": "sha256:ef44abb5adf4025ced78f82666d844a1950ae593f6f7e46e27d802b044783bf1",
+              "expected_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ],
+              "observed_operation_set": [
+                "identity.session.transfer-consume",
+                "identity.session.transfer-generate"
+              ]
+            }
+          ]
+        },
+        "transfer_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "source_session_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "target_session_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "consumed_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "replay_rejected": {
+          "type": "boolean"
+        }
+      },
+      "x-semantic-rules": [
+        {
+          "kind": "positive",
+          "fields": [
+            "consumed_count"
+          ]
+        },
+        {
+          "kind": "true",
+          "fields": [
+            "replay_rejected"
+          ]
+        },
+        {
+          "kind": "const",
+          "field": "consumed_count",
+          "value": 1
+        }
+      ]
+    }
+  }
+}

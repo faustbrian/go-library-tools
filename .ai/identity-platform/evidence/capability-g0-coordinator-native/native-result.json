@@ -1,0 +1,12 @@
+{
+  "revision": "c43af8abe83f33119ce2b13ec978e556408344f3",
+  "input_root": "sha256:c8a916e642ba0e2c6d31bab7e4323d96faf0df52f674ea16e8e829d364af5a2f",
+  "started_at": "2026-10-01T10:47:06Z",
+  "completed_at": "2026-10-01T10:51:56Z",
+  "argv": [
+    "/usr/bin/make",
+    "ci"
+  ],
+  "exit_code": 0,
+  "merged_stream_sha256": "a48d8fa23b7d7e8ef9266adcf0ab40f54af1ac4c58014d076801f813d2d822e6"
+}

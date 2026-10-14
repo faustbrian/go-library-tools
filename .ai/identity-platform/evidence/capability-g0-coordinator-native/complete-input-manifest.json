@@ -1,0 +1,1199 @@
+{
+  "environment_inputs": [
+    {
+      "content_identity": "sha256:fa05d0ee48363ef990dfcbe3745afa4f87f508b703587cc5890aba7e141254d5",
+      "environment_id": "environment:focused-external-inputs",
+      "owner": "coordinator",
+      "reason": "Native pre-execution focused input identities close aggregate external and reverse-consumer boundaries; captured at their actual executions, not attributed retroactively to the earlier aggregate"
+    },
+    {
+      "content_identity": "sha256:098a97d2206fd016e1b57a9258466988b2cc4159b62ee5a7b80ae45cc8143775",
+      "environment_id": "environment:host",
+      "owner": "coordinator",
+      "reason": "Directly acquired before coordinator native module execution; external live vulnerability feed not frozen by this record"
+    },
+    {
+      "content_identity": "sha256:0726e318ed86d73a758ab4898d7be07e11a2c5a75199a0d6f285d9ca49e07e7e",
+      "environment_id": "environment:native-launcher",
+      "owner": "coordinator",
+      "reason": "Directly acquired before coordinator native module execution; external live vulnerability feed not frozen by this record"
+    },
+    {
+      "content_identity": "sha256:9231f65a0f7b8b9e90af67448f85036ea9e8d49c2902f17d3c3b5ba1d3c4ab53",
+      "environment_id": "environment:package-environment",
+      "owner": "coordinator",
+      "reason": "Directly acquired before coordinator native module execution; external live vulnerability feed not frozen by this record"
+    },
+    {
+      "content_identity": "sha256:7f5fdc565440b9f03c2dfc591009be5671f8bf7ace1bf4b88f38acb17e67f769",
+      "environment_id": "environment:python-interop",
+      "owner": "coordinator",
+      "reason": "Directly acquired before coordinator native module execution; external live vulnerability feed not frozen by this record"
+    },
+    {
+      "content_identity": "sha256:136a0024b7e24297aefdb14bb44e0728bebf2819659339e028a8e40e6731c417",
+      "environment_id": "environment:reverse-consumer-inputs",
+      "owner": "coordinator",
+      "reason": "Native pre-execution focused input identities close aggregate external and reverse-consumer boundaries; captured at their actual executions, not attributed retroactively to the earlier aggregate"
+    },
+    {
+      "content_identity": "sha256:de8c30e1270860e02a1f1ef6849f07ad5409299ed3d430a5578d9067cd3c5da8",
+      "environment_id": "environment:selected-applicability",
+      "owner": "coordinator",
+      "reason": "Directly acquired before coordinator native module execution; external live vulnerability feed not frozen by this record"
+    },
+    {
+      "content_identity": "sha256:a8461b43b68872b2f51c0f27403e3110ca2851f5f93e07fccffee98dc090d9af",
+      "environment_id": "environment:selected-primitive-contract",
+      "owner": "coordinator",
+      "reason": "Directly acquired before coordinator native module execution; external live vulnerability feed not frozen by this record"
+    }
+  ],
+  "repositories": [
+    {
+      "inputs": [
+        {
+          "content_identity": "git-sha1:524e3cd60c87bcff56290af2f381f9041b7b6194",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".gitattributes",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:38675146d8a20c639edc9d541b482303851ec544",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".github/dependabot.yml",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:8e38f0c40fbf2950381028efe0dd69e918e60719",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".github/pull_request_template.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:3d5598bae5d18f76023c467b01f57df1930dbebb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".github/workflows/ci.yml",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:6c97d30527c3d87aaee0e6c0f85169b07a72ed46",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".gitignore",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:9a062f6c6e0605e7ab1f256d56cf89da57742a35",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".gitleaks.toml",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:f250c8f6045f43ce98fd0fe2d0675b0656c7264f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".go-version",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:baf542ea288bec7612862c0db8ba0ff62391e32b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golangci.yml",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:f58285ac0f90379ad301e3474d395bf72dfece2d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/documentation-tools.env",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:8bddc3a9f91c0602c2d9a113c435ec2d502da2d2",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/mutation-bootstrap/root.zip",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:9dbdc433181afedca1e7f83f5b921b9003dd88a8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/mutation-history-migrations.json",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:2986067e669a85163c6d113506417fb6b688d6d4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/mutation-zero-inventory.json",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:315c93b7a49bfcf0f45d4cc60f514d7053c5590d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/package.mk",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:4f6b24e16dbb558528e4e713c18f442555cd0af6",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/audit-goals.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:37179a35f51d0003a8646685e42ab58a8d85d27b",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/build-golib-gremlins.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:40a1b3467788956a9b53937255560d6ff0451781",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/build-local-proxy.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:9eccb14ccd9c31c2cee48cc74a4a9cd7d6199df0",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/check-api-baseline.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:02ed3d2c2f98c911324a7e5b8148504cbc671ae6",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/check-coverage.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:48b133c475a68bce36457f550742109d7e47cc5f",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/check-documentation.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:6d31e48be0fc5d0d9d7354b74439d47186e87a71",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/check-fuzz.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:b4c532dca78b48cd882b6754cde9113019aff0cc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/check-gates.txt",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:a41bec3fdf1ed10061d2bb774ad0d60fe52e3f18",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/check-go-safety.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:840e13bb382d367d211689b3dcca8e6b5db8bc78",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/check-go-safety.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:54cea7bff7515cbc3337277ec2a62ca4da889233",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/check-module.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:2329a37e75e03ef538a3b6e2dda3fe5a77dc4001",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/check-mutation.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:8bc3afbce58bb728eecbf2288e43bbb2d97eb472",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/codeql-build.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:cceb53df1e30790e33da995f1cdc9a7b62d4c449",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/create-verification-snapshot.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:d84a4ff1e5e18caabc75a20e23137c1e169d942a",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/discover-mutation.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:589eca5a02e2df0a2d53a3b4449f9187f68ec8ba",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/filter-releasable-modules.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:710811f875368ad30e1c3abb4a51cd031a0af817",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/gate-input-digest.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:0e867262b76f57c5847281a485aa602673b7f20e",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/configure-mutation-workers.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:d84188feadeb7fc50e9aa8129458e9206b5b6caf",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/isolated-go.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:081483aafb6163927715ba20de9899388b33b7e9",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/migrate-api-baseline-evidence.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:f88356799b7aecd0dffbac8f91b2f550e1842da1",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/migrate-runner-isolation-evidence.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:0068cb2c0055febf47c454eaf34a78479d664343",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/mutation-command.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:ab0271571b01988a85b451c0430fa758e17cf9a3",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/mutation-coverage.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:e2dce95f1b6d302228932d211df4b1356d29490a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/mutation-scratch.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:6e71fa35f736d95e8d418ab2f231052626aecb32",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/optional-mutation-digest.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:7bd74371069f5faf2c9ab50849222b6f802759db",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/reuse-approved-mutation-checkpoint.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:c1a0c83df137abb2fc41b81f7bca9cf00cad44c7",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/reuse-mutation-coverage.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:ac46b58f83996e3c3035a9ff924ec33cf405cbaf",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/run-mutation.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:59de60e609dc353d6e8df3dca41a2a5ff951075b",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/internal/run-verification-snapshots.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:df9c6095689afaba33ac143ad4252f792880bed1",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/mutation-verifier-identity.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:3c49ed05baaf23bb61e85752d42988e089acc7ee",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/package-source-digest.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:c573b4cee345f5afc140052e57d381d4014e1277",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/patches/gremlins-module-relative-diff.patch",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:7ac77993c455d1b017f9f0a7df8969e2c38aacf3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/patches/gremlins-run-all-mutants.patch",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:86e8912820b0488e8a35ea946cdea1eeb9cc4bf7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/patches/gremlins-shared-coverage.patch",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:a2ed9d3765436f919b4f2448f9995bbf25ab48f2",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/release.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:c0978e991cd44412915eafa4e99b9f9e31d768e0",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/repository-check.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:5fe812baaa28696df66c43ccb057db1b440be13f",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/restore-ci-mutation-evidence.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:366d64fd31b4562978d00ca7e8040f9adcde8948",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/run-gate-with-evidence.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:f22fd9d3a302984d78ac76b66ff3dfa59164ba6f",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/run-modules.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:955435e5c7f4e615e9bc858b53d16ab5f3c6c446",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/stage-ci-evidence.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:44b90829e5501378394074dd3a787d95771026f2",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/start-services.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:a3ac5767a5ba7dcf53530fe2085194ae7e48a09d",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/stop-services.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:b87f798dafb5e4df3eeee40351f9502d40913680",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/test-oidc-keycloak-interoperability.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:69f9085b03dcb3e5dc7517c4857f3c28b065cc8b",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/update-api-baseline.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:356d3ee7f79069da25f04ba7c84ea138f5af1a81",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/verify-gate-evidence.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:35b3ba3d847727b6de01bd3336fea3746fff8a74",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/scripts/with-disposable-go-cache.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:c7e8a973e8f6a436ba982958db3db00fe9269dfb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": ".golib/versions.env",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:6ea988c45b6f2d7ae508639dfe316dbb4eebfe49",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "AGENTS.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:b1493951f6582606ab68d8f982692c1801a196f7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "CHANGELOG.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:9c6b85ed4591deab5d63504987d3b25f0d6f324b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "CLAUDE.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:94e4de703d425be22a5b027f64a92e643d4b91f4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "CODE_OF_CONDUCT.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:1203cc0fd8c517336593b6ba8ba4ec1718584315",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "COMPATIBILITY.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:b20fa764ef796f72ff9a983a7a2be986496bd7d5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "CONTRIBUTING.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:78c94e6782ab7066050eaf88dfa2af1726233dee",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "DEPRECATION.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:a654d0c930fd62fab5b3237f14823225dacc7316",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "LICENSE",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:16b94f51ba4b118a9cbb3da068cf45ad94c31f21",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "Makefile",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:cc21b7e7c32fac87b8cfd93f6452cfc55ebf3e8e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "README.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:d6220fe4986165a9e9101cd333d58d2ddff0c50a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "SECURITY.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:90fa6053c6642077936bedccb0797e3fcc0bd06c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "SUPPORT.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:4bfad69bf43fcc9d550411d420a02870b27c0da9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "api/baseline.txt",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:0f5e0051721f373b7bb1c42050338962edf9cf1d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "benchmark_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:eabfe132d21a947a040f7e9eb590b59656417d5f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "boundary_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:228b9ccdbdb213741bb0f5789719b8914aed5376",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "capability_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:61d85196be00b69be9614c6452a7d1ae9861310a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "caphttp/http.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:8d41aabccae012bf52bea5e975b772b8937c8e81",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "caphttp/http_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:569274a8de37765e76b04e8a60eb065fd57b1422",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "crypto.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:07531fb9ca08b2776e6a7e150c111e063a029987",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "cspell.json",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:88765e2f1a9fac7275dcbd3fe00b4fb47cdf2667",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "docs/README.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:da0905e8c0f878e5251323d9bf2a11b7b7c8a154",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "docs/adoption.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:6d682b1ed20d22f9e3c5dbefc39f1b1ad58f1dec",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "docs/api.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:6f6c2b75c55d7169df0f22c4a8546409c3e1e3d0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "docs/conformance.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:93448be222964c6205eceb7eb15a2d2dfd086de8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "docs/deployment-profiles.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:fcb8e2aa48a59fb52aef0b59a21af386894999d8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "docs/identity-contracts.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:bacf29a531c18227e71f6ff1a51d65b66e8ea3f3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "docs/protocol.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:5a6b5641a53a69b20dcc7efccc10b326775492bb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "docs/replay-and-revocation.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:cc770bac34e009ecea1580e590e37d0009b21987",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "docs/security-review.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:31f8302dcffb9acb3e0c474d63b45a46ad9109c2",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "docs/specification-decisions.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:b87bb37c0f3d61c89bb584821ea0259c04cd1d18",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "edge_internal_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:57fc3e4ecfa0c7443ae96a287448c4e433f713e1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "errors.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:5d8a7b30e955bc0dfe9722d4debcbefec4691397",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "example_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:9bad402ca9dd566424d78c96033851c57c183e3f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "fuzz_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:4b0c7036e414cfc25cfa52b85bbc78e47bc53e0c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "go.mod",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:5754bb646afd82aae5787ab9ed92263bcb379d5a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "go.sum",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:62210e786f6a59015a9fa53691d289032c4a0856",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "grant.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:cc9e65e24b2ec91fc52d3f5e17cf0e9054bfae2f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "identity_contracts.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:0dde6e7a9036f2ec2374a9ae9d7988063953f10a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "identity_contracts_internal_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:893a97cadf387b24691aed34ddb38a139c649e02",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "identity_contracts_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:96c98f8404623f4d39c524e811e5def136ba4912",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "identity_example_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:32566a947063edba12f10c1f08091afde941d779",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "interoperability_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:6bd6c51035c9fc2e1ac5944b830e3324af56b724",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "memory/consumption.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:5583e7c78ec2a09ec7628861bd2c2ee6c7bbd173",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "memory/revocation.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:da32cb1c6e3116a4bbab4f52a575563b3d02ff3d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "memory/store_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:bb753fa70fff4c06105cfb3b2385105e2b3da7d9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "modules.json",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:0751b6cefae2e1ad029eae4d629a6e587cfc6473",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "mutation_boundary_internal_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:ba8b8f30660782f1fabeb5823884c7776dea15a4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "package-lock.json",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:bb588310dbb7bcac7ca3600a14f8d18e8561d6af",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "package.json",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:64cdc50476488972a97a7eb8d043572a7a4f1a00",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "packages.json",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:05c99f4189fe5829ad92c6b8a8cc9838540e18d6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "payload.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:861e77b3f2efd3147103a3ed52e65d941d965e90",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "postgres/integration_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:53f67ef094cffcd27ef3c78aac0dc6818dede4fb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "postgres/migrations/001_capability_consumptions.sql",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:77186dce297bb18a913607e325335d216bc1995c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "postgres/store.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:2b7375191077bc3a3dd201fd28902e9b518b894b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "postgres/store_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:0e64ea5922458295ab7d47e4d666d1d4a862d30b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "redaction_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:3ccb792e32dcb188980c9afc99e3af68b110959f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "replay.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:07914a975d0d7046cdd94de19f28cdd544455041",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "replay_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:b5a14d894adfefd34c93d17c11f758da434824bb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "resolver.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:77373618596351c4d712c91c9df8a8372f0a8de2",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "resolver_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:429c0965391b1aaf6030d2409feddb859096ef98",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "revocation.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:1b45c2100139d33599ee4ecd6983fe425bd2d4e6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "revocation_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:8889a5f2f18cc143340f21f21b93baa79468bc53",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "scripts/check-clean-consumer.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:b301e2f83e74f43a6d0034e07d03800c6d57a914",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "scripts/check-conformance.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:97b820393aa087501760d4a192514ac73cfdae7a",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "scripts/check-fuzz.sh",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:2247e50b055e485cdaed3852fb926b76f05e20b7",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "scripts/check-interoperability.py",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:6c57a9d4bda7a09727d2b861e0e9cbf0ed57d73b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "specification/README.md",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:07193943b646e6104c9bfb9ffdc2b65649217d40",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "specification/manifest.tsv",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:4c309b2be1a62fc7f289bb1fd41649763f1a0c80",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "testdata/v1-hmac.token",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:4d3d60d9e4188bef69434a1f3e9e2d80170e1758",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "token.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:9af6721b17a2dd2299f5a6d726fc6d9f9a52760d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "url.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:eab04a048de4406cda5a37f901a54249ffb5315a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "url_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:a4dca7ab887d0477f57bcffa83ef746c3d13e6f9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "valkey/integration_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:1db565778f08f80f9d87a9d52fe8f700d6dde294",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "valkey/store.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        },
+        {
+          "content_identity": "git-sha1:0a8623e23ee4e5f779ae4a7deef8ae518a92f104",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/capability-identity-contracts",
+          "path": "valkey/store_test.go",
+          "reason": "Complete committed package sources, fixtures, dependencies, native gate scripts and configuration"
+        }
+      ],
+      "object_format": "git-sha1",
+      "repository_identity": "github.com/faustbrian/go-capability",
+      "revision": "c43af8abe83f33119ce2b13ec978e556408344f3",
+      "tree": "git-sha1:226969a5a3b81f4625200b9c2ec7c564fc90685e"
+    },
+    {
+      "inputs": [
+        {
+          "content_identity": "git-sha1:27732d493e15aec526a88abf4f545bba3a0c85ad",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/COMMON_REQUIREMENTS.md",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:26566f2f24ca7181de5edbfe72ce6bc3f43ad253",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/ORCHESTRATOR_GOAL.md",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:ffeee4dcf05dd98d3b98ea3b60cb01939ecc9261",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/goals/primitive-capability-identity-contracts.md",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:3238a98ba7af593fd576c444b71cdb52082261c7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/public_contract_repository.rb",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:7dee30bcaf8916ae384c81b2b8ab82c7fcc216d5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/repository_input_manifest.rb",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:fb9710bdcbe0ee2cbb4b8ada7faf618d6bd83d68",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/repository_topology.rb",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        }
+      ],
+      "object_format": "git-sha1",
+      "repository_identity": "github.com/faustbrian/go-library-tools",
+      "revision": "fa569bd80e3f6c934e41b323f6b19e148ce2d64b",
+      "tree": "git-sha1:ced9b36dbbcd39db730b3cf2f3572aadfc5524bf"
+    }
+  ],
+  "schema_version": 2
+}

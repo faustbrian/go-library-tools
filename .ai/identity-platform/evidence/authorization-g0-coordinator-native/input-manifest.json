@@ -1,0 +1,1893 @@
+{
+  "environment_inputs": [
+    {
+      "content_identity": "sha256:098a97d2206fd016e1b57a9258466988b2cc4159b62ee5a7b80ae45cc8143775",
+      "environment_id": "environment:host",
+      "owner": "coordinator",
+      "reason": "Directly captured before configured root-module gate; live vulnerability feed and external fixture/tool inputs require attributable closure"
+    },
+    {
+      "content_identity": "sha256:a2dc9d8dd90504d582f0641517d653820d2eecedd143e818bbc7926ddeae1951",
+      "environment_id": "environment:native-tool",
+      "owner": "coordinator",
+      "reason": "Directly captured before configured root-module gate; live vulnerability feed and external fixture/tool inputs require attributable closure"
+    },
+    {
+      "content_identity": "sha256:9231f65a0f7b8b9e90af67448f85036ea9e8d49c2902f17d3c3b5ba1d3c4ab53",
+      "environment_id": "environment:package-environment",
+      "owner": "coordinator",
+      "reason": "Directly captured before configured root-module gate; live vulnerability feed and external fixture/tool inputs require attributable closure"
+    },
+    {
+      "content_identity": "sha256:de8c30e1270860e02a1f1ef6849f07ad5409299ed3d430a5578d9067cd3c5da8",
+      "environment_id": "environment:selected-applicability",
+      "owner": "coordinator",
+      "reason": "Directly captured before configured root-module gate; live vulnerability feed and external fixture/tool inputs require attributable closure"
+    },
+    {
+      "content_identity": "sha256:92d7fe65f79fbcc15f5da2aa2da8d71f774ebf75c0d917024b65213693ee5034",
+      "environment_id": "environment:selected-primitive-contract",
+      "owner": "coordinator",
+      "reason": "Directly captured before configured root-module gate; live vulnerability feed and external fixture/tool inputs require attributable closure"
+    }
+  ],
+  "repositories": [
+    {
+      "inputs": [
+        {
+          "content_identity": "git-sha1:524e3cd60c87bcff56290af2f381f9041b7b6194",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".gitattributes",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:38675146d8a20c639edc9d541b482303851ec544",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".github/dependabot.yml",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:8e38f0c40fbf2950381028efe0dd69e918e60719",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".github/pull_request_template.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:4b7ef2244e46bab3f99e92e3eda6fae0c12abf7b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".github/workflows/ci.yml",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:6c97d30527c3d87aaee0e6c0f85169b07a72ed46",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".gitignore",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:5a9687b96eaefc2f5f1b28dc13598846402428ca",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".gitleaks.toml",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f250c8f6045f43ce98fd0fe2d0675b0656c7264f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".go-version",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:baf542ea288bec7612862c0db8ba0ff62391e32b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".golangci.yml",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:995d548a236582bc6d996074300d756687471e9d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".golib.yaml",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:eb400feeadc1eff9128b3c9e34e661a559dcd99a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/0111945c631a9dca7f213cfdc8c262a9ee0bb707433838636f96ae79ff1d592c.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e8137e079439685d58c75c949694f877b63e5713",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/04de4b99c03b16badecb59848b1ad06d5389e1795345970b015e2be8417e472e.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:c98d33cf19ebb2474fa4bc186782d7c352dad0c3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/0a40846d3d5897af36067cd0721d3aaf377482dc3ab0c29180c5fd8664b6db05.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:3224f27d74fec9343df395a88313a873afc962c2",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/0c3a05ee7699d78ffe486c1d3ca94409516dd0313e2d837a82ca86db5ff0c509.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d5586725676f25fb42b4b909911891fcf4fc46c4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/18e206c67d85f2f34d63b48dee44acf8107a74ab66ec257fec565f98398b71d4.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:7d917c568c1d885733f51444332a1a3943f9c76f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/204a833ace0c4d7fdbaf8fcc9bb3bbbbaf404527c58ad3742a1f9d0b73fe6ce7.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:85c5279c19127140cc05d2b9c326fde819b0c805",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/23e23f2c49b30d58e53de76bd5f0a9d1b4b9f5bb8c8f88424c973b32b8a8444b.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:52ddad9cea54811870b99967a64d60d3b8e6ac11",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/242046f1d40447c957228aa05377fb4b2dc7ab626a9cb6d05d4d49f5bcfa8cf1.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:35ec50fed84438230caf68877c3328e8500bafa7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/27c45616475e8277470d39020e06a7d7b03335414cacc47e7d0c083052316c83.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:51545306dcb4168a3e9c33239363789f57903220",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/3b80cf4f184c1908c92b3583693693f810c6fa1ef4df07fe30838fab321541ad.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d020273bebac654eef2231b6351b0a35b4349f47",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/3e2a23523567886c94b72640a7dc923faf72529245358992f8e0d5848e4ce83d.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:0422920be17eb2d2c67a787c31dee44abb143d18",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/43d09e421818071f13a89ec5bbcc0ad27455ea6052ab58d200a8fe28139c8c28.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:6f0145c5d90bff9c2ba528e3453ac366d0765b50",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/51462c12929b790dc3a492833d474002ab818097748143ad98f6c6eeb1032811.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ef1ee7f01a35cb0aad6da82482ced7f8318e8876",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/70f2f579b993527792cacd87bf04b38627351997312bd7d8bd93bf9cf18a6b6a.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:4ab88bc444c892f1eb8b8bdcfe122e81319cc9fc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/882758f85e5af4c69fdc63295fe10267307042e5ef0bcbe62f4ca77c9ebee18d.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:89836d4d4afcb3aff79792937f024fd1ad947ac0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/985906bf43152407530fbf035b721a87483fc5ba7ba0782619353952a5395b7c.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:2daf40f59e1f2e3235b1892f450d30cb65ab764b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/9c023e90571c13c4358a8ee2ba5f2e9127db2e299f7b2268383dab9cbb73d8ca.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:790b13cd604c0be958bda63c4e2c62fc228e9877",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/a4dc5f97cddb14e7e92572d61d447287d3cfcdf2411f738006ae8c6253d49bb0.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:48a32e126c8bb2f7762fe8cf81df620de0f8cfd2",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/a64f93131824fa3bf7f5c936c47dc6923080536981f185e14754f525928c31a7.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:9eade7fe82276739106f8b7c6b9e7de0bf8ef9a6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/afb5fccc1dda02a98b1f60865f4d7712adf040e05b26e44fb81955b4f762d182.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:36c5ddcad3e90e28b197ca98d65e63cf75690b3e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/b48fabf4ad74a492529ab243bad4043298789a0d8dad148769371123add1b86e.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f34b71177c6ede44bd9d69c7c15e5dd71893e8a4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/b910490bc7c17850d8fc44add5a4ae932519f8bc95f521ac12115b27be2aaec0.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:31b9375b23378bfb32b2af09447dc86fe962ecf6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/bbd06c09014994b328b9e6d2aa2e52b6f073c1f5bf7272abd1b83ae9f37d2386.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d227b13965ccd51093b61f5216e1d9897bc29ec7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/bec28576169815920f9e5be3b8b6f504136f6ba156e0d8762efb830f31895dad.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:7cf1e5406c7cba0a2d1e029c7fd6ef303708cf49",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/c5e2ccb76294785d4d3e91e23e987c7b1786c4bf9612821ff5eda6672bbbf567.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:30ec9bc6974a1a6386a415e4ba5afeb7843264cd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/cba14800bae49173b6b92c4fa6fa86e3ac36be039efbf1d2fa9087dab1cb6ba4.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:264c0d5f8d6c3705f0a8dbfcc752855f96dd4353",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/e9b82ea6b298a8ebd6dd24e0199ddbf0c36d87e8645bbc89b4fa9b188bc77cd7.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:426d9f8322d215c3ee456022a02467130d28aa61",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/by-input/mutation/ebdfd1554bfdf042a2216af3a15a34b1e7e5e836d1465f7b2066554ebbfc6e20.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:45f05d551a3ea28d1ea603e719ea5f320b49447d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/bootstrap/root.zip",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:b9cddd206633bd911f028d8c8476d87a40793198",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/migration-ledger.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e4fe6c79825118e7be14436beadd2c9b43fa7503",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/0111945c631a9dca7f213cfdc8c262a9ee0bb707433838636f96ae79ff1d592c.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:fa33ccf259c48d8e2b4ccaf621f47119c8a1b005",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/04de4b99c03b16badecb59848b1ad06d5389e1795345970b015e2be8417e472e.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:083f6a1e2975cd3ea81029c7cfa5537548b4f1c5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/0a40846d3d5897af36067cd0721d3aaf377482dc3ab0c29180c5fd8664b6db05.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e40eefb5c844a78685440e53043621b9db41f754",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/0c3a05ee7699d78ffe486c1d3ca94409516dd0313e2d837a82ca86db5ff0c509.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:02e79a636a1e0b575f458dbe7ee469628c66415a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/18e206c67d85f2f34d63b48dee44acf8107a74ab66ec257fec565f98398b71d4.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:5ab954c9401c23f77c1845a1133dcf94c115ef05",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/204a833ace0c4d7fdbaf8fcc9bb3bbbbaf404527c58ad3742a1f9d0b73fe6ce7.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:2967168be486d77fcf0f249dc940cfe9e1a0ba5f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/23e23f2c49b30d58e53de76bd5f0a9d1b4b9f5bb8c8f88424c973b32b8a8444b.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d5fdb4f481f8066b14c9f21ae82bd6667f16b35e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/242046f1d40447c957228aa05377fb4b2dc7ab626a9cb6d05d4d49f5bcfa8cf1.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:c7df6b3076866516f0d2a2837783cf9e4f232ff3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/27c45616475e8277470d39020e06a7d7b03335414cacc47e7d0c083052316c83.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:186be27668bc3dcf5199210f865310dbf4df3807",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/3b80cf4f184c1908c92b3583693693f810c6fa1ef4df07fe30838fab321541ad.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:a06cd81b62326be5d7729eddb8d1cee583d90f17",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/3e2a23523567886c94b72640a7dc923faf72529245358992f8e0d5848e4ce83d.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:8a2d9df1120e37c21ff833257c7c7d2bdc5142d4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/43d09e421818071f13a89ec5bbcc0ad27455ea6052ab58d200a8fe28139c8c28.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:38e7ab3770023d5bdd4ac7ec6e4ae313e62de092",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/51462c12929b790dc3a492833d474002ab818097748143ad98f6c6eeb1032811.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:5ff9405c2f789c68102653402fe464143697b15f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/70f2f579b993527792cacd87bf04b38627351997312bd7d8bd93bf9cf18a6b6a.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:892074cf1f32df13c178d13b2c528e3f73a44ca7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/882758f85e5af4c69fdc63295fe10267307042e5ef0bcbe62f4ca77c9ebee18d.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:68114190aa8318f48430efaf0505f7e211bfb101",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/985906bf43152407530fbf035b721a87483fc5ba7ba0782619353952a5395b7c.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:fe58bf5fa45206b161398975381078280713c196",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/9c023e90571c13c4358a8ee2ba5f2e9127db2e299f7b2268383dab9cbb73d8ca.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d5fdb4f481f8066b14c9f21ae82bd6667f16b35e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/a4dc5f97cddb14e7e92572d61d447287d3cfcdf2411f738006ae8c6253d49bb0.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d3cb1316238b75149a02efbb2ff521e3888909af",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/a64f93131824fa3bf7f5c936c47dc6923080536981f185e14754f525928c31a7.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f1ed0f269777832c05bba5416af72ca57c4e364e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/afb5fccc1dda02a98b1f60865f4d7712adf040e05b26e44fb81955b4f762d182.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:c03f27fbfe0b10626706a860f173903361514b48",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/b48fabf4ad74a492529ab243bad4043298789a0d8dad148769371123add1b86e.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:b19615c01e6dc81698617c9259abed58bc4e700a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/b910490bc7c17850d8fc44add5a4ae932519f8bc95f521ac12115b27be2aaec0.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:551766d99bea7a3673a57b6bbba358e0d6981c34",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/bbd06c09014994b328b9e6d2aa2e52b6f073c1f5bf7272abd1b83ae9f37d2386.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:9e0045a6c755f778369f8189d956eb9d98cb2a41",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/bec28576169815920f9e5be3b8b6f504136f6ba156e0d8762efb830f31895dad.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d5e29137655320838a9384166652c9a30376a7c7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/c5e2ccb76294785d4d3e91e23e987c7b1786c4bf9612821ff5eda6672bbbf567.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:022798e6a118499122aad388a94b210ad57106d1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/cba14800bae49173b6b92c4fa6fa86e3ac36be039efbf1d2fa9087dab1cb6ba4.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f8a95601a4038527d5a9c5ad0e5c16aae15b1856",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/e9b82ea6b298a8ebd6dd24e0199ddbf0c36d87e8645bbc89b4fa9b188bc77cd7.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e65ae32056c2aaedce02e7fb4f18f100a99ecf14",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/reports/ebdfd1554bfdf042a2216af3a15a34b1e7e5e836d1465f7b2066554ebbfc6e20.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:069a20eb6810d796d45b5715773820f2154f4fdf",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": ".verification/mutation/zero-inventory.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:3ce07997e02fc93637977f6cfd2bb3f17edddc5a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "AGENTS.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:2a2a575cf43180f1752a6950376c74109ac23902",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "CHANGELOG.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:9c6b85ed4591deab5d63504987d3b25f0d6f324b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "CLAUDE.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:94e4de703d425be22a5b027f64a92e643d4b91f4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "CODE_OF_CONDUCT.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:1203cc0fd8c517336593b6ba8ba4ec1718584315",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "COMPATIBILITY.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:4f8f624154a99591dc8b74f68702bbff25b15cba",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "CONTRIBUTING.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:78c94e6782ab7066050eaf88dfa2af1726233dee",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "DEPRECATION.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:a654d0c930fd62fab5b3237f14823225dacc7316",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "LICENSE",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:37606f58a879e6ed5f7db6e347e49d372e1dad65",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "Makefile",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:c79dff4b710de97e8a55db0b686302673321110f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "README.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:b0730cfadc422c0a757f381b7fa2cb872e9f5296",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "SECURITY.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:90fa6053c6642077936bedccb0797e3fcc0bd06c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "SUPPORT.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:825337cc285130d6e490aa358f5160516e16c680",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "abac/abac.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:c3570cf791e8673919b282aee27645b2da281a64",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "abac/abac_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:0cf53b5ce9e2db97084e3cb5728d2bb5663e33bd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "abac/benchmark_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:a2bf32a01c553719ed9a1605a1b3ac44842a86cf",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "abac/conditions.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ffdef13c4d57780d61df701305a1ec6a1d08719d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "abac/document.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:9cbb9dbba312f1d50cf21baed043d9b671acc885",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "abac/document_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:8abcae53cfd83ef7372947647842113e26e7eeb7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "abac/example_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:751e5ba94dc7f6062acadb68b7135bf57e69237c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "abac/fuzz_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:6a1c25158b2f0b2370edeb0b620813a768eda07d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "acl/acl.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f2b784e5a5e1c4e0a511faa7541533b856ccbe64",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "acl/acl_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:72567fa61c0677a59ea67a9ad857fedc061b882b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "acl/benchmark_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:b86b72ea5dd4e14d6ad1f73b1ff0b878bf93a39f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "acl/document.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:995c6c5306ed9fbdf2c44d4d2acc2454e8455c7b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "acl/document_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ccee1c9fe0f7c6e59c9d8b1ec77e55778bbf7abe",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "acl/example_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ed7647533dfb5c0ffc5e340436e713397cb2dc12",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "acl/fuzz_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:2e02bbb1f1919029ed651ce39183d023e5b79200",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapter_successor_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:46e548e4c2a1c5e2d663d035c387f781ca9cbc4d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapters/cache/cache.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e1702c044fb6f78ea840209ff2aa66394b4f521c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapters/cache/cache_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:0b3dccdfb46a0f1eed343c07d6abe046c849bd81",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapters/http/http.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:225f7225e61145e11b4cd7eb3568bf9eca6101b3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapters/http/http_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:bea18750d3d80e57146764b8d2f6833246917a81",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapters/jsonrpc/jsonrpc.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:4ef8774d204da34993510dd67e1e2c638cfe9ec4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapters/jsonrpc/jsonrpc_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:fc8e9e565d8514a6dc34982e370398ff881ed7d8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapters/otel/otel.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:bc294efbb0a5deb18fb6c012c604fedb5ee081e1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapters/otel/otel_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:9cc1b7c8f282565e1a0849b75c243547c3117c39",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapters/slog/slog.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:b5578e5dea5c72b796d5ac574ab5a8c28999efbe",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "adapters/slog/slog_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:7d2b19d6c5fa0b9c2601c20e39fc524592d026ea",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "admin_contracts.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:12c295129ee8aea886bc25d3c03eb2985d7b57e8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "admin_contracts_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d1a50e6a84315992b76265b356ab045220a83dd1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "admin_errors.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:78976edbc9a2a47789024995f892255176f35f4c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "api/authorization.txt",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:6edeb15c5229c6a6685e0d60fb1152d5b15105ae",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "attribute.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:3e8c5d15eb814376425429afc176258b681f2c0b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "attribute_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:612dc5e146d3dda80cb57821a326264453d58fcc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authcache/authcache.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:8e23a1f760a87d839b6e729d453761d20c2b90cb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authcache/authcache_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:34d9692f293823c157bc87700dca37bb458c3829",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authhttp/authhttp.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:05882336e11c5a9a0ce669d2aee84502189fb81d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authhttp/authhttp_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:1ba62aa4df728e9125535b73aa5ea38d0063afff",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authlog/authlog.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:a4b516c01ea4d7db9b15c74363f267c84441eeab",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authlog/authlog_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:4c61e8bf0451a4e2e632bb97b3d679d8e543ecfe",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authn/authn.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:89b437ed9b389770a2d3c5b66393b05ac260e001",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authn/authn_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e5e9147627930a3951c99846b2c43a85c4c68a04",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authorizationtest/authorizationtest.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:80d84ec1af99d9930f7d33b35d0b6ad8d21953b4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authorizationtest/authorizationtest_internal_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:0aab043424647696d7ffd250a40c247624610417",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authorizationtest/authorizationtest_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f590a8993e049f6465a619a76b739fc7398c97da",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authotel/authotel.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e4f14bed0e8d9cda5eef93d66b4f486fb146755c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authotel/authotel_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:acc71c6e8db59f7b94ea3f269cab19d36a147fac",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authrpc/authrpc.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:7cd2e3d11635f5179fea6be9b3122471c1f82241",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "authrpc/authrpc_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f1d8fbfaea3109c8efa1bf4a3d8034e59c6f02a0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "benchmark_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:07531fb9ca08b2776e6a7e150c111e063a029987",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "cspell.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:6a8844ce47209173074f444e7039a9b52481b097",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "decision.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ae92bfa62d24e0870860c9301b95f7fba79112d2",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "decision_service.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d2577db551512cf27a3e8663096233fa14f1f7b8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "decision_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:7c8981454a6530b8babc21885950fc6f511122c6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/README.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d3623ef2160b9fddbec600f43ef4791ae1a3a111",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/api-reference.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:631501c4f74b6918ad44978ccaafc9ab278c55fa",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/application-guide.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:35a44ae14f23b66b4aabea13628e599c6e8c0a95",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/authentication.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:4ae9fe4ed012ef6f89dc088ec0fba61189452fb6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/cache.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f032176c2b06c04d2006ee09dce2746d6ba2a86d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/compatibility.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:60c967f5c975da4b38c5a4942eef812888fe344e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/decision-tables.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:5f9a854b32813240ba0c3cc38bc70a0cfe5d94fd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/faq.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:fbfc99313e91fffcb6aa53609eef005e1a662e7f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/http.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:a670e53d1e9e980be2392fb373e620cb3f1ee3a4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/identity-contracts.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:052be36c62754e66c62a8726f17f0e6bcbbbb00e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/jsonrpc.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f572d64fca3e5263aa9db2ba5f865f908a7e6362",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/model-selection.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:c945c5d0348a6c30e3bf55d9b87c5e6340882ffc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/observability.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:2e9c2b8c5f6d5613eb19bada59f6f15fb155b4a1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/operations.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:522cdca9abfd3691bb1f5f1149d4d25ddd121d76",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/performance.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:536f360783dc26cbf1570a8cfbcb01d2cf4825d0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/policy-composition.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:3385213afeeaf3cb681d30d3a37e8c36949c1fa7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/policy-format.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:7029d976153ddde06a97581dc87fb12e5e5b0d79",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/policy-lifecycle.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:21a9c40973e4359c2d65ea5873da753b9659a317",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/postgres.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:80a8c531d42b212dedf53c1219bc856c2f0642dd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/quickstart-abac.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:cbb636cd5031d97b7b9f273a4c49cbb6bcbc00e0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/quickstart-acl.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:715d2c3036291b6f7971cbff160ce91ff34cd39a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/quickstart-rbac.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d0631c0b1d19e9172900c10d05972e2abf60bae7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/security.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:4e342d588fab05dc21272a96f057434406e420f6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/testing.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:38fbe397c463e1af8067cff5a413b700d1f57425",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/threat-model.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:2c1b8fe369adadcfa3dce3281321f2c387aba9f6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "docs/valkey.md",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:6347fd73249e86d6689e5a16a9c84fa6ffd400b9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "engine.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:463fa6a83fef2609fd560391514975065e5df647",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "engine_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ea174e53da525e186fa422e758ada8aeaf68bd88",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "examples/tenant_documents/main.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:7fc82f475c7014b5c7e4a66bc94c722f286e525c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "go.mod",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:71f6d89c48e86ad38f9583bdf4bf2ba4de1180ba",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "go.sum",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:42912937bf6876a962aac3e3fbf700bf7e9e1ee3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "go.work",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:9c5d58797f8c69f466d8a5f51983f26b7fb49c6f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "httpauth/httpauth.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:68cc7dd4203b3558e8fe06e36be161a878d7521d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "httpauth/httpauth_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:450f0ac06297073dbb57749f4c97de8d272c6083",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "idempotency_key.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d26fd4f9705775b7f18f0a25c10c98e7f1c5d384",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "identity_contracts.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:6d61c0e2e6928f6dd438cb541d32cc6f6c7bd9e4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "identity_contracts_boundaries_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:4a1ce6be4c98fbe2dd3c696da533b4ffa6d84758",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "identity_contracts_example_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d37a7757a5d38359471b315380557b93eb71e9cd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "identity_contracts_fuzz_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:547a890b5473c3bec6643b3630bd4cce7536f344",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "identity_contracts_limits_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:3cae1dd7b42b3315a56ae16bbe6aee7cbdd472bb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "identity_contracts_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:60cc955791554bb138c36161ecfd1f8fb814b9e1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "instrumentation.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:82c919cef321c235b81af5783f22125035b4ddea",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "instrumentation_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:10b23c7af7718fcf8ef9109d3946e0f7ef8a4539",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "integration/contracts/contracts_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:c7b5671c3f95bed91cc6bd78f52f64500b2cfde2",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "integration/contracts/go.mod",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ec1b25c01194db5676dde87d932e98bceb36c205",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "integration/contracts/go.sum",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:06d57ac82143d7185e52f19164e4aede8c517191",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "internal/authorizationotel/instrumenter.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:8944ee19ed9e0f71e91abdf117e6fffb6ccb5cb3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "internal/authorizationotel/instrumenter_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:94f933ec74375b2ee269c1b979ca47db19795cec",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "model_conformance_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:55b145c1dc6addc4d05bc82721e9736271ca4249",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "modules.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ba8b8f30660782f1fabeb5823884c7776dea15a4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "package-lock.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:bb588310dbb7bcac7ca3600a14f8d18e8561d6af",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "package.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ccdb0c71600565893d937140a0f9e4df595aa0dd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "packages.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f70b9e85fa5d983557391c3c0fba66c3fac63b4e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "permission_statement.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ffcec959aa9506fda79670f6e996c0338cad97e2",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/benchmark_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:819c0022e1cf27b59324d35981e9682daf75113b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/compatibility_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d8e76cf565579e3157cee916f58221227ff46a07",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/compiler.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:0fe250f2a29e99ad0dd0db968750369af6b72a2a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/compiler_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:7a15ecabaac751bac04b3a220c4a6349ea69a0f9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/fuzz_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:dc897e27e96e5da03ba143dee2407e0d00bab55f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/manifest.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:8f17a6c1e9c40d5fbd54ccb1194a13cd8f368524",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/manifest_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:55d52768a02920f8a0b5a12ea7ae4a04bed39b99",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/policy.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:10218437f573107fbc9fb2450652c67e953ac7ff",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/policy_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:b0e3d9951db035aa1aaea15f4b04f95d657de5c6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/rolling_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:90b82e402a87d4e74e53746c05d81736759bdbf0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/synchronizer.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:0d1d2636a919d7a553bd208ffab3012d9540b431",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/synchronizer_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:4bc7dd41f120c2cc9aebdfb1014a1cf604da1531",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/testdata/v1/abac.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:8948fda1d1c9c12ac0d5c2b01623926a4bdba35c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/testdata/v1/acl.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e797c97a6979d3513ac3a56a9d7aa686278917f7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "policy/testdata/v1/rbac.json",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:0b65ae5c918ae161aa3e31db9534262e2b4e467f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "postgres/integration_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:f571d4eb5e948e9e57c1dd53a8cc8b813337591a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "postgres/migration.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:d770243b9cf1ef224f3607080d765a539995d7b7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "postgres/store.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:c96db722f98e0ac3b5c42c9552aa402bed4c8260",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "postgres/store_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:baed2104f4f1464d29d9d031125f55ab76df67a3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "postgres/testdata/schema-v1-up.sql",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:33a19c128fd0b6d642d30823daa7acc243ec82e0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "rbac/benchmark_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:01cf070683406d8f5740d01f0e2b8cf7b7c5edfd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "rbac/document.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e2d83d9e451daffe7c706976bfdb88cf292934a0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "rbac/document_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:adcd26b817d70d255ec4680a8a0e125baaf42a47",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "rbac/example_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:64ba3c484a1cc354da64774d6630243b7b6cc4c4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "rbac/fuzz_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:b991ff74245ff58383df1c5347af771fd9b1ad87",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "rbac/manager.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:058f8712e4cac2ebee2f0926dd4964f605182504",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "rbac/manager_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:75733af48bced2025889f3b4bc3edeb313800254",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "rbac/rbac.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:3549af0936a262462661faea467c36a07c8fee4d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "rbac/rbac_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:56c11bdf157ba70f7f9c14f18920d1db597a044d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "request.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:6d78ae9718efa4a96dbd507d78a02bf7c210e7c5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "request_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:15c0a59db559dd453ef9ecec58b179cca0514881",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "scripts/check-api.sh",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e2c914a7d0df0eced33afbed4f8bca271523ee23",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "snapshot.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:69d05eabfefecf6e7af2b12a14440e415600ac71",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "snapshot_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:e6fcada58af71eea8dcad25ca632072fa6aa8de6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "valkey/integration_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:ea78f3a013ca9214fcc74388457feafeb6615edd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "valkey/invalidator.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:b3787401261b0dd57158a80790aef344aca3226f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "valkey/invalidator_test.go",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        },
+        {
+          "content_identity": "git-sha1:aafe88e8defce1abd63e0623025535dea8ec2e63",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authorization-identity-contracts",
+          "path": "verification/package.mk",
+          "reason": "Complete committed family sources, fixtures, dependencies and configured native gate inputs"
+        }
+      ],
+      "object_format": "git-sha1",
+      "repository_identity": "github.com/faustbrian/go-authorization",
+      "revision": "a74c24b3846323e0c1627c6fccbb79ce25248392",
+      "tree": "git-sha1:c6b71d63e97caea8feaf93c24633118615545342"
+    },
+    {
+      "inputs": [
+        {
+          "content_identity": "git-sha1:27732d493e15aec526a88abf4f545bba3a0c85ad",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/COMMON_REQUIREMENTS.md",
+          "reason": "Selected unit requirements and canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:26566f2f24ca7181de5edbfe72ce6bc3f43ad253",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/ORCHESTRATOR_GOAL.md",
+          "reason": "Selected unit requirements and canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:19d1c5f901dba7cf863aeed7509291cc462e026b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/goals/primitive-authorization-identity-contracts.md",
+          "reason": "Selected unit requirements and canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:3238a98ba7af593fd576c444b71cdb52082261c7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/public_contract_repository.rb",
+          "reason": "Selected unit requirements and canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:7dee30bcaf8916ae384c81b2b8ab82c7fcc216d5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/repository_input_manifest.rb",
+          "reason": "Selected unit requirements and canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:fb9710bdcbe0ee2cbb4b8ada7faf618d6bd83d68",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/repository_topology.rb",
+          "reason": "Selected unit requirements and canonical input readers"
+        }
+      ],
+      "object_format": "git-sha1",
+      "repository_identity": "github.com/faustbrian/go-library-tools",
+      "revision": "4029da0ac501242223db2b1a06bf4ffa78cd223f",
+      "tree": "git-sha1:0e8a449ecb9a6b482168c373b14b4018b0bbee01"
+    }
+  ],
+  "schema_version": 2
+}

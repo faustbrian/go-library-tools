@@ -1,0 +1,10 @@
+./.golib/scripts/repository-check.sh
+standalone repository contract passed
+./.golib/scripts/with-disposable-go-cache.sh ./.golib/scripts/run-modules.sh check --all
+
+[.] check
+
+[.] format-check
+test -z "$(gofmt -l .)"
+make[1]: *** [format-check] Error 1
+make: *** [check] Error 2

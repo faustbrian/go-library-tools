@@ -1,0 +1,72 @@
+diff --git a/.golib/scripts/gate-input-digest.sh b/.golib/scripts/gate-input-digest.sh
+index 84a2d91..f775af9 100755
+--- a/.golib/scripts/gate-input-digest.sh
++++ b/.golib/scripts/gate-input-digest.sh
+@@ -879,11 +879,12 @@ package_digest() {
+     if [[ "${resolution}" == "legacy-stable" ]]; then
+         jq -s \
+             --arg root "${root}/" \
+             --arg module_path "${module_path}" '
+             .[]
+-            | select((.Dir // "") | startswith($root))
++            | select((.Dir // "") == ($root | rtrimstr("/")) or
++                ((.Dir // "") | startswith($root)))
+             | . + {
+                 GolibMutationObserver:
+                     ((.Module.Path // "") == $module_path)
+             }
+         ' "${package_data}" >"${relevant_package_data}"
+@@ -905,11 +906,12 @@ package_digest() {
+         | ([
+             $observers[]
+             | canonical_import, (.Deps // [])[]
+         ] | unique) as $relevant_imports
+         | .[]
+-        | select((.Dir // "") | startswith($root))
++        | select((.Dir // "") == ($root | rtrimstr("/")) or
++            ((.Dir // "") | startswith($root)))
+         | select(
+             canonical_import as $import
+             | ($relevant_imports | index($import)) != null
+         )
+         | .Dir as $directory
+@@ -937,11 +939,12 @@ package_digest() {
+         | ([
+             $observers[]
+             | canonical_import, (.Deps // [])[]
+         ] | unique) as $relevant_imports
+         | .[]
+-        | select((.Dir // "") | startswith($root))
++        | select((.Dir // "") == ($root | rtrimstr("/")) or
++            ((.Dir // "") | startswith($root)))
+         | select(
+             (.ForTest // "") == "" or
+             (.ForTest // "") == $target
+         )
+         | select(
+@@ -955,11 +958,11 @@ package_digest() {
+         }
+         ' "${package_data}" >"${relevant_package_data}"
+     fi
+ 
+     jq -r --arg root "${root}/" --arg module_path "${module_path}" '
+-        select(.Dir | startswith($root))
++        select(.Dir == ($root | rtrimstr("/")) or (.Dir | startswith($root)))
+         | .Dir as $directory
+         | (
+             [
+                 .GoFiles[]?,
+                 .CgoFiles[]?,
+@@ -1009,11 +1012,11 @@ package_digest() {
+                     -print >>"${input_files}"
+             fi
+         done
+     done < <(
+         jq -r --arg root "${root}/" '
+-            select(.Dir | startswith($root))
++            select(.Dir == ($root | rtrimstr("/")) or (.Dir | startswith($root)))
+             | .Dir
+         ' "${relevant_package_data}" | LC_ALL=C sort -u
+     )
+ 
+     while IFS= read -r file; do

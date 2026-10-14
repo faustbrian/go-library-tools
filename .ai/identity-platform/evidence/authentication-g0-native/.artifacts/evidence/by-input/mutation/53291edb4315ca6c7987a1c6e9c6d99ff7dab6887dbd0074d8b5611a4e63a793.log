@@ -1,0 +1,71 @@
+
+[.] mutation
+go: downloading go1.26.6 (darwin/arm64)
+go: downloading github.com/faustbrian/go-clock v1.0.0
+[.] mutation package .
+ok  	github.com/faustbrian/go-authentication	1.061s	coverage: 58.5% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/apikey	0.188s	coverage: 12.7% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/authhttp	0.408s	coverage: 30.8% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/authlog	0.188s	coverage: 0.5% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/authtest	0.405s	coverage: 9.3% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/basic	0.183s	coverage: 8.7% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/bearer	0.391s	coverage: 11.7% of statements in ./...
+Starting...
+Gathering coverage... done in 6s
+
+Mutation testing completed in 4 minutes 41 seconds
+Killed: 460, Lived: 0, Not covered: 0
+Timed out: 0, Not viable: 0, Skipped: 0
+Test efficacy: 100.00%
+Mutator coverage: 100.00%
+[.] . killed 460/460 viable mutants
+[.] mutation package ./apikey
+Starting...
+Gathering coverage... done in 6s
+
+Mutation testing completed in 12 seconds 301 milliseconds
+Killed: 52, Lived: 0, Not covered: 0
+Timed out: 0, Not viable: 0, Skipped: 0
+Test efficacy: 100.00%
+Mutator coverage: 100.00%
+[.] ./apikey killed 52/52 viable mutants
+[.] mutation package ./authhttp
+Starting...
+Gathering coverage... done in 6s
+
+Mutation testing completed in 51 seconds 472 milliseconds
+Killed: 155, Lived: 0, Not covered: 0
+Timed out: 0, Not viable: 0, Skipped: 0
+Test efficacy: 100.00%
+Mutator coverage: 100.00%
+[.] ./authhttp killed 155/155 viable mutants
+[.] mutation package ./authlog
+Starting...
+Gathering coverage... done in 6s
+
+Mutation testing completed in 1 second 223 milliseconds
+Killed: 2, Lived: 0, Not covered: 0
+Timed out: 0, Not viable: 0, Skipped: 0
+Test efficacy: 100.00%
+Mutator coverage: 100.00%
+[.] ./authlog killed 2/2 viable mutants
+[.] mutation package ./basic
+Starting...
+Gathering coverage... done in 6s
+
+Mutation testing completed in 6 seconds 751 milliseconds
+Killed: 28, Lived: 0, Not covered: 0
+Timed out: 0, Not viable: 0, Skipped: 0
+Test efficacy: 100.00%
+Mutator coverage: 100.00%
+[.] ./basic killed 28/28 viable mutants
+[.] mutation package ./bearer
+Starting...
+Gathering coverage... done in 6s
+
+Mutation testing completed in 11 seconds 615 milliseconds
+Killed: 45, Lived: 0, Not covered: 0
+Timed out: 0, Not viable: 0, Skipped: 0
+Test efficacy: 100.00%
+Mutator coverage: 100.00%
+[.] ./bearer killed 45/45 viable mutants

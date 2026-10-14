@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "module": ".",
+  "gate": "nilaway",
+  "result": "advisory",
+  "exit_code": 0,
+  "execution_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "completed_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "input_digest": "a074498a5b9d87dd827511bf4c96a7af2f8e13dc77d4836eddf332e4252ce67a",
+  "completed_input_digest": "a074498a5b9d87dd827511bf4c96a7af2f8e13dc77d4836eddf332e4252ce67a",
+  "log_sha256": "9f8b8e9825f39f06667503e141b02767d4cc668e3367136746c62e89b97cefa9",
+  "started_at": "2026-10-01T06:17:09Z",
+  "completed_at": "2026-10-01T06:17:33Z",
+  "environment": {
+    "go_version": "go1.26.6",
+    "goos": "darwin",
+    "goarch": "arm64"
+  }
+}

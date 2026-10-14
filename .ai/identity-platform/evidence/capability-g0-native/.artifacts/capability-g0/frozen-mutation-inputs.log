@@ -1,0 +1,13 @@
+go: downloading github.com/jackc/pgx/v5 v5.10.0
+go: downloading github.com/valkey-io/valkey-go v1.0.76
+go: downloading github.com/jackc/puddle/v2 v2.2.2
+go: downloading github.com/jackc/pgpassfile v1.0.0
+go: downloading github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761
+go: downloading golang.org/x/text v0.36.0
+go: downloading golang.org/x/sync v0.20.0
+go: downloading golang.org/x/sys v0.43.0
+. current complete mutation inputs match executed checkpoint: 1988271515acb7da2dd29f686c2b458748da8d5c90842edbf4a4068183710fef
+caphttp current complete mutation inputs match executed checkpoint: a4cdebdd37cba5cf86468a8acadd83d40150d2241f641ca1f5ba8527c174da92
+memory current complete mutation inputs match executed checkpoint: cd4da26b9d3d50c080be8fd0f9b7e9257207ea8b8cb551b515ca4b58e5347c9f
+postgres current complete mutation inputs match executed checkpoint: a92a6018f93c104fc04ead23adfe6020fff3f25313ee6eb932723b9e7b1d6d8f
+valkey current complete mutation inputs match executed checkpoint: c84c84bf320405419b113ff887b4e05a5eadb0eb31917eac3cb165a5eccfbb2c

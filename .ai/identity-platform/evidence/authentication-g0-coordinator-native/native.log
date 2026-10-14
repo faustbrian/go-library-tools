@@ -1,0 +1,571 @@
+
+[.] check
+
+[.] format-check
+
+[.] tidy-check
+go: downloading go1.26.6 (darwin/arm64)
+go: downloading go1.26.6 (darwin/arm64)
+
+[.] safety
+standalone safety policy passed for .
+
+[.] vet
+
+[.] test
+ok  	github.com/faustbrian/go-authentication	1.318s
+ok  	github.com/faustbrian/go-authentication/apikey	0.168s
+ok  	github.com/faustbrian/go-authentication/authhttp	0.188s
+ok  	github.com/faustbrian/go-authentication/authlog	0.168s
+ok  	github.com/faustbrian/go-authentication/authtest	0.178s
+ok  	github.com/faustbrian/go-authentication/basic	0.164s
+ok  	github.com/faustbrian/go-authentication/bearer	0.165s
+
+[.] race
+ok  	github.com/faustbrian/go-authentication	2.315s
+ok  	github.com/faustbrian/go-authentication/apikey	1.184s
+ok  	github.com/faustbrian/go-authentication/authhttp	1.200s
+ok  	github.com/faustbrian/go-authentication/authlog	1.174s
+ok  	github.com/faustbrian/go-authentication/authtest	1.208s
+ok  	github.com/faustbrian/go-authentication/basic	1.198s
+ok  	github.com/faustbrian/go-authentication/bearer	1.193s
+
+[.] coverage
+ok  	github.com/faustbrian/go-authentication	1.044s	coverage: 58.5% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/apikey	0.175s	coverage: 12.7% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/authhttp	0.205s	coverage: 30.8% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/authlog	0.191s	coverage: 0.5% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/authtest	0.201s	coverage: 9.3% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/basic	0.179s	coverage: 8.7% of statements in ./...
+ok  	github.com/faustbrian/go-authentication/bearer	0.183s	coverage: 11.7% of statements in ./...
+github.com/faustbrian/go-authentication 561/561 statements
+github.com/faustbrian/go-authentication/apikey 93/93 statements
+github.com/faustbrian/go-authentication/authhttp 243/243 statements
+github.com/faustbrian/go-authentication/authlog 5/5 statements
+github.com/faustbrian/go-authentication/basic 52/52 statements
+github.com/faustbrian/go-authentication/bearer 83/83 statements
+all production packages have exact 100% statement coverage
+
+[.] lint
+go: downloading github.com/golangci/golangci-lint/v2 v2.12.2
+go: downloading charm.land/lipgloss/v2 v2.0.3
+go: downloading github.com/fatih/color v1.19.0
+go: downloading github.com/gofrs/flock v0.13.0
+go: downloading github.com/ldez/grignotin v0.10.1
+go: downloading github.com/pelletier/go-toml/v2 v2.3.1
+go: downloading github.com/pelletier/go-toml v1.9.5
+go: downloading github.com/santhosh-tekuri/jsonschema/v6 v6.0.2
+go: downloading github.com/spf13/cobra v1.10.2
+go: downloading github.com/spf13/pflag v1.0.10
+go: downloading github.com/spf13/viper v1.12.0
+go: downloading go.yaml.in/yaml/v3 v3.0.4
+go: downloading golang.org/x/mod v0.35.0
+go: downloading github.com/mattn/go-colorable v0.1.14
+go: downloading github.com/mattn/go-isatty v0.0.20
+go: downloading github.com/charmbracelet/colorprofile v0.4.3
+go: downloading github.com/charmbracelet/ultraviolet v0.0.0-20251205161215-1948445e3318
+go: downloading github.com/charmbracelet/x/ansi v0.11.7
+go: downloading github.com/charmbracelet/x/term v0.2.2
+go: downloading github.com/clipperhouse/displaywidth v0.11.0
+go: downloading github.com/lucasb-eyer/go-colorful v1.4.0
+go: downloading github.com/rivo/uniseg v0.4.7
+go: downloading golang.org/x/tools v0.44.0
+go: downloading github.com/go-viper/mapstructure/v2 v2.5.0
+go: downloading github.com/hashicorp/go-version v1.9.0
+go: downloading github.com/mitchellh/go-homedir v1.1.0
+go: downloading github.com/alecthomas/chroma/v2 v2.24.1
+go: downloading github.com/rogpeppe/go-internal v1.14.1
+go: downloading github.com/golangci/plugin-module-register v0.1.2
+go: downloading github.com/sirupsen/logrus v1.9.4
+go: downloading github.com/stretchr/testify v1.11.1
+go: downloading github.com/go-xmlfmt/xmlfmt v1.1.3
+go: downloading github.com/golangci/revgrep v0.8.0
+go: downloading golang.org/x/sys v0.43.0
+go: downloading github.com/fsnotify/fsnotify v1.5.4
+go: downloading github.com/mitchellh/mapstructure v1.5.0
+go: downloading github.com/spf13/afero v1.15.0
+go: downloading github.com/spf13/cast v1.5.0
+go: downloading github.com/spf13/jwalterweatherman v1.1.0
+go: downloading golang.org/x/text v0.36.0
+go: downloading github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
+go: downloading github.com/charmbracelet/x/termios v0.1.1
+go: downloading github.com/charmbracelet/x/windows v0.2.2
+go: downloading github.com/muesli/cancelreader v0.2.2
+go: downloading golang.org/x/sync v0.20.0
+go: downloading github.com/clipperhouse/uax29/v2 v2.7.0
+go: downloading github.com/mattn/go-runewidth v0.0.23
+go: downloading github.com/daixiang0/gci v0.13.7
+go: downloading github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d
+go: downloading mvdan.cc/gofumpt v0.9.2
+go: downloading github.com/golangci/golines v0.15.0
+go: downloading github.com/sourcegraph/go-diff v0.8.0
+go: downloading github.com/golangci/swaggoswag v0.0.0-20250504205917-77f2aca3143e
+go: downloading go.augendre.info/arangolint v0.4.0
+go: downloading github.com/alingse/asasalint v0.0.11
+go: downloading github.com/golangci/asciicheck v0.5.0
+go: downloading github.com/breml/bidichk v0.3.3
+go: downloading github.com/timakin/bodyclose v0.0.0-20260129054331-73d1f95b84b4
+go: downloading github.com/lasiar/canonicalheader v1.1.2
+go: downloading github.com/ClickHouse/clickhouse-go-linter v1.2.0
+go: downloading github.com/sivchari/containedctx v1.0.3
+go: downloading github.com/kkHAIKE/contextcheck v1.1.6
+go: downloading github.com/karamaru-alpha/copyloopvar v1.2.2
+go: downloading github.com/bkielbasa/cyclop v1.2.3
+go: downloading gitlab.com/bosi/decorder v0.4.2
+go: downloading github.com/OpenPeeDeeP/depguard/v2 v2.2.1
+go: downloading github.com/golangci/dupl v0.0.0-20260401084720-c99c5cf5c202
+go: downloading github.com/Abirdcfly/dupword v0.1.7
+go: downloading github.com/charithe/durationcheck v0.0.11
+go: downloading github.com/manuelarte/embeddedstructfieldcheck v0.4.0
+go: downloading github.com/Djarvur/go-err113 v0.1.1
+go: downloading github.com/kisielk/errcheck v1.10.0
+go: downloading github.com/breml/errchkjson v0.4.1
+go: downloading github.com/Antonboom/errname v1.1.1
+go: downloading codeberg.org/polyfloyd/go-errorlint v1.9.0
+go: downloading github.com/nishanths/exhaustive v0.12.0
+go: downloading dev.gaijin.team/go/exhaustruct/v4 v4.0.0
+go: downloading github.com/ldez/exptostd v0.4.5
+go: downloading go.augendre.info/fatcontext v0.9.0
+go: downloading github.com/ashanbrown/forbidigo/v2 v2.3.1
+go: downloading github.com/gostaticanalysis/forcetypeassert v0.2.0
+go: downloading github.com/manuelarte/funcorder v0.6.0
+go: downloading github.com/ultraware/funlen v0.2.0
+go: downloading github.com/nunnatsa/ginkgolinter v0.23.0
+go: downloading 4d63.com/gocheckcompilerdirectives v1.3.0
+go: downloading 4d63.com/gochecknoglobals v0.2.2
+go: downloading github.com/alecthomas/go-check-sumtype v0.3.1
+go: downloading github.com/uudashr/gocognit v1.2.1
+go: downloading github.com/jgautheron/goconst v1.10.0
+go: downloading github.com/go-critic/go-critic v0.14.3
+go: downloading github.com/quasilyte/go-ruleguard/dsl v0.3.23
+go: downloading github.com/fzipp/gocyclo v0.6.0
+go: downloading github.com/quasilyte/go-ruleguard v0.4.5
+go: downloading github.com/godoc-lint/godoc-lint v0.11.2
+go: downloading github.com/tetafro/godot v1.5.6
+go: downloading github.com/matoous/godox v1.1.0
+go: downloading github.com/denis-tingaikin/go-header v0.5.0
+go: downloading github.com/ldez/gomoddirectives v0.8.0
+go: downloading github.com/Masterminds/semver/v3 v3.5.0
+go: downloading github.com/ryancurrah/gomodguard v1.4.1
+go: downloading github.com/ryancurrah/gomodguard/v2 v2.1.3
+go: downloading github.com/golangci/go-printf-func-name v0.1.1
+go: downloading github.com/securego/gosec/v2 v2.26.1
+go: downloading github.com/xen0n/gosmopolitan v1.3.0
+go: downloading github.com/leonklingele/grouper v1.1.2
+go: downloading github.com/uudashr/iface v1.4.2
+go: downloading github.com/julz/importas v0.2.0
+go: downloading github.com/macabu/inamedparam v0.2.0
+go: downloading github.com/gordonklaus/ineffassign v0.2.0
+go: downloading github.com/sashamelentyev/interfacebloat v1.1.0
+go: downloading github.com/ckaznocha/intrange v0.3.1
+go: downloading github.com/AdminBenni/iota-mixing v1.0.0
+go: downloading github.com/butuzov/ireturn v0.4.1
+go: downloading github.com/timonwong/loggercheck v0.11.0
+go: downloading github.com/yagipy/maintidx v1.0.0
+go: downloading github.com/ashanbrown/makezero/v2 v2.2.1
+go: downloading github.com/butuzov/mirror v1.3.0
+go: downloading github.com/golangci/misspell v0.8.0
+go: downloading github.com/tommy-muehle/go-mnd/v2 v2.5.1
+go: downloading go-simpler.org/musttag v0.14.0
+go: downloading github.com/alexkohler/nakedret/v2 v2.0.6
+go: downloading github.com/nakabonne/nestif v0.3.1
+go: downloading github.com/gostaticanalysis/nilerr v0.1.2
+go: downloading github.com/alingse/nilnesserr v0.2.0
+go: downloading github.com/Antonboom/nilnil v1.1.1
+go: downloading github.com/ssgreg/nlreturn/v2 v2.2.1
+go: downloading github.com/sonatard/noctx v0.5.1
+go: downloading github.com/AlwxSin/noinlineerr v1.0.5
+go: downloading github.com/firefart/nonamedreturns v1.0.6
+go: downloading github.com/stbenjam/no-sprintf-host-port v0.3.1
+go: downloading github.com/kunwardeep/paralleltest v1.0.15
+go: downloading github.com/catenacyber/perfsprint v0.10.1
+go: downloading github.com/alexkohler/prealloc v1.1.0
+go: downloading github.com/nishanths/predeclared v0.2.2
+go: downloading github.com/yeya24/promlinter v0.3.0
+go: downloading github.com/ghostiam/protogetter v0.3.20
+go: downloading github.com/curioswitch/go-reassign v0.3.0
+go: downloading github.com/raeperd/recvcheck v0.2.0
+go: downloading github.com/BurntSushi/toml v1.6.0
+go: downloading github.com/mgechev/revive v1.15.0
+go: downloading github.com/golangci/rowserrcheck v0.0.0-20260419091836-c5f79b8a11ba
+go: downloading go-simpler.org/sloglint v0.12.0
+go: downloading github.com/jjti/go-spancheck v0.6.5
+go: downloading github.com/ryanrolds/sqlclosecheck v0.6.0
+go: downloading honnef.co/go/tools v0.7.0
+go: downloading github.com/4meepo/tagalign v1.4.3
+go: downloading github.com/ldez/tagliatelle v0.7.2
+go: downloading github.com/maratori/testableexamples v1.0.1
+go: downloading github.com/Antonboom/testifylint v1.6.4
+go: downloading github.com/maratori/testpackage v1.1.2
+go: downloading github.com/kulti/thelper v0.7.1
+go: downloading github.com/moricho/tparallel v0.3.2
+go: downloading github.com/golangci/unconvert v0.0.0-20250410112200-a129a6e6413e
+go: downloading mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15
+go: downloading github.com/MirrexOne/unqueryvet v1.5.4
+go: downloading github.com/sashamelentyev/usestdlibvars v1.29.0
+go: downloading github.com/ldez/usetesting v0.5.0
+go: downloading github.com/blizzy78/varnamelen v0.8.0
+go: downloading github.com/sanposhiho/wastedassign/v2 v2.1.0
+go: downloading github.com/ultraware/whitespace v0.2.0
+go: downloading github.com/tomarrell/wrapcheck/v2 v2.12.0
+go: downloading github.com/bombsimon/wsl/v4 v4.7.0
+go: downloading github.com/bombsimon/wsl/v5 v5.8.0
+go: downloading github.com/ykadowak/zerologlint v0.1.5
+go: downloading github.com/davecgh/go-spew v1.1.1
+go: downloading github.com/pmezard/go-difflib v1.0.0
+go: downloading github.com/stretchr/objx v0.5.2
+go: downloading github.com/subosito/gotenv v1.4.1
+go: downloading github.com/hashicorp/hcl v1.0.0
+go: downloading gopkg.in/ini.v1 v1.67.0
+go: downloading github.com/magiconair/properties v1.8.6
+go: downloading gopkg.in/yaml.v3 v3.0.1
+go: downloading github.com/hexops/gotextdiff v1.0.3
+go: downloading go.uber.org/zap v1.27.0
+go: downloading github.com/dave/dst v0.27.3
+go: downloading github.com/google/go-cmp v0.7.0
+go: downloading github.com/gostaticanalysis/analysisutil v0.7.1
+go: downloading github.com/go-toolsmith/astcast v1.1.0
+go: downloading github.com/gobwas/glob v0.2.3
+go: downloading dev.gaijin.team/go/golib v0.6.0
+go: downloading github.com/go-toolsmith/astfmt v1.1.0
+go: downloading github.com/go-toolsmith/astcopy v1.1.0
+go: downloading github.com/go-toolsmith/astequal v1.2.0
+go: downloading github.com/go-toolsmith/astp v1.1.0
+go: downloading github.com/go-toolsmith/strparse v1.1.0
+go: downloading github.com/go-toolsmith/typep v1.1.0
+go: downloading github.com/quasilyte/regex/syntax v0.0.0-20210819130434-b3f0c404a727
+go: downloading github.com/ccojocar/zxcvbn-go v1.0.4
+go: downloading github.com/gostaticanalysis/comment v1.5.0
+go: downloading github.com/prometheus/client_golang v1.12.1
+go: downloading github.com/prometheus/client_model v0.2.0
+go: downloading github.com/fatih/structtag v1.2.0
+go: downloading github.com/ettle/strcase v0.2.0
+go: downloading github.com/alfatraining/structtag v1.0.0
+go: downloading github.com/hashicorp/go-immutable-radix/v2 v2.1.0
+go: downloading github.com/dlclark/regexp2 v1.12.0
+go: downloading go.uber.org/multierr v1.10.0
+go: downloading github.com/ldez/structtags v0.6.1
+go: downloading golang.org/x/exp/typeparams v0.0.0-20260209203927-2842357ff358
+go: downloading golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
+go: downloading github.com/quasilyte/gogrep v0.5.0
+go: downloading github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567
+go: downloading github.com/prometheus/common v0.32.1
+go: downloading github.com/beorn7/perks v1.0.1
+go: downloading github.com/cespare/xxhash/v2 v2.3.0
+go: downloading github.com/golang/protobuf v1.5.3
+go: downloading github.com/prometheus/procfs v0.7.3
+go: downloading google.golang.org/protobuf v1.36.10
+go: downloading codeberg.org/chavacava/garif v0.2.0
+go: downloading github.com/hashicorp/golang-lru/v2 v2.0.7
+go: downloading github.com/matttproud/golang_protobuf_extensions v1.0.1
+0 issues.
+
+[.] staticcheck
+go: downloading golang.org/x/tools v0.40.1-0.20260108161641-ca281cf95054
+go: downloading golang.org/x/exp/typeparams v0.0.0-20231108232855-2478ac86f678
+go: downloading golang.org/x/sync v0.19.0
+go: downloading golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
+go: downloading github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c
+go: downloading golang.org/x/mod v0.31.0
+
+[.] vulnerability
+go: downloading golang.org/x/vuln v1.6.0
+go: downloading golang.org/x/telemetry v0.0.0-20260708182218-49f421fb7959
+go: downloading golang.org/x/mod v0.38.0
+go: downloading golang.org/x/tools v0.48.0
+go: downloading golang.org/x/sync v0.22.0
+No vulnerabilities found.
+
+[.] secrets
+go: downloading github.com/zricethezav/gitleaks/v8 v8.30.1
+go: downloading github.com/rs/zerolog v1.33.0
+go: downloading github.com/spf13/cobra v1.9.1
+go: downloading github.com/spf13/viper v1.19.0
+go: downloading github.com/spf13/pflag v1.0.6
+go: downloading github.com/BobuSumisu/aho-corasick v1.0.3
+go: downloading github.com/hashicorp/go-version v1.7.0
+go: downloading golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
+go: downloading github.com/charmbracelet/lipgloss v0.5.0
+go: downloading github.com/fatih/semgroup v1.2.0
+go: downloading github.com/Masterminds/sprig/v3 v3.3.0
+go: downloading github.com/gitleaks/go-gitdiff v0.9.1
+go: downloading github.com/h2non/filetype v1.1.3
+go: downloading github.com/mholt/archives v0.1.2
+go: downloading github.com/fsnotify/fsnotify v1.8.0
+go: downloading github.com/sagikazarmark/slog-shim v0.1.0
+go: downloading github.com/spf13/afero v1.12.0
+go: downloading github.com/spf13/cast v1.7.1
+go: downloading github.com/lucasb-eyer/go-colorful v1.2.0
+go: downloading github.com/mattn/go-runewidth v0.0.14
+go: downloading github.com/muesli/reflow v0.2.1-0.20210115123740-9e1d0d53df68
+go: downloading github.com/muesli/termenv v0.15.1
+go: downloading dario.cat/mergo v1.0.1
+go: downloading github.com/Masterminds/goutils v1.1.1
+go: downloading github.com/Masterminds/semver/v3 v3.3.0
+go: downloading github.com/google/uuid v1.6.0
+go: downloading github.com/huandu/xstrings v1.5.0
+go: downloading github.com/mitchellh/copystructure v1.2.0
+go: downloading github.com/shopspring/decimal v1.4.0
+go: downloading golang.org/x/crypto v0.35.0
+go: downloading golang.org/x/sync v0.11.0
+go: downloading github.com/STARRY-S/zip v0.2.1
+go: downloading github.com/andybalholm/brotli v1.1.2-0.20250424173009-453214e765f3
+go: downloading github.com/bodgit/sevenzip v1.6.0
+go: downloading github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
+go: downloading github.com/klauspost/compress v1.17.11
+go: downloading github.com/klauspost/pgzip v1.2.6
+go: downloading github.com/minio/minlz v1.0.0
+go: downloading github.com/nwaples/rardecode/v2 v2.1.0
+go: downloading github.com/pierrec/lz4/v4 v4.1.21
+go: downloading github.com/sorairolake/lzip-go v0.3.5
+go: downloading github.com/therootcompany/xz v1.0.1
+go: downloading github.com/ulikunitz/xz v0.5.12
+go: downloading golang.org/x/text v0.22.0
+go: downloading golang.org/x/sys v0.30.0
+go: downloading github.com/subosito/gotenv v1.6.0
+go: downloading github.com/magiconair/properties v1.8.9
+go: downloading github.com/pelletier/go-toml/v2 v2.2.3
+go: downloading github.com/rivo/uniseg v0.2.0
+go: downloading github.com/aymanbagabas/go-osc52/v2 v2.0.1
+go: downloading github.com/mitchellh/reflectwalk v1.0.2
+go: downloading github.com/bodgit/plumbing v1.3.0
+go: downloading github.com/bodgit/windows v1.0.1
+go: downloading github.com/hashicorp/go-multierror v1.1.1
+go: downloading go4.org v0.0.0-20230225012048-214862532bf5
+go: downloading github.com/hashicorp/errwrap v1.1.0
+2:13PM INF scanned ~1557539 bytes (1.56 MB) in 400ms
+2:13PM INF no leaks found
+
+[.] licenses
+go: downloading github.com/google/go-licenses/v2 v2.0.1
+go: downloading github.com/otiai10/copy v1.10.0
+go: downloading github.com/spf13/cobra v1.7.0
+go: downloading golang.org/x/sync v0.16.0
+go: downloading golang.org/x/text v0.28.0
+go: downloading k8s.io/klog/v2 v2.90.1
+go: downloading go.opencensus.io v0.24.0
+go: downloading golang.org/x/net v0.43.0
+go: downloading github.com/google/licenseclassifier/v2 v2.0.0
+go: downloading golang.org/x/tools v0.36.0
+go: downloading golang.org/x/sys v0.35.0
+go: downloading github.com/spf13/pflag v1.0.5
+go: downloading golang.org/x/mod v0.27.0
+go: downloading github.com/go-logr/logr v1.2.0
+go: downloading github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
+go: downloading github.com/sergi/go-diff v1.2.0
+
+[.] sbom
+go: downloading github.com/CycloneDX/cyclonedx-gomod v1.10.0
+go: downloading github.com/rs/zerolog v1.34.0
+go: downloading github.com/peterbourgon/ff/v3 v3.4.0
+go: downloading github.com/CycloneDX/cyclonedx-go v0.9.3
+go: downloading github.com/mattn/go-colorable v0.1.13
+go: downloading github.com/mattn/go-isatty v0.0.19
+go: downloading golang.org/x/crypto v0.47.0
+go: downloading golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56
+go: downloading github.com/go-enry/go-license-detector/v4 v4.3.0
+go: downloading github.com/go-git/go-git/v5 v5.16.2
+go: downloading golang.org/x/sys v0.40.0
+go: downloading github.com/pkg/errors v0.9.1
+go: downloading dario.cat/mergo v1.0.0
+go: downloading github.com/ProtonMail/go-crypto v1.1.6
+go: downloading github.com/go-git/go-billy/v5 v5.6.2
+go: downloading github.com/sergi/go-diff v1.3.2-0.20230802210424-5b0b94c5c0d3
+go: downloading github.com/emirpasic/gods v1.18.1
+go: downloading github.com/ekzhu/minhash-lsh v0.0.0-20171225071031-5c06ee8586a1
+go: downloading github.com/jdkato/prose v1.1.0
+go: downloading github.com/pjbgf/sha1cd v0.3.2
+go: downloading github.com/cyphar/filepath-securejoin v0.4.1
+go: downloading github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376
+go: downloading github.com/jbenet/go-context v0.0.0-20150711004518-d14ea06fba99
+go: downloading golang.org/x/text v0.33.0
+go: downloading github.com/hhatto/gorst v0.0.0-20181029133204-ca9f730cac5b
+go: downloading github.com/russross/blackfriday/v2 v2.0.1
+go: downloading golang.org/x/net v0.48.0
+go: downloading gonum.org/v1/gonum v0.7.0
+go: downloading github.com/dgryski/go-minhash v0.0.0-20170608043002-7fe510aff544
+go: downloading github.com/montanaflynn/stats v0.0.0-20151014174947-eeaced052adb
+go: downloading github.com/shogo82148/go-shuffle v0.0.0-20170808115208-59829097ff3b
+go: downloading gopkg.in/neurosnap/sentences.v1 v1.0.6
+go: downloading github.com/cloudflare/circl v1.6.1
+go: downloading gopkg.in/warnings.v0 v0.1.2
+go: downloading github.com/golang/groupcache v0.0.0-20241129210726-2c02b8208cf8
+go: downloading github.com/kevinburke/ssh_config v1.2.0
+go: downloading github.com/skeema/knownhosts v1.3.1
+go: downloading github.com/xanzy/ssh-agent v0.3.3
+go: downloading github.com/shurcooL/sanitized_anchor_name v0.0.0-20170918181015-86672fcb3f95
+2:14PM WRN failed to determine version of main module error="git: reference not found"
+
+[.] fuzz
+fuzz: elapsed: 0s, gathering baseline coverage: 0/4 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 4/4 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (45704/sec), new interesting: 23 (total: 27)
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	0.426s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10018 (58607/sec), new interesting: 21 (total: 24)
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	0.276s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/4 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 4/4 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (37552/sec), new interesting: 10 (total: 14)
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	0.368s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (38736/sec), new interesting: 23 (total: 26)
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	0.360s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (65180/sec), new interesting: 4 (total: 7)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.364s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/13 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 13/13 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (39635/sec), new interesting: 32 (total: 45)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.357s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (21939/sec), new interesting: 37 (total: 40)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.571s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/6 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 6/6 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (63510/sec), new interesting: 10 (total: 16)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.261s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/4 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 4/4 completed, now fuzzing with 2 workers
+fuzz: elapsed: 1s, execs: 10000 (15181/sec), new interesting: 22 (total: 26)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.767s
+executed 9 registered fuzz targets
+
+[.] mutation
+patching file 'internal/engine/engine.go'
+patching file 'internal/engine/executor.go'
+patching file 'internal/coverage/coverage.go'
+patching file 'cmd/unleash.go'
+patching file 'internal/diff/parse.go'
+patching file 'internal/diff/diff.go'
+patching file 'internal/diff/diff_test.go'
+patching file 'internal/diff/parse_test.go'
+go: downloading github.com/fatih/color v1.18.0
+go: downloading github.com/MakeNowJust/heredoc v1.0.0
+go: downloading github.com/spf13/viper v1.21.0
+go: downloading golang.org/x/tools v0.39.0
+go: downloading github.com/bluekeyes/go-gitdiff v0.8.1
+go: downloading github.com/hako/durafmt v0.0.0-20210608085754-5c1018a4e16b
+go: downloading golang.org/x/sys v0.38.0
+go: downloading github.com/fsnotify/fsnotify v1.9.0
+go: downloading github.com/go-viper/mapstructure/v2 v2.4.0
+go: downloading github.com/sagikazarmark/locafero v0.12.0
+go: downloading github.com/spf13/cast v1.10.0
+go: downloading golang.org/x/text v0.31.0
+go: downloading github.com/pelletier/go-toml/v2 v2.2.4
+[.] . reused content-identical mutation evidence
+[.] ./apikey reused content-identical mutation evidence
+[.] ./authhttp reused content-identical mutation evidence
+[.] ./authlog reused content-identical mutation evidence
+[.] ./basic reused content-identical mutation evidence
+[.] ./bearer reused content-identical mutation evidence
+
+[.] nilaway
+go: downloading go.uber.org/nilaway v0.0.0-20260720194628-9fd1b8d7bac8
+go: downloading golang.org/x/tools v0.45.0
+go: downloading golang.org/x/exp/typeparams v0.0.0-20260611194520-c48552f49976
+go: downloading github.com/klauspost/compress v1.18.6
+go: downloading golang.org/x/mod v0.36.0
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform/apikey/static.go:79:9: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authentication-identity-platform/example_test.go:16:17: result 0 of `NewStatic()` lacking guarding; used as receiver to call `Authenticate()` via the assignment(s):
+		- `apikey.NewStatic(...)` to `authenticator` at golib-go-authentication-identity-platform/example_test.go:12:2
+	- apikey/static.go:79:9: read by method receiver `s` accessed field `set`
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform/principal_test.go:75:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authentication-identity-platform/principal.go:118:9: result 0 of `cloneClaimMap()` lacking guarding; returned from `Claims()` in position 0 via the assignment(s):
+		- `cloneClaimMap(...)` to `claims` at golib-go-authentication-identity-platform/principal.go:116:2
+	- golib-go-authentication-identity-platform/principal_test.go:75:2: result 0 of `Claims()` written to at an index via the assignment(s):
+		- `authentication.NewPrincipal(...)` to `principal` at golib-go-authentication-identity-platform/principal_test.go:26:2,
+		- `principal.Claims()` to `returnedClaims` at golib-go-authentication-identity-platform/principal_test.go:74:2
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform/apikey/static.go:59:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- apikey/example_test.go:16:6: result 0 of `NewStatic()` lacking guarding; used as receiver to call `Replace()` via the assignment(s):
+		- `apikey.NewStatic(...)` to `authenticator` at apikey/example_test.go:12:2
+	- apikey/static.go:59:2: read by method receiver `s` accessed field `set`
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform/apikey/static.go:79:9: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- apikey/example_test.go:20:17: result 0 of `NewStatic()` lacking guarding; used as receiver to call `Authenticate()` via the assignment(s):
+		- `apikey.NewStatic(...)` to `authenticator` at apikey/example_test.go:12:2
+	- apikey/static.go:79:9: read by method receiver `s` accessed field `set`
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform/basic/static.go:103:24: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- basic/example_test.go:16:17: result 0 of `NewStatic()` lacking guarding; used as receiver to call `Authenticate()` via the assignment(s):
+		- `basic.NewStatic(...)` to `authenticator` at basic/example_test.go:12:2
+	- basic/static.go:103:24: read by method receiver `s` accessed field `entries`
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform/bearer/authenticator.go:69:20: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- bearer/example_test.go:22:17: result 0 of `New()` lacking guarding; used as receiver to call `Authenticate()` via the assignment(s):
+		- `bearer.New(...)` to `authenticator` at bearer/example_test.go:12:2
+	- bearer/authenticator.go:69:20: read by method receiver `a` accessed field `validator`
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform/bearer/static.go:72:9: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- bearer/example_test.go:36:17: result 0 of `NewStatic()` lacking guarding; used as receiver to call `Authenticate()` via the assignment(s):
+		- `bearer.NewStatic(...)` to `authenticator` at bearer/example_test.go:32:2
+	- bearer/static.go:72:9: read by method receiver `s` accessed field `set`
+
+[.] NilAway advisory exit status: 3
+
+[.] docs
+/var/folders/c_/cyfs05854flfb113r0dpvz800000gn/T//golib-documentation-tools.QoCxei/lychee-aarch64-apple-darwin.tar.gz: OK
+🔍 89 Total (in 1s 481ms) 🔗 68 Unique ✅ 87 OK 🚫 0 Errors 👻 2 Excluded
+
+
+[.] api
+go: downloading golang.org/x/exp v0.0.0-20260718201538-764159d718ef
+
+[.] conformance
+./scripts/check-conformance.sh
+ok  	github.com/faustbrian/go-authentication/authhttp	0.091s
+
+[.] interoperability
+./scripts/check-conformance.sh
+ok  	github.com/faustbrian/go-authentication/authhttp	0.095s
+
+[.] benchmark
+PASS
+ok  	github.com/faustbrian/go-authentication	0.094s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/apikey
+cpu: Apple M4 Max
+BenchmarkStaticAuthenticate-2   	 2086244	       578.4 ns/op	    1072 B/op	      18 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/apikey	1.268s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/authhttp
+cpu: Apple M4 Max
+BenchmarkBearerAuthorizationExtraction-2   	18325738	        65.82 ns/op	      16 B/op	       1 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	1.341s
+PASS
+ok  	github.com/faustbrian/go-authentication/authlog	0.061s
+PASS
+ok  	github.com/faustbrian/go-authentication/authtest	0.097s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/basic
+cpu: Apple M4 Max
+BenchmarkStaticAuthenticate-2   	 2037841	       578.9 ns/op	    1072 B/op	      18 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/basic	1.238s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authentication/bearer
+cpu: Apple M4 Max
+BenchmarkStaticAuthenticate-2   	 4003960	       301.1 ns/op	     528 B/op	       9 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authentication/bearer	1.278s

@@ -1,0 +1,1872 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity-platform.acceptance.bearer-continuation-report.v1",
+  "title": "bearer-continuation-report acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "result",
+    "control_repository",
+    "package_repository",
+    "input_manifest",
+    "input_root",
+    "observations",
+    "artifact_hashes",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 3
+    },
+    "artifact_id": {
+      "const": "bearer-continuation-report"
+    },
+    "result": {
+      "const": {
+        "status": "pass",
+        "gate": "make check MODULES=pkg/identity/reference"
+      }
+    },
+    "control_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "control"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-library-tools"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "package_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "package"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-identity"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "input_manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "repositories",
+        "environment_inputs"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 2
+        },
+        "repositories": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "prefixItems": [
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "items": false
+        },
+        "environment_inputs": {
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "input_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "bearer-continuation-report.identity.session.bearer-authorize.behavior"
+              },
+              "claim_id": {
+                "const": "identity.session.bearer-authorize"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.bearer-continuation-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,outage,replay"
+              },
+              "preconditions": {
+                "const": "Operations: identity.session.bearer-authorize; exact inputs: tenant_id, session_id, audience, continuation_ttl; initial state: active browser session exists"
+              },
+              "stimulus": {
+                "const": "Run identity.session.bearer-authorize for success, failure, outage, replay cases using tenant_id, session_id, audience, continuation_ttl and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: issued bearer continuation preserves subject, tenant, audience, expiry, revocation, and freshness policy; stable outcomes: success=pass/none, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict; required artifact fields: session_id, continuation_id, subject_id, audience_digest, revocation_observed, bearer_transition_cases"
+              },
+              "actual_outcome": {
+                "const": "Invariant: issued bearer continuation preserves subject, tenant, audience, expiry, revocation, and freshness policy; stable outcomes: success=pass/none, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict; required artifact fields: session_id, continuation_id, subject_id, audience_digest, revocation_observed, bearer_transition_cases"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "bearer-continuation-report.identity.session.bearer-issue.behavior"
+              },
+              "claim_id": {
+                "const": "identity.session.bearer-issue"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.bearer-continuation-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,outage,replay"
+              },
+              "preconditions": {
+                "const": "Operations: identity.session.bearer-issue; exact inputs: tenant_id, session_id, audience, continuation_ttl; initial state: active browser session exists"
+              },
+              "stimulus": {
+                "const": "Run identity.session.bearer-issue for success, failure, outage, replay cases using tenant_id, session_id, audience, continuation_ttl and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: issued bearer continuation preserves subject, tenant, audience, expiry, revocation, and freshness policy; stable outcomes: success=pass/none, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict; required artifact fields: session_id, continuation_id, subject_id, audience_digest, revocation_observed, bearer_transition_cases"
+              },
+              "actual_outcome": {
+                "const": "Invariant: issued bearer continuation preserves subject, tenant, audience, expiry, revocation, and freshness policy; stable outcomes: success=pass/none, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict; required artifact fields: session_id, continuation_id, subject_id, audience_digest, revocation_observed, bearer_transition_cases"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "bearer-continuation-report.journey.sessions.v1.behavior"
+              },
+              "claim_id": {
+                "const": "journey.sessions.v1"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.bearer-continuation-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,outage,replay"
+              },
+              "preconditions": {
+                "const": "Operations: identity.session.bearer-authorize, identity.session.bearer-issue; exact inputs: tenant_id, session_id, audience, continuation_ttl; initial state: active browser session exists"
+              },
+              "stimulus": {
+                "const": "Run identity.session.bearer-authorize then identity.session.bearer-issue for success, failure, outage, replay cases using tenant_id, session_id, audience, continuation_ttl and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: issued bearer continuation preserves subject, tenant, audience, expiry, revocation, and freshness policy; stable outcomes: success=pass/none, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict; required artifact fields: session_id, continuation_id, subject_id, audience_digest, revocation_observed, bearer_transition_cases"
+              },
+              "actual_outcome": {
+                "const": "Invariant: issued bearer continuation preserves subject, tenant, audience, expiry, revocation, and freshness policy; stable outcomes: success=pass/none, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict; required artifact fields: session_id, continuation_id, subject_id, audience_digest, revocation_observed, bearer_transition_cases"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "artifact_hashes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.ai/[A-Za-z0-9._/-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "const": ".ai/identity-platform/evidence/artifacts/bearer-continuation-report.json"
+          }
+        }
+      },
+      "minContains": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "bearer-continuation-report.identity.session.bearer-authorize.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "bearer-continuation-report.identity.session.bearer-issue.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "bearer-continuation-report.journey.sessions.v1.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "artifact_hashes": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "const": ".ai/identity-platform/evidence/executions/bearer-continuation-report.json"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    }
+  ],
+  "x-cross-field-rules": [
+    "every observations[].artifact_sha256 value must equal one artifact_hashes[].sha256 value",
+    "artifact_hashes must bind the artifact-specific evidence object at .ai/identity-platform/evidence/artifacts/bearer-continuation-report.json",
+    "artifact_hashes must bind the separately captured coordinator execution receipt at .ai/identity-platform/evidence/executions/bearer-continuation-report.json",
+    "control and package repository bindings have distinct identities, revisions, trees, and runtime workdirs",
+    "input_root is the repository-qualified v2 input-manifest fingerprint"
+  ],
+  "$defs": {
+    "artifact_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "invariant_id",
+        "invariant",
+        "operation_ids",
+        "input_digest",
+        "execution",
+        "scenario_cases",
+        "session_id",
+        "continuation_id",
+        "subject_id",
+        "audience_digest",
+        "revocation_observed",
+        "bearer_transition_cases"
+      ],
+      "properties": {
+        "artifact_id": {
+          "const": "bearer-continuation-report"
+        },
+        "invariant_id": {
+          "const": "bearer-continuation-report.invariant"
+        },
+        "invariant": {
+          "const": "issued bearer continuation preserves subject, tenant, audience, expiry, revocation, and freshness policy"
+        },
+        "operation_ids": {
+          "const": [
+            "identity.session.bearer-authorize",
+            "identity.session.bearer-issue"
+          ]
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "execution_identity",
+            "execution_receipt_path",
+            "execution_receipt_sha256",
+            "capture_authority",
+            "logical_module",
+            "producer_argv",
+            "verifier_argv",
+            "control_repository",
+            "package_repository",
+            "input_root",
+            "sandbox_environment_sha256",
+            "executable_realpath",
+            "executable_sha256",
+            "verifier_executable_realpath",
+            "verifier_executable_sha256",
+            "verifier_driver_realpath",
+            "verifier_driver_sha256",
+            "version_argv",
+            "version_stdout",
+            "version_stderr",
+            "verifier_version_argv",
+            "verifier_version_stdout",
+            "verifier_version_stderr",
+            "environment_probe_argv",
+            "environment_probe_stdout",
+            "environment_probe_stderr",
+            "verifier_exit_status",
+            "verifier_stdout",
+            "verifier_stderr",
+            "verifier_attestation_sha256",
+            "started_at",
+            "completed_at",
+            "exit_status",
+            "stdout",
+            "stdout_byte_length",
+            "stdout_sha256",
+            "stderr",
+            "stderr_byte_length",
+            "stderr_sha256",
+            "captured_output_sha256",
+            "raw_capture_sha256",
+            "output_artifact_path",
+            "artifact_payload_binding"
+          ],
+          "properties": {
+            "execution_identity": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "execution_receipt_path": {
+              "const": ".ai/identity-platform/evidence/executions/bearer-continuation-report.json"
+            },
+            "execution_receipt_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "capture_authority": {
+              "const": "coordinator-owned-execution-runner/v4"
+            },
+            "logical_module": {
+              "const": "pkg/identity/reference"
+            },
+            "producer_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "check",
+                "--module",
+                "reference"
+              ]
+            },
+            "verifier_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "/Users/brian/Developer/.worktrees/golib-go-library-tools-identity-platform/.ai/identity-platform/acceptance/schema_validation.rb",
+                "verify",
+                "bearer-continuation-report"
+              ]
+            },
+            "control_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "control"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "package_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "package"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-identity"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "input_root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "sandbox_environment_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_driver_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_driver_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "--version"
+              ]
+            },
+            "version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "--version"
+              ]
+            },
+            "verifier_version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "verifier_version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "environment_probe_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "uname",
+                "-a"
+              ]
+            },
+            "environment_probe_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "environment_probe_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_exit_status": {
+              "const": 0
+            },
+            "verifier_stdout": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_attestation_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "started_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "completed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "exit_status": {
+              "const": 0
+            },
+            "stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1048576
+            },
+            "stdout_byte_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "stdout_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "stderr_byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "stderr_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "captured_output_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "raw_capture_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "output_artifact_path": {
+              "const": ".ai/identity-platform/evidence/artifacts/bearer-continuation-report.json"
+            },
+            "artifact_payload_binding": {
+              "const": "record.artifact_hashes[path,sha256]"
+            }
+          },
+          "x-execution-proof": 3
+        },
+        "scenario_cases": {
+          "type": "array",
+          "minItems": 12,
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "observation_id",
+              "claim_id",
+              "invariant_id",
+              "scenario",
+              "operation_ids",
+              "input_fields",
+              "initial_state",
+              "status",
+              "stable_error",
+              "expected_invariant",
+              "observed_state_digest",
+              "observed_event_digest",
+              "transcript_sha256",
+              "artifact_contract_sha256",
+              "observed_value_count",
+              "ordered_steps",
+              "expected_operation_set",
+              "observed_operation_set",
+              "observed_values"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string",
+                "enum": [
+                  "bearer-continuation-report.identity.session.bearer-authorize.behavior#success",
+                  "bearer-continuation-report.identity.session.bearer-authorize.behavior#failure",
+                  "bearer-continuation-report.identity.session.bearer-authorize.behavior#outage",
+                  "bearer-continuation-report.identity.session.bearer-authorize.behavior#replay",
+                  "bearer-continuation-report.identity.session.bearer-issue.behavior#success",
+                  "bearer-continuation-report.identity.session.bearer-issue.behavior#failure",
+                  "bearer-continuation-report.identity.session.bearer-issue.behavior#outage",
+                  "bearer-continuation-report.identity.session.bearer-issue.behavior#replay",
+                  "bearer-continuation-report.journey.sessions.v1.behavior#success",
+                  "bearer-continuation-report.journey.sessions.v1.behavior#failure",
+                  "bearer-continuation-report.journey.sessions.v1.behavior#outage",
+                  "bearer-continuation-report.journey.sessions.v1.behavior#replay"
+                ]
+              },
+              "observation_id": {
+                "type": "string",
+                "enum": [
+                  "bearer-continuation-report.identity.session.bearer-authorize.behavior",
+                  "bearer-continuation-report.identity.session.bearer-issue.behavior",
+                  "bearer-continuation-report.journey.sessions.v1.behavior"
+                ]
+              },
+              "claim_id": {
+                "type": "string",
+                "enum": [
+                  "identity.session.bearer-authorize",
+                  "identity.session.bearer-issue",
+                  "journey.sessions.v1"
+                ]
+              },
+              "invariant_id": {
+                "const": "bearer-continuation-report.invariant"
+              },
+              "scenario": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failure",
+                  "outage",
+                  "replay"
+                ]
+              },
+              "operation_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.session.bearer-authorize",
+                    "identity.session.bearer-issue"
+                  ]
+                }
+              },
+              "input_fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "initial_state": {
+                "const": "active browser session exists"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "failed",
+                  "unavailable",
+                  "denied"
+                ]
+              },
+              "stable_error": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "internal",
+                  "unavailable",
+                  "conflict"
+                ]
+              },
+              "expected_invariant": {
+                "const": "issued bearer continuation preserves subject, tenant, audience, expiry, revocation, and freshness policy"
+              },
+              "observed_state_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_event_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "artifact_contract_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_value_count": {
+                "const": 5
+              },
+              "ordered_steps": {
+                "const": [
+                  "precondition-established",
+                  "stimulus-executed",
+                  "outcome-observed",
+                  "transcript-bound"
+                ]
+              },
+              "expected_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.session.bearer-authorize",
+                    "identity.session.bearer-issue"
+                  ]
+                }
+              },
+              "observed_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.session.bearer-authorize",
+                    "identity.session.bearer-issue"
+                  ]
+                }
+              },
+              "observed_values": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "session_id",
+                  "continuation_id",
+                  "subject_id",
+                  "audience_digest",
+                  "revocation_observed"
+                ],
+                "properties": {
+                  "session_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "continuation_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "subject_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "audience_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "revocation_observed": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          },
+          "x-exact-scenario-case-fields": [
+            "case_id",
+            "observation_id",
+            "claim_id",
+            "scenario",
+            "operation_ids",
+            "input_fields",
+            "status",
+            "stable_error",
+            "artifact_contract_sha256",
+            "expected_operation_set",
+            "observed_operation_set"
+          ],
+          "x-exact-scenario-cases": [
+            {
+              "case_id": "bearer-continuation-report.identity.session.bearer-authorize.behavior#success",
+              "observation_id": "bearer-continuation-report.identity.session.bearer-authorize.behavior",
+              "claim_id": "identity.session.bearer-authorize",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.session.bearer-authorize"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:90b02817185c0880851d7a332a256b3aee609bf7d0eeb6d828e5c63f41bbbdbf",
+              "expected_operation_set": [
+                "identity.session.bearer-authorize"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-authorize"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.identity.session.bearer-authorize.behavior#failure",
+              "observation_id": "bearer-continuation-report.identity.session.bearer-authorize.behavior",
+              "claim_id": "identity.session.bearer-authorize",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.session.bearer-authorize"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:1bfbf69481852e9aec689d829040ca4d0b20880635c0add3811d79f65822c393",
+              "expected_operation_set": [
+                "identity.session.bearer-authorize"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-authorize"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.identity.session.bearer-authorize.behavior#outage",
+              "observation_id": "bearer-continuation-report.identity.session.bearer-authorize.behavior",
+              "claim_id": "identity.session.bearer-authorize",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.session.bearer-authorize"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:617e28602a9a305cdf0e3d089859f42a2d654dea5c80488a04116bb553cd2434",
+              "expected_operation_set": [
+                "identity.session.bearer-authorize"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-authorize"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.identity.session.bearer-authorize.behavior#replay",
+              "observation_id": "bearer-continuation-report.identity.session.bearer-authorize.behavior",
+              "claim_id": "identity.session.bearer-authorize",
+              "scenario": "replay",
+              "operation_ids": [
+                "identity.session.bearer-authorize"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "denied",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:e25c4b7ba79f17f7bc12393dc8a03ecaedac9acb1d1ce63bc8e7310c1dabe227",
+              "expected_operation_set": [
+                "identity.session.bearer-authorize"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-authorize"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.identity.session.bearer-issue.behavior#success",
+              "observation_id": "bearer-continuation-report.identity.session.bearer-issue.behavior",
+              "claim_id": "identity.session.bearer-issue",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.session.bearer-issue"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:bb1c7673ffa85ac35ba847a0323c43ec1be41434a4e57e3842cf37d6b0fd9b07",
+              "expected_operation_set": [
+                "identity.session.bearer-issue"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-issue"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.identity.session.bearer-issue.behavior#failure",
+              "observation_id": "bearer-continuation-report.identity.session.bearer-issue.behavior",
+              "claim_id": "identity.session.bearer-issue",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.session.bearer-issue"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:6a14fae61342ac650aecf30e8748a3ccbc3fce2120c6ee0c0173a9a2b5b5c9c8",
+              "expected_operation_set": [
+                "identity.session.bearer-issue"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-issue"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.identity.session.bearer-issue.behavior#outage",
+              "observation_id": "bearer-continuation-report.identity.session.bearer-issue.behavior",
+              "claim_id": "identity.session.bearer-issue",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.session.bearer-issue"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:e66892264332703148db76115d6b1a0ab5dc2d99442c848995088999d2ece964",
+              "expected_operation_set": [
+                "identity.session.bearer-issue"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-issue"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.identity.session.bearer-issue.behavior#replay",
+              "observation_id": "bearer-continuation-report.identity.session.bearer-issue.behavior",
+              "claim_id": "identity.session.bearer-issue",
+              "scenario": "replay",
+              "operation_ids": [
+                "identity.session.bearer-issue"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "denied",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:a9a2437072b60fd109bd93a40a25a531c11e0e14b6eea696e7f721ddebdd6fb6",
+              "expected_operation_set": [
+                "identity.session.bearer-issue"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-issue"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.journey.sessions.v1.behavior#success",
+              "observation_id": "bearer-continuation-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:85aaafdf377db1607a1240abc5c8bfa0369abeac1a869b0add5253f185170ec1",
+              "expected_operation_set": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.journey.sessions.v1.behavior#failure",
+              "observation_id": "bearer-continuation-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:c9c1df110f1006bc4a222db11eb62a7e5c82775a34da642f2592819c31ec0577",
+              "expected_operation_set": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.journey.sessions.v1.behavior#outage",
+              "observation_id": "bearer-continuation-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:1f926af052044a2fb8df767acd3b04421338ba15839962128d888f3fc4e7a340",
+              "expected_operation_set": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ]
+            },
+            {
+              "case_id": "bearer-continuation-report.journey.sessions.v1.behavior#replay",
+              "observation_id": "bearer-continuation-report.journey.sessions.v1.behavior",
+              "claim_id": "journey.sessions.v1",
+              "scenario": "replay",
+              "operation_ids": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "session_id",
+                "audience",
+                "continuation_ttl"
+              ],
+              "status": "denied",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:c54b173cc3984d67c58e329dbbc7f6e9fa1b6a7ef5e648affba7002d8f6d4e19",
+              "expected_operation_set": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ],
+              "observed_operation_set": [
+                "identity.session.bearer-authorize",
+                "identity.session.bearer-issue"
+              ]
+            }
+          ]
+        },
+        "session_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "continuation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "subject_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "audience_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "revocation_observed": {
+          "type": "boolean"
+        },
+        "bearer_transition_cases": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "sequence",
+                  "authorized",
+                  "issued_count",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "authorize-source-session"
+                  },
+                  "operation_id": {
+                    "const": "identity.session.bearer-authorize"
+                  },
+                  "sequence": {
+                    "const": 1
+                  },
+                  "authorized": {
+                    "const": true
+                  },
+                  "issued_count": {
+                    "const": 0
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "sequence",
+                  "authorized",
+                  "issued_count",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "issue-bound-continuation"
+                  },
+                  "operation_id": {
+                    "const": "identity.session.bearer-issue"
+                  },
+                  "sequence": {
+                    "const": 2
+                  },
+                  "authorized": {
+                    "const": true
+                  },
+                  "issued_count": {
+                    "const": 1
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            ]
+          },
+          "allOf": [
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "sequence",
+                  "authorized",
+                  "issued_count",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "authorize-source-session"
+                  },
+                  "operation_id": {
+                    "const": "identity.session.bearer-authorize"
+                  },
+                  "sequence": {
+                    "const": 1
+                  },
+                  "authorized": {
+                    "const": true
+                  },
+                  "issued_count": {
+                    "const": 0
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            },
+            {
+              "contains": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "case_id",
+                  "operation_id",
+                  "sequence",
+                  "authorized",
+                  "issued_count",
+                  "transcript_sha256"
+                ],
+                "properties": {
+                  "case_id": {
+                    "const": "issue-bound-continuation"
+                  },
+                  "operation_id": {
+                    "const": "identity.session.bearer-issue"
+                  },
+                  "sequence": {
+                    "const": 2
+                  },
+                  "authorized": {
+                    "const": true
+                  },
+                  "issued_count": {
+                    "const": 1
+                  },
+                  "transcript_sha256": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              },
+              "minContains": 1
+            }
+          ]
+        }
+      },
+      "x-semantic-rules": [
+        {
+          "kind": "true",
+          "fields": [
+            "revocation_observed"
+          ]
+        }
+      ]
+    }
+  }
+}

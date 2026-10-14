@@ -1,0 +1,107 @@
+[
+  {
+    "path": "results/authentication-authotel/acquisition-failure.json",
+    "sha256": "bc7032e313c8016418be25eda18e51634016d9678e16a346fe30f3400d18ead4",
+    "bytes": 539
+  },
+  {
+    "path": "results/authentication-jwt/acquisition-failure.json",
+    "sha256": "bc7032e313c8016418be25eda18e51634016d9678e16a346fe30f3400d18ead4",
+    "bytes": 539
+  },
+  {
+    "path": "results/authentication-oidc/acquisition-failure.json",
+    "sha256": "e02dc0e3e6f76462ad97705290d10c83e2759f89bc8ec89ecfb883034af28441",
+    "bytes": 593
+  },
+  {
+    "path": "results/authorization-contracts/go.mod",
+    "sha256": "da549171641d5df179831943c26f2f7f38bf36405978f6762ec7806c53f15cd7",
+    "bytes": 1275
+  },
+  {
+    "path": "results/authorization-contracts/go.sum",
+    "sha256": "9b3fda04870e502a5ba4c0a9a534d936fa49278159aa2a91b31e5451c69dfe50",
+    "bytes": 4224
+  },
+  {
+    "path": "results/authorization-contracts/inputs.json",
+    "sha256": "3699e39a566dee62995e647f974ab02f032cf73ae74404b45c06c54a1ecef823",
+    "bytes": 1200
+  },
+  {
+    "path": "results/authorization-contracts/result.json",
+    "sha256": "9e1253e66528273edf045cb98df46a150afbf2bc2e4d293f4b0cfdea83b2da79",
+    "bytes": 364
+  },
+  {
+    "path": "results/authorization-contracts/stderr.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/authorization-contracts/stdout.log",
+    "sha256": "2e8f44b86af58b5d3ee3b97b201b8eb51ec7b4db990d83f04dd2ddea624d30a5",
+    "bytes": 73
+  },
+  {
+    "path": "results/batch-result.json",
+    "sha256": "f1628c533c7b840f51b2c1af1c3f9cc2eef932a2448c5b2cfd95ae29ba090023",
+    "bytes": 434
+  },
+  {
+    "path": "results/middleware-siblings/go.mod",
+    "sha256": "ce8fbe5b885302cc560950f8c75da3f3e1b6e7d3d7f69c486470319bcd843071",
+    "bytes": 1472
+  },
+  {
+    "path": "results/middleware-siblings/go.sum",
+    "sha256": "9d77ea83b2f93e43005cc37885de924718b6a0c43d920a351abb9090dc7d3115",
+    "bytes": 7946
+  },
+  {
+    "path": "results/middleware-siblings/inputs.json",
+    "sha256": "0d69e877e713b9804bc18ae9d9fff62c686b0c7763708dc55b601163352f5c17",
+    "bytes": 1124
+  },
+  {
+    "path": "results/middleware-siblings/result.json",
+    "sha256": "a6b22d26ab87504c25b3b93a78cf060b5faac015a6ab64d748dcc19e4071296b",
+    "bytes": 364
+  },
+  {
+    "path": "results/middleware-siblings/stderr.log",
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bytes": 0
+  },
+  {
+    "path": "results/middleware-siblings/stdout.log",
+    "sha256": "3a78dfaa94c7e53d8453311cab3d0bf0bdf291f949f46de3b48d2595a45545b1",
+    "bytes": 74
+  },
+  {
+    "path": "results/queue-authz-server/acquisition-failure.json",
+    "sha256": "309911135ed9f6a59e5008697745aa892a0b645b9d656089c1af17e7f699da66",
+    "bytes": 1619
+  },
+  {
+    "path": "results/service-compatibility/acquisition-failure.json",
+    "sha256": "f075b77117046a7381f1ea0f6c92ac565ec5797f9fc2b1ca6cd55b8c4b692b0f",
+    "bytes": 1037
+  },
+  {
+    "path": "results/service-reference-http/acquisition-failure.json",
+    "sha256": "3970ba29b6061796c106c855146c02b06a67e2a339fa9e4c4ca3cd4f8b535879",
+    "bytes": 881
+  },
+  {
+    "path": "results/source-inputs.json",
+    "sha256": "6092d91790f16ca4806edb99d60b01672e22b2ea2e73d06d8632c5b88d948c69",
+    "bytes": 230308
+  },
+  {
+    "path": "run.rb",
+    "sha256": "82d822f2b4c2f643243c955fa9b96dc7182a4cb421e896e30be0629860fe176d",
+    "bytes": 5823
+  }
+]

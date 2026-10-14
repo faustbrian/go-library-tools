@@ -1,0 +1,10 @@
+--- FAIL: TestIdentityServiceIssuePreservesExplicitTimestamps (0.00s)
+    --- FAIL: TestIdentityServiceIssuePreservesExplicitTimestamps/both-explicit (0.00s)
+        identity_contracts_test.go:105: signed future activation was overwritten: <nil>
+    --- FAIL: TestIdentityServiceIssuePreservesExplicitTimestamps/only-issued-at-zero (0.00s)
+        identity_contracts_test.go:105: signed future activation was overwritten: <nil>
+    --- FAIL: TestIdentityServiceIssuePreservesExplicitTimestamps/only-not-before-zero (0.00s)
+        identity_contracts_test.go:115: signed timestamps changed: iat=2026-08-09 12:00:10 +0000 UTC nbf=2026-08-09 12:00:10 +0000 UTC
+FAIL
+FAIL	github.com/faustbrian/go-capability	0.204s
+FAIL

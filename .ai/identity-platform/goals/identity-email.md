@@ -1,0 +1,169 @@
+# Goal: pkg/identity/email
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+"SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+"OPTIONAL" in this document are to be interpreted as described in BCP 14
+[RFC2119] [RFC8174] when, and only when, they appear in all capitals, as
+shown here.
+
+## Execution metadata
+
+- Unit: `identity/email`
+- Canonical module: `pkg/identity/email`
+- Canonical goal after scaffolding: `pkg/identity/email/.ai/GOAL.md`
+- Public contracts: unit ID `contract:unit:identity/email:v1`; owned operation IDs: `contract:operation:identity.email.address-get:v1`, `contract:operation:identity.email.address-list:v1`, `contract:operation:identity.email.address-remove:v1`, `contract:operation:identity.email.change-confirm:v1`, `contract:operation:identity.email.change-request:v1`, `contract:operation:identity.email.verification-confirm:v1`, `contract:operation:identity.email.verification-send:v1`
+- Requires: `identity`, `identity/delivery`, `identity/otp`, `primitive/authentication-identity-contracts`, `primitive/capability-identity-contracts`, `primitive/identifier-identity-contracts`
+- Consumes existing primitives: `capability`, `workflow`, `audit`, `identifier`
+- Unlocks after verification: `identity/magiclink`, `identity/http`
+
+## Start gate
+
+The primary agent MUST follow IMPLEMENTATION_GOAL.md and COMMON_REQUIREMENTS.md.
+Record the frozen consumer milestone and its necessary owners in the existing
+ledger. Development requires committed, integrated, focused behavioral and
+compatibility proof of the contracts actually consumed, not whole-unit release
+verification or a generated worker assignment. Final unit verification retains
+all product requirements, applicable release gates and verified prerequisites.
+
+## Objective and observable completion
+
+Build an independently releasable `pkg/identity/email` module that owns email address verification, primary-email change, re-verification, and verified-address lifecycle. Completion
+requires executable proof of the behaviors below through its public API and,
+where applicable, real supported infrastructure or providers.
+
+## Ownership boundary
+
+This module owns email address verification, primary-email change, re-verification, and verified-address lifecycle. It does not own mail transport, password reset, magic-link signin, and email-client UI. Those exclusions MUST remain
+outside its public API and dependency graph.
+
+## Required public contract
+
+The design MUST define AddressPolicy, VerificationProfile, ChangeProfile, Service, Delivery, CallbackResult, and capability payload contracts. Public errors MUST be typed, stable,
+redacted, and useful for policy decisions without exposing enumeration or
+secret state. Zero values, clocks, randomness, identifier canonicalization,
+limits, and extension points MUST have explicit semantics.
+
+## Required behavior
+
+The module MUST implement the version-1 privacy-export contributor contract
+for email identifiers, verification history, and bounded redacted delivery
+metadata, and MUST participate in identity anonymization and deletion cascades.
+The public contract MUST define an injected storage-neutral
+`LifecycleCheckpointContributor` with exactly
+`ContributeLifecycle(context.Context, LifecycleCheckpointCommand) (LifecycleCheckpointResult, error)`.
+It MUST persist the email anonymization/deletion checkpoint and privacy-export
+fragment for the exact tenant, subject, snapshot ID, policy version,
+contributor version, content digest, and terminal outcome in the owning
+coordinator transaction. The core MUST NOT import or name a persistence
+adapter; reference PostgreSQL composition supplies the contributor backed by
+`identity/postgres`.
+
+The implementation and tests MUST send enumeration-safe verification; consume once; bind action and subject; race address claims; confirm old/new address policy; revoke superseded links; avoid losing the last reachable verified identifier. Every state transition MUST
+define authorization, audit, idempotency, cancellation, cleanup, and
+not-committed/committed/unknown outcomes where external or durable state is
+involved.
+
+The public lifecycle MUST expose `identity.email.address-list`,
+`identity.email.address-get`, and `identity.email.address-remove` for the
+current subject and for an explicitly authorized email administrator. List/get
+return only safe versioned address projections and make absent, forbidden and
+cross-tenant targets indistinguishable. Removal requires fresh authentication,
+an expected address version, actor reason and an explicit primary/recovery
+disposition; it MUST refuse the last permitted signin or recovery path,
+atomically select any replacement primary, revoke address-bound capabilities,
+initiate `lifecycle.cascade.identifier_remove`, and retain required audit and
+privacy history without retaining verification bearers.
+
+## Package-specific acceptance checklist
+
+- An email-verification OTP recovery flow MUST select the canonical
+  `email_verification_otp` recovery path before issuance and preserve that
+  selector through OTP reservation, identity mutation and audit; a link flow
+  MUST NOT be reinterpreted as OTP recovery or vice versa.
+
+- Address policy MUST define parsing, canonical comparison, case/domain/IDN
+  handling, display preservation, maximum length and whether plus-address or
+  provider-specific normalization is deliberately unsupported.
+- Verification request MUST support signup-triggered, require-before-signin and
+  manual resend profiles, cooldown/attempt limits and an enumeration-safe
+  public result. Duplicate signup callbacks MUST NOT disclose account state.
+- Verification callback MUST bind user, canonical address, purpose, tenant,
+  redirect and token version; consume once; handle link scanners; and expose
+  before-verification/after-success hooks with exact transaction semantics.
+- Auto-signin after verification MUST be explicit, risk-assessed and issue a
+  new session only after the address transition commits. It MUST NOT reuse a
+  stale pre-verification session proof.
+- Email change MUST define current-address confirmation, new-address proof,
+  recent-authentication requirement, notification to old address, collision
+  race, primary replacement and rollback/unknown delivery outcomes.
+- Removing an address MUST preserve required verified/recovery identifiers and
+  revoke outstanding tokens for that address.
+- Verification and change links MUST implement scanner-safe read-only Validate
+  and explicit user confirmation. Validation MUST return only bounded public
+  metadata and MUST NOT consume, reserve, mutate identity or issue a session;
+  Reserve/Apply/Finalize and recovery semantics MUST follow
+  `.ai/identity-platform/TRANSACTION_CONTRACT.md`.
+- Address verification/change, capability finalization, identity mutation and
+  any session invalidation MUST produce one coordinated, reconcilable result.
+  Delivery acceptance is not proof of either capability consumption or address
+  ownership.
+- Recent authentication for address replacement/removal MUST be an explicit
+  proof bound to subject, tenant, session/version, action, assurance and maximum
+  age, not a caller boolean or session timestamp. Exact freshness defaults
+  belong to `.ai/identity-platform/REFERENCE_CONFIGURATION.md`.
+- Any explicit auto-signin profile MUST accept and preserve the caller's
+  persistent or non-persistent remember policy through verification and risk/
+  MFA continuation; verification MUST NOT silently create a persistent session.
+
+## Security and abuse requirements
+
+- When handling `identity.otp.email-verify`,
+  `identity.otp.email-change-confirm`, or the optional current-address OTP branch
+  of `identity.otp.email-change-request`, this workflow MUST
+  reserve/apply/finalize the purpose-bound OTP through the public
+  `identity/otp` contributor contract in the same coordinator unit of work as
+  its owning mutation. The core MUST NOT import, require, or name a concrete
+  OTP persistence adapter; reference composition selects that adapter.
+  Non-OTP email operations MUST NOT enlist an OTP participant. Release and
+  recovery remain fail-closed on rollback or unknown commit.
+
+- Inputs MUST be bounded before parsing, allocation, storage, hashing, or
+  cryptographic work.
+- Subject, tenant, organization, purpose, audience, action, and redirect scope
+  MUST be bound wherever applicable and MUST fail closed on mismatch.
+- Enumeration, replay, fixation, confused-deputy, downgrade, race, and
+  cross-scope attacks MUST have deterministic regression cases.
+- Logs, traces, metrics, examples, fixtures, and errors MUST preserve the
+  redaction requirements in `.ai/identity-platform/COMMON_REQUIREMENTS.md`.
+
+## Persistence, lifecycle, and compatibility
+
+The core MUST remain adapter-neutral unless this goal is itself an adapter.
+State ownership, consistency, retention, deletion, migration, key rotation,
+clock skew, concurrent callers, shutdown, and recovery MUST be documented and
+tested where applicable. Unsupported protocol or deployment profiles MUST be
+stated rather than silently approximated.
+
+## Acceptance evidence
+
+Before this unit becomes `verified`, the owner MUST satisfy every common gate,
+the package-specific behavior above, the module's exact coverage and mutation
+gates, race/fuzz/interoperability gates that apply, clean-consumer proof,
+manifests, public API baseline, security and supply-chain checks, documentation,
+changelog, and changed reverse-dependant gates. The final evidence record MUST
+name any non-applicable gate with a reviewed reason; absence of infrastructure
+or provider access is a blocker, not a pass.
+
+Verification applicability is exact for this unit: `race=required`,
+`fuzz=required`, `hostile=required`, `leak=required`, `benchmark=required`,
+`infrastructure=required`, and `provider_interoperability=required`; a gate
+MAY be satisfied by the required composed reference evidence but MUST NOT be
+silently skipped.
+
+## Release blockers
+
+The unit MUST remain `implemented-unverified` or `blocked` if any prerequisite
+is not `verified`, any ownership boundary is unresolved, a protocol claim
+lacks pinned specification and interoperability evidence, a durable transition
+has unhandled ambiguity, a secret can escape redaction, or any required gate is
+stale, skipped, warning-only, or failing.

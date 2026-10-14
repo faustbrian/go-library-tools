@@ -1,0 +1,6 @@
+a9c0de5d97e057b48ad4a1a5f6d744dbd01f80ebf2c108cc35e29587ddac3744  /tmp/capability-g0-mutant.UNVr2Q/identity_contracts.go
+--- FAIL: TestIdentityPurposeExactBounds (0.00s)
+    identity_contracts_test.go:19: invalid purpose accepted: "a.*", <nil>
+FAIL
+FAIL	github.com/faustbrian/go-capability	0.190s
+FAIL

@@ -1,0 +1,3 @@
+ok  	github.com/faustbrian/go-capability	0.226s	coverage: 100.0% of statements
+ok  	github.com/faustbrian/go-capability/caphttp	0.203s	coverage: 100.0% of statements
+ok  	github.com/faustbrian/go-capability/memory	0.190s	coverage: 100.0% of statements

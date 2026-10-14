@@ -1,0 +1,130 @@
+{
+  "aggregate-tool": {
+    "compiler": "go1.27.0",
+    "executable_sha256": "8134607b944a21268431b2ffc3389e16ef611655588aaa6be19363c674c3b96a",
+    "execution_session": 20865,
+    "module": "github.com/faustbrian/go-library-tools/cmd/golib@v1.0.13",
+    "module_checksum": "h1:yeTOIiIi2ctojPaMpOWBKDMCe2CMtMJVBVP5NE2EN4M="
+  },
+  "benchmark-image": {
+    "reference": "golang@sha256:116d58cbd88c1297624acc6e967a060012422bacf9930927e23fb719189c6f36"
+  },
+  "package-environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOFLAGS": "-p=2",
+    "GOMAXPROCS": "2",
+    "GOOS": "darwin",
+    "GOTOOLCHAIN": "go1.26.6",
+    "GOWORK": "off"
+  },
+  "php-interop": {
+    "crypto": "{\"openssl\":\"OpenSSL 3.6.4 25 Aug 2026\",\"argon_provider\":\"openssl\",\"sodium\":\"1.0.22\"}\n",
+    "dynamic_linkage": "/Users/brian/Library/Application Support/Herd/bin/php85:\n\t/usr/lib/libresolv.9.dylib (compatibility version 1.0.0, current version 1.0.0)\n\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1345.120.2)\n\t/System/Library/Frameworks/CoreFoundation.framework/Versions/A/CoreFoundation (compatibility version 150.0.0, current version 2503.1.0)\n\t/System/Library/Frameworks/CoreServices.framework/Versions/A/CoreServices (compatibility version 1.0.0, current version 1226.0.0)\n\t/System/Library/Frameworks/SystemConfiguration.framework/Versions/A/SystemConfiguration (compatibility version 1.0.0, current version 1300.120.2)\n\t/System/Library/Frameworks/Security.framework/Versions/A/Security (compatibility version 1.0.0, current version 61123.121.1)\n\t/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 1700.255.5)\n",
+    "executable": "/Users/brian/Library/Application Support/Herd/bin/php85",
+    "os_build": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0\nBuildVersion:\t\t26A428\n",
+    "sha256": "e3ed139c4fb079f0fc82879e5269de51861c73d4180015930bee3e0c7a962138",
+    "version": "PHP 8.5.10 (cli) (built: Sep 24 2026 09:19:38) (NTS clang 15.0.0)\nCopyright (c) The PHP Group\nBuilt by Laravel Herd\nZend Engine v4.5.10, Copyright (c) Zend Technologies\n    with Zend OPcache v8.5.10, Copyright (c), by Zend Technologies\n"
+  },
+  "selected-applicability": {
+    "requires": [],
+    "shared": {
+      "configuration": [
+        "none"
+      ],
+      "lifecycle": [
+        "none"
+      ],
+      "lifecycle_consumers": [
+        "none"
+      ],
+      "security_events": [
+        "none"
+      ],
+      "transaction": [
+        "none"
+      ]
+    },
+    "verification": {
+      "selectors": {
+        "benchmark": {
+          "reviewed_reason": "primitive/password-secret-contracts owns no benchmark boundary; composed consumers own that evidence",
+          "status": "not_applicable"
+        },
+        "fuzz": {
+          "status": "required"
+        },
+        "hostile": {
+          "status": "required"
+        },
+        "infrastructure": {
+          "reviewed_reason": "primitive/password-secret-contracts owns no infrastructure boundary; composed consumers own that evidence",
+          "status": "not_applicable"
+        },
+        "leak": {
+          "status": "required"
+        },
+        "provider_interoperability": {
+          "reviewed_reason": "primitive/password-secret-contracts owns no provider interoperability boundary; composed consumers own that evidence",
+          "status": "not_applicable"
+        },
+        "race": {
+          "status": "required"
+        }
+      },
+      "unit": "primitive/password-secret-contracts"
+    }
+  },
+  "selected-primitive-contract": {
+    "current_api_status": "requires-extension",
+    "errors": [
+      "golibpassword.ErrAdmission",
+      "golibpassword.ErrCanceled",
+      "golibpassword.ErrClosed",
+      "golibpassword.ErrEntropy",
+      "golibpassword.ErrInvalidPolicy",
+      "golibpassword.ErrInvalidSecret",
+      "golibpassword.ErrMalformedHash",
+      "golibpassword.ErrMismatch",
+      "golibpassword.ErrResourceRejected",
+      "golibpassword.ErrUnsupportedAlgorithm",
+      "golibpassword.ErrUnsupportedVersion"
+    ],
+    "interfaces": [],
+    "methods": [
+      "golibpassword.NewParameters(golibpassword.Parameters) (golibpassword.Parameters, error)",
+      "golibpassword.NewSecret([]byte) (golibpassword.Secret, error)",
+      "golibpassword.Secret.Destroy()",
+      "golibpassword.Secret.Len() int",
+      "golibpassword.Secret.Use(func([]byte) error) error"
+    ],
+    "owner": "password",
+    "package_path": "github.com/faustbrian/golib/pkg/password",
+    "required_contract_sha256": "sha256:225402cb5159d79d5acb6debacab7ae4666ed5567432cbbd6a7fb6f884d4df91",
+    "types": [
+      {
+        "declaration": "struct{Algorithm golibpassword.Algorithm; Argon2id golibpassword.Argon2idParameters; BcryptCost int}",
+        "name": "golibpassword.Parameters",
+        "semantics": "Exactly the arm selected by Algorithm is populated. NewParameters validates intrinsic algorithm bounds: Argon2id version 19, positive time and parallelism, memory at least eight times parallelism, salt at least eight bytes, output at least sixteen bytes, and BcryptCost 4..31. Composition uses existing NewPolicy to enforce caller-supplied enclosing limits before hashing; DefaultPolicy limits are not universal maxima."
+      },
+      {
+        "declaration": "struct with unexported owned []byte; constructed by golibpassword.NewSecret; maximum 1048576 bytes",
+        "name": "golibpassword.Secret",
+        "semantics": "Ephemeral mutable secret owner; construction copies input, Use exposes bytes only for one synchronous callback, Destroy clears owned bytes idempotently, and the type has no String, text, JSON, logging or formatting implementation."
+      }
+    ]
+  },
+  "vulnerability-database": {
+    "db_index": {
+      "modified": "2026-09-28T16:43:40Z"
+    },
+    "modules_index_sha256": "63ed43e801b80d9b253d110de8f1bc661249ac3f1117c91c96e7618cb7c338cd",
+    "source": "https://vuln.go.dev/vulndb.zip",
+    "zip_bytes": 3351093,
+    "zip_sha256": "faa8c45538d259ae1fd3c34ae20632ee738d1190836c84ac95d5f2bc604d85bc"
+  },
+  "vulnerability-tool": {
+    "build_info": "/tmp/identity-password-narrow-gates.kqVk5A/bin/govulncheck: go1.26.6\n\tpath\tgolang.org/x/vuln/cmd/govulncheck\n\tmod\tgolang.org/x/vuln\tv1.6.0\th1:FeMO9Rm/HwyduOztbvKcOw+zvDEPr4I4aQNSfevFcKY=\n\tdep\tgolang.org/x/mod\tv0.38.0\th1:MECBjubtXD7yj4HrhIUcywNaGeNVUdfVnxmPajOk4yk=\n\tdep\tgolang.org/x/sync\tv0.22.0\th1:SZjpbeLmrCk4xhRSZFNZW5gFUeCeFgjekvI/+gfScek=\n\tdep\tgolang.org/x/telemetry\tv0.0.0-20260708182218-49f421fb7959\th1:RJhm5l6Fo4rmEIcndxDllNhhf/fAx8qIm4t6A7vpm2A=\n\tdep\tgolang.org/x/tools\tv0.48.0\th1:3+hClM1aLL5mjMKm5ovokw9epgRXPuu2tILgismM6RE=\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\tDefaultGODEBUG=cryptocustomrand=1,tlssecpmlkem=0,urlstrictcolons=0\n\tbuild\tCGO_ENABLED=1\n\tbuild\tCGO_CFLAGS=\n\tbuild\tCGO_CPPFLAGS=\n\tbuild\tCGO_CXXFLAGS=\n\tbuild\tCGO_LDFLAGS=\n\tbuild\tGOARCH=arm64\n\tbuild\tGOOS=darwin\n\tbuild\tGOARM64=v8.0\n",
+    "sha256": "1853c48e3368c5472594a64be9619688c6ee11eaa16a20392fded4d0d15d41e8"
+  }
+}

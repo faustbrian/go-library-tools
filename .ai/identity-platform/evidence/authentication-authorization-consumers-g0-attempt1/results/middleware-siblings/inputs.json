@@ -1,0 +1,33 @@
+{
+  "consumer": "middleware-siblings",
+  "source_repository": "middleware",
+  "subdir": "integration/siblings",
+  "source_inputs_sha256": "6092d91790f16ca4806edb99d60b01672e22b2ea2e73d06d8632c5b88d948c69",
+  "candidate_revisions": {
+    "authentication": "a5eb0e543f53610ceaece35373986cf0a4fa5891",
+    "authorization": "a74c24b3846323e0c1627c6fccbb79ce25248392",
+    "capability": "c43af8abe83f33119ce2b13ec978e556408344f3"
+  },
+  "go_mod_sha256": "ce8fbe5b885302cc560950f8c75da3f3e1b6e7d3d7f69c486470319bcd843071",
+  "go_sum_sha256": "9d77ea83b2f93e43005cc37885de924718b6a0c43d920a351abb9090dc7d3115",
+  "go_executable_sha256": "548608a910c46de32c65a3934f461b1787acf6ddd371044826068d8503b8509b",
+  "tool_version": "go version go1.27.1 darwin/arm64",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOFLAGS": "-p=2",
+    "GOOS": "darwin",
+    "GOROOT": "/opt/homebrew/Cellar/go/1.27.1/libexec",
+    "GOTOOLCHAIN": "go1.27.1",
+    "GOVERSION": "go1.27.1",
+    "GOWORK": "off"
+  },
+  "argv": [
+    "/opt/homebrew/bin/go",
+    "test",
+    "-race",
+    "-count=1",
+    "-timeout=180s",
+    "./..."
+  ]
+}

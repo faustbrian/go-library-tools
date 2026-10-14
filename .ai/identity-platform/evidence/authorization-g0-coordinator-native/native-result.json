@@ -1,0 +1,14 @@
+{
+  "revision": "a74c24b3846323e0c1627c6fccbb79ce25248392",
+  "input_root": "sha256:5c8ec16db4ce1963f25b6ae2cf6d407014aa139aba051fe9cb3b339df2c29b68",
+  "started_at": "2026-10-01T11:22:35Z",
+  "completed_at": "2026-10-01T11:31:40Z",
+  "argv": [
+    "/private/tmp/identity-authorization-coordinator-gate.6eAPg1/bin/golib",
+    "check",
+    "--module",
+    "."
+  ],
+  "exit_code": 0,
+  "merged_stream_sha256": "0ef73b74ecd9023862e3d2f4868137306ce5b922d83ae3775a3b5b58f9489b0e"
+}

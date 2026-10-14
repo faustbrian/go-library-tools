@@ -1,0 +1,47 @@
+
+[.] nilaway
+go: downloading go1.26.6 (darwin/arm64)
+go: downloading go.uber.org/nilaway v0.0.0-20260720194628-9fd1b8d7bac8
+go: downloading golang.org/x/tools v0.45.0
+go: downloading golang.org/x/exp/typeparams v0.0.0-20260611194520-c48552f49976
+go: downloading github.com/klauspost/compress v1.18.6
+go: downloading golang.org/x/sync v0.20.0
+go: downloading golang.org/x/mod v0.36.0
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform-worker-g0/apikey/static.go:79:9: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authentication-identity-platform-worker-g0/example_test.go:16:17: result 0 of `NewStatic()` lacking guarding; used as receiver to call `Authenticate()` via the assignment(s):
+		- `apikey.NewStatic(...)` to `authenticator` at golib-go-authentication-identity-platform-worker-g0/example_test.go:12:2
+	- apikey/static.go:79:9: read by method receiver `s` accessed field `set`
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform-worker-g0/principal_test.go:75:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authentication-identity-platform-worker-g0/principal.go:118:9: result 0 of `cloneClaimMap()` lacking guarding; returned from `Claims()` in position 0 via the assignment(s):
+		- `cloneClaimMap(...)` to `claims` at golib-go-authentication-identity-platform-worker-g0/principal.go:116:2
+	- golib-go-authentication-identity-platform-worker-g0/principal_test.go:75:2: result 0 of `Claims()` written to at an index via the assignment(s):
+		- `authentication.NewPrincipal(...)` to `principal` at golib-go-authentication-identity-platform-worker-g0/principal_test.go:26:2,
+		- `principal.Claims()` to `returnedClaims` at golib-go-authentication-identity-platform-worker-g0/principal_test.go:74:2
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform-worker-g0/apikey/static.go:59:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- apikey/example_test.go:16:6: result 0 of `NewStatic()` lacking guarding; used as receiver to call `Replace()` via the assignment(s):
+		- `apikey.NewStatic(...)` to `authenticator` at apikey/example_test.go:12:2
+	- apikey/static.go:59:2: read by method receiver `s` accessed field `set`
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform-worker-g0/apikey/static.go:79:9: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- apikey/example_test.go:20:17: result 0 of `NewStatic()` lacking guarding; used as receiver to call `Authenticate()` via the assignment(s):
+		- `apikey.NewStatic(...)` to `authenticator` at apikey/example_test.go:12:2
+	- apikey/static.go:79:9: read by method receiver `s` accessed field `set`
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform-worker-g0/basic/static.go:103:24: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- basic/example_test.go:16:17: result 0 of `NewStatic()` lacking guarding; used as receiver to call `Authenticate()` via the assignment(s):
+		- `basic.NewStatic(...)` to `authenticator` at basic/example_test.go:12:2
+	- basic/static.go:103:24: read by method receiver `s` accessed field `entries`
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform-worker-g0/bearer/authenticator.go:69:20: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- bearer/example_test.go:22:17: result 0 of `New()` lacking guarding; used as receiver to call `Authenticate()` via the assignment(s):
+		- `bearer.New(...)` to `authenticator` at bearer/example_test.go:12:2
+	- bearer/authenticator.go:69:20: read by method receiver `a` accessed field `validator`
+
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform-worker-g0/bearer/static.go:72:9: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- bearer/example_test.go:36:17: result 0 of `NewStatic()` lacking guarding; used as receiver to call `Authenticate()` via the assignment(s):
+		- `bearer.NewStatic(...)` to `authenticator` at bearer/example_test.go:32:2
+	- bearer/static.go:72:9: read by method receiver `s` accessed field `set`
+
+[.] NilAway advisory exit status: 3

@@ -1,0 +1,5 @@
+github.com/faustbrian/go-capability 658/658 statements
+github.com/faustbrian/go-capability/caphttp 88/88 statements
+github.com/faustbrian/go-capability/memory 84/84 statements
+github.com/faustbrian/go-capability/postgres 92/92 statements
+github.com/faustbrian/go-capability/valkey 38/38 statements

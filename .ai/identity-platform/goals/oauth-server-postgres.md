@@ -1,0 +1,129 @@
+# Goal: pkg/oauth-server/postgres
+
+The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+"SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+"OPTIONAL" in this document are to be interpreted as described in BCP 14
+[RFC2119] [RFC8174] when, and only when, they appear in all capitals, as
+shown here.
+
+## Shared-issuer amendment: Delegation persistence and optional device storage
+
+[`SHARED_ISSUER_PROFILE.md`](../SHARED_ISSUER_PROFILE.md) is binding for this
+unit. Implement SI-04, SI-08 and SI-09. Persist root/parent lineage, typed
+owner/actor/tenant/caller, immutable ceilings, versions and
+replay/reconciliation state. Core OAuth storage MUST build without device
+types; isolate optional device storage in an adapter subpath or nested module.
+Full device integration remains eventual unit proof, not a base construction
+dependency.
+
+## Execution metadata
+
+- Unit: `oauth-server/postgres`
+- Canonical module: `pkg/oauth-server/postgres`
+- Canonical goal after scaffolding: `pkg/oauth-server/postgres/.ai/GOAL.md`
+- Public contracts: unit ID `contract:unit:oauth-server/postgres:v1`; owned operation IDs: none
+- Requires: `oauth-server`, `identity/postgres`, `primitive/capability-postgres-identity-contracts`
+- Consumes existing primitives: `postgres`, `migrations`, `capability/postgres`, `secret-envelope`, `outbox`, `audit`
+- Unlocks after verification: `identity/reference`
+
+## Start gate
+
+The primary agent MUST follow IMPLEMENTATION_GOAL.md and COMMON_REQUIREMENTS.md.
+Record the frozen consumer milestone and its necessary owners in the existing
+ledger. Development requires committed, integrated, focused behavioral and
+compatibility proof of the contracts actually consumed, not whole-unit release
+verification or a generated worker assignment. Final unit verification retains
+all product requirements, applicable release gates and verified prerequisites.
+
+## Objective and observable completion
+
+Build an independently releasable `pkg/oauth-server/postgres` module that owns durable OAuth clients, consents, codes, grants, refresh families, revocations, keys, and authorization transactions. Completion
+requires executable proof of the behaviors below through its public API and,
+where applicable, real supported infrastructure or providers.
+
+## Ownership boundary
+
+This module owns durable OAuth clients, consents, codes, grants, refresh
+families, revocations, keys and authorization transactions. An isolated optional
+device adapter implements the device package's code/approval store contract.
+It does not own endpoint policy, token cryptography, OIDC claims, and device-flow
+semantics. Those exclusions MUST remain
+outside its public API and dependency graph.
+
+## Required public contract
+
+The design MUST define schema, client secret storage, redirect sets, single-use code transaction, refresh-family locking, consent versions, key metadata, revocation indexes, migrations, cleanup, and reconciliation contracts. Public errors MUST be typed, stable,
+redacted, and useful for policy decisions without exposing enumeration or
+secret state. Zero values, clocks, randomness, identifier canonicalization,
+limits, and extension points MUST have explicit semantics.
+
+## Required behavior
+
+The implementation and tests MUST race code redemption and refresh rotation; revoke replayed families; hash bearer-equivalent values; rotate client secrets and keys; recover ambiguous commits without duplicate issuance; clean expiry safely; preserve old/new binary compatibility and query plans. Every state transition MUST
+define authorization, audit, idempotency, cancellation, cleanup, and
+not-committed/committed/unknown outcomes where external or durable state is
+involved.
+
+## Package-specific acceptance checklist
+
+- The schema MUST persist public/confidential clients, digested secrets and
+  rotation lineage, exact redirect sets, dynamic-registration access tokens,
+  grants/codes, opaque/JWT access metadata, refresh families, consent versions,
+  device codes, user codes, key metadata and revocation state.
+- Subject, actor and source-session identifiers MUST remain opaque bounded
+  values validated by the core before persistence. This adapter MUST use only
+  the public `identity/postgres` coordinator/contributor boundary and MUST NOT import its
+  internals, copy its SQL, create foreign-key ownership over identity/session
+  records, or revalidate identity/session policy. The reference composition
+  owns runtime bindings through public core contracts.
+- Constraints MUST enforce client ID, redirect and token uniqueness, one-time
+  code/device consumption, refresh-family state, consent scope version and
+  registration-token ownership under concurrent requests.
+- Secret rotation MUST define reveal-once output, overlap/revoke timing and
+  unknown-commit recovery. Raw client, access, refresh, registration and device
+  bearer values MUST NOT be stored when digest lookup suffices.
+- Authorization-code redemption and token issuance MUST NOT duplicate tokens
+  after ambiguous commit. A reconciliation record MUST distinguish committed
+  token metadata from an unknown secret value that cannot safely be re-shown.
+- Introspection/revocation indexes and expiry cleanup MUST be bounded and
+  preserve active refresh families and signing-key overlap.
+- Migration evidence MUST cover OIDC-provider legacy data where supported,
+  client-secret upgrades, consent versions, pairwise-subject inputs, device
+  tables, mixed binaries, backup/restore and realistic query plans.
+
+## Security and abuse requirements
+
+- Inputs MUST be bounded before parsing, allocation, storage, hashing, or
+  cryptographic work.
+- Subject, tenant, organization, purpose, audience, action, and redirect scope
+  MUST be bound wherever applicable and MUST fail closed on mismatch.
+- Enumeration, replay, fixation, confused-deputy, downgrade, race, and
+  cross-scope attacks MUST have deterministic regression cases.
+- Logs, traces, metrics, examples, fixtures, and errors MUST preserve the
+  redaction requirements in `.ai/identity-platform/COMMON_REQUIREMENTS.md`.
+
+## Persistence, lifecycle, and compatibility
+
+The core MUST remain adapter-neutral unless this goal is itself an adapter.
+State ownership, consistency, retention, deletion, migration, key rotation,
+clock skew, concurrent callers, shutdown, and recovery MUST be documented and
+tested where applicable. Unsupported protocol or deployment profiles MUST be
+stated rather than silently approximated.
+
+## Acceptance evidence
+
+Before this unit becomes `verified`, the owner MUST satisfy every common gate,
+the package-specific behavior above, the module's exact coverage and mutation
+gates, race/fuzz/interoperability gates that apply, clean-consumer proof,
+manifests, public API baseline, security and supply-chain checks, documentation,
+changelog, and changed reverse-dependant gates. The final evidence record MUST
+name any non-applicable gate with a reviewed reason; absence of infrastructure
+or provider access is a blocker, not a pass.
+
+## Release blockers
+
+The unit MUST remain `implemented-unverified` or `blocked` if any prerequisite
+is not `verified`, any ownership boundary is unresolved, a protocol claim
+lacks pinned specification and interoperability evidence, a durable transition
+has unhandled ambiguity, a secret can escape redaction, or any required gate is
+stale, skipped, warning-only, or failing.

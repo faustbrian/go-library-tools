@@ -1,0 +1,659 @@
+[.] services: postgresql,valkey
+[.] format-check
+[.] tidy-check
+go: downloading go1.26.6 (darwin/arm64)
+go: downloading golang.org/x/text v0.41.0
+go: downloading github.com/faustbrian/go-cache v1.0.0
+go: downloading go.opentelemetry.io/otel/metric v1.44.0
+go: downloading go.opentelemetry.io/otel v1.44.0
+go: downloading go.opentelemetry.io/otel/trace v1.44.0
+go: downloading github.com/faustbrian/go-jsonrpc v1.0.0
+go: downloading go.opentelemetry.io/otel/sdk/metric v1.44.0
+go: downloading go.opentelemetry.io/otel/sdk v1.44.0
+go: downloading github.com/faustbrian/go-migrations v1.0.0
+go: downloading github.com/jackc/pgx/v5 v5.10.0
+go: downloading github.com/valkey-io/valkey-go v1.0.76
+go: downloading github.com/valkey-io/valkey-go/mock v1.0.76
+go: downloading go.uber.org/mock v0.6.0
+go: downloading go.uber.org/goleak v1.3.0
+go: downloading github.com/stretchr/testify v1.11.1
+go: downloading github.com/google/go-cmp v0.7.0
+go: downloading github.com/go-logr/logr v1.4.3
+go: downloading github.com/go-logr/stdr v1.2.2
+go: downloading go.opentelemetry.io/otel/metric/x v0.66.0
+go: downloading github.com/jackc/puddle/v2 v2.2.2
+go: downloading golang.org/x/sys v0.47.0
+go: downloading github.com/onsi/gomega v1.39.1
+go: downloading github.com/davecgh/go-spew v1.1.1
+go: downloading github.com/pmezard/go-difflib v1.0.0
+go: downloading github.com/cespare/xxhash/v2 v2.3.0
+go: downloading github.com/google/uuid v1.6.0
+go: downloading go.opentelemetry.io/auto/sdk v1.2.1
+go: downloading github.com/jackc/pgpassfile v1.0.0
+go: downloading github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761
+go: downloading golang.org/x/sync v0.22.0
+go: downloading gopkg.in/yaml.v3 v3.0.1
+go: downloading go.yaml.in/yaml/v3 v3.0.4
+go: downloading golang.org/x/net v0.53.0
+[.] safety
+[.] vet
+[.] test
+ok  	github.com/faustbrian/go-authorization	0.213s
+ok  	github.com/faustbrian/go-authorization/abac	0.180s
+ok  	github.com/faustbrian/go-authorization/acl	0.197s
+ok  	github.com/faustbrian/go-authorization/adapters/cache	0.178s
+ok  	github.com/faustbrian/go-authorization/adapters/http	0.187s
+ok  	github.com/faustbrian/go-authorization/adapters/jsonrpc	0.189s
+ok  	github.com/faustbrian/go-authorization/adapters/otel	0.169s
+ok  	github.com/faustbrian/go-authorization/adapters/slog	0.381s
+ok  	github.com/faustbrian/go-authorization/authcache	0.186s
+ok  	github.com/faustbrian/go-authorization/authhttp	0.188s
+ok  	github.com/faustbrian/go-authorization/authlog	0.169s
+ok  	github.com/faustbrian/go-authorization/authn	0.177s
+ok  	github.com/faustbrian/go-authorization/authorizationtest	0.168s
+ok  	github.com/faustbrian/go-authorization/authotel	0.201s
+ok  	github.com/faustbrian/go-authorization/authrpc	0.184s
+?   	github.com/faustbrian/go-authorization/examples/tenant_documents	[no test files]
+ok  	github.com/faustbrian/go-authorization/httpauth	0.190s
+ok  	github.com/faustbrian/go-authorization/internal/authorizationotel	0.205s
+ok  	github.com/faustbrian/go-authorization/policy	0.544s
+ok  	github.com/faustbrian/go-authorization/postgres	0.256s
+ok  	github.com/faustbrian/go-authorization/rbac	0.180s
+ok  	github.com/faustbrian/go-authorization/valkey	0.209s
+[.] race
+ok  	github.com/faustbrian/go-authorization	1.257s
+ok  	github.com/faustbrian/go-authorization/abac	1.290s
+ok  	github.com/faustbrian/go-authorization/acl	1.275s
+ok  	github.com/faustbrian/go-authorization/adapters/cache	1.198s
+ok  	github.com/faustbrian/go-authorization/adapters/http	1.213s
+ok  	github.com/faustbrian/go-authorization/adapters/jsonrpc	1.222s
+ok  	github.com/faustbrian/go-authorization/adapters/otel	1.190s
+ok  	github.com/faustbrian/go-authorization/adapters/slog	1.207s
+ok  	github.com/faustbrian/go-authorization/authcache	1.192s
+ok  	github.com/faustbrian/go-authorization/authhttp	1.202s
+ok  	github.com/faustbrian/go-authorization/authlog	1.191s
+ok  	github.com/faustbrian/go-authorization/authn	1.188s
+ok  	github.com/faustbrian/go-authorization/authorizationtest	1.191s
+ok  	github.com/faustbrian/go-authorization/authotel	1.219s
+ok  	github.com/faustbrian/go-authorization/authrpc	1.213s
+?   	github.com/faustbrian/go-authorization/examples/tenant_documents	[no test files]
+ok  	github.com/faustbrian/go-authorization/httpauth	1.208s
+ok  	github.com/faustbrian/go-authorization/internal/authorizationotel	1.232s
+ok  	github.com/faustbrian/go-authorization/policy	5.093s
+ok  	github.com/faustbrian/go-authorization/postgres	1.284s
+ok  	github.com/faustbrian/go-authorization/rbac	1.277s
+ok  	github.com/faustbrian/go-authorization/valkey	1.231s
+[.] coverage
+ok  	github.com/faustbrian/go-authorization	0.227s	coverage: 42.8% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/abac	0.197s	coverage: 23.4% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/acl	0.204s	coverage: 10.4% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/adapters/cache	0.188s	coverage: 2.4% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/adapters/http	0.201s	coverage: 1.8% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/adapters/jsonrpc	0.206s	coverage: 1.7% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/adapters/otel	0.183s	coverage: 1.8% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/adapters/slog	0.185s	coverage: 0.4% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/authcache	0.191s	coverage: 2.6% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/authhttp	0.202s	coverage: 2.2% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/authlog	0.182s	coverage: 0.4% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/authn	0.187s	coverage: 4.7% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/authorizationtest	0.194s	coverage: 4.5% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/authotel	0.212s	coverage: 1.5% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/authrpc	0.212s	coverage: 2.5% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+?   	github.com/faustbrian/go-authorization/examples/tenant_documents	[no test files]
+ok  	github.com/faustbrian/go-authorization/httpauth	0.204s	coverage: 2.7% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/internal/authorizationotel	0.210s	coverage: 1.2% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/policy	0.558s	coverage: 26.1% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/postgres	0.285s	coverage: 2.0% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/rbac	0.202s	coverage: 11.5% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+ok  	github.com/faustbrian/go-authorization/valkey	0.224s	coverage: 2.9% of statements in github.com/faustbrian/go-authorization, github.com/faustbrian/go-authorization/abac, github.com/faustbrian/go-authorization/acl, github.com/faustbrian/go-authorization/adapters/cache, github.com/faustbrian/go-authorization/adapters/http, github.com/faustbrian/go-authorization/adapters/jsonrpc, github.com/faustbrian/go-authorization/adapters/otel, github.com/faustbrian/go-authorization/adapters/slog, github.com/faustbrian/go-authorization/authcache, github.com/faustbrian/go-authorization/authhttp, github.com/faustbrian/go-authorization/authlog, github.com/faustbrian/go-authorization/authn, github.com/faustbrian/go-authorization/authotel, github.com/faustbrian/go-authorization/authrpc, github.com/faustbrian/go-authorization/httpauth, github.com/faustbrian/go-authorization/internal/authorizationotel, github.com/faustbrian/go-authorization/policy, github.com/faustbrian/go-authorization/postgres, github.com/faustbrian/go-authorization/rbac, github.com/faustbrian/go-authorization/valkey
+github.com/faustbrian/go-authorization 717/717 statements
+github.com/faustbrian/go-authorization/abac 470/470 statements
+github.com/faustbrian/go-authorization/acl 149/149 statements
+github.com/faustbrian/go-authorization/adapters/cache 32/32 statements
+github.com/faustbrian/go-authorization/adapters/http 39/39 statements
+github.com/faustbrian/go-authorization/adapters/jsonrpc 38/38 statements
+github.com/faustbrian/go-authorization/adapters/otel 16/16 statements
+github.com/faustbrian/go-authorization/adapters/slog 6/6 statements
+github.com/faustbrian/go-authorization/authcache 5/5 statements
+github.com/faustbrian/go-authorization/authhttp 3/3 statements
+github.com/faustbrian/go-authorization/authlog 6/6 statements
+github.com/faustbrian/go-authorization/authn 82/82 statements
+github.com/faustbrian/go-authorization/authotel 26/26 statements
+github.com/faustbrian/go-authorization/authrpc 20/20 statements
+github.com/faustbrian/go-authorization/httpauth 23/23 statements
+github.com/faustbrian/go-authorization/internal/authorizationotel 27/27 statements
+github.com/faustbrian/go-authorization/policy 209/209 statements
+github.com/faustbrian/go-authorization/postgres 25/25 statements
+github.com/faustbrian/go-authorization/rbac 254/254 statements
+github.com/faustbrian/go-authorization/valkey 64/64 statements
+all production packages have exact 100% statement coverage
+[.] mutation-import
+[.] . skipped stale mutation checkpoint
+[.] ./abac skipped stale mutation checkpoint
+[.] ./acl skipped stale mutation checkpoint
+[.] ./authcache skipped stale mutation checkpoint
+[.] ./authhttp skipped stale mutation checkpoint
+[.] ./authlog skipped stale mutation checkpoint
+[.] ./authn skipped stale mutation checkpoint
+[.] ./authotel skipped stale mutation checkpoint
+[.] ./authrpc skipped stale mutation checkpoint
+[.] ./httpauth skipped stale mutation checkpoint
+[.] ./policy skipped stale mutation checkpoint
+[.] ./postgres skipped stale mutation checkpoint
+[.] ./rbac skipped stale mutation checkpoint
+[.] ./valkey skipped stale mutation checkpoint
+[.] mutation-import: changed packages require current verification
+[.] mutation
+Starting...
+Gathering coverage... done in 8s
+
+Mutation testing completed in 3 minutes 47 seconds
+Killed: 431, Lived: 0, Not covered: 0
+Timed out: 0, Not viable: 0, Skipped: 0
+Test efficacy: 100.00%
+Mutator coverage: 100.00%
+[.] . killed 431/431 viable mutants
+[.] ./abac reused content-identical mutation evidence (213 mutants)
+[.] ./acl reused content-identical mutation evidence (70 mutants)
+[.] ./adapters/cache reused content-identical mutation evidence (15 mutants)
+[.] ./adapters/http reused content-identical mutation evidence (11 mutants)
+[.] ./adapters/jsonrpc reused content-identical mutation evidence (14 mutants)
+[.] ./adapters/otel reused content-identical mutation evidence (3 mutants)
+[.] ./adapters/slog reused content-identical mutation evidence (3 mutants)
+[.] ./authcache reused content-identical mutation evidence (0 mutants)
+[.] ./authhttp reused content-identical mutation evidence (0 mutants)
+[.] ./authlog reused content-identical mutation evidence (3 mutants)
+[.] ./authn reused content-identical mutation evidence (19 mutants)
+[.] ./authotel reused content-identical mutation evidence (5 mutants)
+[.] ./authrpc reused content-identical mutation evidence (9 mutants)
+[.] ./httpauth reused content-identical mutation evidence (8 mutants)
+[.] ./internal/authorizationotel reused content-identical mutation evidence (3 mutants)
+[.] ./policy reused content-identical mutation evidence (108 mutants)
+[.] ./postgres reused content-identical mutation evidence (22 mutants)
+[.] ./rbac reused content-identical mutation evidence (79 mutants)
+[.] ./valkey reused content-identical mutation evidence (23 mutants)
+[.] lint
+go: downloading github.com/golangci/golangci-lint/v2 v2.13.1
+go: downloading charm.land/lipgloss/v2 v2.0.6
+go: downloading github.com/fatih/color v1.19.0
+go: downloading github.com/gofrs/flock v0.13.0
+go: downloading github.com/ldez/grignotin v0.10.1
+go: downloading github.com/pelletier/go-toml/v2 v2.4.3
+go: downloading github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
+go: downloading github.com/pelletier/go-toml v1.9.5
+go: downloading github.com/spf13/cobra v1.10.2
+go: downloading github.com/spf13/pflag v1.0.10
+go: downloading github.com/spf13/viper v1.12.0
+go: downloading go.yaml.in/yaml/v3 v3.0.5
+go: downloading golang.org/x/mod v0.40.0
+go: downloading github.com/mattn/go-colorable v0.1.15
+go: downloading github.com/mattn/go-isatty v0.0.20
+go: downloading golang.org/x/tools v0.49.0
+go: downloading github.com/go-viper/mapstructure/v2 v2.5.0
+go: downloading github.com/hashicorp/go-version v1.9.0
+go: downloading github.com/mitchellh/go-homedir v1.1.0
+go: downloading github.com/alecthomas/chroma/v2 v2.27.0
+go: downloading github.com/rogpeppe/go-internal v1.16.0
+go: downloading github.com/golangci/plugin-module-register v0.1.2
+go: downloading github.com/sirupsen/logrus v1.10.1
+go: downloading github.com/stretchr/testify v1.12.1
+go: downloading github.com/go-xmlfmt/xmlfmt v1.1.3
+go: downloading github.com/golangci/revgrep v0.8.0
+go: downloading github.com/charmbracelet/colorprofile v0.4.3
+go: downloading github.com/charmbracelet/ultraviolet v0.0.0-20260811164956-006e29f97886
+go: downloading github.com/charmbracelet/x/ansi v0.11.8
+go: downloading github.com/charmbracelet/x/term v0.2.2
+go: downloading github.com/clipperhouse/displaywidth v0.11.0
+go: downloading github.com/lucasb-eyer/go-colorful v1.4.1
+go: downloading github.com/rivo/uniseg v0.4.7
+go: downloading golang.org/x/text v0.40.0
+go: downloading github.com/fsnotify/fsnotify v1.9.0
+go: downloading github.com/mitchellh/mapstructure v1.5.0
+go: downloading github.com/spf13/afero v1.15.0
+go: downloading github.com/spf13/jwalterweatherman v1.1.0
+go: downloading github.com/spf13/cast v1.5.0
+go: downloading github.com/daixiang0/gci v0.13.7
+go: downloading mvdan.cc/gofumpt v0.11.0
+go: downloading github.com/golangci/gofmt v0.0.0-20260820135601-e84e05053792
+go: downloading github.com/golangci/golines v0.15.0
+go: downloading github.com/sourcegraph/go-diff v0.8.0
+go: downloading github.com/golangci/swaggoswag v0.0.0-20250504205917-77f2aca3143e
+go: downloading go.augendre.info/arangolint v0.4.0
+go: downloading github.com/alingse/asasalint v0.0.11
+go: downloading github.com/golangci/asciicheck v0.5.0
+go: downloading github.com/breml/bidichk v0.3.3
+go: downloading github.com/timakin/bodyclose v0.0.0-20260129054331-73d1f95b84b4
+go: downloading github.com/lasiar/canonicalheader v1.1.2
+go: downloading github.com/ClickHouse/clickhouse-go-linter v1.2.1
+go: downloading github.com/sivchari/containedctx v1.0.3
+go: downloading github.com/kkHAIKE/contextcheck v1.1.6
+go: downloading github.com/karamaru-alpha/copyloopvar v1.2.2
+go: downloading github.com/bkielbasa/cyclop v1.2.3
+go: downloading gitlab.com/bosi/decorder v0.4.2
+go: downloading github.com/OpenPeeDeeP/depguard/v2 v2.2.1
+go: downloading github.com/golangci/dupl v0.0.0-20260401084720-c99c5cf5c202
+go: downloading github.com/Abirdcfly/dupword v0.1.8
+go: downloading github.com/charithe/durationcheck v0.0.11
+go: downloading github.com/manuelarte/embeddedstructfieldcheck v0.4.0
+go: downloading github.com/Djarvur/go-err113 v0.1.1
+go: downloading github.com/kisielk/errcheck v1.20.0
+go: downloading github.com/breml/errchkjson v0.4.1
+go: downloading github.com/Antonboom/errname v1.1.2
+go: downloading codeberg.org/polyfloyd/go-errorlint v1.9.0
+go: downloading github.com/nishanths/exhaustive v0.12.0
+go: downloading dev.gaijin.team/go/exhaustruct/v4 v4.0.0
+go: downloading dev.gaijin.team/go/exhaustruct/v5 v5.0.3
+go: downloading github.com/ldez/exptostd v0.4.5
+go: downloading go.augendre.info/fatcontext v0.10.0
+go: downloading github.com/ashanbrown/forbidigo/v2 v2.3.1
+go: downloading github.com/gostaticanalysis/forcetypeassert v0.2.0
+go: downloading github.com/manuelarte/funcorder v0.6.0
+go: downloading github.com/ultraware/funlen v0.2.0
+go: downloading github.com/nunnatsa/ginkgolinter v0.24.0
+go: downloading 4d63.com/gocheckcompilerdirectives v1.4.0
+go: downloading 4d63.com/gochecknoglobals v0.2.2
+go: downloading github.com/alecthomas/go-check-sumtype v0.3.1
+go: downloading github.com/uudashr/gocognit v1.2.1
+go: downloading github.com/jgautheron/goconst v1.11.0
+go: downloading github.com/go-critic/go-critic v0.14.4
+go: downloading github.com/quasilyte/go-ruleguard/dsl v0.3.23
+go: downloading github.com/fzipp/gocyclo v0.6.0
+go: downloading github.com/quasilyte/go-ruleguard v0.4.5
+go: downloading github.com/godoc-lint/godoc-lint v0.11.2
+go: downloading github.com/tetafro/godot v1.5.6
+go: downloading github.com/matoous/godox v1.1.0
+go: downloading github.com/denis-tingaikin/go-header v0.5.0
+go: downloading github.com/ldez/gomoddirectives v0.9.0
+go: downloading github.com/Masterminds/semver/v3 v3.5.0
+go: downloading github.com/ryancurrah/gomodguard v1.4.1
+go: downloading github.com/ryancurrah/gomodguard/v2 v2.1.3
+go: downloading github.com/golangci/go-printf-func-name v0.1.1
+go: downloading github.com/securego/gosec/v2 v2.28.0
+go: downloading github.com/xen0n/gosmopolitan v1.3.0
+go: downloading github.com/leonklingele/grouper v1.1.2
+go: downloading github.com/uudashr/iface v1.5.0
+go: downloading github.com/macabu/inamedparam v0.2.0
+go: downloading github.com/julz/importas v0.2.0
+go: downloading github.com/gordonklaus/ineffassign v0.2.0
+go: downloading github.com/sashamelentyev/interfacebloat v1.1.0
+go: downloading github.com/ckaznocha/intrange v0.3.1
+go: downloading github.com/AdminBenni/iota-mixing v1.0.0
+go: downloading github.com/butuzov/ireturn v0.4.1
+go: downloading github.com/timonwong/loggercheck v0.11.0
+go: downloading github.com/yagipy/maintidx v1.0.0
+go: downloading github.com/ashanbrown/makezero/v2 v2.2.1
+go: downloading github.com/butuzov/mirror v1.3.3
+go: downloading github.com/golangci/misspell v0.8.0
+go: downloading github.com/tommy-muehle/go-mnd/v2 v2.5.1
+go: downloading go-simpler.org/musttag v0.14.0
+go: downloading github.com/alexkohler/nakedret/v2 v2.0.6
+go: downloading github.com/nakabonne/nestif v0.3.1
+go: downloading github.com/gostaticanalysis/nilerr v0.1.2
+go: downloading github.com/alingse/nilnesserr v0.2.0
+go: downloading github.com/Antonboom/nilnil v1.1.2
+go: downloading github.com/ssgreg/nlreturn/v2 v2.2.1
+go: downloading github.com/sonatard/noctx v0.5.1
+go: downloading github.com/AlwxSin/noinlineerr v1.0.6
+go: downloading github.com/firefart/nonamedreturns v1.0.8
+go: downloading github.com/stbenjam/no-sprintf-host-port v0.3.1
+go: downloading github.com/kunwardeep/paralleltest v1.0.15
+go: downloading github.com/catenacyber/perfsprint v0.10.1
+go: downloading github.com/alexkohler/prealloc v1.1.0
+go: downloading github.com/nishanths/predeclared v0.2.2
+go: downloading github.com/yeya24/promlinter v0.3.0
+go: downloading github.com/ghostiam/protogetter v0.3.21
+go: downloading github.com/curioswitch/go-reassign v0.3.0
+go: downloading github.com/raeperd/recvcheck v0.3.0
+go: downloading github.com/BurntSushi/toml v1.6.0
+go: downloading github.com/mgechev/revive v1.15.0
+go: downloading github.com/golangci/rowserrcheck v0.0.0-20260419091836-c5f79b8a11ba
+go: downloading go-simpler.org/sloglint v0.12.0
+go: downloading github.com/jjti/go-spancheck v0.6.5
+go: downloading github.com/ryanrolds/sqlclosecheck v0.6.0
+go: downloading honnef.co/go/tools v0.8.0
+go: downloading github.com/4meepo/tagalign v1.4.3
+go: downloading github.com/ldez/tagliatelle v0.7.2
+go: downloading github.com/maratori/testableexamples v1.0.1
+go: downloading github.com/Antonboom/testifylint v1.6.4
+go: downloading github.com/maratori/testpackage v1.1.2
+go: downloading github.com/kulti/thelper v0.7.1
+go: downloading github.com/moricho/tparallel v0.3.2
+go: downloading github.com/golangci/unconvert v0.0.0-20250410112200-a129a6e6413e
+go: downloading mvdan.cc/unparam v0.0.0-20260818115549-3f964bcb5673
+go: downloading github.com/MirrexOne/unqueryvet v1.5.4
+go: downloading github.com/sashamelentyev/usestdlibvars v1.29.0
+go: downloading github.com/ldez/usetesting v0.5.0
+go: downloading github.com/blizzy78/varnamelen v0.8.0
+go: downloading github.com/sanposhiho/wastedassign/v2 v2.1.0
+go: downloading github.com/ultraware/whitespace v0.2.0
+go: downloading github.com/tomarrell/wrapcheck/v2 v2.12.0
+go: downloading github.com/bombsimon/wsl/v4 v4.7.0
+go: downloading github.com/bombsimon/wsl/v5 v5.9.0
+go: downloading github.com/ykadowak/zerologlint v0.1.5
+go: downloading github.com/stretchr/objx v0.5.3
+go: downloading github.com/xo/terminfo v0.0.0-20220910002029-abceb7e1c41e
+go: downloading github.com/charmbracelet/x/termios v0.1.1
+go: downloading github.com/charmbracelet/x/windows v0.2.2
+go: downloading github.com/muesli/cancelreader v0.2.2
+go: downloading github.com/clipperhouse/uax29/v2 v2.7.0
+go: downloading github.com/mattn/go-runewidth v0.0.24
+go: downloading github.com/subosito/gotenv v1.4.1
+go: downloading github.com/hashicorp/hcl v1.0.0
+go: downloading github.com/magiconair/properties v1.8.6
+go: downloading gopkg.in/ini.v1 v1.67.0
+go: downloading github.com/dlclark/regexp2/v2 v2.2.1
+go: downloading go.uber.org/zap v1.27.0
+go: downloading github.com/hexops/gotextdiff v1.0.3
+go: downloading github.com/dave/dst v0.27.3
+go: downloading github.com/dlclark/regexp2 v1.12.0
+go: downloading github.com/gostaticanalysis/analysisutil v0.7.1
+go: downloading github.com/go-toolsmith/astcast v1.1.0
+go: downloading github.com/gobwas/glob v0.2.3
+go: downloading dev.gaijin.team/go/golib v0.8.1
+go: downloading github.com/go-toolsmith/astfmt v1.1.0
+go: downloading github.com/go-toolsmith/astcopy v1.1.0
+go: downloading github.com/go-toolsmith/astequal v1.2.0
+go: downloading github.com/go-toolsmith/astp v1.1.0
+go: downloading github.com/go-toolsmith/strparse v1.1.0
+go: downloading github.com/go-toolsmith/typep v1.1.0
+go: downloading github.com/quasilyte/regex/syntax v0.0.0-20210819130434-b3f0c404a727
+go: downloading github.com/ccojocar/zxcvbn-go v1.0.4
+go: downloading github.com/gostaticanalysis/comment v1.5.0
+go: downloading github.com/prometheus/client_golang v1.12.1
+go: downloading github.com/prometheus/client_model v0.2.0
+go: downloading github.com/fatih/structtag v1.2.0
+go: downloading github.com/ettle/strcase v0.2.0
+go: downloading github.com/hashicorp/go-immutable-radix/v2 v2.1.0
+go: downloading github.com/alfatraining/structtag v1.0.0
+go: downloading go.uber.org/multierr v1.10.0
+go: downloading github.com/ldez/structtags v0.6.1
+go: downloading golang.org/x/exp/typeparams v0.0.0-20260811152304-ee035b5b010f
+go: downloading github.com/quasilyte/gogrep v0.5.0
+go: downloading golang.org/x/exp v0.0.0-20250620022241-b7579e27df2b
+go: downloading github.com/quasilyte/stdinfo v0.0.0-20220114132959-f7386bf02567
+go: downloading github.com/beorn7/perks v1.0.1
+go: downloading github.com/golang/protobuf v1.5.3
+go: downloading github.com/prometheus/common v0.32.1
+go: downloading google.golang.org/protobuf v1.36.11
+go: downloading github.com/prometheus/procfs v0.7.3
+go: downloading codeberg.org/chavacava/garif v0.2.0
+go: downloading github.com/hashicorp/golang-lru/v2 v2.0.7
+go: downloading github.com/matttproud/golang_protobuf_extensions v1.0.1
+0 issues.
+[.] staticcheck
+go: downloading honnef.co/go/tools v0.8.1
+go: downloading golang.org/x/tools v0.44.1-0.20260420230617-19499e7caabc
+go: downloading golang.org/x/exp/typeparams v0.0.0-20231108232855-2478ac86f678
+go: downloading golang.org/x/sync v0.20.0
+go: downloading github.com/BurntSushi/toml v1.4.1-0.20240526193622-a339e1f7089c
+go: downloading golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa
+go: downloading golang.org/x/mod v0.35.0
+[.] vulnerability
+go: downloading golang.org/x/vuln v1.6.0
+go: downloading golang.org/x/telemetry v0.0.0-20260708182218-49f421fb7959
+go: downloading golang.org/x/mod v0.38.0
+go: downloading golang.org/x/tools v0.48.0
+No vulnerabilities found.
+[.] secrets
+go: downloading github.com/zricethezav/gitleaks/v8 v8.30.1
+go: downloading github.com/rs/zerolog v1.33.0
+go: downloading github.com/spf13/viper v1.19.0
+go: downloading github.com/spf13/cobra v1.9.1
+go: downloading github.com/mattn/go-colorable v0.1.14
+go: downloading github.com/spf13/pflag v1.0.6
+go: downloading github.com/BobuSumisu/aho-corasick v1.0.3
+go: downloading github.com/hashicorp/go-version v1.7.0
+go: downloading golang.org/x/exp v0.0.0-20250218142911-aa4b98e5adaa
+go: downloading github.com/charmbracelet/lipgloss v0.5.0
+go: downloading github.com/fatih/semgroup v1.2.0
+go: downloading github.com/Masterminds/sprig/v3 v3.3.0
+go: downloading github.com/gitleaks/go-gitdiff v0.9.1
+go: downloading github.com/h2non/filetype v1.1.3
+go: downloading github.com/mholt/archives v0.1.2
+go: downloading github.com/fsnotify/fsnotify v1.8.0
+go: downloading github.com/sagikazarmark/slog-shim v0.1.0
+go: downloading github.com/spf13/afero v1.12.0
+go: downloading github.com/spf13/cast v1.7.1
+go: downloading github.com/lucasb-eyer/go-colorful v1.2.0
+go: downloading github.com/mattn/go-runewidth v0.0.14
+go: downloading github.com/muesli/reflow v0.2.1-0.20210115123740-9e1d0d53df68
+go: downloading github.com/muesli/termenv v0.15.1
+go: downloading golang.org/x/sync v0.11.0
+go: downloading dario.cat/mergo v1.0.1
+go: downloading github.com/Masterminds/goutils v1.1.1
+go: downloading github.com/Masterminds/semver/v3 v3.3.0
+go: downloading github.com/huandu/xstrings v1.5.0
+go: downloading github.com/mitchellh/copystructure v1.2.0
+go: downloading github.com/shopspring/decimal v1.4.0
+go: downloading golang.org/x/crypto v0.35.0
+go: downloading golang.org/x/sys v0.30.0
+go: downloading golang.org/x/text v0.22.0
+go: downloading github.com/subosito/gotenv v1.6.0
+go: downloading github.com/magiconair/properties v1.8.9
+go: downloading github.com/pelletier/go-toml/v2 v2.2.3
+go: downloading github.com/STARRY-S/zip v0.2.1
+go: downloading github.com/andybalholm/brotli v1.1.2-0.20250424173009-453214e765f3
+go: downloading github.com/bodgit/sevenzip v1.6.0
+go: downloading github.com/dsnet/compress v0.0.2-0.20230904184137-39efe44ab707
+go: downloading github.com/klauspost/compress v1.17.11
+go: downloading github.com/klauspost/pgzip v1.2.6
+go: downloading github.com/minio/minlz v1.0.0
+go: downloading github.com/nwaples/rardecode/v2 v2.1.0
+go: downloading github.com/pierrec/lz4/v4 v4.1.21
+go: downloading github.com/sorairolake/lzip-go v0.3.5
+go: downloading github.com/therootcompany/xz v1.0.1
+go: downloading github.com/ulikunitz/xz v0.5.12
+go: downloading github.com/rivo/uniseg v0.2.0
+go: downloading github.com/aymanbagabas/go-osc52/v2 v2.0.1
+go: downloading github.com/mitchellh/reflectwalk v1.0.2
+go: downloading github.com/bodgit/plumbing v1.3.0
+go: downloading github.com/bodgit/windows v1.0.1
+go: downloading github.com/hashicorp/go-multierror v1.1.1
+go: downloading go4.org v0.0.0-20230225012048-214862532bf5
+go: downloading github.com/hashicorp/errwrap v1.1.0
+2:30PM INF scanned ~1405789 bytes (1.41 MB) in 287ms
+2:30PM INF no leaks found
+[.] licenses
+go: downloading github.com/google/go-licenses/v2 v2.0.1
+go: downloading github.com/otiai10/copy v1.10.0
+go: downloading github.com/spf13/cobra v1.7.0
+go: downloading golang.org/x/sync v0.16.0
+go: downloading golang.org/x/text v0.28.0
+go: downloading k8s.io/klog/v2 v2.90.1
+go: downloading go.opencensus.io v0.24.0
+go: downloading golang.org/x/net v0.43.0
+go: downloading github.com/google/licenseclassifier/v2 v2.0.0
+go: downloading golang.org/x/tools v0.36.0
+go: downloading golang.org/x/sys v0.35.0
+go: downloading github.com/spf13/pflag v1.0.5
+go: downloading golang.org/x/mod v0.27.0
+go: downloading github.com/go-logr/logr v1.2.0
+go: downloading github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da
+go: downloading github.com/sergi/go-diff v1.2.0
+W1001 14:30:11.082992   19374 library.go:141] "github.com/cespare/xxhash/v2" contains non-Go code that can't be inspected for further dependencies:
+/var/folders/c_/cyfs05854flfb113r0dpvz800000gn/T/golib-golib-go-authorization-identity-platform-3128917561/go-mod/github.com/cespare/xxhash/v2@v2.3.0/xxhash_arm64.s
+W1001 14:30:11.083134   19374 library.go:141] "golang.org/x/sys/cpu" contains non-Go code that can't be inspected for further dependencies:
+/var/folders/c_/cyfs05854flfb113r0dpvz800000gn/T/golib-golib-go-authorization-identity-platform-3128917561/go-mod/golang.org/x/sys@v0.47.0/cpu/asm_darwin_arm64_gc.s
+/var/folders/c_/cyfs05854flfb113r0dpvz800000gn/T/golib-golib-go-authorization-identity-platform-3128917561/go-mod/golang.org/x/sys@v0.47.0/cpu/cpu_arm64.s
+[.] SBOM
+[.] fuzz
+fuzz: elapsed: 0s, gathering baseline coverage: 0/7 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 7/7 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 109 (3470/sec), new interesting: 1 (total: 8)
+PASS
+ok  	github.com/faustbrian/go-authorization	0.249s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/2 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 2/2 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 100 (1697/sec), new interesting: 4 (total: 6)
+PASS
+ok  	github.com/faustbrian/go-authorization	0.175s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/4 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 4/4 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 100 (6570/sec), new interesting: 2 (total: 6)
+PASS
+ok  	github.com/faustbrian/go-authorization/abac	0.207s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 100 (7623/sec), new interesting: 3 (total: 6)
+PASS
+ok  	github.com/faustbrian/go-authorization/acl	0.211s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 100 (5487/sec), new interesting: 4 (total: 7)
+PASS
+ok  	github.com/faustbrian/go-authorization/policy	0.223s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 100 (8448/sec), new interesting: 2 (total: 5)
+PASS
+ok  	github.com/faustbrian/go-authorization/rbac	0.208s
+[.] docs
+🔍 78 Total (in 1s 83ms) 🔗 49 Unique ✅ 76 OK 🚫 0 Errors 👻 2 Excluded
+
+[.] api
+go: downloading golang.org/x/exp v0.0.0-20260718201538-764159d718ef
+[.] API compatibility passed
+[.] nilaway
+go: downloading go.uber.org/nilaway v0.0.0-20260720194628-9fd1b8d7bac8
+go: downloading golang.org/x/tools v0.45.0
+go: downloading golang.org/x/exp/typeparams v0.0.0-20260611194520-c48552f49976
+go: downloading github.com/klauspost/compress v1.18.6
+go: downloading golang.org/x/mod v0.36.0
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/abac/abac.go:305:43: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- abac/abac.go:328:9: literal `nil` returned from `conditionChildren()` in position 0
+	- abac/abac.go:305:43: result 0 of `conditionChildren()` sliced into via the assignment(s):
+		- `conditionChildren(...)` to `children` at abac/abac.go:303:3
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/policy/policy.go:111:15: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- policy/policy.go:111:15: result 0 of `DecideBatch()` lacking guarding; sliced into via the assignment(s):
+		- `candidateEngine.DecideBatch(...)` to `candidateDecisions` at policy/policy.go:96:2
+
+(Same nil source could also cause potential nil panic(s) at 1 other place(s): "policy/policy.go:112:56".)
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/admin_contracts_test.go:119:105: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authorization-identity-platform/admin_errors.go:35:10: literal `nil` returned from `NewAdminPermissionCheckError()` in position 0
+	- golib-go-authorization-identity-platform/admin_contracts_test.go:119:105: result 0 of `NewAdminPermissionCheckError()` dereferenced via the assignment(s):
+		- `NewAdminPermissionCheckError(...)` to `err` at golib-go-authorization-identity-platform/admin_contracts_test.go:115:3
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/admin_contracts_test.go:158:135: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authorization-identity-platform/admin_errors.go:108:10: literal `nil` returned from `NewAdminUserRoleSetError()` in position 0
+	- golib-go-authorization-identity-platform/admin_contracts_test.go:158:135: result 0 of `NewAdminUserRoleSetError()` dereferenced via the assignment(s):
+		- `NewAdminUserRoleSetError(...)` to `err` at golib-go-authorization-identity-platform/admin_contracts_test.go:154:3
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/attribute_test.go:62:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authorization-identity-platform/attribute_test.go:62:2: result 0 of `StringSet()` lacking guarding; sliced into via the assignment(s):
+		- `tests[...].value.StringSet()` to `set` at golib-go-authorization-identity-platform/attribute_test.go:58:2
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/attribute_test.go:64:5: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authorization-identity-platform/attribute_test.go:64:5: result 0 of `StringSet()` lacking guarding; sliced into via the assignment(s):
+		- `tests[...].value.StringSet()` to `setAgain` at golib-go-authorization-identity-platform/attribute_test.go:63:2
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:266:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:266:19: result 0 of `NewDecisionService()` lacking guarding; called `Decide()` via the assignment(s):
+		- `NewDecisionService(...)` to `service` at golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:265:2
+
+(Same nil source could also cause potential nil panic(s) at 2 other place(s): "golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:275:20", and "golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:282:22".)
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:290:22: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:290:22: result 0 of `NewDecisionService()` lacking guarding; called `Decide()` via the assignment(s):
+		- `NewDecisionService(...)` to `service` at golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:286:2
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:298:18: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:298:18: result 0 of `NewDecisionService()` lacking guarding; called `Decide()` via the assignment(s):
+		- `NewDecisionService(...)` to `service` at golib-go-authorization-identity-platform/identity_contracts_boundaries_test.go:294:2
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/identity_contracts_example_test.go:14:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- golib-go-authorization-identity-platform/identity_contracts_example_test.go:14:19: result 0 of `NewDecisionService()` lacking guarding; called `Decide()` via the assignment(s):
+		- `authorization.NewDecisionService(...)` to `service` at golib-go-authorization-identity-platform/identity_contracts_example_test.go:13:2
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/engine.go:122:37: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- authorizationtest/authorizationtest.go:208:9: result 0 of `NewEngine()` lacking guarding; returned from `MustEngine()` in position 0 via the assignment(s):
+		- `authorization.NewEngine(...)` to `engine` at authorizationtest/authorizationtest.go:204:2
+	- authorizationtest/authorizationtest_test.go:118:19: result 0 of `MustEngine()` used as receiver to call `Decide()` via the assignment(s):
+		- `authorizationtest.MustEngine(...)` to `engine` at authorizationtest/authorizationtest_test.go:117:2
+	- golib-go-authorization-identity-platform/engine.go:122:37: read by method receiver `engine` accessed field `snapshot`
+
+/Users/brian/Developer/.worktrees/golib-go-authorization-identity-platform/postgres/store_test.go:44:4: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- postgres/store_test.go:44:4: read directly from variadic parameter `destinations` sliced into
+
+exit status 3
+[.] NilAway advisory: run go: exit status 1
+[.] benchmark
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authorization
+cpu: Apple M4 Max
+BenchmarkEngineDecideWarm-2       	  701856	       183.3 ns/op	     160 B/op	       3 allocs/op
+BenchmarkEngineDecideCold-2       	  445028	       266.7 ns/op	     384 B/op	       6 allocs/op
+BenchmarkEngineDecideBatch100-2   	    6837	     18276 ns/op	   25728 B/op	     301 allocs/op
+BenchmarkEngineReload-2           	 1761891	        70.26 ns/op	     160 B/op	       2 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authorization	0.888s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authorization/abac
+cpu: Apple M4 Max
+BenchmarkEvaluatePredicateCount/predicates-1-2         	 1339924	        87.35 ns/op	     240 B/op	       2 allocs/op
+BenchmarkEvaluatePredicateCount/predicates-10-2        	  287817	       442.7 ns/op	     240 B/op	       2 allocs/op
+BenchmarkEvaluatePredicateCount/predicates-100-2       	   32542	      3643 ns/op	     240 B/op	       2 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authorization/abac	0.694s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authorization/acl
+cpu: Apple M4 Max
+BenchmarkEvaluateByPolicySize/entries-10-2         	  782331	       145.6 ns/op	      80 B/op	       2 allocs/op
+BenchmarkEvaluateByPolicySize/entries-100-2        	  281971	       436.7 ns/op	      80 B/op	       2 allocs/op
+BenchmarkEvaluateByPolicySize/entries-1000-2       	   32499	      3651 ns/op	      80 B/op	       2 allocs/op
+BenchmarkEvaluateByPolicySize/entries-10000-2      	    3354	     37126 ns/op	      80 B/op	       2 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authorization/acl	0.796s
+PASS
+ok  	github.com/faustbrian/go-authorization/adapters/cache	0.191s
+PASS
+ok  	github.com/faustbrian/go-authorization/adapters/http	0.189s
+PASS
+ok  	github.com/faustbrian/go-authorization/adapters/jsonrpc	0.202s
+PASS
+ok  	github.com/faustbrian/go-authorization/adapters/otel	0.180s
+PASS
+ok  	github.com/faustbrian/go-authorization/adapters/slog	0.189s
+PASS
+ok  	github.com/faustbrian/go-authorization/authcache	0.182s
+PASS
+ok  	github.com/faustbrian/go-authorization/authhttp	0.193s
+PASS
+ok  	github.com/faustbrian/go-authorization/authlog	0.252s
+PASS
+ok  	github.com/faustbrian/go-authorization/authn	0.184s
+PASS
+ok  	github.com/faustbrian/go-authorization/authorizationtest	0.181s
+PASS
+ok  	github.com/faustbrian/go-authorization/authotel	0.200s
+PASS
+ok  	github.com/faustbrian/go-authorization/authrpc	0.201s
+?   	github.com/faustbrian/go-authorization/examples/tenant_documents	[no test files]
+PASS
+ok  	github.com/faustbrian/go-authorization/httpauth	0.189s
+PASS
+ok  	github.com/faustbrian/go-authorization/internal/authorizationotel	0.217s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authorization/policy
+cpu: Apple M4 Max
+BenchmarkCompilerCompile-2   	  138807	       869.9 ns/op	    1512 B/op	      17 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authorization/policy	0.312s
+PASS
+ok  	github.com/faustbrian/go-authorization/postgres	0.222s
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-authorization/rbac
+cpu: Apple M4 Max
+BenchmarkEvaluateInheritanceDepth/depth-1-2         	  862972	       142.1 ns/op	     128 B/op	       2 allocs/op
+BenchmarkEvaluateInheritanceDepth/depth-8-2         	  351784	       334.5 ns/op	     128 B/op	       2 allocs/op
+BenchmarkEvaluateInheritanceDepth/depth-32-2        	   46400	      2608 ns/op	    3336 B/op	       9 allocs/op
+PASS
+ok  	github.com/faustbrian/go-authorization/rbac	0.572s
+PASS
+ok  	github.com/faustbrian/go-authorization/valkey	0.205s

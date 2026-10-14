@@ -1,0 +1,5 @@
+--- FAIL: TestNilPanicNeverReportsTransportSuccess (0.00s)
+    panicnil_probe_test.go:17: nil panic reported success: <nil>
+FAIL
+FAIL	github.com/faustbrian/go-capability/.artifacts/capability-g0	0.187s
+FAIL

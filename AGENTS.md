@@ -99,6 +99,19 @@ priority system/developer instructions remain controlling.
   failures, skipped checks and unverified boundaries; reused proof MUST NOT be
   described as newly executed.
 
+## Identity Platform Program
+
+- `.ai/identity-platform/REPAIR_AND_CHECKPOINT_GOAL.md` owns the bounded
+  transition and stops before another feature. After explicit user activation,
+  `.ai/identity-platform/IMPLEMENTATION_GOAL.md` is its sole execution prompt.
+- One persistent primary owns a frozen consumer milestone across necessary
+  modules; isolated GPT-6.1 Sol medium subagents are read-only investigators or
+  independent final reviewers, not implementation workers. Preserve dependency
+  ownership, focused consumed-contract proof and separate full qualification.
+- Historical coordinator, worker-assignment and capture-release documents
+  preserve evidence and product requirements, not additional current start
+  ceremonies. Never restore unrelated old tooling from the identity branch.
+
 ## Tools Contracts
 
 - Shared behavior belongs in typed Go code. Repository-specific facts belong

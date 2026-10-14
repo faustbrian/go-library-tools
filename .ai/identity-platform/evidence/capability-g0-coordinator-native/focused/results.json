@@ -1,0 +1,44 @@
+[
+  {
+    "name": "clean-consumer",
+    "argv": [
+      "/usr/bin/env",
+      "bash",
+      "scripts/check-clean-consumer.sh"
+    ],
+    "started_at": "2026-10-01T11:00:31Z",
+    "completed_at": "2026-10-01T11:00:33Z",
+    "exit_code": 0,
+    "log_sha256": "8dd0b50231d07e326fc96748287e648a3a3e50472fbf106b5f44981c70821d13"
+  },
+  {
+    "name": "vulnerability",
+    "argv": [
+      "/private/tmp/identity-capability-focused.uWjCtu/bin/govulncheck",
+      "-db",
+      "file:///private/tmp/identity-capability-focused.uWjCtu/db",
+      "-json",
+      "./..."
+    ],
+    "started_at": "2026-10-01T11:00:33Z",
+    "completed_at": "2026-10-01T11:00:35Z",
+    "exit_code": 0,
+    "log_sha256": "46a6248e0026e66d86badc5e72708894e7d68107ab21cea7c907d0a126257f33"
+  },
+  {
+    "name": "pinned-services",
+    "argv": [
+      "/opt/homebrew/bin/go",
+      "test",
+      "-count=1",
+      "-race",
+      "-tags=integration",
+      "./postgres",
+      "./valkey"
+    ],
+    "started_at": "2026-10-01T11:00:36Z",
+    "completed_at": "2026-10-01T11:00:57Z",
+    "exit_code": 0,
+    "log_sha256": "63f826aade2c485ac32237505073f63bba6fb5d0e8fa15e1433b73b5b556abf8"
+  }
+]

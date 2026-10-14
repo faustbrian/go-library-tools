@@ -1,0 +1,15 @@
+{
+  "revision": "a5eb0e543f53610ceaece35373986cf0a4fa5891",
+  "input_root": "sha256:e131b42624401b94a103ba9cfeef6c11bec4ce0d4e414843a86b11d43187031b",
+  "started_at": "2026-10-01T11:11:07Z",
+  "completed_at": "2026-10-01T11:15:28Z",
+  "argv": [
+    "./.golib/scripts/with-disposable-go-cache.sh",
+    "./.golib/scripts/run-modules.sh",
+    "check",
+    "--modules",
+    "."
+  ],
+  "exit_code": 0,
+  "merged_stream_sha256": "9f959488a56870b2ddc49a65248296231c220cc6501e6a053f4ecdaeb9e9f474"
+}

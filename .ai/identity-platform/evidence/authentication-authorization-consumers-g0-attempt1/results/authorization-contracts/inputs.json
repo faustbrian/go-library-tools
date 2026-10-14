@@ -1,0 +1,33 @@
+{
+  "consumer": "authorization-contracts",
+  "source_repository": "authorization",
+  "subdir": "integration/contracts",
+  "source_inputs_sha256": "6092d91790f16ca4806edb99d60b01672e22b2ea2e73d06d8632c5b88d948c69",
+  "candidate_revisions": {
+    "authentication": "a5eb0e543f53610ceaece35373986cf0a4fa5891",
+    "authorization": "a74c24b3846323e0c1627c6fccbb79ce25248392",
+    "capability": "c43af8abe83f33119ce2b13ec978e556408344f3"
+  },
+  "go_mod_sha256": "da549171641d5df179831943c26f2f7f38bf36405978f6762ec7806c53f15cd7",
+  "go_sum_sha256": "9b3fda04870e502a5ba4c0a9a534d936fa49278159aa2a91b31e5451c69dfe50",
+  "go_executable_sha256": "548608a910c46de32c65a3934f461b1787acf6ddd371044826068d8503b8509b",
+  "tool_version": "go version go1.26.6 darwin/arm64",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOFLAGS": "-p=2",
+    "GOOS": "darwin",
+    "GOROOT": "/private/tmp/identity-platform-consumer-gates.9IxpDN/mod/golang.org/toolchain@v0.0.1-go1.26.6.darwin-arm64",
+    "GOTOOLCHAIN": "go1.26.6",
+    "GOVERSION": "go1.26.6",
+    "GOWORK": "off"
+  },
+  "argv": [
+    "/opt/homebrew/bin/go",
+    "test",
+    "-race",
+    "-count=1",
+    "-timeout=180s",
+    "./..."
+  ]
+}

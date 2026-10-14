@@ -1,0 +1,25 @@
+{
+  "commit": "fc43df279d06e70cff8f2a4a5077a6fb296a9004",
+  "tree": "c6b71d63e97caea8feaf93c24633118615545342",
+  "base": "ce41a61000844dd3c06484a7799af336ad1b2892",
+  "source_closure_sha256": "780b6ed40addf4bba78cb796c073ef087f8df86c6f56ee9b317535d864557405",
+  "committed_path_count": 23,
+  "pushed": false,
+  "unit_verified": false,
+  "intent_validation": "Core only; no applicable profile located; effective impact unspecified",
+  "native_evidence_index": "evidence-index.json",
+  "source_manifest": "source-manifest.sha256",
+  "custody": "Current 20 mutation checkpoints and 20 matching reports remain untracked in this worker worktree, with native original execution environments and digests in evidence-index.json. No superseded task-generated records remain.",
+  "merge_inspection": {
+    "historical_integration": "e08db3af02adde4ad67094d678febc7b12302d85",
+    "conflicted_merge_tree": "a3569b3f9b0cd2c6d2d23fa28a6b87c0eab46731",
+    "conflicts": [".github/workflows/ci.yml", ".golib.yaml"],
+    "resolution": "Retain committed worker bytes for both configuration supersessions; no distinct historical coordinator policy is lost.",
+    "expected_resolved_tree": "c6b71d63e97caea8feaf93c24633118615545342",
+    "combined_changelog_blob": "2a2a575cf43180f1752a6950376c74109ac23902",
+    "reserved_integration_contracts_tree": "ddf56b907f3b7aa415d1a01a21e5e33ab397c601",
+    "integration_written": false
+  },
+  "nonblocking_review_suggestion": "Replacement tests could assert genuinely changed contents more directly; current production uses replacement inputs correctly. No new source cycle initiated.",
+  "remaining": "Coordinator integration, historical/reverse-consumer closure, unit disposition, platform/release/provenance, hosted CI, publication and downstream durable administration remain separate obligations."
+}

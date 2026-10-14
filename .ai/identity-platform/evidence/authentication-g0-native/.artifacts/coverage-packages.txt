@@ -1,0 +1,6 @@
+github.com/faustbrian/go-authentication
+github.com/faustbrian/go-authentication/apikey
+github.com/faustbrian/go-authentication/authhttp
+github.com/faustbrian/go-authentication/authlog
+github.com/faustbrian/go-authentication/basic
+github.com/faustbrian/go-authentication/bearer

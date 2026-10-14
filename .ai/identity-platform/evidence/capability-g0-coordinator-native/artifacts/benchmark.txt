@@ -1,0 +1,22 @@
+GOWORK=off go test ./... -run '^$' -bench . -benchmem -benchtime=100ms
+goos: darwin
+goarch: arm64
+pkg: github.com/faustbrian/go-capability
+cpu: Apple M4 Max
+BenchmarkIssueHMACSHA256-2          	   65994	      1787 ns/op	    3536 B/op	      21 allocs/op
+BenchmarkVerifyHMACSHA256-2         	   26232	      4595 ns/op	    4832 B/op	      51 allocs/op
+BenchmarkSignURLHMACSHA256-2        	   29704	      4008 ns/op	    7473 B/op	      53 allocs/op
+BenchmarkVerifyURLHMACSHA256-2      	   14706	      8070 ns/op	    8361 B/op	      87 allocs/op
+BenchmarkMemoryConsume-2            	 5494327	        22.62 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMemoryRevocationCheck-2    	12561004	         9.664 ns/op	       0 B/op	       0 allocs/op
+BenchmarkMemoryRevokeCapability-2   	 6712206	        18.21 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/faustbrian/go-capability	0.943s
+PASS
+ok  	github.com/faustbrian/go-capability/caphttp	0.094s
+PASS
+ok  	github.com/faustbrian/go-capability/memory	0.063s
+PASS
+ok  	github.com/faustbrian/go-capability/postgres	0.065s
+PASS
+ok  	github.com/faustbrian/go-capability/valkey	0.064s

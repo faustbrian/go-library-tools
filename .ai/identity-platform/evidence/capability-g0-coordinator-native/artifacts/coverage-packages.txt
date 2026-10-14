@@ -1,0 +1,5 @@
+github.com/faustbrian/go-capability
+github.com/faustbrian/go-capability/caphttp
+github.com/faustbrian/go-capability/memory
+github.com/faustbrian/go-capability/postgres
+github.com/faustbrian/go-capability/valkey

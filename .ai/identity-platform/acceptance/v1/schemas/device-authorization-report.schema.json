@@ -1,0 +1,1064 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity-platform.acceptance.device-authorization-report.v1",
+  "title": "device-authorization-report acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "result",
+    "tested_revision",
+    "gate_execution_revision",
+    "revalidation_revision",
+    "input_manifest",
+    "input_root",
+    "observations",
+    "artifact_hashes",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 2
+    },
+    "artifact_id": {
+      "const": "device-authorization-report"
+    },
+    "result": {
+      "const": {
+        "status": "pass",
+        "gate": "make check MODULES=pkg/identity/reference"
+      }
+    },
+    "tested_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "gate_execution_revision": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "revalidation_revision": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[0-9a-f]{40}$"
+    },
+    "input_manifest": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path_or_environment_id",
+          "kind",
+          "content_identity",
+          "owner",
+          "reason"
+        ],
+        "properties": {
+          "path_or_environment_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content_identity": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    },
+    "input_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior"
+              },
+              "claim_id": {
+                "const": "journey.oauth-oidc-provider.v1"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.device-authorization-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,replay,cleanup,unknown-outcome"
+              },
+              "preconditions": {
+                "const": "Operations: identity.oauth-server.device-authorize, identity.oauth-server.device-approve, identity.oauth-server.device-deny, identity.oauth-server.device-token; exact inputs: client_id, device_code, user_code, scopes, interval; initial state: registered device client has no authorization grant"
+              },
+              "stimulus": {
+                "const": "Run identity.oauth-server.device-authorize then identity.oauth-server.device-approve then identity.oauth-server.device-deny then identity.oauth-server.device-token for success, failure, denial, outage, replay, cleanup, unknown-outcome cases using client_id, device_code, user_code, scopes, interval and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: pending polling respects interval, approval issues one grant, denial returns access_denied, and expired or replayed codes issue no token; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, replay=denied/conflict, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit; required artifact fields: device_code_digest, user_code_digest, poll_count, token_issued_count, terminal_status"
+              },
+              "actual_outcome": {
+                "const": "Invariant: pending polling respects interval, approval issues one grant, denial returns access_denied, and expired or replayed codes issue no token; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, replay=denied/conflict, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit; required artifact fields: device_code_digest, user_code_digest, poll_count, token_issued_count, terminal_status"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "artifact_hashes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.ai/[A-Za-z0-9._/-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "const": ".ai/identity-platform/evidence/artifacts/device-authorization-report.json"
+          }
+        }
+      },
+      "minContains": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "artifact_hashes": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "const": ".ai/identity-platform/evidence/executions/device-authorization-report.json"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    }
+  ],
+  "x-cross-field-rules": [
+    "every observations[].artifact_sha256 value must equal one artifact_hashes[].sha256 value",
+    "artifact_hashes must bind the artifact-specific evidence object at .ai/identity-platform/evidence/artifacts/device-authorization-report.json",
+    "artifact_hashes must bind the separately captured coordinator execution receipt at .ai/identity-platform/evidence/executions/device-authorization-report.json",
+    "revalidation_revision is null exactly when tested_revision equals gate_execution_revision; otherwise it equals gate_execution_revision",
+    "input_root is SHA-256 over RFC 8785 canonical JSON of input_manifest"
+  ],
+  "$defs": {
+    "artifact_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "invariant_id",
+        "invariant",
+        "operation_ids",
+        "input_digest",
+        "execution",
+        "scenario_cases",
+        "device_code_digest",
+        "user_code_digest",
+        "poll_count",
+        "token_issued_count",
+        "terminal_status"
+      ],
+      "properties": {
+        "artifact_id": {
+          "const": "device-authorization-report"
+        },
+        "invariant_id": {
+          "const": "device-authorization-report.invariant"
+        },
+        "invariant": {
+          "const": "pending polling respects interval, approval issues one grant, denial returns access_denied, and expired or replayed codes issue no token"
+        },
+        "operation_ids": {
+          "const": [
+            "identity.oauth-server.device-authorize",
+            "identity.oauth-server.device-approve",
+            "identity.oauth-server.device-deny",
+            "identity.oauth-server.device-token"
+          ]
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "execution_identity",
+            "execution_receipt_path",
+            "execution_receipt_sha256",
+            "capture_authority",
+            "producer_argv",
+            "verifier_argv",
+            "tested_revision",
+            "input_root",
+            "sandbox_environment_sha256",
+            "canonical_workdir",
+            "executable_realpath",
+            "executable_sha256",
+            "verifier_executable_realpath",
+            "verifier_executable_sha256",
+            "verifier_driver_realpath",
+            "verifier_driver_sha256",
+            "version_argv",
+            "version_stdout",
+            "version_stderr",
+            "verifier_version_argv",
+            "verifier_version_stdout",
+            "verifier_version_stderr",
+            "environment_probe_argv",
+            "environment_probe_stdout",
+            "environment_probe_stderr",
+            "verifier_exit_status",
+            "verifier_stdout",
+            "verifier_stderr",
+            "verifier_attestation_sha256",
+            "started_at",
+            "completed_at",
+            "exit_status",
+            "stdout",
+            "stdout_byte_length",
+            "stdout_sha256",
+            "stderr",
+            "stderr_byte_length",
+            "stderr_sha256",
+            "captured_output_sha256",
+            "raw_capture_sha256",
+            "output_artifact_path",
+            "artifact_payload_binding"
+          ],
+          "properties": {
+            "execution_identity": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "execution_receipt_path": {
+              "const": ".ai/identity-platform/evidence/executions/device-authorization-report.json"
+            },
+            "execution_receipt_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "capture_authority": {
+              "const": "coordinator-owned-execution-runner/v3"
+            },
+            "producer_argv": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "make",
+                "check",
+                "MODULES=pkg/identity/reference"
+              ]
+            },
+            "verifier_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                ".ai/identity-platform/acceptance/schema_validation.rb",
+                "verify",
+                "device-authorization-report"
+              ]
+            },
+            "tested_revision": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "input_root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "sandbox_environment_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "canonical_workdir": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_driver_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_driver_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "make",
+                "--version"
+              ]
+            },
+            "version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "--version"
+              ]
+            },
+            "verifier_version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "verifier_version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "environment_probe_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "uname",
+                "-a"
+              ]
+            },
+            "environment_probe_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "environment_probe_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_exit_status": {
+              "const": 0
+            },
+            "verifier_stdout": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_attestation_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "started_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "completed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "exit_status": {
+              "const": 0
+            },
+            "stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1048576
+            },
+            "stdout_byte_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "stdout_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "stderr_byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "stderr_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "captured_output_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "raw_capture_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "output_artifact_path": {
+              "const": ".ai/identity-platform/evidence/artifacts/device-authorization-report.json"
+            },
+            "artifact_payload_binding": {
+              "const": "record.artifact_hashes[path,sha256]"
+            }
+          },
+          "x-execution-proof": 2
+        },
+        "scenario_cases": {
+          "type": "array",
+          "minItems": 7,
+          "maxItems": 7,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "observation_id",
+              "claim_id",
+              "invariant_id",
+              "scenario",
+              "operation_ids",
+              "input_fields",
+              "initial_state",
+              "status",
+              "stable_error",
+              "expected_invariant",
+              "observed_state_digest",
+              "observed_event_digest",
+              "transcript_sha256",
+              "artifact_contract_sha256",
+              "observed_value_count",
+              "ordered_steps",
+              "expected_operation_set",
+              "observed_operation_set",
+              "observed_values"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string",
+                "enum": [
+                  "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#success",
+                  "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#failure",
+                  "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#denial",
+                  "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#outage",
+                  "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#replay",
+                  "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#cleanup",
+                  "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#unknown-outcome"
+                ]
+              },
+              "observation_id": {
+                "type": "string",
+                "enum": [
+                  "device-authorization-report.journey.oauth-oidc-provider.v1.behavior"
+                ]
+              },
+              "claim_id": {
+                "type": "string",
+                "enum": [
+                  "journey.oauth-oidc-provider.v1"
+                ]
+              },
+              "invariant_id": {
+                "const": "device-authorization-report.invariant"
+              },
+              "scenario": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "failure",
+                  "denial",
+                  "outage",
+                  "replay",
+                  "cleanup",
+                  "unknown-outcome"
+                ]
+              },
+              "operation_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.oauth-server.device-authorize",
+                    "identity.oauth-server.device-approve",
+                    "identity.oauth-server.device-deny",
+                    "identity.oauth-server.device-token"
+                  ]
+                }
+              },
+              "input_fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "initial_state": {
+                "const": "registered device client has no authorization grant"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "failed",
+                  "denied",
+                  "unavailable",
+                  "reconciled"
+                ]
+              },
+              "stable_error": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "internal",
+                  "forbidden",
+                  "unavailable",
+                  "conflict",
+                  "unknown_commit"
+                ]
+              },
+              "expected_invariant": {
+                "const": "pending polling respects interval, approval issues one grant, denial returns access_denied, and expired or replayed codes issue no token"
+              },
+              "observed_state_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_event_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "artifact_contract_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_value_count": {
+                "const": 5
+              },
+              "ordered_steps": {
+                "const": [
+                  "precondition-established",
+                  "stimulus-executed",
+                  "outcome-observed",
+                  "transcript-bound"
+                ]
+              },
+              "expected_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.oauth-server.device-authorize",
+                    "identity.oauth-server.device-approve",
+                    "identity.oauth-server.device-deny",
+                    "identity.oauth-server.device-token"
+                  ]
+                }
+              },
+              "observed_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.oauth-server.device-authorize",
+                    "identity.oauth-server.device-approve",
+                    "identity.oauth-server.device-deny",
+                    "identity.oauth-server.device-token"
+                  ]
+                }
+              },
+              "observed_values": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "device_code_digest",
+                  "user_code_digest",
+                  "poll_count",
+                  "token_issued_count",
+                  "terminal_status"
+                ],
+                "properties": {
+                  "device_code_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "user_code_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "poll_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "token_issued_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "terminal_status": {
+                    "type": "string",
+                    "enum": [
+                      "pending",
+                      "approved",
+                      "denied",
+                      "expired"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "x-exact-scenario-case-fields": [
+            "case_id",
+            "observation_id",
+            "claim_id",
+            "scenario",
+            "operation_ids",
+            "input_fields",
+            "status",
+            "stable_error",
+            "artifact_contract_sha256",
+            "expected_operation_set",
+            "observed_operation_set"
+          ],
+          "x-exact-scenario-cases": [
+            {
+              "case_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#success",
+              "observation_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior",
+              "claim_id": "journey.oauth-oidc-provider.v1",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "input_fields": [
+                "client_id",
+                "device_code",
+                "user_code",
+                "scopes",
+                "interval"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:39f16cb0153b29e51c03876cec825643b792e7750dfbe832f3ab42d85b894860",
+              "expected_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "observed_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ]
+            },
+            {
+              "case_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#failure",
+              "observation_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior",
+              "claim_id": "journey.oauth-oidc-provider.v1",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "input_fields": [
+                "client_id",
+                "device_code",
+                "user_code",
+                "scopes",
+                "interval"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:ae97fd503e11e1eafcb56a7f3a76189584071bade89b41112e46ac398af83fe6",
+              "expected_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "observed_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ]
+            },
+            {
+              "case_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#denial",
+              "observation_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior",
+              "claim_id": "journey.oauth-oidc-provider.v1",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "input_fields": [
+                "client_id",
+                "device_code",
+                "user_code",
+                "scopes",
+                "interval"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:7ad26795681f941088f296ea6c1199e20601e66915d6859658813ded442529f4",
+              "expected_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "observed_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ]
+            },
+            {
+              "case_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#outage",
+              "observation_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior",
+              "claim_id": "journey.oauth-oidc-provider.v1",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "input_fields": [
+                "client_id",
+                "device_code",
+                "user_code",
+                "scopes",
+                "interval"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:b6e345a7dcb89cd3e57845ea0701539f37d6a887ed3feec2b8431b69bc02156b",
+              "expected_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "observed_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ]
+            },
+            {
+              "case_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#replay",
+              "observation_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior",
+              "claim_id": "journey.oauth-oidc-provider.v1",
+              "scenario": "replay",
+              "operation_ids": [
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "input_fields": [
+                "client_id",
+                "device_code",
+                "user_code",
+                "scopes",
+                "interval"
+              ],
+              "status": "denied",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:0900b03ad3c88e4ac6b7411ad53bbece1e13c2b7838988ddfe548c78460dca19",
+              "expected_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "observed_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ]
+            },
+            {
+              "case_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#cleanup",
+              "observation_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior",
+              "claim_id": "journey.oauth-oidc-provider.v1",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "input_fields": [
+                "client_id",
+                "device_code",
+                "user_code",
+                "scopes",
+                "interval"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:1cf1a02ea3ca3bca4cf05e4c4ffcfb86c4fe3902208567e7fc375e4515f453bf",
+              "expected_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "observed_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ]
+            },
+            {
+              "case_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior#unknown-outcome",
+              "observation_id": "device-authorization-report.journey.oauth-oidc-provider.v1.behavior",
+              "claim_id": "journey.oauth-oidc-provider.v1",
+              "scenario": "unknown-outcome",
+              "operation_ids": [
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "input_fields": [
+                "client_id",
+                "device_code",
+                "user_code",
+                "scopes",
+                "interval"
+              ],
+              "status": "reconciled",
+              "stable_error": "unknown_commit",
+              "artifact_contract_sha256": "sha256:84929c4b7f389c4d2373074b6aa109cc6b10ca67e719ec26cd541c579ad38371",
+              "expected_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ],
+              "observed_operation_set": [
+                "identity.oauth-server.device-approve",
+                "identity.oauth-server.device-authorize",
+                "identity.oauth-server.device-deny",
+                "identity.oauth-server.device-token"
+              ]
+            }
+          ]
+        },
+        "device_code_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "user_code_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "poll_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "token_issued_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "terminal_status": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "approved",
+            "denied",
+            "expired"
+          ]
+        }
+      },
+      "x-semantic-rules": [
+        {
+          "kind": "positive",
+          "fields": [
+            "poll_count",
+            "token_issued_count"
+          ]
+        },
+        {
+          "kind": "const",
+          "field": "token_issued_count",
+          "value": 1
+        }
+      ]
+    }
+  }
+}

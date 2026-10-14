@@ -1,0 +1,2276 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity-platform.acceptance.operational-api-redaction-report.v1",
+  "title": "operational-api-redaction-report acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "result",
+    "control_repository",
+    "package_repository",
+    "input_manifest",
+    "input_root",
+    "observations",
+    "artifact_hashes",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 3
+    },
+    "artifact_id": {
+      "const": "operational-api-redaction-report"
+    },
+    "result": {
+      "const": {
+        "status": "pass",
+        "gate": "make check MODULES=pkg/identity/reference"
+      }
+    },
+    "control_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "control"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-library-tools"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "package_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "package"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-identity"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "input_manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "repositories",
+        "environment_inputs"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 2
+        },
+        "repositories": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "prefixItems": [
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "items": false
+        },
+        "environment_inputs": {
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "input_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "operational-api-redaction-report.identity.audit.export.behavior"
+              },
+              "claim_id": {
+                "const": "identity.audit.export"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.operational-api-redaction-report.v1"
+              },
+              "scenario": {
+                "const": "success,denial,failure,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.audit.export; exact inputs: tenant_id, investigation_id, indexed_predicates, time_bounds, field_grants, export_byte_limit; initial state: one immutable audit investigation contains permissioned and redacted records while reference diagnostics contain credentials, tokens, keys, DSNs, and safe identifiers"
+              },
+              "stimulus": {
+                "const": "Run identity.audit.export for success, denial, failure, outage, cleanup cases using tenant_id, investigation_id, indexed_predicates, time_bounds, field_grants, export_byte_limit and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: investigation_id, get_record_count, search_record_count, list_record_count, exported_record_count, redacted_field_count, access_event_count, export_event_count, cursor_digest, content_digest, cross_tenant_rejected, forbidden_indistinguishable, secret_match_count"
+              },
+              "actual_outcome": {
+                "const": "Invariant: diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: investigation_id, get_record_count, search_record_count, list_record_count, exported_record_count, redacted_field_count, access_event_count, export_event_count, cursor_digest, content_digest, cross_tenant_rejected, forbidden_indistinguishable, secret_match_count"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "operational-api-redaction-report.identity.audit.get.behavior"
+              },
+              "claim_id": {
+                "const": "identity.audit.get"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.operational-api-redaction-report.v1"
+              },
+              "scenario": {
+                "const": "success,denial,failure"
+              },
+              "preconditions": {
+                "const": "Operations: identity.audit.get; exact inputs: tenant_id, investigation_id, record_id, field_grants; initial state: one immutable audit investigation contains permissioned and redacted records while reference diagnostics contain credentials, tokens, keys, DSNs, and safe identifiers"
+              },
+              "stimulus": {
+                "const": "Run identity.audit.get for success, denial, failure cases using tenant_id, investigation_id, record_id, field_grants and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal; required artifact fields: investigation_id, get_record_count, search_record_count, list_record_count, exported_record_count, redacted_field_count, access_event_count, export_event_count, cursor_digest, content_digest, cross_tenant_rejected, forbidden_indistinguishable, secret_match_count"
+              },
+              "actual_outcome": {
+                "const": "Invariant: diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal; required artifact fields: investigation_id, get_record_count, search_record_count, list_record_count, exported_record_count, redacted_field_count, access_event_count, export_event_count, cursor_digest, content_digest, cross_tenant_rejected, forbidden_indistinguishable, secret_match_count"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "operational-api-redaction-report.identity.audit.list.behavior"
+              },
+              "claim_id": {
+                "const": "identity.audit.list"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.operational-api-redaction-report.v1"
+              },
+              "scenario": {
+                "const": "success,denial,failure"
+              },
+              "preconditions": {
+                "const": "Operations: identity.audit.list; exact inputs: tenant_id, investigation_id, cursor, limit, time_bounds, field_grants; initial state: one immutable audit investigation contains permissioned and redacted records while reference diagnostics contain credentials, tokens, keys, DSNs, and safe identifiers"
+              },
+              "stimulus": {
+                "const": "Run identity.audit.list for success, denial, failure cases using tenant_id, investigation_id, cursor, limit, time_bounds, field_grants and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal; required artifact fields: investigation_id, get_record_count, search_record_count, list_record_count, exported_record_count, redacted_field_count, access_event_count, export_event_count, cursor_digest, content_digest, cross_tenant_rejected, forbidden_indistinguishable, secret_match_count"
+              },
+              "actual_outcome": {
+                "const": "Invariant: diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal; required artifact fields: investigation_id, get_record_count, search_record_count, list_record_count, exported_record_count, redacted_field_count, access_event_count, export_event_count, cursor_digest, content_digest, cross_tenant_rejected, forbidden_indistinguishable, secret_match_count"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "operational-api-redaction-report.identity.audit.search.behavior"
+              },
+              "claim_id": {
+                "const": "identity.audit.search"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.operational-api-redaction-report.v1"
+              },
+              "scenario": {
+                "const": "success,denial,failure"
+              },
+              "preconditions": {
+                "const": "Operations: identity.audit.search; exact inputs: tenant_id, investigation_id, indexed_predicates, time_bounds, field_grants; initial state: one immutable audit investigation contains permissioned and redacted records while reference diagnostics contain credentials, tokens, keys, DSNs, and safe identifiers"
+              },
+              "stimulus": {
+                "const": "Run identity.audit.search for success, denial, failure cases using tenant_id, investigation_id, indexed_predicates, time_bounds, field_grants and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal; required artifact fields: investigation_id, get_record_count, search_record_count, list_record_count, exported_record_count, redacted_field_count, access_event_count, export_event_count, cursor_digest, content_digest, cross_tenant_rejected, forbidden_indistinguishable, secret_match_count"
+              },
+              "actual_outcome": {
+                "const": "Invariant: diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal; required artifact fields: investigation_id, get_record_count, search_record_count, list_record_count, exported_record_count, redacted_field_count, access_event_count, export_event_count, cursor_digest, content_digest, cross_tenant_rejected, forbidden_indistinguishable, secret_match_count"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "operational-api-redaction-report.journey.audit-investigation.v1.behavior"
+              },
+              "claim_id": {
+                "const": "journey.audit-investigation.v1"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.operational-api-redaction-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,cleanup"
+              },
+              "preconditions": {
+                "const": "Operations: identity.reference.diagnostics, identity.reference.migration-check, identity.audit.get, identity.audit.search, identity.audit.list, identity.audit.export; exact inputs: tenant_id, investigation_id, record_id, indexed_predicates, cursor, limit, time_bounds, field_grants, export_byte_limit, secret_shaped_configuration; initial state: one immutable audit investigation contains permissioned and redacted records while reference diagnostics contain credentials, tokens, keys, DSNs, and safe identifiers"
+              },
+              "stimulus": {
+                "const": "Run identity.reference.diagnostics then identity.reference.migration-check then identity.audit.get then identity.audit.search then identity.audit.list then identity.audit.export for success, failure, denial, outage, cleanup cases using tenant_id, investigation_id, record_id, indexed_predicates, cursor, limit, time_bounds, field_grants, export_byte_limit, secret_shaped_configuration and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: investigation_id, get_record_count, search_record_count, list_record_count, exported_record_count, redacted_field_count, access_event_count, export_event_count, cursor_digest, content_digest, cross_tenant_rejected, forbidden_indistinguishable, secret_match_count"
+              },
+              "actual_outcome": {
+                "const": "Invariant: diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, cleanup=pass/none; required artifact fields: investigation_id, get_record_count, search_record_count, list_record_count, exported_record_count, redacted_field_count, access_event_count, export_event_count, cursor_digest, content_digest, cross_tenant_rejected, forbidden_indistinguishable, secret_match_count"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "artifact_hashes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.ai/[A-Za-z0-9._/-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "const": ".ai/identity-platform/evidence/artifacts/operational-api-redaction-report.json"
+          }
+        }
+      },
+      "minContains": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "operational-api-redaction-report.identity.audit.export.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "operational-api-redaction-report.identity.audit.get.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "operational-api-redaction-report.identity.audit.list.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "operational-api-redaction-report.identity.audit.search.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "operational-api-redaction-report.journey.audit-investigation.v1.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "artifact_hashes": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "const": ".ai/identity-platform/evidence/executions/operational-api-redaction-report.json"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    }
+  ],
+  "x-cross-field-rules": [
+    "every observations[].artifact_sha256 value must equal one artifact_hashes[].sha256 value",
+    "artifact_hashes must bind the artifact-specific evidence object at .ai/identity-platform/evidence/artifacts/operational-api-redaction-report.json",
+    "artifact_hashes must bind the separately captured coordinator execution receipt at .ai/identity-platform/evidence/executions/operational-api-redaction-report.json",
+    "control and package repository bindings have distinct identities, revisions, trees, and runtime workdirs",
+    "input_root is the repository-qualified v2 input-manifest fingerprint"
+  ],
+  "$defs": {
+    "artifact_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "invariant_id",
+        "invariant",
+        "operation_ids",
+        "input_digest",
+        "execution",
+        "scenario_cases",
+        "investigation_id",
+        "get_record_count",
+        "search_record_count",
+        "list_record_count",
+        "exported_record_count",
+        "redacted_field_count",
+        "access_event_count",
+        "export_event_count",
+        "cursor_digest",
+        "content_digest",
+        "cross_tenant_rejected",
+        "forbidden_indistinguishable",
+        "secret_match_count"
+      ],
+      "properties": {
+        "artifact_id": {
+          "const": "operational-api-redaction-report"
+        },
+        "invariant_id": {
+          "const": "operational-api-redaction-report.invariant"
+        },
+        "invariant": {
+          "const": "diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable"
+        },
+        "operation_ids": {
+          "const": [
+            "identity.reference.diagnostics",
+            "identity.reference.migration-check",
+            "identity.audit.get",
+            "identity.audit.search",
+            "identity.audit.list",
+            "identity.audit.export"
+          ]
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "execution_identity",
+            "execution_receipt_path",
+            "execution_receipt_sha256",
+            "capture_authority",
+            "logical_module",
+            "producer_argv",
+            "verifier_argv",
+            "control_repository",
+            "package_repository",
+            "input_root",
+            "sandbox_environment_sha256",
+            "executable_realpath",
+            "executable_sha256",
+            "verifier_executable_realpath",
+            "verifier_executable_sha256",
+            "verifier_driver_realpath",
+            "verifier_driver_sha256",
+            "version_argv",
+            "version_stdout",
+            "version_stderr",
+            "verifier_version_argv",
+            "verifier_version_stdout",
+            "verifier_version_stderr",
+            "environment_probe_argv",
+            "environment_probe_stdout",
+            "environment_probe_stderr",
+            "verifier_exit_status",
+            "verifier_stdout",
+            "verifier_stderr",
+            "verifier_attestation_sha256",
+            "started_at",
+            "completed_at",
+            "exit_status",
+            "stdout",
+            "stdout_byte_length",
+            "stdout_sha256",
+            "stderr",
+            "stderr_byte_length",
+            "stderr_sha256",
+            "captured_output_sha256",
+            "raw_capture_sha256",
+            "output_artifact_path",
+            "artifact_payload_binding"
+          ],
+          "properties": {
+            "execution_identity": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "execution_receipt_path": {
+              "const": ".ai/identity-platform/evidence/executions/operational-api-redaction-report.json"
+            },
+            "execution_receipt_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "capture_authority": {
+              "const": "coordinator-owned-execution-runner/v4"
+            },
+            "logical_module": {
+              "const": "pkg/identity/reference"
+            },
+            "producer_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "check",
+                "--module",
+                "reference"
+              ]
+            },
+            "verifier_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "/Users/brian/Developer/.worktrees/golib-go-library-tools-identity-platform/.ai/identity-platform/acceptance/schema_validation.rb",
+                "verify",
+                "operational-api-redaction-report"
+              ]
+            },
+            "control_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "control"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "package_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "package"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-identity"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "input_root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "sandbox_environment_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_driver_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_driver_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "--version"
+              ]
+            },
+            "version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "--version"
+              ]
+            },
+            "verifier_version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "verifier_version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "environment_probe_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "uname",
+                "-a"
+              ]
+            },
+            "environment_probe_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "environment_probe_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_exit_status": {
+              "const": 0
+            },
+            "verifier_stdout": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_attestation_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "started_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "completed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "exit_status": {
+              "const": 0
+            },
+            "stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1048576
+            },
+            "stdout_byte_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "stdout_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "stderr_byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "stderr_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "captured_output_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "raw_capture_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "output_artifact_path": {
+              "const": ".ai/identity-platform/evidence/artifacts/operational-api-redaction-report.json"
+            },
+            "artifact_payload_binding": {
+              "const": "record.artifact_hashes[path,sha256]"
+            }
+          },
+          "x-execution-proof": 3
+        },
+        "scenario_cases": {
+          "type": "array",
+          "minItems": 19,
+          "maxItems": 19,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "observation_id",
+              "claim_id",
+              "invariant_id",
+              "scenario",
+              "operation_ids",
+              "input_fields",
+              "initial_state",
+              "status",
+              "stable_error",
+              "expected_invariant",
+              "observed_state_digest",
+              "observed_event_digest",
+              "transcript_sha256",
+              "artifact_contract_sha256",
+              "observed_value_count",
+              "ordered_steps",
+              "expected_operation_set",
+              "observed_operation_set",
+              "observed_values"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string",
+                "enum": [
+                  "operational-api-redaction-report.identity.audit.export.behavior#success",
+                  "operational-api-redaction-report.identity.audit.export.behavior#denial",
+                  "operational-api-redaction-report.identity.audit.export.behavior#failure",
+                  "operational-api-redaction-report.identity.audit.export.behavior#outage",
+                  "operational-api-redaction-report.identity.audit.export.behavior#cleanup",
+                  "operational-api-redaction-report.identity.audit.get.behavior#success",
+                  "operational-api-redaction-report.identity.audit.get.behavior#denial",
+                  "operational-api-redaction-report.identity.audit.get.behavior#failure",
+                  "operational-api-redaction-report.identity.audit.list.behavior#success",
+                  "operational-api-redaction-report.identity.audit.list.behavior#denial",
+                  "operational-api-redaction-report.identity.audit.list.behavior#failure",
+                  "operational-api-redaction-report.identity.audit.search.behavior#success",
+                  "operational-api-redaction-report.identity.audit.search.behavior#denial",
+                  "operational-api-redaction-report.identity.audit.search.behavior#failure",
+                  "operational-api-redaction-report.journey.audit-investigation.v1.behavior#success",
+                  "operational-api-redaction-report.journey.audit-investigation.v1.behavior#failure",
+                  "operational-api-redaction-report.journey.audit-investigation.v1.behavior#denial",
+                  "operational-api-redaction-report.journey.audit-investigation.v1.behavior#outage",
+                  "operational-api-redaction-report.journey.audit-investigation.v1.behavior#cleanup"
+                ]
+              },
+              "observation_id": {
+                "type": "string",
+                "enum": [
+                  "operational-api-redaction-report.identity.audit.export.behavior",
+                  "operational-api-redaction-report.identity.audit.get.behavior",
+                  "operational-api-redaction-report.identity.audit.list.behavior",
+                  "operational-api-redaction-report.identity.audit.search.behavior",
+                  "operational-api-redaction-report.journey.audit-investigation.v1.behavior"
+                ]
+              },
+              "claim_id": {
+                "type": "string",
+                "enum": [
+                  "identity.audit.export",
+                  "identity.audit.get",
+                  "identity.audit.list",
+                  "identity.audit.search",
+                  "journey.audit-investigation.v1"
+                ]
+              },
+              "invariant_id": {
+                "const": "operational-api-redaction-report.invariant"
+              },
+              "scenario": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "denial",
+                  "failure",
+                  "outage",
+                  "cleanup"
+                ]
+              },
+              "operation_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.reference.diagnostics",
+                    "identity.reference.migration-check",
+                    "identity.audit.get",
+                    "identity.audit.search",
+                    "identity.audit.list",
+                    "identity.audit.export"
+                  ]
+                }
+              },
+              "input_fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "initial_state": {
+                "const": "one immutable audit investigation contains permissioned and redacted records while reference diagnostics contain credentials, tokens, keys, DSNs, and safe identifiers"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "denied",
+                  "failed",
+                  "unavailable"
+                ]
+              },
+              "stable_error": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "forbidden",
+                  "internal",
+                  "unavailable"
+                ]
+              },
+              "expected_invariant": {
+                "const": "diagnostic and migration outputs retain safe identifiers with zero secret matches; audit get, indexed search, bounded chronological list, and immutable export share one investigation ID, enforce grants and tenant scope, emit access and export events, preserve stable cursors and tamper-evident digests, and make absent and forbidden indistinguishable"
+              },
+              "observed_state_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_event_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "artifact_contract_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_value_count": {
+                "const": 13
+              },
+              "ordered_steps": {
+                "const": [
+                  "precondition-established",
+                  "stimulus-executed",
+                  "outcome-observed",
+                  "transcript-bound"
+                ]
+              },
+              "expected_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.reference.diagnostics",
+                    "identity.reference.migration-check",
+                    "identity.audit.get",
+                    "identity.audit.search",
+                    "identity.audit.list",
+                    "identity.audit.export"
+                  ]
+                }
+              },
+              "observed_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.reference.diagnostics",
+                    "identity.reference.migration-check",
+                    "identity.audit.get",
+                    "identity.audit.search",
+                    "identity.audit.list",
+                    "identity.audit.export"
+                  ]
+                }
+              },
+              "observed_values": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "investigation_id",
+                  "get_record_count",
+                  "search_record_count",
+                  "list_record_count",
+                  "exported_record_count",
+                  "redacted_field_count",
+                  "access_event_count",
+                  "export_event_count",
+                  "cursor_digest",
+                  "content_digest",
+                  "cross_tenant_rejected",
+                  "forbidden_indistinguishable",
+                  "secret_match_count"
+                ],
+                "properties": {
+                  "investigation_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "get_record_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "search_record_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "list_record_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "exported_record_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "redacted_field_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "access_event_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "export_event_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "cursor_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "content_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "cross_tenant_rejected": {
+                    "type": "boolean"
+                  },
+                  "forbidden_indistinguishable": {
+                    "type": "boolean"
+                  },
+                  "secret_match_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  }
+                }
+              }
+            }
+          },
+          "x-exact-scenario-case-fields": [
+            "case_id",
+            "observation_id",
+            "claim_id",
+            "scenario",
+            "operation_ids",
+            "input_fields",
+            "status",
+            "stable_error",
+            "artifact_contract_sha256",
+            "expected_operation_set",
+            "observed_operation_set"
+          ],
+          "x-exact-scenario-cases": [
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.export.behavior#success",
+              "observation_id": "operational-api-redaction-report.identity.audit.export.behavior",
+              "claim_id": "identity.audit.export",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.audit.export"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "indexed_predicates",
+                "time_bounds",
+                "field_grants",
+                "export_byte_limit"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:90b17c04bb1df11200da55fd41938b8d32f3850dd3a4dc5d2fb5006fc8b6c7dc",
+              "expected_operation_set": [
+                "identity.audit.export"
+              ],
+              "observed_operation_set": [
+                "identity.audit.export"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.export.behavior#denial",
+              "observation_id": "operational-api-redaction-report.identity.audit.export.behavior",
+              "claim_id": "identity.audit.export",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.audit.export"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "indexed_predicates",
+                "time_bounds",
+                "field_grants",
+                "export_byte_limit"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:edfc12e8209bf26e948d272df9a72c4e1e230f8f2a5d4862af806a92eacd935c",
+              "expected_operation_set": [
+                "identity.audit.export"
+              ],
+              "observed_operation_set": [
+                "identity.audit.export"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.export.behavior#failure",
+              "observation_id": "operational-api-redaction-report.identity.audit.export.behavior",
+              "claim_id": "identity.audit.export",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.audit.export"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "indexed_predicates",
+                "time_bounds",
+                "field_grants",
+                "export_byte_limit"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:63dab99957db93dc7adff2beced91c0d60929741aa68c7531754f25043ec7107",
+              "expected_operation_set": [
+                "identity.audit.export"
+              ],
+              "observed_operation_set": [
+                "identity.audit.export"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.export.behavior#outage",
+              "observation_id": "operational-api-redaction-report.identity.audit.export.behavior",
+              "claim_id": "identity.audit.export",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.audit.export"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "indexed_predicates",
+                "time_bounds",
+                "field_grants",
+                "export_byte_limit"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:d29340ce2526612d91f0d8f50987e4eaf1caa8df53dea8f4fef4af4078d0a44c",
+              "expected_operation_set": [
+                "identity.audit.export"
+              ],
+              "observed_operation_set": [
+                "identity.audit.export"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.export.behavior#cleanup",
+              "observation_id": "operational-api-redaction-report.identity.audit.export.behavior",
+              "claim_id": "identity.audit.export",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.audit.export"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "indexed_predicates",
+                "time_bounds",
+                "field_grants",
+                "export_byte_limit"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:5e936b6b071cfbe095b79bd216795a93c9ac9c0ca9f24b2d7558e69c793e7a8f",
+              "expected_operation_set": [
+                "identity.audit.export"
+              ],
+              "observed_operation_set": [
+                "identity.audit.export"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.get.behavior#success",
+              "observation_id": "operational-api-redaction-report.identity.audit.get.behavior",
+              "claim_id": "identity.audit.get",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.audit.get"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "record_id",
+                "field_grants"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:382a204a996e5777b0600bce5a636459af0f31c43a14ef722b67a9ba2d21fc19",
+              "expected_operation_set": [
+                "identity.audit.get"
+              ],
+              "observed_operation_set": [
+                "identity.audit.get"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.get.behavior#denial",
+              "observation_id": "operational-api-redaction-report.identity.audit.get.behavior",
+              "claim_id": "identity.audit.get",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.audit.get"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "record_id",
+                "field_grants"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:669013a4d8719fe5298968fd17707891c1380885ba9128b379e4b30918b760cf",
+              "expected_operation_set": [
+                "identity.audit.get"
+              ],
+              "observed_operation_set": [
+                "identity.audit.get"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.get.behavior#failure",
+              "observation_id": "operational-api-redaction-report.identity.audit.get.behavior",
+              "claim_id": "identity.audit.get",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.audit.get"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "record_id",
+                "field_grants"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:be95a29521533acd03238e50cb9968645e7dc72690d6cc587b3b6a0b39fd863d",
+              "expected_operation_set": [
+                "identity.audit.get"
+              ],
+              "observed_operation_set": [
+                "identity.audit.get"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.list.behavior#success",
+              "observation_id": "operational-api-redaction-report.identity.audit.list.behavior",
+              "claim_id": "identity.audit.list",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.audit.list"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "cursor",
+                "limit",
+                "time_bounds",
+                "field_grants"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:03d378ce231efc5024da62f274c606d4fb177e9a5b3b315dcba41f8e8e009c40",
+              "expected_operation_set": [
+                "identity.audit.list"
+              ],
+              "observed_operation_set": [
+                "identity.audit.list"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.list.behavior#denial",
+              "observation_id": "operational-api-redaction-report.identity.audit.list.behavior",
+              "claim_id": "identity.audit.list",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.audit.list"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "cursor",
+                "limit",
+                "time_bounds",
+                "field_grants"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:65286041683574cac0530a1cc7fc25be03c2ce26cb7a9f1e27ca5ab910f6ddaa",
+              "expected_operation_set": [
+                "identity.audit.list"
+              ],
+              "observed_operation_set": [
+                "identity.audit.list"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.list.behavior#failure",
+              "observation_id": "operational-api-redaction-report.identity.audit.list.behavior",
+              "claim_id": "identity.audit.list",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.audit.list"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "cursor",
+                "limit",
+                "time_bounds",
+                "field_grants"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:6f4781c1f47816032057a9f520085c269b5d069d3825b68682cb4be27646252f",
+              "expected_operation_set": [
+                "identity.audit.list"
+              ],
+              "observed_operation_set": [
+                "identity.audit.list"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.search.behavior#success",
+              "observation_id": "operational-api-redaction-report.identity.audit.search.behavior",
+              "claim_id": "identity.audit.search",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.audit.search"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "indexed_predicates",
+                "time_bounds",
+                "field_grants"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:dda9fd2abfb1ad8bb1020129d143ae39aa1294f515686a74590940b148c7c456",
+              "expected_operation_set": [
+                "identity.audit.search"
+              ],
+              "observed_operation_set": [
+                "identity.audit.search"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.search.behavior#denial",
+              "observation_id": "operational-api-redaction-report.identity.audit.search.behavior",
+              "claim_id": "identity.audit.search",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.audit.search"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "indexed_predicates",
+                "time_bounds",
+                "field_grants"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:421a74f728b33cf520fa27f119914d287c38df0db588d42390d68296ec4500aa",
+              "expected_operation_set": [
+                "identity.audit.search"
+              ],
+              "observed_operation_set": [
+                "identity.audit.search"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.identity.audit.search.behavior#failure",
+              "observation_id": "operational-api-redaction-report.identity.audit.search.behavior",
+              "claim_id": "identity.audit.search",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.audit.search"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "indexed_predicates",
+                "time_bounds",
+                "field_grants"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:671aa80a144f3763030d99899236719b88354c4c2211f4adfc40d85777aa5e0e",
+              "expected_operation_set": [
+                "identity.audit.search"
+              ],
+              "observed_operation_set": [
+                "identity.audit.search"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.journey.audit-investigation.v1.behavior#success",
+              "observation_id": "operational-api-redaction-report.journey.audit-investigation.v1.behavior",
+              "claim_id": "journey.audit-investigation.v1",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check",
+                "identity.audit.get",
+                "identity.audit.search",
+                "identity.audit.list",
+                "identity.audit.export"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "record_id",
+                "indexed_predicates",
+                "cursor",
+                "limit",
+                "time_bounds",
+                "field_grants",
+                "export_byte_limit",
+                "secret_shaped_configuration"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:583cd7109e638d701b9501135d234a60549e4b67c5ef2a3b618c5eb7e5781d53",
+              "expected_operation_set": [
+                "identity.audit.export",
+                "identity.audit.get",
+                "identity.audit.list",
+                "identity.audit.search",
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check"
+              ],
+              "observed_operation_set": [
+                "identity.audit.export",
+                "identity.audit.get",
+                "identity.audit.list",
+                "identity.audit.search",
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.journey.audit-investigation.v1.behavior#failure",
+              "observation_id": "operational-api-redaction-report.journey.audit-investigation.v1.behavior",
+              "claim_id": "journey.audit-investigation.v1",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check",
+                "identity.audit.get",
+                "identity.audit.search",
+                "identity.audit.list",
+                "identity.audit.export"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "record_id",
+                "indexed_predicates",
+                "cursor",
+                "limit",
+                "time_bounds",
+                "field_grants",
+                "export_byte_limit",
+                "secret_shaped_configuration"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:dad38eaaf2e979b484bcfb672bb0973e94c060dbb6899f1160946929183b1017",
+              "expected_operation_set": [
+                "identity.audit.export",
+                "identity.audit.get",
+                "identity.audit.list",
+                "identity.audit.search",
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check"
+              ],
+              "observed_operation_set": [
+                "identity.audit.export",
+                "identity.audit.get",
+                "identity.audit.list",
+                "identity.audit.search",
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.journey.audit-investigation.v1.behavior#denial",
+              "observation_id": "operational-api-redaction-report.journey.audit-investigation.v1.behavior",
+              "claim_id": "journey.audit-investigation.v1",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check",
+                "identity.audit.get",
+                "identity.audit.search",
+                "identity.audit.list",
+                "identity.audit.export"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "record_id",
+                "indexed_predicates",
+                "cursor",
+                "limit",
+                "time_bounds",
+                "field_grants",
+                "export_byte_limit",
+                "secret_shaped_configuration"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:5727c07d2f700d7772d8edba35642a6e459327f174eb15660226be204f6d92c9",
+              "expected_operation_set": [
+                "identity.audit.export",
+                "identity.audit.get",
+                "identity.audit.list",
+                "identity.audit.search",
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check"
+              ],
+              "observed_operation_set": [
+                "identity.audit.export",
+                "identity.audit.get",
+                "identity.audit.list",
+                "identity.audit.search",
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.journey.audit-investigation.v1.behavior#outage",
+              "observation_id": "operational-api-redaction-report.journey.audit-investigation.v1.behavior",
+              "claim_id": "journey.audit-investigation.v1",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check",
+                "identity.audit.get",
+                "identity.audit.search",
+                "identity.audit.list",
+                "identity.audit.export"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "record_id",
+                "indexed_predicates",
+                "cursor",
+                "limit",
+                "time_bounds",
+                "field_grants",
+                "export_byte_limit",
+                "secret_shaped_configuration"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:46d344c5f2d7a3398aa27055d67b99602c660fcae8761fd8c7ad082778aec1a4",
+              "expected_operation_set": [
+                "identity.audit.export",
+                "identity.audit.get",
+                "identity.audit.list",
+                "identity.audit.search",
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check"
+              ],
+              "observed_operation_set": [
+                "identity.audit.export",
+                "identity.audit.get",
+                "identity.audit.list",
+                "identity.audit.search",
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check"
+              ]
+            },
+            {
+              "case_id": "operational-api-redaction-report.journey.audit-investigation.v1.behavior#cleanup",
+              "observation_id": "operational-api-redaction-report.journey.audit-investigation.v1.behavior",
+              "claim_id": "journey.audit-investigation.v1",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check",
+                "identity.audit.get",
+                "identity.audit.search",
+                "identity.audit.list",
+                "identity.audit.export"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "investigation_id",
+                "record_id",
+                "indexed_predicates",
+                "cursor",
+                "limit",
+                "time_bounds",
+                "field_grants",
+                "export_byte_limit",
+                "secret_shaped_configuration"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:8b6be0321ca59aafb14bdcbdaa1020789eb2d7a7ba8852c23d7478795465eb66",
+              "expected_operation_set": [
+                "identity.audit.export",
+                "identity.audit.get",
+                "identity.audit.list",
+                "identity.audit.search",
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check"
+              ],
+              "observed_operation_set": [
+                "identity.audit.export",
+                "identity.audit.get",
+                "identity.audit.list",
+                "identity.audit.search",
+                "identity.reference.diagnostics",
+                "identity.reference.migration-check"
+              ]
+            }
+          ]
+        },
+        "investigation_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "get_record_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "search_record_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "list_record_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "exported_record_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "redacted_field_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "access_event_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "export_event_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "cursor_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "content_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "cross_tenant_rejected": {
+          "type": "boolean"
+        },
+        "forbidden_indistinguishable": {
+          "type": "boolean"
+        },
+        "secret_match_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        }
+      },
+      "x-semantic-rules": [
+        {
+          "kind": "positive",
+          "fields": [
+            "get_record_count",
+            "search_record_count",
+            "list_record_count",
+            "exported_record_count",
+            "redacted_field_count",
+            "access_event_count",
+            "export_event_count"
+          ]
+        },
+        {
+          "kind": "zero",
+          "fields": [
+            "secret_match_count"
+          ]
+        },
+        {
+          "kind": "true",
+          "fields": [
+            "cross_tenant_rejected",
+            "forbidden_indistinguishable"
+          ]
+        }
+      ]
+    }
+  }
+}

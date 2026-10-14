@@ -1,0 +1,1118 @@
+{
+  "schema_version": 1,
+  "schema": "identity-platform.preflight-primitive-contracts.v1",
+  "observed_control_revision": "f448c203121b7edb90e7648a827ec5806208c723",
+  "recorded_at": "2026-08-30T10:32:30Z",
+  "tool_environment_path": ".ai/identity-platform/evidence/preflight/tool-environment-inventory.json",
+  "tool_environment_sha256": "sha256:3b7b33a4ee41b35a398403f12057b818b1033d7d4ae9fff965e2c286b2fb4cba",
+  "api_input_scope": "complete tracked repository tree at the recorded revision; conservative changes invalidate the fingerprint",
+  "gate_input_scope": "complete tracked repository tree, module label, command, and tool-environment artifact digest",
+  "records": [
+    {
+      "primitive": "audit",
+      "consumers": [
+        "identity",
+        "identity/anonymous",
+        "identity/anonymous/postgres",
+        "identity/apikey",
+        "identity/apikey/postgres",
+        "identity/apikey/valkey",
+        "identity/delivery",
+        "identity/delivery/postgres",
+        "identity/email",
+        "identity/http",
+        "identity/i18n",
+        "identity/impersonation",
+        "identity/impersonation/postgres",
+        "identity/magiclink",
+        "identity/mfa",
+        "identity/mfa/postgres",
+        "identity/oauth",
+        "identity/oauth/onetap",
+        "identity/oauth/postgres",
+        "identity/oauth/proxy",
+        "identity/otp",
+        "identity/otp/postgres",
+        "identity/password",
+        "identity/password/postgres",
+        "identity/phone",
+        "identity/postgres",
+        "identity/risk",
+        "identity/risk/captcha",
+        "identity/risk/captcha/captchafox",
+        "identity/risk/captcha/hcaptcha",
+        "identity/risk/hibp",
+        "identity/risk/postgres",
+        "identity/risk/valkey",
+        "identity/session",
+        "identity/session/postgres",
+        "identity/session/valkey",
+        "identity/username",
+        "oauth-server",
+        "oauth-server/device",
+        "oauth-server/oidc",
+        "oauth-server/postgres",
+        "organization",
+        "organization/postgres",
+        "passkey",
+        "passkey/postgres",
+        "scim",
+        "scim/organization",
+        "scim/postgres",
+        "sso",
+        "sso/domain-verification",
+        "sso/oauth2",
+        "sso/oidc",
+        "sso/postgres",
+        "sso/saml",
+        "webauthn",
+        "webauthn/postgres"
+      ],
+      "registered": "audit",
+      "repository_identity": "github.com/faustbrian/go-audit",
+      "repository_revision": "c2160cb8c617a9c2e276cf3d90193e26bc2ad8cc",
+      "repository_tree": "git-sha1:463faf4b674ab6a8f8a47466253aa562de3a1dd8",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:bd282090f0dd70ebda8e2167e481c8f8d220ab35d230199ef6b92d433f63438f",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:a21e63c323903e4a87937eaea83d0a148b644a89a991874eb936c489f233c5af",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "prior execution was not retained as repository-custodied evidence",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "audit/postgres",
+      "consumers": [
+        "identity/reference"
+      ],
+      "registered": "audit/postgres",
+      "repository_identity": "github.com/faustbrian/go-audit",
+      "repository_revision": "c2160cb8c617a9c2e276cf3d90193e26bc2ad8cc",
+      "repository_tree": "git-sha1:463faf4b674ab6a8f8a47466253aa562de3a1dd8",
+      "module_relative_path": "postgres",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:88c70dc4db8402201da65ff7e2cd7b86f5bc58bbfcc149c9d6a4368dd04d3920",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:88876fa0ef6f562770da8c531714972aa7ef22585d5e617d497dcae2c162b50f",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "authentication",
+      "consumers": [
+        "identity",
+        "identity/apikey",
+        "identity/http",
+        "identity/session",
+        "oauth-server",
+        "scim",
+        "sso",
+        "webauthn"
+      ],
+      "registered": "authentication",
+      "repository_identity": "github.com/faustbrian/go-authentication",
+      "repository_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+      "repository_tree": "git-sha1:0779f23ed79e694b7e0298c832b090d9a1da3595",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:09bc976cc1b154d1da946ee3dee76e5d4e64989752aa4328c6677740c5dc8b2e",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:36df7624c200bc4a30f9281d830e3d8723164bd77c2585e1db495b479e3cc54a",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "authentication/jwt",
+      "consumers": [
+        "identity/oauth",
+        "identity/oauth/onetap",
+        "oauth-server/oidc",
+        "sso/oidc"
+      ],
+      "registered": "authentication/jwt",
+      "repository_identity": "github.com/faustbrian/go-authentication",
+      "repository_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+      "repository_tree": "git-sha1:0779f23ed79e694b7e0298c832b090d9a1da3595",
+      "module_relative_path": "jwt",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:3d5bc93fe63f08288b45a716e5d83247f22cae59c0a3e6bca6364a52b4297473",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:bd47ad5a0cc29d679b8a76d686389612b1deff49e51a3af6c6175c630d9b6acc",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "authentication/oidc",
+      "consumers": [
+        "identity/oauth",
+        "identity/oauth/onetap",
+        "identity/oauth/providers",
+        "sso/oidc"
+      ],
+      "registered": "authentication/oidc",
+      "repository_identity": "github.com/faustbrian/go-authentication",
+      "repository_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+      "repository_tree": "git-sha1:0779f23ed79e694b7e0298c832b090d9a1da3595",
+      "module_relative_path": "oidc",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:93c32df4dfd877af5301792612a66449e2c9054ead0a4081aac8461234e7946f",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:c70ad7b010e2f2b9a895c1e83c7d38283d614b00d3f20540eae0e792bbed543d",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "authorization",
+      "consumers": [
+        "identity",
+        "identity/apikey",
+        "identity/http",
+        "identity/impersonation",
+        "identity/session",
+        "identity/username",
+        "oauth-server",
+        "organization",
+        "scim",
+        "scim/organization",
+        "sso"
+      ],
+      "registered": "authorization",
+      "repository_identity": "github.com/faustbrian/go-authorization",
+      "repository_revision": "e08db3af02adde4ad67094d678febc7b12302d85",
+      "repository_tree": "git-sha1:a2e6f2c6d10301f244c54949669f2fa7cbe976e0",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:0dd1daf3000bc69b55edbbb909ec2ccbf657fcf103550a54625ec8021b90973b",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:249534eabc303bc5a44a9584f4ba299008f37fa4e604fbcbebc36caa5467b50e",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "authorization/postgres",
+      "consumers": [
+        "identity/reference"
+      ],
+      "registered": "authorization/postgres",
+      "repository_identity": "github.com/faustbrian/go-authorization",
+      "repository_revision": "e08db3af02adde4ad67094d678febc7b12302d85",
+      "repository_tree": "git-sha1:a2e6f2c6d10301f244c54949669f2fa7cbe976e0",
+      "module_relative_path": "postgres",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:67e42228b4f6f220cead264d5ee4372894ca25d9a6552af87b7d6e0ff6dbb16d",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:e8a7819015bb64f95a566f86419c4033d0505d9d6ff94a6c09536df2f78c565a",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "authorization/valkey",
+      "consumers": [
+        "identity/reference"
+      ],
+      "registered": "authorization/valkey",
+      "repository_identity": "github.com/faustbrian/go-authorization",
+      "repository_revision": "e08db3af02adde4ad67094d678febc7b12302d85",
+      "repository_tree": "git-sha1:a2e6f2c6d10301f244c54949669f2fa7cbe976e0",
+      "module_relative_path": "valkey",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:f87e4c9a977400fa09ff920ffc2e5d998d3bb494ef6d152b81db37293e443902",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:fe11b663f9078a4fa90a541730af4cbc29a81fb8f78b59cbaafea8d9d2ecc0dd",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "cache",
+      "consumers": [
+        "identity/risk/valkey",
+        "identity/session/valkey"
+      ],
+      "registered": "cache",
+      "repository_identity": "github.com/faustbrian/go-cache",
+      "repository_revision": "4c741b6a314493841eb26de06fe36388013418d2",
+      "repository_tree": "git-sha1:111cce7e2e58fff3adfa395b9cce521b10389e7e",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:107a99ca8127620196c00a712c317b4852b581066c4d66141a9bcb0107e8fe1e",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:906123941baa2c77c93b01bea2285829ad9a26ebbcb8a7afca8004b776acc3d3",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "capability",
+      "consumers": [
+        "identity",
+        "identity/email",
+        "identity/impersonation",
+        "identity/magiclink",
+        "identity/mfa",
+        "identity/oauth",
+        "identity/oauth/onetap",
+        "identity/oauth/proxy",
+        "identity/otp",
+        "identity/password",
+        "identity/session",
+        "oauth-server",
+        "oauth-server/device",
+        "organization",
+        "sso",
+        "sso/oauth2",
+        "sso/saml",
+        "webauthn"
+      ],
+      "registered": "capability",
+      "repository_identity": "github.com/faustbrian/go-capability",
+      "repository_revision": "b0b21d15c9653decb0ff4a4fbffbe71c77d8d8fc",
+      "repository_tree": "git-sha1:57fc01d61ab921c0dead07a585235a461011c537",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:100fc7265785b2f4ce87359dc5befff502cf20dc29e955035807cbe01e6803d2",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:0700ffb01506934f039892a213728216c9654b2528440672a54b97baa02b7c01",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "capability/postgres",
+      "consumers": [
+        "identity/mfa/postgres",
+        "identity/oauth/postgres",
+        "identity/reference",
+        "oauth-server/postgres",
+        "sso/postgres"
+      ],
+      "registered": "capability/postgres",
+      "repository_identity": "github.com/faustbrian/go-capability",
+      "repository_revision": "b0b21d15c9653decb0ff4a4fbffbe71c77d8d8fc",
+      "repository_tree": "git-sha1:57fc01d61ab921c0dead07a585235a461011c537",
+      "module_relative_path": "postgres",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:7f7537dbacd91fcedd96607a8fb4440b2af6c41362a5473235cd3d3fd0309c14",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:e8c04327e4b46f488ccaa4b159f00b4f33a8e712c0a49ae708591133ed5526ed",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "capability/valkey",
+      "consumers": [
+        "identity/reference"
+      ],
+      "registered": "capability/valkey",
+      "repository_identity": "github.com/faustbrian/go-capability",
+      "repository_revision": "b0b21d15c9653decb0ff4a4fbffbe71c77d8d8fc",
+      "repository_tree": "git-sha1:57fc01d61ab921c0dead07a585235a461011c537",
+      "module_relative_path": "valkey",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:a6c97b7f74ca05c37de828989a4dd154e8ba4ad47a23fbf4f0400afd6db4526f",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:89f22e3f1f703e473a62764d69fa5f151036514184259c6907520c581542cc76",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "http-client",
+      "consumers": [
+        "identity/oauth",
+        "identity/oauth/providers",
+        "identity/oauth/proxy",
+        "identity/risk/captcha",
+        "identity/risk/captcha/captchafox",
+        "identity/risk/captcha/hcaptcha",
+        "identity/risk/captcha/recaptcha",
+        "identity/risk/captcha/turnstile",
+        "identity/risk/hibp",
+        "oauth-server",
+        "sso/domain-verification",
+        "sso/oauth2",
+        "sso/oidc",
+        "sso/saml"
+      ],
+      "registered": "http-client",
+      "repository_identity": "github.com/faustbrian/go-http-client",
+      "repository_revision": "4ac0a29082e9a598a655ea8524c31d86cb045be7",
+      "repository_tree": "git-sha1:272d90cee77a8561502421ded8f9ec04decfac65",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:5a12aa09aa8e7ee9e9a7ffff4cb7c1c5eef616a52724681e54d9f1d7b3f38ed7",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:5bc302a10c7b4317da828d74646cead5924eceaf036064b4fc26af0879ad7e19",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "idempotency/postgres",
+      "consumers": [
+        "identity/reference"
+      ],
+      "registered": "idempotency/postgres",
+      "repository_identity": "github.com/faustbrian/go-idempotency",
+      "repository_revision": "af24792f2f00b5c2390b4602e9bcbb196dc6f7ca",
+      "repository_tree": "git-sha1:29e5c1d151243cfdf09bb2565e3fb4285f884dec",
+      "module_relative_path": "postgres",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:96a5030074cb750831e55209b6a556097d2472fbd8abd750fd00b5b119b4a8da",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:ece300f91ff85bba3091c46f688d48e17d881ed4f4df549c6b0106034be7475a",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "idempotency/valkey",
+      "consumers": [
+        "identity/reference"
+      ],
+      "registered": "idempotency/valkey",
+      "repository_identity": "github.com/faustbrian/go-idempotency",
+      "repository_revision": "af24792f2f00b5c2390b4602e9bcbb196dc6f7ca",
+      "repository_tree": "git-sha1:29e5c1d151243cfdf09bb2565e3fb4285f884dec",
+      "module_relative_path": "valkey",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:6cd958a3b8b173daaaa71c59fb5b88cf2c2667eef65eaebea8ea84591ff333ac",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:2126130932aa4889deb7062d5ef15504db62f20135f89ca90e4eba498cd2076d",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "identifier",
+      "consumers": [
+        "identity",
+        "identity/anonymous",
+        "identity/email",
+        "identity/i18n",
+        "identity/identitytest",
+        "identity/phone",
+        "identity/risk",
+        "identity/session",
+        "identity/session/valkey",
+        "identity/username",
+        "oauth-server/oidc",
+        "organization",
+        "passkey",
+        "scim",
+        "webauthn"
+      ],
+      "registered": "identifier",
+      "repository_identity": "github.com/faustbrian/go-identifier",
+      "repository_revision": "23a8818faef585a87e3e31965d6af51bd7900478",
+      "repository_tree": "git-sha1:d944dffdd7e48f784d29fd93acb911f98b6375bd",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:220a6517f2df023ac27b2120c7335fa4a4344ad7b8a4eda8caef2f8a38ef0d0b",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:1e532ad6920a3e0c6fc7375ba167dbe4977f42646478db6727a6054e017b20a5",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "migrations",
+      "consumers": [
+        "identity/anonymous/postgres",
+        "identity/apikey/postgres",
+        "identity/delivery/postgres",
+        "identity/identitytest",
+        "identity/impersonation/postgres",
+        "identity/mfa/postgres",
+        "identity/oauth/postgres",
+        "identity/otp/postgres",
+        "identity/password/postgres",
+        "identity/postgres",
+        "identity/reference",
+        "identity/risk/postgres",
+        "identity/session/postgres",
+        "oauth-server/postgres",
+        "organization/postgres",
+        "passkey/postgres",
+        "scim/postgres",
+        "sso/postgres",
+        "webauthn/postgres"
+      ],
+      "registered": "migrations",
+      "repository_identity": "github.com/faustbrian/go-migrations",
+      "repository_revision": "2231be0bb01fc399c977051e036d50425265ca59",
+      "repository_tree": "git-sha1:6dc2c831704ca22505a2020d9765dac7b19d2be5",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:5d418cac9d44752d5e160d10dce9bda6e11e1fceff6862cecdc7681976829a43",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:5683585d6df08d5db3815aec19a142aef3b4360fe068e27cb497fc3393a27979",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "openapi",
+      "consumers": [
+        "identity/http",
+        "scim"
+      ],
+      "registered": "openapi",
+      "repository_identity": "github.com/faustbrian/go-openapi",
+      "repository_revision": "09771cf1e03bbdb684cca77785cbc7ee1ee2e9a1",
+      "repository_tree": "git-sha1:80f8f00b1994dac66528e2adb01a0982f54e98c1",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:392c7241a9db7ca29fe2e44e33b044bb18b6355165d511712649e5787494fa98",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:d480c7617507fd6efc1d21bc641c92a2364ca83a4a6add68c0f68815661872f1",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "outbox",
+      "consumers": [
+        "identity/anonymous/postgres",
+        "identity/apikey/postgres",
+        "identity/delivery",
+        "identity/delivery/postgres",
+        "identity/impersonation/postgres",
+        "identity/mfa/postgres",
+        "identity/oauth/postgres",
+        "identity/otp/postgres",
+        "identity/password/postgres",
+        "identity/postgres",
+        "identity/reference",
+        "oauth-server/postgres",
+        "organization/postgres",
+        "passkey/postgres",
+        "scim/postgres",
+        "sso/postgres",
+        "webauthn/postgres"
+      ],
+      "registered": "outbox",
+      "repository_identity": "github.com/faustbrian/go-transactional-outbox",
+      "repository_revision": "6beb84b707c5ff9ea16714e072e3648b03479ca6",
+      "repository_tree": "git-sha1:112cb04b94bdc45e4f8b800cf007be779a08aeb2",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:7a176925cbb3df0e2dfc7f4b431ad8fa054c9be116c27bb2f4758dbcf8887a1f",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:9ace8721024ea2b0b1e0b0b604dd2996110d54447bdd450b96a6dd112cdf1a8b",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "prior execution was not retained as repository-custodied evidence",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "outbox/postgres",
+      "consumers": [
+        "identity/reference"
+      ],
+      "registered": "outbox/postgres",
+      "repository_identity": "github.com/faustbrian/go-transactional-outbox",
+      "repository_revision": "6beb84b707c5ff9ea16714e072e3648b03479ca6",
+      "repository_tree": "git-sha1:112cb04b94bdc45e4f8b800cf007be779a08aeb2",
+      "module_relative_path": "postgres",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:f863c145687a29b481ed72f9e0518ef37e7eb841340b87424bc03ce0a5cfca46",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:4849d2224c93e51a3f1493d0fe90afd142e8c6dc301ba54acacf5a42d41f00d9",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "password",
+      "consumers": [
+        "identity/mfa",
+        "identity/otp",
+        "identity/password",
+        "identity/password/postgres",
+        "identity/risk/hibp"
+      ],
+      "registered": "password",
+      "repository_identity": "github.com/faustbrian/go-password",
+      "repository_revision": "082f25b85d7975049b0629e1b57226384469af3b",
+      "repository_tree": "git-sha1:7cd5697a11cbe8cf6ec96ce4b3498da0aeee7ac5",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:aa00de2760bdad7d0f73e84e2b2c806c8798bd0adf132e03c801d8d885b6acb5",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:684f98d260ac0548ec3a73da2129d827ebc99dcc6c13948b4549ea57940c640c",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "postgres",
+      "consumers": [
+        "identity/anonymous/postgres",
+        "identity/apikey/postgres",
+        "identity/delivery/postgres",
+        "identity/identitytest",
+        "identity/impersonation/postgres",
+        "identity/mfa/postgres",
+        "identity/oauth/postgres",
+        "identity/otp/postgres",
+        "identity/password/postgres",
+        "identity/postgres",
+        "identity/reference",
+        "identity/risk/postgres",
+        "identity/session/postgres",
+        "oauth-server/postgres",
+        "organization/postgres",
+        "passkey/postgres",
+        "scim/postgres",
+        "sso/postgres",
+        "webauthn/postgres"
+      ],
+      "registered": "postgres",
+      "repository_identity": "github.com/faustbrian/go-postgres",
+      "repository_revision": "d149afa58ff5ae9e08a8a87deb6d71a44cfbd530",
+      "repository_tree": "git-sha1:8c2bac6bb4baf9236066c830d93684e49108cf2f",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:a7c86b16cd98395fa1f54f90ff74b367d1a160323b5bc81f59c1f80ea025ecd0",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:907d3d290999771e7ea850de44578409bdebbae68dcea74489ef4f59a17b907b",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "rate-limit",
+      "consumers": [
+        "identity/apikey",
+        "identity/http",
+        "identity/magiclink",
+        "identity/mfa",
+        "identity/oauth/onetap",
+        "identity/oauth/proxy",
+        "identity/otp",
+        "identity/password",
+        "identity/risk",
+        "identity/risk/valkey",
+        "identity/username",
+        "oauth-server",
+        "oauth-server/device",
+        "sso/domain-verification"
+      ],
+      "registered": "rate-limit",
+      "repository_identity": "github.com/faustbrian/go-rate-limit",
+      "repository_revision": "fdf5ba550136fa35a19df26d36c8cfc6999fecd9",
+      "repository_tree": "git-sha1:f5616beda205143ea723ec15ce53a54d0c8e4186",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:e0f17895a8956161f02e4069f6eb2dda8e6676d10edd5e4473095783c45b266b",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:245ec1448dd77e0c172c8cc20ad632a18fd059b917ac49aba55505378f52e7ee",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "rate-limit/postgres",
+      "consumers": [
+        "identity/reference"
+      ],
+      "registered": "rate-limit/postgres",
+      "repository_identity": "github.com/faustbrian/go-rate-limit",
+      "repository_revision": "fdf5ba550136fa35a19df26d36c8cfc6999fecd9",
+      "repository_tree": "git-sha1:f5616beda205143ea723ec15ce53a54d0c8e4186",
+      "module_relative_path": "postgres",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:15da1069f325a4ebd53329fe8ce9f99c9e6f2ef03f36c5852ae409b8e73e8e78",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:9a3e5c83cd27b233f2517b8d81d0157602065c3c5909983ee0f4f14afa707737",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "rate-limit/valkey",
+      "consumers": [
+        "identity/reference"
+      ],
+      "registered": "rate-limit/valkey",
+      "repository_identity": "github.com/faustbrian/go-rate-limit",
+      "repository_revision": "fdf5ba550136fa35a19df26d36c8cfc6999fecd9",
+      "repository_tree": "git-sha1:f5616beda205143ea723ec15ce53a54d0c8e4186",
+      "module_relative_path": "valkey",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:ac0005f4b95ef06346906a8ad0d029a4b2d98906af7093039d7697f08e8ecfac",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:fca2c646a9106a688a380f3694df6af282e2aa98b2d6267e0490662311911abc",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "secret-envelope",
+      "consumers": [
+        "identity/apikey",
+        "identity/delivery/postgres",
+        "identity/mfa",
+        "identity/mfa/postgres",
+        "identity/oauth",
+        "identity/oauth/postgres",
+        "identity/oauth/providers",
+        "identity/oauth/proxy",
+        "identity/reference",
+        "identity/risk/captcha/recaptcha",
+        "identity/risk/captcha/turnstile",
+        "identity/session",
+        "oauth-server",
+        "oauth-server/postgres",
+        "sso",
+        "sso/oauth2",
+        "sso/oidc",
+        "sso/postgres",
+        "sso/saml",
+        "webauthn"
+      ],
+      "registered": "secret-envelope",
+      "repository_identity": "github.com/faustbrian/go-secret-envelope",
+      "repository_revision": "396f6f20b8f0d9a0cdb72f025b602b3852242dd1",
+      "repository_tree": "git-sha1:52f7c79d95695e15e75d55a8de86e00b30c21581",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:e12450a509776bc0ccbdcd9b67f0f72c21af8598be4d79792fbbb8ab189ca36d",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:33ffd2fc8f598d60ad5e6e17d28fbec1a8e3b27663c27e58bc69252f2667c898",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "telemetry",
+      "consumers": [
+        "identity/apikey/valkey",
+        "identity/delivery",
+        "identity/http",
+        "identity/oauth/providers",
+        "identity/reference",
+        "identity/risk",
+        "identity/risk/captcha",
+        "identity/risk/captcha/captchafox",
+        "identity/risk/captcha/hcaptcha",
+        "identity/risk/captcha/recaptcha",
+        "identity/risk/captcha/turnstile",
+        "identity/risk/hibp",
+        "sso/domain-verification"
+      ],
+      "registered": "telemetry",
+      "repository_identity": "github.com/faustbrian/go-telemetry",
+      "repository_revision": "f020dcc8451aa85e57539dbd59ff0d8ad2b33097",
+      "repository_tree": "git-sha1:cb0963444ca88d7298a387f3a7af8b2f4a8a1ae1",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:4c896df6527c49d70188d1c6bb35b9de78fa79836d13138513f6f747bcd18191",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:8ec6080f20f6e744f51d3e793c20a2c876e876a4e854d19222bf7f36c038f591",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "prior execution was not retained as repository-custodied evidence",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "tenancy",
+      "consumers": [
+        "identity",
+        "organization"
+      ],
+      "registered": "tenancy",
+      "repository_identity": "github.com/faustbrian/go-tenancy",
+      "repository_revision": "3ddfa8e64c6e4a4c6401a19b97013e0874dbd086",
+      "repository_tree": "git-sha1:e7684e65b96cc8519ebf46d1cb640f8ce33d434d",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:c1dfc1c5b539b37437c364f91ddb60481bfd9c6190c5ae6989991aa1a683d08d",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:4192c67bbeac5dd31546336c2330b63c83c41af7bab403692f350b5cbe054f74",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "workflow",
+      "consumers": [
+        "identity/delivery",
+        "identity/delivery/postgres",
+        "identity/email",
+        "identity/magiclink",
+        "identity/password",
+        "identity/phone",
+        "identity/reference",
+        "sso"
+      ],
+      "registered": "workflow",
+      "repository_identity": "github.com/faustbrian/go-workflow",
+      "repository_revision": "86fc399ed43026458a5f36eeb3d07a65196957e8",
+      "repository_tree": "git-sha1:ab234d0d73d182c2c2135c16650a89549d432976",
+      "module_relative_path": ".",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:a582c81f4ac39ca83b28fe890dd77313c91df25788c176e039334e8d5399340f",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:c3f6d4ab90e4214acb153c4f643b2eb84cb045019c2fbf6cdd8e73353f5000c3",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    },
+    {
+      "primitive": "workflow/postgres",
+      "consumers": [
+        "identity/reference"
+      ],
+      "registered": "workflow/postgres",
+      "repository_identity": "github.com/faustbrian/go-workflow",
+      "repository_revision": "86fc399ed43026458a5f36eeb3d07a65196957e8",
+      "repository_tree": "git-sha1:ab234d0d73d182c2c2135c16650a89549d432976",
+      "module_relative_path": "postgres",
+      "api_input_algorithm": "identity-platform-primitive-api-input-v1",
+      "api_input_fingerprint": "sha256:ccdc844d648ea8dcec1f2080c1d4e846fa26353bf10ff1d10a71ac589185aa35",
+      "gate_input_algorithm": "identity-platform-primitive-gate-input-v1",
+      "gate_input_fingerprint": "sha256:0effdbf80dffbb2919bec529413ecb7e0731002a582874e1049f3e941b150a49",
+      "gate_command": [
+        "make",
+        "check"
+      ],
+      "gate_working_directory": ".",
+      "gate_result": "stale",
+      "gate_observation": {
+        "classification": "not-executed",
+        "exit_status": null,
+        "log_path": null,
+        "log_sha256": null,
+        "summary": "no current attributable primitive gate execution was available at preflight",
+        "tested_revision": null
+      }
+    }
+  ]
+}

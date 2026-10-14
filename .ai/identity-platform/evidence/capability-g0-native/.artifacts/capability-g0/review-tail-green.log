@@ -1,0 +1,13 @@
+=== RUN   TestIdentityProofTransferErasesPoisonedSpareCapacity
+=== RUN   TestIdentityProofTransferErasesPoisonedSpareCapacity/success
+    identity_contracts_test.go:306: borrow len=367 cap=384 spare=17
+=== RUN   TestIdentityProofTransferErasesPoisonedSpareCapacity/error
+    identity_contracts_test.go:306: borrow len=367 cap=384 spare=17
+=== RUN   TestIdentityProofTransferErasesPoisonedSpareCapacity/panic
+    identity_contracts_test.go:306: borrow len=367 cap=384 spare=17
+--- PASS: TestIdentityProofTransferErasesPoisonedSpareCapacity (0.00s)
+    --- PASS: TestIdentityProofTransferErasesPoisonedSpareCapacity/success (0.00s)
+    --- PASS: TestIdentityProofTransferErasesPoisonedSpareCapacity/error (0.00s)
+    --- PASS: TestIdentityProofTransferErasesPoisonedSpareCapacity/panic (0.00s)
+PASS
+ok  	github.com/faustbrian/go-capability	1.230s

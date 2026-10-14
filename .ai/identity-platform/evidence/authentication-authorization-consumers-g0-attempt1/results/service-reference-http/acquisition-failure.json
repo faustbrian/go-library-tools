@@ -1,0 +1,4 @@
+{
+  "error": "acquisition failed /opt/homebrew/bin/go: go: downloading github.com/faustbrian/go-audit v1.0.0\ngo: downloading github.com/faustbrian/go-http-signature v1.0.0\ngo: downloading github.com/faustbrian/go-tenancy v1.1.0\ngo: downloading github.com/faustbrian/go-validation v1.1.0\ngo: downloading github.com/dunglas/httpsfv v1.1.0\ngo: downloading golang.org/x/net v0.57.0\ngo: finding module for package github.com/faustbrian/go-authentication/adapters/http\ngo: github.com/faustbrian/go-service/integration/reference-http imports\n\tgithub.com/faustbrian/go-authentication/adapters/http: module github.com/faustbrian/go-authentication@latest found (v1.2.1, replaced by /private/tmp/identity-platform-consumer-gates.9IxpDN/snapshots/authentication), but does not contain package github.com/faustbrian/go-authentication/adapters/http\n",
+  "at": "2026-10-01T11:50:59Z"
+}

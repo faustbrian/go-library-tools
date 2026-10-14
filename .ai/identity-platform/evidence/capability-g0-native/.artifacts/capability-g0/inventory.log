@@ -1,0 +1,4 @@
+./.golib/scripts/repository-check.sh
+/Users/brian/Developer/.worktrees/golib-go-capability-identity-platform-worker-g0/.git:1:gitdir: /Users/brian/Developer/golib/go-capability/.git/worktrees/golib-go-capability-identity-platform-worker-g0
+monorepo or sibling-checkout reference remains
+make: *** [inventory] Error 1

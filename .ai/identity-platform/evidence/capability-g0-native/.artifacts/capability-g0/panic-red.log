@@ -1,0 +1,5 @@
+--- FAIL: TestIdentityTransferPanicCancellationClassification (0.00s)
+    identity_contracts_internal_test.go:105: lost safe panic classification capability: proof transfer failed
+FAIL
+FAIL	github.com/faustbrian/go-capability	0.203s
+FAIL

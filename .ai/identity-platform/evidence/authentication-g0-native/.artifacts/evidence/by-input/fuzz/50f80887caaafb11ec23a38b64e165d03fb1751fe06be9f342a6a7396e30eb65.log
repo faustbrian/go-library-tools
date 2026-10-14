@@ -1,0 +1,49 @@
+
+[.] fuzz
+go: downloading go1.26.6 (darwin/arm64)
+fuzz: elapsed: 0s, gathering baseline coverage: 0/4 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 4/4 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (36700/sec), new interesting: 21 (total: 25)
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	0.480s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (35280/sec), new interesting: 13 (total: 16)
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	0.407s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/4 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 4/4 completed, now fuzzing with 2 workers
+fuzz: elapsed: 1s, execs: 10022 (16690/sec), new interesting: 8 (total: 12)
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	0.720s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 1s, execs: 10000 (17500/sec), new interesting: 24 (total: 27)
+PASS
+ok  	github.com/faustbrian/go-authentication/authhttp	0.702s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (42841/sec), new interesting: 4 (total: 7)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.461s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/6 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 6/6 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (21642/sec), new interesting: 48 (total: 54)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.571s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/3 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 3/3 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (20196/sec), new interesting: 43 (total: 46)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.609s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/6 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 6/6 completed, now fuzzing with 2 workers
+fuzz: elapsed: 0s, execs: 10000 (55489/sec), new interesting: 8 (total: 14)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.297s
+fuzz: elapsed: 0s, gathering baseline coverage: 0/2 completed
+fuzz: elapsed: 0s, gathering baseline coverage: 2/2 completed, now fuzzing with 2 workers
+fuzz: elapsed: 1s, execs: 10000 (19312/sec), new interesting: 27 (total: 29)
+PASS
+ok  	github.com/faustbrian/go-authentication	0.636s
+executed 9 registered fuzz targets

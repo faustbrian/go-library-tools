@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "repository": "github.com/faustbrian/go-authorization",
+  "module": ".",
+  "package": "adapters/jsonrpc",
+  "gate": "mutation",
+  "input_digest": "sha256:de14019f44a8181efa757e0ff0c98cd5d7824127dbafe7f43705bb0ea2366309",
+  "verifier_digest": "sha256:9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+  "result": "passed",
+  "report_digest": "sha256:a1b4aaeb550bb0ca31a83937164c747d9842e64b70cb1eda3a8def93034c813f",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOOS": "darwin",
+    "GOVERSION": "go1.27.1",
+    "gremlins_binary_sha256": "sha256:3500ba5216454cd0e74be81da7b927251d831230ee89858c90d2028c1ade7694"
+  },
+  "completed_at": "2026-10-01T09:07:21.456307Z"
+}

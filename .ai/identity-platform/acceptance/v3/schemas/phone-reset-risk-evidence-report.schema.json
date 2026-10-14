@@ -1,0 +1,2712 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "identity-platform.acceptance.phone-reset-risk-evidence-report.v1",
+  "title": "phone-reset-risk-evidence-report acceptance evidence",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "artifact_id",
+    "result",
+    "control_repository",
+    "package_repository",
+    "input_manifest",
+    "input_root",
+    "observations",
+    "artifact_hashes",
+    "recorded_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 3
+    },
+    "artifact_id": {
+      "const": "phone-reset-risk-evidence-report"
+    },
+    "result": {
+      "const": {
+        "status": "pass",
+        "gate": "make check MODULES=pkg/identity/reference"
+      }
+    },
+    "control_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "control"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-library-tools"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "package_repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "repository_identity",
+        "object_format",
+        "revision",
+        "tree",
+        "worktree_root",
+        "module_relative_path",
+        "module_workdir"
+      ],
+      "properties": {
+        "role": {
+          "const": "package"
+        },
+        "repository_identity": {
+          "const": "github.com/faustbrian/go-identity"
+        },
+        "object_format": {
+          "enum": [
+            "git-sha1",
+            "git-sha256"
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+        },
+        "tree": {
+          "type": "string",
+          "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+        },
+        "worktree_root": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        },
+        "module_relative_path": {
+          "type": "string",
+          "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+        },
+        "module_workdir": {
+          "type": "string",
+          "pattern": "^/",
+          "minLength": 2,
+          "maxLength": 4096
+        }
+      }
+    },
+    "input_manifest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "repositories",
+        "environment_inputs"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 2
+        },
+        "repositories": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "prefixItems": [
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-identity"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha1:[0-9a-f]{40}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha1"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{40}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha1:[0-9a-f]{40}$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "inputs",
+                    "object_format",
+                    "repository_identity",
+                    "revision",
+                    "tree"
+                  ],
+                  "properties": {
+                    "inputs": {
+                      "type": "array",
+                      "minItems": 1,
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "content_identity",
+                          "kind",
+                          "mode",
+                          "owner",
+                          "path",
+                          "reason"
+                        ],
+                        "properties": {
+                          "content_identity": {
+                            "type": "string",
+                            "pattern": "^git-sha256:[0-9a-f]{64}$"
+                          },
+                          "kind": {
+                            "enum": [
+                              "blob",
+                              "commit"
+                            ]
+                          },
+                          "mode": {
+                            "enum": [
+                              "100644",
+                              "100755",
+                              "120000",
+                              "160000"
+                            ]
+                          },
+                          "owner": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "path": {
+                            "type": "string",
+                            "minLength": 1
+                          },
+                          "reason": {
+                            "type": "string",
+                            "minLength": 1
+                          }
+                        }
+                      }
+                    },
+                    "object_format": {
+                      "const": "git-sha256"
+                    },
+                    "repository_identity": {
+                      "const": "github.com/faustbrian/go-library-tools"
+                    },
+                    "revision": {
+                      "type": "string",
+                      "pattern": "^[0-9a-f]{64}$"
+                    },
+                    "tree": {
+                      "type": "string",
+                      "pattern": "^git-sha256:[0-9a-f]{64}$"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "items": false
+        },
+        "environment_inputs": {
+          "type": "array",
+          "uniqueItems": true
+        }
+      }
+    },
+    "input_root": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "observations": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "uniqueItems": true,
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior"
+              },
+              "claim_id": {
+                "const": "identity.phone.password-reset-complete"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.phone-reset-risk-evidence-report.v1"
+              },
+              "scenario": {
+                "const": "success,denial,failure,outage,replay,concurrency,rollback,expiry,cleanup,unknown-outcome"
+              },
+              "preconditions": {
+                "const": "Operations: identity.phone.password-reset-complete; exact inputs: tenant_id, subject_id, recovery_purpose, canonical_number, preauth_transaction_id, attempt_id, policy_version, reset_capability, phone_otp_proof, independent_factor, risk_evidence_id, new_password; initial state: phone recovery is enabled and identity/risk has issued fresh immutable one-use RiskEvidence bound to tenant, subject, purpose, canonical number, pre-auth transaction, attempt, and policy version"
+              },
+              "stimulus": {
+                "const": "Run identity.phone.password-reset-complete for success, denial, failure, outage, replay, concurrency, rollback, expiry, cleanup, unknown-outcome cases using tenant_id, subject_id, recovery_purpose, canonical_number, preauth_transaction_id, attempt_id, policy_version, reset_capability, phone_otp_proof, independent_factor, risk_evidence_id, new_password and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: request discloses no account state and completion atomically consumes reset capability, OTP, independent factor, and RiskEvidence with password rotation and session revocation; mismatch, replay, concurrency loss, expiry, carrier positive or unknown or unavailable, rollback, and unknown commit never duplicate or bypass recovery; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict, concurrency=pass/conflict, rollback=rolled_back/internal, expiry=denied/invalid_input, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit; required artifact fields: attempt_id, risk_evidence_id, risk_policy_version, risk_evidence_digest, successful_consumption_count, credential_version, revoked_session_count, rollback_restored_evidence, unknown_reconciliation_digest"
+              },
+              "actual_outcome": {
+                "const": "Invariant: request discloses no account state and completion atomically consumes reset capability, OTP, independent factor, and RiskEvidence with password rotation and session revocation; mismatch, replay, concurrency loss, expiry, carrier positive or unknown or unavailable, rollback, and unknown commit never duplicate or bypass recovery; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict, concurrency=pass/conflict, rollback=rolled_back/internal, expiry=denied/invalid_input, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit; required artifact fields: attempt_id, risk_evidence_id, risk_policy_version, risk_evidence_digest, successful_consumption_count, credential_version, revoked_session_count, rollback_restored_evidence, unknown_reconciliation_digest"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior"
+              },
+              "claim_id": {
+                "const": "identity.phone.password-reset-request"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.phone-reset-risk-evidence-report.v1"
+              },
+              "scenario": {
+                "const": "success,denial,failure,outage,replay,concurrency,rollback,expiry,cleanup,unknown-outcome"
+              },
+              "preconditions": {
+                "const": "Operations: identity.phone.password-reset-request; exact inputs: tenant_id, subject_id, recovery_purpose, canonical_number, preauth_transaction_id, attempt_id, policy_version; initial state: phone recovery is enabled and identity/risk has issued fresh immutable one-use RiskEvidence bound to tenant, subject, purpose, canonical number, pre-auth transaction, attempt, and policy version"
+              },
+              "stimulus": {
+                "const": "Run identity.phone.password-reset-request for success, denial, failure, outage, replay, concurrency, rollback, expiry, cleanup, unknown-outcome cases using tenant_id, subject_id, recovery_purpose, canonical_number, preauth_transaction_id, attempt_id, policy_version and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: request discloses no account state and completion atomically consumes reset capability, OTP, independent factor, and RiskEvidence with password rotation and session revocation; mismatch, replay, concurrency loss, expiry, carrier positive or unknown or unavailable, rollback, and unknown commit never duplicate or bypass recovery; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict, concurrency=pass/conflict, rollback=rolled_back/internal, expiry=denied/invalid_input, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit; required artifact fields: attempt_id, risk_evidence_id, risk_policy_version, risk_evidence_digest, successful_consumption_count, credential_version, revoked_session_count, rollback_restored_evidence, unknown_reconciliation_digest"
+              },
+              "actual_outcome": {
+                "const": "Invariant: request discloses no account state and completion atomically consumes reset capability, OTP, independent factor, and RiskEvidence with password rotation and session revocation; mismatch, replay, concurrency loss, expiry, carrier positive or unknown or unavailable, rollback, and unknown commit never duplicate or bypass recovery; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict, concurrency=pass/conflict, rollback=rolled_back/internal, expiry=denied/invalid_input, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit; required artifact fields: attempt_id, risk_evidence_id, risk_policy_version, risk_evidence_digest, successful_consumption_count, credential_version, revoked_session_count, rollback_restored_evidence, unknown_reconciliation_digest"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior"
+              },
+              "claim_id": {
+                "const": "identity.risk.evaluate"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.phone-reset-risk-evidence-report.v1"
+              },
+              "scenario": {
+                "const": "success,denial,failure,outage,replay,expiry,unknown-outcome"
+              },
+              "preconditions": {
+                "const": "Operations: identity.risk.evaluate; exact inputs: tenant_id, subject_id, recovery_purpose, canonical_number, preauth_transaction_id, attempt_id, policy_version; initial state: phone recovery is enabled and identity/risk has issued fresh immutable one-use RiskEvidence bound to tenant, subject, purpose, canonical number, pre-auth transaction, attempt, and policy version"
+              },
+              "stimulus": {
+                "const": "Run identity.risk.evaluate for success, denial, failure, outage, replay, expiry, unknown-outcome cases using tenant_id, subject_id, recovery_purpose, canonical_number, preauth_transaction_id, attempt_id, policy_version and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: request discloses no account state and completion atomically consumes reset capability, OTP, independent factor, and RiskEvidence with password rotation and session revocation; mismatch, replay, concurrency loss, expiry, carrier positive or unknown or unavailable, rollback, and unknown commit never duplicate or bypass recovery; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict, expiry=denied/invalid_input, unknown-outcome=reconciled/unknown_commit; required artifact fields: attempt_id, risk_evidence_id, risk_policy_version, risk_evidence_digest, successful_consumption_count, credential_version, revoked_session_count, rollback_restored_evidence, unknown_reconciliation_digest"
+              },
+              "actual_outcome": {
+                "const": "Invariant: request discloses no account state and completion atomically consumes reset capability, OTP, independent factor, and RiskEvidence with password rotation and session revocation; mismatch, replay, concurrency loss, expiry, carrier positive or unknown or unavailable, rollback, and unknown commit never duplicate or bypass recovery; stable outcomes: success=pass/none, denial=denied/forbidden, failure=failed/internal, outage=unavailable/unavailable, replay=denied/conflict, expiry=denied/invalid_input, unknown-outcome=reconciled/unknown_commit; required artifact fields: attempt_id, risk_evidence_id, risk_policy_version, risk_evidence_digest, successful_consumption_count, credential_version, revoked_session_count, rollback_restored_evidence, unknown_reconciliation_digest"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "observation_id",
+              "claim_id",
+              "contract_reference",
+              "scenario",
+              "preconditions",
+              "stimulus",
+              "expected_outcome",
+              "actual_outcome",
+              "result",
+              "artifact_sha256"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior"
+              },
+              "claim_id": {
+                "const": "journey.passwordless.v1"
+              },
+              "contract_reference": {
+                "const": "identity-platform.acceptance.phone-reset-risk-evidence-report.v1"
+              },
+              "scenario": {
+                "const": "success,failure,denial,outage,concurrency,cleanup,unknown-outcome,rollback,expiry"
+              },
+              "preconditions": {
+                "const": "Operations: identity.phone.password-reset-request, identity.phone.password-reset-complete, identity.risk.evaluate; exact inputs: tenant_id, subject_id, recovery_purpose, canonical_number, preauth_transaction_id, attempt_id, policy_version, reset_capability, phone_otp_proof, independent_factor, risk_evidence_id, new_password; initial state: phone recovery is enabled and identity/risk has issued fresh immutable one-use RiskEvidence bound to tenant, subject, purpose, canonical number, pre-auth transaction, attempt, and policy version"
+              },
+              "stimulus": {
+                "const": "Run identity.phone.password-reset-request then identity.phone.password-reset-complete then identity.risk.evaluate for success, failure, denial, outage, concurrency, cleanup, unknown-outcome, rollback, expiry cases using tenant_id, subject_id, recovery_purpose, canonical_number, preauth_transaction_id, attempt_id, policy_version, reset_capability, phone_otp_proof, independent_factor, risk_evidence_id, new_password and capture every required artifact field"
+              },
+              "expected_outcome": {
+                "const": "Invariant: request discloses no account state and completion atomically consumes reset capability, OTP, independent factor, and RiskEvidence with password rotation and session revocation; mismatch, replay, concurrency loss, expiry, carrier positive or unknown or unavailable, rollback, and unknown commit never duplicate or bypass recovery; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, concurrency=pass/conflict, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit, rollback=rolled_back/internal, expiry=denied/invalid_input; required artifact fields: attempt_id, risk_evidence_id, risk_policy_version, risk_evidence_digest, successful_consumption_count, credential_version, revoked_session_count, rollback_restored_evidence, unknown_reconciliation_digest"
+              },
+              "actual_outcome": {
+                "const": "Invariant: request discloses no account state and completion atomically consumes reset capability, OTP, independent factor, and RiskEvidence with password rotation and session revocation; mismatch, replay, concurrency loss, expiry, carrier positive or unknown or unavailable, rollback, and unknown commit never duplicate or bypass recovery; stable outcomes: success=pass/none, failure=failed/internal, denial=denied/forbidden, outage=unavailable/unavailable, concurrency=pass/conflict, cleanup=pass/none, unknown-outcome=reconciled/unknown_commit, rollback=rolled_back/internal, expiry=denied/invalid_input; required artifact fields: attempt_id, risk_evidence_id, risk_policy_version, risk_evidence_digest, successful_consumption_count, credential_version, revoked_session_count, rollback_restored_evidence, unknown_reconciliation_digest"
+              },
+              "result": {
+                "const": "pass"
+              },
+              "artifact_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    "artifact_hashes": {
+      "type": "array",
+      "minItems": 2,
+      "uniqueItems": true,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "sha256"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^\\.ai/[A-Za-z0-9._/-]+$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^sha256:[0-9a-f]{64}$"
+          }
+        }
+      },
+      "contains": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "const": ".ai/identity-platform/evidence/artifacts/phone-reset-risk-evidence-report.json"
+          }
+        }
+      },
+      "minContains": 1
+    },
+    "recorded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "observations": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "observation_id"
+            ],
+            "properties": {
+              "observation_id": {
+                "const": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    },
+    {
+      "properties": {
+        "artifact_hashes": {
+          "contains": {
+            "type": "object",
+            "required": [
+              "path"
+            ],
+            "properties": {
+              "path": {
+                "const": ".ai/identity-platform/evidence/executions/phone-reset-risk-evidence-report.json"
+              }
+            }
+          },
+          "minContains": 1
+        }
+      }
+    }
+  ],
+  "x-cross-field-rules": [
+    "every observations[].artifact_sha256 value must equal one artifact_hashes[].sha256 value",
+    "artifact_hashes must bind the artifact-specific evidence object at .ai/identity-platform/evidence/artifacts/phone-reset-risk-evidence-report.json",
+    "artifact_hashes must bind the separately captured coordinator execution receipt at .ai/identity-platform/evidence/executions/phone-reset-risk-evidence-report.json",
+    "control and package repository bindings have distinct identities, revisions, trees, and runtime workdirs",
+    "input_root is the repository-qualified v2 input-manifest fingerprint"
+  ],
+  "$defs": {
+    "artifact_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_id",
+        "invariant_id",
+        "invariant",
+        "operation_ids",
+        "input_digest",
+        "execution",
+        "scenario_cases",
+        "attempt_id",
+        "risk_evidence_id",
+        "risk_policy_version",
+        "risk_evidence_digest",
+        "successful_consumption_count",
+        "credential_version",
+        "revoked_session_count",
+        "rollback_restored_evidence",
+        "unknown_reconciliation_digest"
+      ],
+      "properties": {
+        "artifact_id": {
+          "const": "phone-reset-risk-evidence-report"
+        },
+        "invariant_id": {
+          "const": "phone-reset-risk-evidence-report.invariant"
+        },
+        "invariant": {
+          "const": "request discloses no account state and completion atomically consumes reset capability, OTP, independent factor, and RiskEvidence with password rotation and session revocation; mismatch, replay, concurrency loss, expiry, carrier positive or unknown or unavailable, rollback, and unknown commit never duplicate or bypass recovery"
+        },
+        "operation_ids": {
+          "const": [
+            "identity.phone.password-reset-request",
+            "identity.phone.password-reset-complete",
+            "identity.risk.evaluate"
+          ]
+        },
+        "input_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "execution_identity",
+            "execution_receipt_path",
+            "execution_receipt_sha256",
+            "capture_authority",
+            "logical_module",
+            "producer_argv",
+            "verifier_argv",
+            "control_repository",
+            "package_repository",
+            "input_root",
+            "sandbox_environment_sha256",
+            "executable_realpath",
+            "executable_sha256",
+            "verifier_executable_realpath",
+            "verifier_executable_sha256",
+            "verifier_driver_realpath",
+            "verifier_driver_sha256",
+            "version_argv",
+            "version_stdout",
+            "version_stderr",
+            "verifier_version_argv",
+            "verifier_version_stdout",
+            "verifier_version_stderr",
+            "environment_probe_argv",
+            "environment_probe_stdout",
+            "environment_probe_stderr",
+            "verifier_exit_status",
+            "verifier_stdout",
+            "verifier_stderr",
+            "verifier_attestation_sha256",
+            "started_at",
+            "completed_at",
+            "exit_status",
+            "stdout",
+            "stdout_byte_length",
+            "stdout_sha256",
+            "stderr",
+            "stderr_byte_length",
+            "stderr_sha256",
+            "captured_output_sha256",
+            "raw_capture_sha256",
+            "output_artifact_path",
+            "artifact_payload_binding"
+          ],
+          "properties": {
+            "execution_identity": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "execution_receipt_path": {
+              "const": ".ai/identity-platform/evidence/executions/phone-reset-risk-evidence-report.json"
+            },
+            "execution_receipt_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "capture_authority": {
+              "const": "coordinator-owned-execution-runner/v4"
+            },
+            "logical_module": {
+              "const": "pkg/identity/reference"
+            },
+            "producer_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "check",
+                "--module",
+                "reference"
+              ]
+            },
+            "verifier_argv": {
+              "type": "array",
+              "minItems": 4,
+              "maxItems": 4,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "/Users/brian/Developer/.worktrees/golib-go-library-tools-identity-platform/.ai/identity-platform/acceptance/schema_validation.rb",
+                "verify",
+                "phone-reset-risk-evidence-report"
+              ]
+            },
+            "control_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "control"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-library-tools"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "package_repository": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "role",
+                "repository_identity",
+                "object_format",
+                "revision",
+                "tree",
+                "worktree_root",
+                "module_relative_path",
+                "module_workdir"
+              ],
+              "properties": {
+                "role": {
+                  "const": "package"
+                },
+                "repository_identity": {
+                  "const": "github.com/faustbrian/go-identity"
+                },
+                "object_format": {
+                  "enum": [
+                    "git-sha1",
+                    "git-sha256"
+                  ]
+                },
+                "revision": {
+                  "type": "string",
+                  "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+                },
+                "tree": {
+                  "type": "string",
+                  "pattern": "^git-(?:sha1|sha256):[0-9a-f]{40,64}$"
+                },
+                "worktree_root": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                },
+                "module_relative_path": {
+                  "type": "string",
+                  "pattern": "^(?:\\.|[A-Za-z0-9._/-]+)$"
+                },
+                "module_workdir": {
+                  "type": "string",
+                  "pattern": "^/",
+                  "minLength": 2,
+                  "maxLength": 4096
+                }
+              }
+            },
+            "input_root": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "sandbox_environment_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_executable_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_executable_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "verifier_driver_realpath": {
+              "type": "string",
+              "pattern": "^/",
+              "minLength": 2,
+              "maxLength": 4096
+            },
+            "verifier_driver_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "golib",
+                "--version"
+              ]
+            },
+            "version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_version_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "ruby",
+                "--version"
+              ]
+            },
+            "verifier_version_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "verifier_version_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "environment_probe_argv": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "const": [
+                "uname",
+                "-a"
+              ]
+            },
+            "environment_probe_stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 65536
+            },
+            "environment_probe_stderr": {
+              "type": "string",
+              "maxLength": 65536
+            },
+            "verifier_exit_status": {
+              "const": 0
+            },
+            "verifier_stdout": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "verifier_attestation_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "started_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "completed_at": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "exit_status": {
+              "const": 0
+            },
+            "stdout": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 1048576
+            },
+            "stdout_byte_length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 1048576
+            },
+            "stdout_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "stderr": {
+              "type": "string",
+              "maxLength": 1048576
+            },
+            "stderr_byte_length": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1048576
+            },
+            "stderr_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "captured_output_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "raw_capture_sha256": {
+              "type": "string",
+              "pattern": "^sha256:[0-9a-f]{64}$"
+            },
+            "output_artifact_path": {
+              "const": ".ai/identity-platform/evidence/artifacts/phone-reset-risk-evidence-report.json"
+            },
+            "artifact_payload_binding": {
+              "const": "record.artifact_hashes[path,sha256]"
+            }
+          },
+          "x-execution-proof": 3
+        },
+        "scenario_cases": {
+          "type": "array",
+          "minItems": 36,
+          "maxItems": 36,
+          "uniqueItems": true,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "case_id",
+              "observation_id",
+              "claim_id",
+              "invariant_id",
+              "scenario",
+              "operation_ids",
+              "input_fields",
+              "initial_state",
+              "status",
+              "stable_error",
+              "expected_invariant",
+              "observed_state_digest",
+              "observed_event_digest",
+              "transcript_sha256",
+              "artifact_contract_sha256",
+              "observed_value_count",
+              "ordered_steps",
+              "expected_operation_set",
+              "observed_operation_set",
+              "observed_values"
+            ],
+            "properties": {
+              "case_id": {
+                "type": "string",
+                "enum": [
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#success",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#denial",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#failure",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#outage",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#replay",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#concurrency",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#rollback",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#expiry",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#cleanup",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#unknown-outcome",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#success",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#denial",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#failure",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#outage",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#replay",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#concurrency",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#rollback",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#expiry",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#cleanup",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#unknown-outcome",
+                  "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#success",
+                  "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#denial",
+                  "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#failure",
+                  "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#outage",
+                  "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#replay",
+                  "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#expiry",
+                  "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#unknown-outcome",
+                  "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#success",
+                  "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#failure",
+                  "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#denial",
+                  "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#outage",
+                  "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#concurrency",
+                  "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#cleanup",
+                  "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#unknown-outcome",
+                  "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#rollback",
+                  "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#expiry"
+                ]
+              },
+              "observation_id": {
+                "type": "string",
+                "enum": [
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+                  "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+                  "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior",
+                  "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior"
+                ]
+              },
+              "claim_id": {
+                "type": "string",
+                "enum": [
+                  "identity.phone.password-reset-complete",
+                  "identity.phone.password-reset-request",
+                  "identity.risk.evaluate",
+                  "journey.passwordless.v1"
+                ]
+              },
+              "invariant_id": {
+                "const": "phone-reset-risk-evidence-report.invariant"
+              },
+              "scenario": {
+                "type": "string",
+                "enum": [
+                  "success",
+                  "denial",
+                  "failure",
+                  "outage",
+                  "replay",
+                  "concurrency",
+                  "rollback",
+                  "expiry",
+                  "cleanup",
+                  "unknown-outcome"
+                ]
+              },
+              "operation_ids": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.phone.password-reset-request",
+                    "identity.phone.password-reset-complete",
+                    "identity.risk.evaluate"
+                  ]
+                }
+              },
+              "input_fields": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "initial_state": {
+                "const": "phone recovery is enabled and identity/risk has issued fresh immutable one-use RiskEvidence bound to tenant, subject, purpose, canonical number, pre-auth transaction, attempt, and policy version"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "pass",
+                  "denied",
+                  "failed",
+                  "unavailable",
+                  "rolled_back",
+                  "reconciled"
+                ]
+              },
+              "stable_error": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "forbidden",
+                  "internal",
+                  "unavailable",
+                  "conflict",
+                  "invalid_input",
+                  "unknown_commit"
+                ]
+              },
+              "expected_invariant": {
+                "const": "request discloses no account state and completion atomically consumes reset capability, OTP, independent factor, and RiskEvidence with password rotation and session revocation; mismatch, replay, concurrency loss, expiry, carrier positive or unknown or unavailable, rollback, and unknown commit never duplicate or bypass recovery"
+              },
+              "observed_state_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_event_digest": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "transcript_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "artifact_contract_sha256": {
+                "type": "string",
+                "pattern": "^sha256:[0-9a-f]{64}$"
+              },
+              "observed_value_count": {
+                "const": 9
+              },
+              "ordered_steps": {
+                "const": [
+                  "precondition-established",
+                  "stimulus-executed",
+                  "outcome-observed",
+                  "transcript-bound"
+                ]
+              },
+              "expected_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.phone.password-reset-request",
+                    "identity.phone.password-reset-complete",
+                    "identity.risk.evaluate"
+                  ]
+                }
+              },
+              "observed_operation_set": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "enum": [
+                    "identity.phone.password-reset-request",
+                    "identity.phone.password-reset-complete",
+                    "identity.risk.evaluate"
+                  ]
+                }
+              },
+              "observed_values": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "attempt_id",
+                  "risk_evidence_id",
+                  "risk_policy_version",
+                  "risk_evidence_digest",
+                  "successful_consumption_count",
+                  "credential_version",
+                  "revoked_session_count",
+                  "rollback_restored_evidence",
+                  "unknown_reconciliation_digest"
+                ],
+                "properties": {
+                  "attempt_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "risk_evidence_id": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+                  },
+                  "risk_policy_version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9223372036854775807
+                  },
+                  "risk_evidence_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  },
+                  "successful_consumption_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "credential_version": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9223372036854775807
+                  },
+                  "revoked_session_count": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  "rollback_restored_evidence": {
+                    "type": "boolean"
+                  },
+                  "unknown_reconciliation_digest": {
+                    "type": "string",
+                    "pattern": "^sha256:[0-9a-f]{64}$"
+                  }
+                }
+              }
+            }
+          },
+          "x-exact-scenario-case-fields": [
+            "case_id",
+            "observation_id",
+            "claim_id",
+            "scenario",
+            "operation_ids",
+            "input_fields",
+            "status",
+            "stable_error",
+            "artifact_contract_sha256",
+            "expected_operation_set",
+            "observed_operation_set"
+          ],
+          "x-exact-scenario-cases": [
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#success",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+              "claim_id": "identity.phone.password-reset-complete",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.phone.password-reset-complete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:1b6050a9c9fb2d400d8a231fec4ea959d54b8f913629a6ddfb2e591dbc3042ae",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#denial",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+              "claim_id": "identity.phone.password-reset-complete",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.phone.password-reset-complete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:d9b13af692a324fad48768e3aed1d16e5c499b5f1833d45f3bf51762246bd95a",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#failure",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+              "claim_id": "identity.phone.password-reset-complete",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.phone.password-reset-complete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:44f86c9f09e18fcd838d4746b32a7d7500d5082d1c2acfaa638bd10c9d7b942d",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#outage",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+              "claim_id": "identity.phone.password-reset-complete",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.phone.password-reset-complete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:c6eb04b7c09014efd50e49a76bb6720bb6e2062bf7ccd2441b9e90ddef741650",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#replay",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+              "claim_id": "identity.phone.password-reset-complete",
+              "scenario": "replay",
+              "operation_ids": [
+                "identity.phone.password-reset-complete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "denied",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:c80bdc12f1ac3a08f2adbdc6e21efdd5d07a09be9979f4959a7a8fdd9b9c2a6d",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#concurrency",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+              "claim_id": "identity.phone.password-reset-complete",
+              "scenario": "concurrency",
+              "operation_ids": [
+                "identity.phone.password-reset-complete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "pass",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:a4f49752e2a5eacff15ea92018e637316be923dbcf208747f93d721847233bf4",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#rollback",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+              "claim_id": "identity.phone.password-reset-complete",
+              "scenario": "rollback",
+              "operation_ids": [
+                "identity.phone.password-reset-complete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "rolled_back",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:43e1e5b9497337f1e71e0aa26daa12722ffabbbe03cb2f828d8cd50f91501661",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#expiry",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+              "claim_id": "identity.phone.password-reset-complete",
+              "scenario": "expiry",
+              "operation_ids": [
+                "identity.phone.password-reset-complete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "denied",
+              "stable_error": "invalid_input",
+              "artifact_contract_sha256": "sha256:18cbb5cc292809c6e800364dd8c9ab9d0804dc9022e93da6b720e8236ef640c0",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#cleanup",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+              "claim_id": "identity.phone.password-reset-complete",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.phone.password-reset-complete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:f383797c34343e2c19f1aab851aec1d4ddc7371bcc71d83147c6c5a4bd13286d",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior#unknown-outcome",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-complete.behavior",
+              "claim_id": "identity.phone.password-reset-complete",
+              "scenario": "unknown-outcome",
+              "operation_ids": [
+                "identity.phone.password-reset-complete"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "reconciled",
+              "stable_error": "unknown_commit",
+              "artifact_contract_sha256": "sha256:086ec16a8644505eae84c4f2a92002d980ea33b7b12a9509a84839a6d957f458",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#success",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+              "claim_id": "identity.phone.password-reset-request",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.phone.password-reset-request"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:762e25986fc5f98ce05daa7d7a4b425b206b00fb0e14388bc150bd501efebba7",
+              "expected_operation_set": [
+                "identity.phone.password-reset-request"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-request"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#denial",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+              "claim_id": "identity.phone.password-reset-request",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.phone.password-reset-request"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:6750bad2ff9f042c3cfb62c7504a1401742463cb45b2d52d7a77e72923559f58",
+              "expected_operation_set": [
+                "identity.phone.password-reset-request"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-request"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#failure",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+              "claim_id": "identity.phone.password-reset-request",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.phone.password-reset-request"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:ce914edcf926dcd6c47d26468622fe2ff9375ee175bc68be20e54bbde0125e3d",
+              "expected_operation_set": [
+                "identity.phone.password-reset-request"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-request"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#outage",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+              "claim_id": "identity.phone.password-reset-request",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.phone.password-reset-request"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:3cccc8fc27413483e76594df6e34111a02bf2e23efed0fe2c024188e20ff87eb",
+              "expected_operation_set": [
+                "identity.phone.password-reset-request"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-request"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#replay",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+              "claim_id": "identity.phone.password-reset-request",
+              "scenario": "replay",
+              "operation_ids": [
+                "identity.phone.password-reset-request"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "denied",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:f0c1e273924b7cbe6db9c230c8e8de726c98cf37bbdd883e95b4392520ef6c96",
+              "expected_operation_set": [
+                "identity.phone.password-reset-request"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-request"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#concurrency",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+              "claim_id": "identity.phone.password-reset-request",
+              "scenario": "concurrency",
+              "operation_ids": [
+                "identity.phone.password-reset-request"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "pass",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:5d6dcbbbb7bab364d0c029be1113aa19f9e7aa56d22b6a0ebf5595cc869be189",
+              "expected_operation_set": [
+                "identity.phone.password-reset-request"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-request"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#rollback",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+              "claim_id": "identity.phone.password-reset-request",
+              "scenario": "rollback",
+              "operation_ids": [
+                "identity.phone.password-reset-request"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "rolled_back",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:3b74c5ba03573fcfe1220fd0f03f86fafe77768bb0440fe9ce233a224d659aa1",
+              "expected_operation_set": [
+                "identity.phone.password-reset-request"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-request"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#expiry",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+              "claim_id": "identity.phone.password-reset-request",
+              "scenario": "expiry",
+              "operation_ids": [
+                "identity.phone.password-reset-request"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "denied",
+              "stable_error": "invalid_input",
+              "artifact_contract_sha256": "sha256:cec18470c4fa108bc7622662b10b5b126f9033e02d1f77583ec3f5d0844eb4ee",
+              "expected_operation_set": [
+                "identity.phone.password-reset-request"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-request"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#cleanup",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+              "claim_id": "identity.phone.password-reset-request",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.phone.password-reset-request"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:9c39f4694704755673cff6f7447e4b813431be95a9526ebdc2625743e8349523",
+              "expected_operation_set": [
+                "identity.phone.password-reset-request"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-request"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior#unknown-outcome",
+              "observation_id": "phone-reset-risk-evidence-report.identity.phone.password-reset-request.behavior",
+              "claim_id": "identity.phone.password-reset-request",
+              "scenario": "unknown-outcome",
+              "operation_ids": [
+                "identity.phone.password-reset-request"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "reconciled",
+              "stable_error": "unknown_commit",
+              "artifact_contract_sha256": "sha256:7854f78539725c5cbb3da37280c6fb30f2452ee18411e9c46eba8f9d5c189569",
+              "expected_operation_set": [
+                "identity.phone.password-reset-request"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-request"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#success",
+              "observation_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior",
+              "claim_id": "identity.risk.evaluate",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:a58e0fc8c472f396218cf35af976953041ac27cf9c49ec3c81da998a7ba96bf2",
+              "expected_operation_set": [
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#denial",
+              "observation_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior",
+              "claim_id": "identity.risk.evaluate",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:9e07d4161dadb672238ed2381ea3765f541e49e9082071481c9ed04b52809941",
+              "expected_operation_set": [
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#failure",
+              "observation_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior",
+              "claim_id": "identity.risk.evaluate",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:8a5ce3b888581c06e7124e2ddfaf12292d8292b2f130d55aeacafa6a7ca479fe",
+              "expected_operation_set": [
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#outage",
+              "observation_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior",
+              "claim_id": "identity.risk.evaluate",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:90218901a708fdb930504ab4371274472e63f9430ef1e82b1b8820b61f29a43f",
+              "expected_operation_set": [
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#replay",
+              "observation_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior",
+              "claim_id": "identity.risk.evaluate",
+              "scenario": "replay",
+              "operation_ids": [
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "denied",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:05d43ff274eb264bda42892ddbae7798cbf97e050092c1edc707f6962c7526ce",
+              "expected_operation_set": [
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#expiry",
+              "observation_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior",
+              "claim_id": "identity.risk.evaluate",
+              "scenario": "expiry",
+              "operation_ids": [
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "denied",
+              "stable_error": "invalid_input",
+              "artifact_contract_sha256": "sha256:95e8abacc6a61b6faba204b8d45a9e3f258c9226f458f87f580e41f9da139c97",
+              "expected_operation_set": [
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior#unknown-outcome",
+              "observation_id": "phone-reset-risk-evidence-report.identity.risk.evaluate.behavior",
+              "claim_id": "identity.risk.evaluate",
+              "scenario": "unknown-outcome",
+              "operation_ids": [
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version"
+              ],
+              "status": "reconciled",
+              "stable_error": "unknown_commit",
+              "artifact_contract_sha256": "sha256:522a5c0d0d36ec889d0b6c411d34f3acc87037c68c47ce703d5f264a66118f38",
+              "expected_operation_set": [
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#success",
+              "observation_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior",
+              "claim_id": "journey.passwordless.v1",
+              "scenario": "success",
+              "operation_ids": [
+                "identity.phone.password-reset-request",
+                "identity.phone.password-reset-complete",
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:6979533eb0057221f8d1df74eb585115deb006972c397ee99ef6941df24d3687",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#failure",
+              "observation_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior",
+              "claim_id": "journey.passwordless.v1",
+              "scenario": "failure",
+              "operation_ids": [
+                "identity.phone.password-reset-request",
+                "identity.phone.password-reset-complete",
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "failed",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:5d3c7947c1344e1b053886d0ad633dfa99182adf743bf4a6c9b12e220fa18d12",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#denial",
+              "observation_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior",
+              "claim_id": "journey.passwordless.v1",
+              "scenario": "denial",
+              "operation_ids": [
+                "identity.phone.password-reset-request",
+                "identity.phone.password-reset-complete",
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "denied",
+              "stable_error": "forbidden",
+              "artifact_contract_sha256": "sha256:0d55e793f9cdc53cbc9cfa550d66f238322c73191e923b690b74e8a2515866b7",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#outage",
+              "observation_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior",
+              "claim_id": "journey.passwordless.v1",
+              "scenario": "outage",
+              "operation_ids": [
+                "identity.phone.password-reset-request",
+                "identity.phone.password-reset-complete",
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "unavailable",
+              "stable_error": "unavailable",
+              "artifact_contract_sha256": "sha256:f109bf651f3e1f2e397d34753077b595fbfe06da417998c37e3a7194ea2050ee",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#concurrency",
+              "observation_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior",
+              "claim_id": "journey.passwordless.v1",
+              "scenario": "concurrency",
+              "operation_ids": [
+                "identity.phone.password-reset-request",
+                "identity.phone.password-reset-complete",
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "pass",
+              "stable_error": "conflict",
+              "artifact_contract_sha256": "sha256:d76c2c3aa6d609027fddf6abbd6ee16ac42b5178615da2e2c7f378f6b70d929a",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#cleanup",
+              "observation_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior",
+              "claim_id": "journey.passwordless.v1",
+              "scenario": "cleanup",
+              "operation_ids": [
+                "identity.phone.password-reset-request",
+                "identity.phone.password-reset-complete",
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "pass",
+              "stable_error": "none",
+              "artifact_contract_sha256": "sha256:4196b985a72227262c127a8025273c6401405b7641a79ad66b7aa9b86b679002",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#unknown-outcome",
+              "observation_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior",
+              "claim_id": "journey.passwordless.v1",
+              "scenario": "unknown-outcome",
+              "operation_ids": [
+                "identity.phone.password-reset-request",
+                "identity.phone.password-reset-complete",
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "reconciled",
+              "stable_error": "unknown_commit",
+              "artifact_contract_sha256": "sha256:7b9e1e67c718ab9b62b7e08054894b2bce8f937f768616bfe4b7ff43df4ec039",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#rollback",
+              "observation_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior",
+              "claim_id": "journey.passwordless.v1",
+              "scenario": "rollback",
+              "operation_ids": [
+                "identity.phone.password-reset-request",
+                "identity.phone.password-reset-complete",
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "rolled_back",
+              "stable_error": "internal",
+              "artifact_contract_sha256": "sha256:baa56f0132482fddd4dd14515a05551360cdcc96bf9458b6b6c31a9042ffb135",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ]
+            },
+            {
+              "case_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior#expiry",
+              "observation_id": "phone-reset-risk-evidence-report.journey.passwordless.v1.behavior",
+              "claim_id": "journey.passwordless.v1",
+              "scenario": "expiry",
+              "operation_ids": [
+                "identity.phone.password-reset-request",
+                "identity.phone.password-reset-complete",
+                "identity.risk.evaluate"
+              ],
+              "input_fields": [
+                "tenant_id",
+                "subject_id",
+                "recovery_purpose",
+                "canonical_number",
+                "preauth_transaction_id",
+                "attempt_id",
+                "policy_version",
+                "reset_capability",
+                "phone_otp_proof",
+                "independent_factor",
+                "risk_evidence_id",
+                "new_password"
+              ],
+              "status": "denied",
+              "stable_error": "invalid_input",
+              "artifact_contract_sha256": "sha256:855140e8bd7f5858b98d72cef7b8fd39de1784524b8804a8ab9a47a1a2e718ea",
+              "expected_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ],
+              "observed_operation_set": [
+                "identity.phone.password-reset-complete",
+                "identity.phone.password-reset-request",
+                "identity.risk.evaluate"
+              ]
+            }
+          ]
+        },
+        "attempt_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "risk_evidence_id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$"
+        },
+        "risk_policy_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "risk_evidence_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        },
+        "successful_consumption_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "credential_version": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9223372036854775807
+        },
+        "revoked_session_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "rollback_restored_evidence": {
+          "type": "boolean"
+        },
+        "unknown_reconciliation_digest": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$"
+        }
+      },
+      "x-semantic-rules": [
+        {
+          "kind": "positive",
+          "fields": [
+            "risk_policy_version",
+            "successful_consumption_count",
+            "credential_version",
+            "revoked_session_count"
+          ]
+        },
+        {
+          "kind": "true",
+          "fields": [
+            "rollback_restored_evidence"
+          ]
+        },
+        {
+          "kind": "const",
+          "field": "successful_consumption_count",
+          "value": 1
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,5 @@
+--- FAIL: TestIdentityServiceRejectsStructurallyValidForgedSignature (0.00s)
+    identity_contracts_test.go:119: structural parsing was promoted to authority: <nil>
+FAIL
+FAIL	github.com/faustbrian/go-capability	0.203s
+FAIL

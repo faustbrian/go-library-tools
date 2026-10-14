@@ -1,0 +1,9 @@
+
+[.] race
+ok  	github.com/faustbrian/go-authentication	2.215s
+ok  	github.com/faustbrian/go-authentication/apikey	1.219s
+ok  	github.com/faustbrian/go-authentication/authhttp	1.231s
+ok  	github.com/faustbrian/go-authentication/authlog	1.219s
+ok  	github.com/faustbrian/go-authentication/authtest	1.219s
+ok  	github.com/faustbrian/go-authentication/basic	1.205s
+ok  	github.com/faustbrian/go-authentication/bearer	1.219s

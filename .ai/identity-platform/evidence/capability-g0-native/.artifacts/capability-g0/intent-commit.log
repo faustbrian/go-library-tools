@@ -1,0 +1,7 @@
+[feature/identity-platform-capability-g0 4cfaa62] feat(capability): add opaque proof contracts
+ 15 files changed, 1299 insertions(+), 10 deletions(-)
+ create mode 100644 docs/identity-contracts.md
+ create mode 100644 identity_contracts.go
+ create mode 100644 identity_contracts_internal_test.go
+ create mode 100644 identity_contracts_test.go
+ create mode 100644 identity_example_test.go

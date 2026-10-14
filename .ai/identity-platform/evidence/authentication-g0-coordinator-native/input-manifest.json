@@ -1,0 +1,2181 @@
+{
+  "environment_inputs": [
+    {
+      "content_identity": "sha256:098a97d2206fd016e1b57a9258466988b2cc4159b62ee5a7b80ae45cc8143775",
+      "environment_id": "environment:host",
+      "owner": "coordinator",
+      "reason": "Captured before native root-module execution; live vulnerability feed and external interoperability tools require separate closure"
+    },
+    {
+      "content_identity": "sha256:ed56ddd709a6ff36d5afe5d5e4388687cb1f81effebc402fbfc0349e55b508af",
+      "environment_id": "environment:native-launcher",
+      "owner": "coordinator",
+      "reason": "Captured before native root-module execution; live vulnerability feed and external interoperability tools require separate closure"
+    },
+    {
+      "content_identity": "sha256:9231f65a0f7b8b9e90af67448f85036ea9e8d49c2902f17d3c3b5ba1d3c4ab53",
+      "environment_id": "environment:package-environment",
+      "owner": "coordinator",
+      "reason": "Captured before native root-module execution; live vulnerability feed and external interoperability tools require separate closure"
+    },
+    {
+      "content_identity": "sha256:de8c30e1270860e02a1f1ef6849f07ad5409299ed3d430a5578d9067cd3c5da8",
+      "environment_id": "environment:selected-applicability",
+      "owner": "coordinator",
+      "reason": "Captured before native root-module execution; live vulnerability feed and external interoperability tools require separate closure"
+    },
+    {
+      "content_identity": "sha256:fc31915142d8c5becfa399d6f49e80e9b48641177969fcf1ae0aad3642e7c53d",
+      "environment_id": "environment:selected-primitive-contract",
+      "owner": "coordinator",
+      "reason": "Captured before native root-module execution; live vulnerability feed and external interoperability tools require separate closure"
+    }
+  ],
+  "repositories": [
+    {
+      "inputs": [
+        {
+          "content_identity": "git-sha1:524e3cd60c87bcff56290af2f381f9041b7b6194",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".gitattributes",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:38675146d8a20c639edc9d541b482303851ec544",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".github/dependabot.yml",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:8e38f0c40fbf2950381028efe0dd69e918e60719",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".github/pull_request_template.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:8bb95867c90ee2eba6c0596c3acf7ff11ceddf7b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".github/workflows/ci.yml",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6c97d30527c3d87aaee0e6c0f85169b07a72ed46",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".gitignore",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:28af8698e4cef8055224475e21a53e897396e319",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".gitleaks.toml",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f250c8f6045f43ce98fd0fe2d0675b0656c7264f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".go-version",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:baf542ea288bec7612862c0db8ba0ff62391e32b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golangci.yml",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f58285ac0f90379ad301e3474d395bf72dfece2d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/documentation-tools.env",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:96790e07c8a6b580b598f5e102884eb8b23d4df5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/mutation-bootstrap/authotel.zip",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:9c26e4e773454efeacd0d0de45a9552760e6b133",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/mutation-bootstrap/jwt.zip",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:52462df15949977a9c9fe2c51b5004aad519bb1d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/mutation-bootstrap/oidc.zip",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:d3873f76c383dcc98cd2c3e5d6036ab80ded965a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/mutation-bootstrap/root.zip",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:4caa342ed6905741cadae3d83ca2ec80fcbdc38f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/mutation-history-migrations.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:2986067e669a85163c6d113506417fb6b688d6d4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/mutation-zero-inventory.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:fe78daf3e0e01a1cc1dc8a69e1e6f73da80e4097",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/package.mk",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:4f6b24e16dbb558528e4e713c18f442555cd0af6",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/audit-goals.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:37179a35f51d0003a8646685e42ab58a8d85d27b",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/build-golib-gremlins.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:40a1b3467788956a9b53937255560d6ff0451781",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/build-local-proxy.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:9eccb14ccd9c31c2cee48cc74a4a9cd7d6199df0",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/check-api-baseline.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:02ed3d2c2f98c911324a7e5b8148504cbc671ae6",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/check-coverage.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:48b133c475a68bce36457f550742109d7e47cc5f",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/check-documentation.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6d31e48be0fc5d0d9d7354b74439d47186e87a71",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/check-fuzz.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:b4c532dca78b48cd882b6754cde9113019aff0cc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/check-gates.txt",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a41bec3fdf1ed10061d2bb774ad0d60fe52e3f18",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/check-go-safety.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:840e13bb382d367d211689b3dcca8e6b5db8bc78",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/check-go-safety.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6e238cb0255b75817f558b132cab4afe33a300d0",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/check-module.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:2329a37e75e03ef538a3b6e2dda3fe5a77dc4001",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/check-mutation.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:8bc3afbce58bb728eecbf2288e43bbb2d97eb472",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/codeql-build.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:cceb53df1e30790e33da995f1cdc9a7b62d4c449",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/create-verification-snapshot.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:d84a4ff1e5e18caabc75a20e23137c1e169d942a",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/discover-mutation.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:589eca5a02e2df0a2d53a3b4449f9187f68ec8ba",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/filter-releasable-modules.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f775af9162c18d205019b272e21cd293c73cd364",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/gate-input-digest.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0e867262b76f57c5847281a485aa602673b7f20e",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/configure-mutation-workers.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:d84188feadeb7fc50e9aa8129458e9206b5b6caf",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/isolated-go.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:081483aafb6163927715ba20de9899388b33b7e9",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/migrate-api-baseline-evidence.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f88356799b7aecd0dffbac8f91b2f550e1842da1",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/migrate-runner-isolation-evidence.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0068cb2c0055febf47c454eaf34a78479d664343",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/mutation-command.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:ab0271571b01988a85b451c0430fa758e17cf9a3",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/mutation-coverage.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:e2dce95f1b6d302228932d211df4b1356d29490a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/mutation-scratch.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6e71fa35f736d95e8d418ab2f231052626aecb32",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/optional-mutation-digest.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:7bd74371069f5faf2c9ab50849222b6f802759db",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/reuse-approved-mutation-checkpoint.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:c1a0c83df137abb2fc41b81f7bca9cf00cad44c7",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/reuse-mutation-coverage.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:ac46b58f83996e3c3035a9ff924ec33cf405cbaf",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/run-mutation.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:59de60e609dc353d6e8df3dca41a2a5ff951075b",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/internal/run-verification-snapshots.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:df9c6095689afaba33ac143ad4252f792880bed1",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/mutation-verifier-identity.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:3c49ed05baaf23bb61e85752d42988e089acc7ee",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/package-source-digest.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:c573b4cee345f5afc140052e57d381d4014e1277",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/patches/gremlins-module-relative-diff.patch",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:7ac77993c455d1b017f9f0a7df8969e2c38aacf3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/patches/gremlins-run-all-mutants.patch",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:86e8912820b0488e8a35ea946cdea1eeb9cc4bf7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/patches/gremlins-shared-coverage.patch",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a2ed9d3765436f919b4f2448f9995bbf25ab48f2",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/release.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:c17930f0077e6371bc07d65be21d073b72ae2866",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/repository-check.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:5fe812baaa28696df66c43ccb057db1b440be13f",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/restore-ci-mutation-evidence.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:366d64fd31b4562978d00ca7e8040f9adcde8948",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/run-gate-with-evidence.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f22fd9d3a302984d78ac76b66ff3dfa59164ba6f",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/run-modules.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:955435e5c7f4e615e9bc858b53d16ab5f3c6c446",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/stage-ci-evidence.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:44b90829e5501378394074dd3a787d95771026f2",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/start-services.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a3ac5767a5ba7dcf53530fe2085194ae7e48a09d",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/stop-services.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:46e29e529221a4182ea9380604d77ff67a766f1c",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/test-oidc-keycloak-interoperability.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:69f9085b03dcb3e5dc7517c4857f3c28b065cc8b",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/update-api-baseline.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:356d3ee7f79069da25f04ba7c84ea138f5af1a81",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/verify-gate-evidence.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:35b3ba3d847727b6de01bd3336fea3746fff8a74",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/scripts/with-disposable-go-cache.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:c7e8a973e8f6a436ba982958db3db00fe9269dfb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": ".golib/versions.env",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6ea988c45b6f2d7ae508639dfe316dbb4eebfe49",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "AGENTS.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:55f5572d2065b6c127fc4c9133a11d5a7c448b04",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "CHANGELOG.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:9c6b85ed4591deab5d63504987d3b25f0d6f324b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "CLAUDE.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:94e4de703d425be22a5b027f64a92e643d4b91f4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "CODE_OF_CONDUCT.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:1203cc0fd8c517336593b6ba8ba4ec1718584315",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "COMPATIBILITY.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:b20fa764ef796f72ff9a983a7a2be986496bd7d5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "CONTRIBUTING.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:78c94e6782ab7066050eaf88dfa2af1726233dee",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "DEPRECATION.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a654d0c930fd62fab5b3237f14823225dacc7316",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "LICENSE",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:16b94f51ba4b118a9cbb3da068cf45ad94c31f21",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "Makefile",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:fb2ebfc5fc27679e6aa575939b57a7260c1ab458",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:8a7cb55d7f6fe49e5826a9eb390689f3a7ac3c4a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "SECURITY.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:90fa6053c6642077936bedccb0797e3fcc0bd06c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "SUPPORT.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0c8698587537a62943267b80502474e48afabb40",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "api/authotel.txt",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f3926fa211cb5360698d1fb38f9bf9b0015ad7ce",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "api/jwt.txt",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0a286962500d6066cd6ae407855a51bbbd9c1560",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "api/oidc.txt",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:49bb11bb1611c2c805d99f331918219da7be0797",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "api/root.txt",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:66e5f01e95a49544406f84796b6d986d0dd4e361",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "apikey/authenticator.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:d3d751d9443b4bee148cb5b8ccaf61973250f64e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "apikey/authenticator_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f8a8a968ce6c8467ebd46a0b4b384f0602af3106",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "apikey/example_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:1f8c49f5280b649145c08933b656cab03d8b1e62",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "apikey/static.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0a5f74fddca7bf2cd256649c50bc6a2ccdfb87fe",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "apikey/static_benchmark_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6b97089f25c42e90ad1174acb41b31e91df6442f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "apikey/static_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:5f8a4ac881dfad565ac93f1bf891740f6f5522f3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/challenge.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:ce349f930c5fa48ea87518e5f78c47f9d3fba173",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/challenge_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0287b832d7dbbb25a894f553e7739543deeba847",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/example_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:3def076fa2a214e52a95a8347f4b4d26d1c5fe4c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/extractor.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:544b00331288cb5e18873f94cadbc47d68bd147a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/extractor_benchmark_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0462107ef7dfff19cc9e1edaef74b56684c525ee",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/extractor_fuzz_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:7adfc04d1adf651e63b4974c62590e7a0c7459b4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/extractor_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:467139847cf9dfb90a22e1b1b7daf2c9c03a54c1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/interoperability_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:ca47bb6f55a6bdcf64c2dc042ea132bb5d9ffd2d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/invariants_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:338f44e5d1ce67e426841c83ace1199624eb8a0a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/middleware.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6918834de78525bfbcdee6b40c9ee3071e128652",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authhttp/middleware_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:e183607422b8da3d1c39cb0bd03721a8eabd5313",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authlog/authlog.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:bc5d03835a37f6d0d55c1670be68fbf234926ada",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authlog/authlog_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:db6893e37c3d32229bf4cc590a773738a8ff8eff",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authlog/example_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:26bf7117c9eed1486ba5ae02e8ef13a9ea7c2de7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authority.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:888b553deff5708521c8b21bd5f00291ed3f9ec5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authority_boundaries_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:c9e468ce26c8e2ce1cfe706989f17f7fb9cab7b4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authority_configuration_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:1cf69470f2256c2715be5e9e2af19a51cfd4ca43",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authority_contracts.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:cbb920d0dd4fb576b80bf1e5c1b3c54824f031ee",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authority_fuzz_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a80e0e7849c1ad36046f5c3b4329a51ee7d18868",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authority_internal_boundaries_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:171e04c97d24bc53247888dec0d4b83d218f270b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authority_interoperability_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:1a6f16a25eebfb2d5f859b4052a4e808475f6437",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authority_json_profile_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:cb47b49662dc62f2063cd4b40d6f177e9746bd72",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authority_permanent_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:8517a3d53782e33988e83f98695e3a537ee8110b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authority_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:aa775dfc376fc0f7ce9b88b60e2f3b0844b8340f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/CHANGELOG.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a654d0c930fd62fab5b3237f14823225dacc7316",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/LICENSE",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:bb2787e2cb9c38c436831d835977ab6e41139a78",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/Makefile",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:84848962e149c86dfa2b35ad9d34949bc6baae64",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0c8698587537a62943267b80502474e48afabb40",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/api/baseline.txt",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:835fac49e4c5a6d3a6f0c215dab496aacf14ad13",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/authotel.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:9fefab7442ffc6040d2aa23a5237b5e6d783e85c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/authotel_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:9855ea3edebe557880c18c32ff089cc65c24037c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/benchmark_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:9a6bfd4efbd3ee3fda4edf8692531d6c854d7f1d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/docs/README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:60dc8ad08e02c87bfe241d011e4cb33ce92585f3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/docs/reference.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:1c091c7af78a3db5a6c1bdc6bc2c9c67a0f8e04c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/example_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:aae5605fcd1c72c14cfeb41e6071dd8cec0f5aee",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/go.mod",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:2106ea0c9ee6780afb48267ccc9120377e95303d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/go.sum",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:d5746f05a40290f7f6cd475d4ddf48dc8a5f3833",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/hardening_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:aef27763e32f97ba7c87989f8d455040bd85c14c",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authotel/scripts/check-benchmarks.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:8e3b370effedf97f07d507a2926c222ebead9ef3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authtest/authtest.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:fd285cbf4ab36fe20c491d7967b2860c31bb2147",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "authtest/authtest_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:2a6bf3405090c96b4008ae9513fa9c1065f54ae0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "basic/example_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:96a2a3f1161756a23272f4f0b5a6400a344262f3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "basic/static.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:74e572e9f80c5f6853a8ab10181f00e25e3436b9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "basic/static_benchmark_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:201bc2715512da59e2ac14d8a9961641611fdadc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "basic/static_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:8ddab17bf6846721547d7aa7ebdbbaa73f324f95",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "bearer/authenticator.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0d2a749faf97158ac8ed7e5e8bbd0da64f768162",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "bearer/authenticator_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:326cf77207199b156a83279b056b8b51162bce14",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "bearer/example_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:88b0743a69db9055a07fd3a5f61f07bac474f781",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "bearer/static.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:4129da35e32822345954a88a48b794f62bd9870c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "bearer/static_benchmark_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0641454a9dc9468b4cf41738bb295604b1e9ffaa",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "composite.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f15eef59892a3e6a382adaae4568873e9285037a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "composite_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:138e1e3967f3cb7e826a8b868a2c9ff692dce08f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "contracts.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:2f8512dc330d1bbb8ec5e8517fe5c8903c908732",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "contracts_internal_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:b6286e9760471a29fd7295345acac97cd1f19d0c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "contracts_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:d5f5c5b271b3bf37d41412b06ba841f9296a5f4f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "credential.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:42a4c7e4bd8962a8ddc2394daf34725b127492aa",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "credential_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:07531fb9ca08b2776e6a7e150c111e063a029987",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "cspell.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:5207393261dc4ea767b89acf26c5fb63731152a3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a0302626d9696e524cef399878d1248390b1ae29",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/adoption.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:80219ff33c39f083964fac0e52bcbdef71ce2f63",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/api.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:1cd2de11dfa4648f051c0fa478f5d427c52dbb27",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/authentication-vs-authorization.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:70f4536cb2ddeae5b6c641f094bddacf048a2185",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/compatibility.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:fd395a82f4d4b57e136113e777d18ab51312541b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/faq.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:d8b6c65d04b41b643244042833d2fff55caa6c99",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/guides/anonymous-routes.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:17e6b574bae94e10f049057f84be3fa0794bb5b4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/guides/api-key.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:73f3afe12f613791cbbfd4e2a729bb208cc351b3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/guides/basic.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:57ace463eff1c84f1bf5df93ea5376e232d38749",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/guides/bearer.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:9a1899659261f08dd69c9782d10e15dc21cf7843",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/guides/credential-rotation.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:8959e0a5f05203282efdb5a0b02788105530c71a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/guides/http.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:bfe9a8c8c3994ce5e2abfb796c37083f802d056d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/guides/json-rpc.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:54e604f09d8abc4ed62c9ca6afb8f916197d5b72",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/guides/jwt.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a53c51cb1bfd622142f0db59998c8b499efca223",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/guides/oidc.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:73d43f6e2cf4c27bbb87719f1a06e1d8e50ab784",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/guides/service-accounts.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:de77d4adbc1f2644476145a2c6e7e5991f5e5fdb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/identity-proofs.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f87d99a5cc3830e2744170ccd0a0c4a809d5c5f6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/migration.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:1b1807c1026e3eb9952f5c9e9a4cc1b861ca43d9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/operations.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:548ee050110b6c209bbfd820fd1c991f8e236ca1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/performance.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:d7c9ef4944778feb0aa2961d3b1fc7260da60eba",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/quickstart.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a33e099da51285ee5ccdf0f5d90e2448f6610796",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/security/findings.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:afb55d800a40a003ac86cf11b3b2c6ec74d1b97b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/security/test-matrices.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:bdf3e4d75ebb9cdbb034f75f0c879cff231269eb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/security/threat-model.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:8009d297c61a0115c4ea3a2574afdbf94b52cb50",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/security/vectors.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:44c6cce5000a3381bc821db7542947d05a8646c9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/specification-decisions.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:debe8971df213c37b1c2bef0935b1022523ee68e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "docs/troubleshooting.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:391f2711f9127ff97727da85e78aee687fdf0d30",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "example_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:7fda6c2b728a59ac8672696766e6ace9c1ca18d0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "go.mod",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a43a1d2f0b79ad6017f60888d265581b707fc4f8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "go.sum",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:e6b5dd6363b2199f36d8a6c70f8298c5e36bcc56",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "go.work",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f51530c93ec045d8adaf4577445af1919b3a1c61",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "instrumentation.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:3bf6fcaf6c31abf10abd8210fbd6324b807996f1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "instrumentation_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:e2a9e13a9712dc276b945c131423460740c363e8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/CHANGELOG.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a654d0c930fd62fab5b3237f14823225dacc7316",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/LICENSE",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:84fa35881384ae6faacf2c4cd71f781425ef5b79",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/Makefile",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:313f701a659f2191cb097874c35632050978f36a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f3926fa211cb5360698d1fb38f9bf9b0015ad7ce",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/api/baseline.txt",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:866b2608816138a7753b17eb102288a4ccbe60b8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/docs/README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:c168a34b4e76c05e5b9ca4f7e803b0fb40585566",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/docs/api.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:14c91a170cba2aec07a132a634bd451bfcbd17cf",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/docs/hardening.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:b8be606eed9f2a38ee1dc1eaebd8665cc8e12b47",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/docs/reference.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f820da2a47f8791087ae08b56978c052330647d3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/docs/specification-decisions.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:e5edac14e8719eb6bbb1fe62a45c666125583c03",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/example_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:67cbc045864bc214d89a770e40aaa26ea1d1ce09",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/fuzz_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0b0959428f0de64a0fc03aad187770aea83b562b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/go.mod",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:7930f8436a366bae1513b4d0e1186d831b84ac91",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/go.sum",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:3a5e3c68353cee44d9df273e49eee16b989cd30c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/hardening_internal_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:d9923597a1412350e821d06bf971e08e280fe8e9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/interoperability_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6dbdcf6a353275b050d5022069a5e61d79bcc4f5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/remote.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:50ba011f08ebd03407706ef3139356c9fe8dda8e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/remote_internal_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:cf42bdf67545c6a282369e45a4633e8125c0ed07",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/remote_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:e809dc2f5da11f8325e84da80848b31baac2ba75",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/specification/README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:02e7029905663121c052f416edd397664918ff33",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/specification/manifest.tsv",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:ca1be4d83c98f3cec94ed42bb8b6f4fff96dead0",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/validator.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:441c958bc0be2fb58e4ef12e3d3aecf7e81d5770",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/validator_benchmark_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:4cd696150494c043ca3399c182db3fc80c84da71",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/validator_internal_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:4d0657f627c6fe165f3e930156167211b98be6c4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "jwt/validator_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:90f458951813eb0ba83f075b1fd8cad86c3f37bc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "modules.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:69ada6c43d9de6ee4f7ead9b872041b9432f4e2d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/CHANGELOG.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:a654d0c930fd62fab5b3237f14823225dacc7316",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/LICENSE",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:4d3ccd63b989d798d8d79ed854a6af6e2b1cd2a1",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/Makefile",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:edc8c3eb1ccf3f534b7dcf44ae245f2312b1ca3e",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:0a286962500d6066cd6ae407855a51bbbd9c1560",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/api/baseline.txt",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:64e4b32a86e29a4c6b8cb2cc4cdedcf00df872f8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/docs/README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:2ff18c39c451d32cb056db867d55c9267ed88f98",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/docs/hardening.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f777625b06ad784464da8a52e6ab8aa3a25977cd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/docs/reference.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:3437c2edb318afe7bd42e14b88b31d4b8987f630",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/docs/specification-decisions.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:121dde2d1f0cc6fb4af19ef4fadce2a08f2413c4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/example_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:84e01b05df88e0caa04d1723e3571548598a6ebf",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/fuzz_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6a640be4e4629618f97646f96da538a8ef24affe",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/go.mod",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:1aa60739eb84fcf0d06189efb1c1fc1904b420a6",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/go.sum",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:8035f1b194c7ad94b4a9f2e902898641507d8ece",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/interoperability_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:34152826b916c2f2d5bd523ebe26453184f24077",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/keycloak_interoperability_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:bb01a71cb7bade2ef5aa1ebf1cd55e03638d42d3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/mutation_regression_internal_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:36766204df382b63f3837a2beeb34f88ae03d603",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/remote.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:1849a0ad466febae62ed7a8b2521238d41772eac",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/remote_concurrency_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:93bb9f8a44e7d884beb28e2af40380064cb87b39",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/remote_internal_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:3646ccae84f0d9859d12a86867a008f81ea44193",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/remote_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:16365cbe459f28be68689ab755ed82352d15ab02",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/specification/README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:28b93491399655ca5476066b70527021ac78c9dd",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/specification/manifest.tsv",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:fbd2fedbbaded552612510859e916baf96da5214",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/testdata/google-openid-configuration-2026-08-09.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:61e08e5355a2a002158e7a21af139f9720a1c212",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/testdata/keycloak-26.3.2-realm.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:c9530a1ce7dfa7e5a429921310f46394d3c3a225",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/testdata/oidc-core-section-2-claims.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:fa6ee461a055f5cfe14dc1a336a19a78023868ec",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/validator.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:f40b5ede731c3670593164a63cb13ce9721780fc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/validator_benchmark_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:615ce6cdd1f959aec40f7512301e6c7968f689ef",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/validator_internal_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6305ded2a03c87379c54372cb2494cd5ab3abe8d",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "oidc/validator_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:ba8b8f30660782f1fabeb5823884c7776dea15a4",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "package-lock.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:bb588310dbb7bcac7ca3600a14f8d18e8561d6af",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "package.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:81d817e4387d1ab2c5e52a7ff50a4583fb682225",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "packages.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:ace6ad160f35325553af5ca08e3e7b105d391fd8",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "principal.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:3a02044faf54fd301d482b066b07dfaf4ad7028c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "principal_fuzz_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:50c42a553cc9f1974ee08e46ae5a342f88260c75",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "principal_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:5e9e4eb3b466af6bc17f7b2f7852f1d824878eef",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "proof.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:39895f76de6aeb7641e446f01814505bf2e784df",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "proof_consumer_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:90d00e4c9ad9303217d8b02fdb967c0d4ace4feb",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "proof_example_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:35551b9181a947730716dd49466fa50a4df74546",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "proof_fuzz_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:09fc8e7154e40661f8fb9c9db66d87007a734cb3",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "proof_internal_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:738eae2fd987e2e02c581df9131be3b46d7a82f9",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "proof_test.go",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:03a3464aac7f1f4d8e015799aa6c4d813c8f5974",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/build-release.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:013eebca7ec8a438ecebdb71ed76413de183689f",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/check-all.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:059bff8587bc41782125972d615193b8b4b76034",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/check-api.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:9f5ff2b285309c13d39646dc65be422e581bb962",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/check-benchmarks.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:bf6a5da92ba350ea5e68b90e9b3cadc1e05dc0c4",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/check-boundaries.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:13dfaec7bde20883b8d21d9599c966a202238fdd",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/check-conformance.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:3212f8fce4dd80d2c901aca38654ad312af129cf",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/check-coverage.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:69bf6324ce16488d4f1cae10d6980ac443c8a713",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/check-examples.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:fd04c6d7ce66e3831cc91b20b80c801d4f0a0431",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/check-format.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:b4979b704230253396c87d88df58d18784bbda88",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/check-fuzz.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:6f30b6c37961390e3d14b8a47e11161a36e13b1a",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/generate-shared-issuer-fixtures.rb",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:e7fce6e660c75cc8b9b5e027ad8df3ba2ed4f5df",
+          "kind": "blob",
+          "mode": "100755",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "scripts/release-notes.sh",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:01c914b94bc085e3854c8bed8137502b839ae0cc",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "specification/README.md",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:027e1f3ece9f11a01cc1dcc654db52bc8f81647b",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "specification/manifest.tsv",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:21bd2dbcd8d8a54d26c998847efca6f9174c5d3f",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "testdata/shared-issuer/manifest.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        },
+        {
+          "content_identity": "git-sha1:d286c65c86aac0d1ecdd0acb5bfc31f3b7406a66",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "primitive/authentication-identity-contracts",
+          "path": "testdata/shared-issuer/openssl-eddsa.json",
+          "reason": "Complete committed family input tree, including scripts/configuration and nested consumers"
+        }
+      ],
+      "object_format": "git-sha1",
+      "repository_identity": "github.com/faustbrian/go-authentication",
+      "revision": "a5eb0e543f53610ceaece35373986cf0a4fa5891",
+      "tree": "git-sha1:fe4949e07e5e62cbed73458111e456719f1532e4"
+    },
+    {
+      "inputs": [
+        {
+          "content_identity": "git-sha1:27732d493e15aec526a88abf4f545bba3a0c85ad",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/COMMON_REQUIREMENTS.md",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:26566f2f24ca7181de5edbfe72ce6bc3f43ad253",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/ORCHESTRATOR_GOAL.md",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:46799fc44bf939f69f1df78361fff331c6184b7c",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/SHARED_ISSUER_PROFILE.md",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:13f445cd7be9ca0bfe18577fa709eade5a52e0a5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/goals/primitive-authentication-identity-contracts.md",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:3238a98ba7af593fd576c444b71cdb52082261c7",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/public_contract_repository.rb",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:7dee30bcaf8916ae384c81b2b8ab82c7fcc216d5",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/repository_input_manifest.rb",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        },
+        {
+          "content_identity": "git-sha1:fb9710bdcbe0ee2cbb4b8ada7faf618d6bd83d68",
+          "kind": "blob",
+          "mode": "100644",
+          "owner": "coordinator",
+          "path": ".ai/identity-platform/repository_topology.rb",
+          "reason": "Selected unit requirements and existing canonical input readers"
+        }
+      ],
+      "object_format": "git-sha1",
+      "repository_identity": "github.com/faustbrian/go-library-tools",
+      "revision": "9bb908ad2cfa1ab4cefe08f836642b6c226a452d",
+      "tree": "git-sha1:f4fe075dad52f90b4a69e4f021df4834e6a467e2"
+    }
+  ],
+  "schema_version": 2
+}

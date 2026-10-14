@@ -1,0 +1,286 @@
+{
+  "source_closure_sha256": "780b6ed40addf4bba78cb796c073ef087f8df86c6f56ee9b317535d864557405",
+  "base_sha": "ce41a61000844dd3c06484a7799af336ad1b2892",
+  "native_session": "/Users/brian/.codex/sessions/2026/10/01/rollout-2026-10-01T11-20-16-01a0f68c-c6cd-7d43-af14-731a528cd606.jsonl",
+  "final_gate": {
+    "command": "GOWORK=off GOTOOLCHAIN=go1.26.6 <official Golib v1.4.0> check --module .",
+    "exec_session": 63736,
+    "exit_code": 0,
+    "start_output_line": 1454,
+    "intermediate_output_line": 1476,
+    "terminal_output_line": 1498,
+    "terminal_chunk": "6f1dcc",
+    "note": "Terminal tool response retained exact exit 0; middle of terminal output was tool-truncated. Independent persisted mutation records below retain their original execution environment."
+  },
+  "counterfactuals": {
+    "binding_and_not_equal_line": 1009,
+    "authrpc_line": 1188
+  },
+  "mutation_records": [
+    [
+      ".",
+      ".verification/by-input/mutation/3ae7124040e46716a03a71cb3533fffd778a77a215883548cce99b2418e0e9ad.json",
+      "sha256:3ae7124040e46716a03a71cb3533fffd778a77a215883548cce99b2418e0e9ad",
+      "sha256:0bbd29accccdd2128779717586c074a4ccbdf0a03799f9e7b1b2ec838b4a5668",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "abac",
+      ".verification/by-input/mutation/b42f3d8a34a7f340dc1d586b446deead161e6e82396a07a3501678ac1161b1b5.json",
+      "sha256:b42f3d8a34a7f340dc1d586b446deead161e6e82396a07a3501678ac1161b1b5",
+      "sha256:08ddf90da920bb88658926a6a2ad7359b4c5423507335fa643f2d8cca5116e41",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.27.1",
+        "gremlins_binary_sha256": "sha256:3500ba5216454cd0e74be81da7b927251d831230ee89858c90d2028c1ade7694"
+      }
+    ],
+    [
+      "acl",
+      ".verification/by-input/mutation/718569e9ac14ab955e4a8800f74046a66445898f7562988dbea54c74afa821da.json",
+      "sha256:718569e9ac14ab955e4a8800f74046a66445898f7562988dbea54c74afa821da",
+      "sha256:9c8d646423fc90666743904bbc5497cd15ccefe59889d57bee4e9bbd0f7aef11",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.27.1",
+        "gremlins_binary_sha256": "sha256:3500ba5216454cd0e74be81da7b927251d831230ee89858c90d2028c1ade7694"
+      }
+    ],
+    [
+      "adapters/cache",
+      ".verification/by-input/mutation/47b965638fe44c055bdc7ffbadd294d7555f8f44b9dbc1ff214be7814e5c9089.json",
+      "sha256:47b965638fe44c055bdc7ffbadd294d7555f8f44b9dbc1ff214be7814e5c9089",
+      "sha256:837de8baa2d87fe90a04ccffaa8664181f8db4dc1229006863a2d9e6f98e0f90",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.27.1",
+        "gremlins_binary_sha256": "sha256:3500ba5216454cd0e74be81da7b927251d831230ee89858c90d2028c1ade7694"
+      }
+    ],
+    [
+      "adapters/http",
+      ".verification/by-input/mutation/db3efcbf20df43790ec57f92c00357e550f8a2166afdfba63991cdd41d6d4a1f.json",
+      "sha256:db3efcbf20df43790ec57f92c00357e550f8a2166afdfba63991cdd41d6d4a1f",
+      "sha256:1e1f4fe9e1522b57c574ce3c380c85078bdacc595f9b9adc5aed2eee274d51c7",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.27.1",
+        "gremlins_binary_sha256": "sha256:3500ba5216454cd0e74be81da7b927251d831230ee89858c90d2028c1ade7694"
+      }
+    ],
+    [
+      "adapters/jsonrpc",
+      ".verification/by-input/mutation/de14019f44a8181efa757e0ff0c98cd5d7824127dbafe7f43705bb0ea2366309.json",
+      "sha256:de14019f44a8181efa757e0ff0c98cd5d7824127dbafe7f43705bb0ea2366309",
+      "sha256:a1b4aaeb550bb0ca31a83937164c747d9842e64b70cb1eda3a8def93034c813f",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.27.1",
+        "gremlins_binary_sha256": "sha256:3500ba5216454cd0e74be81da7b927251d831230ee89858c90d2028c1ade7694"
+      }
+    ],
+    [
+      "adapters/otel",
+      ".verification/by-input/mutation/082cbebd28fe0ac5e086e8138742dc5f572b43f2091f8f577fe3a21637ce1251.json",
+      "sha256:082cbebd28fe0ac5e086e8138742dc5f572b43f2091f8f577fe3a21637ce1251",
+      "sha256:fb51b7b97396a228a73c77da782a9d84b1a2eee49d6d6e1148c2b6f6a75d3c6e",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.27.1",
+        "gremlins_binary_sha256": "sha256:3500ba5216454cd0e74be81da7b927251d831230ee89858c90d2028c1ade7694"
+      }
+    ],
+    [
+      "adapters/slog",
+      ".verification/by-input/mutation/236cd4cdb0287bd26ea6d71bc776828355e5cc325eb4783c2141d77b5df31f6f.json",
+      "sha256:236cd4cdb0287bd26ea6d71bc776828355e5cc325eb4783c2141d77b5df31f6f",
+      "sha256:ed2d74d3b63ea1a15d4925780df5f41be04eb28a1e5110fe83f6eb9f2a901adb",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.27.1",
+        "gremlins_binary_sha256": "sha256:3500ba5216454cd0e74be81da7b927251d831230ee89858c90d2028c1ade7694"
+      }
+    ],
+    [
+      "authcache",
+      ".verification/by-input/mutation/7b53569c20003ba38a9acf19e6949395d7399b0f20141b08e19b4d055c0728b9.json",
+      "sha256:7b53569c20003ba38a9acf19e6949395d7399b0f20141b08e19b4d055c0728b9",
+      "sha256:72094c8b2dcf0bfb4f1d7ef1e19f4be87352e3165051f0a9f28b3169215a5896",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "authhttp",
+      ".verification/by-input/mutation/57192164e49ad3f4cd0641466956276cc3611b74812512c495c0c883a14660ed.json",
+      "sha256:57192164e49ad3f4cd0641466956276cc3611b74812512c495c0c883a14660ed",
+      "sha256:72094c8b2dcf0bfb4f1d7ef1e19f4be87352e3165051f0a9f28b3169215a5896",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "authlog",
+      ".verification/by-input/mutation/479cdf83154006ab7edf2e777b9f24f962e75ae5a18cda82cf087f0b30e498ef.json",
+      "sha256:479cdf83154006ab7edf2e777b9f24f962e75ae5a18cda82cf087f0b30e498ef",
+      "sha256:785507aeceacc71f89bb907609b6b5eb176694f650f568f45485fd1ea82dd26e",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "authn",
+      ".verification/by-input/mutation/c044f36b847b025a1969f9d4fb001f4c3d1f11ddfb722b3160826b24cd121b6f.json",
+      "sha256:c044f36b847b025a1969f9d4fb001f4c3d1f11ddfb722b3160826b24cd121b6f",
+      "sha256:c79e5e0d0ee130658946b10bbae95f97960ef2f378decb37531ea62e2e241a3e",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "authotel",
+      ".verification/by-input/mutation/b2d7def1283de98b6fd81231482cb933ed1d1754f691bff59f73bb2b8b7c6876.json",
+      "sha256:b2d7def1283de98b6fd81231482cb933ed1d1754f691bff59f73bb2b8b7c6876",
+      "sha256:c496a288950e3bb8ba093770ed5a09f3d49917cc793c8458ac06e9420c28e18b",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "authrpc",
+      ".verification/by-input/mutation/9fecca8d969fda6e81ec2f8e5d07d3cdcb0862cdf408ef44f5e45c7b5d1a20d9.json",
+      "sha256:9fecca8d969fda6e81ec2f8e5d07d3cdcb0862cdf408ef44f5e45c7b5d1a20d9",
+      "sha256:060de786fbfd8deb1e591b872da808be5cefe4f9f9534383a991c3f9e8d27424",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "httpauth",
+      ".verification/by-input/mutation/8a57e9b925be0753a5572f8cbd94d50c941c927860fdd584c9481030451d29fe.json",
+      "sha256:8a57e9b925be0753a5572f8cbd94d50c941c927860fdd584c9481030451d29fe",
+      "sha256:4ae2e0dbb5b99dfe01b2ffa978ddeae43a8f6f385d05fb5e8b4eac5c56c2cb2d",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "internal/authorizationotel",
+      ".verification/by-input/mutation/fa98eed21ced10a4625346526eb20634c3cdb38048a96c5ca66cbfced3021eee.json",
+      "sha256:fa98eed21ced10a4625346526eb20634c3cdb38048a96c5ca66cbfced3021eee",
+      "sha256:a273659350f042fad8686b2f94aa021274b834942cec5207527d3c64dc4a1728",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "policy",
+      ".verification/by-input/mutation/d2be080b46cc457708637698be33888778213048208fd35fb025280512daed22.json",
+      "sha256:d2be080b46cc457708637698be33888778213048208fd35fb025280512daed22",
+      "sha256:6092a4f021df9660a9b5dba29e6e87f44632ee8236e386e5bceee6d539ce665b",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "postgres",
+      ".verification/by-input/mutation/d583b7f653431d54cb9e03e15d9223b9cfe0f411bd6c08ec7db7b233b918f068.json",
+      "sha256:d583b7f653431d54cb9e03e15d9223b9cfe0f411bd6c08ec7db7b233b918f068",
+      "sha256:aa38f78b9265ada91a107030358f8dc72144062d2708d960f6b5e803ca21a192",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "rbac",
+      ".verification/by-input/mutation/2382e9174478e27555c57becd28a71816611577971f2f651d65682fd9d48468e.json",
+      "sha256:2382e9174478e27555c57becd28a71816611577971f2f651d65682fd9d48468e",
+      "sha256:651a3b2f3b8b0a17b8621b19ae2aacf693823c6cf25a667d22c4a9bb04977b71",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ],
+    [
+      "valkey",
+      ".verification/by-input/mutation/12e96100a40cb77656168cd434e9a37ce762eb195289479bab4fb5901dd170ae.json",
+      "sha256:12e96100a40cb77656168cd434e9a37ce762eb195289479bab4fb5901dd170ae",
+      "sha256:3ecc79a25b647299b4496faa1ee2cbbaed97fff230d6a5d76f87e3720ea818d1",
+      {
+        "CGO_ENABLED": "1",
+        "GOARCH": "arm64",
+        "GOOS": "darwin",
+        "GOVERSION": "go1.26.6",
+        "gremlins_binary_sha256": "sha256:e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0"
+      }
+    ]
+  ],
+  "advisory": {
+    "nilaway_exit_code": 1,
+    "chunk": "91a7e8",
+    "note": "Focused clarification contains existing production diagnostics plus added test-only diagnostics; not a standalone analyzer pass. Official aggregate gate treats NilAway as advisory."
+  }
+}

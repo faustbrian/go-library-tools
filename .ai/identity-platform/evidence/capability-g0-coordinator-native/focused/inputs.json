@@ -1,0 +1,43 @@
+{
+  "revision": "c43af8abe83f33119ce2b13ec978e556408344f3",
+  "package_tree": "226969a5a3b81f4625200b9c2ec7c564fc90685e",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOFLAGS": "-p=2",
+    "GOOS": "darwin",
+    "GOVERSION": "go1.26.6",
+    "GOWORK": "off"
+  },
+  "database": {
+    "source": "https://vuln.go.dev/vulndb.zip",
+    "custody": "password-g0-narrow/vulndb.zip",
+    "sha256": "faa8c45538d259ae1fd3c34ae20632ee738d1190836c84ac95d5f2bc604d85bc"
+  },
+  "scanner": {
+    "sha256": "08a48ccbcd7a60e4ca888e887b489549876af7c2058bb25a01a91349f0605ff5",
+    "build_info": "/private/tmp/identity-capability-focused.uWjCtu/bin/govulncheck: go1.26.6\n\tpath\tgolang.org/x/vuln/cmd/govulncheck\n\tmod\tgolang.org/x/vuln\tv1.6.0\th1:FeMO9Rm/HwyduOztbvKcOw+zvDEPr4I4aQNSfevFcKY=\n\tdep\tgolang.org/x/mod\tv0.38.0\th1:MECBjubtXD7yj4HrhIUcywNaGeNVUdfVnxmPajOk4yk=\n\tdep\tgolang.org/x/sync\tv0.22.0\th1:SZjpbeLmrCk4xhRSZFNZW5gFUeCeFgjekvI/+gfScek=\n\tdep\tgolang.org/x/telemetry\tv0.0.0-20260708182218-49f421fb7959\th1:RJhm5l6Fo4rmEIcndxDllNhhf/fAx8qIm4t6A7vpm2A=\n\tdep\tgolang.org/x/tools\tv0.48.0\th1:3+hClM1aLL5mjMKm5ovokw9epgRXPuu2tILgismM6RE=\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\tDefaultGODEBUG=cryptocustomrand=1,tlssecpmlkem=0,urlstrictcolons=0\n\tbuild\tCGO_ENABLED=1\n\tbuild\tCGO_CFLAGS=\n\tbuild\tCGO_CPPFLAGS=\n\tbuild\tCGO_CXXFLAGS=\n\tbuild\tCGO_LDFLAGS=\n\tbuild\tGOARCH=arm64\n\tbuild\tGOOS=darwin\n\tbuild\tGOARM64=v8.0\n"
+  },
+  "images": [
+    {
+      "tag": "postgres:18.4-alpine",
+      "id": "sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15",
+      "repo_digests": [
+        "postgres@sha256:9a8afca54e7861fd90fab5fdf4c42477a6b1cb7d293595148e674e0a3181de15"
+      ],
+      "architecture": "arm64",
+      "os": "linux"
+    },
+    {
+      "tag": "valkey/valkey:9.1.0-alpine",
+      "id": "sha256:c9b77919daeba2c02ad954d0c844cc4e7142069d177b89c5fd771f405daf9e02",
+      "repo_digests": [
+        "valkey/valkey@sha256:c9b77919daeba2c02ad954d0c844cc4e7142069d177b89c5fd771f405daf9e02"
+      ],
+      "architecture": "arm64",
+      "os": "linux"
+    }
+  ],
+  "clean_consumer_script_sha256": "0dcb37e7b997832b9fc96a04e6156ebdb9ee8ac104ee279f372e5ecb2fcb4e67",
+  "native_input_manifest_sha256": "cf4c4e77ff2b0d9f670177a913fa507c9a128265322fdb7c3deb22c188c8769c"
+}

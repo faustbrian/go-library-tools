@@ -1,0 +1,20 @@
+{
+  "units": [
+    "authorization-contracts",
+    "authentication-authotel",
+    "authentication-jwt",
+    "authentication-oidc",
+    "middleware-siblings",
+    "queue-authz-server",
+    "service-compatibility",
+    "service-reference-http"
+  ],
+  "failed": [
+    "authentication-authotel",
+    "authentication-jwt",
+    "authentication-oidc",
+    "queue-authz-server",
+    "service-compatibility",
+    "service-reference-http"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "schema_version": 3,
+  "module": ".",
+  "package": "authlog",
+  "execution_revision": "9926ce00a89c4f3187b12b4b25e3268158e138e6",
+  "validated_revision": "a5eb0e543f53610ceaece35373986cf0a4fa5891",
+  "gate_input_digest": "2ed6bd5037b0402b0df07808f372d939b754be044cdbf322fcb9122c27d25f19",
+  "gremlins_version": "v0.6.0",
+  "gremlins_verifier_sha256": "9a9499ff68a8dfd49a0be7995590297a8ee563a1aa226bfd8b9361dc53058108",
+  "verifier_identity_source": "executed",
+  "gremlins_binary_sha256": "e05bf25d661b16ab96d6f2e17aed481d393930e0f24205cc341b010f887368a0",
+  "environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOOS": "darwin",
+    "GOVERSION": "go1.26.6"
+  },
+  "report": {
+    "go_module": "github.com/faustbrian/go-authentication",
+    "files": [
+      {
+        "file_name": "authlog.go",
+        "mutations": [
+          {
+            "type": "INVERT_BITWISE",
+            "status": "KILLED",
+            "line": 22,
+            "column": 9
+          },
+          {
+            "type": "CONDITIONALS_NEGATION",
+            "status": "KILLED",
+            "line": 19,
+            "column": 12
+          }
+        ]
+      }
+    ],
+    "test_efficacy": 100,
+    "mutations_coverage": 100,
+    "mutants_total": 2,
+    "mutants_killed": 2,
+    "mutants_lived": 0,
+    "mutants_not_viable": 0,
+    "mutants_not_covered": 0,
+    "elapsed_time": 0.915455375,
+    "mutator_statistics": {
+      "conditionals_negation": 1,
+      "invert_bitwise": 1
+    }
+  }
+}

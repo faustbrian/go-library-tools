@@ -1,0 +1,2104 @@
+{
+  "package-environment": {
+    "CGO_ENABLED": "1",
+    "GOARCH": "arm64",
+    "GOFLAGS": "-p=2",
+    "GOOS": "darwin",
+    "GOVERSION": "go1.26.6",
+    "GOWORK": "off"
+  },
+  "selected-primitive-contract": {
+    "current_api_status": "requires-extension",
+    "errors": [
+      "authorization.ErrAssignmentLimit",
+      "authorization.ErrBatchLimitExceeded",
+      "authorization.ErrDecisionUnavailable",
+      "authorization.ErrInvalidPermissionStatement",
+      "authorization.ErrInvalidOutcome",
+      "authorization.ErrInvalidRequest",
+      "authorization.ErrPolicyLimitExceeded",
+      "authorization.ErrPolicyPanic",
+      "authorization.ErrRevisionConflict",
+      "authorization.ErrStatementNotFound"
+    ],
+    "interfaces": [
+      {
+        "methods": [
+          "Decide(context.Context, authorization.Request) (authorization.Decision, error)"
+        ],
+        "name": "authorization.Authorizer",
+        "semantics": "The caller constructs the complete typed request; errors, NotApplicable, and invalid outcomes fail closed and MUST NOT be converted to Allow."
+      },
+      {
+        "methods": [
+          "Decide(context.Context, authorization.DecisionContext) (authorization.Decision, error)"
+        ],
+        "name": "authorization.Service",
+        "semantics": "Service is the consumer-oriented decision boundary; errors, stale revisions, NotApplicable and invalid outcomes deny authority."
+      },
+      {
+        "methods": [
+          "AdminPermissionCheck(context.Context, authorization.AdminPermissionCheckRequest) (authorization.AdminPermissionCheckResult, error)",
+          "AdminUserRoleSet(context.Context, authorization.AdminUserRoleSetRequest) (authorization.AdminUserRoleSetResult, error)"
+        ],
+        "name": "authorization.AuthorizationService",
+        "semantics": "The exact externally owned administrative operation boundary; every method uses its closed request, result and stable error contracts and preserves unknown outcomes."
+      }
+    ],
+    "methods": [
+      "authorization.AdminPermissionCheckError.Error() string",
+      "authorization.AdminPermissionCheckError.Format(fmt.State, rune)",
+      "authorization.AdminPermissionCheckError.Kind() authorization.AdminPermissionCheckErrorKind",
+      "authorization.AdminPermissionCheckError.RetryAfter() time.Duration",
+      "authorization.AdminPermissionCheckError.Unwrap() error",
+      "authorization.AdminPermissionCheckRequest.Clone() authorization.AdminPermissionCheckRequest",
+      "authorization.AdminPermissionCheckRequest.Validate() error",
+      "authorization.AdminPermissionCheckResult.Clone() authorization.AdminPermissionCheckResult",
+      "authorization.AdminPermissionCheckResult.Validate(authorization.Revision) error",
+      "authorization.AdminUserRoleSetError.CommandID() authorization.CommandID",
+      "authorization.AdminUserRoleSetError.Error() string",
+      "authorization.AdminUserRoleSetError.Format(fmt.State, rune)",
+      "authorization.AdminUserRoleSetError.Kind() authorization.AdminUserRoleSetErrorKind",
+      "authorization.AdminUserRoleSetError.RetryAfter() time.Duration",
+      "authorization.AdminUserRoleSetError.Unwrap() error",
+      "authorization.AdminUserRoleSetRequest.BindingDigest([]byte) ([32]byte, error)",
+      "authorization.AdminUserRoleSetRequest.Clone() authorization.AdminUserRoleSetRequest",
+      "authorization.AdminUserRoleSetRequest.Validate() error",
+      "authorization.AdminUserRoleSetResult.Clone() authorization.AdminUserRoleSetResult",
+      "authorization.AdminUserRoleSetResult.Validate(authorization.AdminUserRoleSetRequest) error",
+      "authorization.AssignmentDisposition.Validate(authorization.AssignmentImpact, authorization.RoleID) error",
+      "authorization.AssignmentImpact.Validate() error",
+      "authorization.Condition.Match(authorization.Value) (bool, error)",
+      "authorization.Condition.Validate() error",
+      "authorization.DecisionContext.Clone() authorization.DecisionContext",
+      "authorization.DecisionContext.Validate() error",
+      "authorization.IdempotencyKey.Digest([]byte) ([32]byte, error)",
+      "authorization.IdempotencyKey.Format(fmt.State, rune)",
+      "authorization.IdempotencyKey.LogValue() slog.Value",
+      "authorization.IdempotencyKey.MarshalJSON() ([]byte, error)",
+      "authorization.IdempotencyKey.MarshalText() ([]byte, error)",
+      "authorization.NewAdminPermissionCheckError(authorization.AdminPermissionCheckErrorKind, time.Duration) (*authorization.AdminPermissionCheckError, error)",
+      "authorization.NewAdminUserRoleSetError(authorization.AdminUserRoleSetErrorKind, time.Duration, authorization.CommandID) (*authorization.AdminUserRoleSetError, error)",
+      "authorization.NewCommandID(string) (authorization.CommandID, error)",
+      "authorization.NewDecisionService(authorization.Authorizer) (authorization.Service, error)",
+      "authorization.NewIdempotencyKey([]byte) (authorization.IdempotencyKey, error)",
+      "authorization.NewPermissionID(string) (authorization.PermissionID, error)",
+      "authorization.NewRole(authorization.RoleID, string, []authorization.StatementID, uint64) (authorization.Role, error)",
+      "authorization.NewRoleID(string) (authorization.RoleID, error)",
+      "authorization.NewStatementID(string) (authorization.StatementID, error)",
+      "authorization.PermissionStatement.Clone() authorization.PermissionStatement",
+      "authorization.PermissionStatement.Validate() error",
+      "authorization.Request.Validate() error",
+      "authorization.Role.Clone() authorization.Role",
+      "authorization.Role.Replace(uint64, string, []authorization.StatementID, uint64) (authorization.Role, error)",
+      "authorization.Role.Validate() error",
+      "authorization.RoleDisposition.Validate(uint32, authorization.RoleID) error",
+      "authorization.SubjectProjection.Clone() authorization.SubjectProjection",
+      "authorization.SubjectProjection.Validate() error",
+      "authorization.VersionedPermissionStatement.Clone() authorization.VersionedPermissionStatement",
+      "authorization.VersionedPermissionStatement.Replace(uint64, authorization.PermissionStatement, uint64) (authorization.VersionedPermissionStatement, error)",
+      "authorization.VersionedPermissionStatement.Validate() error"
+    ],
+    "owner": "authorization",
+    "package_path": "github.com/faustbrian/golib/pkg/authorization",
+    "required_contract_sha256": "sha256:33f0787b321be7f21ced591008930a457b86e84c3dc6fd6f99c2e3678cb3d0ba",
+    "types": [
+      {
+        "declaration": "enum{authorization.AssignmentDispositionUnspecified,authorization.AssignmentDispositionReject,authorization.AssignmentDispositionRemove,authorization.AssignmentDispositionReassign}",
+        "name": "authorization.AssignmentDisposition",
+        "semantics": "Unspecified is invalid; Remove deletes every affected assignment and Reassign requires one explicit replacement role, with at most 10000 affected assignments."
+      },
+      {
+        "declaration": "struct{AssignmentCount uint32; SubjectCount uint32; Truncated bool}",
+        "name": "authorization.AssignmentImpact",
+        "semantics": "Counts are bounded to 10000 and describe the exact pre-mutation impact; Truncated is forbidden for an authorized mutation decision."
+      },
+      {
+        "declaration": "struct{Attribute authorization.AttributeName; Operator authorization.ConditionOperator; Value authorization.Value}",
+        "name": "authorization.Condition",
+        "semantics": "Attribute and Operator are required; Value uses the existing bounded closed authorization value union, and evaluation never performs implicit string conversion."
+      },
+      {
+        "declaration": "enum{authorization.ConditionOperatorUnspecified,authorization.ConditionOperatorEqual,authorization.ConditionOperatorNotEqual,authorization.ConditionOperatorContains,authorization.ConditionOperatorLess,authorization.ConditionOperatorGreater}",
+        "name": "authorization.ConditionOperator",
+        "semantics": "Unspecified is invalid and operands must have the exact compatible authorization.Value kind."
+      },
+      {
+        "declaration": "struct{Subject authorization.Subject; Action authorization.Action; Resource authorization.Resource; Tenant authorization.TenantID; Environment authorization.Environment; Attributes authorization.Attributes}",
+        "name": "authorization.Request",
+        "semantics": "Subject kind and ID, action, and resource type are mandatory; an empty tenant is explicitly global and never implies authorization."
+      },
+      {
+        "declaration": "struct{Request authorization.Request; CorrelationID string; PolicyRevision authorization.Revision}",
+        "name": "authorization.DecisionContext",
+        "semantics": "Request is fully validated, CorrelationID is optional and bounded to 128 UTF-8 bytes, and a positive PolicyRevision binds the decision to one immutable policy snapshot."
+      },
+      {
+        "declaration": "struct{Outcome authorization.Outcome; Reason authorization.ReasonCode; MatchedPolicyIDs []authorization.PolicyID; MatchedPolicyIDsTruncated bool; Revision authorization.Revision; Trace []authorization.TraceEntry; TraceTruncated bool}",
+        "name": "authorization.Decision",
+        "semantics": "Outcome is exactly NotApplicable, Allow, or Deny; the decision records the policy revision and bounded/truncation-aware evidence without request attribute values."
+      },
+      {
+        "declaration": "defined string; 1..128 canonical ASCII characters",
+        "name": "authorization.PermissionID",
+        "semantics": "Stable permission identity; empty is invalid, comparison is bytewise, and no prefix or wildcard grants authority."
+      },
+      {
+        "declaration": "struct{PermissionID authorization.PermissionID; ResourceType authorization.ResourceType; ResourceID authorization.ResourceID; Action authorization.Action; Conditions []authorization.Condition}",
+        "name": "authorization.PermissionStatement",
+        "semantics": "PermissionID, ResourceType and Action are required; ResourceID may select the whole type; Conditions is canonically ordered, duplicate-free and limited to 64 entries."
+      },
+      {
+        "declaration": "enum{authorization.RoleDispositionUnspecified,authorization.RoleDispositionReject,authorization.RoleDispositionDetach,authorization.RoleDispositionReplace}",
+        "name": "authorization.RoleDisposition",
+        "semantics": "Unspecified is invalid; Detach removes at most 256 roles and Replace requires one explicit replacement role and preserves no hidden permissions."
+      },
+      {
+        "declaration": "struct{RoleID authorization.RoleID; Name string; StatementIDs []authorization.StatementID; Version uint64}",
+        "name": "authorization.Role",
+        "semantics": "RoleID is immutable, Name is 1..128 valid NFC UTF-8 bytes without leading/trailing whitespace or control characters, StatementIDs is bytewise sorted, duplicate-free, defensively copied and limited to 256 entries, and Version is positive; authority derives only from the exact current statements, never the role name."
+      },
+      {
+        "declaration": "defined string; exactly 22 canonical base64url characters",
+        "name": "authorization.StatementID",
+        "semantics": "Stable permission-statement identity scoped to the authorization authority; empty is invalid and it conveys no permission by itself."
+      },
+      {
+        "declaration": "struct{Subject authorization.Subject; Roles []string; StatementIDs []authorization.StatementID; Revision authorization.Revision}",
+        "name": "authorization.SubjectProjection",
+        "semantics": "Roles and StatementIDs are bytewise sorted and duplicate-free, bounded to 128 and 256 entries respectively, and Revision is positive; returned slices are defensive copies."
+      },
+      {
+        "declaration": "struct{StatementID authorization.StatementID; Statement authorization.PermissionStatement; Version uint64}",
+        "name": "authorization.VersionedPermissionStatement",
+        "semantics": "Version is positive and fences replacement or deletion; StatementID equals the immutable identity of Statement."
+      },
+      {
+        "declaration": "struct{Actor authorization.Subject; Context authorization.DecisionContext}",
+        "name": "authorization.AdminPermissionCheckRequest",
+        "semantics": "Actor is the requesting administrator supplied by trusted composition; Context.Request is the independently evaluated subject/resource/action and exact policy revision. Both subjects are complete; authentication grants no authority."
+      },
+      {
+        "declaration": "struct{Decision authorization.Decision}",
+        "name": "authorization.AdminPermissionCheckResult",
+        "semantics": "Decision is explicit allow or deny with policy identity and version; role-name inference is forbidden."
+      },
+      {
+        "declaration": "opaque struct with unexported kind and retryAfter; *AdminPermissionCheckError implements error",
+        "name": "authorization.AdminPermissionCheckError",
+        "semantics": "Exactly seven operation-specific tags. Zero and unknown tags are invalid; RetryAfter is 1 second..1 hour only for rate limiting and zero otherwise. No conflict or commit outcome; errors are redacted."
+      },
+      {
+        "declaration": "struct{Actor authorization.Subject; Target authorization.Subject; RoleIDs []authorization.RoleID; PermissionIDs []authorization.StatementID; ExpectedVersion uint64; IdempotencyKey authorization.IdempotencyKey}",
+        "name": "authorization.AdminUserRoleSetRequest",
+        "semantics": "Actor is the requesting administrator; Target is the exact complete user subject. Ordered duplicate-free roles/statements have maxima 128/256 and may be empty to clear assignments. Positive expected version and exact opaque key bind retries to all request fields; scope, atomic persistence and reconciliation belong to the consuming authority."
+      },
+      {
+        "declaration": "struct{Decision authorization.Decision; Projection authorization.SubjectProjection; AuthorityVersion uint64}",
+        "name": "authorization.AdminUserRoleSetResult",
+        "semantics": "Deny carries no projection or authority version. Allow carries the exact target's valid complete projection with revision equal to committed AuthorityVersion, strictly greater than the requested expected version; validation does not certify durable atomicity."
+      },
+      {
+        "declaration": "opaque struct with unexported kind, retryAfter and commandID; *AdminUserRoleSetError implements error",
+        "name": "authorization.AdminUserRoleSetError",
+        "semantics": "Exactly nine operation-specific tags. Zero, unknown tags and extraneous payloads are invalid; only rate limiting carries 1 second..1 hour delay and only unknown commit carries a canonical nonzero CommandID. Unknown outcome requires reconciliation, never a new mutation attempt."
+      },
+      {
+        "declaration": "defined string; 1..128 canonical ASCII characters",
+        "name": "authorization.RoleID",
+        "semantics": "Same exact bounded ASCII grammar as PermissionID; zero invalid, identity confers no permission."
+      },
+      {
+        "declaration": "defined string; exactly 22 canonical unpadded base64url characters encoding 16 bytes",
+        "name": "authorization.CommandID",
+        "semantics": "Stable administrative attempt identity; zero and noncanonical trailing bits are invalid."
+      },
+      {
+        "declaration": "opaque struct with unexported raw string",
+        "name": "authorization.IdempotencyKey",
+        "semantics": "Copies exactly 1..256 input bytes into immutable storage. Zero invalid. Formatting and slog redact; JSON/text serialization reject. Retain only keyed digests and discard transient raw references; no physical erasure guarantee. Digest and BindingDigest require a 32..64 byte authority key; BindingDigest binds all request fields and the authority owns tenant/key scope."
+      },
+      {
+        "declaration": "enum{authorization.AdminPermissionCheckInvalidInput,authorization.AdminPermissionCheckUnauthenticated,authorization.AdminPermissionCheckForbidden,authorization.AdminPermissionCheckRateLimited,authorization.AdminPermissionCheckUnavailable,authorization.AdminPermissionCheckCancelled,authorization.AdminPermissionCheckDeadlineExceeded}",
+        "name": "authorization.AdminPermissionCheckErrorKind",
+        "semantics": "Defined uint8; tags start at 1. Zero and unknown tags are invalid."
+      },
+      {
+        "declaration": "enum{authorization.AdminUserRoleSetInvalidInput,authorization.AdminUserRoleSetUnauthenticated,authorization.AdminUserRoleSetForbidden,authorization.AdminUserRoleSetConflict,authorization.AdminUserRoleSetRateLimited,authorization.AdminUserRoleSetUnavailable,authorization.AdminUserRoleSetCancelled,authorization.AdminUserRoleSetDeadlineExceeded,authorization.AdminUserRoleSetUnknownCommit}",
+        "name": "authorization.AdminUserRoleSetErrorKind",
+        "semantics": "Defined uint8; tags start at 1. Zero and unknown tags are invalid."
+      }
+    ]
+  },
+  "selected-applicability": {
+    "schema_version": 1,
+    "authority": "REFERENCE_CONFIGURATION.md#struct:ref.verification.applicability",
+    "selectors": [
+      "race",
+      "fuzz",
+      "hostile",
+      "leak",
+      "benchmark",
+      "infrastructure",
+      "provider_interoperability"
+    ],
+    "units": [
+      {
+        "unit": "primitive/authentication-identity-contracts",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/authentication-identity-contracts owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/authentication-identity-contracts owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/authentication-identity-contracts owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/authentication-identity-contracts owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "primitive/authorization-identity-contracts",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/authorization-identity-contracts owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/authorization-identity-contracts owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/authorization-identity-contracts owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/authorization-identity-contracts owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "primitive/capability-identity-contracts",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/capability-identity-contracts owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/capability-identity-contracts owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "primitive/capability-postgres-identity-contracts",
+        "selectors": {
+          "race": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/capability-postgres-identity-contracts is a prerequisite contract extension; executable verification belongs to the canonical package gate"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/capability-postgres-identity-contracts is a prerequisite contract extension; executable verification belongs to the canonical package gate"
+          },
+          "hostile": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/capability-postgres-identity-contracts is a prerequisite contract extension; executable verification belongs to the canonical package gate"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/capability-postgres-identity-contracts is a prerequisite contract extension; executable verification belongs to the canonical package gate"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/capability-postgres-identity-contracts is a prerequisite contract extension; executable verification belongs to the canonical package gate"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/capability-postgres-identity-contracts is a prerequisite contract extension; executable verification belongs to the canonical package gate"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/capability-postgres-identity-contracts is a prerequisite contract extension; executable verification belongs to the canonical package gate"
+          }
+        }
+      },
+      {
+        "unit": "primitive/identifier-identity-contracts",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/identifier-identity-contracts owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/identifier-identity-contracts owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/identifier-identity-contracts owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/identifier-identity-contracts owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "primitive/password-secret-contracts",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/password-secret-contracts owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/password-secret-contracts owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "primitive/password-secret-contracts owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/postgres owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/postgres owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/session",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/session owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/session owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/session owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/session/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/session/postgres owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/session/postgres owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/session/valkey",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/session/valkey owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/session/valkey owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/delivery",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/delivery owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/delivery owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/delivery owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/delivery/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/risk",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/risk/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/risk/postgres owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/risk/postgres owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/risk/valkey",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/risk/valkey owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/risk/valkey owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/risk/captcha",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/risk/captcha owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/risk/captcha/recaptcha",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/risk/captcha/turnstile",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/risk/captcha/turnstile owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/risk/captcha/hcaptcha",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/risk/captcha/hcaptcha owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/risk/captcha/captchafox",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/risk/captcha/captchafox owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/risk/hibp",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/risk/hibp owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/password",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/password/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/password/postgres owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/password/postgres owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/username",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/username owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/username owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/username owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/email",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/magiclink",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/magiclink owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/magiclink owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/magiclink owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/magiclink owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/magiclink owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/otp",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/otp owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/otp owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/otp owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/otp/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/phone",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/phone owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/phone owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/phone owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/anonymous",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/anonymous/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/mfa",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/mfa/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "webauthn",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "webauthn/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "passkey",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "passkey/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/oauth",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/oauth/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/oauth/providers",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/oauth/onetap",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/oauth/proxy",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/apikey",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/apikey owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/apikey owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/apikey owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/apikey owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/apikey/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/apikey/postgres owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/apikey/postgres owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/apikey/valkey",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/apikey/valkey owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/apikey/valkey owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/impersonation",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/impersonation owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/impersonation owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/impersonation owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/impersonation owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/impersonation owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "identity/impersonation/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/impersonation/postgres owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/impersonation/postgres owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "organization",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "organization owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "organization owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "organization owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "organization owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "organization owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "organization/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "organization/postgres owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "organization/postgres owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      },
+      {
+        "unit": "sso",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "sso/domain-verification",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "sso/oidc",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "sso/oidc owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "sso/oidc owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "sso/oauth2",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "sso/oauth2 owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "sso/oauth2 owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "sso/saml",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "not_applicable",
+            "reviewed_reason": "sso/saml owns no benchmark boundary; composed consumers own that evidence"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "sso/saml owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "sso/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "scim",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "scim owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "scim/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "scim/organization",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "oauth-server",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "oauth-server/oidc",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "oauth-server/device",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "oauth-server/postgres",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/i18n",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/i18n owns no leak boundary; composed consumers own that evidence"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/i18n owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/http",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "required"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/reference",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/reference owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "required"
+          },
+          "provider_interoperability": {
+            "status": "required"
+          }
+        }
+      },
+      {
+        "unit": "identity/identitytest",
+        "selectors": {
+          "race": {
+            "status": "required"
+          },
+          "fuzz": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/identitytest owns no fuzz boundary; composed consumers own that evidence"
+          },
+          "hostile": {
+            "status": "required"
+          },
+          "leak": {
+            "status": "required"
+          },
+          "benchmark": {
+            "status": "required"
+          },
+          "infrastructure": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/identitytest owns no infrastructure boundary; composed consumers own that evidence"
+          },
+          "provider_interoperability": {
+            "status": "not_applicable",
+            "reviewed_reason": "identity/identitytest owns no provider interoperability boundary; composed consumers own that evidence"
+          }
+        }
+      }
+    ]
+  },
+  "host": {
+    "os": "ProductName:\t\tmacOS\nProductVersion:\t\t27.0\nBuildVersion:\t\t26A428\n",
+    "gomaxprocs": "2"
+  },
+  "native-tool": {
+    "argv": [
+      "/private/tmp/identity-authorization-coordinator-gate.6eAPg1/bin/golib",
+      "check",
+      "--module",
+      "."
+    ],
+    "path": "/private/tmp/identity-authorization-coordinator-gate.6eAPg1/bin/golib",
+    "sha256": "1a4422d7b1fe0a5a09af982ce944087ce769f5cb78c066a9d7b539dd17ddf540",
+    "build_info": "/private/tmp/identity-authorization-coordinator-gate.6eAPg1/bin/golib: go1.27.0\n\tpath\tgithub.com/faustbrian/go-library-tools/cmd/golib\n\tmod\tgithub.com/faustbrian/go-library-tools\t(devel)\t\n\tdep\tgithub.com/santhosh-tekuri/jsonschema/v6\tv6.0.3\th1:1EYB5IzjZawrrnELUi78f9fPu57HuXjmddZPjrls/28=\n\tdep\tgithub.com/yuin/goldmark\tv1.8.5\th1:r6N5afV5qj/5S4UTch8agZHJ8UxNCMwX7WjkkJam2NA=\n\tdep\tgo.yaml.in/yaml/v3\tv3.0.4\th1:tfq32ie2Jv2UxXFdLJdh3jXuOzWiL1fo0bu/FbuKpbc=\n\tdep\tgolang.org/x/mod\tv0.40.0\th1:hUv+3cXcdRHz08UmSiOob7sadHig73uo5bkXxQ/tvUs=\n\tdep\tgolang.org/x/text\tv0.14.0\th1:ScX5w1eTa3QqT8oi6+ziP7dTV1S2+ALU0bI+0zXKWiQ=\n\tbuild\t-buildmode=exe\n\tbuild\t-compiler=gc\n\tbuild\t-trimpath=true\n\tbuild\tCGO_ENABLED=0\n\tbuild\tGOARCH=arm64\n\tbuild\tGOOS=darwin\n\tbuild\tGOARM64=v8.0\n",
+    "official_release": "https://github.com/faustbrian/go-library-tools/releases/tag/v1.4.0",
+    "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33",
+    "archive_sha256": "fa4af274bbfdf0dd8327770504ef88f0740e93dd825b50967ab0b17bc20d655d"
+  }
+}

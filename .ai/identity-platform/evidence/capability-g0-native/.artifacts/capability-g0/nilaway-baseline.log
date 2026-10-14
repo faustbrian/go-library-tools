@@ -1,0 +1,257 @@
+go: downloading go.uber.org/nilaway v0.0.0-20260720194628-9fd1b8d7bac8
+go: downloading golang.org/x/tools v0.45.0
+go: downloading golang.org/x/exp/typeparams v0.0.0-20260611194520-c48552f49976
+go: downloading github.com/klauspost/compress v1.18.6
+go: downloading golang.org/x/sync v0.20.0
+go: downloading golang.org/x/mod v0.36.0
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/url.go:87:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/url.go:87:2: result 0 of `Parse()` lacking guarding; accessed field `RawQuery` via the assignment(s):
+		- `url.Parse(...)` to `u` at capability-g0-nilaway-baseline.kEuSDH/url.go:84:2
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/url.go:309:49: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/edge_internal_test.go:183:35: result 0 of `Parse()` lacking guarding; passed as arg `u` to `canonicalAuthority()` via the assignment(s):
+		- `url.Parse(raw)` to `u` at capability-g0-nilaway-baseline.kEuSDH/edge_internal_test.go:182:3
+	- capability-g0-nilaway-baseline.kEuSDH/url.go:309:49: function parameter `u` accessed field `Scheme`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/url.go:309:49: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/edge_internal_test.go:189:43: result 0 of `Parse()` lacking guarding; passed as arg `u` to `canonicalAuthority()` via the assignment(s):
+		- `url.Parse(raw)` to `u` at capability-g0-nilaway-baseline.kEuSDH/edge_internal_test.go:188:3
+	- capability-g0-nilaway-baseline.kEuSDH/url.go:309:49: function parameter `u` accessed field `Scheme`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/url.go:309:49: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/mutation_boundary_internal_test.go:222:37: result 0 of `Parse()` lacking guarding; passed as arg `u` to `canonicalAuthority()` via the assignment(s):
+		- `url.Parse(...)` to `u` at capability-g0-nilaway-baseline.kEuSDH/mutation_boundary_internal_test.go:221:3
+	- capability-g0-nilaway-baseline.kEuSDH/url.go:309:49: function parameter `u` accessed field `Scheme`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/url.go:326:13: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/edge_internal_test.go:195:30: result 0 of `Parse()` lacking guarding; passed as arg `u` to `canonicalPath()` via the assignment(s):
+		- `url.Parse(raw)` to `u` at capability-g0-nilaway-baseline.kEuSDH/edge_internal_test.go:194:3
+	- capability-g0-nilaway-baseline.kEuSDH/url.go:326:13: function parameter `u` accessed field `Path`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/url.go:326:13: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/mutation_boundary_internal_test.go:228:30: result 0 of `Parse()` lacking guarding; passed as arg `u` to `canonicalPath()` via the assignment(s):
+		- `url.Parse(...)` to `u` at capability-g0-nilaway-baseline.kEuSDH/mutation_boundary_internal_test.go:227:3
+	- capability-g0-nilaway-baseline.kEuSDH/url.go:326:13: function parameter `u` accessed field `Path`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:35:18: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:35:18: result 0 of `NewHMACSHA256Signer()` lacking guarding; called `Sign()` via the assignment(s):
+		- `capability.NewHMACSHA256Signer(...)` to `signer` at capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:33:2
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:39:12: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:39:12: result 0 of `NewHMACSHA256Verifier()` lacking guarding; called `Verify()` via the assignment(s):
+		- `capability.NewHMACSHA256Verifier(key)` to `verifier` at capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:34:2
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:50:15: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:50:15: result 0 of `NewHMACSHA256Signer()` lacking guarding; called `Sign()` via the assignment(s):
+		- `capability.NewHMACSHA256Signer(...)` to `hmacSigner` at capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:48:2
+
+(Same nil source could also cause potential nil panic(s) at 1 other place(s): "capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:66:15".)
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:53:12: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:53:12: result 0 of `NewHMACSHA256Verifier()` lacking guarding; called `Verify()` via the assignment(s):
+		- `capability.NewHMACSHA256Verifier(key)` to `hmacVerifier` at capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:49:2
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:59:15: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:59:15: result 0 of `NewEd25519Signer()` lacking guarding; called `Sign()` via the assignment(s):
+		- `capability.NewEd25519Signer(...)` to `edSigner` at capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:57:2
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:62:12: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:62:12: result 0 of `NewEd25519Verifier()` lacking guarding; called `Verify()` via the assignment(s):
+		- `capability.NewEd25519Verifier(...)` to `edVerifier` at capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:58:2
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:309:12: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:309:12: result 0 of `NewEd25519Verifier()` lacking guarding; called `Verify()` via the assignment(s):
+		- `capability.NewEd25519Verifier(...)` to `verifier` at capability-g0-nilaway-baseline.kEuSDH/boundary_test.go:308:2
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:69:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/benchmark_test.go:81:10: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at capability-g0-nilaway-baseline.kEuSDH/benchmark_test.go:77:2
+	- memory/consumption.go:69:2: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:69:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/replay_test.go:87:17: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `capmemory.NewConsumptionStore(...)` to `store` at capability-g0-nilaway-baseline.kEuSDH/replay_test.go:74:2
+	- memory/consumption.go:69:2: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:69:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/replay_test.go:81:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `capmemory.NewConsumptionStore(...)` to `store` at capability-g0-nilaway-baseline.kEuSDH/replay_test.go:74:2
+	- memory/consumption.go:69:2: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:69:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/replay_test.go:76:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `capmemory.NewConsumptionStore(...)` to `store` at capability-g0-nilaway-baseline.kEuSDH/replay_test.go:74:2
+	- memory/consumption.go:69:2: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:86:11: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/replay_test.go:91:18: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Cleanup()` via the assignment(s):
+		- `capmemory.NewConsumptionStore(...)` to `store` at capability-g0-nilaway-baseline.kEuSDH/replay_test.go:74:2
+	- memory/consumption.go:86:11: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/resolver.go:50:22: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/resolver_test.go:96:15: result 0 of `NewKeySet()` lacking guarding; used as receiver to call `Resolve()` via the assignment(s):
+		- `capability.NewKeySet(...)` to `set` at capability-g0-nilaway-baseline.kEuSDH/resolver_test.go:93:2
+	- capability-g0-nilaway-baseline.kEuSDH/resolver.go:50:22: read by method receiver `set` accessed field `keys`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/resolver.go:112:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/resolver_test.go:143:15: result 0 of `NewBoundedResolver()` lacking guarding; used as receiver to call `Resolve()` via the assignment(s):
+		- `capability.NewBoundedResolver(...)` to `resolver` at capability-g0-nilaway-baseline.kEuSDH/resolver_test.go:139:2
+	- capability-g0-nilaway-baseline.kEuSDH/resolver.go:112:19: read by method receiver `resolver` accessed field `source`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/resolver.go:112:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/resolver_test.go:133:15: result 0 of `NewBoundedResolver()` lacking guarding; used as receiver to call `Resolve()` via the assignment(s):
+		- `capability.NewBoundedResolver(...)` to `resolver` at capability-g0-nilaway-baseline.kEuSDH/resolver_test.go:129:2
+	- capability-g0-nilaway-baseline.kEuSDH/resolver.go:112:19: read by method receiver `resolver` accessed field `source`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/resolver.go:112:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/resolver_test.go:122:15: result 0 of `NewBoundedResolver()` lacking guarding; used as receiver to call `Resolve()` via the assignment(s):
+		- `capability.NewBoundedResolver(...)` to `resolver` at capability-g0-nilaway-baseline.kEuSDH/resolver_test.go:114:2
+	- capability-g0-nilaway-baseline.kEuSDH/resolver.go:112:19: read by method receiver `resolver` accessed field `source`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/resolver.go:112:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- capability-g0-nilaway-baseline.kEuSDH/resolver_test.go:118:19: result 0 of `NewBoundedResolver()` lacking guarding; used as receiver to call `Resolve()` via the assignment(s):
+		- `capability.NewBoundedResolver(...)` to `resolver` at capability-g0-nilaway-baseline.kEuSDH/resolver_test.go:114:2
+	- capability-g0-nilaway-baseline.kEuSDH/resolver.go:112:19: read by method receiver `resolver` accessed field `source`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/caphttp/http.go:105:5: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- caphttp/http_test.go:231:15: result 0 of `NewVerifier()` lacking guarding; used as receiver to call `VerifyRequest()` via the assignment(s):
+		- `caphttp.NewVerifier(...)` to `verifier` at caphttp/http_test.go:203:2
+	- caphttp/http.go:105:5: read by method receiver `verifier` accessed field `profile`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/caphttp/http.go:105:5: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- caphttp/http_test.go:207:15: result 0 of `NewVerifier()` lacking guarding; used as receiver to call `VerifyRequest()` via the assignment(s):
+		- `caphttp.NewVerifier(...)` to `verifier` at caphttp/http_test.go:203:2
+	- caphttp/http.go:105:5: read by method receiver `verifier` accessed field `profile`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/caphttp/http_test.go:153:5: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- caphttp/http_test.go:153:5: result 0 of `NewRequest()` lacking guarding; accessed field `URL` via the assignment(s):
+		- `http.NewRequest(...)` to `request` at caphttp/http_test.go:148:2
+
+(Same nil source could also cause potential nil panic(s) at 2 other place(s): "caphttp/http_test.go:156:14", and "caphttp/http_test.go:160:5".)
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:69:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:60:17: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:69:2: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:69:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:55:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:69:2: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:69:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:51:17: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:69:2: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:69:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:48:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:69:2: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:69:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:42:16: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:69:2: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:69:2: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:39:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:69:2: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:86:11: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:78:17: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Cleanup()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:86:11: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:86:11: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:74:18: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Cleanup()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:86:11: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:86:11: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:71:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Cleanup()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:86:11: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:86:11: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:68:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Cleanup()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:86:11: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/memory/consumption.go:86:11: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- memory/store_test.go:65:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Cleanup()` via the assignment(s):
+		- `memory.NewConsumptionStore(...)` to `store` at memory/store_test.go:19:2
+	- memory/consumption.go:86:11: read by method receiver `store` accessed field `records`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/postgres/store_test.go:293:22: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- postgres/store_test.go:293:22: result 0 of `begin()` lacking guarding; called `load()` via the assignment(s):
+		- `beginner.begin(...)` to `tx` at postgres/store_test.go:292:2
+
+(Same nil source could also cause potential nil panic(s) at 1 other place(s): "postgres/store_test.go:296:12".)
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/postgres/store_test.go:313:18: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- postgres/store_test.go:313:18: result 0 of `begin()` lacking guarding; called `load()` via the assignment(s):
+		- `beginner.begin(...)` to `tx` at postgres/store_test.go:312:2
+
+(Same nil source could also cause potential nil panic(s) at 1 other place(s): "postgres/store_test.go:316:6".)
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/postgres/store_test.go:322:15: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- postgres/store_test.go:322:15: result 0 of `begin()` lacking guarding; called `insert()` via the assignment(s):
+		- `beginner.begin(...)` to `tx` at postgres/store_test.go:321:2
+
+(Same nil source could also cause potential nil panic(s) at 3 other place(s): "postgres/store_test.go:325:12", "postgres/store_test.go:328:15", and "postgres/store_test.go:331:6".)
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/postgres/store_test.go:335:15: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- postgres/store_test.go:335:15: result 0 of `begin()` lacking guarding; called `insert()` via the assignment(s):
+		- `beginner.begin(...)` to `tx` at postgres/store_test.go:334:2
+
+(Same nil source could also cause potential nil panic(s) at 2 other place(s): "postgres/store_test.go:338:15", and "postgres/store_test.go:341:6".)
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/postgres/store_test.go:345:12: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- postgres/store_test.go:345:12: result 0 of `begin()` lacking guarding; called `Commit()` via the assignment(s):
+		- `beginner.begin(...)` to `tx` at postgres/store_test.go:344:2
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/postgres/store_test.go:472:12: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- postgres/store_test.go:207:29: unassigned variable `nilContext` passed as arg `ctx` to `Consume()`
+	- postgres/store.go:60:43: function parameter `ctx` passed as arg `ctx` to `consumeOnce()`
+	- postgres/store.go:72:34: function parameter `ctx` passed as arg 0 to `begin()`
+	- postgres/store_test.go:471:29: passed as parameter `ctx` to `fakeBackend.begin()` (implementing `beginner.begin()`)
+	- postgres/store_test.go:472:12: function parameter `ctx` called `Err()`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/valkey/store.go:80:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- valkey/store_test.go:70:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `capvalkey.NewConsumptionStore(...)` to `store` at valkey/store_test.go:54:2
+	- valkey/store.go:80:19: read by method receiver `store` accessed field `client`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/valkey/store.go:80:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- valkey/store_test.go:65:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `capvalkey.NewConsumptionStore(...)` to `store` at valkey/store_test.go:54:2
+	- valkey/store.go:80:19: read by method receiver `store` accessed field `client`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/valkey/store.go:80:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- valkey/store_test.go:61:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `capvalkey.NewConsumptionStore(...)` to `store` at valkey/store_test.go:54:2
+	- valkey/store.go:80:19: read by method receiver `store` accessed field `client`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/valkey/store.go:80:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- valkey/store_test.go:56:15: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `capvalkey.NewConsumptionStore(...)` to `store` at valkey/store_test.go:54:2
+	- valkey/store.go:80:19: read by method receiver `store` accessed field `client`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/valkey/store.go:80:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- valkey/store_test.go:134:20: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `capvalkey.NewConsumptionStore(...)` to `store` at valkey/store_test.go:104:2
+	- valkey/store.go:80:19: read by method receiver `store` accessed field `client`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/valkey/store.go:80:19: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- valkey/store_test.go:128:20: result 0 of `NewConsumptionStore()` lacking guarding; used as receiver to call `Consume()` via the assignment(s):
+		- `capvalkey.NewConsumptionStore(...)` to `store` at valkey/store_test.go:104:2
+	- valkey/store.go:80:19: read by method receiver `store` accessed field `client`
+
+/private/tmp/capability-g0-nilaway-baseline.kEuSDH/valkey/store_test.go:184:33: Potential nil panic detected. Observed nil flow from source to dereference point: 
+	- valkey/store_test.go:184:33: read directly from variadic parameter `arguments` sliced into
+
+(Same nil source could also cause potential nil panic(s) at 1 other place(s): "valkey/store_test.go:185:33".)
+
+exit status 3

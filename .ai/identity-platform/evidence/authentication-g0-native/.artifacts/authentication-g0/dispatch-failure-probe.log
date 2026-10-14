@@ -1,0 +1,5 @@
+
+[.] conformance
+go: downloading go1.26.6 (darwin/arm64)
+task-owned deliberate conformance failure
+make: *** [conformance] Error 23

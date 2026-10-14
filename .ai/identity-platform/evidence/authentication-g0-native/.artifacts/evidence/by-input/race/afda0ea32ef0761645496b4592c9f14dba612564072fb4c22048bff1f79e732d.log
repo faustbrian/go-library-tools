@@ -1,0 +1,11 @@
+
+[.] race
+go: downloading go1.26.6 (darwin/arm64)
+ok  	github.com/faustbrian/go-authentication	2.998s
+ok  	github.com/faustbrian/go-authentication/apikey	1.239s
+ok  	github.com/faustbrian/go-authentication/authhttp	1.316s
+ok  	github.com/faustbrian/go-authentication/authlog	1.248s
+ok  	github.com/faustbrian/go-authentication/authtest	1.252s
+ok  	github.com/faustbrian/go-authentication/basic	1.235s
+ok  	github.com/faustbrian/go-authentication/bearer	1.239s
+/Users/brian/Developer/.worktrees/golib-go-authentication-identity-platform-worker-g0/.golib/scripts/check-module.sh: line 517: unexpected EOF while looking for matching `"'

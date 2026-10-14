@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "authority": "BETTER_AUTH_PARITY.md",
+  "digest_algorithm": "sha256",
+  "digest_input": "sha256 of RFC 8785-style canonical row JSON excluding semantic_digest, LF, then exact authoritative artifact bytes selected by source_anchor or artifact",
+  "dispositions": [
+    {
+      "id": "exclusion.billing.v1",
+      "kind": "excluded",
+      "owner": "identity/reference",
+      "artifact": "BETTER_AUTH_PARITY.md#explicit-baseline-dispositions-outside-the-selected-backend-capability-set",
+      "semantic_digest": "6fb32f6596035c64a38acb9cfa03781ccc317e850ab9f0f2c34eb64d7b58151c"
+    },
+    {
+      "id": "exclusion.siwe.v1",
+      "kind": "excluded",
+      "owner": "identity/reference",
+      "artifact": "UPSTREAM_DISPOSITIONS.md",
+      "semantic_digest": "770397ac7f55ecafcd09418a75895b3c9ae27901cd92fd62b87765337a85b2ad"
+    },
+    {
+      "id": "exclusion.mcp-authentication.v1",
+      "kind": "excluded",
+      "owner": "oauth-server",
+      "artifact": "UPSTREAM_DISPOSITIONS.md",
+      "semantic_digest": "bc4f137166172252ae1d5fa054dac94ad4b2aa33b6a2a506576c5aeb8dc2d691"
+    },
+    {
+      "id": "exclusion.agent-authentication.v1",
+      "kind": "excluded",
+      "owner": "oauth-server",
+      "artifact": "UPSTREAM_DISPOSITIONS.md",
+      "semantic_digest": "bcd38be2fc8c2816e1ec62f96a4351f6114f3518ad9954ed2eaffe2b85c70fbe"
+    },
+    {
+      "id": "divergence.additional-databases.v1",
+      "kind": "deployment-profile",
+      "owner": "identity/reference",
+      "artifact": "CONFIGURATION_CATALOGS.json",
+      "semantic_digest": "3ef1612ae832395c812533b77ffbfd7fc78592d83b14d8d9cd3a36799cdc866f"
+    },
+    {
+      "id": "divergence.javascript-tooling.v1",
+      "kind": "non-capability-tooling",
+      "owner": "identity/reference",
+      "artifact": "BETTER_AUTH_PARITY.md",
+      "semantic_digest": "7e918d10442b04374804dbb08918bf18668570b1d66fec84d35d16580be23466"
+    },
+    {
+      "id": "divergence.community-plugin-catalog.v1",
+      "kind": "non-capability-catalog",
+      "owner": "identity/http",
+      "artifact": "BETTER_AUTH_PARITY.md",
+      "semantic_digest": "8823b737ee300ea787cc92bde98fe95ba7d0124c061794fb3593e8f52c5c4c87"
+    },
+    {
+      "id": "divergence.personal-scim.v1",
+      "kind": "deployment-profile",
+      "owner": "scim/organization",
+      "artifact": "API_OPERATIONS.md",
+      "semantic_digest": "c67d155db23a0658fc5eaf757a013f5bba62690cd47543bc2433822c77e9cb72"
+    },
+    {
+      "id": "divergence.provider-token-cookies.v1",
+      "kind": "security",
+      "owner": "identity/oauth/postgres",
+      "artifact": "CONFIGURATION_CATALOGS.json",
+      "semantic_digest": "7385c5df1c9a64519281135017b85ff584e90a746074398e8bef6bacbd866dbf"
+    },
+    {
+      "id": "divergence.backup-code-review.v1",
+      "kind": "superseded",
+      "owner": "identity/mfa",
+      "artifact": "BETTER_AUTH_PARITY.md",
+      "semantic_digest": "74c9369f2c953b3c6eb631e8300f164cd40f61a8863537a1317bdfffd355e050"
+    },
+    {
+      "id": "exclusion.lead-tracking-analytics.v1",
+      "kind": "excluded",
+      "owner": "identity/reference",
+      "artifact": "BETTER_AUTH_PARITY.md",
+      "semantic_digest": "3e5c10b289c4ef56eb0f08be2836bb55d723016b3f9d4295f87884395f61d2d1"
+    },
+    {
+      "id": "exclusion.javascript-framework-clients.v1",
+      "kind": "excluded",
+      "owner": "identity/http",
+      "artifact": "BETTER_AUTH_PARITY.md",
+      "semantic_digest": "d078729a94cf55a396ae2da71eb3d92cd8d8e6093e64993a3b800855684f178f"
+    }
+  ],
+  "ownership_reclassifications": [
+    {
+      "id": "reclassification.remote-signing.v1",
+      "classification": "typed_adapter",
+      "owner": "oauth-server/oidc",
+      "interface": "oauth-server/oidc.Signer",
+      "artifact": "CONFIGURATION_CATALOGS.json",
+      "semantic_digest": "fccf46319c16bb145c52a960a5eb69ed2bce508c68df02a32685ceea4413feb4"
+    },
+    {
+      "id": "reclassification.hosted-jwks.v1",
+      "classification": "typed_adapter",
+      "owner": "authentication/jwt",
+      "interface": "authentication/jwt.KeySource",
+      "artifact": "CONFIGURATION_CATALOGS.json",
+      "semantic_digest": "e96e1177d501d08dce8ce56078348672da9257f4e201d1eb8f187dbba26b0b4f"
+    }
+  ],
+  "provider_native_token_modes": {
+    "artifact": "CONFIGURATION_CATALOGS.json#native_token_modes",
+    "closed_default": []
+  },
+  "captcha_owners": {
+    "artifact": "CONFIGURATION_CATALOGS.json#captcha.owners",
+    "required_count": 4
+  }
+}
