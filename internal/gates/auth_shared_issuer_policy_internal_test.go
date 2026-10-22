@@ -39,7 +39,7 @@ func TestAuthenticationSharedIssuerPolicyRequiresExactTuple(t *testing.T) {
 			t.Run(test.name, func(t *testing.T) {
 				allowed := false
 				for _, block := range strings.Split(gitleaksPolicy, "[[allowlists]]") {
-					if !strings.Contains(block, `description = "Exact public Authentication shared-issuer`) {
+					if !strings.Contains(block, `description = "Exact synthetic shared-issuer`) {
 						continue
 					}
 					if !strings.Contains(block, `condition = "AND"`) || !strings.Contains(block, `targetRules = ["jwt"]`) || !strings.Contains(block, `regexTarget = "line"`) {
