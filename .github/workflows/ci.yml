@@ -340,7 +340,7 @@ jobs:
           mkdir -p "${task}/cache" "${task}/mod" "${task}/tmp"
           export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod"
           export GOTMPDIR="${task}/tmp" TMPDIR="${task}/tmp"
-          test "$(go env GOVERSION)" = go1.27.2
+          test "$(go env GOVERSION)" = go1.27.3
           go test -p=1 ./internal/gates \
             -run '^(TestChangedSecretsPinnedScannerRetainsFindings|TestEthereumTrieFixturePolicyHosted|TestJSONAPIDecisionDigestPolicyHosted|TestOpenAPIDecisionDigestPolicyIntegration|TestIdentityEvidencePolicyPinnedScanner|TestGitHubPublicExamplesPolicyIntegration|TestPublicPasswordAndGitHubMetadataPinnedScanner|TestPublicPolicySourceHistoryPinnedScanner|TestEmbeddedGitleaksPolicyPinnedScanner)$' -count=1 -timeout=15m
 
