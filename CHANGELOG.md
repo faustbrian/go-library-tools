@@ -11,6 +11,12 @@ All notable changes to this project are documented in this file.
   in a separate architecture track requiring its own compatibility and
   maintenance commitment before adapter support.
 
+## 2.5.2 - 2026-10-22
+
+### Changed
+
+- Publish the current source and documentation with a fresh immutable tag.
+
 ## 2.5.1 - 2026-10-14
 
 ### Fixed
