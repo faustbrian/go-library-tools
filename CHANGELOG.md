@@ -13,6 +13,12 @@ All notable changes to this project are documented in this file.
 
 ## 2.5.2 - 2026-10-22
 
+### Fixed
+
+- Admit only exact public synthetic Authentication JWT verification-vector
+  lines in the central secret policy; changed tokens, other paths and
+  unrelated credential detectors remain findings.
+
 ### Changed
 
 - Publish the current source and documentation with a fresh immutable tag.
