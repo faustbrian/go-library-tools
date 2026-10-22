@@ -219,7 +219,7 @@ func testCompatibilityConsumerCancellation(t *testing.T, admission bool) {
 import os,pathlib,signal,sys,time
 root=pathlib.Path(os.environ['PROBE_ROOT'])
 arguments=sys.argv[1:]
-if arguments==['env','GOVERSION']: print('go1.27.2')
+if arguments==['env','GOVERSION']: print('go1.27.3')
 elif arguments==['env','GOOS']: print('linux')
 elif arguments==['env','GOARCH']: print('amd64')
 elif arguments==['mod','edit','-json']: print('{"Replace":null}')
@@ -342,7 +342,7 @@ func TestCompatibilityConsumerStagesOnlySelectedSourcesAndPropagatesFailure(t *t
 			writeExecutable(t, filepath.Join(root, "bin", "go"), `#!/usr/bin/env bash
 set -euo pipefail
 case "$*" in
-  'env GOVERSION') echo go1.27.2 ;;
+  'env GOVERSION') echo go1.27.3 ;;
   'env GOOS') echo linux ;;
   'env GOARCH') echo amd64 ;;
   'mod edit -json') echo '{"Replace":null}' ;;

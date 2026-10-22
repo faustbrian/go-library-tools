@@ -76,7 +76,7 @@ export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp"
 export GOENV=off GOTOOLCHAIN=local GOWORK=off GOMAXPROCS=2 GOFLAGS=-p=1
 export GOPROXY=https://proxy.golang.org GOSUMDB=sum.golang.org
 export GOPRIVATE='' GONOPROXY='' GONOSUMDB=''
-test "$(go env GOVERSION)" = go1.27.2
+test "$(go env GOVERSION)" = go1.27.3
 test "$(go env GOOS)/$(go env GOARCH)" = "${EXPECTED_GOOS}/${EXPECTED_GOARCH}"
 go mod edit -json | python3 -c 'import json,sys; assert not json.load(sys.stdin).get("Replace"), "public consumer forbids replacements"'
 # Authenticate public resolution; tidy prunes unused requirements in this disposable module.
