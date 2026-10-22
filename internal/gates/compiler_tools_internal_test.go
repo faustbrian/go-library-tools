@@ -65,7 +65,7 @@ func TestCompilerToolBuildUnderOlderConsumerGo(t *testing.T) {
 	}
 	err = runner.withCompilerTool(t.Context(), tool, func(binary string) error {
 		info, err := buildinfo.ReadFile(binary)
-		if err != nil || info.GoVersion != "go1.27.2" {
+		if err != nil || info.GoVersion != "go1.27.3" {
 			t.Fatal("isolated analyzer was not built with the patched tooling compiler")
 		}
 		if os.Getenv("GOTOOLCHAIN") != "local" {
@@ -77,7 +77,7 @@ func TestCompilerToolBuildUnderOlderConsumerGo(t *testing.T) {
 		t.Fatalf("build and analyze under older consumer compiler: %v", err)
 	}
 	selections, err := os.ReadFile(capture)
-	if err != nil || !strings.HasPrefix(string(selections), "go1.27.2\n") || !strings.Contains(string(selections), "\nlocal\n") {
+	if err != nil || !strings.HasPrefix(string(selections), "go1.27.3\n") || !strings.Contains(string(selections), "\nlocal\n") {
 		t.Fatal("build and consumer loading did not use their distinct compiler selections")
 	}
 	if data, err := os.ReadFile(filepath.Join(root, "go.mod")); err != nil || string(data) != manifest {
@@ -249,7 +249,7 @@ func TestCompilerToolsPreserveIsolationFailureAndPrivacy(t *testing.T) {
 					if command.Name != "go" || command.Dir == target || !strings.HasPrefix(command.Dir, task+string(filepath.Separator)) || command.Env["GOWORK"] != "off" || command.Env["GOFLAGS"] != "" || !command.boundedScanner {
 						t.Fatal("tool construction lost isolation or bounded output")
 					}
-					if command.Env["GOTOOLCHAIN"] != "go1.27.2" {
+					if command.Env["GOTOOLCHAIN"] != "go1.27.3" {
 						t.Fatal("tool build inherited the consumer compiler instead of the patched tooling compiler")
 					}
 					manifest, err := os.ReadFile(filepath.Join(command.Dir, "go.mod"))

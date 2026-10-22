@@ -412,7 +412,7 @@ fine-grained `GOLIB_ROLLOUT_TOKEN`; the repository-scoped workflow token cannot
 write to sibling repositories. The workflow changes only `.golib.yaml` and the
 thin CI caller and never force-pushes an existing rollout branch.
 
-Own tooling builds and CI select Go 1.27.2 from `.go-version`; the module
+Own tooling builds and CI select Go 1.27.3 from `.go-version`; the module
 language floor remains Go 1.27.0. Producer-Go or shared consumer-input changes
 select the existing native compatibility-consumer matrix without republishing
 the historical Go 1.27.0 compatibility cohort or relabeling its observations.

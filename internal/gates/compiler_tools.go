@@ -73,7 +73,7 @@ func (runner Runner) withCompilerTool(ctx context.Context, tool compilerTool, an
 	err = runner.Executor.Run(ctx, Command{
 		cacheClass: verifierCache,
 		Name:       "go", Args: []string{"build", "-mod=mod", "-o", binary, tool.command},
-		Dir: root, Env: map[string]string{"GOWORK": "off", "GOFLAGS": "", "GOTOOLCHAIN": "go1.27.2"},
+		Dir: root, Env: map[string]string{"GOWORK": "off", "GOFLAGS": "", "GOTOOLCHAIN": "go1.27.3"},
 		boundedScanner: true, Stdout: stdout, Stderr: stderr,
 	})
 	var overflow error
