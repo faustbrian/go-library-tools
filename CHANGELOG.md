@@ -15,6 +15,8 @@ All notable changes to this project are documented in this file.
 
 ### Fixed
 
+- Bind binary runtime attribution to the verified Go 1.27.3 license and
+  patent files while retaining exact runtime and source-digest admission.
 - Admit only exact public synthetic Authentication JWT verification-vector
   lines in the central secret policy; changed tokens, other paths and
   unrelated credential detectors remain findings.
