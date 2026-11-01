@@ -94,6 +94,19 @@ Historical `runner.go` source allowances remain because moving current data
 does not erase old Git source. Installed verifiers still carry compiled policy:
 data updates require a qualified Tools binary release, not a consumer override
 or automatic fleet migration.
+Identity source exceptions require `generic-api-key`, the exact owning path
+and enumerated public content: a cursor fixture ID, deterministic delivery
+retry inputs, operation/event identifiers, or complete prose lines. The six
+historical `http/catalog.json` API digests are exact match-target exceptions,
+not whole-line exceptions: unrelated credentials on the same catalog line
+remain scanned. Identity's historical
+[`scripts/generate-http-catalog.rb`](https://github.com/faustbrian/go-identity/blob/dfb0e2cb2efc284865d8269506a602d465f36e16/scripts/generate-http-catalog.rb#L36)
+assigns these metadata fields from `Digest::SHA256.file(api).hexdigest`;
+the unavailable historical API preimages were not regenerated. The source
+regression covers both history and current-tree scans, changed values,
+same-line credentials and identical content at different paths. Owner:
+library maintainer; review when these source facts or pinned scanner framing
+changes. No detector, path or commit is excluded wholesale.
 The historical public-tool-identity exception for root `Makefile` and exact
 `.golib/package.mk` is restricted to `generic-api-key` findings on complete
 `APIDIFF_VERSION` assignments using `:=` or `?=` with the public version form

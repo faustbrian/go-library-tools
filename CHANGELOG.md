@@ -4,6 +4,15 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.5.3 - 2026-11-01
+
+### Fixed
+
+- Admit exact nonsecret Identity source fixtures, prose, operation identifiers
+  and historical API catalog digest matches in the central secret policy.
+  Changed values, other paths and credentials beside catalog digests remain
+  findings in history and current-tree scans.
+
 ### Changed
 
 - Clarify the ecosystem HTTP recommendation around the supported `net/http`
