@@ -161,7 +161,7 @@ jobs:
             "${RUNNER_TEMP}/legacy-release.status" \
             "${RUNNER_TEMP}/legacy-services.status" \
             "${RUNNER_TEMP}/legacy-summary"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: parity-legacy-${{ matrix.name }}
@@ -306,7 +306,7 @@ jobs:
             "${RUNNER_TEMP}/shared-release.status" \
             "${RUNNER_TEMP}/shared-services.status" \
             "${RUNNER_TEMP}/shared-summary"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: parity-shared-${{ matrix.name }}
@@ -402,7 +402,7 @@ jobs:
         if: always()
         working-directory: source
         run: ../tooling/rehearsals/audit-services.sh "${RUNNER_TEMP}/performance-services.status"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: always()
         with:
           name: performance-${{ matrix.artifact }}
@@ -472,7 +472,7 @@ jobs:
             '${{ steps.source.outputs.tooling_revision }}' \
             '${{ github.repository }}' \
             rehearsals/repositories.json
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: performance-results
           path: performance-results.json
