@@ -6,6 +6,21 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
+- Name the advisories behind a failed vulnerability gate. The error now lists
+  each govulncheck advisory ID with its found and fixed module versions, taken
+  only from govulncheck's fixed heading and version lines, so traces and
+  other scanner text stay out of the output.
+
+### Fixed
+
+- Admit the independently recomputed OPENAPI-DEC-011 decision digest in the
+  central secret policy, so go-openapi can record it in its changelog.
+- The Go toolchain patch workflow now ignores `automation/go-` pull requests
+  from forks or other authors instead of failing that library's bump; they are
+  listed in the run summary and never merged.
+
+### Added
+
 - Add the scheduled `go-toolchain.yml` workflow, which proposes and
   squash-merges pull requests that move each library's pinned Go toolchain to
   the newest stable patch of its minor release once the library's own
