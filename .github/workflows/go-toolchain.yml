@@ -13,7 +13,8 @@ name: Go toolchain patches
 # No run waits on another. GOLIB_ROLLOUT_TOKEN is a fine-grained token with
 # contents and pull-request write access to the libraries; the workflow token
 # cannot open pull requests there, and pull requests it opened would not run CI.
-# This repository pins Go in release attribution and tool code, so it is
+# This repository and go-library-assurance pin the producer Go version in
+# release attribution, tool code and pinned tooling scripts, so they are
 # skipped and bumped by hand.
 
 on:
@@ -180,7 +181,10 @@ jobs:
           }
 
           while IFS= read -r repo; do
-            [[ "${repo}" == "${OWNER}/go-library-tools" ]] && continue
+            case "${repo#*/}" in
+              # Both pin the producer Go version in tooling scripts and code.
+              go-library-tools|go-library-assurance) continue ;;
+            esac
             land_or_skip "${repo}" || propose "${repo}"
           done < <(gh repo list "${OWNER}" --no-archived --source --limit 1000 --json nameWithOwner \
             --jq '.[].nameWithOwner | select(test("/go-"))' | sort)

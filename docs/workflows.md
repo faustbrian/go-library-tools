@@ -434,8 +434,8 @@ no release is tagged because consumers build with their own toolchain. The
 workflow needs `GOLIB_ROLLOUT_TOKEN`, a fine-grained token with contents and
 pull-request write access to the libraries: the workflow token cannot open pull
 requests there, and pull requests it opened would not run CI. This repository
-pins its Go version in release attribution and tool code too, so it is skipped
-and bumped by hand.
+and go-library-assurance pin the producer Go version in release attribution,
+tool code and pinned tooling scripts, so they are skipped and bumped by hand.
 
 Own tooling builds and CI select Go 1.27.4 from `.go-version`; the module
 language floor remains Go 1.27.0. Producer-Go or shared consumer-input changes
