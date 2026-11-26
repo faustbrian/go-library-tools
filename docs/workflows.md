@@ -412,7 +412,32 @@ fine-grained `GOLIB_ROLLOUT_TOKEN`; the repository-scoped workflow token cannot
 write to sibling repositories. The workflow changes only `.golib.yaml` and the
 thin CI caller and never force-pushes an existing rollout branch.
 
-Own tooling builds and CI select Go 1.27.3 from `.go-version`; the module
+## Consumer Go patch updates
+
+The scheduled `go-toolchain.yml` workflow keeps every `faustbrian/go-*`
+library's pinned toolchain on the newest stable patch of its Go minor release;
+libraries need no workflow changes. Each run handles each library with a
+`.go-version`:
+
+- An open `automation/go-<version>` pull request whose `Required` check passed
+  on its head is squash-merged. One that is behind `main` is closed and
+  proposed again on the current `main`. One whose `Required` check failed fails
+  the run, so the schedule's notification reports it.
+- Otherwise, when the `actions/go-versions` manifest that `setup-go` installs
+  from has a newer stable patch, a pull request is opened that changes only
+  `.go-version`, the top-level `modules.json` `go_version` and a matching
+  `go.work` directive. The library's own CI runs on it.
+
+No run waits on another, so a patch lands on the run after its CI passes.
+`go.mod` language minimums, workflow files and changelogs stay unchanged, and
+no release is tagged because consumers build with their own toolchain. The
+workflow needs `GOLIB_ROLLOUT_TOKEN`, a fine-grained token with contents and
+pull-request write access to the libraries: the workflow token cannot open pull
+requests there, and pull requests it opened would not run CI. This repository
+pins its Go version in release attribution and tool code too, so it is skipped
+and bumped by hand.
+
+Own tooling builds and CI select Go 1.27.4 from `.go-version`; the module
 language floor remains Go 1.27.0. Producer-Go or shared consumer-input changes
 select the existing native compatibility-consumer matrix without republishing
 the historical Go 1.27.0 compatibility cohort or relabeling its observations.

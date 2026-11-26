@@ -4,6 +4,18 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add the scheduled `go-toolchain.yml` workflow, which proposes and
+  squash-merges pull requests that move each library's pinned Go toolchain to
+  the newest stable patch of its minor release once the library's own
+  `Required` check passes.
+
+### Fixed
+
+- Build and attribute releases with Go 1.27.4 to address GO-2026-6859 in
+  `net/http`. The module language minimum is unchanged.
+
 ## 2.5.3 - 2026-11-01
 
 ### Fixed

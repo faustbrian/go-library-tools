@@ -1,0 +1,191 @@
+name: Go toolchain patches
+
+# Keeps every library's pinned Go toolchain on the newest stable patch of its
+# minor release. Each run, per faustbrian/go-* repository with a .go-version:
+#
+# - an open automation/go-<version> pull request whose Required check passed
+#   on its head is squash-merged; one that is behind main is closed and
+#   proposed again; one with a failed Required check fails this run;
+# - otherwise, when a newer patch is installable, a pull request changing only
+#   .go-version, the top-level modules.json go_version and a matching go.work
+#   directive is opened, and that repository's own CI runs on it.
+#
+# No run waits on another. GOLIB_ROLLOUT_TOKEN is a fine-grained token with
+# contents and pull-request write access to the libraries; the workflow token
+# cannot open pull requests there, and pull requests it opened would not run CI.
+# This repository pins Go in release attribution and tool code, so it is
+# skipped and bumped by hand.
+
+on:
+  schedule:
+    - cron: '41 1 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-toolchain-patches
+  cancel-in-progress: false
+
+jobs:
+  patches:
+    name: Propose and land Go patches
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - name: Propose and land
+        env:
+          GH_TOKEN: ${{ secrets.GOLIB_ROLLOUT_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${GH_TOKEN}" ]]; then
+            echo 'GOLIB_ROLLOUT_TOKEN is not configured' >&2
+            exit 1
+          fi
+          gh auth setup-git
+          git config --global user.name 'golib-toolchain'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          # setup-go installs from this manifest, so a patch is proposed only
+          # once runners can download it.
+          manifest="$(curl -fsSL --retry 3 --max-time 60 \
+            https://raw.githubusercontent.com/actions/go-versions/main/versions-manifest.json)"
+          work="$(mktemp -d "${RUNNER_TEMP}/go-toolchain.XXXXXX")"
+          trap 'find "${work}" -depth -delete' EXIT
+          failures=''
+          summary() { printf -- '- %s\n' "$*" >>"${GITHUB_STEP_SUMMARY}"; }
+          fail() { failures+="$*"$'\n'; }
+          bot="$(gh api user --jq .login)"
+
+          # Both functions run in a || list, where errexit is ignored, so every
+          # step checks its own result. land_or_skip returns 1 only when no bot
+          # pull request is open and a new one may be proposed.
+          land_or_skip() {
+            local repo="$1" pull number oid url state commits files required
+            pull="$(gh pr list --repo "${repo}" --state open --limit 100 \
+              --json number,headRefName,headRefOid,url,mergeStateStatus,isCrossRepository,author \
+              --jq '[.[] | select(.headRefName | startswith("automation/go-"))][0] // empty')" ||
+              { fail "${repo}: could not list pull requests"; return 0; }
+            [[ -n "${pull}" ]] || return 1
+            number="$(jq -r .number <<<"${pull}")"
+            oid="$(jq -r .headRefOid <<<"${pull}")"
+            url="$(jq -r .url <<<"${pull}")"
+            state="$(jq -r .mergeStateStatus <<<"${pull}")"
+            # Merge only this bot's own same-repository bump, never other content
+            # carried on a matching branch name.
+            if [[ "$(jq -r .isCrossRepository <<<"${pull}")" != false || "$(jq -r .author.login <<<"${pull}")" != "${bot}" ]]; then
+              fail "${repo}: ${url} uses an automation/go- branch but is not this bot's pull request"
+              return 0
+            fi
+            if ! commits="$(gh pr view "${number}" --repo "${repo}" --json commits --jq '.commits | length')" ||
+              ! files="$(gh pr view "${number}" --repo "${repo}" --json files --jq '[.files[].path] | sort | join(" ")')"; then
+              fail "${repo}: could not read ${url}"
+              return 0
+            fi
+            if [[ "${commits}" != 1 ]] || ! grep -Eqx '(\.go-version|go\.work|modules\.json)( (\.go-version|go\.work|modules\.json))*' <<<"${files}"; then
+              fail "${repo}: ${url} is not a single toolchain-pin commit (${commits} commits: ${files})"
+              return 0
+            fi
+            if [[ "${state}" == BEHIND ]]; then
+              gh pr close "${number}" --repo "${repo}" --delete-branch \
+                --comment 'Main moved; proposing the patch again on the current main.' ||
+                { fail "${repo}: could not close outdated ${url}"; return 0; }
+              summary "${repo}: closed outdated ${url}"
+              return 1
+            fi
+            required="$(gh api "repos/${repo}/commits/${oid}/check-runs?check_name=Required" \
+              --jq '[.check_runs[] | select(.app.slug == "github-actions") | .conclusion]
+                | if length == 0 or any(. == null) then "pending"
+                  elif all(. == "success") then "success" else "failure" end')" ||
+              { fail "${repo}: could not read the Required check on ${url}"; return 0; }
+            case "${required}:${state}" in
+              success:CLEAN|success:UNSTABLE|success:HAS_HOOKS)
+                if gh pr merge "${number}" --repo "${repo}" --squash --delete-branch --match-head-commit "${oid}"; then
+                  summary "${repo}: merged ${url}"
+                else
+                  fail "${repo}: merge failed for ${url}"
+                fi
+                ;;
+              success:UNKNOWN|pending:*)
+                summary "${repo}: CI or mergeability still pending on ${url}"
+                ;;
+              success:*)
+                fail "${repo}: ${url} passed Required but cannot merge (${state})"
+                ;;
+              *)
+                fail "${repo}: Required failed on ${url}"
+                ;;
+            esac
+            return 0
+          }
+
+          propose() {
+            local repo="$1" current minor patch target branch checkout
+            current="$(gh api "repos/${repo}/contents/.go-version" --jq .content 2>/dev/null | base64 -d | tr -d '[:space:]')" || return 0
+            if [[ ! "${current}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              fail "${repo}: unsupported .go-version ${current}"
+              return 0
+            fi
+            minor="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
+            if ! target="$(jq -er --arg minor "${minor}" '
+              [.[]
+                | select(.stable == true)
+                | .version as $version
+                | select($version | test("^[0-9]+\\.[0-9]+\\.[0-9]+$"))
+                | select(($version | split(".") | .[0:2] | join(".")) == $minor)
+                | select(any(.files[]; .platform == "linux" and .arch == "x64"))
+                | $version]
+              | if length == 0 then error("no stable Go patch for " + $minor)
+                else max_by(split(".") | map(tonumber)) end' <<<"${manifest}")" ||
+              [[ ! "${target}" =~ ^[0-9]+\.[0-9]+\.([0-9]+)$ ]]; then
+              fail "${repo}: no installable Go ${minor} patch"
+              return 0
+            fi
+            (( BASH_REMATCH[1] > patch )) || return 0
+            branch="automation/go-${target}"
+            checkout="${work}/${repo#*/}"
+            (
+              git clone -q --depth 1 --filter=blob:none --no-checkout "https://github.com/${repo}.git" "${checkout}" || exit 1
+              cd "${checkout}" || exit 1
+              git sparse-checkout set --no-cone /.go-version /modules.json /go.work || exit 1
+              git checkout -q || exit 1
+              export OLD_PATTERN="${current//./\\.}" NEW_VERSION="${target}"
+              printf '%s\n' "${target}" >.go-version || exit 1
+              if [[ -f modules.json ]]; then
+                [[ "$(jq -er '.go_version' modules.json)" == "${current}" ]] || exit 1
+                perl -0pi -e 's/^(  "go_version": ")$ENV{OLD_PATTERN}(",?)$/${1}$ENV{NEW_VERSION}${2}/m
+                  or die "modules.json top-level go_version line not found\n"' modules.json || exit 1
+                [[ "$(jq -er '.go_version' modules.json)" == "${target}" ]] || exit 1
+              fi
+              if [[ -f go.work ]]; then
+                perl -pi -e 's/^go $ENV{OLD_PATTERN}$/go $ENV{NEW_VERSION}/' go.work || exit 1
+              fi
+              git add -u || exit 1
+              git commit -q -m "build: use Go ${target} toolchain" \
+                -m "$(printf '%s\n' \
+                  'Move the pinned toolchain to the newest stable patch so CI and the' \
+                  'scheduled vulnerability scan use the patched standard library.' \
+                  'Module language minimums are unchanged.')" || exit 1
+              git push -q origin "HEAD:refs/heads/${branch}" || exit 1
+            ) || { fail "${repo}: could not prepare Go ${target}"; return 0; }
+            if gh pr create --repo "${repo}" --base main --head "${branch}" \
+              --title "build: use Go ${target} toolchain" \
+              --body "Moves the pinned toolchain from Go ${current} to ${target}, the newest stable ${minor} patch. Only \`.go-version\`, the top-level \`modules.json\` \`go_version\` and a matching \`go.work\` directive change. The go-toolchain workflow in go-library-tools squash-merges this once \`Required\` passes." >/dev/null; then
+              summary "${repo}: proposed Go ${target}"
+            else
+              fail "${repo}: could not open the Go ${target} pull request"
+            fi
+          }
+
+          while IFS= read -r repo; do
+            [[ "${repo}" == "${OWNER}/go-library-tools" ]] && continue
+            land_or_skip "${repo}" || propose "${repo}"
+          done < <(gh repo list "${OWNER}" --no-archived --source --limit 1000 --json nameWithOwner \
+            --jq '.[].nameWithOwner | select(test("/go-"))' | sort)
+
+          if [[ -n "${failures}" ]]; then
+            printf '%s' "${failures}" | tee -a "${GITHUB_STEP_SUMMARY}" >&2
+            exit 1
+          fi
