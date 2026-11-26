@@ -114,6 +114,7 @@ jobs:
 
           # Replace last week's pull request; a failed one also fails this run.
           failed=''
+          foreign=''
           previous="$(gh pr list --repo "${REPOSITORY}" --state open --head "${branch}" \
             --json number,url,author,isCrossRepository,headRefOid)"
           while IFS= read -r pull; do
@@ -122,6 +123,7 @@ jobs:
             url="$(jq -r .url <<<"${pull}")"
             if [[ "$(jq -r .isCrossRepository <<<"${pull}")" != false || "$(jq -r .author.login <<<"${pull}")" != "${bot}" ]]; then
               summary "ignored ${url}, which is not this workflow's pull request"
+              [[ "$(jq -r .isCrossRepository <<<"${pull}")" != false ]] || foreign="${url}"
               continue
             fi
             required="$(gh api "repos/${REPOSITORY}/commits/$(jq -r .headRefOid <<<"${pull}")/check-runs?check_name=Required" \
@@ -133,6 +135,10 @@ jobs:
           done < <(jq -c '.[]' <<<"${previous}")
           # An auto-merged or manually closed update can leave its branch behind;
           # with no open pull request on it, it is this workflow's stale branch.
+          if [[ -n "${foreign}" ]]; then
+            echo "${REPOSITORY}: ${branch} belongs to another author's open pull request ${foreign}" | tee -a "${GITHUB_STEP_SUMMARY}" >&2
+            exit 1
+          fi
           if gh api "repos/${REPOSITORY}/git/ref/heads/${branch}" >/dev/null 2>&1; then
             gh api -X DELETE "repos/${REPOSITORY}/git/refs/heads/${branch}" >/dev/null
             summary "deleted stale ${branch}"
