@@ -1,0 +1,113 @@
+name: Go toolchain patch
+
+# Keeps a library's pinned Go toolchain on the newest stable patch of its
+# minor release. A bump is committed to a temporary carrier branch, the
+# repository's own CI is dispatched on that exact commit, and the default
+# branch is fast-forwarded only after the required check passes there.
+
+on:
+  workflow_call:
+    inputs:
+      tooling_sha:
+        description: Immutable source of this reusable workflow and its bump script
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: go-toolchain-patch-${{ github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  bump:
+    name: Advance Go patch
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
+    permissions:
+      actions: write
+      checks: read
+      contents: write
+    steps:
+      - name: Check immutable tooling identity
+        env:
+          TOOLING_SHA: ${{ inputs.tooling_sha }}
+        run: |
+          set -euo pipefail
+          [[ "${TOOLING_SHA}" =~ ^[0-9a-f]{40}$ ]]
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: faustbrian/go-library-tools
+          ref: ${{ inputs.tooling_sha }}
+          path: .golib-tooling
+          persist-credentials: false
+      - id: bump
+        name: Apply newest Go patch
+        run: |
+          set -euo pipefail
+          target="$(bash .golib-tooling/.github/scripts/bump-go-toolchain.sh "${GITHUB_WORKSPACE}")"
+          if [[ -z "${target}" ]]; then
+            echo 'Go toolchain is already on the newest patch.' >>"${GITHUB_STEP_SUMMARY}"
+            echo 'changed=false' >>"${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          git diff --stat
+          echo "target=${target}" >>"${GITHUB_OUTPUT}"
+          echo 'changed=true' >>"${GITHUB_OUTPUT}"
+      - name: Verify on a carrier branch and advance the default branch
+        if: steps.bump.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TARGET: ${{ steps.bump.outputs.target }}
+          REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          set -euo pipefail
+          branch="automation/go-${TARGET}"
+          remote="https://github.com/${REPOSITORY}.git"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -u
+          git commit -q -m "build: use Go ${TARGET} toolchain" \
+            -m "Move the pinned toolchain to the newest stable patch so CI and the scheduled vulnerability scan use the patched standard library. Module language minimums are unchanged."
+          sha="$(git rev-parse HEAD)"
+          gh auth setup-git
+          delete_carrier() {
+            if git ls-remote --exit-code --heads "${remote}" "${branch}" >/dev/null 2>&1; then
+              git push -q "${remote}" --delete "${branch}"
+            fi
+          }
+          trap delete_carrier EXIT
+          delete_carrier
+          git push -q "${remote}" "${sha}:refs/heads/${branch}"
+          gh workflow run ci.yml --repo "${REPOSITORY}" --ref "${branch}"
+          run_id=''
+          for _ in $(seq 1 30); do
+            run_id="$(gh run list --repo "${REPOSITORY}" --workflow ci.yml --branch "${branch}" \
+              --event workflow_dispatch --json databaseId,headSha |
+              jq -r --arg sha "${sha}" '[.[] | select(.headSha == $sha)][0].databaseId // empty')"
+            [[ -n "${run_id}" ]] && break
+            sleep 10
+          done
+          if [[ -z "${run_id}" ]]; then
+            echo 'carrier CI run did not start' >&2
+            exit 1
+          fi
+          echo "Carrier CI for Go ${TARGET}: ${GITHUB_SERVER_URL}/${REPOSITORY}/actions/runs/${run_id}" >>"${GITHUB_STEP_SUMMARY}"
+          if ! gh run watch "${run_id}" --repo "${REPOSITORY}" --exit-status --interval 60 >/dev/null; then
+            echo "carrier CI failed: ${GITHUB_SERVER_URL}/${REPOSITORY}/actions/runs/${run_id}" >&2
+            exit 1
+          fi
+          required="$(gh api "repos/${REPOSITORY}/commits/${sha}/check-runs?check_name=Required" \
+            --jq '[.check_runs[] | select(.app.slug == "github-actions") | .conclusion] | length > 0 and all(. == "success")')"
+          if [[ "${required}" != true ]]; then
+            echo "Required check is not green on ${sha}" >&2
+            exit 1
+          fi
+          git push -q "${remote}" "${sha}:refs/heads/${DEFAULT_BRANCH}"
+          echo "Advanced ${DEFAULT_BRANCH} to ${sha}." >>"${GITHUB_STEP_SUMMARY}"
