@@ -45,11 +45,11 @@ SHA-pinned third-party actions to their latest releases, and squash-merges it
 through GitHub auto-merge once the library's own `Required` check passes. A
 module whose `go` or `toolchain` line would rise keeps its requirements and is
 listed in the run summary. Dependabot vulnerability alerts stay enabled as
-information; its security-update pull requests are disabled. This repository
-and `go-library-assurance` are not updated automatically: tool dependencies
-must move with the reviewed release license mapping, and selection-owned
-composition dependencies must update their selection and module inputs
-together.
+information; its security-update pull requests are disabled. This repository keeps
+its own Dependabot configuration, because tool dependencies must move with the
+reviewed release license mapping, and `go-library-assurance` is updated by hand
+because selection-owned composition dependencies must update their selection
+and module inputs together.
 
 Tools' retained `release/compatibility-consumer` is catalog-generated historical
 publication evidence. Its bot updates only indirect requirements; direct

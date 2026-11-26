@@ -417,15 +417,18 @@ thin CI caller and never force-pushes an existing rollout branch.
 The scheduled `dependencies.yml` workflow runs weekly, one matrix job per
 `faustbrian/go-*` library except this repository and `go-library-assurance`.
 Each job closes the previous week's `automation/dependencies` pull request,
-runs `go get -u ./...` and `go mod tidy` in every tracked Go module with
+runs `go get -u -t ./...`, `go get -u tool` where a module declares tools, and
+`go mod tidy` in every tracked Go module with
 `GOWORK=off`, moves exactly pinned npm dependencies to their newest release
 with `npm install --package-lock-only --ignore-scripts`, and moves SHA-pinned
-third-party actions to the commit of their latest release. Modules whose `go`
+third-party actions with a version comment to the commit of their highest
+stable release, never downgrading. Modules whose `go`
 or `toolchain` line would rise, or whose update fails, keep their requirements
 and are listed in the summary. The result is one pull request with GitHub
 auto-merge enabled, so it squash-merges once `Required` passes; a previous
 week's pull request whose `Required` check failed fails that library's job.
-Libraries need `allow_auto_merge` enabled and the workflow needs
+A stale `automation/dependencies` branch left by a merged or closed update is
+deleted first. Libraries need `allow_auto_merge` and `delete_branch_on_merge` enabled and the workflow needs
 `GOLIB_ROLLOUT_TOKEN` with contents, pull-request and workflow write access.
 Run it for selected libraries with the `repositories` dispatch input.
 

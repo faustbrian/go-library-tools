@@ -9,8 +9,8 @@ name: Dependency updates
 # A module whose go directive or toolchain line would rise is left unchanged
 # and listed in the summary. The previous week's pull request is closed and
 # replaced; one whose Required check failed also fails this run. go-library-tools
-# (release license mapping) and go-library-assurance (published selection) own
-# their dependency inputs and are updated by hand.
+# (release license mapping, updated by its own Dependabot configuration) and
+# go-library-assurance (published selection) own their dependency inputs.
 #
 # GOLIB_ROLLOUT_TOKEN needs contents, pull-request and workflow write access to
 # the libraries; the workflow token can neither open pull requests there nor
@@ -131,13 +131,21 @@ jobs:
               --comment "Replaced by this week's dependency update." >/dev/null
             summary "closed ${url}"
           done < <(jq -c '.[]' <<<"${previous}")
+          # An auto-merged or manually closed update can leave its branch behind;
+          # with no open pull request on it, it is this workflow's stale branch.
+          if gh api "repos/${REPOSITORY}/git/ref/heads/${branch}" >/dev/null 2>&1; then
+            gh api -X DELETE "repos/${REPOSITORY}/git/refs/heads/${branch}" >/dev/null
+            summary "deleted stale ${branch}"
+          fi
 
           # Go: newest compatible requirements per module, never a higher go line.
           kept=''
           while IFS= read -r modfile; do
             directory="$(dirname "${modfile}")"
             before="$(grep -E '^(go|toolchain) ' "${modfile}" || true)"
-            if (cd "${directory}" && go get -u ./... >/dev/null 2>"${task}/go.log" && go mod tidy >/dev/null 2>>"${task}/go.log"); then
+            if (cd "${directory}" && env -u GH_TOKEN go get -u -t ./... >/dev/null 2>"${task}/go.log" &&
+              { ! grep -qE '^tool[[:space:]]' go.mod || env -u GH_TOKEN go get -u tool >/dev/null 2>>"${task}/go.log"; } &&
+              env -u GH_TOKEN go mod tidy >/dev/null 2>>"${task}/go.log"); then
               after="$(grep -E '^(go|toolchain) ' "${modfile}" || true)"
               if [[ "${after}" != "${before}" ]]; then
                 git checkout -q -- "${directory}/go.mod" "${directory}/go.sum" 2>/dev/null || git checkout -q -- "${directory}/go.mod"
@@ -147,7 +155,7 @@ jobs:
               git checkout -q -- "${directory}/go.mod" "${directory}/go.sum" 2>/dev/null || git checkout -q -- "${directory}/go.mod"
               kept+="${directory} ($(tail -n 1 "${task}/go.log" | cut -c1-200))"$'\n'
             fi
-          done < <(git ls-files -- '*go.mod' ':!:**/testdata/**' ':!:**/vendor/**')
+          done < <(git ls-files -- '*go.mod' ':(exclude,glob)**/testdata/**' ':(exclude,glob)**/vendor/**')
 
           # npm: exactly pinned dependencies move to their newest release; no install scripts run.
           while IFS= read -r manifest; do
@@ -156,7 +164,10 @@ jobs:
             for section in dependencies devDependencies; do
               while IFS=$'\t' read -r name version; do
                 [[ -n "${name}" ]] || continue
-                latest="$(npm view "${name}" version 2>/dev/null)" || continue
+                if ! latest="$(env -u GH_TOKEN npm view "${name}" version 2>/dev/null)"; then
+                  kept+="${manifest} ${name} (registry lookup failed)"$'\n'
+                  continue
+                fi
                 [[ "${latest}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "${latest}" != "${version}" ]] || continue
                 jq --arg section "${section}" --arg name "${name}" --arg latest "${latest}" \
                   '.[$section][$name] = $latest' "${manifest}" >"${task}/package.json"
@@ -164,24 +175,40 @@ jobs:
               done < <(jq -r --arg section "${section}" '(.[$section] // {}) | to_entries[] | select(.value | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) | [.key, .value] | @tsv' "${manifest}")
             done
             if ! git diff --quiet -- "${manifest}"; then
-              (cd "${directory}" && npm install --package-lock-only --ignore-scripts --no-audit --no-fund >/dev/null) ||
+              (cd "${directory}" && env -u GH_TOKEN npm install --package-lock-only --ignore-scripts --no-audit --no-fund >/dev/null) ||
                 { git checkout -q -- "${manifest}" "${directory}/package-lock.json"; kept+="${directory} (npm lock refresh failed)"$'\n'; }
             fi
-          done < <(git ls-files -- '*package.json' ':!:**/node_modules/**')
+          done < <(git ls-files -- '*package.json' ':(exclude,glob)**/node_modules/**')
 
           # Actions: SHA-pinned third-party actions move to their latest release.
           while IFS= read -r workflow; do
             while IFS= read -r action; do
               owner_repo="$(cut -d/ -f1-2 <<<"${action}")"
-              tag="$(gh api "repos/${owner_repo}/releases/latest" --jq .tag_name 2>/dev/null)" || continue
-              [[ "${tag}" =~ ^v?[0-9]+(\.[0-9]+){0,2}$ ]] || continue
-              sha="$(gh api "repos/${owner_repo}/commits/${tag}" --jq .sha 2>/dev/null)" || continue
-              [[ "${sha}" =~ ^[0-9a-f]{40}$ ]] || continue
+              # The current version comes from the pin's comment; without one the
+              # pin is left alone, since its version cannot be compared.
+              current="$(grep -hoE "uses:[[:space:]]*${action//./\\.}@[0-9a-f]{40}[[:space:]]*#[[:space:]]*v?[0-9]+(\.[0-9]+){0,2}" "${workflow}" |
+                head -n 1 | sed -E 's/.*#[[:space:]]*v?//')" || true
+              [[ -n "${current}" ]] || continue
+              # Highest stable semver release, never a lower or backport "latest".
+              if ! tag="$(gh api "repos/${owner_repo}/releases?per_page=100" --jq '
+                  [.[] | select(.draft | not) | select(.prerelease | not) | .tag_name
+                    | select(test("^v?[0-9]+\\.[0-9]+\\.[0-9]+$"))]
+                  | max_by(ltrimstr("v") | split(".") | map(tonumber)) // empty' 2>/dev/null)"; then
+                kept+="${workflow} ${action} (release lookup failed)"$'\n'
+                continue
+              fi
+              [[ -n "${tag}" ]] || continue
+              newest="$(printf '%s\n%s\n' "${current}" "${tag#v}" | sort -V | tail -n 1)"
+              [[ "${newest}" == "${tag#v}" && "${tag#v}" != "${current}" ]] || continue
+              if ! sha="$(gh api "repos/${owner_repo}/commits/${tag}" --jq .sha 2>/dev/null)" || [[ ! "${sha}" =~ ^[0-9a-f]{40}$ ]]; then
+                kept+="${workflow} ${action} (could not resolve ${tag})"$'\n'
+                continue
+              fi
               ACTION="${action}" SHA="${sha}" TAG="${tag}" perl -pi -e '
                 s/(uses:\s*\Q$ENV{ACTION}\E@)[0-9a-f]{40}(\s*#\s*\S+)?/$1$ENV{SHA} # $ENV{TAG}/' "${workflow}"
             done < <(grep -hoE 'uses:[[:space:]]*[A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+@[0-9a-f]{40}' "${workflow}" |
               sed -E 's/^uses:[[:space:]]*//; s/@.*//' | grep -v '^faustbrian/' | sort -u)
-          done < <(git ls-files -- '.github/workflows/*.yml' '.github/workflows/*.yaml' '.github/actions/**/action.yml' '.github/actions/**/action.yaml')
+          done < <(git ls-files -- '.github/workflows/*.yml' '.github/workflows/*.yaml' ':(glob).github/actions/**/action.yml' ':(glob).github/actions/**/action.yaml')
 
           [[ -z "${kept}" ]] || { summary "kept unchanged:"; printf '%s' "${kept}" | sed 's/^/  - /' >>"${GITHUB_STEP_SUMMARY}"; }
           if git diff --quiet; then
@@ -198,7 +225,7 @@ jobs:
             url="$(gh pr create --repo "${REPOSITORY}" --base main --head "${branch}" \
               --title 'build(deps): update dependencies' \
               --body "Weekly dependency update from the go-library-tools dependency workflow. It squash-merges automatically once Required passes; a failed run is closed and replaced next week.")"
-            gh pr merge "${url}" --repo "${REPOSITORY}" --auto --squash --delete-branch \
+            gh pr merge "${url}" --repo "${REPOSITORY}" --auto --squash \
               --match-head-commit "$(git rev-parse HEAD)"
             summary "${REPOSITORY}: proposed ${url} with auto-merge"
           fi
