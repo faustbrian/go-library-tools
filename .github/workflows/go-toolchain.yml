@@ -1,75 +1,107 @@
-name: Go toolchain patch
+name: Go toolchain patches
 
-# Keeps a library's pinned Go toolchain on the newest stable patch of its
-# minor release, in two short jobs that never wait on other runs:
+# Keeps every library's pinned Go toolchain on the newest stable patch of its
+# minor release. Each run, per faustbrian/go-* repository with a .go-version:
 #
-# - bump (scheduled CI): commit the newer patch to a carrier branch
-#   automation/go-<version> and dispatch the repository's ci.yml on it.
-# - land (that dispatched CI, after its Required job passed): verify the
-#   carrier holds exactly the bump commit on top of the default branch,
-#   fast-forward the default branch to it and delete the carrier.
+# - an open automation/go-<version> pull request whose Required check passed
+#   on its head is squash-merged; one that is behind main is closed and
+#   proposed again; one with a failed Required check fails this run;
+# - otherwise, when a newer patch is installable, a pull request changing only
+#   .go-version, the top-level modules.json go_version and a matching go.work
+#   directive is opened, and that repository's own CI runs on it.
 #
-# A carrier still present at the next schedule did not land, so bump fails
-# that scheduled run with a link to the carrier's CI after re-proposing it.
-# The logic is inline so callers pass no tooling_sha besides library-ci's.
+# No run waits on another. GOLIB_ROLLOUT_TOKEN is a fine-grained token with
+# contents and pull-request write access to the libraries; the workflow token
+# cannot open pull requests there, and pull requests it opened would not run CI.
+# This repository pins Go in release attribution and tool code, so it is
+# skipped and bumped by hand.
 
 on:
-  workflow_call:
-    inputs:
-      mode:
-        description: bump on the scheduled default-branch run, land on the dispatched carrier run
-        required: true
-        type: string
+  schedule:
+    - cron: '41 1 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: go-toolchain-patches
+  cancel-in-progress: false
+
 jobs:
-  bump:
-    name: Propose Go patch
-    if: >-
-      inputs.mode == 'bump' && github.event_name == 'schedule' &&
-      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+  patches:
+    name: Propose and land Go patches
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      actions: write
-      contents: write
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-      - name: Commit newest patch to a carrier and dispatch CI
+      - name: Propose and land
         env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
+          GH_TOKEN: ${{ secrets.GOLIB_ROLLOUT_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
-          remote="https://github.com/${REPOSITORY}.git"
-          gh auth setup-git
-
-          # land deletes its carrier, so any remaining carrier is a failed attempt.
-          stale=''
-          while read -r _ ref; do
-            carrier="${ref#refs/heads/}"
-            run_url="$(gh run list --repo "${REPOSITORY}" --workflow ci.yml --branch "${carrier}" \
-              --event workflow_dispatch --limit 1 --json url --jq '.[0].url // "no CI run"')"
-            stale+="${carrier} did not land: ${run_url}"$'\n'
-            git push -q "${remote}" --delete "${carrier}"
-          done < <(git ls-remote --heads "${remote}" 'refs/heads/automation/go-*')
-
-          current="$(tr -d '[:space:]' <.go-version)"
-          if [[ ! "${current}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-            echo "unsupported .go-version: ${current}" >&2
+          if [[ -z "${GH_TOKEN}" ]]; then
+            echo 'GOLIB_ROLLOUT_TOKEN is not configured' >&2
             exit 1
           fi
-          minor="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
-          current_patch="${BASH_REMATCH[3]}"
+          gh auth setup-git
+          git config --global user.name 'golib-toolchain'
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'
           # setup-go installs from this manifest, so a patch is proposed only
-          # once the runner can download it.
-          target="$(curl -fsSL --retry 3 --max-time 60 \
-            https://raw.githubusercontent.com/actions/go-versions/main/versions-manifest.json |
-            jq -er --arg minor "${minor}" '
+          # once runners can download it.
+          manifest="$(curl -fsSL --retry 3 --max-time 60 \
+            https://raw.githubusercontent.com/actions/go-versions/main/versions-manifest.json)"
+          work="$(mktemp -d "${RUNNER_TEMP}/go-toolchain.XXXXXX")"
+          trap 'find "${work}" -depth -delete' EXIT
+          failures=''
+          summary() { printf -- '- %s\n' "$*" >>"${GITHUB_STEP_SUMMARY}"; }
+
+          land_or_skip() {
+            local repo="$1" pull
+            pull="$(gh pr list --repo "${repo}" --state open --limit 100 \
+              --json number,headRefName,headRefOid,url,mergeStateStatus \
+              --jq '[.[] | select(.headRefName | startswith("automation/go-"))][0] // empty')"
+            [[ -n "${pull}" ]] || return 1
+            local number oid url state required
+            number="$(jq -r .number <<<"${pull}")"
+            oid="$(jq -r .headRefOid <<<"${pull}")"
+            url="$(jq -r .url <<<"${pull}")"
+            state="$(jq -r .mergeStateStatus <<<"${pull}")"
+            if [[ "${state}" == BEHIND ]]; then
+              gh pr close "${number}" --repo "${repo}" --delete-branch \
+                --comment 'Main moved; proposing the patch again on the current main.'
+              summary "${repo}: closed outdated ${url}"
+              return 1
+            fi
+            required="$(gh api "repos/${repo}/commits/${oid}/check-runs?check_name=Required" \
+              --jq '[.check_runs[] | select(.app.slug == "github-actions") | .conclusion]
+                | if length == 0 or any(. == null) then "pending"
+                  elif all(. == "success") then "success" else "failure" end')"
+            case "${required}" in
+              success)
+                gh pr merge "${number}" --repo "${repo}" --squash --delete-branch --match-head-commit "${oid}"
+                summary "${repo}: merged ${url}"
+                ;;
+              failure)
+                failures+="${repo}: Required failed on ${url}"$'\n'
+                ;;
+              *)
+                summary "${repo}: CI still running on ${url}"
+                ;;
+            esac
+            return 0
+          }
+
+          propose() {
+            local repo="$1" current minor patch target branch checkout
+            current="$(gh api "repos/${repo}/contents/.go-version" --jq .content 2>/dev/null | base64 -d | tr -d '[:space:]')" || return 0
+            if [[ ! "${current}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
+              failures+="${repo}: unsupported .go-version ${current}"$'\n'
+              return 0
+            fi
+            minor="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
+            patch="${BASH_REMATCH[3]}"
+            target="$(jq -er --arg minor "${minor}" '
               [.[]
                 | select(.stable == true)
                 | .version as $version
@@ -78,82 +110,48 @@ jobs:
                 | select(any(.files[]; .platform == "linux" and .arch == "x64"))
                 | $version]
               | if length == 0 then error("no stable Go patch for " + $minor)
-                else max_by(split(".") | map(tonumber)) end')"
-          [[ "${target}" =~ ^[0-9]+\.[0-9]+\.([0-9]+)$ ]]
-          if (( BASH_REMATCH[1] > current_patch )); then
-            # Only the toolchain pin moves; go.mod language minimums and
-            # workflow files never change.
-            export OLD_PATTERN="${current//./\\.}" NEW_VERSION="${target}"
-            printf '%s\n' "${target}" >.go-version
-            if [[ -f modules.json ]]; then
-              [[ "$(jq -er '.go_version' modules.json)" == "${current}" ]] ||
-                { echo "modules.json go_version differs from .go-version ${current}" >&2; exit 1; }
-              perl -0pi -e 's/^(  "go_version": ")$ENV{OLD_PATTERN}(",?)$/${1}$ENV{NEW_VERSION}${2}/m
-                or die "modules.json top-level go_version line not found\n"' modules.json
-              [[ "$(jq -er '.go_version' modules.json)" == "${target}" ]]
-            fi
-            if [[ -f go.work ]]; then
-              perl -pi -e 's/^go $ENV{OLD_PATTERN}$/go $ENV{NEW_VERSION}/' go.work
-            fi
+                else max_by(split(".") | map(tonumber)) end' <<<"${manifest}")"
+            [[ "${target}" =~ ^[0-9]+\.[0-9]+\.([0-9]+)$ ]]
+            (( BASH_REMATCH[1] > patch )) || return 0
             branch="automation/go-${target}"
-            git config user.name 'github-actions[bot]'
-            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-            git add -u
-            git commit -q -m "build: use Go ${target} toolchain" \
-              -m "Move the pinned toolchain to the newest stable patch so CI and the scheduled vulnerability scan use the patched standard library. Module language minimums are unchanged."
-            git push -q "${remote}" "HEAD:refs/heads/${branch}"
-            gh workflow run ci.yml --repo "${REPOSITORY}" --ref "${branch}"
-            echo "Proposed Go ${target} on ${branch}; its CI lands it after Required passes." >>"${GITHUB_STEP_SUMMARY}"
-          else
-            echo "Go ${current} is the newest ${minor} patch." >>"${GITHUB_STEP_SUMMARY}"
-          fi
+            checkout="${work}/${repo#*/}"
+            git clone -q --depth 1 --filter=blob:none --no-checkout "https://github.com/${repo}.git" "${checkout}"
+            git -C "${checkout}" sparse-checkout set --no-cone /.go-version /modules.json /go.work
+            git -C "${checkout}" checkout -q
+            (
+              cd "${checkout}"
+              export OLD_PATTERN="${current//./\\.}" NEW_VERSION="${target}"
+              # errexit does not apply inside this || list, so every step checks itself.
+              printf '%s\n' "${target}" >.go-version || exit 1
+              if [[ -f modules.json ]]; then
+                [[ "$(jq -er '.go_version' modules.json)" == "${current}" ]] || exit 1
+                perl -0pi -e 's/^(  "go_version": ")$ENV{OLD_PATTERN}(",?)$/${1}$ENV{NEW_VERSION}${2}/m
+                  or die "modules.json top-level go_version line not found\n"' modules.json || exit 1
+                [[ "$(jq -er '.go_version' modules.json)" == "${target}" ]] || exit 1
+              fi
+              if [[ -f go.work ]]; then
+                perl -pi -e 's/^go $ENV{OLD_PATTERN}$/go $ENV{NEW_VERSION}/' go.work || exit 1
+              fi
+              git add -u || exit 1
+              git commit -q -m "build: use Go ${target} toolchain" \
+                -m "Move the pinned toolchain to the newest stable patch so CI and the
+scheduled vulnerability scan use the patched standard library.
+Module language minimums are unchanged." || exit 1
+              git push -q origin "HEAD:refs/heads/${branch}" || exit 1
+            ) || { failures+="${repo}: could not prepare Go ${target}"$'\n'; return 0; }
+            gh pr create --repo "${repo}" --base main --head "${branch}" \
+              --title "build: use Go ${target} toolchain" \
+              --body "Moves the pinned toolchain from Go ${current} to ${target}, the newest stable ${minor} patch. Only \`.go-version\`, the top-level \`modules.json\` \`go_version\` and a matching \`go.work\` directive change. The go-toolchain workflow in go-library-tools squash-merges this once \`Required\` passes." >/dev/null
+            summary "${repo}: proposed Go ${target}"
+          }
 
-          if [[ -n "${stale}" ]]; then
-            printf '%s' "${stale}" | tee -a "${GITHUB_STEP_SUMMARY}" >&2
+          while IFS= read -r repo; do
+            [[ "${repo}" == "${OWNER}/go-library-tools" ]] && continue
+            land_or_skip "${repo}" || propose "${repo}"
+          done < <(gh repo list "${OWNER}" --no-archived --source --limit 1000 --json nameWithOwner \
+            --jq '.[].nameWithOwner | select(test("/go-"))' | sort)
+
+          if [[ -n "${failures}" ]]; then
+            printf '%s' "${failures}" | tee -a "${GITHUB_STEP_SUMMARY}" >&2
             exit 1
-          fi
-
-  land:
-    name: Land Go patch
-    if: >-
-      inputs.mode == 'land' && github.event_name == 'workflow_dispatch' &&
-      startsWith(github.ref, 'refs/heads/automation/go-')
-    runs-on: ubuntu-24.04
-    timeout-minutes: 10
-    permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          persist-credentials: false
-      - name: Fast-forward the default branch to the verified carrier
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPOSITORY: ${{ github.repository }}
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-          BRANCH: ${{ github.ref_name }}
-          SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          version="${BRANCH#automation/go-}"
-          [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "invalid carrier ${BRANCH}" >&2; exit 1; }
-          [[ "$(git rev-parse HEAD)" == "${SHA}" ]]
-          git fetch -q origin "refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
-          base="$(git rev-parse "origin/${DEFAULT_BRANCH}")"
-          # Land only the single bot bump commit, never other carrier content.
-          [[ "$(git rev-parse "${SHA}^")" == "${base}" ]] || { echo "carrier is not one commit on ${DEFAULT_BRANCH}" >&2; exit 1; }
-          while IFS= read -r path; do
-            case "${path}" in
-              .go-version|modules.json|go.work) ;;
-              *) echo "carrier changes unexpected path: ${path}" >&2; exit 1 ;;
-            esac
-          done < <(git diff --name-only "${base}" "${SHA}")
-          [[ "$(tr -d '[:space:]' <.go-version)" == "${version}" ]] || { echo '.go-version does not match the carrier' >&2; exit 1; }
-          gh auth setup-git
-          remote="https://github.com/${REPOSITORY}.git"
-          git push -q "${remote}" "${SHA}:refs/heads/${DEFAULT_BRANCH}"
-          echo "Advanced ${DEFAULT_BRANCH} to ${SHA} (Go ${version})." >>"${GITHUB_STEP_SUMMARY}"
-          if ! git push -q "${remote}" --delete "${BRANCH}"; then
-            echo "::warning::Landed, but ${BRANCH} could not be deleted; the next schedule reports it."
           fi

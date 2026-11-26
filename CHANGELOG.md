@@ -6,9 +6,10 @@ All notable changes to this project are documented in this file.
 
 ### Added
 
-- Add the `go-toolchain.yml` reusable workflow, which moves a library's pinned
-  Go toolchain to the newest stable patch of its minor release after the
-  library's own CI passes on the exact bump commit.
+- Add the scheduled `go-toolchain.yml` workflow, which proposes and
+  squash-merges pull requests that move each library's pinned Go toolchain to
+  the newest stable patch of its minor release once the library's own
+  `Required` check passes.
 
 ### Fixed
 
