@@ -10,6 +10,10 @@ All notable changes to this project are documented in this file.
   each govulncheck advisory ID with its found and fixed module versions, taken
   only from govulncheck's fixed heading and version lines, so traces and
   other scanner text stay out of the output.
+- Add the scheduled `go-toolchain.yml` workflow, which proposes and
+  squash-merges pull requests that move each library's pinned Go toolchain to
+  the newest stable patch of its minor release once the library's own
+  `Required` check passes.
 
 ### Fixed
 
@@ -18,16 +22,6 @@ All notable changes to this project are documented in this file.
 - The Go toolchain patch workflow now ignores `automation/go-` pull requests
   from forks or other authors instead of failing that library's bump; they are
   listed in the run summary and never merged.
-
-### Added
-
-- Add the scheduled `go-toolchain.yml` workflow, which proposes and
-  squash-merges pull requests that move each library's pinned Go toolchain to
-  the newest stable patch of its minor release once the library's own
-  `Required` check passes.
-
-### Fixed
-
 - Build and attribute releases with Go 1.27.4 to address GO-2026-6859 in
   `net/http`. The module language minimum is unchanged.
 

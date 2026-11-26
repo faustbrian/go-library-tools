@@ -156,10 +156,11 @@ elsewhere, but another ID, checksum, path, surrounding text, rule or credential
 assignment remains scanned. Owner: library maintainer; review condition:
 changed decision provenance, scanner matching semantics or exception scope.
 The OpenAPI metadata exception likewise requires the generic-api-key detector,
-root `CHANGELOG.md`, and one of 14 exact public decision-ID/SHA-256 lines.
+root `CHANGELOG.md`, and one of 15 exact public decision-ID/SHA-256 lines.
 Their checksums were independently recomputed from decision registers at
-`09771cf1e03bbdb684cca77785cbc7ee1ee2e9a1` and
-`92dcffd42c0dbd6d27c526e5cf33ea7f9b8591f1` and matched their history.
+`09771cf1e03bbdb684cca77785cbc7ee1ee2e9a1`,
+`92dcffd42c0dbd6d27c526e5cf33ea7f9b8591f1` and
+`bd1a4c20ab9ad20e9c76b5410413d113f15fc3e8` and matched their history.
 Only the scanner's optional leading newline is admitted. Changed pairs,
 paths, surrounding text, credential assignments and other detectors remain
 findings. Owner and review conditions are the same as for JSONAPI metadata;
@@ -185,7 +186,9 @@ matching semantics or exception scope. Other supplier-history findings and
 vulnerability checks are not waived by this classification.
 
 Scanner-controlled stdout and stderr are suppressed and independently limited
-to 4 MiB. Gitleaks uses a distinct findings exit status; only the exact final
+to 4 MiB. A failed vulnerability scan surfaces only up to 32 shape-checked
+`vulnerability GO-… found=… fixed=…` lines; traces and other govulncheck text
+are discarded. Gitleaks uses a distinct findings exit status; only the exact final
 Go-wrapper status line is recognized, without retaining scanner text. Completed
 findings produce the fixed `secret-findings` diagnostic and still fail the gate.
 An owned report template emits only SHA-256 file and rule identities, positive

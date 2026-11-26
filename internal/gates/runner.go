@@ -1084,11 +1084,13 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 					}
 					classification = errors.New(metadata)
 				}
-				// Exit status 3 is govulncheck's completed scan with findings.
+				// govulncheck runs through go run, which reports both findings (the
+				// child's status 3) and tool errors as status 1; only advisory
+				// headings on stdout distinguish findings.
 				if err != nil && overflow == nil && ctx.Err() == nil && govulncheck {
 					metadata := "govulncheck-tool-or-report-failure"
 					var status interface{ ExitCode() int }
-					if errors.As(err, &status) && (status.ExitCode() == 3 || status.ExitCode() == 1) {
+					if errors.As(err, &status) && status.ExitCode() == 1 {
 						metadata = govulncheckFailureMetadata(report.data.Bytes())
 					}
 					classification = errors.New(metadata)

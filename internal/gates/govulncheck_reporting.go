@@ -7,7 +7,10 @@ import (
 	"strings"
 )
 
-const maximumVulnerabilityFindings = 32
+const (
+	maximumVulnerabilityFindings = 32
+	maximumVulnerabilityVersions = 4
+)
 
 var (
 	vulnerabilityHeading = regexp.MustCompile(`^Vulnerability #[1-9][0-9]{0,3}: (GO-[0-9]{4}-[0-9]{1,6})$`)
@@ -24,32 +27,38 @@ func govulncheckFailureMetadata(data []byte) string {
 	}
 	var findings []string
 	current := ""
+	versions := 0
 	omitted := false
 	flush := func() {
-		if current == "" {
-			return
-		}
-		if len(findings) < maximumVulnerabilityFindings {
-			findings = append(findings, current)
-		} else {
-			omitted = true
+		if current != "" {
+			if len(findings) < maximumVulnerabilityFindings {
+				findings = append(findings, current)
+			} else {
+				omitted = true
+			}
 		}
 		current = ""
+		versions = 0
 	}
 	scanner := bufio.NewScanner(bytes.NewReader(data))
 	scanner.Buffer(make([]byte, 0, 4096), 4096)
 	for scanner.Scan() {
 		line := scanner.Text()
-		if match := vulnerabilityHeading.FindStringSubmatch(line); match != nil {
+		if strings.HasPrefix(line, "Vulnerability #") {
+			// An unrecognized heading still ends the previous advisory, so its
+			// version lines are never attributed to the wrong advisory.
 			flush()
-			current = "vulnerability " + match[1]
+			if match := vulnerabilityHeading.FindStringSubmatch(line); match != nil {
+				current = "vulnerability " + match[1]
+			}
 			continue
 		}
 		if current == "" {
 			continue
 		}
-		if match := vulnerabilityVersion.FindStringSubmatch(line); match != nil {
+		if match := vulnerabilityVersion.FindStringSubmatch(line); match != nil && versions < maximumVulnerabilityVersions {
 			current += " " + strings.ToLower(match[1]) + "=" + match[2]
+			versions++
 		}
 	}
 	if scanner.Err() != nil {

@@ -70,9 +70,12 @@ jobs:
             # Only this token's own same-repository bump is considered; another
             # author's or a fork's matching branch name is noted, never merged,
             # and does not block proposing or landing the real bump.
-            foreign="$(jq -r --arg bot "${bot}" '.[] | select((.headRefName | startswith("automation/go-")) and (.isCrossRepository or .author.login != $bot)) | .url' <<<"${pulls}")"
+            if ! foreign="$(jq -r --arg bot "${bot}" '.[] | select((.headRefName | startswith("automation/go-")) and (.isCrossRepository or .author.login != $bot)) | .url' <<<"${pulls}")" ||
+              ! pull="$(jq -c --arg bot "${bot}" '[.[] | select((.headRefName | startswith("automation/go-")) and (.isCrossRepository | not) and .author.login == $bot)][0] // empty' <<<"${pulls}")"; then
+              fail "${repo}: could not read pull requests"
+              return 0
+            fi
             [[ -z "${foreign}" ]] || summary "${repo}: ignored automation/go- pull requests by others: ${foreign//$'\n'/ }"
-            pull="$(jq -c --arg bot "${bot}" '[.[] | select((.headRefName | startswith("automation/go-")) and (.isCrossRepository | not) and .author.login == $bot)][0] // empty' <<<"${pulls}")"
             [[ -n "${pull}" ]] || return 1
             number="$(jq -r .number <<<"${pull}")"
             oid="$(jq -r .headRefOid <<<"${pull}")"

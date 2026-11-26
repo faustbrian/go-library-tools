@@ -95,3 +95,27 @@ func TestVulnerabilityGatePassesWithoutFindings(t *testing.T) {
 		t.Fatalf("vulnerability gate failed without findings: %v", err)
 	}
 }
+
+func TestGovulncheckFailureMetadataDoesNotMisattributeVersions(t *testing.T) {
+	report := "Vulnerability #1: GO-2026-0001\n    Found in: a@v1.0.0\n" +
+		"Vulnerability #10000: GO-2026-0002\n    Found in: b@v1.0.0\n" +
+		"Vulnerability #2: GO-2026-0003\n" + strings.Repeat("    Found in: c@v1.0.0\n", maximumVulnerabilityVersions+2)
+	got := govulncheckFailureMetadata([]byte(report))
+	want := "vulnerability GO-2026-0001 found=a@v1.0.0\nvulnerability GO-2026-0003" + strings.Repeat(" found=c@v1.0.0", maximumVulnerabilityVersions)
+	if got != want {
+		t.Fatalf("metadata = %q, want %q", got, want)
+	}
+}
+
+func TestVulnerabilityGateIgnoresFindingsShapeOnUnexpectedStatus(t *testing.T) {
+	root := t.TempDir()
+	runner := Runner{Root: root, Executor: executorFunction(func(_ context.Context, command Command) error {
+		_, _ = io.WriteString(command.Stdout, "Vulnerability #1: GO-2026-6859\n    Found in: net/http@go1.27.3\n")
+		return compilerScannerExit{error: errors.New("signal: killed"), code: 137}
+	})}
+	err := runner.securityTool(t.Context(), io.Discard, ".", "vulnerability", root,
+		"golang.org/x/vuln/cmd/govulncheck@"+govulncheckVersion, "./...")
+	if err == nil || !strings.Contains(err.Error(), "govulncheck-tool-or-report-failure") || strings.Contains(err.Error(), "GO-2026-6859") {
+		t.Fatalf("unexpected-status error = %v", err)
+	}
+}

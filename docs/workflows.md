@@ -429,8 +429,8 @@ libraries need no workflow changes. Each run handles each library with a
   `go.work` directive. The library's own CI runs on it.
 
 Pull requests on an `automation/go-` branch from a fork or another author are
-listed in the run summary and otherwise ignored, so they cannot block or be
-merged as a bump. No run waits on another, so a patch lands on the run after its CI passes.
+listed in the run summary and otherwise ignored, so they are never merged and
+do not stop the real bump unless they occupy its exact branch name. No run waits on another, so a patch lands on the run after its CI passes.
 `go.mod` language minimums, workflow files and changelogs stay unchanged, and
 no release is tagged because consumers build with their own toolchain. The
 workflow needs `GOLIB_ROLLOUT_TOKEN`, a fine-grained token with contents and
