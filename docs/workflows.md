@@ -426,7 +426,6 @@ which stays its only workflow:
       contents: write
     uses: faustbrian/go-library-tools/.github/workflows/go-toolchain.yml@<sha>
     with:
-      tooling_sha: <sha>
       mode: bump
 
   go-toolchain-land:
@@ -436,7 +435,6 @@ which stays its only workflow:
       contents: write
     uses: faustbrian/go-library-tools/.github/workflows/go-toolchain.yml@<sha>
     with:
-      tooling_sha: <sha>
       mode: land
 ```
 
@@ -448,7 +446,11 @@ branch and dispatches `ci.yml` there. That dispatched run lands the bump after
 its own `Required` job passes: it checks that the carrier is exactly one commit
 on the default branch touching only those files, fast-forwards the default
 branch and deletes the carrier. Neither job waits on another run. A failed
-carrier run leaves `main` untouched and is rebuilt on the next schedule.
+carrier run leaves `main` untouched; the next scheduled run finds the leftover
+carrier, re-proposes it and fails with a link to that carrier's CI, so the
+failure reaches the schedule's notifications. The logic is inline so `ci.yml`
+keeps exactly one `tooling_sha` input for `golib upgrade`; re-pin the two
+`go-toolchain.yml` references by hand when this workflow changes.
 `go.mod` language minimums, workflow files and changelogs stay unchanged, and no
 release is tagged because consumers build with their own toolchain. This
 repository pins its Go version in release attribution and tool code too, so its
