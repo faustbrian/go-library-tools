@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+### Added
+
+- Add the weekly `dependencies.yml` workflow, which replaces Dependabot in the
+  libraries with one auto-merging dependency update pull request per library.
+
 ## 2.6.0 - 2026-11-26
 
 Recorded as a prepared release candidate on this date; public availability
