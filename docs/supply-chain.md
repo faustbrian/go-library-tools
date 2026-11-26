@@ -37,14 +37,19 @@ preserve failures; do not infer advisory freshness from an old green commit.
 
 ## Updates and authenticated inputs
 
-Keep exactly one repository-owned Dependabot configuration and no competing
-Renovate configuration. Check its directories against actual dependency
-manifests, including owned non-workspace modules and embedded tooling. Root
-Actions updates do not cover nested Go, npm or Composer manifests. Keep
-compatible directory globs; do not require a fleet migration merely to rewrite
-equivalent scopes. Selection-owned composition dependencies must update their
-selection and module inputs together rather than accepting a bot's partial
-direct-version edit.
+Libraries keep no Dependabot or Renovate configuration. The weekly
+`dependencies.yml` workflow in this repository opens one pull request per
+library that moves every tracked Go module to its newest compatible
+requirements, exactly pinned npm dependencies to their newest releases and
+SHA-pinned third-party actions to their latest releases, and squash-merges it
+through GitHub auto-merge once the library's own `Required` check passes. A
+module whose `go` or `toolchain` line would rise keeps its requirements and is
+listed in the run summary. Dependabot vulnerability alerts stay enabled as
+information; its security-update pull requests are disabled. This repository keeps
+its own Dependabot configuration, because tool dependencies must move with the
+reviewed release license mapping, and `go-library-assurance` is updated by hand
+because selection-owned composition dependencies must update their selection
+and module inputs together.
 
 Tools' retained `release/compatibility-consumer` is catalog-generated historical
 publication evidence. Its bot updates only indirect requirements; direct

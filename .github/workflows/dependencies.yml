@@ -1,0 +1,242 @@
+name: Dependency updates
+
+# Weekly, per faustbrian/go-* library: move every Go module's requirements to
+# their newest compatible releases, every exactly pinned npm dependency to its
+# newest release, and every SHA-pinned third-party action to its latest
+# release, in one pull request with GitHub auto-merge, so it squash-merges as
+# soon as the library's own Required check passes.
+#
+# A module whose go directive or toolchain line would rise is left unchanged
+# and listed in the summary. The previous week's pull request is closed and
+# replaced; one whose Required check failed also fails this run. go-library-tools
+# (release license mapping, updated by its own Dependabot configuration) and
+# go-library-assurance (published selection) own their dependency inputs.
+#
+# GOLIB_ROLLOUT_TOKEN needs contents, pull-request and workflow write access to
+# the libraries; the workflow token can neither open pull requests there nor
+# edit their workflows.
+
+on:
+  schedule:
+    - cron: '17 2 * * 1'
+  workflow_dispatch:
+    inputs:
+      repositories:
+        description: Optional JSON array of repository names, for example ["go-knapsack"]; empty means every library
+        required: false
+        default: ''
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dependency-updates
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Select libraries
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      repositories: ${{ steps.plan.outputs.repositories }}
+    steps:
+      - id: plan
+        name: List libraries
+        env:
+          GH_TOKEN: ${{ secrets.GOLIB_ROLLOUT_TOKEN }}
+          OWNER: ${{ github.repository_owner }}
+          REQUESTED: ${{ inputs.repositories }}
+        run: |
+          set -euo pipefail
+          [[ -n "${GH_TOKEN}" ]] || { echo 'GOLIB_ROLLOUT_TOKEN is not configured' >&2; exit 1; }
+          all="$(gh repo list "${OWNER}" --no-archived --source --limit 1000 --json name \
+            --jq '[.[].name | select(startswith("go-")) | select(. != "go-library-tools" and . != "go-library-assurance")] | sort')"
+          if [[ -n "${REQUESTED}" ]]; then
+            selected="$(jq -ce --argjson all "${all}" '
+              if type == "array" and length > 0 and all(.[]; type == "string") then
+                [.[] | . as $name | if ($all | index($name)) == null then error("not an updatable library: " + $name) else $name end] | unique
+              else error("repositories must be a non-empty JSON array of names") end' <<<"${REQUESTED}")"
+          else
+            selected="${all}"
+          fi
+          [[ "$(jq length <<<"${selected}")" -le 256 ]]
+          echo "repositories=${selected}" >>"${GITHUB_OUTPUT}"
+
+  update:
+    name: Update / ${{ matrix.repository }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 6
+      matrix:
+        repository: ${{ fromJSON(needs.plan.outputs.repositories) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository_owner }}/${{ matrix.repository }}
+          token: ${{ secrets.GOLIB_ROLLOUT_TOKEN }}
+          path: target
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: target/.go-version
+          cache: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '24.21.0'
+          package-manager-cache: false
+      - name: Propose and auto-merge updates
+        working-directory: target
+        env:
+          GH_TOKEN: ${{ secrets.GOLIB_ROLLOUT_TOKEN }}
+          REPOSITORY: ${{ github.repository_owner }}/${{ matrix.repository }}
+          GOTOOLCHAIN: local
+          GOWORK: 'off'
+          GOFLAGS: -mod=mod
+          GOPROXY: https://proxy.golang.org
+          GOSUMDB: sum.golang.org
+        run: |
+          set -euo pipefail
+          branch='automation/dependencies'
+          summary() { printf -- '- %s\n' "$*" >>"${GITHUB_STEP_SUMMARY}"; }
+          task="$(mktemp -d "${RUNNER_TEMP}/dependency-updates.XXXXXX")"
+          trap 'chmod -R u+w "${task}" 2>/dev/null || true; find "${task}" -depth -delete' EXIT
+          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp" npm_config_cache="${task}/npm"
+          mkdir -p "${GOTMPDIR}"
+          gh auth setup-git
+          git config user.name 'golib-dependencies'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          bot="$(gh api user --jq .login)"
+
+          # Replace last week's pull request; a failed one also fails this run.
+          failed=''
+          foreign=''
+          previous="$(gh pr list --repo "${REPOSITORY}" --state open --head "${branch}" \
+            --json number,url,author,isCrossRepository,headRefOid)"
+          while IFS= read -r pull; do
+            [[ -n "${pull}" ]] || continue
+            number="$(jq -r .number <<<"${pull}")"
+            url="$(jq -r .url <<<"${pull}")"
+            if [[ "$(jq -r .isCrossRepository <<<"${pull}")" != false || "$(jq -r .author.login <<<"${pull}")" != "${bot}" ]]; then
+              summary "ignored ${url}, which is not this workflow's pull request"
+              [[ "$(jq -r .isCrossRepository <<<"${pull}")" != false ]] || foreign="${url}"
+              continue
+            fi
+            required="$(gh api "repos/${REPOSITORY}/commits/$(jq -r .headRefOid <<<"${pull}")/check-runs?check_name=Required" \
+              --jq '[.check_runs[] | select(.app.slug == "github-actions") | .conclusion] | if any(. == "failure" or . == "cancelled" or . == "timed_out") then "failure" else "other" end')"
+            [[ "${required}" != failure ]] || failed="Required failed on ${url}"
+            gh pr close "${number}" --repo "${REPOSITORY}" --delete-branch \
+              --comment "Replaced by this week's dependency update." >/dev/null
+            summary "closed ${url}"
+          done < <(jq -c '.[]' <<<"${previous}")
+          # An auto-merged or manually closed update can leave its branch behind;
+          # with no open pull request on it, it is this workflow's stale branch.
+          if [[ -n "${foreign}" ]]; then
+            echo "${REPOSITORY}: ${branch} belongs to another author's open pull request ${foreign}" | tee -a "${GITHUB_STEP_SUMMARY}" >&2
+            exit 1
+          fi
+          if gh api "repos/${REPOSITORY}/git/ref/heads/${branch}" >/dev/null 2>&1; then
+            gh api -X DELETE "repos/${REPOSITORY}/git/refs/heads/${branch}" >/dev/null
+            summary "deleted stale ${branch}"
+          fi
+
+          # Go: newest compatible requirements per module, never a higher go line.
+          kept=''
+          while IFS= read -r modfile; do
+            directory="$(dirname "${modfile}")"
+            before="$(grep -E '^(go|toolchain) ' "${modfile}" || true)"
+            if (cd "${directory}" && env -u GH_TOKEN go get -u -t ./... >/dev/null 2>"${task}/go.log" &&
+              { ! grep -qE '^tool[[:space:]]' go.mod || env -u GH_TOKEN go get -u tool >/dev/null 2>>"${task}/go.log"; } &&
+              env -u GH_TOKEN go mod tidy >/dev/null 2>>"${task}/go.log"); then
+              after="$(grep -E '^(go|toolchain) ' "${modfile}" || true)"
+              if [[ "${after}" != "${before}" ]]; then
+                git checkout -q -- "${directory}/go.mod" "${directory}/go.sum" 2>/dev/null || git checkout -q -- "${directory}/go.mod"
+                kept+="${directory} (would raise its go or toolchain line)"$'\n'
+              fi
+            else
+              git checkout -q -- "${directory}/go.mod" "${directory}/go.sum" 2>/dev/null || git checkout -q -- "${directory}/go.mod"
+              kept+="${directory} ($(tail -n 1 "${task}/go.log" | cut -c1-200))"$'\n'
+            fi
+          done < <(git ls-files -- '*go.mod' ':(exclude,glob)**/testdata/**' ':(exclude,glob)**/vendor/**')
+
+          # npm: exactly pinned dependencies move to their newest release; no install scripts run.
+          while IFS= read -r manifest; do
+            directory="$(dirname "${manifest}")"
+            [[ -f "${directory}/package-lock.json" ]] || continue
+            for section in dependencies devDependencies; do
+              while IFS=$'\t' read -r name version; do
+                [[ -n "${name}" ]] || continue
+                if ! latest="$(env -u GH_TOKEN npm view "${name}" version 2>/dev/null)"; then
+                  kept+="${manifest} ${name} (registry lookup failed)"$'\n'
+                  continue
+                fi
+                [[ "${latest}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ && "${latest}" != "${version}" ]] || continue
+                jq --arg section "${section}" --arg name "${name}" --arg latest "${latest}" \
+                  '.[$section][$name] = $latest' "${manifest}" >"${task}/package.json"
+                cat "${task}/package.json" >"${manifest}"
+              done < <(jq -r --arg section "${section}" '(.[$section] // {}) | to_entries[] | select(.value | test("^[0-9]+\\.[0-9]+\\.[0-9]+$")) | [.key, .value] | @tsv' "${manifest}")
+            done
+            if ! git diff --quiet -- "${manifest}"; then
+              (cd "${directory}" && env -u GH_TOKEN npm install --package-lock-only --ignore-scripts --no-audit --no-fund >/dev/null) ||
+                { git checkout -q -- "${manifest}" "${directory}/package-lock.json"; kept+="${directory} (npm lock refresh failed)"$'\n'; }
+            fi
+          done < <(git ls-files -- '*package.json' ':(exclude,glob)**/node_modules/**')
+
+          # Actions: SHA-pinned third-party actions move to their latest release.
+          while IFS= read -r workflow; do
+            while IFS= read -r action; do
+              owner_repo="$(cut -d/ -f1-2 <<<"${action}")"
+              # The current version comes from the pin's comment; without one the
+              # pin is left alone, since its version cannot be compared.
+              current="$(grep -hoE "uses:[[:space:]]*${action//./\\.}@[0-9a-f]{40}[[:space:]]*#[[:space:]]*v?[0-9]+(\.[0-9]+){0,2}" "${workflow}" |
+                head -n 1 | sed -E 's/.*#[[:space:]]*v?//')" || true
+              [[ -n "${current}" ]] || continue
+              # Highest stable semver release, never a lower or backport "latest".
+              if ! tag="$(gh api "repos/${owner_repo}/releases?per_page=100" --jq '
+                  [.[] | select(.draft | not) | select(.prerelease | not) | .tag_name
+                    | select(test("^v?[0-9]+\\.[0-9]+\\.[0-9]+$"))]
+                  | max_by(ltrimstr("v") | split(".") | map(tonumber)) // empty' 2>/dev/null)"; then
+                kept+="${workflow} ${action} (release lookup failed)"$'\n'
+                continue
+              fi
+              [[ -n "${tag}" ]] || continue
+              newest="$(printf '%s\n%s\n' "${current}" "${tag#v}" | sort -V | tail -n 1)"
+              [[ "${newest}" == "${tag#v}" && "${tag#v}" != "${current}" ]] || continue
+              if ! sha="$(gh api "repos/${owner_repo}/commits/${tag}" --jq .sha 2>/dev/null)" || [[ ! "${sha}" =~ ^[0-9a-f]{40}$ ]]; then
+                kept+="${workflow} ${action} (could not resolve ${tag})"$'\n'
+                continue
+              fi
+              ACTION="${action}" SHA="${sha}" TAG="${tag}" perl -pi -e '
+                s/(uses:\s*\Q$ENV{ACTION}\E@)[0-9a-f]{40}(\s*#\s*\S+)?/$1$ENV{SHA} # $ENV{TAG}/' "${workflow}"
+            done < <(grep -hoE 'uses:[[:space:]]*[A-Za-z0-9_.-]+/[A-Za-z0-9_./-]+@[0-9a-f]{40}' "${workflow}" |
+              sed -E 's/^uses:[[:space:]]*//; s/@.*//' | grep -v '^faustbrian/' | sort -u)
+          done < <(git ls-files -- '.github/workflows/*.yml' '.github/workflows/*.yaml' ':(glob).github/actions/**/action.yml' ':(glob).github/actions/**/action.yaml')
+
+          [[ -z "${kept}" ]] || { summary "kept unchanged:"; printf '%s' "${kept}" | sed 's/^/  - /' >>"${GITHUB_STEP_SUMMARY}"; }
+          if git diff --quiet; then
+            summary "${REPOSITORY}: dependencies are current"
+          else
+            git switch -q -c "${branch}"
+            git add -u
+            git commit -q -m 'build(deps): update dependencies' \
+              -m "$(printf '%s\n' \
+                'Move Go requirements to their newest compatible releases, exactly' \
+                'pinned npm dependencies to their newest releases and pinned actions' \
+                'to their latest releases. Module go lines are unchanged.')"
+            git push -q origin "HEAD:refs/heads/${branch}"
+            url="$(gh pr create --repo "${REPOSITORY}" --base main --head "${branch}" \
+              --title 'build(deps): update dependencies' \
+              --body "Weekly dependency update from the go-library-tools dependency workflow. It squash-merges automatically once Required passes; a failed run is closed and replaced next week.")"
+            gh pr merge "${url}" --repo "${REPOSITORY}" --auto --squash \
+              --match-head-commit "$(git rev-parse HEAD)"
+            summary "${REPOSITORY}: proposed ${url} with auto-merge"
+          fi
+
+          if [[ -n "${failed}" ]]; then
+            echo "${REPOSITORY}: last week's update failed: ${failed}" | tee -a "${GITHUB_STEP_SUMMARY}" >&2
+            exit 1
+          fi
