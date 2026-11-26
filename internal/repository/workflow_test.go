@@ -142,7 +142,9 @@ func TestRepositoryWorkflowsPinRemoteActions(t *testing.T) {
 			t.Fatal(readErr)
 		}
 		matches := remoteAction.FindAllStringSubmatch(string(data), -1)
-		if len(matches) == 0 {
+		// A workflow without steps that use actions, such as a pure script
+		// job, has nothing to pin; one with uses: lines must match them all.
+		if len(matches) == 0 && strings.Contains(string(data), "uses:") {
 			t.Fatalf("%s has no pinned remote actions", entry.Name())
 		}
 		for _, match := range matches {
