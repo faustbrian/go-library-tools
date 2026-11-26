@@ -63,22 +63,24 @@ jobs:
           # step checks its own result. land_or_skip returns 1 only when no bot
           # pull request is open and a new one may be proposed.
           land_or_skip() {
-            local repo="$1" pull number oid url state commits files required
-            pull="$(gh pr list --repo "${repo}" --state open --limit 100 \
-              --json number,headRefName,headRefOid,url,mergeStateStatus,isCrossRepository,author \
-              --jq '[.[] | select(.headRefName | startswith("automation/go-"))][0] // empty')" ||
+            local repo="$1" pulls pull foreign number oid url state commits files required
+            pulls="$(gh pr list --repo "${repo}" --state open --limit 100 \
+              --json number,headRefName,headRefOid,url,mergeStateStatus,isCrossRepository,author)" ||
               { fail "${repo}: could not list pull requests"; return 0; }
+            # Only this token's own same-repository bump is considered; another
+            # author's or a fork's matching branch name is noted, never merged,
+            # and does not block proposing or landing the real bump.
+            if ! foreign="$(jq -r --arg bot "${bot}" '.[] | select((.headRefName | startswith("automation/go-")) and (.isCrossRepository or .author.login != $bot)) | .url' <<<"${pulls}")" ||
+              ! pull="$(jq -c --arg bot "${bot}" '[.[] | select((.headRefName | startswith("automation/go-")) and (.isCrossRepository | not) and .author.login == $bot)][0] // empty' <<<"${pulls}")"; then
+              fail "${repo}: could not read pull requests"
+              return 0
+            fi
+            [[ -z "${foreign}" ]] || summary "${repo}: ignored automation/go- pull requests by others: ${foreign//$'\n'/ }"
             [[ -n "${pull}" ]] || return 1
             number="$(jq -r .number <<<"${pull}")"
             oid="$(jq -r .headRefOid <<<"${pull}")"
             url="$(jq -r .url <<<"${pull}")"
             state="$(jq -r .mergeStateStatus <<<"${pull}")"
-            # Merge only this bot's own same-repository bump, never other content
-            # carried on a matching branch name.
-            if [[ "$(jq -r .isCrossRepository <<<"${pull}")" != false || "$(jq -r .author.login <<<"${pull}")" != "${bot}" ]]; then
-              fail "${repo}: ${url} uses an automation/go- branch but is not this bot's pull request"
-              return 0
-            fi
             if ! commits="$(gh pr view "${number}" --repo "${repo}" --json commits --jq '.commits | length')" ||
               ! files="$(gh pr view "${number}" --repo "${repo}" --json files --jq '[.files[].path] | sort | join(" ")')"; then
               fail "${repo}: could not read ${url}"

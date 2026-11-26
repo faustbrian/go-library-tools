@@ -1018,6 +1018,7 @@ func (runner Runner) goTool(ctx context.Context, output io.Writer, module, gate,
 func (runner Runner) securityTool(ctx context.Context, output io.Writer, module, gate, directory, tool string, args ...string) (result error) {
 	gitleaks := tool == "github.com/zricethezav/gitleaks/v8@"+gitleaksVersion
 	gosec := tool == "github.com/securego/gosec/v2/cmd/gosec@"+gosecVersion
+	govulncheck := tool == "golang.org/x/vuln/cmd/govulncheck@"+govulncheckVersion
 	if gosec {
 		args = append([]string{"-fmt=json"}, args...)
 	}
@@ -1036,7 +1037,7 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 			stderr := &boundedProcessOutput{limit: maximumSecurityProcessOutput}
 			var stdoutWriter io.Writer = stdout
 			var report *sourceInventoryOutput
-			if gosec {
+			if gosec || govulncheck {
 				report = &sourceInventoryOutput{}
 				report.limit = maximumSecurityProcessOutput
 				stdout = &report.boundedProcessOutput
@@ -1080,6 +1081,17 @@ func (runner Runner) securityTool(ctx context.Context, output io.Writer, module,
 					var status interface{ ExitCode() int }
 					if errors.As(err, &status) && status.ExitCode() == 1 {
 						metadata = gosecFailureMetadata(report.data.Bytes(), directory)
+					}
+					classification = errors.New(metadata)
+				}
+				// govulncheck runs through go run, which reports both findings (the
+				// child's status 3) and tool errors as status 1; only advisory
+				// headings on stdout distinguish findings.
+				if err != nil && overflow == nil && ctx.Err() == nil && govulncheck {
+					metadata := "govulncheck-tool-or-report-failure"
+					var status interface{ ExitCode() int }
+					if errors.As(err, &status) && status.ExitCode() == 1 {
+						metadata = govulncheckFailureMetadata(report.data.Bytes())
 					}
 					classification = errors.New(metadata)
 				}

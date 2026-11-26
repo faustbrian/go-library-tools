@@ -13,7 +13,8 @@ import (
 
 // Public records independently recomputed from immutable OpenAPI decision
 // registers 09771cf1e03bbdb684cca77785cbc7ee1ee2e9a1 and
-// 92dcffd42c0dbd6d27c526e5cf33ea7f9b8591f1, not from policy expressions.
+// 92dcffd42c0dbd6d27c526e5cf33ea7f9b8591f1, and OPENAPI-DEC-011 from
+// bd1a4c20ab9ad20e9c76b5410413d113f15fc3e8, not from policy expressions.
 func openapiPublicDigestLines() []string {
 	records := []struct {
 		id     string
@@ -33,6 +34,7 @@ func openapiPublicDigestLines() []string {
 		{"OPENAPI-DEC-004", []string{"c38e2c7b", "778c8636", "f4ed8c9b", "7231a104", "9cfac298", "59a655b5", "c7011d44", "159bd1e9"}},
 		{"OPENAPI-DEC-006", []string{"df83163c", "b3d52899", "abcdfcfc", "d95245e3", "ea9914b4", "1401ef55", "2eb6dc88", "12ded7bb"}},
 		{"OPENAPI-DEC-010", []string{"cfd3ed8d", "4b897ba3", "9715ecd0", "61f875b6", "d5da62eb", "87aab1a0", "17de8e9f", "79fb37a7"}},
+		{"OPENAPI-DEC-011", []string{"968315b0", "fc7a0794", "2d41f35c", "0b9853f3", "1c40ca86", "e37fa4c3", "34164da2", "e554f14a"}},
 	}
 	lines := make([]string, 0, len(records))
 	for _, record := range records {
