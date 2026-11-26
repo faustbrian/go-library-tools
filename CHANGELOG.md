@@ -4,6 +4,11 @@ All notable changes to this project are documented in this file.
 
 ## Unreleased
 
+## 2.6.0 - 2026-11-26
+
+Recorded as a prepared release candidate on this date; public availability
+requires the v2.6.0 tag and release.
+
 ### Added
 
 - Name the advisories behind a failed vulnerability gate. The error now lists

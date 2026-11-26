@@ -358,11 +358,11 @@
       "repository": "github.com/faustbrian/go-international",
       "source": {
         "kind": "commit",
-        "commit": "233cbdbd1b448c0d2acdb422df9a539bc21c086b"
+        "commit": "21c26a681fdec1e0e216880036ce83c8c021ba32"
       },
       "tooling": {
-        "version": "v1.6.2",
-        "checksums_sha256": "2a740a44fee468f042b4a66e086fc01a02d8d28877c9b1866e278102665b35ad"
+        "version": "v2.5.1",
+        "checksums_sha256": "ca1293ba633e3ebb5197134cd586979db4e0af51a37e0de0bad2884005327c15"
       }
     },
     {
@@ -771,11 +771,11 @@
       "repository": "github.com/faustbrian/go-search",
       "source": {
         "kind": "commit",
-        "commit": "a93ac8817a9a172ffe552f3a4c1694bb74bd7e9b"
+        "commit": "dcc8145a780f66318cce8282a9571eff7d527166"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v2.5.1",
+        "checksums_sha256": "ca1293ba633e3ebb5197134cd586979db4e0af51a37e0de0bad2884005327c15"
       }
     },
     {
@@ -870,11 +870,11 @@
       "repository": "github.com/faustbrian/go-tabular",
       "source": {
         "kind": "commit",
-        "commit": "5fab96ea7aff199f84bf08b5c5babb121986f508"
+        "commit": "8a13598528c4113c9bc270de9b9d56da5b751359"
       },
       "tooling": {
-        "version": "v1.4.0",
-        "checksums_sha256": "ba1b71d41dc9b58d5bfb411bc89ae2d45b6f3f778152714bfd1afeab0bef2f33"
+        "version": "v2.5.1",
+        "checksums_sha256": "ca1293ba633e3ebb5197134cd586979db4e0af51a37e0de0bad2884005327c15"
       }
     },
     {
