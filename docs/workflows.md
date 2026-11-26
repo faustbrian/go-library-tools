@@ -415,31 +415,44 @@ thin CI caller and never force-pushes an existing rollout branch.
 ## Consumer Go patch updates
 
 `go-toolchain.yml` keeps a library's pinned toolchain on the newest stable patch
-of its current Go minor release. A thin caller schedules it daily, before the
-scheduled CI run, with `actions: write`, `checks: read` and `contents: write`:
+of its current Go minor release. Each library adds two jobs to its own `ci.yml`,
+which stays its only workflow:
 
 ```yaml
-jobs:
-  bump:
+  go-toolchain-bump:
+    if: github.event_name == 'schedule'
     permissions:
       actions: write
-      checks: read
       contents: write
     uses: faustbrian/go-library-tools/.github/workflows/go-toolchain.yml@<sha>
     with:
       tooling_sha: <sha>
+      mode: bump
+
+  go-toolchain-land:
+    needs: required
+    if: github.event_name == 'workflow_dispatch' && startsWith(github.ref_name, 'automation/go-')
+    permissions:
+      contents: write
+    uses: faustbrian/go-library-tools/.github/workflows/go-toolchain.yml@<sha>
+    with:
+      tooling_sha: <sha>
+      mode: land
 ```
 
-It selects the patch from the `actions/go-versions` manifest that `setup-go`
-installs from, so a bump never precedes runner availability. The bump changes
-only `.go-version`, the top-level `modules.json` `go_version` and a matching
-`go.work` directive; `go.mod` language minimums, workflow files and changelogs
-stay unchanged, and no release is tagged because consumers build with their own
-toolchain. The commit goes to a temporary `automation/go-<version>` branch, the
-repository's `ci.yml` is dispatched on that exact commit, and the default branch
-is fast-forwarded only after its `Required` check passes; any failure leaves
-`main` untouched and fails the run visibly. This repository pins its Go version
-in release attribution and tool code too, so its own bumps stay manual.
+The scheduled run selects the patch from the `actions/go-versions` manifest that
+`setup-go` installs from, so a bump never precedes runner availability. It
+changes only `.go-version`, the top-level `modules.json` `go_version` and a
+matching `go.work` directive, commits that to a temporary `automation/go-<version>`
+branch and dispatches `ci.yml` there. That dispatched run lands the bump after
+its own `Required` job passes: it checks that the carrier is exactly one commit
+on the default branch touching only those files, fast-forwards the default
+branch and deletes the carrier. Neither job waits on another run. A failed
+carrier run leaves `main` untouched and is rebuilt on the next schedule.
+`go.mod` language minimums, workflow files and changelogs stay unchanged, and no
+release is tagged because consumers build with their own toolchain. This
+repository pins its Go version in release attribution and tool code too, so its
+own bumps stay manual.
 
 Own tooling builds and CI select Go 1.27.4 from `.go-version`; the module
 language floor remains Go 1.27.0. Producer-Go or shared consumer-input changes

@@ -1,9 +1,13 @@
 name: Go toolchain patch
 
 # Keeps a library's pinned Go toolchain on the newest stable patch of its
-# minor release. A bump is committed to a temporary carrier branch, the
-# repository's own CI is dispatched on that exact commit, and the default
-# branch is fast-forwarded only after the required check passes there.
+# minor release, in two short jobs that never wait on other runs:
+#
+# - bump (scheduled CI): commit the newer patch to a carrier branch
+#   automation/go-<version> and dispatch the repository's ci.yml on it.
+# - land (that dispatched CI, after its Required job passed): verify the
+#   carrier holds exactly the bump commit on top of the default branch and
+#   fast-forward the default branch to it.
 
 on:
   workflow_call:
@@ -12,23 +16,24 @@ on:
         description: Immutable source of this reusable workflow and its bump script
         required: true
         type: string
+      mode:
+        description: bump on the scheduled default-branch run, land on the dispatched carrier run
+        required: true
+        type: string
 
 permissions:
   contents: read
 
-concurrency:
-  group: go-toolchain-patch-${{ github.repository }}
-  cancel-in-progress: false
-
 jobs:
   bump:
-    name: Advance Go patch
-    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    name: Propose Go patch
+    if: >-
+      inputs.mode == 'bump' && github.event_name == 'schedule' &&
+      github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     runs-on: ubuntu-24.04
-    timeout-minutes: 180
+    timeout-minutes: 10
     permissions:
       actions: write
-      checks: read
       contents: write
     steps:
       - name: Check immutable tooling identity
@@ -46,68 +51,72 @@ jobs:
           ref: ${{ inputs.tooling_sha }}
           path: .golib-tooling
           persist-credentials: false
-      - id: bump
-        name: Apply newest Go patch
+      - name: Commit newest patch to a carrier and dispatch CI
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
         run: |
           set -euo pipefail
           target="$(bash .golib-tooling/.github/scripts/bump-go-toolchain.sh "${GITHUB_WORKSPACE}")"
           if [[ -z "${target}" ]]; then
             echo 'Go toolchain is already on the newest patch.' >>"${GITHUB_STEP_SUMMARY}"
-            echo 'changed=false' >>"${GITHUB_OUTPUT}"
             exit 0
           fi
-          git diff --stat
-          echo "target=${target}" >>"${GITHUB_OUTPUT}"
-          echo 'changed=true' >>"${GITHUB_OUTPUT}"
-      - name: Verify on a carrier branch and advance the default branch
-        if: steps.bump.outputs.changed == 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TARGET: ${{ steps.bump.outputs.target }}
-          REPOSITORY: ${{ github.repository }}
-          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
-        run: |
-          set -euo pipefail
-          branch="automation/go-${TARGET}"
+          branch="automation/go-${target}"
           remote="https://github.com/${REPOSITORY}.git"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add -u
-          git commit -q -m "build: use Go ${TARGET} toolchain" \
+          git commit -q -m "build: use Go ${target} toolchain" \
             -m "Move the pinned toolchain to the newest stable patch so CI and the scheduled vulnerability scan use the patched standard library. Module language minimums are unchanged."
-          sha="$(git rev-parse HEAD)"
           gh auth setup-git
-          delete_carrier() {
-            if git ls-remote --exit-code --heads "${remote}" "${branch}" >/dev/null 2>&1; then
-              git push -q "${remote}" --delete "${branch}"
-            fi
-          }
-          trap delete_carrier EXIT
-          delete_carrier
-          git push -q "${remote}" "${sha}:refs/heads/${branch}"
+          # A carrier left by a failed or outdated attempt is rebuilt on the current default branch.
+          if git ls-remote --exit-code --heads "${remote}" "${branch}" >/dev/null 2>&1; then
+            git push -q "${remote}" --delete "${branch}"
+          fi
+          git push -q "${remote}" "HEAD:refs/heads/${branch}"
           gh workflow run ci.yml --repo "${REPOSITORY}" --ref "${branch}"
-          run_id=''
-          for _ in $(seq 1 30); do
-            run_id="$(gh run list --repo "${REPOSITORY}" --workflow ci.yml --branch "${branch}" \
-              --event workflow_dispatch --json databaseId,headSha |
-              jq -r --arg sha "${sha}" '[.[] | select(.headSha == $sha)][0].databaseId // empty')"
-            [[ -n "${run_id}" ]] && break
-            sleep 10
-          done
-          if [[ -z "${run_id}" ]]; then
-            echo 'carrier CI run did not start' >&2
-            exit 1
-          fi
-          echo "Carrier CI for Go ${TARGET}: ${GITHUB_SERVER_URL}/${REPOSITORY}/actions/runs/${run_id}" >>"${GITHUB_STEP_SUMMARY}"
-          if ! gh run watch "${run_id}" --repo "${REPOSITORY}" --exit-status --interval 60 >/dev/null; then
-            echo "carrier CI failed: ${GITHUB_SERVER_URL}/${REPOSITORY}/actions/runs/${run_id}" >&2
-            exit 1
-          fi
-          required="$(gh api "repos/${REPOSITORY}/commits/${sha}/check-runs?check_name=Required" \
-            --jq '[.check_runs[] | select(.app.slug == "github-actions") | .conclusion] | length > 0 and all(. == "success")')"
-          if [[ "${required}" != true ]]; then
-            echo "Required check is not green on ${sha}" >&2
-            exit 1
-          fi
-          git push -q "${remote}" "${sha}:refs/heads/${DEFAULT_BRANCH}"
-          echo "Advanced ${DEFAULT_BRANCH} to ${sha}." >>"${GITHUB_STEP_SUMMARY}"
+          echo "Proposed Go ${target} on ${branch}; its CI lands it after Required passes." >>"${GITHUB_STEP_SUMMARY}"
+
+  land:
+    name: Land Go patch
+    if: >-
+      inputs.mode == 'land' && github.event_name == 'workflow_dispatch' &&
+      startsWith(github.ref, 'refs/heads/automation/go-')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fast-forward the default branch to the verified carrier
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          BRANCH: ${{ github.ref_name }}
+          SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          version="${BRANCH#automation/go-}"
+          [[ "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "invalid carrier ${BRANCH}" >&2; exit 1; }
+          [[ "$(git rev-parse HEAD)" == "${SHA}" ]]
+          git fetch -q origin "refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
+          base="$(git rev-parse "origin/${DEFAULT_BRANCH}")"
+          # Land only the single bot bump commit, never other carrier content.
+          [[ "$(git rev-parse "${SHA}^")" == "${base}" ]] || { echo "carrier is not one commit on ${DEFAULT_BRANCH}" >&2; exit 1; }
+          while IFS= read -r path; do
+            case "${path}" in
+              .go-version|modules.json|go.work) ;;
+              *) echo "carrier changes unexpected path: ${path}" >&2; exit 1 ;;
+            esac
+          done < <(git diff --name-only "${base}" "${SHA}")
+          [[ "$(tr -d '[:space:]' <.go-version)" == "${version}" ]] || { echo '.go-version does not match the carrier' >&2; exit 1; }
+          gh auth setup-git
+          remote="https://github.com/${REPOSITORY}.git"
+          git push -q "${remote}" "${SHA}:refs/heads/${DEFAULT_BRANCH}"
+          git push -q "${remote}" --delete "${BRANCH}"
+          echo "Advanced ${DEFAULT_BRANCH} to ${SHA} (Go ${version})." >>"${GITHUB_STEP_SUMMARY}"
