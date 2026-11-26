@@ -55,38 +55,66 @@ jobs:
           trap 'find "${work}" -depth -delete' EXIT
           failures=''
           summary() { printf -- '- %s\n' "$*" >>"${GITHUB_STEP_SUMMARY}"; }
+          fail() { failures+="$*"$'\n'; }
+          bot="$(gh api user --jq .login)"
 
+          # Both functions run in a || list, where errexit is ignored, so every
+          # step checks its own result. land_or_skip returns 1 only when no bot
+          # pull request is open and a new one may be proposed.
           land_or_skip() {
-            local repo="$1" pull
+            local repo="$1" pull number oid url state commits files required
             pull="$(gh pr list --repo "${repo}" --state open --limit 100 \
-              --json number,headRefName,headRefOid,url,mergeStateStatus \
-              --jq '[.[] | select(.headRefName | startswith("automation/go-"))][0] // empty')"
+              --json number,headRefName,headRefOid,url,mergeStateStatus,isCrossRepository,author \
+              --jq '[.[] | select(.headRefName | startswith("automation/go-"))][0] // empty')" ||
+              { fail "${repo}: could not list pull requests"; return 0; }
             [[ -n "${pull}" ]] || return 1
-            local number oid url state required
             number="$(jq -r .number <<<"${pull}")"
             oid="$(jq -r .headRefOid <<<"${pull}")"
             url="$(jq -r .url <<<"${pull}")"
             state="$(jq -r .mergeStateStatus <<<"${pull}")"
+            # Merge only this bot's own same-repository bump, never other content
+            # carried on a matching branch name.
+            if [[ "$(jq -r .isCrossRepository <<<"${pull}")" != false || "$(jq -r .author.login <<<"${pull}")" != "${bot}" ]]; then
+              fail "${repo}: ${url} uses an automation/go- branch but is not this bot's pull request"
+              return 0
+            fi
+            if ! commits="$(gh pr view "${number}" --repo "${repo}" --json commits --jq '.commits | length')" ||
+              ! files="$(gh pr view "${number}" --repo "${repo}" --json files --jq '[.files[].path] | sort | join(" ")')"; then
+              fail "${repo}: could not read ${url}"
+              return 0
+            fi
+            if [[ "${commits}" != 1 ]] || ! grep -Eqx '(\.go-version|go\.work|modules\.json)( (\.go-version|go\.work|modules\.json))*' <<<"${files}"; then
+              fail "${repo}: ${url} is not a single toolchain-pin commit (${commits} commits: ${files})"
+              return 0
+            fi
             if [[ "${state}" == BEHIND ]]; then
               gh pr close "${number}" --repo "${repo}" --delete-branch \
-                --comment 'Main moved; proposing the patch again on the current main.'
+                --comment 'Main moved; proposing the patch again on the current main.' ||
+                { fail "${repo}: could not close outdated ${url}"; return 0; }
               summary "${repo}: closed outdated ${url}"
               return 1
             fi
             required="$(gh api "repos/${repo}/commits/${oid}/check-runs?check_name=Required" \
               --jq '[.check_runs[] | select(.app.slug == "github-actions") | .conclusion]
                 | if length == 0 or any(. == null) then "pending"
-                  elif all(. == "success") then "success" else "failure" end')"
-            case "${required}" in
-              success)
-                gh pr merge "${number}" --repo "${repo}" --squash --delete-branch --match-head-commit "${oid}"
-                summary "${repo}: merged ${url}"
+                  elif all(. == "success") then "success" else "failure" end')" ||
+              { fail "${repo}: could not read the Required check on ${url}"; return 0; }
+            case "${required}:${state}" in
+              success:CLEAN|success:UNSTABLE|success:HAS_HOOKS)
+                if gh pr merge "${number}" --repo "${repo}" --squash --delete-branch --match-head-commit "${oid}"; then
+                  summary "${repo}: merged ${url}"
+                else
+                  fail "${repo}: merge failed for ${url}"
+                fi
                 ;;
-              failure)
-                failures+="${repo}: Required failed on ${url}"$'\n'
+              success:UNKNOWN|pending:*)
+                summary "${repo}: CI or mergeability still pending on ${url}"
+                ;;
+              success:*)
+                fail "${repo}: ${url} passed Required but cannot merge (${state})"
                 ;;
               *)
-                summary "${repo}: CI still running on ${url}"
+                fail "${repo}: Required failed on ${url}"
                 ;;
             esac
             return 0
@@ -96,12 +124,12 @@ jobs:
             local repo="$1" current minor patch target branch checkout
             current="$(gh api "repos/${repo}/contents/.go-version" --jq .content 2>/dev/null | base64 -d | tr -d '[:space:]')" || return 0
             if [[ ! "${current}" =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)$ ]]; then
-              failures+="${repo}: unsupported .go-version ${current}"$'\n'
+              fail "${repo}: unsupported .go-version ${current}"
               return 0
             fi
             minor="${BASH_REMATCH[1]}.${BASH_REMATCH[2]}"
             patch="${BASH_REMATCH[3]}"
-            target="$(jq -er --arg minor "${minor}" '
+            if ! target="$(jq -er --arg minor "${minor}" '
               [.[]
                 | select(.stable == true)
                 | .version as $version
@@ -110,18 +138,20 @@ jobs:
                 | select(any(.files[]; .platform == "linux" and .arch == "x64"))
                 | $version]
               | if length == 0 then error("no stable Go patch for " + $minor)
-                else max_by(split(".") | map(tonumber)) end' <<<"${manifest}")"
-            [[ "${target}" =~ ^[0-9]+\.[0-9]+\.([0-9]+)$ ]]
+                else max_by(split(".") | map(tonumber)) end' <<<"${manifest}")" ||
+              [[ ! "${target}" =~ ^[0-9]+\.[0-9]+\.([0-9]+)$ ]]; then
+              fail "${repo}: no installable Go ${minor} patch"
+              return 0
+            fi
             (( BASH_REMATCH[1] > patch )) || return 0
             branch="automation/go-${target}"
             checkout="${work}/${repo#*/}"
-            git clone -q --depth 1 --filter=blob:none --no-checkout "https://github.com/${repo}.git" "${checkout}"
-            git -C "${checkout}" sparse-checkout set --no-cone /.go-version /modules.json /go.work
-            git -C "${checkout}" checkout -q
             (
-              cd "${checkout}"
+              git clone -q --depth 1 --filter=blob:none --no-checkout "https://github.com/${repo}.git" "${checkout}" || exit 1
+              cd "${checkout}" || exit 1
+              git sparse-checkout set --no-cone /.go-version /modules.json /go.work || exit 1
+              git checkout -q || exit 1
               export OLD_PATTERN="${current//./\\.}" NEW_VERSION="${target}"
-              # errexit does not apply inside this || list, so every step checks itself.
               printf '%s\n' "${target}" >.go-version || exit 1
               if [[ -f modules.json ]]; then
                 [[ "$(jq -er '.go_version' modules.json)" == "${current}" ]] || exit 1
@@ -134,15 +164,19 @@ jobs:
               fi
               git add -u || exit 1
               git commit -q -m "build: use Go ${target} toolchain" \
-                -m "Move the pinned toolchain to the newest stable patch so CI and the
-scheduled vulnerability scan use the patched standard library.
-Module language minimums are unchanged." || exit 1
+                -m "$(printf '%s\n' \
+                  'Move the pinned toolchain to the newest stable patch so CI and the' \
+                  'scheduled vulnerability scan use the patched standard library.' \
+                  'Module language minimums are unchanged.')" || exit 1
               git push -q origin "HEAD:refs/heads/${branch}" || exit 1
-            ) || { failures+="${repo}: could not prepare Go ${target}"$'\n'; return 0; }
-            gh pr create --repo "${repo}" --base main --head "${branch}" \
+            ) || { fail "${repo}: could not prepare Go ${target}"; return 0; }
+            if gh pr create --repo "${repo}" --base main --head "${branch}" \
               --title "build: use Go ${target} toolchain" \
-              --body "Moves the pinned toolchain from Go ${current} to ${target}, the newest stable ${minor} patch. Only \`.go-version\`, the top-level \`modules.json\` \`go_version\` and a matching \`go.work\` directive change. The go-toolchain workflow in go-library-tools squash-merges this once \`Required\` passes." >/dev/null
-            summary "${repo}: proposed Go ${target}"
+              --body "Moves the pinned toolchain from Go ${current} to ${target}, the newest stable ${minor} patch. Only \`.go-version\`, the top-level \`modules.json\` \`go_version\` and a matching \`go.work\` directive change. The go-toolchain workflow in go-library-tools squash-merges this once \`Required\` passes." >/dev/null; then
+              summary "${repo}: proposed Go ${target}"
+            else
+              fail "${repo}: could not open the Go ${target} pull request"
+            fi
           }
 
           while IFS= read -r repo; do
