@@ -1,0 +1,88 @@
+name: Upstream specification monitor
+
+on:
+  schedule:
+    - cron: '47 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: specification-monitor
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    name: Select specification owners
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      repositories: ${{ steps.select.outputs.repositories }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: select
+        env:
+          GH_TOKEN: ${{ github.token }}
+          OWNER: ${{ github.repository_owner }}
+        run: bash .github/scripts/plan-specification-monitor.sh
+
+  monitor:
+    name: Review / ${{ matrix.repository.name }}
+    needs: plan
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      max-parallel: 8
+      matrix:
+        repository: ${{ fromJSON(needs.plan.outputs.repositories) }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          path: tooling
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: tooling/.go-version
+          cache: false
+      - name: Build this workflow's trusted verifier
+        env:
+          GOENV: 'off'
+          GOWORK: 'off'
+          GOTOOLCHAIN: local
+          GOPROXY: https://proxy.golang.org
+          GOSUMDB: sum.golang.org
+          GOPRIVATE: ''
+          GONOPROXY: ''
+          GONOSUMDB: ''
+        run: |
+          set -euo pipefail
+          umask 077
+          task="$(mktemp -d "${RUNNER_TEMP}/golib-specification.XXXXXX")"
+          printf 'SPECIFICATION_TASK=%s\n' "${task}" >>"${GITHUB_ENV}"
+          mkdir "${task}/cache" "${task}/mod" "${task}/tmp"
+          export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp"
+          go -C tooling build -mod=readonly -trimpath -buildvcs=false -o "${task}/golib" ./cmd/golib
+          printf '%s\n' "${task}" >>"${GITHUB_PATH}"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ github.repository_owner }}/${{ matrix.repository.name }}
+          ref: ${{ matrix.repository.revision }}
+          persist-credentials: false
+          path: library
+      - name: Check reviewed authority snapshots
+        working-directory: library
+        run: golib specification check --online
+      - name: Remove task-owned verifier
+        if: always() && env.SPECIFICATION_TASK != ''
+        run: |
+          set -euo pipefail
+          case "${SPECIFICATION_TASK}" in
+            "${RUNNER_TEMP}"/golib-specification.*) ;;
+            *) echo 'unexpected specification workspace' >&2; exit 1 ;;
+          esac
+          chmod -R u+w "${SPECIFICATION_TASK}"
+          find "${SPECIFICATION_TASK}" -depth -delete

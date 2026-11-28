@@ -310,7 +310,7 @@ func TestDecisionContractRejectsUndocumentedAdditionalAuthoritativeSource(t *tes
 	if err != nil {
 		t.Fatal(err)
 	}
-	policy, err := loadMonitoring(root, "specification/monitoring.json", catalog.Modules[0].Specifications, time.Now().UTC())
+	policy, err := loadMonitoring(root, "specification/monitoring.json", catalog.Modules[0].Specifications, time.Now().UTC(), true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -338,7 +338,7 @@ func TestDecisionContractRejectsAdditionalAuthorityDocumentedOutsideDecision(t *
 	if err != nil {
 		t.Fatal(err)
 	}
-	policy, err := loadMonitoring(root, "specification/monitoring.json", catalog.Modules[0].Specifications, time.Now().UTC())
+	policy, err := loadMonitoring(root, "specification/monitoring.json", catalog.Modules[0].Specifications, time.Now().UTC(), true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -530,13 +530,13 @@ func TestMonitoringBoundaryContract(t *testing.T) {
 	for _, interval := range []int{1, 90} {
 		root := t.TempDir()
 		writeMonitoringFixture(t, root, 64, interval)
-		if _, err := loadMonitoring(root, "monitoring.json", []string{"RFC 9110"}, time.Date(2026, 8, 30, 23, 59, 0, 0, time.UTC)); err != nil {
+		if _, err := loadMonitoring(root, "monitoring.json", []string{"RFC 9110"}, time.Date(2026, 8, 30, 23, 59, 0, 0, time.UTC), true); err != nil {
 			t.Fatalf("loadMonitoring(interval %d) error = %v", interval, err)
 		}
 	}
 	root := t.TempDir()
 	writeMonitoringFixture(t, root, 65, 90)
-	if _, err := loadMonitoring(root, "monitoring.json", []string{"RFC 9110"}, time.Date(2026, 8, 30, 23, 59, 0, 0, time.UTC)); err == nil || !strings.Contains(err.Error(), "too many authorities") {
+	if _, err := loadMonitoring(root, "monitoring.json", []string{"RFC 9110"}, time.Date(2026, 8, 30, 23, 59, 0, 0, time.UTC), true); err == nil || !strings.Contains(err.Error(), "too many authorities") {
 		t.Fatalf("loadMonitoring(65 authorities) error = %v", err)
 	}
 }

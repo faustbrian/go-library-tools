@@ -163,8 +163,7 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 		"security-events: write",
 		"golib repository check",
 		"golib workflows check",
-		"golib specification check",
-		"golib specification check --online",
+		"golib repository check --offline",
 		"arguments=(check --local)",
 		"github/codeql-action/init@",
 		"github/codeql-action/analyze@",
@@ -184,29 +183,95 @@ func TestReusableWorkflowPreservesConsumerContract(t *testing.T) {
 	}
 }
 
-func TestReusableWorkflowKeepsOnlineSpecificationMonitoringOutOfOrdinaryPullRequests(t *testing.T) {
+func TestSpecificationMonitoringRunsIndependentlyOfRequiredCI(t *testing.T) {
+	libraryCI := readProjectFile(t, ".github/workflows/library-ci.yml")
+	if strings.Contains(libraryCI, "specification check --online") {
+		t.Fatal("the reusable CI workflow still relies on live publisher responses")
+	}
+	if !strings.Contains(libraryCI, "repository check --offline") {
+		t.Fatal("the reusable CI workflow lost offline specification validation")
+	}
+
 	var workflow workflowDocument
-	if err := yaml.Unmarshal([]byte(readProjectFile(t, ".github/workflows/library-ci.yml")), &workflow); err != nil {
+	data := readProjectFile(t, ".github/workflows/specification-monitor.yml")
+	if err := yaml.Unmarshal([]byte(data), &workflow); err != nil {
 		t.Fatal(err)
 	}
-	offline := 0
-	online := 0
-	for _, step := range workflow.Jobs["repository-contract"].Steps {
-		switch strings.TrimSpace(step.Run) {
-		case "golib specification check":
-			if step.If != "" {
-				t.Fatalf("offline specification check condition = %q, want unconditional", step.If)
-			}
-			offline++
-		case "golib specification check --online":
-			if step.If != "github.event_name == 'schedule'" {
-				t.Fatalf("online specification check condition = %q, want scheduled monitoring only", step.If)
-			}
-			online++
+	if len(workflow.On.Schedule) == 0 || !strings.Contains(data, "workflow_dispatch:") {
+		t.Fatal("specification monitoring must remain scheduled and manually runnable")
+	}
+	for _, step := range workflow.Jobs["monitor"].Steps {
+		if strings.TrimSpace(step.Run) == "golib specification check --online" {
+			return
 		}
 	}
-	if offline != 1 || online != 1 {
-		t.Fatalf("specification steps = offline %d, online %d; want one of each", offline, online)
+	t.Fatal("independent workflow does not run the strict online check")
+}
+
+func TestSpecificationMonitorSelectsPinnedPublicOwners(t *testing.T) {
+	if _, err := exec.LookPath("jq"); err != nil {
+		t.Fatal(err)
+	}
+	task := t.TempDir()
+	const revision = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+	fakeGitHub := `#!/usr/bin/env bash
+set -euo pipefail
+case "$*" in
+  *users/faustbrian/repos*)
+    cat <<'JSON'
+[[
+  {"name":"go-owned","archived":false,"fork":false,"private":false,"default_branch":"main"},
+  {"name":"go-empty","archived":false,"fork":false,"private":false,"default_branch":"main"},
+  {"name":"go-fork","archived":false,"fork":true,"private":false,"default_branch":"main"},
+  {"name":"go-library-assurance","archived":false,"fork":false,"private":false,"default_branch":"main"}
+]]
+JSON
+    ;;
+  *go-empty/git/ref/heads/main*|*go-owned/git/ref/heads/main*)
+    echo '` + revision + `'
+    ;;
+  *go-empty/contents/modules.json?ref=` + revision + `)
+    echo '{"modules":[{}]}'
+    ;;
+  *go-owned/contents/modules.json?ref=` + revision + `)
+    if [[ "${FAIL_MANIFEST:-}" == true ]]; then
+      exit 1
+    fi
+    echo '{"modules":[{"specifications":["RFC 9110"]}]}'
+    ;;
+  *) exit 1 ;;
+esac
+`
+	if err := os.WriteFile(filepath.Join(task, "gh"), []byte(fakeGitHub), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	script := filepath.Join(projectRoot(t), ".github/scripts/plan-specification-monitor.sh")
+	for _, fail := range []bool{false, true} {
+		output := filepath.Join(task, "output-"+strconv.FormatBool(fail))
+		command := exec.CommandContext(t.Context(), "bash", script)
+		command.Env = append(os.Environ(), "PATH="+task+string(os.PathListSeparator)+os.Getenv("PATH"),
+			"OWNER=faustbrian", "GITHUB_OUTPUT="+output, "FAIL_MANIFEST="+strconv.FormatBool(fail))
+		lines, err := command.CombinedOutput()
+		if fail {
+			if err == nil || !strings.Contains(string(lines), "Cannot read module declarations for go-owned") {
+				t.Fatalf("unavailable manifest: %v: %s", err, lines)
+			}
+			if _, err := os.Stat(output); !os.IsNotExist(err) {
+				t.Fatalf("published a partial monitor matrix: %v", err)
+			}
+			continue
+		}
+		if err != nil {
+			t.Fatalf("select authority owners: %v: %s", err, lines)
+		}
+		data, err := os.ReadFile(output)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expected := "repositories=[{\"name\":\"go-owned\",\"revision\":\"" + revision + "\"}]\n"
+		if string(data) != expected {
+			t.Fatalf("matrix = %q, want %q", data, expected)
+		}
 	}
 }
 
@@ -816,6 +881,7 @@ exit "${GOLIB_ROUTING_FIXTURE_STATUS:-0}"
 
 type workflowDocument struct {
 	On struct {
+		Schedule     []map[string]string `yaml:"schedule"`
 		WorkflowCall struct {
 			Inputs map[string]workflowInput `yaml:"inputs"`
 		} `yaml:"workflow_call"`

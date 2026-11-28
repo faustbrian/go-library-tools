@@ -189,7 +189,7 @@ func TestLoadMonitoringRejectsInvalidPolicies(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			root := t.TempDir()
 			write(t, filepath.Join(root, "specification/monitoring.json"), content)
-			if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"RFC 9110"}, now); err == nil {
+			if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"RFC 9110"}, now, true); err == nil {
 				t.Fatal("loadMonitoring() error = nil")
 			}
 		})
@@ -201,12 +201,12 @@ func TestLoadMonitoringRejectsInvalidPolicies(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			root := t.TempDir()
 			write(t, filepath.Join(root, "specification/monitoring.json"), valid)
-			if _, err := loadMonitoring(root, "specification/monitoring.json", specifications, now); err == nil {
+			if _, err := loadMonitoring(root, "specification/monitoring.json", specifications, now, true); err == nil {
 				t.Fatal("loadMonitoring() error = nil")
 			}
 		})
 	}
-	if _, err := loadMonitoring(t.TempDir(), "specification/monitoring.json", []string{"RFC 9110"}, now); err == nil {
+	if _, err := loadMonitoring(t.TempDir(), "specification/monitoring.json", []string{"RFC 9110"}, now, true); err == nil {
 		t.Fatal("loadMonitoring(missing) error = nil")
 	}
 }
@@ -217,7 +217,7 @@ func TestLoadMonitoringAcceptsRestrictedSourceWithoutContentDigest(t *testing.T)
 	root := t.TempDir()
 	write(t, filepath.Join(root, "specification/monitoring.json"), policy)
 
-	if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now); err != nil {
+	if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now, true); err != nil {
 		t.Fatalf("loadMonitoring(restricted source) error = %v", err)
 	}
 }
@@ -238,7 +238,7 @@ func TestLoadMonitoringRejectsUntruthfulRestrictedSource(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			root := t.TempDir()
 			write(t, filepath.Join(root, "specification/monitoring.json"), content)
-			if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now); err == nil {
+			if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now, true); err == nil {
 				t.Fatal("loadMonitoring() error = nil")
 			}
 		})
@@ -251,7 +251,7 @@ func TestLoadMonitoringAcceptsConditionallyAvailableSource(t *testing.T) {
 	valid := `{"schema_version":1,"reviewed_at":"2026-08-30","review_interval_days":90,"authorities":[{"id":"source","kind":"specification","version":"ISO/IEC 18004:2024 edition 4","url":"https://www.iso.org/standard/83389.html","sha256":"` + digest + `","access":"conditional","expected_status":403,"unavailable_reason":"The public metadata endpoint may deny automated retrieval.","specifications":["ISO/IEC 18004:2024 QR Code"]},{"id":"releases","kind":"releases","url":"https://example.com/releases","sha256":"` + digest + `","specifications":["ISO/IEC 18004:2024 QR Code"]}]}`
 	root := t.TempDir()
 	write(t, filepath.Join(root, "specification/monitoring.json"), valid)
-	if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now); err != nil {
+	if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now, true); err != nil {
 		t.Fatalf("loadMonitoring(conditional source) error = %v", err)
 	}
 
@@ -266,7 +266,7 @@ func TestLoadMonitoringAcceptsConditionallyAvailableSource(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			root := t.TempDir()
 			write(t, filepath.Join(root, "specification/monitoring.json"), content)
-			if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now); err == nil {
+			if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"ISO/IEC 18004:2024 QR Code"}, now, true); err == nil {
 				t.Fatal("loadMonitoring() error = nil")
 			}
 		})
@@ -284,7 +284,7 @@ func TestLoadMonitoringRejectsUnboundedAuthoritySet(t *testing.T) {
 	root := t.TempDir()
 	write(t, filepath.Join(root, "specification/monitoring.json"), policy)
 
-	if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"RFC 9110"}, now); err == nil || !strings.Contains(err.Error(), "too many authorities") {
+	if _, err := loadMonitoring(root, "specification/monitoring.json", []string{"RFC 9110"}, now, true); err == nil || !strings.Contains(err.Error(), "too many authorities") {
 		t.Fatalf("loadMonitoring() error = %v", err)
 	}
 }

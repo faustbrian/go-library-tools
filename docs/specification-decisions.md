@@ -247,7 +247,16 @@ append-only preservation is a protected review obligation: the required pull
 request section makes every removed or superseded identifier explicit, and
 reviewers must require it to remain in the register and ledger.
 
-`golib specification check` performs the complete offline structural check.
+`golib specification check` checks the local records and their review age.
+`golib repository check --offline` checks the same decision records,
+provenance and authority pins, but does not expire an unchanged source tree
+when its review age passes. Required CI uses this mode. The separate scheduled
+[Upstream specification monitor](../.github/workflows/specification-monitor.yml)
+checks the reviewed snapshots for every public specification-owning Golib
+repository at its selected main commit. It reports changes, overdue reviews
+and publisher failures without changing library CI results or refreshing pins.
+Explicit release rehearsals still require a current review.
+
 `golib specification check --online` additionally downloads bounded authority
 content, verifies each reviewed digest, preserves the original HTTPS authority
 across redirects, rejects any authority resolution containing a non-public

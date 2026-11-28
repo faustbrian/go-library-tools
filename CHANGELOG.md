@@ -10,6 +10,14 @@ All notable changes to this project are documented in this file.
   libraries with one auto-merging dependency update pull request per library;
   this repository keeps its own Dependabot configuration.
 
+### Fixed
+
+- Keep immutable specification validation in Required CI without depending on
+  publisher availability or the passage of time. A separate scheduled monitor
+  still fails on overdue reviews, changed content and publisher errors. Explicit
+  `specification check` and `specification check --online` retain their
+  strict review-age checks.
+
 ## 2.6.0 - 2026-11-26
 
 Recorded as a prepared release candidate on this date; public availability
