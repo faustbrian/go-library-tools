@@ -53,7 +53,7 @@ Usage:
   golib inventory [--json]
   golib inventory --json --base-sha <commit>
 	golib consumers validate [--json]
-  golib repository check
+  golib repository check [--offline]
   golib specification check [--online]
   golib workflows check
   golib coverage [--module <directory>]
@@ -232,10 +232,14 @@ func executeContext(ctx context.Context, args []string, workingDirectory string,
 		}
 		return usage(stderr, "usage: golib config <validate|show --json>")
 	case "repository":
-		if len(args) != 2 || args[1] != "check" {
-			return usage(stderr, "usage: golib repository check")
+		if len(args) < 2 || len(args) > 3 || args[1] != "check" || (len(args) == 3 && args[2] != "--offline") {
+			return usage(stderr, "usage: golib repository check [--offline]")
 		}
-		if err := repository.Check(root, catalog); err != nil {
+		checkRepository := repository.Check
+		if len(args) == 3 {
+			checkRepository = repository.CheckOffline
+		}
+		if err := checkRepository(root, catalog); err != nil {
 			return failure(stderr, err)
 		}
 		_, _ = io.WriteString(stdout, "standalone repository contract passed\n")

@@ -24,6 +24,16 @@ const maximumModuleFileSize = 1 << 20
 // Check validates module identities, versions, workspace membership, and the
 // absence of the copied legacy implementation.
 func Check(root string, catalog inventory.Inventory) error {
+	return check(root, catalog, specification.Check)
+}
+
+// CheckOffline validates the same repository contract without applying the
+// recurring specification review deadline to an unchanged source tree.
+func CheckOffline(root string, catalog inventory.Inventory) error {
+	return check(root, catalog, specification.CheckOffline)
+}
+
+func check(root string, catalog inventory.Inventory, checkSpecification func(string, inventory.Inventory) (specification.Report, error)) error {
 	if !filepath.IsAbs(root) {
 		return errors.New("repository root must be absolute")
 	}
@@ -53,10 +63,8 @@ func Check(root string, catalog inventory.Inventory) error {
 	if err := checkLegacy(root, os.Lstat); err != nil {
 		return err
 	}
-	if _, err := specification.Check(root, catalog); err != nil {
-		return err
-	}
-	return nil
+	_, err = checkSpecification(root, catalog)
+	return err
 }
 
 func checkLegacy(root string, lstat func(string) (os.FileInfo, error)) error {

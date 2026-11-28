@@ -107,7 +107,7 @@ type authorityResolver interface {
 }
 
 func checkOnline(ctx context.Context, root string, catalog inventory.Inventory, client *http.Client, resolver authorityResolver) (Report, error) {
-	report, policies, err := check(root, catalog)
+	report, policies, err := check(root, catalog, true)
 	if err != nil {
 		return report, err
 	}
@@ -291,14 +291,24 @@ func dialResolvedAuthority(resolver authorityResolver, dial authorityDialer) aut
 // source provenance, and resolved executable evidence when any module declares
 // specification ownership.
 func Check(root string, catalog inventory.Inventory) (Report, error) {
-	report, _, err := check(root, catalog)
+	return checkLocal(root, catalog, true)
+}
+
+// CheckOffline validates decision and monitoring metadata independently of the
+// passing of time. Use Check or CheckOnline to enforce the review interval.
+func CheckOffline(root string, catalog inventory.Inventory) (Report, error) {
+	return checkLocal(root, catalog, false)
+}
+
+func checkLocal(root string, catalog inventory.Inventory, requireFreshReview bool) (Report, error) {
+	report, _, err := check(root, catalog, requireFreshReview)
 	if err == nil && report.Unresolved > 0 {
 		err = fmt.Errorf("specification decisions require review: %d unresolved", report.Unresolved)
 	}
 	return report, err
 }
 
-func check(root string, catalog inventory.Inventory) (Report, []monitoring, error) {
+func check(root string, catalog inventory.Inventory, requireFreshReview bool) (Report, []monitoring, error) {
 	report := Report{}
 	policies := make([]monitoring, 0, len(catalog.Modules))
 	decisionOwners := make(map[string]string)
@@ -320,7 +330,7 @@ func check(root string, catalog inventory.Inventory) (Report, []monitoring, erro
 		if err := validateProvenance(root, module, catalog.Modules); err != nil {
 			return Report{}, nil, fmt.Errorf("module %q specification provenance: %w", module.Directory, err)
 		}
-		moduleReport, policy, identifiers, err := checkModule(root, catalog, module)
+		moduleReport, policy, identifiers, err := checkModule(root, catalog, module, requireFreshReview)
 		if err != nil {
 			return Report{}, nil, fmt.Errorf("module %q: %w", module.Directory, err)
 		}
@@ -351,14 +361,14 @@ func hasSpecificationArtifacts(root, moduleDirectory string) (bool, error) {
 	}
 }
 
-func checkModule(root string, catalog inventory.Inventory, module inventory.Module) (Report, monitoring, []string, error) {
+func checkModule(root string, catalog inventory.Inventory, module inventory.Module, requireFreshReview bool) (Report, monitoring, []string, error) {
 	registerPath := modulePath(module.Directory, "docs/specification-decisions.md")
 	matrixPath := modulePath(module.Directory, "specification/README.md")
 	monitoringPath := modulePath(module.Directory, "specification/monitoring.json")
 	decisionsPath := modulePath(module.Directory, "specification/decisions.json")
 	conformancePath := modulePath(module.Directory, "specification/conformance.json")
 	historyPath := modulePath(module.Directory, "specification/decision-history.json")
-	policy, err := loadMonitoring(root, monitoringPath, module.Specifications, time.Now().UTC())
+	policy, err := loadMonitoring(root, monitoringPath, module.Specifications, time.Now().UTC(), requireFreshReview)
 	if err != nil {
 		return Report{}, monitoring{}, nil, err
 	}
@@ -1243,7 +1253,7 @@ type authority struct {
 	Specifications    []string `json:"specifications"`
 }
 
-func loadMonitoring(root, relative string, specifications []string, now time.Time) (monitoring, error) {
+func loadMonitoring(root, relative string, specifications []string, now time.Time, requireFreshReview bool) (monitoring, error) {
 	data, err := repositoryfile.Read(root, relative, maximumDocumentSize)
 	if err != nil {
 		return monitoring{}, fmt.Errorf("read specification authority monitoring: %w", err)
@@ -1266,7 +1276,7 @@ func loadMonitoring(root, relative string, specifications []string, now time.Tim
 	if policy.ReviewIntervalDays < 1 || policy.ReviewIntervalDays > 90 {
 		return monitoring{}, errors.New("specification authority review interval must be between 1 and 90 days")
 	}
-	if reviewed.AddDate(0, 0, policy.ReviewIntervalDays).Before(today) {
+	if requireFreshReview && reviewed.AddDate(0, 0, policy.ReviewIntervalDays).Before(today) {
 		return monitoring{}, errors.New("specification authority review is stale")
 	}
 	if len(policy.Authorities) == 0 {

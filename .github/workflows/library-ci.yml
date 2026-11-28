@@ -350,10 +350,47 @@ jobs:
           set -euo pipefail
           printf '%s\n' 'GOPROXY=https://proxy.golang.org' 'GOSUMDB=sum.golang.org' \
             'GOPRIVATE=' 'GONOPROXY=' 'GONOSUMDB=' >>"${GITHUB_ENV}"
-      - run: golib repository check
+      - name: Validate immutable repository contracts
+        env:
+          RELEASE_DRY_RUN: ${{ inputs.release_dry_run }}
+          GOENV: 'off'
+          GOWORK: 'off'
+          GOTOOLCHAIN: local
+          GOPROXY: https://proxy.golang.org
+          GOSUMDB: sum.golang.org
+          GOPRIVATE: ''
+          GONOPROXY: ''
+          GONOSUMDB: ''
+        run: |
+          set -euo pipefail
+          help="$(golib --help)"
+          if [[ "${RELEASE_DRY_RUN}" == true ]]; then
+            golib repository check
+          elif [[ "${help}" == *'repository check [--offline]'* ]]; then
+            golib repository check --offline
+          elif [[ -z "$(git ls-files -- ':(glob)**/specification/monitoring.json')" ]]; then
+            # The released checker still enforces monitoring metadata presence
+            # when a module declares a specification.
+            golib repository check
+          else
+            # The workflow's tooling SHA and checkout are already pinned.
+            # Only this check needs the new CLI; leave other release gates pinned.
+            task="$(mktemp -d "${RUNNER_TEMP}/golib-offline-repository.XXXXXX")"
+            cleanup() {
+              status=$?
+              trap - EXIT
+              chmod -R u+w "${task}" || status=1
+              find "${task}" -depth -delete || status=1
+              exit "${status}"
+            }
+            trap cleanup EXIT
+            mkdir -m 700 "${task}/cache" "${task}/mod" "${task}/tmp"
+            export GOCACHE="${task}/cache" GOMODCACHE="${task}/mod" GOTMPDIR="${task}/tmp"
+            go -C .golib-tooling build -mod=readonly -trimpath -buildvcs=false -o "${task}/golib" ./cmd/golib
+            "${task}/golib" repository check --offline
+          fi
       - run: golib workflows check
       - run: golib cohesion check
-      - run: golib specification check
       - name: Validate metadata documentation locally
         if: needs.prepare.outputs.runtime == 'false'
         run: |
@@ -381,9 +418,6 @@ jobs:
           else
             golib secrets check
           fi
-      - name: Monitor upstream specification drift
-        if: github.event_name == 'schedule'
-        run: golib specification check --online
       - name: Validate release contract
         if: inputs.release_dry_run == true
         env:

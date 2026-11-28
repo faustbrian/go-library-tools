@@ -477,6 +477,30 @@ func TestCheckRequiresFreshAuthorityMonitoring(t *testing.T) {
 	}
 }
 
+func TestCheckOfflineDoesNotExpireAnUnchangedSpecification(t *testing.T) {
+	root, catalog := validFixture(t)
+	path := filepath.Join(root, "specification/monitoring.json")
+	body, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	today := time.Now().UTC().Format("2006-01-02")
+	old := strings.Replace(string(body), today, "2000-01-01", 1)
+	if old == string(body) {
+		t.Fatal("did not replace the fixture's review date")
+	}
+	write(t, path, old)
+	if _, err := CheckOffline(root, catalog); err != nil {
+		t.Fatalf("immutable contract should not expire: %v", err)
+	}
+	if _, err := Check(root, catalog); err == nil || !strings.Contains(err.Error(), "review is stale") {
+		t.Fatalf("strict check must still detect stale reviews, got %v", err)
+	}
+	if _, err := CheckOnline(t.Context(), root, catalog, nil); err == nil || !strings.Contains(err.Error(), "review is stale") {
+		t.Fatalf("online check must still detect stale reviews before fetching, got %v", err)
+	}
+}
+
 func TestCheckRequiresSourceAndChangeMonitoringForEveryDeclaredSpecification(t *testing.T) {
 	root, catalog := validFixture(t)
 	path := filepath.Join(root, "specification/monitoring.json")
